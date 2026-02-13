@@ -11,16 +11,15 @@
 
 * { box-sizing: border-box; user-select: none; -webkit-user-drag: none; }
 
-/* FIX: Ensure the body is fluid for NW.js */
 body {
     margin: 0; padding: 0;
     height: 100vh;
-    width: 100vw; 
     font-family: 'Segoe UI', sans-serif;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     background: var(--canvas-bg);
+    min-width: 320px;
 }
 
 /* --- TITLE BAR --- */
@@ -250,7 +249,6 @@ body {
 .workspace {
     display: flex;
     flex-grow: 1;
-    width: 100%; /* FIX: Force fluid width */
     overflow: hidden;
     position: relative;
 }
@@ -349,7 +347,6 @@ body {
     overflow: hidden;
     grid-template-columns: 20px 1fr;
     grid-template-rows: 20px 1fr;
-    width: 100%; /* FIX: Force fluid width */
 }
 
 .ruler-c { background: #dadada; z-index: 20; border-right: 1px solid #999; border-bottom: 1px solid #999; }
@@ -364,10 +361,7 @@ body {
     overflow: auto;
     position: relative;
     padding: 50px;
-    display: flex; 
-    align-items: flex-start; 
-    justify-content: flex-start !important; 
-    width: 100% !important;
+    display: flex; align-items: flex-start; justify-content: center;
     background: var(--canvas-bg);
 }
 
@@ -568,7 +562,7 @@ td, th {
     background: rgba(255,255,255,0.8); filter: none !important; transform: none !important;
 }
 
-/* WordArt Styles 1-60 (ALL RESTORED) */
+/* WordArt Styles 1-60 */
 .wa-style-1 { color: transparent; -webkit-text-stroke: 2px #333; }
 .wa-style-2 { background: linear-gradient(to bottom, #f00, #ff0); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; transform: skewX(-10deg); }
 .wa-style-3 { color: #fff; text-shadow: 2px 2px 0 #000, 4px 4px 0 #555; }
@@ -599,6 +593,7 @@ td, th {
 .wa-style-28 { font-family: 'Playfair Display', serif; font-style: italic; color: #795548; text-decoration: underline wavy #795548; }
 .wa-style-29 { font-family: 'Montserrat', sans-serif; font-weight: 900; color: #fff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 0 #ccc; }
 .wa-style-30 { font-family: 'Segoe UI', sans-serif; font-weight: 300; letter-spacing: 10px; color: #000; text-transform: uppercase; border: 1px solid #000; padding: 5px; }
+/* 30-60 */
 .wa-style-31 { color: #fff; text-shadow: 0 0 2px #000, 0 0 10px #00f, 0 0 20px #00f; }
 .wa-style-32 { background: linear-gradient(180deg, #333 50%, #eee 50%); -webkit-background-clip: text; color: transparent; }
 .wa-style-33 { color: gold; text-shadow: 1px 1px 0 #000; font-style: italic; font-weight: bold; }
@@ -631,7 +626,7 @@ td, th {
 .wa-style-60 { color: transparent; -webkit-text-stroke: 2px #ffeb3b; filter: drop-shadow(0 0 2px #000); }
 
 
-/* Print Override (RESTORED) */
+/* Print Override */
 @media print {
     @page { margin: 0; size: auto; }
     body, html { 
@@ -654,10 +649,11 @@ td, th {
     .page-header:not(.visible), .page-footer:not(.visible) { display: none !important; }
 }
 
-/* --- NW.JS RESIZE FIX (THE ADDITION) --- */
-/* This kills the green border by forcing everything to match the window glass. */
-@media all {
-    html, body, .workspace, .canvas-area {
+/* --- NW.JS RESIZE FIX --- */
+/* This media query detects the 'standalone' display mode used by NW.js and Electron.
+   It overrides the fixed constraints for the body and root containers. */
+@media all and (display-mode: standalone) {
+    html, body {
         width: 100vw !important;
         height: 100vh !important;
         max-width: none !important;
