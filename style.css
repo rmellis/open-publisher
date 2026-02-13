@@ -364,7 +364,10 @@ body {
     overflow: auto;
     position: relative;
     padding: 50px;
-    display: flex; align-items: flex-start; justify-content: center;
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: flex-start !important; 
+    width: 100% !important;
     background: var(--canvas-bg);
 }
 
