@@ -1,0 +1,26 @@
+{
+  "name": "OpenPublisher",
+  "short_name": "Publisher",
+  "start_url": "/?source=pwa",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#007670",
+  "theme_color": "#007670",
+  "description": "The professional tool for open publishing.",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
