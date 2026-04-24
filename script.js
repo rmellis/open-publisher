@@ -3684,7 +3684,39 @@ window.initWordArt = function() {
         grid.appendChild(item);
     }
 };
+/* =========================================================================
+   INP FIX (Overrides for heavy functions)
+   ========================================================================= */
 
+// 1. Hijack the heavy canvas renderer
+const originalUpdateThumbnails = updateThumbnails;
+let thumbTimer;
+updateThumbnails = function() {
+    clearTimeout(thumbTimer);
+    // Wait 500ms after the user stops interacting before freezing the main thread
+    thumbTimer = setTimeout(() => {
+        originalUpdateThumbnails();
+    }, 500); 
+};
+
+// 2. Hijack the heavy history serializer
+const originalPushHistory = pushHistory;
+pushHistory = function() {
+    // A 10ms timeout takes this off the main interaction thread. 
+    // The browser instantly paints the UI change, THEN does the heavy math.
+    setTimeout(() => {
+        originalPushHistory();
+    }, 10);
+};
+
+// 3. Hijack the synchronous layout thrashing from typing
+const originalForceRepaint = forceRepaint;
+forceRepaint = function() {
+    // Same trick. Let the UI update the text, then fix the focus a split-second later.
+    setTimeout(() => {
+        originalForceRepaint();
+    }, 10);
+};
 // Initialize Everything Once the DOM is Ready
 setTimeout(() => {
     document.querySelectorAll('.wa-text').forEach(el => el.setAttribute('spellcheck', 'false'));
