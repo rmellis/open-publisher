@@ -1,15 +1,16 @@
+
 # 📘 Open Publisher – User Guide
 
-Welcome to **Open Publisher**! This is a lightweight, web-based desktop publishing tool that allows you to create documents, flyers, brochures, and fun designs on any device in any modern browser.
+Welcome to **Open Publisher**! This is a lightweight, web-based desktop publishing tool that allows you to create documents, flyers, brochures, and fun designs on any device in any modern browser. We are constantly tweaking and improving the app based on your feedback to make the workflow as smooth as possible.
 
 ## 📑 Table of Contents
 1. [The Interface Overview](#1-the-interface-overview)
-2. [File Management](#2-file-management-saving--exporting)
-3. [Core Editing Concepts](#3-core-editing-concepts)
+2. [File Management & Importing](#2-file-management--importing)
+3. [Core Editing & Workflows](#3-core-editing--workflows)
 4. [Working with Text](#4-working-with-text)
 5. [Working with Images & Graphics](#5-working-with-images--graphics)
 6. [Page Design & Layout](#6-page-design--layout)
-7. [Multi-Page Documents](#7-multi-page-documents)
+7. [Multi-Page Documents & Printing](#7-multi-page-documents--printing)
 8. [Templates](#8-templates)
 9. [Ribbon Reference (Detailed Tab Breakdown)](#9-ribbon-reference-detailed-tab-breakdown)
 10. [Keyboard Shortcuts](#10-keyboard-shortcuts)
@@ -18,92 +19,73 @@ Welcome to **Open Publisher**! This is a lightweight, web-based desktop publishi
 
 ## 1. The Interface Overview
 
-If you’ve spent any time on a computer over the past 20 years, this layout will feel instantly familiar<br>
-— it’s look's inspired by Microsoft's Office, when it looked at it's best.
+If you’ve spent any time on a computer over the past 20 years, this layout will feel instantly familiar—it’s look's inspired by Microsoft's Office, when it looked at it's best.
 
 <img  alt="Open Publisher's Main Window" src="https://github.com/user-attachments/assets/9cead72a-9ba2-457d-bc1d-e7eb88c72ec8" />
 
 * **Title Bar:** Displays the document name (click to rename), Undo/Redo controls, and mouse coordinates.
-* **Ribbon Menu:** The tabbed area at the top (`Home`, `Insert`, `Page Design`, etc.) containing all tools.
+* **Ribbon Menu:** The tabbed area at the top containing all tools. *Note: Contextual tabs will automatically appear here when you select specific items like images or tables.*
 * **Sidebar (Left):** Shows thumbnails of your pages. Use this to add, delete, or switch pages.
-* **Canvas (Center):** Your workspace/paper.
-* **Status Bar (Bottom):** Shows tool status and page count.
-* **Zoom Controls (Bottom Right):** Quick toggles for zooming (60% - 150%).
+* **Canvas & Rulers (Center):** Your workspace. The rulers are hardware-accelerated, measure in true Centimeters/Millimeters (matching MS Publisher), and dynamically track your page's exact physical dimensions.
+* **Zoom Controls (Bottom Right):** Quick toggles for zooming (60% - 150%). The ruler and canvas will gracefully scale without blurring or losing lines.
 
 ---
 
-## 2. File Management (Saving & Exporting)
+## 2. File Management & Importing
 
-Everything related to opening, saving, printing, and keeping your work safe is located in the **File Tab**.
-
+Everything related to opening, saving, and exporting your work is located in the **File Tab**. 
 <img alt="File Tab" src="https://github.com/user-attachments/assets/cab74ff3-690e-41a8-b46f-9e8fdc441983" />
 
-### Key Operations:
-* **New Project:** Click **New** to wipe the canvas and start fresh.
-    > ⚠️ **Warning:** Unsaved changes will be lost.
-* **Save as PDF:** Click the **PDF** button to render your current page as a high-quality image inside a PDF file.
-* **Save Source (Important):** Click **Save Source** to download a `.json` file. **This is your "Master File."** Keep this to edit your text or move objects later.
-* **Open Source:** Upload a `.json` file to resume working on a previous project.
-* **Print:** Opens your browser's print dialog (formatted to hide the interface and print only the paper).
+### Saving Your Work
+* **Save Source:** Click **Save Source** to download a `.json` file. **This is your "Master File."** Keep this to edit your text or move objects later.
+* **Save as PDF:** Renders your pages as a high-quality PDF document.
+
+### Opening & Importing Documents
+You can click **Open** or simply **Drag and Drop** files directly onto the canvas. We currently support:
+* **Open Publisher Saves (`.json`):** Restores your previous working sessions.
+* **Images (`.png`, `.jpg`, etc.):** Drops the image directly onto your page.
+* **Publisher Files (`.pub`, `.pubx`):** Experimental import for legacy Publisher files.
+* **Word Documents (`.doc`, `.docx`):** Because Word layouts can be tricky, dropping a Word file opens an import menu with two choices:
+  1. **Editable Text Mode:** The engine will extract the text, fonts, and colors, turning them into editable boxes. 
+  2. **Flattened Image Mode (Safe Mode):** Best for strict forms or highly complex medical tables. It renders the document as a high-res, uneditable background image to guarantee 100% layout accuracy.
 
 ---
 
-## 3. Core Editing Concepts
-
-Before designing, it helps to know how to interact with the page (found mostly in the **Home Tab**).
+## 3. Core Editing & Workflows
 
 <img alt="Gome Tab" src="https://github.com/user-attachments/assets/1baf6223-e32e-42c0-89a6-d77526a78917" />
 
-* **Selection:** Click once on any object to select it.
-* **Movement:** Drag an object to move it.
-* **Resize:** Drag the **white square handles** on the corners or edges.
-    * *Tip:* Dragging a handle past the opposite edge will "flip" (mirror) the object.
-* **Rotate:** Use the **Green Handle** sticking out of the top of a selection to rotate it.
-* **Layering:** Use **Front** and **Back** buttons in the Home tab to move objects behind or in front of others.
-* **Clipboard:** Standard **Copy** and **Paste** buttons are available (shortcuts `Ctrl+C` / `Ctrl+V` work too).
+* **Selection & Marquee:** Click once on any object to select it. Click and drag on the blank paper to draw a **Marquee Selection Box** and select multiple items at once.
+* **Grouping:** Once multiple items are selected, right-click and choose **Group** to lock them together.
+* **Movement & Resize:** Drag an object to move it, or drag the white square handles to resize. Dragging a handle past the opposite edge will "flip" (mirror) the object.
+* **Contextual Ribbons:** When you select an image, shape, or table, keep an eye on the top ribbon. A special highlighted tab (e.g., "Picture Tools") will appear with specific tools for that object.
+* **Right-Click Context Menu:** Right-click anywhere on the canvas or on an object to quickly access layer arrangements, background formatting, cropping, grouping, and more.
 
 ---
 
 ## 4. Working with Text
 
-### Inserting Text
-Go to the **Insert Tab** and click **Text Box**. A new box will appear on the canvas.
+### Inserting & Formatting
+Go to the **Insert Tab** and click **Text Box**. You can format text using the Ribbon, or by using the **Floating Toolbar** that appears next to your selection. 
 
 <img alt="insert tab with text box" src="https://github.com/user-attachments/assets/f655626e-b94a-4f08-b5cb-c6cb72c31ba9" />
 
-### Formatting Text
-There are two ways to format text:
-1.  **The Home Tab:** Use the Font Picker (60+ Google Fonts), Size input, and Bold/Italic/Underline buttons.
-2.  **The Floating Toolbar:** When you select a text object, a small toolbar appears next to it for quick access to fonts, colors, and alignment.
+* **Text Fit:** Right-click a text box and select **Text Fit: Best Fit** to automatically scale your font to perfectly fill the box.
+* **Drop Cap:** Right-click and select **Drop Cap** to stylize the first letter of a paragraph.
 
 ### WordArt
-For headlines, go to **Insert > WordArt**. This opens a gallery of 60 pre-styled graphical text effects (3D, gradients, shadows).
-
+For headlines, go to **Insert > WordArt** to access a gallery of 60 pre-styled graphical text effects. You can stretch, resize, and swap WordArt styles on the fly without breaking the layout.
 <img alt="WordArt Gallery" src="https://github.com/user-attachments/assets/c736f229-39e1-44e4-a11c-403c2e1efa42" />
 
 ---
 
 ## 5. Working with Images & Graphics
 
-### Inserting Graphics
-Go to the **Insert Tab** to find:
-* **Picture:** Upload JPG/PNG files from your computer.
-* **Clipart:** Insert high-quality vector icons (Twemoji).
-* **Shapes:** Insert geometry (Circles, Stars) or outlines (Arrows, Callouts).
-* **Ads:** Insert pre-made marketing stickers (e.g., "Sale", "50% Off").
+Go to the **Insert Tab** to upload pictures or utilize our built-in vector Clipart, Shapes, and Ad Stickers.
 
-### The Picture Tab (Contextual)
-When you select an image, a new **Picture Tab** appears in the ribbon.
-
-<img alt="Picture tab" src="https://github.com/user-attachments/assets/e3090f8a-a88c-4199-871b-92e31dc94301" />
-
-* **Recolor:** Apply filters like Grayscale, Sepia, or Color Tints.
-* **Corrections:** Auto-adjust brightness and contrast.
-* **Crop Tool:**
-    1. Click **Crop**.
-    2. Drag the handles to resize the "frame".
-    3. Drag the image to move it *inside* the frame.
-    4. Click Crop again to apply.
+When an image is selected, the **Picture Tools** tab appears:<img alt="Picture tab" src="https://github.com/user-attachments/assets/e3090f8a-a88c-4199-871b-92e31dc94301" />
+* **Crop & Shape Crop:** Click Crop to trim the image, or right-click the image and select **Crop to Shape** to instantly cut your photo into a circle, star, or triangle.
+* **Recolor & Filters:** Apply grayscale, sepia, color tints, or drop-shadows.
 
 ---
 
@@ -114,16 +96,14 @@ Use the **Page Design Tab** to change the look of the paper itself.
 <img alt="Page Design tab" src="https://github.com/user-attachments/assets/07474d1c-223b-4356-ae1e-415971463a46" />
 
 * **Size & Orientation:** Switch between A4/Letter and Portrait/Landscape.
-* **Margins:** Toggle blue dotted lines (guides) to help you align content.
-* **Page Borders:** Apply borders to the page edge. Includes standard lines and **Fancy Borders** (Art Deco, Floral, Certificate).
-* **Themes:** Click a color swatch in the scrolling list to instantly set the page background (Solids, Gradients, Patterns).
+* **Page Borders:** Apply standard lines or **Fancy Borders** (Art Deco, Floral, Certificate) to the page edge.
+* **Themes & Backgrounds:** Click a color swatch in the ribbon, or right-click the blank paper and select **Format Background** to pick a custom hex color.
 
 ---
 
-## 7. Multi-Page Documents
+## 7. Multi-Page Documents & Printing
 
-Open Publisher allows you to work on multiple pages within a single file.
-
+### Managing Pages:
 <table border="0" cellspacing="0" cellpadding="0">
   <tr>
     <td width="300" valign="middle" style="border:none;">
@@ -144,22 +124,25 @@ Open Publisher allows you to work on multiple pages within a single file.
   </tr>
 </table>
 
+### Perfect Printing
+We have completely overhauled the print spooler to ensure a seamless physical printing experience. 
+* Click **Print** in the File tab.
+* **Zero Spillage:** We use a special mathematical "zoom box" to ensure your document never triggers an extra blank page at the end.
+* **Color Accuracy:** Background colors, forms, and text-halos are forced to render exactly as they appear on screen.
+
 ---
 
 ## 8. Templates
 
-Need inspiration? Go to **File > Templates**.
+Need inspiration? Go to **File > Templates**. Browse categories like Resumes, Flyers, Menus, and Certificates.
 
 <img alt="Templates Gallery" src="https://github.com/user-attachments/assets/91fa7dac-59ad-4da1-bb94-2e228c8a059c" />
 
-Browse categories like Resumes, Flyers, Menus, and Certificates.
 > 📝 **Note:** Loading a template will replace the content of your **currently selected** page.
 
 ---
 
 ## 9. Ribbon Reference (Detailed Tab Breakdown)
-
-Here is a specific breakdown of every button in the interface.
 
 ### 🏠 Home Tab
 * **Common:** Shortcuts for PDF Export and Saving.
@@ -171,7 +154,7 @@ Here is a specific breakdown of every button in the interface.
 ### ➕ Insert Tab
 * **Illustrations:** Text Box, Picture (Upload), Clipart (Gallery).
 * **Graphics:** Shapes (Solid & Outlines), WordArt.
-* **Marketing:** Ad templates.
+* **Marketing:** Ad templates and stickers.
 * **Tables:** Grid picker to insert editable tables.
 
 ### 🎨 Page Design Tab
@@ -183,13 +166,13 @@ Here is a specific breakdown of every button in the interface.
 * **Zoom:** Presets (60%, 75%, 100%, 150%).
 * **Show:**
     * **Margins:** Visual print guides.
-    * **Rulers:** Top and Left measurement rulers.
+    * **Rulers:** Hardware-accelerated measurement rulers (CM/MM).
     * **Grid:** Graph paper overlay.
     * **Baselines:** Notebook line overlay.
 
 ### 🔎 Review Tab
 * **Proofing:**
-    * **Spelling:** Turn on the red squiggly lines of judgment.
+    * **Spelling:** Turn on the red squiggly lines for spellcheck.
     * **Thesaurus:** Opens external reference.
 
 ---
@@ -200,11 +183,10 @@ Here is a specific breakdown of every button in the interface.
 | :--- | :--- |
 | **Ctrl + Z** | Undo |
 | **Ctrl + Y** | Redo |
-| **Ctrl + C** | Copy selected element |
-| **Ctrl + V** | Paste copied element |
-| **Delete** | Delete selected element |
-| **Ctrl + Wheel** | Zoom In/Out |
-| **Esc** | Deselect all elements |
-| **Ctrl + +** | Zoom In |
-| **Ctrl + -** | Zoom Out |
-| **Ctrl + 0** | Reset Zoom to 100% |
+| **Ctrl + C** | Copy |
+| **Ctrl + V** | Paste |
+| **Delete** | Delete selected element(s) |
+| **Ctrl + Wheel** | Zoom In / Out |
+| **Esc** | Deselect all |
+| **Ctrl + A** | Select All |
+| **Ctrl + 0** | Reset Zoom |
