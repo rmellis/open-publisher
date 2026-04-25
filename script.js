@@ -2686,6 +2686,17 @@ function openDocument() { document.getElementById('file-open').click(); }
 document.getElementById('file-open').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if(!file) return;
+
+    const fileName = file.name.toLowerCase();
+
+    // Handle Publisher Files
+    if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+        uploadAndConvertPub(file);
+        e.target.value = ''; // Reset input
+        return;
+    }
+
+    // Handle standard JSON OpenPublisher files
     const reader = new FileReader();
     reader.onload = (evt) => {
         try {
@@ -2701,6 +2712,7 @@ document.getElementById('file-open').addEventListener('change', (e) => {
         } catch(err) { DialogSystem.alert('Error', "Error opening file: " + err); }
     };
     reader.readAsText(file);
+    e.target.value = ''; // Reset input
 });
 
 window.downloadPDF = async function() {
@@ -3764,15 +3776,10 @@ window.initWordArt = function() {
                 reader.readAsText(file);
             } 
             
-            // --- B. Handle MS Publisher Files (.pub, .pubx) ---
-            else if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
-                if(typeof DialogSystem !== 'undefined') {
-                    DialogSystem.alert(
-                        'Feature Coming Soon!', 
-                        'Microsoft Publisher (.pub / .pubx) support is currently in development!<br><br>Because it is a closed-source format, reverse-engineering the files takes some extra time, but we are actively working on adding this in a future update!'
-                    );
-                }
-            }
+			// --- B. Handle MS Publisher Files (.pub, .pubx) ---
+			else if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+				uploadAndConvertPub(file);
+			}
 
             // --- C. Handle Images (.jpg, .png, .gif, .svg, .webp) ---
             else if (file.type.startsWith('image/')) {
@@ -3797,6 +3804,331 @@ window.initWordArt = function() {
         });
     }
 })();
+
+/* =========================================================================
+   PUB CONVERSION ADDON (image - Text Extraction)
+   ========================================================================= */
+function uploadAndConvertPub(file) {
+    const progressHtml = `
+        <div style="text-align:center; padding: 10px;">
+            <p id="convert-status" style="margin-bottom:15px; font-weight:bold;">Processing...</p>
+            <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                <div id="convert-progress" style="width:0%; height:100%; background:var(--pub-color); transition: width 0.3s;"></div>
+            </div>
+        </div>
+    `;
+    
+    DialogSystem.show('Importing Publisher File', progressHtml, null, true);
+    document.getElementById('custom-dialog-confirm').style.display = 'none'; 
+
+    const formData = new FormData();
+    formData.append('pubFile', file);
+
+    const xhr = new XMLHttpRequest();
+    // Connect to Cloudflare Tunnel
+    xhr.open('POST', 'https://determine-regardless-passage-occurring.trycloudflare.com/api/convert-pub', true); 
+
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 40; 
+            document.getElementById('convert-progress').style.width = percentComplete + '%';
+            
+            if (percentComplete >= 40) {
+                document.getElementById('convert-status').innerText = "Decoding the publication...";
+                let fakeProgress = 40;
+                window.convertInterval = setInterval(() => {
+                    if(fakeProgress < 75) {
+                        fakeProgress += 1;
+                        document.getElementById('convert-progress').style.width = fakeProgress + '%';
+                    }
+                }, 800);
+            }
+        }
+    };
+
+    xhr.onload = async function() {
+        clearInterval(window.convertInterval);
+        
+        if (xhr.status === 200) {
+            document.getElementById('convert-progress').style.width = '85%';
+            document.getElementById('convert-status').innerText = "Extracting Text & Rendering images...";
+            
+            try {
+                const data = JSON.parse(xhr.responseText);
+                
+                // 1. Decode PDF
+                const binaryString = window.atob(data.pdfData);
+                const binaryLen = binaryString.length;
+                const bytes = new Uint8Array(binaryLen);
+                for (let i = 0; i < binaryLen; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                let opPages = [];
+                const OP_PAGE_WIDTH = 794;  // OpenPublisher standard width
+                const OP_PAGE_HEIGHT = 1123; // OpenPublisher standard height
+
+                // 2. Loop through every page
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    
+                    // --- PART A: Render Background Image ---
+                    // Render at high resolution so it's crisp
+                    const viewportImage = page.getViewport({ scale: 2.0 }); 
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = viewportImage.width;
+                    canvas.height = viewportImage.height;
+                    await page.render({ canvasContext: ctx, viewport: viewportImage }).promise;
+                    const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85); // 85% quality to save RAM
+
+                    let elements = [];
+                    let zIndexCounter = 1;
+
+                    // Push the flattened background layer first (Locked)
+                    elements.push({
+                        left: "0px", top: "0px", width: "100%", height: "100%",
+                        transform: "none", zIndex: (zIndexCounter++).toString(), type: "box", 
+                        innerHTML: "", imgSrc: imgDataUrl, clipPath: "", bg: "", cropMode: false,
+                        imgStyle: {
+                            width: "100%", height: "100%", top: "0px", left: "0px",
+                            position: "absolute", filter: "none", maxWidth: "none", maxHeight: "none",
+                            pointerEvents: "none" // Prevents the user from accidentally moving the background!
+                        },
+                        scaleX: "1", scaleY: "1"
+                    });
+
+                    // --- PART B: Extract Editable Text ---
+                    const textContent = await page.getTextContent();
+                    const viewportText = page.getViewport({ scale: 1.0 }); // Use 1.0 scale for accurate math
+
+                    // Calculate the ratio between the PDF size and OpenPublisher's Canvas size
+                    const scaleX = OP_PAGE_WIDTH / viewportText.width;
+                    const scaleY = OP_PAGE_HEIGHT / viewportText.height;
+
+                    textContent.items.forEach(item => {
+                        const str = item.str.trim();
+                        if (!str) return; // Ignore empty text blocks
+
+                        // pdf.js uses bottom-left origin. We must convert it to OpenPublisher's top-left origin.
+                        // item.transform array: [scaleX, skewY, skewX, scaleY, translateX, translateY]
+                        const tx = item.transform[4] * scaleX;
+                        let ty = (viewportText.height - item.transform[5]) * scaleY; 
+
+                        // Extract Font Size
+                        let fontSize = Math.abs(item.transform[3]) * scaleY;
+                        
+                        // Adjust Y coordinate up by the font size so it sits correctly on the baseline
+                        ty = ty - fontSize; 
+
+                        elements.push({
+                            left: `${tx}px`, 
+                            top: `${ty}px`, 
+                            width: `${(item.width * scaleX) + 20}px`, // Add slight padding
+                            height: `${fontSize + 10}px`,
+                            transform: "none", 
+                            zIndex: (zIndexCounter++).toString(), 
+                            type: "box", 
+                            innerHTML: `<div style="width:100%; height:100%; padding:2px; font-family:sans-serif; color:black; font-size:${fontSize.toFixed(1)}px; line-height:1;">${str}</div>`, 
+                            imgSrc: "", clipPath: "", bg: "", cropMode: false, imgStyle: {}, scaleX: "1", scaleY: "1"
+                        });
+                    });
+
+                    opPages.push({
+                        id: Date.now() + pageNum,
+                        thumb: "",
+                        width: `${OP_PAGE_WIDTH}px`, height: `${OP_PAGE_HEIGHT}px`,
+                        background: "#ffffff",
+                        header: "", footer: "", borderStyle: "none",
+                        elements: elements
+                    });
+                }
+
+                // 3. Finalize and push to UI
+                document.getElementById('convert-progress').style.width = '100%';
+                setTimeout(() => {
+                    document.getElementById('doc-title').innerText = data.title;
+                    state.pages = opPages;
+                    state.currentPageIndex = 0;
+                    renderPage(state.pages[0]);
+                    
+                    if(typeof updateThumbnails === 'function') updateThumbnails();
+                    if(typeof pushHistory === 'function') pushHistory(); 
+                    
+                    DialogSystem.close(); 
+                }, 500);
+
+            } catch(err) {
+                console.error(err);
+                DialogSystem.close();
+                DialogSystem.alert('Error', "Failed to extract text from the document.");
+            }
+        } else {
+            DialogSystem.close();
+            DialogSystem.alert('Error', "I failed to process the file.");
+        }
+    };
+
+    xhr.onerror = function() {
+        clearInterval(window.convertInterval);
+        DialogSystem.close();
+        DialogSystem.alert('Error', "Could not connect to a Cloudflare server.");
+    };
+
+    xhr.send(formData);
+}
+/* =========================================================================
+   OPENPUBLISHER ADDON: Automate Landscape mode
+   ========================================================================= */
+if (typeof window.originalRenderPage === 'undefined') {
+    window.originalRenderPage = window.renderPage;
+}
+
+window.renderPage = function(page) {
+    if (page && page.elements && page.elements.length > 0) {
+        // Only run this heavy check once per page load
+        if (!page._orientationChecked) {
+            page._orientationChecked = true; 
+
+            // Find the background photograph that LibreOffice generated
+            const bgElement = page.elements.find(el => el.imgSrc && el.imgSrc.startsWith('data:image'));
+
+            if (bgElement) {
+                // Secretly load the image in the background to measure its true pixels
+                const img = new Image();
+                img.onload = function() {
+                    
+                    // CHECK: Is the photo wider than it is tall?
+                    if (img.width > img.height) {
+                        page.width = "1123px";
+                        page.height = "794px";
+                    } else {
+                        page.width = "794px";
+                        page.height = "1123px";
+                    }
+
+                    // Force the OpenPublisher HTML wrapper to change shape
+                    const paperElement = document.getElementById('paper');
+                    if (paperElement) {
+                        paperElement.style.width = page.width;
+                        paperElement.style.height = page.height;
+                    }
+
+                    // Now that the canvas is the correct shape, finish drawing the text!
+                    if (typeof window.originalRenderPage === 'function') {
+                        window.originalRenderPage(page);
+                    }
+                };
+                img.src = bgElement.imgSrc;
+                
+                // Pause the app while the image loads!
+                return; 
+            }
+        }
+    }
+
+    // Normal fallback for pages that have already been checked
+    const paperElement = document.getElementById('paper');
+    if (paperElement && page.width && page.height) {
+        paperElement.style.width = page.width;
+        paperElement.style.height = page.height;
+    }
+
+    if (typeof window.originalRenderPage === 'function') {
+        window.originalRenderPage(page);
+    }
+};
+/* =========================================================================
+   OPENPUBLISHER ADDON: Unifide Orientation (noflicker)
+   ========================================================================= */
+
+// --- 1. MAIN CANVAS ENGINE (Watches the workspace) ---
+setInterval(() => {
+    if (!state.pages || state.pages.length === 0) return;
+
+    const currentPage = state.pages[state.currentPageIndex];
+    
+    if (currentPage && !currentPage._smartOriented) {
+        currentPage._smartOriented = true; 
+        
+        const bgEl = currentPage.elements.find(e => e.imgSrc && e.imgSrc.startsWith('data:image'));
+        if (bgEl) {
+            const img = new Image();
+            img.onload = function() {
+                let needsFix = false;
+                
+                if (img.width > img.height) { 
+                    if (currentPage.width !== "1123px") {
+                        currentPage.width = "1123px";
+                        currentPage.height = "794px";
+                        needsFix = true;
+                    }
+                } else { 
+                    if (currentPage.width !== "794px") {
+                        currentPage.width = "794px";
+                        currentPage.height = "1123px";
+                        needsFix = true;
+                    }
+                }
+
+                if (needsFix) {
+                    const paperEl = document.getElementById('paper');
+                    if (paperEl) {
+                        paperEl.style.width = currentPage.width;
+                        paperEl.style.height = currentPage.height;
+                    }
+                    if (typeof window.renderPage === 'function') window.renderPage(currentPage);
+                    // Force the thumbnails to regenerate so the Observer below catches them!
+                    if (typeof window.updateThumbnails === 'function') window.updateThumbnails(); 
+                }
+            };
+            img.src = bgEl.imgSrc;
+        }
+    }
+    
+    // Safety Catch: Instantly corrects the paper if clicking between pages resets it
+    const paperEl = document.getElementById('paper');
+    if (paperEl && currentPage && paperEl.style.width !== currentPage.width) {
+        paperEl.style.width = currentPage.width;
+        paperEl.style.height = currentPage.height;
+    }
+}, 50);
+
+// --- 2. THUMBNAIL ENGINE (MutationObserver: Fires BEFORE the screen paints) ---
+const thumbObserver = new MutationObserver(() => {
+    if (!state.pages || state.pages.length === 0) return;
+    
+    const thumbs = document.querySelectorAll('.page-thumb, .thumbnail, .thumb, .sidebar-thumb, .thumb-item');
+    
+    thumbs.forEach((thumbNode, index) => {
+        const pageData = state.pages[index];
+        if (!pageData) return;
+
+        const pW = parseFloat(pageData.width) || 794;
+        const pH = parseFloat(pageData.height) || 1123;
+        const expectedRatio = `${pW} / ${pH}`;
+
+        // Only apply CSS if it's currently wrong. 
+        if (thumbNode.style.aspectRatio !== expectedRatio) {
+            thumbNode.style.aspectRatio = expectedRatio;
+            thumbNode.style.height = "auto";
+        }
+
+        // Ensure the image inside scales cleanly without stretching
+        const innerElements = thumbNode.querySelectorAll('canvas, img');
+        innerElements.forEach(el => {
+            if (el.style.objectFit !== "contain") {
+                el.style.width = "100%";
+                el.style.height = "100%";
+                el.style.objectFit = "contain";
+            }
+        });
+    });
+});
+
+// Start watching the body for any new thumbnails being drawn
+thumbObserver.observe(document.body, { childList: true, subtree: true });
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
