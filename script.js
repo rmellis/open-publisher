@@ -7083,21 +7083,20 @@ if (!window._thumbObserverRunning) {
     }
 })();
 /* =========================================================================
-   UI FEATURE: Dynamic Page Format Indicator (A4 vs Letter) - TOOLTIP & THIN
+   UI FEATURE: Dynamic Page Format Indicator (App Toolbar Position Fix)
    ========================================================================= */
 (function initFormatIndicator() {
     const style = document.createElement('style');
     style.innerHTML = `
         #op-format-indicator {
             position: fixed;
-            top: 12px;   
+            top: 28px;
             right: 140px; 
-            z-index: 99999;
+            z-index: 900 !important; /* Lowered so the dark modal overlay dims it */
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            /* pointer-events: none; REMOVED so the hover tooltip works */
-            cursor: help; /* Changes cursor to a question mark on hover */
+            cursor: help; 
             opacity: 0.9;
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -7117,12 +7116,9 @@ if (!window._thumbObserverRunning) {
     const indicator = document.createElement('div');
     indicator.id = 'op-format-indicator';
     
-    // NATIVE HTML TOOLTIP (Shows when hovered)
     indicator.title = "To change the page size, click 'Size' in the Home tab.";
-    
     document.body.appendChild(indicator);
 
-    // Reduced stroke-width to 0.8 for ultra-thin, delicate lines
     const svgA4 = `
         <svg width="30" height="35" viewBox="0 0 24 28" style="display:block;">
             <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L 20 2 C 21.1 2 22 2.9 22 4 L 22 28" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
