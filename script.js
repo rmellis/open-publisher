@@ -5110,6 +5110,227 @@ if (!window._thumbObserverRunning) {
     };
 })();
 /* =========================================================================
+   3D VIEW TOPOLOGY (COMPACT STACK MATH FIX)
+   ========================================================================= */
+(function init3DViewMode() {
+    function inject3DViewButton() {
+        const viewRibbon = document.getElementById('ribbon-view');
+        if (viewRibbon && !document.getElementById('3dview-btn-group')) {
+            const viewGroup = document.createElement('div');
+            viewGroup.id = '3dview-btn-group';
+            viewGroup.className = 'group';
+            viewGroup.innerHTML = `
+                <div class="tool-btn" onclick="window.toggle3DView()"><i class="fas fa-cube"></i>3D View</div>
+                <div class="group-label">Topology</div>
+            `;
+            viewRibbon.appendChild(viewGroup);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inject3DViewButton);
+    } else {
+        inject3DViewButton();
+    }
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .xray-ctrl-panel { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 10000; pointer-events: all; }
+        .xray-btn-icon { background: #ffffff; color: #007670; border: 1px solid #007670; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .xray-btn-icon:hover { background: #f1f5f9; transform: translateY(-1px); }
+        .xray-btn-close { background: #007670; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-family: 'Segoe UI', sans-serif; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .xray-btn-close:hover { background: #005a55; transform: translateY(-1px); }
+    `;
+    document.head.appendChild(style);
+
+    window.is3DViewActive = false;
+    window.toggle3DView = function() {
+        const livePaper = document.getElementById('paper');
+        const viewport = document.getElementById('viewport'); 
+        if (!livePaper || !viewport) return;
+
+        if (window.is3DViewActive) {
+            window.is3DViewActive = false;
+            const overlay = document.getElementById('native-3d-overlay');
+            if (overlay) overlay.remove();
+            livePaper.style.opacity = '1'; 
+            return;
+        }
+
+        window.is3DViewActive = true;
+
+        const paperClone = livePaper.cloneNode(true);
+        paperClone.id = '3d-paper-clone';
+
+        const allCloneNodes = paperClone.querySelectorAll('*');
+        allCloneNodes.forEach(node => {
+            if (node.id) node.id = node.id + '-clone';
+            node.removeAttribute('contenteditable');
+            node.style.userSelect = 'none'; 
+            if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(node.tagName)) {
+                node.disabled = true;
+            }
+        });
+        
+        let activeZoom = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1.0;
+        let rotX = 60;
+        let rotZ = -25;
+        let panY = 0; 
+
+        const updateTransform = () => {
+            paperClone.style.transform = `translateY(${panY}px) scale(${activeZoom}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`;
+        };
+        
+        paperClone.style.opacity = '1'; 
+        paperClone.style.backgroundColor = '#ffffff'; 
+        paperClone.style.position = 'relative';
+        paperClone.style.top = 'auto';
+        paperClone.style.left = 'auto';
+        paperClone.style.margin = '0';
+        paperClone.style.transformStyle = 'preserve-3d';
+        paperClone.style.transition = 'transform 0.1s ease-out'; 
+        paperClone.style.boxShadow = '-30px 40px 60px rgba(0,0,0,0.2)'; 
+        paperClone.style.pointerEvents = 'none'; 
+        
+        updateTransform(); 
+
+        livePaper.style.opacity = '0';
+
+        const overlay = document.createElement('div');
+        overlay.id = 'native-3d-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.inset = '0';
+        overlay.style.zIndex = '9999';
+        overlay.style.background = 'transparent'; 
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.perspective = '2500px';
+        overlay.style.overflow = 'hidden';
+        overlay.style.cursor = 'grab'; 
+
+        const ctrlPanel = document.createElement('div');
+        ctrlPanel.className = 'xray-ctrl-panel';
+
+        const zoomInBtn = document.createElement('button');
+        zoomInBtn.className = 'xray-btn-icon';
+        zoomInBtn.innerHTML = '<i class="fas fa-search-plus"></i>';
+        zoomInBtn.title = "Zoom In (Ctrl + Scroll Up)";
+        zoomInBtn.onclick = () => { activeZoom = Math.min(activeZoom + 0.1, 3.0); updateTransform(); };
+
+        const zoomOutBtn = document.createElement('button');
+        zoomOutBtn.className = 'xray-btn-icon';
+        zoomOutBtn.innerHTML = '<i class="fas fa-search-minus"></i>';
+        zoomOutBtn.title = "Zoom Out (Ctrl + Scroll Down)";
+        zoomOutBtn.onclick = () => { activeZoom = Math.max(activeZoom - 0.1, 0.3); updateTransform(); };
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'xray-btn-close';
+        closeBtn.innerHTML = '<i class="fas fa-times"></i> Close 3D View';
+        closeBtn.onclick = window.toggle3DView;
+
+        ctrlPanel.appendChild(zoomOutBtn);
+        ctrlPanel.appendChild(zoomInBtn);
+        ctrlPanel.appendChild(closeBtn);
+
+        let isDragging = false, prevMouse = { x: 0, y: 0 };
+        
+        overlay.onmousedown = (e) => { 
+            if (e.target.closest('.xray-ctrl-panel')) return;
+            isDragging = true; 
+            overlay.style.cursor = 'grabbing';
+            prevMouse = { x: e.clientX, y: e.clientY }; 
+        };
+        overlay.onmouseup = () => { isDragging = false; overlay.style.cursor = 'grab'; };
+        overlay.onmouseleave = () => { isDragging = false; overlay.style.cursor = 'grab'; };
+        overlay.onmousemove = (e) => {
+            if (isDragging) {
+                const delta = { x: e.clientX - prevMouse.x, y: e.clientY - prevMouse.y };
+                rotZ += delta.x * 0.4; 
+                rotX -= delta.y * 0.4;
+                updateTransform();
+                prevMouse = { x: e.clientX, y: e.clientY };
+            }
+        };
+
+        overlay.onwheel = (e) => {
+            e.preventDefault(); 
+            if (e.ctrlKey || e.metaKey) {
+                const zoomSpeed = 0.05;
+                if (e.deltaY < 0) activeZoom += zoomSpeed;
+                else activeZoom -= zoomSpeed;
+                activeZoom = Math.max(0.3, Math.min(activeZoom, 3.0)); 
+            } else {
+                panY -= e.deltaY; 
+            }
+            updateTransform();
+        };
+
+        overlay.appendChild(paperClone);
+        overlay.appendChild(ctrlPanel);
+        
+        if (window.getComputedStyle(viewport).position === 'static') {
+            viewport.style.position = 'relative'; 
+        }
+        
+        viewport.appendChild(overlay);
+        
+        setTimeout(() => {
+            const liveElements = Array.from(livePaper.children);
+            const cloneElements = Array.from(paperClone.children);
+
+            const isStructural = (el) => {
+                const pos = window.getComputedStyle(el).position;
+                return el.id === 'margin-guides' || el.id === 'page-border' || el.tagName === 'CANVAS' || el.classList.contains('page-header') || el.classList.contains('page-footer') || pos !== 'absolute';
+            };
+
+            const interactiveItems = [];
+
+            liveElements.forEach((liveEl, index) => {
+                const cloneEl = cloneElements[index];
+                if (!cloneEl) return;
+
+                const liveComputed = window.getComputedStyle(liveEl);
+
+                if (isStructural(liveEl)) {
+                    if (cloneEl.tagName === 'CANVAS' || cloneEl.classList.contains('page-background')) cloneEl.style.opacity = '0';
+                    cloneEl.style.transform = 'translateZ(0px)';
+                } else {
+                    cloneEl.style.position = liveComputed.position;
+                    cloneEl.style.left = liveComputed.left;
+                    cloneEl.style.top = liveComputed.top;
+                    cloneEl.style.width = liveComputed.width;
+                    cloneEl.style.height = liveComputed.height;
+                    cloneEl.style.zIndex = liveComputed.zIndex;
+                    
+                    // Push to array so we can sort them by rank
+                    interactiveItems.push({
+                        clone: cloneEl,
+                        zVal: parseInt(liveComputed.zIndex) || 0
+                    });
+                }
+            });
+
+            // Sort by actual Z-Index to find their exact physical stacking rank
+            interactiveItems.sort((a, b) => a.zVal - b.zVal);
+
+            // THE FIX: Compact Cloud Math. Base lift + tiny micro-step.
+            interactiveItems.forEach((item, rankIndex) => {
+                // Base lift of 50px off the paper, plus a micro 2px step to stop clipping!
+                const zOffset = 50 + (rankIndex * 2); 
+                
+                item.clone.style.transform = `translateZ(${zOffset}px)`;
+                item.clone.style.boxShadow = '-8px 12px 18px rgba(0,0,0,0.15)';
+                item.clone.style.backgroundColor = '#ffffff'; 
+                item.clone.style.border = '1px solid #007670';
+                item.clone.style.transformStyle = 'flat';
+                item.clone.style.textShadow = '0px 0px 1px rgba(0,0,0,0.2)';
+                item.clone.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        }, 10);
+    };
+})();
+/* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
