@@ -7286,6 +7286,53 @@ if (!window._thumbObserverRunning) {
     });
 })();
 /* =========================================================================
+   BUG FIX: Firefox Native Undo Override & Button Stabilization
+   ========================================================================= */
+(function fixFirefoxUndo() {
+    
+    // 1. Intercept Ctrl+Z globally
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+            
+            // Are we actively typing?
+            const activeEl = document.activeElement;
+            const isTextEditing = activeEl && (
+                activeEl.isContentEditable || 
+                activeEl.tagName === 'INPUT' || 
+                activeEl.tagName === 'TEXTAREA' ||
+                activeEl.closest('[contenteditable="true"]')
+            );
+
+            // If we are NOT typing inside a text box, block Firefox!
+            if (!isTextEditing) {
+                // This stops Firefox from reverting hidden UI dropdowns (like page orientation)
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                
+                // Manually trigger the app's custom undo instead
+                if (typeof window.undo === 'function') {
+                    window.undo();
+                } else if (document.getElementById('undo-btn')) {
+                    document.getElementById('undo-btn').click();
+                }
+            }
+        }
+    }, true);
+
+    // 2. Prevent the top Undo/Redo buttons from triggering Firefox form submissions
+    setTimeout(() => {
+        const undoRedoBtns = document.querySelectorAll('#undo-btn, #redo-btn, [title*="Undo"], [title*="Redo"], .undo-btn, .redo-btn');
+        undoRedoBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // In Firefox, clicking a <button> can sometimes act as a form submit if not explicitly blocked
+                e.preventDefault(); 
+            });
+            // Stop the buttons from stealing canvas focus
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); });
+        });
+    }, 1000);
+})();
+/* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
@@ -7300,14 +7347,26 @@ updateThumbnails = function() {
     }, 500); 
 };
 
-// 2. Hijack the heavy history serializer
+// 2. Hijack the heavy history serializer (FIXED: Debounce & Spam Filter)
 const originalPushHistory = pushHistory;
+let historyTimer;
+let lastSavedHistoryState = "";
+
 pushHistory = function() {
-    // A 10ms timeout takes this off the main interaction thread. 
-    // The browser instantly paints the UI change, THEN does the heavy math.
-    setTimeout(() => {
-        originalPushHistory();
-    }, 10);
+    // 1. Clear the timer so dragging doesn't trigger 100 saves
+    clearTimeout(historyTimer);
+    
+    // 2. Wait 250ms after the user finishes dragging/typing to save
+    historyTimer = setTimeout(() => {
+        
+        // 3. SPAM FILTER: Only save if the canvas HTML actually changed!
+        const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+        
+        if (currentState !== lastSavedHistoryState) {
+            originalPushHistory();
+            lastSavedHistoryState = currentState;
+        }
+    }, 250); 
 };
 
 // 3. Hijack the synchronous layout thrashing from typing
