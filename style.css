@@ -751,6 +751,37 @@ td, th {
 .btn-primary { background: var(--pub-color); color: white; }
 .btn-primary:hover { background: var(--pub-dark); }
 /* =========================================================================
+   UI FEATURE: Custom App Scrollbars (Webkit & Firefox)
+   ========================================================================= */
+
+/* 1. Firefox Support */
+* {
+    scrollbar-width: auto !important; 
+    
+    scrollbar-color: #007670 #f1f5f9 !important; 
+}
+
+/* 2. Chrome, Edge, Safari Support */
+::-webkit-scrollbar {
+    width: 8px !important; 
+    height: 8px !important; 
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9 !important; 
+    border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #007670 !important; 
+    border-radius: 4px !important;
+    border: 2px solid #f1f5f9 !important; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #005a55 !important; 
+}
+/* =========================================================================
    PRINT SPOOLER STYLES (ZOOM BOX-MODEL FIX)
    ========================================================================= */
 @page {
