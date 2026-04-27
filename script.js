@@ -4572,6 +4572,67 @@ window.initWordArt = function() {
 
 })();
 /* =========================================================================
+   FEATURE: Native Ctrl+A (Select All)
+   ========================================================================= */
+(function installSelectAll() {
+    window.addEventListener('keydown', function(e) {
+        // Detect Ctrl+A or Cmd+A
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+            
+            // 1. Are we typing inside a text box?
+            const activeEl = document.activeElement;
+            const isTextEditing = activeEl && (
+                activeEl.tagName === 'INPUT' || 
+                activeEl.tagName === 'TEXTAREA' || 
+                activeEl.isContentEditable || 
+                activeEl.closest('[contenteditable="true"]')
+            );
+
+            // If we are typing, let the browser highlight the text natively.
+            if (isTextEditing) return; 
+
+            // 2. We are on the canvas. Block the browser's default highlight!
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const paper = document.getElementById('paper');
+            if (!paper) return;
+
+            // 3. Clear existing selections
+            if (state.selectedEl) {
+                state.selectedEl.classList.remove('selected');
+                state.selectedEl = null;
+            }
+            if (state.multiSelected) {
+                state.multiSelected.forEach(el => el.classList.remove('selected'));
+            }
+            state.multiSelected = [];
+
+            // 4. Find every valid canvas item and add it to the group array
+            const allItems = paper.querySelectorAll('.pub-element');
+            allItems.forEach(el => {
+                // Ignore UI overlays, ghost boxes, and handles
+                if (!el.className.includes('select') && !el.className.includes('handle')) {
+                    state.multiSelected.push(el);
+                    el.classList.add('selected');
+                }
+            });
+
+            // 5. Update the UI to show the bounding box
+            if (state.multiSelected.length > 0) {
+                const status = document.getElementById('status-msg');
+                if (status) status.innerText = state.multiSelected.length + " Elements Selected";
+                
+                const ft = document.getElementById('float-toolbar');
+                if (ft) ft.style.display = 'none';
+
+                if (typeof forceRepaint === 'function') forceRepaint();
+                if (typeof drawSelectionUI === 'function') drawSelectionUI();
+            }
+        }
+    }, true); // Capture phase ensures we beat the browser's default text highlight
+})();
+/* =========================================================================
    DRAG AND DROP MEDIA & SAVE FILES ADDON
    ========================================================================= */
 (function initDragAndDrop() {
