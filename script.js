@@ -106,7 +106,7 @@ window.onload = function() {
     initRulers();
     initThemes();
     initShapes();
-    //initClipart();
+    //initClipart(); //disabled to provent lag, LazyLoad method used somewhere below
     initWordArt();
     initAds();
     initTemplates();
@@ -4839,6 +4839,30 @@ window.initWordArt = function() {
             };
         }
     }, 1000);
+})();
+/* =========================================================================
+   WORKSPACE SLIDE LOCK (Ruler Alignment Fix)
+   ========================================================================= */
+(function lockWorkspaceAnimation() {
+    const sidebar = document.getElementById('op-image-sidebar');
+    const viewport = document.getElementById('viewport');
+
+    if (!sidebar || !viewport) return;
+
+    const observer = new MutationObserver(() => {
+        if (sidebar.classList.contains('visible')) {
+            // Apply margin to the viewport ONLY. 
+            // This glides the paper left while the rulers stay fixed.
+            viewport.style.setProperty('margin-right', '290px', 'important');
+            viewport.style.setProperty('width', 'calc(100% - 290px)', 'important');
+        } else {
+            // Reset to full width
+            viewport.style.setProperty('margin-right', '0px', 'important');
+            viewport.style.setProperty('width', '100%', 'important');
+        }
+    });
+
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
 })();
 /* =========================================================================
    FEATURE: Native Ctrl+A (Select All)

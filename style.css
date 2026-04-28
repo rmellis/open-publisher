@@ -872,3 +872,29 @@ body::-webkit-scrollbar-thumb:hover,
         display: none !important;
     }
 }
+/* =========================================================================
+   ANIMATED SIDEBAR & WORKSPACE (Ruler-Safe Slide)
+   ========================================================================= */
+
+/* 1. THE SIDEBAR (No changes here) */
+#op-image-sidebar {
+    display: flex !important; 
+    visibility: hidden;
+    transform: translateX(110%);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
+}
+#op-image-sidebar.visible {
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* 2. THE VIEWPORT SLIDE (Targets the paper area, not the rulers) */
+#viewport {
+    transition: margin-right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+/* Ensure the workspace container stays full-width so rulers don't move */
+.workspace {
+    width: 100% !important;
+    padding-right: 0 !important;
+}
