@@ -8248,6 +8248,120 @@ window.handleMouseUp = function() {
     state.dragMode = null;
 };
 /* =========================================================================
+   BUG FIX: Group Dragging Patch
+   Forces the mouse to grab the group wrapper instead of the individual items
+   ========================================================================= */
+(function applyGroupDragFix() {
+    const style = document.createElement('style');
+    
+    // NOTE: If your group box uses a different class name than "op-group", 
+    // just change it in the line below!
+    style.innerHTML = `
+        .op-group * {
+            pointer-events: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+/* =========================================================================
+   NON-GROUPING STABILITY PATCHES (Safe UI Fixes Only)
+   ========================================================================= */
+(function applyUIFixes() {
+
+    // 1. SELECT ALL REDEMPTION
+    // Restores functionality to the ribbon button without breaking multi-select
+    window.selectAllElements = function() {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'A', ctrlKey: true, bubbles: true }));
+    };
+
+    // 2. THE "ANTI-FREEZE" SAFETY NET
+    // Prevents the Uncaught TypeError that locks your mouse if deselect fails
+    if (typeof window.deselect === 'function') {
+        const originalDeselect = window.deselect;
+        window.deselect = function() {
+            // If the app tries to deselect something that isn't there, catch it safely
+            if (state && state.selectedEl && !state.selectedEl.classList) {
+                if (Array.isArray(state.selectedEl)) {
+                    state.selectedEl.forEach(el => {
+                        if (el && el.classList) el.classList.remove('selected', 'active');
+                    });
+                }
+                state.selectedEl = null;
+            }
+            try { 
+                originalDeselect(); 
+            } catch (e) { 
+                console.warn("OpenPublisher: Suppressed deselect crash.");
+            }
+        };
+    }
+
+})();
+/* =========================================================================
+   GROUP BUTTON HIJACK & MODAL (Final Version)
+   ========================================================================= */
+(function disableGroupingSafely() {
+
+    // 1. The Explanatory Modal (Using your native DialogSystem)
+    function showGroupingMaintenanceModal() {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show(
+                '<i class="fas fa-exclamation-triangle" style="color: #ffffff;"></i>&nbsp; Grouping Disabled',
+                `<div style="text-align: left; line-height: 1.5;">
+                    <p>The grouping feature has been disabled.</p>
+                    <p>Grouping elements currently conflicts with the <b>Undo</b> function, which can result in duplicated or oversized images appearing on the canvas.</p>
+                    <hr style="border: 0; border-top: 1px solid #e1dfdd; margin: 15px 0;">
+                    <p><b>Workaround:</b></p>
+                    <p>You can still <b>move</b> and <b>rotate</b> multiple items at the same time. Just <b>click and drag a selection box</b> over the items you want (or hold <b>Ctrl / Command</b> while clicking them) to manipulate them together.</p>
+                </div>`,
+                null, 
+                true // Setting isAlert = true hides the cancel button, just showing "OK"
+            );
+        } else {
+            // Failsafe just in case the DialogSystem isn't loaded
+            alert("Grouping is disabled due to an Undo bug. Use click-and-drag multi-select or Ctrl/Cmd + Click to move or rotate items together.");
+        }
+    }
+
+    // 2. Intercept the core engine functions so they trigger the modal
+    window.groupItems = showGroupingMaintenanceModal;
+    
+    if (typeof ContextRibbonActions !== 'undefined') {
+        ContextRibbonActions.toggleGroup = showGroupingMaintenanceModal;
+    }
+
+    // 3. Ensure the Ribbon Button is safely hooked up
+    setTimeout(() => {
+        const picTab = document.getElementById('ribbon-picture');
+        if (!picTab) return;
+        
+        let groupBtn = document.getElementById('op-global-group-tab-btn');
+        
+        if (!groupBtn) {
+            const arrangeGroup = Array.from(picTab.querySelectorAll('.group')).find(g => g.innerHTML.includes('Arrange')) || picTab.querySelector('.group:last-child');
+            if (!arrangeGroup) return;
+
+            groupBtn = document.createElement('div');
+            groupBtn.id = 'op-global-group-tab-btn';
+            groupBtn.className = 'tool-btn'; 
+            groupBtn.innerHTML = '<i class="fas fa-object-group"></i>Group';
+            
+            const label = arrangeGroup.querySelector('.group-label');
+            if (label) arrangeGroup.insertBefore(groupBtn, label);
+            else arrangeGroup.appendChild(groupBtn);
+        }
+
+        // Override the click event to strictly show the modal
+        groupBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showGroupingMaintenanceModal();
+        };
+    }, 1500);
+
+})();
+/* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
