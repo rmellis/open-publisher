@@ -4841,28 +4841,56 @@ window.initWordArt = function() {
     }, 1000);
 })();
 /* =========================================================================
-   WORKSPACE SLIDE LOCK (Ruler Alignment Fix)
+   GLOBAL WORKSPACE SLIDE LOCK (Ruler-Safe & Future-Proof)
    ========================================================================= */
-(function lockWorkspaceAnimation() {
-    const sidebar = document.getElementById('op-image-sidebar');
+(function lockGlobalWorkspaceAnimation() {
     const viewport = document.getElementById('viewport');
+    if (!viewport) return;
 
-    if (!sidebar || !viewport) return;
+    const observer = new MutationObserver((mutations) => {
+        let shouldSync = false;
+        
+        // Only trigger the math if the element changing classes is a sidebar
+        for (let m of mutations) {
+            if (m.target.id === 'op-image-sidebar' || m.target.classList.contains('sidebar-panel')) {
+                shouldSync = true;
+                break;
+            }
+        }
 
-    const observer = new MutationObserver(() => {
-        if (sidebar.classList.contains('visible')) {
-            // Apply margin to the viewport ONLY. 
-            // This glides the paper left while the rulers stay fixed.
-            viewport.style.setProperty('margin-right', '290px', 'important');
-            viewport.style.setProperty('width', 'calc(100% - 290px)', 'important');
-        } else {
-            // Reset to full width
-            viewport.style.setProperty('margin-right', '0px', 'important');
-            viewport.style.setProperty('width', '100%', 'important');
+        if (shouldSync) {
+            // Check if ANY sidebar is currently open (Catches current and future panels)
+            const activeSidebar = document.querySelector('#op-image-sidebar.visible, .sidebar-panel.visible');
+            
+ if (activeSidebar) {
+    const sidebarWidth = activeSidebar.offsetWidth || 290;
+
+    const screenWidth = window.innerWidth;
+    const minContentWidth = 986; // tweak this threshold to make the sidebar colapse change
+
+    // Only push layout if space is tight
+    if (screenWidth < sidebarWidth + minContentWidth) {
+        viewport.style.setProperty('margin-right', sidebarWidth + 'px', 'important');
+        viewport.style.setProperty('width', `calc(100% - ${sidebarWidth}px)`, 'important');
+    } else {
+        // Plenty of room → overlay mode
+        viewport.style.setProperty('margin-right', '0px', 'important');
+        viewport.style.setProperty('width', '100%', 'important');
+    }
+} else {
+                // Reset to full width
+                viewport.style.setProperty('margin-right', '0px', 'important');
+                viewport.style.setProperty('width', '100%', 'important');
+            }
         }
     });
 
-    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    // Watch the entire body, but filter purely for class changes for high performance
+    observer.observe(document.body, { 
+        attributes: true, 
+        attributeFilter: ['class'],
+        subtree: true 
+    });
 })();
 /* =========================================================================
    FEATURE: Native Ctrl+A (Select All)
