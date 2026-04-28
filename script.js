@@ -106,7 +106,7 @@ window.onload = function() {
     initRulers();
     initThemes();
     initShapes();
-    initClipart();
+    //initClipart();
     initWordArt();
     initAds();
     initTemplates();
@@ -8439,6 +8439,31 @@ window.handleMouseUp = function() {
             }, 1000);
         }, 150);
     };
+
+})();
+/* =========================================================================
+   CLIPART LAZY-LOADER (Fixes the 5-Minute Chrome Lag & Console Spam)
+   ========================================================================= */
+(function fixClipartLag() {
+    
+    // Intercept the native Clipart button function
+    if (typeof window.showClipartModal === 'function' && !window.showClipartModal.isLagFixed) {
+        const originalShowClipart = window.showClipartModal;
+        let isClipartLoaded = false;
+        
+        window.showClipartModal = function(...args) {
+            
+            // 1. If the clipart hasn't been generated yet, do it NOW
+            if (!isClipartLoaded && typeof window.initClipart === 'function') {
+                window.initClipart();
+                isClipartLoaded = true; // Mark it as done so it doesn't rebuild every click
+            }
+
+            // 2. Open the modal normally
+            originalShowClipart.apply(this, args);
+        };
+        window.showClipartModal.isLagFixed = true;
+    }
 
 })();
 /* =========================================================================
