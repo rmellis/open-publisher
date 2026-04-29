@@ -5821,7 +5821,7 @@ window.initWordArt = function() {
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 3"/></svg>
                 </button>
             </div>
-            <div class="wa-note">Note: Not fully compatible with all WordArt styles. Effects are disabled while a shape is applied.</div>
+            <div class="wa-note">Note: Not fully compatible with all WordArt styles. Effects are disabled while a shape is applied. If applying a shape breaks your text, just click undo.</div>
         </div>
     `;
     document.body.appendChild(panel);
@@ -5982,6 +5982,111 @@ window.initWordArt = function() {
             if (typeof pushHistory === 'function') pushHistory();
         };
     });
+})();
+/* =========================================================================
+   FEATURE: Ruler Highlights (Global Overlay + Boundary Clamping)
+   ========================================================================= */
+(function installRulerHighlights() {
+    console.log("🛠️ Ruler Highlight Script initializing (Boundary Clamped)...");
+
+    // 1. Inject styling
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .op-ruler-highlight-h, .op-ruler-highlight-v {
+            position: fixed !important; 
+            background: rgba(33, 115, 70, 0.25) !important; /* Excel Green */
+            pointer-events: none !important; 
+            z-index: 999999 !important; 
+            display: none; 
+        }
+        .op-ruler-highlight-h {
+            border-left: 2px solid #217346 !important;
+            border-right: 2px solid #217346 !important;
+        }
+        .op-ruler-highlight-v {
+            border-top: 2px solid #217346 !important;
+            border-bottom: 2px solid #217346 !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 2. Attach overlays to body
+    const hlH = document.createElement('div');
+    hlH.className = 'op-ruler-highlight-h';
+    document.body.appendChild(hlH);
+
+    const hlV = document.createElement('div');
+    hlV.className = 'op-ruler-highlight-v';
+    document.body.appendChild(hlV);
+
+    let rulerH = null;
+    let rulerV = null;
+
+    // 3. The high-speed tracking loop
+    function trackSelection() {
+        if (!rulerH) rulerH = document.getElementById('ruler-h');
+        if (!rulerV) rulerV = document.getElementById('ruler-v');
+
+        if (!rulerH || !rulerV) {
+            requestAnimationFrame(trackSelection);
+            return;
+        }
+
+        const selectedEl = document.querySelector('.pub-element.selected');
+
+        if (selectedEl) {
+            const elRect = selectedEl.getBoundingClientRect();
+            const hRect = rulerH.getBoundingClientRect();
+            const vRect = rulerV.getBoundingClientRect();
+
+            // --- MATH: Clamp Horizontal Boundaries ---
+            // Don't let the left edge go past the ruler's left edge
+            const clampedHLeft = Math.max(elRect.left, hRect.left);
+            // Don't let the right edge go past the ruler's right edge
+            const clampedHRight = Math.min(elRect.right, hRect.right);
+            // Calculate new width after clamping
+            const clampedHWidth = clampedHRight - clampedHLeft;
+
+            // Only show if it's actually over the ruler
+            if (clampedHWidth > 0) {
+                hlH.style.display = 'block';
+                hlH.style.left = clampedHLeft + 'px';
+                hlH.style.width = clampedHWidth + 'px';
+                hlH.style.top = hRect.top + 'px';
+                hlH.style.height = hRect.height + 'px';
+            } else {
+                hlH.style.display = 'none';
+            }
+
+            // --- MATH: Clamp Vertical Boundaries ---
+            // Don't let the top edge go past the ruler's top edge
+            const clampedVTop = Math.max(elRect.top, vRect.top);
+            // Don't let the bottom edge go past the ruler's bottom edge
+            const clampedVBottom = Math.min(elRect.bottom, vRect.bottom);
+            // Calculate new height after clamping
+            const clampedVHeight = clampedVBottom - clampedVTop;
+
+            // Only show if it's actually over the ruler
+            if (clampedVHeight > 0) {
+                hlV.style.display = 'block';
+                hlV.style.top = clampedVTop + 'px';
+                hlV.style.height = clampedVHeight + 'px';
+                hlV.style.left = vRect.left + 'px';
+                hlV.style.width = vRect.width + 'px';
+            } else {
+                hlV.style.display = 'none';
+            }
+
+        } else {
+            hlH.style.display = 'none';
+            hlV.style.display = 'none';
+        }
+
+        requestAnimationFrame(trackSelection);
+    }
+
+    requestAnimationFrame(trackSelection);
+    console.log("✅ Ruler Highlight Loop started successfully.");
 })();
 /* =========================================================================
    OPENPUBLISHER ADDON: Automate Landscape mode
