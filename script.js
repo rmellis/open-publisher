@@ -5364,6 +5364,11 @@ window.initWordArt = function() {
    FEATURE: Picture Format Sidebar
    ========================================================================= */
 (function installSidebarImageFilters() {
+    // --- NEW SAFEGUARD: Destroy existing instances to prevent clones ---
+    document.getElementById('op-image-sidebar')?.remove();
+    document.getElementById('op-sidebar-expander')?.remove();
+    // -------------------------------------------------------------------
+
     let userCollapsed = false; 
 
     const style = document.createElement('style');
@@ -5502,11 +5507,11 @@ window.initWordArt = function() {
             } else {
                 panel.classList.add('visible'); expander.classList.remove('visible'); if (vp) vp.style.width = 'calc(100% - 290px)';
             }
-            document.querySelectorAll('.op-sidebar-slider').forEach(s => {
+            panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
                 const f = s.dataset.filter;
                 const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
                 s.value = v; 
-                const txt = document.getElementById(`val-${f}`);
+                const txt = panel.querySelector(`#val-${f}`);
                 if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             });
         } else {
@@ -5521,12 +5526,12 @@ window.initWordArt = function() {
         img.style.opacity = 1 - (get('transparency',0) / 100);
     };
 
-    document.querySelectorAll('.op-sidebar-slider').forEach(s => {
+    panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
         s.addEventListener('input', e => {
             if(!state.selectedEl) return;
             const f = e.target.dataset.filter, v = e.target.value;
             state.selectedEl.setAttribute(`data-filter-${f}`, v);
-            const txt = document.getElementById(`val-${f}`);
+            const txt = panel.querySelector(`#val-${f}`);
             if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             apply(state.selectedEl);
         });
@@ -5535,18 +5540,19 @@ window.initWordArt = function() {
 
     panel.querySelector('#filter-reset-btn').addEventListener('click', () => {
         if(!state.selectedEl) return;
-        document.querySelectorAll('.op-sidebar-slider').forEach(s => {
+        panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
             const f = s.dataset.filter, d = (['brightness','contrast','saturate'].includes(f)?100:0);
             state.selectedEl.removeAttribute(`data-filter-${f}`);
             s.value = d; 
-            const txt = document.getElementById(`val-${f}`);
+            const txt = panel.querySelector(`#val-${f}`);
             if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
     });
 
     panel.querySelector('#filter-close-btn').addEventListener('click', () => { userCollapsed = true; refreshVisibility(state.selectedEl); });
-    document.getElementById('op-sidebar-expander').addEventListener('click', () => { userCollapsed = false; refreshVisibility(state.selectedEl); });
+    
+    expander.addEventListener('click', () => { userCollapsed = false; refreshVisibility(state.selectedEl); });
 
     setTimeout(() => {
         if(window.selectElement) {
@@ -5564,6 +5570,11 @@ window.initWordArt = function() {
    FEATURE: WordArt Sidebar (Anti-Pinch Physics Compensator)
    ========================================================================= */
 (function installSidebarWordArt() {
+    // --- NEW SAFEGUARD: Destroy existing instances to prevent clones ---
+    document.getElementById('op-wordart-sidebar')?.remove();
+    document.getElementById('op-wa-sidebar-expander')?.remove();
+    // -------------------------------------------------------------------
+
     let waUserCollapsed = false;
 
     const getDef = (f) => {
@@ -5585,7 +5596,7 @@ window.initWordArt = function() {
     const toggleSliders = (isDisabled) => {
         const sections = ['wa-color-sec', 'wa-shadow-sec', 'wa-typo-sec'];
         sections.forEach(id => {
-            const el = document.getElementById(id);
+            const el = panel.querySelector(`#${id}`);
             if (el) {
                 if (isDisabled) el.classList.add('wa-disabled-section');
                 else el.classList.remove('wa-disabled-section');
@@ -5627,8 +5638,6 @@ window.initWordArt = function() {
         } else if (shape === 'circle') {
             pathD = "M 100, 135 m -65, 0 a 65,65 0 1,1 130,0 a 65,65 0 1,1 -130,0";
         } else {
-            // FIX: Draw a perfectly straight line for standard text to map onto. 
-            // This forces standard text to use the exact same stretching math as the curves!
             pathD = "M 10,75 L 190,75";
         }
 
@@ -5642,10 +5651,8 @@ window.initWordArt = function() {
         textEl.style.fontFamily = "inherit";
         textEl.style.fontWeight = "inherit";
         
-        // Ensure text stays perfectly aligned vertically to the line
         textEl.setAttribute("dominant-baseline", "middle");
 
-        // Calculate dynamic font size to perfectly fit the path
         const charCount = Math.max(1, text.length);
         const dynamicFontSize = Math.min(50, 180 / (charCount * 0.45));
         textEl.style.fontSize = dynamicFontSize + "px"; 
@@ -5836,7 +5843,8 @@ window.initWordArt = function() {
                     const attrVal = target.getAttribute(`data-waf-${f}`);
                     const v = attrVal !== null ? attrVal : getDef(f);
                     input.value = v;
-                    document.getElementById(`val-wa-${f}`).innerText = v + getUnit(f);
+                    const textLabel = panel.querySelector(`#val-wa-${f}`);
+                    if(textLabel) textLabel.innerText = v + getUnit(f);
                 });
                 
                 const currentShape = target.getAttribute('data-waf-shape') || 'none';
@@ -5906,7 +5914,8 @@ window.initWordArt = function() {
             const d = getDef(f);
             target.removeAttribute(`data-waf-${f}`);
             input.value = d;
-            document.getElementById(`val-wa-${f}`).innerText = d + getUnit(f);
+            const textLabel = panel.querySelector(`#val-wa-${f}`);
+            if(textLabel) textLabel.innerText = d + getUnit(f);
         });
 
         target.removeAttribute('data-waf-shape');
@@ -5938,7 +5947,8 @@ window.initWordArt = function() {
             const f = e.target.dataset.waf;
             
             target.setAttribute(`data-waf-${f}`, val);
-            document.getElementById(`val-wa-${f}`).innerText = val + getUnit(f);
+            const textLabel = panel.querySelector(`#val-wa-${f}`);
+            if(textLabel) textLabel.innerText = val + getUnit(f);
             
             if (f === 'opacity') target.style.opacity = 1 - (val / 100);
             if (f === 'spacing') target.style.letterSpacing = `${val}px`;
