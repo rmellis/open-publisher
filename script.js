@@ -5533,7 +5533,7 @@ window.initWordArt = function() {
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
     });
 
-    document.getElementById('filter-reset-btn').addEventListener('click', () => {
+    panel.querySelector('#filter-reset-btn').addEventListener('click', () => {
         if(!state.selectedEl) return;
         document.querySelectorAll('.op-sidebar-slider').forEach(s => {
             const f = s.dataset.filter, d = (['brightness','contrast','saturate'].includes(f)?100:0);
@@ -5545,7 +5545,7 @@ window.initWordArt = function() {
         apply(state.selectedEl);
     });
 
-    document.getElementById('filter-close-btn').addEventListener('click', () => { userCollapsed = true; refreshVisibility(state.selectedEl); });
+    panel.querySelector('#filter-close-btn').addEventListener('click', () => { userCollapsed = true; refreshVisibility(state.selectedEl); });
     document.getElementById('op-sidebar-expander').addEventListener('click', () => { userCollapsed = false; refreshVisibility(state.selectedEl); });
 
     setTimeout(() => {
@@ -5872,7 +5872,7 @@ window.initWordArt = function() {
         }
     }, 1500);
 
-    document.getElementById('wa-close-btn').onclick = () => { waUserCollapsed = true; refreshUI(state.selectedEl); };
+    panel.querySelector('#wa-close-btn').onclick = () => { waUserCollapsed = true; refreshUI(state.selectedEl); };
     expander.onclick = () => { waUserCollapsed = false; refreshUI(state.selectedEl); };
 
     // --- Shape Button Click Logic ---
@@ -5897,7 +5897,7 @@ window.initWordArt = function() {
     });
 
     // Reset Button Logic
-    document.getElementById('wa-reset-btn').onclick = () => {
+    panel.querySelector('#wa-reset-btn').onclick = () => {
         if (!state.selectedEl) return;
         const target = state.selectedEl.querySelector('.wa-text') || state.selectedEl;
         
