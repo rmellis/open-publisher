@@ -9808,6 +9808,279 @@ window.handleMouseUp = function() {
 
 })();
 /* =========================================================================
+   FEATURE: Table Templates (v3.6.5 - 100 Templates
+   ========================================================================= */
+(function installTableTemplates() {
+    console.log("🛠️ Table Templates Script initializing...");
+
+    // 1. Setup Base UI CSS & Structural Table CSS
+    const style = document.createElement('style');
+    let cssRules = `
+        /* Grid of Previews */
+        .tt-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;
+            max-height: 500px; overflow-y: auto; background: #faf9f8; padding: 15px;
+            border-radius: 4px; border: 1px solid #eee;
+        }
+        .tt-card {
+            background: white; border: 1px solid #ddd; border-radius: 6px; padding: 12px;
+            cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 10px;
+        }
+        .tt-card:hover { border-color: var(--pub-color, #007670); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .tt-name { font-size: 13px; font-weight: bold; color: #444; text-align: center; margin-top: auto; }
+        
+        /* Mini Preview Tables (CSS-only for UI thumbnails) */
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 6px; user-select: none; }
+        .mini-table th, .mini-table td { padding: 4px; text-align: left; }
+        
+        /* --- 10 STRUCTURAL TEMPLATE CSS --- */
+        .pub-table-minimal th { border-bottom: 2px solid #333; padding: 6px; font-weight: bold; text-align: left; }
+        .pub-table-minimal td { border-bottom: 1px solid #eee; padding: 6px; }
+        .pub-table-grid th { background: #e1dfdd; border: 1px solid #999; padding: 6px; font-weight: bold; color: #333; text-align: left;}
+        .pub-table-grid td { border: 1px solid #999; padding: 6px; }
+        .pub-table-schedule { border-left: 4px solid var(--pub-color, #007670); }
+        .pub-table-schedule th { background: #faf9f8; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; color: #333; }
+        .pub-table-schedule td { padding: 8px; border-bottom: 1px solid #eee; }
+        .pub-table-schedule tr td:first-child { font-weight: bold; color: var(--pub-color, #007670); width: 30%; }
+        .pub-table-invoice th { border-bottom: 2px solid #333; padding: 8px; text-align: left; background:#faf9f8; }
+        .pub-table-invoice td { border-bottom: 1px solid #eee; padding: 8px; }
+        .pub-table-invoice .amount { text-align: right; }
+        .pub-table-invoice .total-row td { border-top: 2px solid #333; border-bottom: 3px double #333; background:#fff; }
+        .pub-table-pricing th { background: #f8f9fa; padding: 15px; text-align: center; border: 1px solid #ddd; font-size: 18px; }
+        .pub-table-pricing td { padding: 10px; text-align: center; border: 1px solid #ddd; }
+        .pub-table-pricing .highlight { background: var(--pub-color, #007670); color: white; border-color: var(--pub-color, #007670); }
+        .pub-table-pricing .highlight-cell { border-left: 2px solid var(--pub-color, #007670); border-right: 2px solid var(--pub-color, #007670); }
+        .pub-table-matrix th { border-bottom: 2px solid #ddd; padding: 10px; }
+        .pub-table-matrix td { border-bottom: 1px solid #eee; padding: 10px; }
+        .pub-table-roster th { background: #e0e0e0; border: 1px solid #999; padding: 6px; text-align: left; }
+        .pub-table-roster td { border: 1px solid #ccc; padding: 6px; }
+        .pub-table-roster .chk { width: 40px; text-align: center; }
+        .pub-table-financial th { border-bottom: 1px solid #000; padding: 6px; text-align: left; }
+        .pub-table-financial td { padding: 6px; }
+        .pub-table-financial .num { text-align: right; }
+        .pub-table-financial .total td { border-top: 1px solid #000; border-bottom: 3px double #000; }
+        .pub-table-roadmap th { padding: 8px; text-align: left; border: 1px solid #555; }
+        .pub-table-roadmap td { border: 1px solid #ccc; padding: 8px; }
+    `;
+
+    // 2. Define 10 Hand-crafted Structural Layouts
+    const structuralTemplates = [
+        {
+            name: 'Clean Minimalist',
+            previewHTML: `<table class="mini-table" style="border:none;"><tr><th style="border:none; border-bottom:2px solid #333;">Col 1</th><th style="border:none; border-bottom:2px solid #333;">Col 2</th></tr><tr><td style="border:none; border-bottom:1px solid #eee;">Data</td><td style="border:none; border-bottom:1px solid #eee;">Data</td></tr></table>`,
+            insertHTML: `<table class="pub-table-minimal" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr></table>`
+        },
+        {
+            name: 'Professional Grid',
+            previewHTML: `<table class="mini-table"><tr style="background:#e1dfdd;"><th>Col 1</th><th>Col 2</th></tr><tr><td style="border:1px solid #999;">Data</td><td style="border:1px solid #999;">Data</td></tr></table>`,
+            insertHTML: `<table class="pub-table-grid" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr></table>`
+        },
+        {
+            name: 'Schedule / Agenda',
+            previewHTML: `<table class="mini-table" style="border:none; border-left:3px solid var(--pub-color, #007670);"><tr><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Time</th><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Event</th></tr><tr><td style="border:none; border-bottom:1px solid #eee; font-weight:bold; color:var(--pub-color, #007670);">09:00</td><td style="border:none; border-bottom:1px solid #eee;">Data</td></tr></table>`,
+            insertHTML: `<table class="pub-table-schedule" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Time</th><th>Event</th><th>Location</th></tr><tr><td>09:00 AM</td><td>Opening Keynote</td><td>Main Hall</td></tr><tr><td>10:30 AM</td><td>Strategy Session</td><td>Room B</td></tr></table>`
+        },
+        {
+            name: 'Invoice List',
+            previewHTML: `<table class="mini-table" style="border:none;"><tr><th style="border:none; border-bottom:2px solid #333;">Item</th><th style="border:none; border-bottom:2px solid #333; text-align:right;">Total</th></tr><tr><td style="border:none; border-bottom:1px solid #eee;">Service</td><td style="border:none; border-bottom:1px solid #eee; text-align:right;">$150</td></tr></table>`,
+            insertHTML: `<table class="pub-table-invoice" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th class="amount">Total</th></tr><tr><td>Consulting Services</td><td>10</td><td>$150.00</td><td class="amount">$1,500.00</td></tr><tr><td>Software License</td><td>1</td><td>$299.00</td><td class="amount">$299.00</td></tr><tr class="total-row"><td colspan="3" style="text-align:right; font-weight:bold;">Grand Total:</td><td class="amount" style="font-weight:bold;">$1,799.00</td></tr></table>`
+        },
+        {
+            name: 'Pricing Tiers',
+            previewHTML: `<table class="mini-table" style="text-align:center;"><tr><th style="border:1px solid #ccc;">Basic</th><th style="background:#007670; color:#fff;">Pro</th><th style="border:1px solid #ccc;">Max</th></tr><tr><td style="border:1px solid #ccc;">$9</td><td style="border:2px solid #007670;">$19</td><td style="border:1px solid #ccc;">$29</td></tr></table>`,
+            insertHTML: `<table class="pub-table-pricing" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; text-align:center;" contenteditable="true"><tr><th>Basic<br><span style="font-size:24px;">$9</span></th><th class="highlight">Pro<br><span style="font-size:24px;">$19</span></th><th>Enterprise<br><span style="font-size:24px;">$49</span></th></tr><tr><td>Feature A</td><td class="highlight-cell">Feature A</td><td>Feature A</td></tr><tr><td>Feature B</td><td class="highlight-cell">Feature B</td><td>Feature B</td></tr></table>`
+        },
+        {
+            name: 'Feature Matrix',
+            previewHTML: `<table class="mini-table"><tr><th style="text-align:left;">Feature</th><th>Free</th><th>Pro</th></tr><tr><td style="border-bottom:1px solid #eee;">Multi-user</td><td style="text-align:center; border-bottom:1px solid #eee;">✖</td><td style="text-align:center; border-bottom:1px solid #eee;">✔</td></tr></table>`,
+            insertHTML: `<table class="pub-table-matrix" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th style="text-align:left;">Feature</th><th style="text-align:center;">Starter</th><th style="text-align:center;">Professional</th></tr><tr><td>Cloud Sync</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr><tr><td>Priority Support</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr></table>`
+        },
+        {
+            name: 'Attendance Roster',
+            previewHTML: `<table class="mini-table"><tr><th style="background:#e0e0e0;">Name</th><th style="background:#e0e0e0; width:10px;">M</th><th style="background:#e0e0e0; width:10px;">T</th></tr><tr><td style="border:1px solid #ccc;">John</td><td style="border:1px solid #ccc;"></td><td style="border:1px solid #ccc;"></td></tr></table>`,
+            insertHTML: `<table class="pub-table-roster" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Student Name</th><th class="chk">Mon</th><th class="chk">Tue</th><th class="chk">Wed</th><th class="chk">Thu</th><th class="chk">Fri</th></tr><tr><td>Anderson, Sarah</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Miller, James</td><td></td><td></td><td></td><td></td><td></td></tr></table>`
+        },
+        {
+            name: 'Financial Report',
+            previewHTML: `<table class="mini-table" style="border:none;"><tr><th style="border-bottom:1px solid #000;">Account</th><th style="border-bottom:1px solid #000;">Q1</th></tr><tr><td style="border-bottom:3px double #000;">Total</td><td style="border-bottom:3px double #000;">$1M</td></tr></table>`,
+            insertHTML: `<table class="pub-table-financial" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Category</th><th class="num">Q1</th><th class="num">Q2</th><th class="num">Q3</th><th class="num">Q4</th></tr><tr><td>Revenue</td><td class="num">$150k</td><td class="num">$175k</td><td class="num">$190k</td><td class="num">$210k</td></tr><tr><td>Expenses</td><td class="num">$80k</td><td class="num">$85k</td><td class="num">$90k</td><td class="num">$95k</td></tr><tr class="total"><td style="font-weight:bold;">Net Income</td><td class="num" style="font-weight:bold;">$70k</td><td class="num" style="font-weight:bold;">$90k</td><td class="num" style="font-weight:bold;">$100k</td><td class="num" style="font-weight:bold;">$115k</td></tr></table>`
+        },
+        {
+            name: 'Project Roadmap',
+            previewHTML: `<table class="mini-table"><tr style="background:#333; color:#fff;"><th style="border:1px solid #555;">Phase</th><th style="border:1px solid #555;">Status</th></tr><tr><td style="border:1px solid #ccc;">Design</td><td style="border:1px solid #ccc;">Done</td></tr></table>`,
+            insertHTML: `<table class="pub-table-roadmap" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr style="background:#333; color:white;"><th>Phase</th><th>Task</th><th>Owner</th><th>Status</th></tr><tr><td style="font-weight:bold;">1. Discovery</td><td>Market Research</td><td>Alice</td><td style="color:green; font-weight:bold;">Complete</td></tr><tr><td style="font-weight:bold;">2. Design</td><td>UI Mockups</td><td>Bob</td><td style="color:orange; font-weight:bold;">In Progress</td></tr></table>`
+        },
+        {
+            name: 'Nutrition Facts',
+            previewHTML: `<table class="mini-table" style="border:2px solid #000;"><tr><th style="border-bottom:4px solid #000; font-size:8px;">Nutrition</th></tr><tr><td>Calories 200</td></tr></table>`,
+            insertHTML: `<table style="width: 100%; border-collapse: collapse; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; border: 4px solid black;" contenteditable="true"><tr><th style="border-bottom: 8px solid black; font-size: 24px; font-weight: 900; padding: 4px; text-align: left;">Nutrition Facts</th></tr><tr><td style="border-bottom: 1px solid black; padding: 4px;"><b>Serving Size</b> 1 cup (228g)</td></tr><tr><td style="border-bottom: 4px solid black; padding: 4px; font-size: 18px;"><b>Calories</b> 280</td></tr><tr><td style="border-bottom: 1px solid black; padding: 4px; text-align: right;"><b>% Daily Value*</b></td></tr><tr><td style="border-bottom: 1px solid black; padding: 4px;"><b>Total Fat</b> 9g <span style="float:right; font-weight:bold;">12%</span></td></tr></table>`
+        }
+    ];
+
+    // 3. Define 30 Color Themes
+    const colorThemes = [
+        { id: 'zebra', name: 'Open Publisher', thBg: 'var(--pub-color, #007670)', thColor: '#fff', bColor: '#ccc', thBColor: 'var(--pub-dark, #005a55)', altBg: '#f3f2f1' },
+        { id: 'blue', name: 'Corporate Blue', thBg: '#2a5699', thColor: '#fff', bColor: '#c4d4e8', thBColor: '#1e3f70', altBg: '#f0f4fa' },
+        { id: 'dark', name: 'Dark Elegant', thBg: '#2c3e50', thColor: '#fff', bColor: '#bdc3c7', thBColor: '#1a252f', altBg: '#f8f9fa' },
+        { id: 'crimson', name: 'Crimson Red', thBg: '#c62828', thColor: '#fff', bColor: '#ffcdd2', thBColor: '#b71c1c', altBg: '#ffebee' },
+        { id: 'sunset', name: 'Sunset Orange', thBg: '#ef6c00', thColor: '#fff', bColor: '#ffe0b2', thBColor: '#e65100', altBg: '#fff3e0' },
+        { id: 'sunflower', name: 'Sunflower Yellow', thBg: '#fbc02d', thColor: '#000', bColor: '#fff9c4', thBColor: '#f57f17', altBg: '#fffde7' },
+        { id: 'forest', name: 'Forest Green', thBg: '#2e7d32', thColor: '#fff', bColor: '#c8e6c9', thBColor: '#1b5e20', altBg: '#e8f5e9' },
+        { id: 'ocean', name: 'Ocean Teal', thBg: '#00838f', thColor: '#fff', bColor: '#b2ebf2', thBColor: '#006064', altBg: '#e0f7fa' },
+        { id: 'royal', name: 'Royal Purple', thBg: '#6a1b9a', thColor: '#fff', bColor: '#e1bee7', thBColor: '#4a148c', altBg: '#f3e5f5' },
+        { id: 'magenta', name: 'Deep Magenta', thBg: '#ad1457', thColor: '#fff', bColor: '#f8bbd0', thBColor: '#880e4f', altBg: '#fce4ec' },
+        { id: 'slate', name: 'Slate Gray', thBg: '#455a64', thColor: '#fff', bColor: '#cfd8dc', thBColor: '#263238', altBg: '#eceff1' },
+        { id: 'choco', name: 'Chocolate Brown', thBg: '#4e342e', thColor: '#fff', bColor: '#d7ccc8', thBColor: '#3e2723', altBg: '#efebe9' },
+        { id: 'navy', name: 'Midnight Navy', thBg: '#1a237e', thColor: '#fff', bColor: '#c5cae9', thBColor: '#1a237e', altBg: '#e8eaf6' },
+        { id: 'pink', name: 'Vibrant Pink', thBg: '#d81b60', thColor: '#fff', bColor: '#f8bbd0', thBColor: '#c2185b', altBg: '#fce4ec' },
+        { id: 'mint', name: 'Mint Fresh', thBg: '#00bfa5', thColor: '#000', bColor: '#b2dfdb', thBColor: '#00897b', altBg: '#e0f2f1' },
+        { id: 'indigo', name: 'Indigo Pro', thBg: '#283593', thColor: '#fff', bColor: '#c5cae9', thBColor: '#1a237e', altBg: '#e8eaf6' },
+        { id: 'cyber', name: 'Cyber Terminal', thBg: '#000', thColor: '#0f0', bColor: '#0f0', thBColor: '#0f0', altBg: '#111', tdColor: '#0f0' },
+        { id: 'blueprint', name: 'Blueprint', thBg: '#0d47a1', thColor: '#fff', bColor: '#8c9eff', thBColor: '#e8eaf6', altBg: '#1a237e', tdColor: '#fff' },
+        { id: 'contrast', name: 'High Contrast', thBg: '#000', thColor: '#fff', bColor: '#000', thBColor: '#000', altBg: '#fff' },
+        { id: 'pastel', name: 'Soft Pastel', thBg: '#f48fb1', thColor: '#fff', bColor: '#f8bbd0', thBColor: '#f06292', altBg: '#fce4ec' },
+        { id: 'neon', name: 'Neon Cyan', thBg: '#00e5ff', thColor: '#000', bColor: '#00e5ff', thBColor: '#00b8d4', altBg: '#e0ffff' },
+        { id: 'lavender', name: 'Lavender Dream', thBg: '#7e57c2', thColor: '#fff', bColor: '#d1c4e9', thBColor: '#512da8', altBg: '#ede7f6' },
+        { id: 'wine', name: 'Ruby Wine', thBg: '#880e4f', thColor: '#fff', bColor: '#f8bbd0', thBColor: '#4a0029', altBg: '#fce4ec' },
+        { id: 'autumn', name: 'Autumn Gold', thBg: '#f57f17', thColor: '#fff', bColor: '#fff59d', thBColor: '#f57f17', altBg: '#fffde7' },
+        { id: 'aqua', name: 'Marine Aqua', thBg: '#006064', thColor: '#fff', bColor: '#b2ebf2', thBColor: '#006064', altBg: '#e0f7fa' },
+        { id: 'emerald', name: 'Emerald City', thBg: '#00695c', thColor: '#fff', bColor: '#b2dfdb', thBColor: '#004d40', altBg: '#e0f2f1' },
+        { id: 'berry', name: 'Berry Purple', thBg: '#8e24aa', thColor: '#fff', bColor: '#e1bee7', thBColor: '#6a1b9a', altBg: '#f3e5f5' },
+        { id: 'espresso', name: 'Espresso', thBg: '#3e2723', thColor: '#fff', bColor: '#d7ccc8', thBColor: '#3e2723', altBg: '#efebe9' },
+        { id: 'steel', name: 'Steel Blue', thBg: '#37474f', thColor: '#fff', bColor: '#cfd8dc', thBColor: '#263238', altBg: '#eceff1' },
+        { id: 'sand', name: 'Desert Sand', thBg: '#8d6e63', thColor: '#fff', bColor: '#d7ccc8', thBColor: '#5d4037', altBg: '#efebe9' }
+    ];
+
+    // 4. Generate the 90 Style Variants (Classic, Rounded, Ghost)
+    const dynamicTemplates = [];
+    colorThemes.forEach(t => {
+        // --- Variant 1: Classic Grid ---
+        cssRules += `
+            .pt-c-${t.id} th { background: ${t.thBg}; color: ${t.thColor}; border: 1px solid ${t.thBColor}; padding: 6px; text-align: left; }
+            .pt-c-${t.id} td { border: 1px solid ${t.bColor}; padding: 6px; color: ${t.tdColor || 'inherit'}; }
+            .pt-c-${t.id} tr:nth-child(even) td { background: ${t.altBg}; }
+        `;
+        dynamicTemplates.push({
+            name: `${t.name} (Grid)`,
+            previewHTML: `<table class="mini-table" style="border:none;"><tr style="background:${t.thBg}; color:${t.thColor};"><th style="border:1px solid ${t.thBColor};">C1</th><th style="border:1px solid ${t.thBColor};">C2</th></tr><tr><td style="border:1px solid ${t.bColor};">A</td><td style="border:1px solid ${t.bColor};">B</td></tr><tr style="background:${t.altBg};"><td style="border:1px solid ${t.bColor};">C</td><td style="border:1px solid ${t.bColor};">D</td></tr></table>`,
+            insertHTML: `<table class="pt-c-${t.id}" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr><tr><td>Row 3 Data</td><td>Row 3 Data</td><td>Row 3 Data</td></tr></table>`
+        });
+
+        // --- Variant 2: Modern SaaS Rounded (3x Radius: 24px) ---
+        cssRules += `
+            .pt-r-${t.id} { border-collapse: separate; border-spacing: 0; border: 1px solid ${t.bColor}; border-radius: 24px; overflow: hidden; }
+            .pt-r-${t.id} th { background: ${t.thBg}; color: ${t.thColor}; border-bottom: 1px solid ${t.bColor}; padding: 8px; text-align: left; font-weight: bold; }
+            .pt-r-${t.id} td { border-bottom: 1px solid ${t.bColor}; padding: 8px; color: ${t.tdColor || 'inherit'}; }
+            .pt-r-${t.id} tr:last-child td { border-bottom: none; }
+            .pt-r-${t.id} tr:nth-child(even) td { background: ${t.altBg === 'transparent' ? '#f9f9f9' : t.altBg}; }
+        `;
+        dynamicTemplates.push({
+            name: `${t.name} (Rounded)`,
+            previewHTML: `<table class="mini-table" style="border:1px solid ${t.bColor}; border-radius:12px; overflow:hidden;"><tr style="background:${t.thBg}; color:${t.thColor};"><th style="border-bottom:1px solid ${t.bColor};">C1</th><th style="border-bottom:1px solid ${t.bColor};">C2</th></tr><tr><td style="border-bottom:1px solid ${t.bColor};">A</td><td style="border-bottom:1px solid ${t.bColor};">B</td></tr><tr style="background:${t.altBg === 'transparent' ? '#f9f9f9' : t.altBg};"><td style="border:none;">C</td><td style="border:none;">D</td></tr></table>`,
+            insertHTML: `<table class="pt-r-${t.id}" style="width: 100%; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr><tr><td>Row 3 Data</td><td>Row 3 Data</td><td>Row 3 Data</td></tr></table>`
+        });
+
+        // --- Variant 3: Ghost / Minimal ---
+        cssRules += `
+            .pt-m-${t.id} th { background: transparent; color: ${t.thBg}; border-bottom: 3px solid ${t.thBg}; padding: 6px; text-align: left; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+            .pt-m-${t.id} td { border-bottom: 1px solid ${t.bColor}; padding: 8px; color: ${t.tdColor || 'inherit'}; }
+            .pt-m-${t.id} tr:last-child td { border-bottom: 2px solid ${t.thBg}; }
+        `;
+        dynamicTemplates.push({
+            name: `${t.name} (Ghost)`,
+            previewHTML: `<table class="mini-table" style="border:none;"><tr><th style="border:none; border-bottom:2px solid ${t.thBg}; color:${t.thBg};">C1</th><th style="border:none; border-bottom:2px solid ${t.thBg}; color:${t.thBg};">C2</th></tr><tr><td style="border:none; border-bottom:1px solid ${t.bColor};">A</td><td style="border:none; border-bottom:1px solid ${t.bColor};">B</td></tr><tr><td style="border:none; border-bottom:2px solid ${t.thBg};">C</td><td style="border:none; border-bottom:2px solid ${t.thBg};">D</td></tr></table>`,
+            insertHTML: `<table class="pt-m-${t.id}" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr><tr><td>Row 3 Data</td><td>Row 3 Data</td><td>Row 3 Data</td></tr></table>`
+        });
+    });
+
+    // Finalize CSS and append to document
+    style.innerHTML += cssRules;
+    document.head.appendChild(style);
+
+    // Merge structural + dynamic themes (100 Total!)
+    window.tableTemplatesData = [...structuralTemplates, ...dynamicTemplates];
+
+    // 5. Trigger the Native DialogSystem Window
+    window.openTableTemplatesModal = function() {
+        let gridHtml = '<div class="tt-grid">';
+        window.tableTemplatesData.forEach((tpl, index) => {
+            // Group labels to separate Structural from Themes visually
+            if(index === 0) gridHtml += `<div style="grid-column: 1 / -1; padding: 10px 5px 0px; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase;">Structural Layouts</div>`;
+            if(index === 10) gridHtml += `<div style="grid-column: 1 / -1; padding: 10px 5px 0px; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase;">Color Themes & Styles</div>`;
+            
+            gridHtml += `
+                <div class="tt-card" onclick="insertQuickTable(${index})">
+                    ${tpl.previewHTML}
+                    <div class="tt-name">${tpl.name}</div>
+                </div>
+            `;
+        });
+        gridHtml += '</div>';
+
+        // Fire native draggable dialog
+        DialogSystem.show('Insert Styled Table (100 Layouts)', gridHtml, null, true);
+
+        // Expand the draggable modal width so the 3-column grid fits beautifully
+        setTimeout(() => {
+            const dialogBox = document.getElementById('custom-dialog-box');
+            if(dialogBox) {
+                dialogBox.style.width = '650px';
+                dialogBox.style.maxWidth = '95vw';
+            }
+        }, 10);
+    };
+
+    // 6. Handle the Click -> Insert -> Close Pipeline
+    window.insertQuickTable = function(index) {
+        const tpl = window.tableTemplatesData[index];
+        if(!tpl) return;
+
+        // Utilize the app's native 'createWrapper' engine!
+        if (typeof createWrapper === 'function') {
+            const el = createWrapper(tpl.insertHTML);
+            el.style.width = '500px';
+            el.style.height = '150px'; // Give it a sensible default height
+        } else {
+            alert("Error: Core layout engine not found.");
+        }
+        
+        DialogSystem.close();
+    };
+
+    // 7. Inject the Ribbon Button directly into the "Tables" group
+    setTimeout(() => {
+        const insertRibbon = document.getElementById('ribbon-insert');
+        if (insertRibbon) {
+            // FIX: Removed all layout hacks! Pure native .tool-btn styling with your exact span.
+            const buttonHTML = `
+                <div class="tool-btn" onclick="openTableTemplatesModal()" title="Styled Table Templates">
+                    <div style="position:relative; display:flex; justify-content:center; align-items:center; width:26px; height:22px;">
+                        <i class="fas fa-table" style="font-size: 24px; color: var(--pub-dark, #005a55); margin:0;"></i>
+                        <i class="fas fa-pen" style="font-size: 11px; position:absolute; bottom: -5px; right: -6px; color: var(--pub-dark, #005a55); text-shadow: 1px 1px 0px var(--ribbon-bg, #f3f2f1), -1px -1px 0px var(--ribbon-bg, #f3f2f1), 1px -1px 0px var(--ribbon-bg, #f3f2f1), -1px 1px 0px var(--ribbon-bg, #f3f2f1); margin:0;"></i>
+                    </div>
+                    <span style="line-height:1.1; text-align:center;">Styled<br>Table<br>Templates</span>
+                </div>
+            `;
+            
+            const groups = insertRibbon.querySelectorAll('.group');
+            let tableGroup = Array.from(groups).find(g => g.querySelector('.group-label')?.innerText === 'Tables');
+            
+            if (tableGroup) {
+                // Safely inject it right before the "Tables" label text at the bottom
+                const label = tableGroup.querySelector('.group-label');
+                if(label) label.insertAdjacentHTML('beforebegin', buttonHTML);
+            } else {
+                console.warn("Could not find the 'Tables' group. Appending safely to the end.");
+                const newGroup = document.createElement('div');
+                newGroup.className = 'group';
+                newGroup.innerHTML = buttonHTML + '<div class="group-label">Tables</div>';
+                insertRibbon.appendChild(newGroup);
+            }
+        }
+    }, 1500);
+
+})();
+/* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
