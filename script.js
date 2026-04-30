@@ -3426,7 +3426,7 @@ function uploadAndConvertDoc(file) {
 }
 
 /* =========================================================================
-   MULTI-SELECT MARQUEE ADDON (PASTE AT THE VERY BOTTOM OF SCRIPT.JS)
+   MULTI-SELECT MARQUEE ADDON
    ========================================================================= */
 
 // 1. Ensure state can hold multiple items
@@ -8931,120 +8931,76 @@ if (!window._thumbObserverRunning) {
     }
 })();
 /* =========================================================================
-   BUG FIX: Universal Paste (The Ghost Hook Method)
+   BUG FIX: Universal Image Paste & Smart Routing
    ========================================================================= */
-(function initializeUniversalPaste() {
-    
-    // --- STEP 1: Fix Ribbon Buttons Stealing Focus ---
-    setTimeout(() => {
-        try {
-            const ribbonButtons = document.querySelectorAll('.paste-btn, .copy-btn, [title="Paste"], [title="Copy"], [id*="paste"], [id*="copy"]');
-            ribbonButtons.forEach(button => {
-                // Prevents buttons from deselecting your active text box/object!
-                button.addEventListener('mousedown', (e) => { e.preventDefault(); });
-            });
-        } catch (e) {}
-    }, 1000);
+(function fixImagePaste() {
+    console.log("🛠️ Universal Paste Fix initializing...");
 
-    // --- STEP 2: The Ghost Hook (Keydown Override) ---
+    // --- STEP 1: The Ghost Hook (Prevent app from blocking OS clipboard) ---
     window.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
-            
             const activeEl = document.activeElement;
             const isTextEditing = activeEl && (
                 activeEl.isContentEditable || 
                 activeEl.tagName === 'INPUT' || 
-                activeEl.tagName === 'TEXTAREA' ||
-                activeEl.closest('[contenteditable="true"]')
+                activeEl.tagName === 'TEXTAREA'
             );
 
-            // If inside a text box, let native browser text editing happen untouched
-            if (isTextEditing) return; 
-
-            // WE ARE ON THE CANVAS.
-            // OpenPublisher will try to block the native browser paste event so it can duplicate objects.
-            // We temporarily "hook" the preventDefault command so the browser ignores it!
-            const originalPrevent = e.preventDefault;
-            e.preventDefault = function() {
-                // We swallow the app's block request. The app thinks it successfully blocked the paste,
-                // but the browser is still going to fire the native 'paste' event a millisecond later!
-            };
+            // If we are just on the canvas, stop the app from killing the native paste event
+            if (!isTextEditing) {
+                const originalPrevent = e.preventDefault;
+                e.preventDefault = function() {
+                    // Swallow the block request so the browser's native 'paste' event can still fire
+                };
+                
+                // Restore it 50ms later so we don't permanently break the app's keyboard shortcuts
+                setTimeout(() => { 
+                    e.preventDefault = originalPrevent; 
+                }, 50);
+            }
         }
-    }, true); // Capture phase ensures we hook it before OpenPublisher sees the keystroke
+    }, true); // Use capture phase to intercept it first!
 
-    // --- STEP 3: The Native Image Injector ---
+    // --- STEP 2: Catch the image and route it to our wrapper ---
     window.addEventListener('paste', function(e) {
         const activeEl = document.activeElement;
         const isTextEditing = activeEl && (
             activeEl.isContentEditable || 
             activeEl.tagName === 'INPUT' || 
-            activeEl.tagName === 'TEXTAREA' ||
-            activeEl.closest('[contenteditable="true"]')
+            activeEl.tagName === 'TEXTAREA'
         );
 
-        if (isTextEditing) return; 
+        if (isTextEditing) return;
 
-        try {
-            // Because we ghosted OpenPublisher, this native event fires with full, secure OS clipboard access!
-            const clipboardData = e.clipboardData || window.clipboardData;
-            if (!clipboardData) return;
-            
-            const items = clipboardData.items;
-            if (!items) return;
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (!clipboardData) return;
 
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
+        const items = clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            // Check if the pasted item is an image
+            if (items[i].type.indexOf('image/') !== -1) {
+                
+                e.preventDefault(); 
+                e.stopImmediatePropagation();
 
-                // WE FOUND AN EXTERNAL IMAGE!
-                if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-                    
-                    // Now we actually prevent the default paste so the browser doesn't do weird things
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
+                const blob = items[i].getAsFile();
+                if (!blob) continue;
 
-                    const blob = item.getAsFile();
-                    if (!blob) continue;
-
-                    const file = new File([blob], "pasted-image.png", { type: blob.type });
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(file);
-
-                    // Execute the Trojan Drop
-                    const dropEvent = new DragEvent('drop', {
-                        bubbles: true, cancelable: true, dataTransfer: dataTransfer
-                    });
-
-                    const dropTarget = document.getElementById('workspace') || 
-                                       document.querySelector('.canvas-container') || 
-                                       document.querySelector('.canvas') || 
-                                       document.body;
-                    
-                    dropTarget.dispatchEvent(dropEvent);
-
-                    // Fallback injector just in case the app ignores the drop
-                    setTimeout(() => {
-                        if (!document.querySelector('img[src^="data:image"]')) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                                const img = new Image();
-                                img.src = ev.target.result;
-                                img.style.maxWidth = '300px';
-                                img.style.position = 'absolute';
-                                img.style.zIndex = '9999';
-                                dropTarget.appendChild(img);
-                            };
-                            reader.readAsDataURL(blob);
-                        }
-                    }, 500);
-                    
-                    return; 
-                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Route the image directly into our robust Smart Image builder!
+                    if (typeof window.insertSmartImage === 'function') {
+                        window.insertSmartImage(event.target.result);
+                    } else {
+                        console.warn("Error: insertSmartImage function is missing from the codebase.");
+                    }
+                };
+                reader.readAsDataURL(blob);
+                
+                break; // We successfully handled the image, stop looking
             }
-        } catch (err) {
-            console.error("Ghost Hook Image injection failed:", err);
         }
-    }, true); 
-
+    }, true);
 })();
 /* =========================================================================
    UI FEATURE: Dynamic Page Format Indicator (App Toolbar Position Fix)
