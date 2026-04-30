@@ -6089,6 +6089,72 @@ window.initWordArt = function() {
     console.log("✅ Ruler Highlight Loop started successfully.");
 })();
 /* =========================================================================
+   FEATURE: Keyboard Nudge (Arrow Key Movement with Shift/Ctrl Modifiers)
+   ========================================================================= */
+(function installKeyboardNudge() {
+    console.log("🛠️ Keyboard Nudge Script initializing...");
+
+    let isNudging = false;
+
+    // Listen for key presses
+    document.addEventListener('keydown', (e) => {
+        // 1. SAFEGUARD: Don't hijack arrow keys if the user is typing in a text box!
+        const isTyping = e.target.tagName === 'INPUT' || 
+                         e.target.tagName === 'TEXTAREA' || 
+                         e.target.isContentEditable;
+        if (isTyping) return;
+
+        // 2. Only intercept Arrow keys
+        const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+        if (!keys.includes(e.key)) return;
+
+        // 3. Find all currently selected elements
+        const selectedEls = document.querySelectorAll('.pub-element.selected');
+        if (selectedEls.length === 0) return;
+
+        // 4. Stop the browser window from scrolling
+        e.preventDefault(); 
+        isNudging = true;
+
+        // 5. Calculate nudge amount (1px normal, 10px Shift, 50px Ctrl/Cmd)
+        let nudgeAmount = 1;
+        if (e.shiftKey) nudgeAmount = 10;
+        if (e.ctrlKey || e.metaKey) nudgeAmount = 50; // The Paint.net "Super Nudge"
+
+        // 6. Move every selected element
+        selectedEls.forEach(el => {
+            // Get current positions (default to 0 if not set)
+            const currentLeft = parseFloat(el.style.left) || 0;
+            const currentTop = parseFloat(el.style.top) || 0;
+
+            if (e.key === 'ArrowUp') el.style.top = (currentTop - nudgeAmount) + 'px';
+            if (e.key === 'ArrowDown') el.style.top = (currentTop + nudgeAmount) + 'px';
+            if (e.key === 'ArrowLeft') el.style.left = (currentLeft - nudgeAmount) + 'px';
+            if (e.key === 'ArrowRight') el.style.left = (currentLeft + nudgeAmount) + 'px';
+
+            // Optional: Keep WordArt synced if needed
+            if (typeof syncWordArt === 'function' && el.querySelector('.wa-text')) {
+                syncWordArt(el);
+            }
+        });
+    });
+
+    // 7. Save to history ONLY when the user releases the key 
+    // (Prevents spamming the undo history with 100 single-pixel moves)
+    document.addEventListener('keyup', (e) => {
+        const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+        if (keys.includes(e.key) && isNudging) {
+            isNudging = false;
+            // Trigger your app's global save state
+            if (typeof pushHistory === 'function') {
+                pushHistory();
+            }
+        }
+    });
+
+    console.log("✅ Keyboard Nudge Script started successfully.");
+})();
+/* =========================================================================
    OPENPUBLISHER ADDON: Automate Landscape mode
    ========================================================================= */
 if (typeof window.originalRenderPage === 'undefined') {
