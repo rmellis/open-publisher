@@ -6379,7 +6379,7 @@ window.initWordArt = function() {
     }, 1500); 
 })();
 /* =========================================================================
-   FEATURE: Smart Text Interaction (Single-Click Edit, Exact Caret & Auto-Deselect)
+   FEATURE: Smart Text Interaction (Final Stable - Text Boxes & Tables)
    ========================================================================= */
 (function installSmartTextInteraction() {
     console.log("🛠️ Smart Text Interaction Script initializing...");
@@ -6406,8 +6406,15 @@ window.initWordArt = function() {
         
         // --- PART A: SINGLE-CLICK TO EDIT WITH EXACT CARET PLACEMENT ---
         if (pubEl) {
-            let editable = pubEl.querySelector('[contenteditable="true"]');
-            if (pubEl.getAttribute('contenteditable') === 'true') editable = pubEl;
+            // Target the exact cell/element clicked (Ignores WordArt intentionally)
+            let editable = e.target.closest('[contenteditable="true"]');
+            
+            // Fallback for wrappers
+            if (!editable && pubEl.getAttribute('contenteditable') === 'true') {
+                editable = pubEl;
+            } else if (!editable) {
+                editable = pubEl.querySelector('[contenteditable="true"]');
+            }
 
             if (editable && !e.target.closest('.resize-handle') && !e.target.closest('.rotate-handle')) {
                 // Focus the box immediately
@@ -6459,7 +6466,7 @@ window.initWordArt = function() {
         }
     });
 
-    console.log("✅ Smart Text Interaction (with Exact Caret) added successfully.");
+    console.log("✅ Smart Text Interaction (Stable) added successfully.");
 })();
 /* =========================================================================
    OPENPUBLISHER ADDON: Automate Landscape mode
