@@ -9808,6 +9808,300 @@ window.handleMouseUp = function() {
 
 })();
 /* =========================================================================
+   FEATURE: Enhanced Table Design & Layout Ribbons (v1.2 - Layout Refactor)
+   ========================================================================= */
+(function enhanceTableRibbons() {
+    console.log("🛠️ Enhanced Table Ribbons Script initializing...");
+
+    // 1. EXTEND THE CONTEXT ACTIONS
+    ContextRibbonActions.getActiveCell = function() {
+        if (!state.selectedEl || !state.selectedEl.querySelector('table')) return null;
+        if (state.lastRange) {
+            let node = state.lastRange.startContainer;
+            if (node.nodeType === 3) node = node.parentNode;
+            const cell = node.closest('td, th');
+            if (cell && state.selectedEl.contains(cell)) return cell;
+        }
+        return state.selectedEl.querySelector('td, th'); 
+    };
+
+    const getTable = () => state.selectedEl?.querySelector('table');
+
+    // --- Layout Logic ---
+    ContextRibbonActions.insertRowAbove = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            const tr = cell.closest('tr');
+            const newRow = table.insertRow(tr.rowIndex);
+            for(let i=0; i<tr.cells.length; i++) {
+                const newCell = newRow.insertCell();
+                newCell.style.cssText = tr.cells[i].style.cssText;
+                newCell.innerHTML = "&nbsp;";
+                newCell.setAttribute('contenteditable', 'true');
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.insertRowBelow = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            const tr = cell.closest('tr');
+            const newRow = table.insertRow(tr.rowIndex + 1);
+            for(let i=0; i<tr.cells.length; i++) {
+                const newCell = newRow.insertCell();
+                newCell.style.cssText = tr.cells[i].style.cssText;
+                newCell.innerHTML = "&nbsp;";
+                newCell.setAttribute('contenteditable', 'true');
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.insertColLeft = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            const index = cell.cellIndex;
+            for(let r=0; r<table.rows.length; r++) {
+                const newCell = table.rows[r].insertCell(index);
+                const refCell = table.rows[r].cells[index > 0 ? index - 1 : index + 1] || table.rows[r].cells[0];
+                newCell.style.cssText = refCell.style.cssText;
+                newCell.innerHTML = "&nbsp;";
+                newCell.setAttribute('contenteditable', 'true');
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.insertColRight = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            const index = cell.cellIndex;
+            for(let r=0; r<table.rows.length; r++) {
+                const newCell = table.rows[r].insertCell(index + 1);
+                const refCell = table.rows[r].cells[index];
+                newCell.style.cssText = refCell.style.cssText;
+                newCell.innerHTML = "&nbsp;";
+                newCell.setAttribute('contenteditable', 'true');
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.deleteRow = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            table.deleteRow(cell.closest('tr').rowIndex);
+            if(table.rows.length === 0) deleteSelected();
+            else pushHistory();
+        }
+    };
+
+    ContextRibbonActions.deleteCol = function() {
+        const cell = this.getActiveCell(); const table = getTable();
+        if (cell && table) {
+            const index = cell.cellIndex;
+            for(let r=0; r<table.rows.length; r++) {
+                if (table.rows[r].cells.length > index) table.rows[r].deleteCell(index);
+            }
+            if(table.rows[0] && table.rows[0].cells.length === 0) deleteSelected();
+            else pushHistory();
+        }
+    };
+
+    ContextRibbonActions.cellAlign = function(vAlign, hAlign) {
+        const cell = this.getActiveCell();
+        if (cell) {
+            cell.style.verticalAlign = vAlign;
+            cell.style.textAlign = hAlign;
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.distributeCols = function() {
+        const table = getTable();
+        if (table && table.rows.length > 0) {
+            const cols = table.rows[0].cells.length;
+            const pct = (100 / cols).toFixed(2) + '%';
+            for(let r=0; r<table.rows.length; r++) {
+                for(let c=0; c<table.rows[r].cells.length; c++) {
+                    table.rows[r].cells[c].style.width = pct;
+                }
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.distributeRows = function() {
+        const table = getTable();
+        if (table) {
+            const rows = table.rows.length;
+            const pct = (100 / rows).toFixed(2) + '%';
+            for(let r=0; r<table.rows.length; r++) {
+                table.rows[r].style.height = pct;
+            }
+            pushHistory();
+        }
+    };
+
+    // --- Design Logic ---
+    ContextRibbonActions.cellFill = function(color) {
+        const cell = this.getActiveCell();
+        if (cell) {
+            cell.style.backgroundColor = color;
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.tableBorderColor = function(color) {
+        const table = getTable();
+        if (table) {
+            table.style.borderColor = color;
+            for(let r=0; r<table.rows.length; r++) {
+                for(let c=0; c<table.rows[r].cells.length; c++) {
+                    table.rows[r].cells[c].style.borderColor = color;
+                }
+            }
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.applyBorderThickness = function(px) {
+        const table = getTable();
+        if (table) {
+            const thick = `${px}px solid `;
+            for(let r=0; r<table.rows.length; r++) {
+                for(let c=0; c<table.rows[r].cells.length; c++) {
+                    const currentColor = table.rows[r].cells[c].style.borderColor || '#000000';
+                    table.rows[r].cells[c].style.border = thick + currentColor;
+                }
+            }
+            table.style.border = thick + (table.style.borderColor || '#000000');
+            pushHistory();
+        }
+    };
+
+    ContextRibbonActions.cellPadding = function(px) {
+        const table = getTable();
+        if (table && px) {
+            for(let r=0; r<table.rows.length; r++) {
+                for(let c=0; c<table.rows[r].cells.length; c++) {
+                    table.rows[r].cells[c].style.padding = px;
+                }
+            }
+            pushHistory();
+        }
+    };
+
+    // 2. OVERWRITE THE RIBBON UI HTML
+    const checkRibbons = setInterval(() => {
+        const designTab = document.getElementById('ribbon-table-design');
+        const layoutTab = document.getElementById('ribbon-table-layout');
+        
+        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
+        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="group-label">Arrange</div></div>`;
+
+        if (designTab && layoutTab) {
+            clearInterval(checkRibbons);
+
+            // --- REBUILD: Table Design ---
+            designTab.innerHTML = `
+                ${clipGroup}
+                <div class="group">
+                    <div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-paint-roller" style="color:var(--pub-color)"></i>Zebra</div>
+                    <div class="group-label">Styles</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; align-items:center; justify-content:center; gap:5px; height:100%;">
+                        <div class="mini-btn ctx-btn-strict ctx-color-strict" style="width:40px; height:35px;" title="Cell Fill Color">
+                            <i class="fas fa-fill-drip" style="font-size:18px; color:var(--pub-color); margin-top:-2px;"></i>
+                            <div style="height:5px; background:#ffffff; width:30px; position:absolute; bottom:2px; border:1px solid #ccc;" id="ctx-cell-fill-bar"></div>
+                            <input type="color" value="#ffffff" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="ContextRibbonActions.cellFill(this.value); document.getElementById('ctx-cell-fill-bar').style.background=this.value;">
+                        </div>
+                    </div>
+                    <div class="group-label">Shading</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; justify-content:center; gap:6px; height:100%;">
+                        <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                            <i class="fas fa-border-all" style="color:#666; width:14px; text-align:center;"></i>
+                            <input type="number" id="ctx-tbl-border" value="1" min="0" max="10" style="width:45px; height:20px; font-size:11px; padding-left:4px; border:1px solid #ccc; border-radius:2px;" onchange="ContextRibbonActions.applyBorderThickness(this.value)"> px
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px; font-size:11px; position:relative;">
+                            <i class="fas fa-palette" style="color:#666; width:14px; text-align:center;"></i>
+                            <div style="width:45px; height:20px; border:1px solid #ccc; border-radius:2px; background:#000000;" id="ctx-tbl-border-color-disp"></div>
+                            <input type="color" value="#000000" style="position:absolute; right:0; width:45px; height:20px; opacity:0; cursor:pointer;" onchange="ContextRibbonActions.tableBorderColor(this.value); document.getElementById('ctx-tbl-border-color-disp').style.background=this.value;"> 
+                            Color
+                        </div>
+                    </div>
+                    <div class="group-label">Borders</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; justify-content:center; height:100%;">
+                        <select class="ribbon-input" onchange="ContextRibbonActions.cellPadding(this.value)" style="width:90px;">
+                            <option value="">Cell Margins</option>
+                            <option value="2px">Tight</option>
+                            <option value="6px">Normal</option>
+                            <option value="12px">Relaxed</option>
+                        </select>
+                    </div>
+                    <div class="group-label">Spacing</div>
+                </div>
+                ${arrGroup}
+            `;
+
+            // --- REBUILD: Table Layout ---
+            layoutTab.innerHTML = `
+                ${clipGroup}
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; gap:2px; justify-content:center; height:100%;">
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Above</div>
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Below</div>
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Left/Right</div>
+                    </div>
+                    <div class="group-label">Rows & Columns</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; gap:2px; justify-content:center; height:100%;">
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px;" onclick="ContextRibbonActions.deleteRow()"><i class="fas fa-minus-circle" style="font-size:12px; margin-right:4px; color:#c00;"></i>Row</div>
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px;" onclick="ContextRibbonActions.deleteCol()"><i class="fas fa-minus-circle" style="font-size:12px; margin-right:4px; color:#c00;"></i>Column</div>
+                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px; color:#c00;" onclick="ContextRibbonActions.deleteRow(); deleteSelected()"><i class="fas fa-trash-alt" style="font-size:12px; margin-right:4px; color:#c00;"></i>Table</div>
+                    </div>
+                    <div class="group-label">Delete</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; gap:4px; justify-content:center; height:100%;">
+                        <div class="tool-btn" style="height:22px; flex-direction:row; justify-content:flex-start; min-width:90px; padding:0 6px;" onclick="ContextRibbonActions.distributeRows()"><i class="fas fa-arrows-alt-v" style="font-size:12px; margin-right:4px;"></i>Distribute Rows</div>
+                        <div class="tool-btn" style="height:22px; flex-direction:row; justify-content:flex-start; min-width:90px; padding:0 6px;" onclick="ContextRibbonActions.distributeCols()"><i class="fas fa-arrows-alt-h" style="font-size:12px; margin-right:4px;"></i>Distribute Cols</div>
+                    </div>
+                    <div class="group-label">Cell Size</div>
+                </div>
+                <div class="group">
+                    <!-- FIX: Goldilocks height (20px) for the 9-grid alignment cells -->
+                    <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#eee; padding:2px; border-radius:2px;">
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Left" onclick="ContextRibbonActions.cellAlign('top', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Center" onclick="ContextRibbonActions.cellAlign('top', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Right" onclick="ContextRibbonActions.cellAlign('top', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
+                        
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center Left" onclick="ContextRibbonActions.cellAlign('middle', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center" onclick="ContextRibbonActions.cellAlign('middle', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center Right" onclick="ContextRibbonActions.cellAlign('middle', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
+                        
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Left" onclick="ContextRibbonActions.cellAlign('bottom', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Center" onclick="ContextRibbonActions.cellAlign('bottom', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
+                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Right" onclick="ContextRibbonActions.cellAlign('bottom', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
+                    </div>
+                    <div class="group-label">Alignment</div>
+                </div>
+                ${arrGroup}
+            `;
+            
+            console.log("✅ Table Ribbons successfully refactored with new layout groups.");
+        }
+    }, 500);
+
+})();
+/* =========================================================================
    FEATURE: Table Templates (v3.6.5 - 100 Templates
    ========================================================================= */
 (function installTableTemplates() {
