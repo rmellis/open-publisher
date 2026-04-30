@@ -9003,6 +9003,389 @@ if (!window._thumbObserverRunning) {
     }, true);
 })();
 /* =========================================================================
+   FEATURE: Advanced Vector Shapes Engine (Hollow Variants Added)
+   ========================================================================= */
+window.initShapes = function() {
+    console.log("🛠️ Advanced Vector Shapes Library (Hollow Variants) initializing...");
+
+    const dropdown = document.getElementById('shape-dropdown');
+    if (!dropdown) return;
+
+    dropdown.innerHTML = '';
+    dropdown.style.width = '380px';
+    dropdown.style.maxHeight = '450px';
+    dropdown.style.overflowY = 'auto';
+    dropdown.style.padding = '0';
+    dropdown.style.scrollbarWidth = 'thin';
+
+    // --- MATHEMATICAL GENERATORS ---
+    const poly = (sides) => {
+        let pts = [];
+        for(let i=0; i<sides; i++) {
+            let a = (i * 2 * Math.PI / sides) - Math.PI/2;
+            pts.push(`${(50 + 45*Math.cos(a)).toFixed(1)},${(50 + 45*Math.sin(a)).toFixed(1)}`);
+        }
+        return `<polygon points="${pts.join(' ')}" />`;
+    };
+
+    const star = (pts, ir) => {
+        let points = [];
+        for(let i=0; i<pts*2; i++) {
+            let r = i%2===0 ? 45 : ir;
+            let a = (i * Math.PI / pts) - Math.PI/2;
+            points.push(`${(50 + r*Math.cos(a)).toFixed(1)},${(50 + r*Math.sin(a)).toFixed(1)}`);
+        }
+        return `<polygon points="${points.join(' ')}" />`;
+    };
+
+    const gear = (teeth) => {
+        let points = [];
+        const pts = teeth * 2;
+        for(let i=0; i<pts; i++) {
+            let rOuter = 45; let rInner = 35;
+            let a1 = (i * Math.PI / teeth) - Math.PI/2;
+            let a2 = ((i + 0.5) * Math.PI / teeth) - Math.PI/2;
+            let r = i%2===0 ? rOuter : rInner;
+            points.push(`${(50 + r*Math.cos(a1)).toFixed(1)},${(50 + r*Math.sin(a1)).toFixed(1)}`);
+            points.push(`${(50 + r*Math.cos(a2)).toFixed(1)},${(50 + r*Math.sin(a2)).toFixed(1)}`);
+        }
+        return `<path d="M ${points[0]} L ${points.slice(1).join(' L ')} Z M 50,35 A 15,15 0 1,0 50,65 A 15,15 0 1,0 50,35 Z" fill-rule="evenodd" />`;
+    };
+
+    // Helper to instantly generate hollow/outline versions of any array of shapes
+    const makeHollow = (arr) => arr.map(shape => ({
+        name: `Hollow ${shape.name}`,
+        // Overrides the parent fill with transparent, and thickens the stroke
+        markup: `<g fill="transparent" stroke-width="6">${shape.markup}</g>`
+    }));
+
+    // --- GENERATE DYNAMIC ARRAYS ---
+    const polygons = [];
+    for(let i=3; i<=24; i++) polygons.push({ name: `${i}-Sided Polygon`, markup: poly(i) });
+
+    const stars = [];
+    [3,4,5,6,7,8,9,10,12,14,16,18,20,24,32,48].forEach(pts => {
+        stars.push({ name: `${pts}-Point Star`, markup: star(pts, pts > 10 ? 35 : 20) });
+    });
+
+    const bursts = [];
+    [8,12,16,24,32,40,48].forEach(pts => {
+        bursts.push({ name: `${pts}-Point Burst`, markup: star(pts, 40) });
+    });
+
+    const gears = [];
+    [6,8,10,12,14,16,20,24].forEach(teeth => {
+        gears.push({ name: `${teeth}-Tooth Gear`, markup: gear(teeth) });
+    });
+
+    const basicShapes = [
+        { name: 'Rectangle', markup: `<rect x="5" y="5" width="90" height="90" />` },
+        { name: 'Rounded Rect', markup: `<rect x="5" y="5" width="90" height="90" rx="15" ry="15" />` },
+        { name: 'Snip Corner Rect', markup: `<polygon points="20,5 95,5 95,95 5,95 5,20" />` },
+        { name: 'Snip Same Side', markup: `<polygon points="20,5 80,5 95,20 95,95 5,95 5,20" />` },
+        { name: 'Snip Diagonal', markup: `<polygon points="20,5 95,5 95,80 80,95 5,95 5,20" />` },
+        { name: 'Oval', markup: `<ellipse cx="50" cy="50" rx="45" ry="45" />` },
+        { name: 'Circle', markup: `<circle cx="50" cy="50" r="45" />` },
+        { name: 'Right Triangle', markup: `<polygon points="5,5 95,95 5,95" />` },
+        { name: 'Parallelogram', markup: `<polygon points="20,5 95,5 80,95 5,95" />` },
+        { name: 'Trapezoid', markup: `<polygon points="25,5 75,5 95,95 5,95" />` },
+        { name: 'Diamond', markup: `<polygon points="50,5 95,50 50,95 5,50" />` },
+        { name: 'Cross', markup: `<polygon points="35,5 65,5 65,35 95,35 95,65 65,65 65,95 35,95 35,65 5,65 5,35 35,35" />` },
+        { name: 'Frame', markup: `<path d="M5,5 H95 V95 H5 Z M20,20 V80 H80 V20 Z" fill-rule="evenodd" />` },
+        { name: 'Ring (Donut)', markup: `<path d="M50,5 A45,45 0 1,0 50,95 A45,45 0 1,0 50,5 Z M50,25 A25,25 0 1,1 50,75 A25,25 0 1,1 50,25 Z" fill-rule="evenodd" />` },
+        { name: 'Half Frame', markup: `<path d="M5,5 H95 V25 H25 V95 H5 Z" />` },
+        { name: 'L-Shape', markup: `<polygon points="5,5 35,5 35,65 95,65 95,95 5,95" />` },
+        { name: 'Diagonal Stripe', markup: `<polygon points="5,80 20,95 95,20 80,5" />` },
+        { name: 'Heart', markup: `<path d="M50,90 C5,60 5,20 25,20 C35,20 45,30 50,40 C55,30 65,20 75,20 C95,20 95,60 50,90 Z" />` },
+        { name: 'Lightning', markup: `<polygon points="60,5 15,55 45,55 40,95 85,45 55,45" />` },
+        { name: 'Smiley', markup: `<path d="M50,5 A45,45 0 1,0 50,95 A45,45 0 1,0 50,5 Z M35,30 A7,7 0 1,1 35,44 A7,7 0 1,1 35,30 Z M65,30 A7,7 0 1,1 65,44 A7,7 0 1,1 65,30 Z M25,60 Q50,85 75,60 Q50,75 25,60 Z" fill-rule="evenodd" />` },
+        { name: 'Sun', markup: `<path d="M50,25 A25,25 0 1,0 50,75 A25,25 0 1,0 50,25 Z M50,5 L55,15 H45 Z M50,95 L45,85 H55 Z M5,50 L15,45 V55 Z M95,50 L85,55 V45 Z M18,18 L28,22 L22,28 Z M82,82 L72,78 L78,72 Z M18,82 L22,72 L28,78 Z M82,18 L78,28 L72,22 Z" />` },
+        { name: 'Moon', markup: `<path d="M50,5 A45,45 0 1,0 95,50 A35,35 0 1,1 50,5 Z" />` },
+        { name: 'Cloud', markup: `<path d="M30,45 A20,20 0 0,1 70,45 A25,25 0 0,1 90,70 A15,15 0 0,1 75,90 H25 A15,15 0 0,1 15,65 A20,20 0 0,1 30,45 Z" />` },
+        { name: 'Teardrop', markup: `<path d="M50,5 C50,5 15,45 15,65 A35,35 0 0,0 85,65 C85,45 50,5 50,5 Z" />` },
+        { name: 'Cylinder', markup: `<path d="M15,20 A35,10 0 0,0 85,20 V80 A35,10 0 0,1 15,80 Z M15,20 A35,10 0 0,1 85,20 A35,10 0 0,1 15,20 Z" fill-rule="evenodd" />` },
+        { name: 'Cube', markup: `<path d="M5,35 L35,5 H95 L65,35 Z M5,35 V95 H65 V35 Z M95,5 V65 L65,95 M65,35 V95" fill="none" stroke-width="4" stroke-linejoin="round" />` },
+        { name: 'Plaque', markup: `<polygon points="15,5 85,5 95,15 95,85 85,95 15,95 5,85 5,15" />` },
+        { name: 'Shield', markup: `<path d="M10,10 H90 V40 C90,70 50,95 50,95 C50,95 10,70 10,40 Z" />` },
+        { name: 'Folded Corner', markup: `<path d="M15,5 H65 L85,25 V95 H15 Z M65,5 V25 H85" fill-rule="evenodd" />` },
+        { name: 'Bevel', markup: `<polygon points="15,15 85,15 95,25 95,95 5,95 5,25" />` },
+        { name: 'Pie', markup: `<path d="M50,50 L50,5 A45,45 0 1,1 5,50 Z" />` },
+        { name: 'Chord', markup: `<path d="M50,5 A45,45 0 1,1 18.1,81.8 Z" />` },
+        { name: 'No Symbol', markup: `<path d="M50,5 A45,45 0 1,0 50,95 A45,45 0 1,0 50,5 Z M20,20 L80,80" fill="none" stroke-width="8" />` }
+    ];
+
+    const blockArrows = [
+        { name: 'Right Arrow', markup: `<polygon points="5,35 55,35 55,15 95,50 55,85 55,65 5,65" />` },
+        { name: 'Left Arrow', markup: `<polygon points="95,35 45,35 45,15 5,50 45,85 45,65 95,65" />` },
+        { name: 'Up Arrow', markup: `<polygon points="35,95 35,45 15,45 50,5 85,45 65,45 65,95" />` },
+        { name: 'Down Arrow', markup: `<polygon points="35,5 35,55 15,55 50,95 85,55 65,55 65,5" />` },
+        { name: 'Left-Right Arrow', markup: `<polygon points="25,40 45,40 45,30 55,30 55,40 75,40 75,60 55,60 55,70 45,70 45,60 25,60" />` }, 
+        { name: 'Up-Down Arrow', markup: `<polygon points="40,25 30,25 50,5 70,25 60,25 60,75 70,75 50,95 30,75 40,75" />` },
+        { name: 'Quad Arrow', markup: `<polygon points="40,40 40,25 30,25 50,5 70,25 60,25 60,40 75,40 75,30 95,50 75,70 75,60 60,60 60,75 70,75 50,95 30,75 40,75 40,60 25,60 25,70 5,50 25,30 25,40" />` },
+        { name: 'Chevron', markup: `<polygon points="10,10 60,10 90,50 60,90 10,90 40,50" />` },
+        { name: 'Pentagon Arrow', markup: `<polygon points="5,15 65,15 95,50 65,85 5,85" />` },
+        { name: 'Notched Right', markup: `<polygon points="5,15 65,15 95,50 65,85 5,85 30,50" />` },
+        { name: 'Striped Right', markup: `<path d="M25,15 H65 L95,50 L65,85 H25 L55,50 Z M5,15 H15 L45,50 L15,85 H5 L35,50 Z" />` },
+        { name: 'U-Turn', markup: `<path d="M40,95 V65 H70 A20,20 0 0,0 70,25 H30 V10 L5,35 L30,60 V45 H70 A5,5 0 0,1 70,55 H40 Z" />` },
+        { name: 'Circular Arrow', markup: `<path d="M50,15 A35,35 0 1,1 15,50 H5 L20,25 L35,50 H25 A25,25 0 1,0 50,25 Z" />` },
+        { name: 'Curved Right', markup: `<path d="M5,80 Q5,40 50,40 V20 L95,50 L50,80 V60 Q20,60 5,80 Z" />` },
+        { name: 'Curved Left', markup: `<path d="M95,80 Q95,40 50,40 V20 L5,50 L50,80 V60 Q80,60 95,80 Z" />` },
+        { name: 'Curved Up', markup: `<path d="M20,95 Q20,50 40,50 H20 L50,5 L80,50 H60 Q60,80 20,95 Z" />` },
+        { name: 'Right Callout', markup: `<polygon points="5,25 65,25 65,10 95,50 65,90 65,75 5,75" />` },
+        { name: 'Left Callout', markup: `<polygon points="95,25 35,25 35,10 5,50 35,90 35,75 95,75" />` },
+        { name: 'Up Callout', markup: `<polygon points="25,95 25,35 10,35 50,5 90,35 75,35 75,95" />` },
+        { name: 'Down Callout', markup: `<polygon points="25,5 25,65 10,65 50,95 90,65 75,65 75,5" />` }
+    ];
+
+    // --- THE MASTER SVG COORDINATE LIBRARY ---
+    const shapeLibrary = {
+        "Basic Shapes": basicShapes,
+        "Hollow Basic Shapes": makeHollow(basicShapes),
+        "Symbols & Icons": [
+            { name: 'Checkmark', markup: `<path d="M10,50 L40,80 L90,10" fill="none" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>` },
+            { name: 'X Mark', markup: `<path d="M15,15 L85,85 M85,15 L15,85" fill="none" stroke-width="12" stroke-linecap="round"/>` },
+            { name: 'Home', markup: `<path d="M50,5 L5,45 V95 H35 V60 H65 V95 H95 V45 Z" />` },
+            { name: 'User', markup: `<circle cx="50" cy="30" r="20" /><path d="M20,95 C20,70 30,60 50,60 C70,60 80,70 80,95 Z" />` },
+            { name: 'Magnifying Glass', markup: `<circle cx="40" cy="40" r="25" fill="none" stroke-width="10"/><line x1="60" y1="60" x2="90" y2="90" stroke-width="12" stroke-linecap="round"/>` },
+            { name: 'Star Icon', markup: star(5, 20) },
+            { name: 'Bell', markup: `<path d="M20,75 C20,60 30,50 30,35 A20,20 0 0,1 70,35 C70,50 80,60 80,75 H20 Z M40,85 A10,10 0 0,0 60,85 Z" />` },
+            { name: 'Lock', markup: `<rect x="25" y="45" width="50" height="40" rx="5" /><path d="M35,45 V30 A15,15 0 0,1 65,30 V45" fill="none" stroke-width="8" />` },
+            { name: 'Unlock', markup: `<rect x="25" y="45" width="50" height="40" rx="5" /><path d="M35,45 V30 A15,15 0 0,1 65,30" fill="none" stroke-width="8" />` },
+            { name: 'Mail', markup: `<rect x="10" y="20" width="80" height="60" rx="5" /><path d="M10,25 L50,55 L90,25" fill="none" stroke-width="6" />` },
+            { name: 'Play', markup: `<polygon points="30,20 80,50 30,80" />` },
+            { name: 'Pause', markup: `<rect x="25" y="20" width="15" height="60" /><rect x="60" y="20" width="15" height="60" />` },
+            { name: 'Stop', markup: `<rect x="20" y="20" width="60" height="60" />` },
+            { name: 'Record', markup: `<circle cx="50" cy="50" r="30" />` }
+        ],
+        "Block Arrows": blockArrows,
+        "Hollow Arrows": makeHollow(blockArrows),
+        "Polygons": polygons,
+        "Hollow Polygons": makeHollow(polygons.slice(0, 10)), // Limit to first 10 so it's not overwhelming
+        "Stars": stars,
+        "Hollow Stars": makeHollow(stars.slice(0, 8)), // Limit to standard stars
+        "Sunbursts & Badges": bursts,
+        "Gears": gears,
+        "Equation Shapes": [
+            { name: 'Plus', markup: `<polygon points="40,10 60,10 60,40 90,40 90,60 60,60 60,90 40,90 40,60 10,60 10,40 40,40" />` },
+            { name: 'Minus', markup: `<rect x="10" y="40" width="80" height="20" />` },
+            { name: 'Multiply', markup: `<polygon points="20,10 50,40 80,10 90,20 60,50 90,80 80,90 50,60 20,90 10,80 40,50 10,20" />` },
+            { name: 'Divide', markup: `<rect x="10" y="45" width="80" height="10" /><circle cx="50" cy="25" r="8" /><circle cx="50" cy="75" r="8" />` },
+            { name: 'Equal', markup: `<rect x="10" y="25" width="80" height="15" /><rect x="10" y="60" width="80" height="15" />` },
+            { name: 'Not Equal', markup: `<path d="M10,35 H90 V45 H10 Z M10,65 H90 V75 H10 Z M30,95 L40,95 L70,5 L60,5 Z" />` },
+            { name: 'Greater Than', markup: `<polygon points="15,15 85,50 15,85 15,65 60,50 15,35" />` },
+            { name: 'Less Than', markup: `<polygon points="85,15 15,50 85,85 85,65 40,50 85,35" />` },
+            { name: 'Left Bracket', markup: `<path d="M60,5 H40 A20,20 0 0,0 20,25 V75 A20,20 0 0,0 40,95 H60 V85 H40 A10,10 0 0,1 30,75 V25 A10,10 0 0,1 40,15 H60 Z" />` },
+            { name: 'Right Bracket', markup: `<path d="M40,5 H60 A20,20 0 0,1 80,25 V75 A20,20 0 0,1 60,95 H40 V85 H60 A10,10 0 0,0 70,75 V25 A10,10 0 0,0 60,15 H40 Z" />` },
+            { name: 'Left Brace', markup: `<path d="M70,5 C40,5 40,40 10,50 C40,60 40,95 70,95 V85 C50,85 50,60 30,50 C50,40 50,15 70,15 Z" />` },
+            { name: 'Right Brace', markup: `<path d="M30,5 C60,5 60,40 90,50 C60,60 60,95 30,95 V85 C50,85 50,60 70,50 C50,40 50,15 30,15 Z" />` }
+        ],
+        "Flowchart": [
+            { name: 'Process', markup: `<rect x="5" y="15" width="90" height="70" />` },
+            { name: 'Alternate Process', markup: `<rect x="5" y="15" width="90" height="70" rx="15" ry="15" />` },
+            { name: 'Decision', markup: `<polygon points="50,5 95,50 50,95 5,50" />` },
+            { name: 'Data', markup: `<polygon points="20,15 95,15 80,85 5,85" />` },
+            { name: 'Predefined Process', markup: `<path d="M5,15 H95 V85 H5 Z M15,15 V85 M85,15 V85" fill-rule="evenodd" />` },
+            { name: 'Internal Storage', markup: `<path d="M5,15 H95 V85 H5 Z M5,25 H95 M15,15 V85" fill-rule="evenodd" />` },
+            { name: 'Document', markup: `<path d="M5,10 H95 V80 Q75,100 50,80 T5,80 Z" />` },
+            { name: 'Multidocument', markup: `<path d="M15,5 H95 V65 Q80,85 60,65 T15,65 Z M10,10 V70 Q30,90 50,70 L65,70 V75 Q45,95 25,75 T5,75 V15 Z M5,15 V80 Q25,100 45,80 L55,80 V85 Q35,105 15,85 T5,80 V15 Z" fill-rule="evenodd" />` },
+            { name: 'Terminator', markup: `<rect x="5" y="20" width="90" height="60" rx="30" ry="30" />` },
+            { name: 'Preparation', markup: `<polygon points="25,15 75,15 95,50 75,85 25,85 5,50" />` },
+            { name: 'Manual Input', markup: `<polygon points="5,30 95,15 95,85 5,85" />` },
+            { name: 'Manual Operation', markup: `<polygon points="20,15 80,15 95,85 5,85" />` },
+            { name: 'Connector', markup: `<circle cx="50" cy="50" r="30" />` },
+            { name: 'Off-page Connector', markup: `<polygon points="20,15 80,15 80,65 50,95 20,65" />` },
+            { name: 'Card', markup: `<polygon points="25,15 95,15 95,85 5,85 5,35" />` },
+            { name: 'Punched Tape', markup: `<path d="M5,15 Q25,5 50,15 T95,15 V85 Q75,95 50,85 T5,85 Z" />` },
+            { name: 'Summing Junction', markup: `<circle cx="50" cy="50" r="40" /><path d="M22,22 L78,78 M22,78 L78,22" stroke-width="2" />` },
+            { name: 'Or', markup: `<circle cx="50" cy="50" r="40" /><path d="M50,10 V90 M10,50 H90" stroke-width="2" />` },
+            { name: 'Collate', markup: `<polygon points="5,15 95,15 50,50 95,85 5,85 50,50" fill-rule="evenodd" />` },
+            { name: 'Sort', markup: `<polygon points="50,5 95,50 5,50 Z M50,95 95,50 5,50 Z" fill-rule="evenodd" />` },
+            { name: 'Merge', markup: `<polygon points="5,15 95,15 50,85" />` },
+            { name: 'Delay', markup: `<path d="M5,15 H50 A35,35 0 0,1 50,85 H5 Z" />` }
+        ],
+        "Banners & Ribbons": [
+            { name: 'Up Ribbon', markup: `<path d="M5,30 L25,30 L25,10 Q50,30 75,10 L75,30 L95,30 L85,55 L95,80 L5,80 L15,55 Z" />` },
+            { name: 'Down Ribbon', markup: `<path d="M5,20 L95,20 L85,45 L95,70 L75,70 L75,90 Q50,70 25,90 L25,70 L5,70 L15,45 Z" />` },
+            { name: 'Curved Ribbon', markup: `<path d="M5,40 Q25,20 50,40 T95,40 V80 Q75,60 50,80 T5,80 Z" />` },
+            { name: 'Scroll Vertical', markup: `<path d="M20,10 Q50,0 80,10 V90 Q50,100 20,90 Z M20,10 A10,10 0 1,1 20,30 M80,90 A10,10 0 1,0 80,70" fill="none" stroke-width="4" />` },
+            { name: 'Scroll Horizontal', markup: `<path d="M10,20 Q0,50 10,80 H90 Q100,50 90,20 Z M10,20 A10,10 0 1,0 30,20 M90,80 A10,10 0 1,1 70,80" fill="none" stroke-width="4" />` }
+        ],
+        "Callouts": [
+            { name: 'Rect Callout', markup: `<path d="M5,5 H95 V65 H60 L40,95 L40,65 H5 Z" />` },
+            { name: 'Rounded Callout', markup: `<path d="M15,5 H85 A10,10 0 0,1 95,15 V55 A10,10 0 0,1 85,65 H60 L40,95 L40,65 H15 A10,10 0 0,1 5,55 V15 A10,10 0 0,1 15,5 Z" />` },
+            { name: 'Oval Callout', markup: `<path d="M50,5 A45,30 0 1,1 5,35 C5,50 20,60 30,65 L15,95 L45,70 A45,30 0 0,1 50,5 Z" />` },
+            { name: 'Cloud Callout', markup: `<path d="M 30,40 C 20,40 20,60 30,60 C 30,70 50,75 55,65 L 75,90 L 70,60 C 85,60 85,40 75,35 C 90,20 70,10 60,20 C 50,10 35,15 30,30 Z" />` },
+            { name: 'Line Callout 1', markup: `<path d="M10,10 H90 V40 H10 Z M50,40 L30,90" fill="none" stroke-width="4" />` },
+            { name: 'Line Callout 2', markup: `<path d="M10,10 H90 V40 H10 Z M50,40 L30,60 H10" fill="none" stroke-width="4" />` }
+        ]
+    };
+
+    // --- RENDER THE UI ---
+    Object.keys(shapeLibrary).forEach(category => {
+        const header = document.createElement('div');
+        header.style.padding = "6px 10px";
+        header.style.background = "#f1f5f9";
+        header.style.borderTop = "1px solid #e2e8f0";
+        header.style.borderBottom = "1px solid #e2e8f0";
+        header.style.fontWeight = "bold";
+        header.style.fontSize = "11px";
+        header.style.color = "#475569";
+        header.style.textTransform = "uppercase";
+        header.style.letterSpacing = "0.5px";
+        dropdown.appendChild(header);
+        header.innerText = category;
+
+        const grid = document.createElement('div');
+        grid.style.display = "grid";
+        grid.style.gridTemplateColumns = "repeat(8, 1fr)";
+        grid.style.gap = "4px";
+        grid.style.padding = "8px";
+        dropdown.appendChild(grid);
+
+        shapeLibrary[category].forEach(shape => {
+            const item = document.createElement('div');
+            item.title = shape.name;
+            item.style.cssText = "aspect-ratio: 1; border: 1px solid transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: all 0.1s;";
+            
+            item.innerHTML = `<svg viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="var(--pub-color)" stroke="var(--pub-dark)" stroke-width="2">${shape.markup}</g></svg>`;
+            
+            item.onmouseover = () => { item.style.background = '#e0f2fe'; item.style.borderColor = '#7dd3fc'; };
+            item.onmouseout = () => { item.style.background = 'transparent'; item.style.borderColor = 'transparent'; };
+            
+            item.onclick = () => {
+                const svgString = `<svg viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0;"><g class="shape-path" fill="var(--pub-color, #007670)" stroke="#005a55" stroke-width="2">${shape.markup}</g></svg>`;
+                
+                if (typeof createWrapper === 'function') {
+                    const el = createWrapper(svgString);
+                    el.setAttribute('data-type', 'shape');
+                    el.style.width = '100px'; 
+                    el.style.height = '100px';
+                }
+                dropdown.style.display = 'none';
+            };
+            
+            grid.appendChild(item);
+        });
+    });
+
+    console.log(`✅ Loaded ${Object.values(shapeLibrary).reduce((acc, cat) => acc + cat.length, 0)} Vector Shapes successfully.`);
+};
+/* =========================================================================
+   BUG FIX: Shape Color Inheritance & Contextual Ribbon Routing
+   ========================================================================= */
+(function installShapeFixes() {
+    
+    // 1. FIX BUG 2: Ensure contextual ribbons instantly recognize new SVG shapes
+    // We proxy the createWrapper function to inject the data-type attribute *before* the ribbon checks it.
+    if (!window._patchedCreateWrapperForShapes) {
+        const originalCreateWrapper = window.createWrapper;
+        window.createWrapper = function(htmlContent) {
+            const el = originalCreateWrapper.apply(this, arguments);
+            
+            // If the content generated is one of our new SVG shapes...
+            if (htmlContent.includes('<svg') && htmlContent.includes('shape-path')) {
+                el.setAttribute('data-type', 'shape');
+                
+                // Immediately correct the contextual ribbon tab
+                if (typeof window.ContextRibbonSystem !== 'undefined') {
+                    window.ContextRibbonSystem.updateTabs(el);
+                }
+            }
+            return el;
+        };
+        window._patchedCreateWrapperForShapes = true;
+    }
+
+    // 2. FIX BUG 1: Format Text Box router (handles SVG fills + Hollow stripping)
+    // We rewrite the format tool to understand the difference between text boxes and vector shapes
+    if (typeof ContextMenuActions !== 'undefined') {
+        ContextMenuActions.formatTextBox = function() {
+            if (!state.selectedEl) return;
+            
+            let currentBg = "#ffffff";
+            let currentBc = "#000000";
+            let currentBt = 0;
+            
+            const isShape = state.selectedEl.getAttribute('data-type') === 'shape';
+            const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
+            const content = state.selectedEl.querySelector('.element-content');
+
+            // Populate the dialog with the existing colors
+            if (isShape && svgOuter) {
+                const innerG = svgOuter.querySelector('g[fill="transparent"]');
+                if (!innerG) {
+                    const fill = svgOuter.getAttribute('fill');
+                    if (fill && fill.startsWith('#')) currentBg = fill;
+                }
+                const stroke = svgOuter.getAttribute('stroke');
+                if (stroke && stroke.startsWith('#')) currentBc = stroke;
+                
+                const strokeWidth = svgOuter.getAttribute('stroke-width');
+                if (strokeWidth) currentBt = parseInt(strokeWidth);
+            }
+
+            const form = `
+                <div class="input-group" style="margin-bottom:10px;">
+                    <label>Fill Color:</label>
+                    <input type="color" id="ctx-box-bg" value="${currentBg}">
+                </div>
+                <div class="input-group" style="margin-bottom:10px;">
+                    <label>Border / Stroke Color:</label>
+                    <input type="color" id="ctx-box-bc" value="${currentBc}">
+                </div>
+                <div class="input-group">
+                    <label>Border Thickness (px):</label>
+                    <input type="number" id="ctx-box-bt" value="${currentBt}" min="0" max="20">
+                </div>
+                <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
+                    Tip: Set thickness to 0 to remove the border.
+                </div>
+            `;
+
+            DialogSystem.show('Format Properties', form, () => {
+                const bg = document.getElementById('ctx-box-bg').value;
+                const bc = document.getElementById('ctx-box-bc').value;
+                const bt = document.getElementById('ctx-box-bt').value;
+
+                if (isShape && svgOuter) {
+                    const isHollow = svgOuter.querySelector('g[fill="transparent"]') !== null;
+                    
+                    // If it's hollow and they leave it white, keep it transparent so the background shows through
+                    if (isHollow && bg === "#ffffff") {
+                        svgOuter.setAttribute('fill', 'transparent');
+                    } else {
+                        // Strip the hardcoded transparent inner-locks so the chosen color correctly applies
+                        svgOuter.setAttribute('fill', bg);
+                        svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
+                    }
+                    
+                    svgOuter.setAttribute('stroke', bc);
+                    svgOuter.setAttribute('stroke-width', bt);
+                    
+                    // Strip inner stroke-width locks so the outline thickness scales properly from the parent wrapper
+                    svgOuter.querySelectorAll('[stroke-width]').forEach(el => {
+                        if (el !== svgOuter) el.removeAttribute('stroke-width');
+                    });
+
+                    // Clear HTML box borders to prevent double-bordering boxes around the SVG
+                    if (content) {
+                        content.style.background = 'transparent';
+                        content.style.border = 'none';
+                    }
+                } else if (content) {
+                    // Standard HTML Text Box Formatting
+                    content.style.background = bg;
+                    content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
+                }
+                
+                if (typeof pushHistory === 'function') pushHistory();
+            });
+        };
+    }
+    
+    console.log("✅ Smart Formatting Router & Ribbon Fix loaded successfully.");
+})();
+/* =========================================================================
    UI FEATURE: Dynamic Page Format Indicator (App Toolbar Position Fix)
    ========================================================================= */
 (function initFormatIndicator() {
