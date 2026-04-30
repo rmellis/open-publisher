@@ -5996,7 +5996,10 @@ window.initWordArt = function() {
             position: fixed !important; 
             background: rgba(33, 115, 70, 0.25) !important; /* Excel Green */
             pointer-events: none !important; 
-            z-index: 999999 !important; 
+            
+            /* Dropped z-index to 99 so it sits below modals (usually 1000+) but above the canvas/rulers */
+            z-index: 99 !important; 
+            
             display: none; 
         }
         .op-ruler-highlight-h {
