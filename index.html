@@ -181,7 +181,7 @@
         </div>
     </div>
 
-    <div class="ribbon-toolbar" id="ribbon-insert">
+<div class="ribbon-toolbar" id="ribbon-insert">
         <div class="group">
             <div class="tool-btn" onclick="addTextBox()"><i class="fas fa-font"></i>Text Box</div>
             <div class="tool-btn" onclick="triggerUpload()"><i class="fas fa-image"></i>Picture</div>
@@ -191,6 +191,7 @@
         <div class="group">
             <div class="tool-btn" onclick="toggleShapeMenu(this); event.stopPropagation();"><i class="fas fa-shapes"></i>Shapes <i class="fas fa-caret-down"></i></div>
             <div class="tool-btn" onclick="showWordArtModal()"><i class="fas fa-text-width"></i>WordArt</div>
+            <div class="tool-btn" onclick="initBasicBorders(); toggleBorderMenu(this); event.stopPropagation();"><i class="fas fa-border-style"></i>Borders</div>
             <div class="group-label">Graphics</div>
         </div>
         <div class="group">
@@ -211,7 +212,7 @@
             <div class="group-label">Page Setup</div>
         </div>
         <div class="group">
-            <div class="tool-btn" onclick="toggleBorderMenu(this); event.stopPropagation();"><i class="far fa-square"></i>Borders</div>
+            <div class="tool-btn" onclick="initBasicBorders(); toggleBorderMenu(this); event.stopPropagation();"><i class="fas fa-border-style"></i>Borders</div>
             <div class="tool-btn" onclick="toggleHeaderFooter()"><i class="fas fa-columns"></i>H/F Toggle</div>
             <div class="group-label">Layout</div>
         </div>

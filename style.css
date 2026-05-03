@@ -899,3 +899,50 @@ body::-webkit-scrollbar-thumb:hover,
     width: 100% !important;
     padding-right: 0 !important;
 }
+/* =========================================================================
+   STRUCTURAL BORDERS (100% Native Print Compatibility)
+   ========================================================================= */
+/* Standard */
+.border-print-none { border: none !important; outline: none !important; }
+.border-print-solid { border-style: solid !important; outline: none !important; }
+.border-print-dashed { border-style: dashed !important; outline: none !important; }
+.border-print-dotted { border-style: dotted !important; outline: none !important; }
+.border-print-double { border-style: double !important; outline: none !important; }
+
+/* Fancy Structural (Uses border + outline to create un-strippable patterns) */
+.border-print-offset { 
+    border-style: solid !important; 
+    outline: 2px solid var(--border-color, #000) !important; 
+    outline-offset: -10px !important; 
+}
+.border-print-museum { 
+    border-style: double !important; 
+    outline: 3px solid var(--border-color, #000) !important; 
+    outline-offset: -12px !important; 
+}
+.border-print-gallery {
+    border-style: ridge !important;
+    outline: 1px solid var(--border-color, #000) !important;
+    outline-offset: -6px !important;
+}
+
+/* Force exact ink colors during print */
+@media print {
+#paper {
+    padding: 15px; /* Creates the physical safe zone from the edge */
+    box-sizing: border-box;
+}
+
+.printable-flow-border {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    /* The border goes HERE, inside the safe zone, in the normal DOM flow */
+}
+
+@media print {
+    .printable-flow-border {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
