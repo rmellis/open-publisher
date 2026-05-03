@@ -2898,12 +2898,13 @@ function saveDocument() {
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = docData.title + '.json';
+    a.download = docData.title + '.opub'; 
     a.click();
 }
 
 function openDocument() { document.getElementById('file-open').click(); }
 
+// --- STANDARD FILE OPEN MENU ---
 document.getElementById('file-open').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -2912,37 +2913,39 @@ document.getElementById('file-open').addEventListener('change', (e) => {
 
     // 1. Handle Publisher Files
     if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
-        uploadAndConvertPub(file);
-        e.target.value = ''; // Reset input
+        if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
+        e.target.value = ''; 
         return;
     }
 
     // 2. Handle Word Documents
     if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
-        uploadAndConvertDoc(file);
-        e.target.value = ''; // Reset input
+        if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
+        e.target.value = ''; 
         return;
     }
 
-    // 3. Handle standard JSON OpenPublisher files
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-        try {
-            const data = JSON.parse(evt.target.result);
-            document.getElementById('doc-title').innerText = data.title;
-            state.pages = data.pages;
-            state.currentPageIndex = 0;
-            renderPage(state.pages[0]);
-            setTimeout(() => {
-                updateThumbnails();
-                pushHistory(); 
-            }, 500);
-        } catch(err) { 
-            DialogSystem.alert('Error', "Error opening file: " + err); 
-        }
-    };
-    reader.readAsText(file);
-    e.target.value = ''; // Reset input
+    // 3. Handle OpenPublisher Native Files (.json or .opub)
+    if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const data = JSON.parse(evt.target.result);
+                document.getElementById('doc-title').innerText = data.title;
+                state.pages = data.pages;
+                state.currentPageIndex = 0;
+                renderPage(state.pages[0]);
+                setTimeout(() => {
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    if (typeof pushHistory === 'function') pushHistory(); 
+                }, 500);
+            } catch(err) { 
+                if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error opening file: " + err); 
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; 
+    }
 });
 
 window.downloadPDF = async function() {
@@ -6845,6 +6848,436 @@ window.renderPage = function(page) {
     }
 };
 /* =========================================================================
+   DRAG & DROP IMPORT FIX (Images, .pub, .doc, .docx, .json, .opub)
+   ========================================================================= */
+(function installDragAndDrop() {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+    document.body.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (!files || files.length === 0) return;
+
+        Array.from(files).forEach(file => {
+            const fileName = file.name.toLowerCase();
+
+            // --- A. HANDLE IMAGES ---
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        const maxWidth = 400; const maxHeight = 400;
+                        let targetWidth = img.width; let targetHeight = img.height;
+                        if (targetWidth > maxWidth || targetHeight > maxHeight) {
+                            const ratio = Math.min(maxWidth / targetWidth, maxHeight / targetHeight);
+                            targetWidth = targetWidth * ratio; targetHeight = targetHeight * ratio;
+                        }
+                        if (typeof createWrapper === 'function') {
+                            const wrapper = createWrapper(`<img src="${evt.target.result}" style="width:100%; height:100%; position:absolute; top:0; left:0;">`);
+                            wrapper.style.width = targetWidth + 'px'; wrapper.style.height = targetHeight + 'px';
+                        }
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            } 
+            
+            // --- B. HANDLE PUBLISHER FILES (.pub, .pubx) ---
+            else if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+                if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
+            } 
+            
+            // --- C. HANDLE WORD DOCUMENTS (.doc, .docx) ---
+            else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+                if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
+            } 
+            
+            // --- D. HANDLE OPENPUBLISHER NATIVE FILES (.json, .opub) ---
+            else if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        document.getElementById('doc-title').innerText = data.title;
+                        state.pages = data.pages; state.currentPageIndex = 0;
+                        renderPage(state.pages[0]);
+                        setTimeout(() => {
+                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                            if (typeof pushHistory === 'function') pushHistory();
+                        }, 500);
+                    } catch(err) {
+                        if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error opening file: " + err);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+})();
+/* =========================================================================
+   PUBLISHER DOCUMENT CONVERSION ENDPOINT (.pub / .pubx)
+   (Fixed FormData Key)
+   ========================================================================= */
+function uploadAndConvertPub(file) {
+    
+    // --- 1. THE PRE-FLIGHT MENU ---
+    const promptHtml = `
+        <style>
+            .op-import-modal { font-family: 'Segoe UI', sans-serif; color: #334155; width: 100%; box-sizing: border-box; }
+            .op-import-modal p { margin-top: 0; font-size: 13px; margin-bottom: 12px; font-weight: 500; }
+            .op-import-card { display: block; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease; background: #ffffff; width: 100%; box-sizing: border-box; }
+            .op-import-card:hover { border-color: #94a3b8; background: #f8fafc; }
+            .op-import-card:has(input:checked) { border-color: #0ea5e9; background: #f0f9ff; }
+            .op-import-card.safe-mode { border-color: #fde68a; background: #fffbeb; }
+            .op-import-card.safe-mode:hover { border-color: #fcd34d; background: #fef3c7; }
+            .op-import-card.safe-mode:has(input:checked) { border-color: #f59e0b; background: #fef3c7; }
+            .op-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+            .op-import-card input[type="radio"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #0ea5e9; }
+            .op-import-card.safe-mode input[type="radio"] { accent-color: #d97706; }
+            .op-import-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-size: 13px; }
+            .icon-edit { background: #e0f2fe; color: #0284c7; }
+            .icon-safe { background: #fef3c7; color: #d97706; }
+            .op-import-title { font-weight: 600; font-size: 13px; color: #0f172a; }
+            .title-safe { color: #92400e; }
+            .op-import-desc { font-size: 11.5px; color: #64748b; line-height: 1.4; margin-left: 24px; display: block; white-space: normal; }
+            .desc-safe { color: #92400e; }
+            .op-import-actions { display: flex; gap: 8px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+            .op-btn { flex: 1; padding: 8px 0; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; transition: all 0.2s; border: none; text-align: center; }
+            .op-btn-cancel { background: #f1f5f9; color: #475569; }
+            .op-btn-cancel:hover { background: #e2e8f0; color: #0f172a; }
+            .op-btn-start { background: #0ea5e9; color: white; }
+            .op-btn-start:hover { background: #0284c7; }
+        </style>
+
+        <div class="op-import-modal">
+            <p>Select how to process this Publisher file:</p>
+            <label class="op-import-card">
+                <div class="op-card-header">
+                    <input type="radio" name="importModePub" id="mode-editable-pub" value="editable" checked>
+                    <div class="op-import-icon icon-edit"><i class="fas fa-file-signature"></i></div>
+                    <span class="op-import-title">Editable Text Mode</span>
+                </div>
+                <span class="op-import-desc">Extracts text and layout. Best for files that you need to edit.</span>
+            </label>
+
+            <label class="op-import-card safe-mode">
+                <div class="op-card-header">
+                    <input type="radio" name="importModePub" id="mode-image-pub" value="image">
+                    <div class="op-import-icon icon-safe"><i class="fas fa-file-image"></i></div>
+                    <span class="op-import-title title-safe">Flattened Image Mode</span>
+                </div>
+                <span class="op-import-desc desc-safe">Converts the document to a high-res, uneditable image. 100% accurate layout.</span>
+            </label>
+
+            <div class="op-import-actions">
+                <button id="btn-cancel-pub" class="op-btn op-btn-cancel">Cancel</button>
+                <button id="btn-start-pub" class="op-btn op-btn-start"><i class="fas fa-cloud-upload-alt" style="margin-right:6px;"></i>Start</button>
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show('Import Publisher File', promptHtml, null, true);
+    
+    setTimeout(() => {
+        const dialogContent = document.getElementById('custom-dialog-content');
+        if (dialogContent && dialogContent.parentElement) {
+            dialogContent.parentElement.style.width = '520px';
+            dialogContent.parentElement.style.maxWidth = '95vw';
+        }
+    }, 10);    
+    
+    const defaultConfirm = document.getElementById('custom-dialog-confirm');
+    if (defaultConfirm) defaultConfirm.style.display = 'none';
+
+    document.getElementById('btn-cancel-pub').onclick = () => DialogSystem.close();
+
+    document.getElementById('btn-start-pub').onclick = () => {
+        const isImageMode = document.getElementById('mode-image-pub').checked;
+        
+        // --- 2. PROGRESS BAR ---
+        const progressHtml = `
+            <div style="text-align:center; padding: 10px;">
+                <p id="convert-status-pub" style="margin-bottom:15px; font-weight:bold;">Processing Publisher Document...</p>
+                <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                    <div id="convert-progress-pub" style="width:0%; height:100%; background:var(--selection); transition: width 0.3s;"></div>
+                </div>
+            </div>
+        `;
+        
+        DialogSystem.show('Processing...', progressHtml, null, true);
+        const newConfirm = document.getElementById('custom-dialog-confirm');
+        if (newConfirm) newConfirm.style.display = 'none';
+
+        // --- 3. EXECUTE CONVERSION ---
+        const formData = new FormData();
+        
+        // 🐛 THE FIX: Changed 'docFile' to 'pubFile' so the backend knows it's a Publisher document!
+        formData.append('pubFile', file); 
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://determine-regardless-passage-occurring.trycloudflare.com/api/convert-pub', true); 
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 40; 
+                const progressBar = document.getElementById('convert-progress-pub');
+                if (progressBar) progressBar.style.width = percentComplete + '%';
+                
+                if (percentComplete >= 40) {
+                    const statusText = document.getElementById('convert-status-pub');
+                    if (statusText) statusText.innerText = "Generating the layout...";
+                    
+                    let fakeProgress = 40;
+                    window.convertIntervalPub = setInterval(() => {
+                        if(fakeProgress < 75) {
+                            fakeProgress += 1;
+                            const pb = document.getElementById('convert-progress-pub');
+                            if (pb) pb.style.width = fakeProgress + '%';
+                        }
+                    }, 800);
+                }
+            }
+        };
+
+        xhr.onload = async function() {
+            clearInterval(window.convertIntervalPub);
+            
+            if (xhr.status === 200) {
+                const pb = document.getElementById('convert-progress-pub');
+                if (pb) pb.style.width = '85%';
+                const statusText = document.getElementById('convert-status-pub');
+                if (statusText) statusText.innerText = "Processing Mapping...";
+                
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    const binaryString = window.atob(data.pdfData);
+                    const binaryLen = binaryString.length;
+                    const bytes = new Uint8Array(binaryLen);
+                    for (let i = 0; i < binaryLen; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+
+                    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                    let opPages = [];
+                    let hasImages = false;
+                    const ops = pdfjsLib.OPS || { paintJpegXObject: 82, paintImageXObject: 85, paintImageMaskXObject: 83 };
+                    const imageOps = [ops.paintJpegXObject, ops.paintImageXObject, ops.paintImageMaskXObject];
+
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const opList = await page.getOperatorList();
+                        if (opList.fnArray.some(op => imageOps.includes(op))) {
+                            hasImages = true; break; 
+                        }
+                    }
+
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 1.0 });
+                        const ratio = 96 / 72;
+                        
+                        const pageWidth = Math.round(viewport.width * ratio);
+                        const pageHeight = Math.round(viewport.height * ratio);
+
+                        let elements = [];
+                        let zIndexCounter = 10;
+                        
+                        if (isImageMode) {
+                            const status = document.getElementById('convert-status-pub');
+                            if (status) status.innerText = `Rendering High-Res Image (Page ${pageNum})...`;
+                            
+                            const viewportImg = page.getViewport({ scale: 2.5 }); 
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = viewportImg.width; canvas.height = viewportImg.height;
+                            await page.render({ canvasContext: ctx, viewport: viewportImg }).promise;
+                            
+                            const imgDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+                            elements.push({
+                                left: "0px", top: "0px", width: "100%", height: "100%",
+                                transform: "none", zIndex: "1", type: "box", 
+                                innerHTML: "", imgSrc: imgDataUrl, clipPath: "", bg: "", cropMode: false,
+                                imgStyle: { width: "100%", height: "100%", position: "absolute", pointerEvents: "none" },
+                                scaleX: "1", scaleY: "1"
+                            });
+
+                        } else {
+                            const status = document.getElementById('convert-status-pub');
+                            if (status) status.innerText = `Extracting Editable Text (Page ${pageNum})...`;
+
+                            let bgImgData = null; 
+                            let canvasWidth = 0; let canvasHeight = 0;
+
+                            const viewportImg = page.getViewport({ scale: 2.0 }); 
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                            canvas.width = viewportImg.width; canvas.height = viewportImg.height;
+                            await page.render({ canvasContext: ctx, viewport: viewportImg }).promise;
+                            
+                            bgImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            canvasWidth = canvas.width; canvasHeight = canvas.height;
+                            
+                            if (hasImages) {
+                                const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                                elements.push({
+                                    left: "0px", top: "0px", width: "100%", height: "100%",
+                                    transform: "none", zIndex: "1", type: "box", 
+                                    innerHTML: "", imgSrc: imgDataUrl, clipPath: "", bg: "", cropMode: false,
+                                    imgStyle: { width: "100%", height: "100%", position: "absolute", pointerEvents: "none" },
+                                    scaleX: "1", scaleY: "1"
+                                });
+                            }
+
+                            await page.getOperatorList(); 
+                            const textContent = await page.getTextContent();
+                            const items = [];
+                            
+                            textContent.items.forEach(item => {
+                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, '•');
+                                if (!str) return;
+
+                                const tx = item.transform[4] * ratio;
+                                const ty = (viewport.height - item.transform[5]) * ratio;
+                                const fontSize = Math.abs(item.transform[0] || item.transform[3]) * ratio;
+                                
+                                let isItalicFont = Math.abs(item.transform[1]) > 0.1 || Math.abs(item.transform[2]) > 0.1;
+                                let isBoldFont = false;
+
+                                try {
+                                    const rawFont = page.commonObjs.get(item.fontName) || page.objs.get(item.fontName);
+                                    const realName = (rawFont?.name || rawFont?.fallbackName || "").toLowerCase();
+                                    isBoldFont = realName.includes("bold") || realName.includes("black") || realName.includes("heavy");
+                                    if (!isItalicFont) isItalicFont = realName.includes("italic") || realName.includes("oblique");
+                                } catch(e) {}
+                                
+                                if (!isBoldFont || !isItalicFont) {
+                                    const fallbackStyle = textContent.styles[item.fontName] || {};
+                                    const fallbackName = (fallbackStyle.fontFamily || fallbackStyle.name || "").toLowerCase();
+                                    if (!isBoldFont) isBoldFont = fallbackName.includes("bold") || fallbackName.includes("black") || fallbackName.includes("heavy");
+                                    if (!isItalicFont) isItalicFont = fallbackName.includes("italic") || fallbackName.includes("oblique");
+                                }
+
+                                let optR = 0, optG = 0, optB = 0, samples = 0;
+                                let py = Math.floor((ty - fontSize * 0.3) * (2.0 / ratio)); 
+                                
+                                if (py >= 0 && py < canvasHeight) {
+                                    for (let x = 0; x < (item.width * ratio); x += 2) {
+                                        let px = Math.floor((tx + x) * (2.0 / ratio));
+                                        if (px >= 0 && px < canvasWidth) {
+                                            const idx = (py * canvasWidth + px) * 4;
+                                            const r = bgImgData.data[idx]; const g = bgImgData.data[idx+1]; const b = bgImgData.data[idx+2];
+                                            if (r < 240 || g < 240 || b < 240) {
+                                                optR += r; optG += g; optB += b; samples++;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                let finalColor = 'black';
+                                if (samples > 0) finalColor = `rgb(${Math.round(optR/samples)}, ${Math.round(optG/samples)}, ${Math.round(optB/samples)})`;
+
+                                const isFormLine = /^[_.\-|=☑\[\]]+$/.test(str.replace(/\s/g, ''));
+                                items.push({ str, tx, ty, width: item.width * ratio, fontSize, isBold: isBoldFont, isItalic: isItalicFont, isFormLine, color: finalColor });
+                            });
+
+                            items.sort((a, b) => b.str.length - a.str.length);
+                            const finalItems = [];
+                            
+                            items.forEach(item => {
+                                let isDup = false;
+                                finalItems.forEach(existing => {
+                                    const diffX = Math.abs(existing.tx - item.tx);
+                                    const diffY = Math.abs(existing.ty - item.ty);
+                                    
+                                    if (diffY < (item.fontSize * 0.3) && diffX < (item.fontSize * 0.5)) {
+                                        if (existing.str.includes(item.str) || item.str.includes(existing.str)) {
+                                            isDup = true;
+                                            if (diffX > 0.1 && diffX < 3.0) existing.isBold = true;
+                                            if (item.isItalic) existing.isItalic = true;
+                                            if (item.isBold) existing.isBold = true;
+                                            if (item.str.length > existing.str.length) { existing.str = item.str; existing.width = item.width; }
+                                        }
+                                    }
+                                });
+                                if (!isDup) finalItems.push(item);
+                            });
+
+                            finalItems.forEach(item => {
+                                const safeWidth = (item.width * 1.05) + 10; 
+                                const top = item.ty - (item.fontSize * 0.85);
+                                let haloCSS = "text-shadow: none;";
+                                
+                                if (hasImages && !item.isFormLine && bgImgData) {
+                                    let px = Math.floor(item.tx * (2.0 / ratio));
+                                    let py = Math.floor((item.ty - item.fontSize * 0.8) * (2.0 / ratio));
+                                    if(px < 0) px = 0; if(py < 0) py = 0; if(px >= canvasWidth) px = canvasWidth - 1; if(py >= canvasHeight) py = canvasHeight - 1;
+                                    const idx = (py * canvasWidth + px) * 4;
+                                    const hColor = `rgb(${bgImgData.data[idx]}, ${bgImgData.data[idx+1]}, ${bgImgData.data[idx+2]})`;
+                                    haloCSS = `text-shadow: 2px 0 2px ${hColor}, -2px 0 2px ${hColor}, 0 2px 2px ${hColor}, 0 -2px 2px ${hColor}, 2px 2px 2px ${hColor}, -2px -2px 2px ${hColor}, 2px -2px 2px ${hColor}, -2px 2px 2px ${hColor};`;
+                                }
+                                
+                                const weightCSS = item.isBold ? "font-weight: bold !important;" : "font-weight: normal;";
+                                const styleCSS = item.isItalic ? "font-style: italic !important;" : "font-style: normal;";
+
+                                elements.push({
+                                    left: `${item.tx.toFixed(1)}px`, top: `${top.toFixed(1)}px`, 
+                                    width: `${safeWidth.toFixed(1)}px`, height: `${(item.fontSize * 1.2).toFixed(1)}px`, 
+                                    transform: "none", zIndex: (zIndexCounter++).toString(), type: "box", 
+                                    innerHTML: `<div style="width:100%; height:100%; font-family:sans-serif; color:${item.color}; font-size:${item.fontSize.toFixed(1)}px; line-height:1; white-space:nowrap; overflow:visible; background:transparent; ${haloCSS} padding: 0;"><span style="${weightCSS} ${styleCSS}">${item.str}</span></div>`, 
+                                    imgSrc: "", clipPath: "", bg: "", cropMode: false, imgStyle: {}, scaleX: "1", scaleY: "1"
+                                });
+                            });
+                        }
+
+                        opPages.push({
+                            id: Date.now() + pageNum,
+                            width: `${pageWidth}px`, height: `${pageHeight}px`,
+                            background: "#ffffff", elements: elements,
+                            header: "", footer: "", borderStyle: "none", thumb: ""
+                        });
+                    }
+
+                    const pb = document.getElementById('convert-progress-pub');
+                    if (pb) pb.style.width = '100%';
+                    setTimeout(() => {
+                        document.getElementById('doc-title').innerText = data.title;
+                        state.pages = opPages;
+                        state.currentPageIndex = 0;
+                        renderPage(state.pages[0]);
+                        
+                        if(typeof updateThumbnails === 'function') updateThumbnails();
+                        if(typeof pushHistory === 'function') pushHistory(); 
+                        DialogSystem.close(); 
+                    }, 500);
+
+                } catch(err) {
+                    console.error(err);
+                    DialogSystem.close();
+                    DialogSystem.alert('Error', "Failed to assemble layout from the Publisher document.");
+                }
+            } else {
+                DialogSystem.close();
+                DialogSystem.alert('Error', "I don't understand, I cannot process this Publisher file.");
+            }
+        };
+
+        xhr.onerror = function() {
+            clearInterval(window.convertIntervalPub);
+            DialogSystem.close();
+            DialogSystem.alert('Error', "Could not reach the conversion server.");
+        };
+
+        xhr.send(formData);
+    };
+}
+/* =========================================================================
    OPENPUBLISHER ADDON: Unifide Orientation (noflicker)
    ========================================================================= */
 // 1. Global registry to remember which pages we've already auto-fixed.
@@ -9620,6 +10053,7 @@ window.initShapes = function() {
     
     console.log("✅ Smart Formatting Router & Ribbon Fix loaded successfully.");
 })();
+
 /* =========================================================================
    UI FEATURE: Dynamic Page Format Indicator (App Toolbar Position Fix)
    ========================================================================= */
