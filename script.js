@@ -127,9 +127,15 @@ window.onload = function() {
     document.addEventListener('keyup', handleKeyUp); 
     
     // Track selection changes to update Float Bar state
-    document.addEventListener('selectionchange', () => {
-        if(state.isProgrammaticUpdate) return; 
+let selectionTimer = null;
+document.addEventListener('selectionchange', () => {
+    if(state.isProgrammaticUpdate) return; 
 
+    // Clear the timer if the user is still actively highlighting
+    if (selectionTimer) clearTimeout(selectionTimer);
+    
+    // Wait 150ms after they stop dragging before updating the UI
+    selectionTimer = setTimeout(() => {
         const sel = window.getSelection();
         if(sel.rangeCount > 0) {
             const range = sel.getRangeAt(0);
@@ -138,7 +144,8 @@ window.onload = function() {
                 if(state.selectedEl) updateFloatToolbarValues();
             }
         }
-    });
+    }, 150); 
+});
 
     document.addEventListener('keydown', (e) => {
         // Key Shortcuts
@@ -3037,11 +3044,11 @@ function initRulers() {
     if(vp) vp.addEventListener('scroll', window.syncRulers);
     window.addEventListener('resize', window.syncRulers);
     
-    // Guarantee rulers stay glued during layout shifts
-    setInterval(window.syncRulers, 100);
-    
     // Force the initial mathematical draw
     window.lastRulerZoom = -1; 
+    
+    // Trigger an initial sync to draw them on load
+    setTimeout(window.syncRulers, 50);
 }
 
 window.syncRulers = function() {
@@ -4634,7 +4641,15 @@ window.handleMouseDown = function(e) {
 };
 
 window.handleMouseMove = function(e) {
-    const cd = document.getElementById('coord-display'); if(cd) cd.innerText = `X: ${e.clientX} | Y: ${e.clientY}`;
+    // --- PERFORMANCE FIX: Debounce coordinate updates to stop DOM thrashing ---
+    if (!window.coordUpdatePending) {
+        window.coordUpdatePending = requestAnimationFrame(() => {
+            const cd = document.getElementById('coord-display'); 
+            if(cd) cd.innerText = `X: ${e.clientX} | Y: ${e.clientY}`;
+            window.coordUpdatePending = null;
+        });
+    }
+    
     if(!state.dragMode && !state.cropMode) {
         const el = e.target.closest('.pub-element');
         if(el) {
@@ -6847,6 +6862,42 @@ window.renderPage = function(page) {
         window.originalRenderPage(page);
     }
 };
+/* =========================================================================
+   PERFORMANCE ADDON: Smart Thumbnail Debouncer (Anti-Freeze)
+   ========================================================================= */
+(function installAntiLag() {
+    console.log("🛠️ Anti-Lag Script initializing...");
+
+    let thumbnailTimer = null;
+
+    // Overwrite the global updateThumbnails function
+    window.updateThumbnails = function() {
+        // Clear any pending renders if the user keeps clicking
+        if (thumbnailTimer) clearTimeout(thumbnailTimer);
+
+        // Defer the heavy html2canvas process by 1.5 seconds
+        thumbnailTimer = setTimeout(() => {
+            // CRITICAL: Abort if the user is actively dragging, cropping, or typing!
+            if (state.dragMode || state.cropMode || (document.activeElement && document.activeElement.isContentEditable)) {
+                // Re-queue it for later
+                window.updateThumbnails();
+                return;
+            }
+
+            // Use requestIdleCallback to render in the background without blocking the UI
+            if (window.requestIdleCallback) {
+                requestIdleCallback(() => {
+                    if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
+                });
+            } else {
+                // Fallback for older browsers
+                if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
+            }
+        }, 1500); 
+    };
+
+    console.log("✅ Anti-Lag successfully applied.");
+})();
 /* =========================================================================
    DRAG & DROP IMPORT FIX (Images, .pub, .doc, .docx, .json, .opub)
    ========================================================================= */
