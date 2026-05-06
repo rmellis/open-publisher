@@ -13003,6 +13003,100 @@ function initBasicBorders() {
 
 })();
 /* =========================================================================
+   MODERN SAVE SYSTEM (File System Access API + Title Sync)
+   Upgrades the save dialog to allow syncing the chosen filename to the UI.
+   ========================================================================= */
+(function upgradeSaveSystem() {
+    
+    // Overwrite the original save function
+    window.saveDocument = async function() {
+        
+        // 1. Serialize the current page before saving
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+        
+        // Get the current title from the UI
+        const currentTitle = document.getElementById('doc-title').innerText || 'Publication1';
+        
+        const docData = {
+            title: currentTitle,
+            pages: state.pages
+        };
+        
+        const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
+
+        // 2. Try to use the modern File System API (Chrome/Edge/Opera)
+        if (window.showSaveFilePicker) {
+            try {
+                // Pop the OS Save Dialog and wait for the user's decision
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: currentTitle + '.opub',
+                    types: [{
+                        description: 'Open Publisher Document',
+                        accept: { 'application/json': ['.opub'] },
+                    }],
+                });
+
+                // Write the file to their hard drive
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+
+                // ✨ THE FIX: Update the UI with the exact name they typed!
+                // We strip the ".opub" extension off so it looks clean in the toolbar
+                const newName = fileHandle.name.replace(/\.opub$/i, '');
+                document.getElementById('doc-title').innerText = newName;
+                
+                // Optional: Flash a quick success message
+                if (typeof DialogSystem !== 'undefined') {
+                    DialogSystem.alert('Saved', `Document successfully saved as "${fileHandle.name}"`);
+                }
+
+            } catch (err) {
+                // If they clicked "Cancel" in the OS dialog, an AbortError is thrown.
+                // We can safely ignore it.
+                if (err.name !== 'AbortError') {
+                    console.error('Save failed:', err);
+                }
+            }
+        } 
+        // 3. FALLBACK for Firefox/Safari (They don't fully support the new API yet)
+        else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = currentTitle + '.opub';
+            a.click();
+            
+            // Clean up the memory leak 
+            setTimeout(() => URL.revokeObjectURL(a.href), 100);
+        }
+    };
+    
+    console.log("✅ Modern Save System with Title Sync installed.");
+})();
+/* =========================================================================
+   SAVE SHORTCUT OVERRIDE (Ctrl+S / Cmd+S)
+   Prevents the browser from saving the HTML page and routes to app save.
+   ========================================================================= */
+(function installSaveShortcut() {
+    document.addEventListener('keydown', function(e) {
+        // Check if Ctrl (Windows/Linux) or Meta/Cmd (Mac) + S is pressed
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            
+            // 1. Stop the browser from downloading the raw .html file
+            e.preventDefault(); 
+            
+            // 2. Trigger your Open Publisher save function
+            if (typeof window.saveDocument === 'function') {
+                window.saveDocument();
+            } else {
+                console.error("Open Publisher: saveDocument() is not accessible.");
+            }
+        }
+    }, true); // Use capture phase to intercept it early
+
+    console.log("✅ Save shortcut (Ctrl+S) override installed successfully.");
+})();
+/* =========================================================================
    Print Router & Auto-Orientation
    Hooks natively into the browser's print pipeline & detects Landscape/Portrait
    ========================================================================= */
