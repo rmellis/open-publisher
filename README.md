@@ -20,7 +20,7 @@ Welcome to **Open Publisher**! This is a lightweight desktop publishing tool tha
 ## 1. The Native Desktop Experience (New)
 
 
-With version 4.0.0, we focused on making Open Publisher feel at home on your computer, no matter what operating system you use. 
+With version 4, we focused on making Open Publisher feel at home on your computer, no matter what operating system you use. 
 <img width="1327" height="729" alt="Screenshot of the app running as a desktop window on Windows/Mac/Linux" src="https://github.com/user-attachments/assets/2feeb211-3047-417d-b8cc-0f02af03664c" />
 <table>
   <tr>
