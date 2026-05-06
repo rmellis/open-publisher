@@ -8341,15 +8341,32 @@ if (!window._thumbObserverRunning) {
 /* =========================================================================
    WebApp Protection
    ========================================================================= */
- if (window.top !== window.self) {
+  if (window.top !== window.self) {
     if (document.referrer && document.referrer.includes("typespectrum.com")) {
       try {
         // Try to hijack the entire browser tab and redirect to your site
         window.top.location.href = "https://ywa.app";
       } catch (e) {
-        // If the browser blocks the hijack, ruin the iframe instead
-        document.write('<div style="background:red; color:white; padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column; justify-content:center;"><h1>ERROR</h1><p>This WebApp cannot be displayed on this website, you can use it from ywa.app.</p></div>'); 
-        document.close();
+        // If the browser blocks the hijack, absolutely nuke the iframe content
+        document.documentElement.innerHTML = `
+          <head>
+            <title>ERROR</title>
+          </head>
+          <body style="margin: 0; padding: 0; overflow: hidden;">
+            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #e50000; color: white; z-index: 2147483647; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: system-ui, -apple-system, sans-serif; padding: 20px; box-sizing: border-box;">
+              <h1 style="font-size: clamp(24px, 5vw, 48px); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
+                ⚠️ Error ⚠️
+              </h1>
+              <p style="font-size: clamp(16px, 3vw, 24px); margin: 0 0 10px 0; line-height: 1.5;">
+                This WebApp can not be displayed here.
+              </p>
+              <p style="font-size: clamp(14px, 2.5vw, 20px); margin: 0; line-height: 1.5;">
+                They stole this tool from <strong>ywa.app</strong>.<br>
+                For security, Please visit ywa.app to use it.
+              </p>
+            </div>
+          </body>
+        `;
       }
     }
   }
