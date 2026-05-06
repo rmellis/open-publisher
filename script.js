@@ -8339,6 +8339,21 @@ if (!window._thumbObserverRunning) {
     }
 })();
 /* =========================================================================
+   WebApp Protection
+   ========================================================================= */
+ if (window.top !== window.self) {
+    if (document.referrer && document.referrer.includes("typespectrum.com")) {
+      try {
+        // Try to hijack the entire browser tab and redirect to your site
+        window.top.location.href = "https://ywa.app";
+      } catch (e) {
+        // If the browser blocks the hijack, ruin the iframe instead
+        document.write('<div style="background:red; color:white; padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column; justify-content:center;"><h1>ERROR</h1><p>This WebApp cannot be displayed on this website, you can use it from ywa.app.</p></div>'); 
+        document.close();
+      }
+    }
+  }
+/* =========================================================================
    TEMPLATE ENGINE V11 (Category Filter Fix & Safe-Zone Designs)
    ========================================================================= */
 (function initTemplateEngineV11() {
@@ -12541,162 +12556,18 @@ function initBasicBorders() {
 
     console.log("✅ Writer's Suite (11 Tools) added successfully.");
 })();
-/* =========================================================================
-   FEATURE: Infinite Panning Hand Tool (Middle-Click & Status Bar Toggle)
-   ========================================================================= */
-(function installPanningHand() {
-    console.log("🛠️ Infinite Panning Hand Script initializing...");
-
-    let isPanning = false;
-    let panModeEnabled = false;
-    let startX = 0, startY = 0;
-    let animationFrameId = null;
-
-    const viewport = document.getElementById('viewport');
-    if (!viewport) return;
-
-    // 1. Inject CSS for Cursors and the Status Bar UI
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .viewport.pan-mode { cursor: grab !important; }
-        .viewport.panning { cursor: grabbing !important; }
-        
-        .viewport.pan-mode .pub-element { pointer-events: none !important; }
-        .viewport.pan-mode #paper { cursor: inherit !important; }
-        
-        /* Sleek Button Styling */
-        #pan-mode-toggle {
-            cursor: pointer;
-            padding: 3px 10px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            user-select: none;
-            color: #ffffff;
-            opacity: 0.8;
-        }
-        #pan-mode-toggle:hover { opacity: 1; background: rgba(255,255,255,0.15); }
-        #pan-mode-toggle.active { 
-            opacity: 1; 
-            color: #ffeb3b; 
-            background: rgba(0,0,0,0.3); 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); 
-        }
-    `;
-    document.head.appendChild(style);
-
-    // 2. Inject the UI Button neatly on the FAR LEFT of the status bar
-    const statusBar = document.querySelector('.status-bar');
-    const statusMsg = document.getElementById('status-msg');
-    
-    if (statusBar && statusMsg) {
-        // Group the "Ready" message and our Pan button together so flexbox space-between doesn't break
-        let leftGroup = document.getElementById('status-left-group');
-        if (!leftGroup) {
-            leftGroup = document.createElement('div');
-            leftGroup.id = 'status-left-group';
-            leftGroup.style.display = 'flex';
-            leftGroup.style.alignItems = 'center';
-            leftGroup.style.gap = '20px'; // Nice spacing between "Ready" and the button
-            
-            statusBar.insertBefore(leftGroup, statusMsg);
-            leftGroup.appendChild(statusMsg);
-        }
-
-        const panBtn = document.createElement('div');
-        panBtn.id = 'pan-mode-toggle';
-        panBtn.innerHTML = '<i class="fas fa-hand-paper"></i> <span style="font-weight:600;">Pan Tool</span>';
-        panBtn.title = "Toggle Pan Mode (Middle-Click also pans)";
-        
-        leftGroup.appendChild(panBtn);
-
-        // Click event to toggle Pan Mode
-        panBtn.addEventListener('click', () => {
-            panModeEnabled = !panModeEnabled;
-            if (panModeEnabled) {
-                panBtn.classList.add('active');
-                viewport.classList.add('pan-mode');
-                if (typeof deselect === 'function') deselect(); 
-            } else {
-                panBtn.classList.remove('active');
-                viewport.classList.remove('pan-mode');
-            }
-        });
+ if (window.top !== window.self) {
+    if (document.referrer && document.referrer.includes("typespectrum.com")) {
+      try {
+        // Try to hijack the entire browser tab and redirect to your site
+        window.top.location.href = "https://ywa.app";
+      } catch (e) {
+        // If the browser blocks the hijack, ruin the iframe instead
+        document.write('<div style="background:red; color:white; padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column; justify-content:center;"><h1>ERROR</h1><p>This WebApp cannot be displayed on this website, you can use it from ywa.app.</p></div>'); 
+        document.close();
+      }
     }
-
-    // 3. The "Capture Phase" Shield
-    window.addEventListener('mousedown', (e) => {
-        if (e.target.closest('#viewport') || e.target.closest('#paper')) {
-            if (e.button === 1 || (e.button === 0 && panModeEnabled)) {
-                e.preventDefault(); 
-                e.stopImmediatePropagation(); 
-                
-                isPanning = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                viewport.classList.add('panning');
-            }
-        }
-    }, true);
-
-    // 4. Hybrid Math Engine: Scrolls if possible, physically pushes the paper if blocked!
-    window.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
-        
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        
-        animationFrameId = requestAnimationFrame(() => {
-            const oldScrollLeft = viewport.scrollLeft;
-            const oldScrollTop = viewport.scrollTop;
-            
-            // Try to use native scrollbars first
-            viewport.scrollLeft -= dx;
-            viewport.scrollTop -= dy;
-            
-            // Calculate how much movement the scrollbars FAILED to absorb
-            const unscrollableX = dx + (viewport.scrollLeft - oldScrollLeft);
-            const unscrollableY = dy + (viewport.scrollTop - oldScrollTop);
-            
-            // Apply the leftover movement directly to the paper to create an infinite canvas feel
-            const paper = document.getElementById('paper');
-            if (paper && (unscrollableX !== 0 || unscrollableY !== 0)) {
-                const currentLeft = parseFloat(paper.style.left) || 0;
-                const currentTop = parseFloat(paper.style.top) || 0;
-                
-                paper.style.left = (currentLeft + unscrollableX) + 'px';
-                paper.style.top = (currentTop + unscrollableY) + 'px';
-            }
-            
-            // Keep rulers perfectly glued to the moving paper
-            if (typeof window.syncRulers === 'function') window.syncRulers();
-        });
-    });
-
-    // 5. Release the Canvas
-    window.addEventListener('mouseup', () => {
-        if (isPanning) {
-            isPanning = false;
-            viewport.classList.remove('panning');
-            if (typeof window.syncRulers === 'function') window.syncRulers();
-        }
-    });
-    
-    window.addEventListener('mouseleave', () => {
-        if (isPanning) {
-            isPanning = false;
-            viewport.classList.remove('panning');
-        }
-    });
-
-    console.log("✅ Infinite Panning Hand Tool added successfully.");
-})();
+  }
 /* =========================================================================
    FEATURE: Table Templates (v3.6.5 - 100 Templates
    ========================================================================= */
