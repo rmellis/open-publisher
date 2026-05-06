@@ -1,4 +1,4 @@
-# 📘 Open Publisher – User Guide (v4.0.0)
+# 📘 Open Publisher – User Guide (v4)
 
 Welcome to **Open Publisher**! This is a lightweight desktop publishing tool that allows you to create documents, flyers, brochures, and fun designs. Originally built for the web, version 4.0.0 brings Open Publisher directly to your desktop as a native application for Windows, macOS, and Linux. We are constantly tweaking and improving the app based on your feedback to make the workflow as smooth as possible.
 
