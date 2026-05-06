@@ -8361,7 +8361,7 @@ if (!window._thumbObserverRunning) {
                 This WebApp can not be displayed here.
               </p>
               <p style="font-size: clamp(14px, 2.5vw, 20px); margin: 0; line-height: 1.5;">
-                Possable Scam site detected</strong>.<br>
+                Possible Scam site detected</strong>.<br>
                 For security, Please visit ywa.app to use it.
               </p>
             </div>
