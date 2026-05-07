@@ -11064,6 +11064,136 @@ window.handleMouseUp = function() {
     state.dragMode = null;
 };
 /* =========================================================================
+   Formatting & Drag-Lock fix | fixes text size from home tab and fixes
+   the "sticky box" drag bug while preserving triple-click selection.
+   ========================================================================= */
+(function installMasterFormattingFix() {
+    console.log("🛠️ V70.0 Master Formatting & Drag-Lock Fix initializing...");
+
+    // --- 1. THE FOCUS SHIELD ---
+    document.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.ribbon-container')) {
+            const tag = e.target.tagName.toUpperCase();
+            if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+            e.preventDefault();
+        }
+    }, true); 
+
+    // --- 2. THE COMMAND UPGRADE ---
+    if (typeof window.execCmd === 'function' && !window._execCmdPatched) {
+        const originalExecCmd = window.execCmd;
+        window.execCmd = function(cmd, val) {
+            const activeEl = document.activeElement;
+            const isTextEditing = activeEl && activeEl.isContentEditable;
+
+            if (!isTextEditing && typeof state !== 'undefined' && state.lastRange && state.selectedEl) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(state.lastRange);
+            }
+            originalExecCmd.apply(this, arguments);
+        };
+        window._execCmdPatched = true;
+    }
+
+    // --- 3. THE TRIPLE-CLICK & DRAG-LOCK PROTECTOR ---
+    document.addEventListener('mouseup', function(e) {
+        // ✨ THE FIX: If the app is actively dragging/resizing a box, DO NOT intercept! 
+        // Let the app's native handleMouseUp fire so it releases the element.
+        if (typeof state !== 'undefined' && state.dragMode) {
+            return; 
+        }
+
+        // Otherwise, protect the text highlight from being wiped out
+        if (e.target.closest('.element-content') && !e.target.classList.contains('resize-handle') && !e.target.classList.contains('rotate-handle')) {
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+                e.stopImmediatePropagation();
+            }
+        }
+    }, true); 
+
+    // --- 4. THE BULLETPROOF FONT SIZE ENGINE ---
+    if (typeof window.setTrueFontSize !== 'undefined') {
+        window.setTrueFontSize = function(val) {
+            if (!state.selectedEl) return;
+            
+            state.isProgrammaticUpdate = true;
+            const waText = state.selectedEl.querySelector('.wa-text');
+            const activeInput = document.activeElement; 
+            
+            if (waText) {
+                waText.style.fontSize = val;
+                waText.style.transform = 'none'; 
+                state.selectedEl.style.width = (waText.offsetWidth + 8) + 'px';
+                state.selectedEl.style.height = (waText.offsetHeight + 8) + 'px';
+                if (typeof syncWordArt === 'function') syncWordArt(state.selectedEl); 
+            } else {
+                const editableContent = state.selectedEl.querySelector('[contenteditable="true"]') || 
+                                        state.selectedEl.querySelector('.element-content > div') || 
+                                        state.selectedEl.querySelector('.element-content');
+                
+                if (editableContent) {
+                    editableContent.focus(); 
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+
+                    let wasCollapsed = false;
+
+                    if (state.lastRange) {
+                        sel.addRange(state.lastRange);
+                        if (sel.isCollapsed) wasCollapsed = true;
+                    } else {
+                        wasCollapsed = true;
+                    }
+
+                    if (wasCollapsed) document.execCommand("selectAll");
+                    
+                    document.execCommand("fontSize", false, "7"); 
+                    
+                    const fontTags = state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]');
+                    fontTags.forEach(f => {
+                        f.removeAttribute("size");
+                        f.style.fontSize = val;
+                    });
+
+                    if (sel.rangeCount > 0 && !wasCollapsed) {
+                        state.lastRange = sel.getRangeAt(0).cloneRange();
+                    } else if (wasCollapsed) {
+                        sel.removeAllRanges(); 
+                    }
+                }
+            }
+            
+            if (activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'SELECT')) {
+                activeInput.focus();
+            }
+
+            const numVal = parseInt(val);
+            const floatSelect = document.getElementById('float-size');
+            const ribbonInput = document.getElementById('font-size');
+            const ctxRibbonInput = document.getElementById('ctx-font-size-text'); 
+            
+            if (ribbonInput) ribbonInput.value = numVal;
+            if (ctxRibbonInput) ctxRibbonInput.value = numVal;
+            
+            if (floatSelect) {
+                let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === numVal);
+                if (!optionExists) {
+                    const newOpt = document.createElement('option');
+                    newOpt.value = numVal;
+                    newOpt.innerText = numVal;
+                    floatSelect.appendChild(newOpt);
+                }
+                floatSelect.value = numVal;
+            }
+            
+            if (typeof pushHistory === 'function') pushHistory();
+            setTimeout(() => { state.isProgrammaticUpdate = false; }, 100);
+        };
+    }
+})();
+/* =========================================================================
    BUG FIX: Group Dragging Patch
    Forces the mouse to grab the group wrapper instead of the individual items
    ========================================================================= */
