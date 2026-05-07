@@ -13098,8 +13098,9 @@ function initBasicBorders() {
 })();
 /* =========================================================================
    Printer Router and page - print sizer
-   - Portrait: (Scale 1.025, Center-Center, Nudged).
-   - Landscape: (ScaleX 1.02, Top-Left, Right-Gap Closed).
+   - Chrome Portrait: UNTOUCHED (-8px).
+   - All Landscape: UNTOUCHED (0px).
+   - Firefox Portrait: Shifted 'top' to 15px to force a hard drop.
    ========================================================================= */
 (function installNativePrintHooks() {
 
@@ -13111,6 +13112,11 @@ function initBasicBorders() {
         }
 
         let isLandscape = false;
+        // Precise Browser Detection
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        const browserClass = isFirefox ? 'op-ff' : (isChrome ? 'op-ch' : 'op-std');
+
         let pW = '794px';
         let pH = '1123px';
         
@@ -13136,58 +13142,63 @@ function initBasicBorders() {
                 }
                 
                 html, body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: white !important;
-                    overflow: hidden !important;
+                    margin: 0 !important; padding: 0 !important;
+                    width: 100% !important; height: 100% !important;
+                    background: white !important; overflow: hidden !important;
                 }
                 
                 body > *:not(#op-print-spooler) { display: none !important; }
                 
                 #op-print-spooler { 
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                    justify-content: ${isLandscape ? 'flex-start' : 'center'} !important; 
-                    width: 100vw !important;
-                    height: 100vh !important;
+                    display: block !important;
                     position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
+                    top: 0 !important; left: 0 !important;
+                    width: 100vw !important; height: 100vh !important;
                     background: white !important;
                 }
                 
                 .op-print-page {
                     position: relative !important;
-                    width: ${pW} !important;
-                    height: ${pH} !important;
+                    width: ${pW} !important; height: ${pH} !important;
                     background: transparent !important;
+                    margin: ${isLandscape ? '0' : '0 auto'} !important;
                     overflow: visible !important; 
                     page-break-after: always !important;
                 }
 
                 .op-print-scaler {
                     position: absolute !important;
-                    width: 100%; 
-                    height: 100%;
-                    
-                    /* ✨ DUAL LOGIC RESTORATION:
-                       Portrait: -1px top, 1px left.
-                       Landscape: 0px top, 1px left. */
-                    top: ${isLandscape ? '0' : '-1px'} !important; 
-                    left: 1px !important;
-                    
-                    /* ✨ DUAL SCALE RESTORATION:
-                       Portrait: Original perfect 1.025 centered.
-                       Landscape: Fixed 1.02 wide / 1.025 high Top-Left. */
-                    transform: ${isLandscape ? 'scaleX(1.02) scaleY(1.025)' : 'scale(1.025)'} !important; 
-                    transform-origin: ${isLandscape ? 'top left' : 'center center'} !important;
-
+                    width: 100% !important; height: 100% !important;
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
                 }
+
+                /* ✨ UNIVERSAL LANDSCAPE (UNTOUCHED) ✨ */
+                ${isLandscape ? `
+                .op-print-scaler {
+                    top: 0 !important;
+                    left: 0 !important;
+                    transform: scaleX(1.02) scaleY(1.025) !important;
+                    transform-origin: top left !important;
+                }
+                ` : `
+                /* ✨ FIREFOX PORTRAIT CLASS (HEAVY DROP) ✨ */
+                #op-print-spooler.op-ff .op-print-scaler {
+                    /* ✨ Shoved down to 15px to clear the top crop ✨ */
+                    top: 15px !important;
+                    left: 1px !important;
+                    transform: scale(1.025) !important;
+                    transform-origin: center center !important;
+                }
+
+                /* ✨ CHROME PORTRAIT CLASS (UNTOUCHED) ✨ */
+                #op-print-spooler.op-ch .op-print-scaler {
+                    top: -8px !important;
+                    left: 1px !important;
+                    transform: scaleX(1.025) scaleY(1.035) !important;
+                    transform-origin: top center !important;
+                }
+                `}
             }
         `;
 
@@ -13197,13 +13208,15 @@ function initBasicBorders() {
             printSpooler.id = 'op-print-spooler';
             document.body.appendChild(printSpooler);
         }
+        
+        // Apply the specific browser class directly to the spooler
+        printSpooler.className = browserClass;
         printSpooler.innerHTML = '';
 
         if (typeof state !== 'undefined' && state.pages) {
             state.pages.forEach((page) => {
                 let pageWrapper = document.createElement('div');
                 pageWrapper.className = 'op-print-page';
-                
                 let scaler = document.createElement('div');
                 scaler.className = 'op-print-scaler';
                 scaler.style.backgroundColor = page.background || '#ffffff';
@@ -13231,7 +13244,6 @@ function initBasicBorders() {
                     }
                     scaler.appendChild(elDiv);
                 });
-                
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
             });
@@ -13241,18 +13253,13 @@ function initBasicBorders() {
     window.addEventListener('beforeprint', buildPrintDOM);
     window.addEventListener('afterprint', () => {
         const spooler = document.getElementById('op-print-spooler');
-        if (spooler) spooler.innerHTML = ''; 
+        if (spooler) {
+            spooler.innerHTML = '';
+            spooler.className = '';
+        }
     });
 
     window.printFullDocument = () => window.print();
-
-    window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            window.print();
-        }
-    }, true);
 })();
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
