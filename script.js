@@ -11064,22 +11064,26 @@ window.handleMouseUp = function() {
     state.dragMode = null;
 };
 /* =========================================================================
-   Draggable Floating Toolbar with Live Color Engine | also fixes 
-   default color application bugs and adds real-time live previewing.
+   Floating Toolbar Engine | A highly optimized, draggable
+   floating toolbar with WeakMap coordinate memory, live
+   color previewing, and native form element UI overrides.
    ========================================================================= */
 ;(function upgradeFloatingToolbar() { 
-    console.log("🛠️ Floating Toolbar initializing...");
+    // Initialize WeakMap to securely bind position data to DOM elements (prevents memory leaks)
+    window._floatMem = window._floatMem || new WeakMap();
 
     const floatBar = document.getElementById('float-toolbar');
     if (!floatBar) return;
 
-    // --- 1. RESCUE CRITICAL ELEMENTS BEFORE WIPING HTML ---
+    // --- 1. DOM PREPARATION ---
+    // Detach critical dropdown elements to prevent reference errors before HTML replacement
     const fontDropdownList = document.getElementById('float-font-list');
     if (fontDropdownList) fontDropdownList.remove(); 
 
-    // --- 2. INJECT THE NEW EXACT CSS MATCH ---
+    // --- 2. CSS STYLESHEET INJECTION ---
     const style = document.createElement('style');
     style.innerHTML = `
+        /* Main Toolbar Container */
         #float-toolbar {
             display: none; 
             position: absolute; 
@@ -11098,6 +11102,7 @@ window.handleMouseUp = function() {
             width: max-content; 
         }
 
+        /* Drag Handle */
         .float-drag-grip {
             width: 24px; 
             background: #e3efea; 
@@ -11111,6 +11116,7 @@ window.handleMouseUp = function() {
         .float-drag-grip:hover { background: #d1e5db; }
         .float-drag-grip:active { cursor: grabbing; }
 
+        /* Custom Grip Icon */
         .grip-dots {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -11123,19 +11129,20 @@ window.handleMouseUp = function() {
             border-radius: 50%;
         }
 
+        /* Tool Layout */
         .float-tools-col {
             display: flex;
             flex-direction: column;
             gap: 4px; 
             justify-content: center;
         }
-
         .float-tool-row {
             display: flex;
             align-items: center;
             gap: 2px; 
         }
 
+        /* Font Family & Size Selectors */
         .float-input-group {
             display: flex;
             align-items: center;
@@ -11174,6 +11181,7 @@ window.handleMouseUp = function() {
             pointer-events: none; 
         }
         
+        /* Native Select UI Override */
         .float-size-select {
             width: 48px; 
             height: 100%;
@@ -11195,6 +11203,7 @@ window.handleMouseUp = function() {
         }
         .float-size-select option { background: #ffffff; color: #333333; }
 
+        /* Action Buttons */
         .float-mini-btn {
             width: 28px; 
             height: 28px; 
@@ -11210,16 +11219,15 @@ window.handleMouseUp = function() {
         }
         .float-mini-btn:hover { background: #d1e5db; }
         .float-mini-btn:active { transform: scale(0.95); background: #c0dacc; }
-
         .float-mini-btn strong { font-family: 'Times New Roman', serif; font-size: 15px; }
 
+        /* Dividers & Color Pickers */
         .float-divider {
             width: 1px;
             height: 18px;
             background: #c8e1d5;
             margin: 0 2px;
         }
-
         .float-color-btn {
             flex-direction: column;
             gap: 2px;
@@ -11231,13 +11239,14 @@ window.handleMouseUp = function() {
             border-radius: 2px;
         }
 
+        /* Z-Index Arrange Icons */
         .arrange-icon-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; }
         .arrange-arrow { position: absolute; font-size: 9px; background: #f5f9f7; border-radius: 50%; padding: 1px; top: -2px; right: -4px; color: #004d40; transition: background 0.1s; }
         .float-mini-btn:hover .arrange-arrow { background: #d1e5db; }
     `;
     document.head.appendChild(style);
 
-    // --- 3. INJECT THE NEW HTML ---
+    // --- 3. UI TEMPLATE INJECTION ---
     floatBar.innerHTML = `
         <div class="float-drag-grip" id="float-drag-handle" title="Drag to move">
             <div class="grip-dots">
@@ -11332,12 +11341,12 @@ window.handleMouseUp = function() {
         </div>
     `;
 
-    // --- 4. RESTORE CRITICAL ELEMENTS ---
+    // Restore rescued elements
     if (fontDropdownList) {
         floatBar.appendChild(fontDropdownList);
     }
 
-    // --- 5. THE DRAGGING ENGINE ---
+    // --- 4. INTERACTION LOGIC: DRAGGING & MEMORY ---
     const handle = document.getElementById('float-drag-handle');
     let isDragging = false;
     let dragStartX, dragStartY;
@@ -11347,12 +11356,10 @@ window.handleMouseUp = function() {
         handle.addEventListener('mousedown', (e) => {
             isDragging = true;
             e.preventDefault(); 
-            
             dragStartX = e.clientX;
             dragStartY = e.clientY;
             initialLeft = floatBar.offsetLeft;
             initialTop = floatBar.offsetTop;
-            
             document.body.style.cursor = 'grabbing';
         });
     }
@@ -11361,60 +11368,69 @@ window.handleMouseUp = function() {
         if (!isDragging) return;
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
-        
         floatBar.style.left = (initialLeft + dx) + 'px';
         floatBar.style.top = (initialTop + dy) + 'px';
-        floatBar.dataset.dragged = "true";
     });
 
     document.addEventListener('mouseup', () => {
         if (isDragging) {
             isDragging = false;
             document.body.style.cursor = 'default';
+            
+            // Calculate and store the exact X/Y offset relative to the selected element
+            if (typeof state !== 'undefined' && state.selectedEl) {
+                const rect = state.selectedEl.getBoundingClientRect();
+                const fbRect = floatBar.getBoundingClientRect();
+                
+                window._floatMem.set(state.selectedEl, {
+                    offsetX: fbRect.left - rect.left,
+                    offsetY: fbRect.top - rect.top
+                });
+            }
         }
     });
 
+    // Prevent standard UI tools from stealing DOM focus
     floatBar.addEventListener('mousedown', function(e) {
         const tag = e.target.tagName.toUpperCase();
         if (tag === 'INPUT' || tag === 'SELECT') return;
         e.preventDefault(); 
     }, true);
 
-    // --- 6. CRASH-SAFE POSITIONING LOGIC ---
-    if (typeof window.showFloatToolbar === 'function' && !window._floatPosPatchedV80) {
+    // --- 5. POSITION LOADER ---
+    if (typeof window.showFloatToolbar === 'function' && !window._floatPosPatchedV88) {
         const originalShowFloat = window.showFloatToolbar;
+        
         window.showFloatToolbar = function() {
             originalShowFloat.apply(this, arguments);
             
             if (!state.selectedEl || floatBar.style.display === 'none') return;
+            if (isDragging) return; 
 
-            if (floatBar.dataset.dragged !== "true") {
-                const rect = state.selectedEl.getBoundingClientRect();
-                let top = rect.top - 85; 
+            const rect = state.selectedEl.getBoundingClientRect();
+            
+            // Retrieve stored coordinates, falling back to default clearance if unmapped
+            const mem = window._floatMem.get(state.selectedEl);
+
+            if (mem) {
+                // Restore saved position
+                floatBar.style.left = Math.max(10, rect.left + mem.offsetX) + 'px';
+                floatBar.style.top = Math.max(10, rect.top + mem.offsetY) + 'px';
+            } else {
+                // Apply default clearance
+                let top = rect.top - 115; 
                 let left = rect.left;
                 if(top < 10) top = rect.bottom + 20; 
                 if(left < 10) left = 10;
-                
                 floatBar.style.top = top + 'px';
                 floatBar.style.left = left + 'px';
             }
         };
-        window._floatPosPatchedV80 = true;
-    }
-
-    if (typeof window.selectElement === 'function' && !window._floatDragResetPatchedV80) {
-        const originalSelect = window.selectElement;
-        window.selectElement = function(el) {
-            if (state.selectedEl !== el) {
-                floatBar.dataset.dragged = "false";
-            }
-            originalSelect.apply(this, arguments);
-        };
-        window._floatDragResetPatchedV80 = true;
+        window._floatPosPatchedV88 = true;
     }
     
-    // --- 7. SYNC FONT SIZES WITH NEW INPUT ID ---
-    if (typeof window.updateFloatToolbarValues === 'function' && !window._floatUpdatePatchedV80) {
+    // --- 6. FONT SIZE SYNCING ---
+    if (typeof window.updateFloatToolbarValues === 'function' && !window._floatUpdatePatchedV88) {
         const originalUpdateFloatValues = window.updateFloatToolbarValues;
         window.updateFloatToolbarValues = function() {
             try { originalUpdateFloatValues.apply(this, arguments); } catch (err) {}
@@ -11424,9 +11440,130 @@ window.handleMouseUp = function() {
                 if (szFloat) szFloat.value = ribbonSize.value;
             }
         };
-        window._floatUpdatePatchedV80 = true;
+        window._floatUpdatePatchedV88 = true;
     }
 
+})();
+/* =========================================================================
+   Granular Text Undo Protector | Bypasses browser 
+   chunking for keystroke-by-keystroke undo history.
+   ========================================================================= */
+;(function installGranularUndoProtector() {
+    console.log("🛠️ V91.0 Granular Text Undo Protector initializing...");
+
+    // WeakMap securely binds the history array directly to the DOM element 
+    const TextHistory = new WeakMap();
+
+    // Fetches or creates the history stack for the active text box
+    function getHist(el) {
+        if (!TextHistory.has(el)) {
+            TextHistory.set(el, { 
+                undo: [], 
+                redo: [], 
+                isRestoring: false, 
+                lastState: el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerHTML 
+            });
+        }
+        return TextHistory.get(el);
+    }
+
+    // Forces the cursor to the end of the text so it doesn't snap to the beginning
+    function setCursorToEnd(el) {
+        try {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.selectionStart = el.selectionEnd = el.value.length;
+            } else {
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        } catch(e) {}
+    }
+
+    // --- 1. RECORD EVERY SINGLE KEYSTROKE ---
+    document.addEventListener('input', function(e) {
+        const el = e.target;
+        if (!el || (!el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+        
+        const hist = getHist(el);
+        if (hist.isRestoring) return; // Don't record our own undo/redo actions
+
+        const currentState = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerHTML;
+        
+        // Save the PREVIOUS state to the undo stack
+        hist.undo.push(hist.lastState);
+        
+        // Cap history at 200 strokes to prevent browser memory bloat
+        if (hist.undo.length > 200) hist.undo.shift();
+        
+        // Clear redo stack because we typed something new
+        hist.redo = [];
+        
+        // Update the tracker to the current state
+        hist.lastState = currentState;
+
+    }, true); 
+
+    // --- 2. INTERCEPT CTRL+Z AND APPLY EXACT PREVIOUS STATE ---
+    document.addEventListener('keydown', function(e) {
+        const isUndo = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey;
+        const isRedo = (e.ctrlKey || e.metaKey) && ((e.key.toLowerCase() === 'y') || (e.key.toLowerCase() === 'z' && e.shiftKey));
+        
+        if (isUndo || isRedo) {
+            const el = document.activeElement;
+            if (!el || (!el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+            
+            // 🛑 SHIELD ACTIVATED: Stop the app and the browser entirely
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const hist = getHist(el);
+            
+            if (isUndo && hist.undo.length > 0) {
+                hist.isRestoring = true; // Lock the recorder
+                
+                const currentState = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerHTML;
+                hist.redo.push(currentState); // Save current so we can redo it
+                
+                const prevState = hist.undo.pop(); // Grab exact previous keystroke
+                
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.value = prevState;
+                } else {
+                    el.innerHTML = prevState;
+                }
+                
+                hist.lastState = prevState;
+                setCursorToEnd(el);
+                
+                // Release the lock
+                setTimeout(() => hist.isRestoring = false, 10);
+            } 
+            else if (isRedo && hist.redo.length > 0) {
+                hist.isRestoring = true; 
+                
+                const currentState = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerHTML;
+                hist.undo.push(currentState);
+                
+                const nextState = hist.redo.pop();
+                
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.value = nextState;
+                } else {
+                    el.innerHTML = nextState;
+                }
+                
+                hist.lastState = nextState;
+                setCursorToEnd(el);
+                
+                setTimeout(() => hist.isRestoring = false, 10);
+            }
+        }
+    }, true);
 })();
 /* =========================================================================
    Formatting & Drag-Lock fix | fixes text size from home tab and fixes
