@@ -10272,6 +10272,390 @@ window.initShapes = function() {
     }, 1000);
 })();
 /* =========================================================================
+   V63.0 - THE DEFINITIVE PASTE & INTERACTION FIX
+   (Ensure the previous "Element Selection Shield" is DELETED)
+   ========================================================================= */
+(function installV63MasterFix() {
+    console.log("🛠️ V63.0 Master Paste Fix initializing...");
+
+    // 1. NEUTRALIZE THE GHOST HOOK DURING INTERNAL PASTES
+    // We hijack the browser's native getAsFile API to return null if the app 
+    // is pasting an internal element. This completely kills the double-paste bug.
+    const originalGetAsFile = DataTransferItem.prototype.getAsFile;
+    DataTransferItem.prototype.getAsFile = function() {
+        if (window._isInternalPaste) return null;
+        return originalGetAsFile.apply(this, arguments);
+    };
+
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+            if (typeof state !== 'undefined' && state.copiedEl) {
+                window._isInternalPaste = true;
+                // Reset the flag shortly after the paste event finishes
+                setTimeout(() => { window._isInternalPaste = false; }, 100);
+            }
+        }
+    }, true);
+
+    // 2. CLEAR INTERNAL CLIPBOARD ON TAB EXIT
+    // If you leave the tab to copy an image from Google, we clear the 
+    // internal clipboard so you don't paste a stale shape by accident.
+    window.addEventListener('blur', () => {
+        if (typeof state !== 'undefined') {
+            state.copiedEl = null;
+        }
+    });
+
+    // 3. RESCUE UNMOVABLE IMAGES & FIX NATIVE DRAG
+    // The Ghost Hook drops raw <img> tags directly onto the paper without wrappers.
+    // We scan the paper, wrap them, and ensure all images have draggable="false" 
+    // so the browser doesn't interfere with your mouse movements.
+    setInterval(() => {
+        const paper = document.getElementById('paper');
+        if (!paper) return;
+        
+        // Fix native browser drag interference
+        paper.querySelectorAll('img').forEach(img => {
+            if (img.getAttribute('draggable') !== 'false') {
+                img.setAttribute('draggable', 'false');
+            }
+            // Strip toxic pointer events if they were injected by other addons
+            if (img.style.pointerEvents === 'none') {
+                img.style.pointerEvents = 'auto';
+            }
+        });
+
+        // Wrap naked Ghost Hook images so they can be moved/resized
+        const rawImages = Array.from(paper.children).filter(el => el.tagName === 'IMG');
+        rawImages.forEach(img => {
+            const w = img.offsetWidth || 300;
+            const h = img.offsetHeight || 300;
+            const l = img.style.left || '50px';
+            const t = img.style.top || '50px';
+            const z = img.style.zIndex || '10';
+            const src = img.src;
+            
+            img.remove(); // Remove the frozen image
+            
+            if (typeof window.createWrapper === 'function') {
+                const wrapper = window.createWrapper(`<img src="${src}" draggable="false" style="width:100%; height:100%; object-fit:fill; display:block; position:absolute; top:0; left:0;">`);
+                wrapper.style.width = w + 'px';
+                wrapper.style.height = h + 'px';
+                wrapper.style.left = l;
+                wrapper.style.top = t;
+                wrapper.style.zIndex = z;
+            }
+        });
+    }, 1000);
+})();
+/* =========================================================================
+   V62.0 - MASTER INTERACTION & PASTE FIX
+   Fixes unselectable images and the double-paste ghost bug.
+   ========================================================================= */
+(function installV62MasterFix() {
+    console.log("🛠️ V62.0 Master Fix initializing...");
+
+    // --- 1. RESTORE IMAGE SELECTION & MOVEMENT ---
+    // Overrides the smart image builder to remove the toxic 'pointer-events: none'
+    // and uses draggable="false" instead, restoring full click and drag functionality.
+    if (typeof window.insertSmartImage !== 'undefined') {
+        window.insertSmartImage = function(imageSrc) {
+            const img = new Image();
+            img.onload = function() {
+                let finalWidth = img.naturalWidth;
+                let finalHeight = img.naturalHeight;
+
+                const paper = document.getElementById('paper');
+                const maxWidth = (paper ? paper.offsetWidth : 794) - 40;
+                const maxHeight = (paper ? paper.offsetHeight : 1123) - 40;
+
+                if (finalWidth > maxWidth || finalHeight > maxHeight) {
+                    const scale = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+                    finalWidth = Math.round(finalWidth * scale);
+                    finalHeight = Math.round(finalHeight * scale);
+                }
+
+                const el = document.createElement('div');
+                el.className = 'pub-element';
+                el.style.left = '50px';
+                el.style.top = '50px';
+                el.style.width = finalWidth + 'px';
+                el.style.height = finalHeight + 'px';
+                el.style.zIndex = 10;
+                el.setAttribute('data-scaleX', "1");
+                el.setAttribute('data-scaleY', "1");
+                
+                // ✨ THE FIX: Removed pointer-events: none; Added draggable="false" ✨
+                el.innerHTML = `
+                    <div class="element-content">
+                        <img src="${imageSrc}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
+                    </div>
+                    <div class="resize-handle rh-nw" data-dir="nw"></div>
+                    <div class="resize-handle rh-n" data-dir="n"></div>
+                    <div class="resize-handle rh-ne" data-dir="ne"></div>
+                    <div class="resize-handle rh-e" data-dir="e"></div>
+                    <div class="resize-handle rh-se" data-dir="se"></div>
+                    <div class="resize-handle rh-s" data-dir="s"></div>
+                    <div class="resize-handle rh-sw" data-dir="sw"></div>
+                    <div class="resize-handle rh-w" data-dir="w"></div>
+                    <div class="rotate-stick"></div>
+                    <div class="rotate-handle"></div>
+                `;
+                
+                if (paper) {
+                    paper.appendChild(el);
+                    if (typeof selectElement === 'function') selectElement(el);
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    if (typeof pushHistory === 'function') pushHistory();
+                }
+            };
+            img.src = imageSrc;
+        };
+
+        // Retroactively fix any broken images already sitting on the canvas!
+        setTimeout(() => {
+            document.querySelectorAll('.pub-element img').forEach(img => {
+                if (img.style.pointerEvents === 'none') {
+                    img.style.pointerEvents = 'auto';
+                    img.setAttribute('draggable', 'false');
+                }
+            });
+        }, 500);
+    }
+
+    // --- 2. FIX THE DOUBLE-PASTE BUG ---
+    // When you copy an element inside the app, we overwrite the OS clipboard with a dummy text string.
+    // This forces the "Ghost Hook" to ignore the OS paste, preventing the double-paste from happening!
+    if (typeof window.copyEl === 'function' && !window._copyElPatched) {
+        const originalCopyEl = window.copyEl;
+        window.copyEl = function() {
+            originalCopyEl(); // Run your normal internal copy
+            
+            // Overwrite the OS clipboard so it doesn't hold a stale image
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText("openpublisher_internal");
+                } else {
+                    const dummy = document.createElement("input");
+                    document.body.appendChild(dummy);
+                    dummy.value = "openpublisher_internal";
+                    dummy.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(dummy);
+                }
+            } catch(e) {}
+        };
+        window._copyElPatched = true;
+    }
+
+    // --- 3. CLEAR STALE GHOSTS ---
+    // If you click empty space and press Copy, it clears the internal clipboard 
+    // so it doesn't paste something you forgot you copied.
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+            if (typeof state !== 'undefined' && !state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0)) {
+                state.copiedEl = null;
+            }
+        }
+    });
+
+})();
+/* =========================================================================
+   V64.0 - MULTI-COPY & SELECT ALL FIX
+   Restores Ctrl+A and enables copying/pasting multiple elements at once.
+   ========================================================================= */
+(function installMultiCopyAndSelectAll() {
+    console.log("🛠️ V64.0 Multi-Copy & Select All Fix initializing...");
+
+    // --- 1. CTRL + A (Select All) ---
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+            // Don't intercept if the user is typing inside a text box (let them select their text!)
+            const activeEl = document.activeElement;
+            const isTextEditing = activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+            if (isTextEditing) return;
+
+            e.preventDefault(); // Stop the browser from highlighting the UI text
+
+            const allElements = document.querySelectorAll('.pub-element');
+            if (allElements.length === 0) return;
+
+            // Clear any current single selection safely
+            if (typeof window.deselect === 'function') window.deselect();
+
+            // Setup multi-selection array
+            state.multiSelected = [];
+            allElements.forEach(el => {
+                // Ignore the blueprint borders and hidden structural elements
+                if (el.dataset.cloaked !== 'true' && el.id !== 'native-blueprint-border' && el.style.display !== 'none') {
+                    state.multiSelected.push(el);
+                    el.classList.add('selected');
+                }
+            });
+
+            // Update UI based on how many things we grabbed
+            if (state.multiSelected.length === 1) {
+                window.selectElement(state.multiSelected[0]);
+                state.multiSelected = [];
+            } else if (state.multiSelected.length > 1) {
+                const status = document.getElementById('status-msg');
+                if (status) status.innerText = state.multiSelected.length + " Elements Selected";
+                const ft = document.getElementById('float-toolbar');
+                if (ft) ft.style.display = 'none';
+            }
+        }
+    }, true);
+
+    // --- 2. MULTI-ITEM COPY ---
+    window.copyEl = function() {
+        state.copiedElements = []; // New array to hold all copied items
+
+        if (state.multiSelected && state.multiSelected.length > 0) {
+            // Copy all selected items
+            state.multiSelected.forEach(el => {
+                state.copiedElements.push(el.cloneNode(true));
+            });
+        } else if (state.selectedEl) {
+            // Copy single selected item
+            state.copiedElements.push(state.selectedEl.cloneNode(true));
+        }
+
+        // Overwrite OS clipboard with a dummy string to prevent the double-paste bug (Ghost Hook)
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText("openpublisher_internal_multi");
+            } else {
+                const dummy = document.createElement("input");
+                document.body.appendChild(dummy);
+                dummy.value = "openpublisher_internal_multi";
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+            }
+        } catch(e) {}
+    };
+
+    // --- 3. MULTI-ITEM PASTE ---
+    window.pasteEl = function() {
+        // First check if we have our new array of copied elements
+        if (state.copiedElements && state.copiedElements.length > 0) {
+            
+            if (typeof window.deselect === 'function') window.deselect();
+            state.multiSelected = [];
+
+            state.copiedElements.forEach((originalClone) => {
+                // Clone the clone so we can paste multiple times in a row
+                const n = originalClone.cloneNode(true);
+                
+                // Shift it down and right by 20px so it doesn't perfectly overlap
+                const currentLeft = parseFloat(n.style.left) || 0;
+                const currentTop = parseFloat(n.style.top) || 0;
+                n.style.left = (currentLeft + 20) + 'px';
+                n.style.top = (currentTop + 20) + 'px';
+                
+                // Add to paper
+                const paper = document.getElementById('paper');
+                if (paper) paper.appendChild(n);
+
+                // Add to multi-select array
+                state.multiSelected.push(n);
+                n.classList.add('selected');
+            });
+
+            // Update the master copied elements to the NEW positions so if they paste AGAIN, it cascades!
+            state.copiedElements = state.multiSelected.map(el => el.cloneNode(true));
+
+            // Update UI based on how many were pasted
+            if (state.multiSelected.length === 1) {
+                window.selectElement(state.multiSelected[0]);
+                state.multiSelected = [];
+            } else if (state.multiSelected.length > 1) {
+                const status = document.getElementById('status-msg');
+                if (status) status.innerText = state.multiSelected.length + " Elements Selected";
+                const ft = document.getElementById('float-toolbar');
+                if (ft) ft.style.display = 'none';
+            }
+
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof pushHistory === 'function') pushHistory();
+        } 
+        // Fallback for older single-item copies just in case
+        else if (state.copiedEl) {
+            const n = state.copiedEl.cloneNode(true);
+            n.style.left = (parseFloat(n.style.left)+20)+'px';
+            n.style.top = (parseFloat(n.style.top)+20)+'px';
+            const paper = document.getElementById('paper');
+            if(paper) paper.appendChild(n);
+            window.selectElement(n);
+            state.copiedEl = n.cloneNode(true); // Cascade
+            if(typeof updateThumbnails === 'function') updateThumbnails();
+            if(typeof pushHistory === 'function') pushHistory();
+        }
+    };
+/* =========================================================================
+   V65.0 - TRUE MULTI-COPY KEYBOARD OVERRIDE
+   Fixes the Ctrl+C and Ctrl+V shortcuts ignoring multi-selected arrays.
+   ========================================================================= */
+(function installV65TrueMultiCopy() {
+    console.log("🛠️ V65.0 True Multi-Copy Override initializing...");
+
+    window.addEventListener('keydown', function(e) {
+        const activeEl = document.activeElement;
+        const isTextEditing = activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+        // --- 1. OVERRIDE CTRL + C ---
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+            if (isTextEditing) return; // Let the user copy text normally if typing
+
+            // If they have EITHER a single item OR multiple items selected
+            if (state.selectedEl || (state.multiSelected && state.multiSelected.length > 0)) {
+                e.preventDefault();
+                e.stopImmediatePropagation(); // Kill the original broken shortcut
+                
+                if (typeof window.copyEl === 'function') window.copyEl();
+            }
+        }
+
+        // --- 2. OVERRIDE CTRL + V ---
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+            if (isTextEditing) return;
+
+            // If they have copied data in EITHER the old or new array
+            if (state.copiedEl || (state.copiedElements && state.copiedElements.length > 0)) {
+                e.preventDefault();
+                e.stopImmediatePropagation(); // Kill the original broken shortcut
+                
+                // Activate the Ghost Hook shield for multi-pastes
+                window._isInternalPaste = true;
+                setTimeout(() => { window._isInternalPaste = false; }, 100);
+
+                if (typeof window.pasteEl === 'function') window.pasteEl();
+            }
+        }
+    }, true); // 'true' runs this in the Capture Phase, beating the old code to the punch!
+})();
+    // --- 4. MULTI-ITEM DELETE OVERRIDE ---
+    // Make sure hitting Delete or Backspace clears the whole group safely
+    const oldDelete = window.deleteSelected;
+    window.deleteSelected = function() {
+        if (state.multiSelected && state.multiSelected.length > 0) {
+            state.multiSelected.forEach(el => {
+                if(el && el.remove) el.remove();
+            });
+            state.multiSelected = [];
+            if(typeof updateThumbnails === 'function') updateThumbnails();
+            if(typeof pushHistory === 'function') pushHistory();
+            const ft = document.getElementById('float-toolbar');
+            if (ft) ft.style.display = 'none';
+            const status = document.getElementById('status-msg');
+            if (status) status.innerText = "Ready";
+        } else if (oldDelete) {
+            oldDelete();
+        }
+    };
+
+})();
+/* =========================================================================
    V3.1.13 MASTER PATCH: Paste, Undo, and Group Rotation Mechanics
    ========================================================================= */
 
