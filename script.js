@@ -11064,6 +11064,371 @@ window.handleMouseUp = function() {
     state.dragMode = null;
 };
 /* =========================================================================
+   Draggable Floating Toolbar with Live Color Engine | also fixes 
+   default color application bugs and adds real-time live previewing.
+   ========================================================================= */
+;(function upgradeFloatingToolbar() { 
+    console.log("🛠️ Floating Toolbar initializing...");
+
+    const floatBar = document.getElementById('float-toolbar');
+    if (!floatBar) return;
+
+    // --- 1. RESCUE CRITICAL ELEMENTS BEFORE WIPING HTML ---
+    const fontDropdownList = document.getElementById('float-font-list');
+    if (fontDropdownList) fontDropdownList.remove(); 
+
+    // --- 2. INJECT THE NEW EXACT CSS MATCH ---
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #float-toolbar {
+            display: none; 
+            position: absolute; 
+            z-index: 9999;
+            background: #f5f9f7; 
+            border: 1px solid #004d40; 
+            border-radius: 14px; 
+            box-shadow: 0 8px 24px rgba(0, 77, 64, 0.15);
+            padding: 6px; 
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 6px; 
+            transition: opacity 0.2s;
+            user-select: none;
+            width: max-content; 
+        }
+
+        .float-drag-grip {
+            width: 24px; 
+            background: #e3efea; 
+            border-radius: 8px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .float-drag-grip:hover { background: #d1e5db; }
+        .float-drag-grip:active { cursor: grabbing; }
+
+        .grip-dots {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px; 
+        }
+        .grip-dots span {
+            width: 3.5px;
+            height: 3.5px;
+            background: #8faea2;
+            border-radius: 50%;
+        }
+
+        .float-tools-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; 
+            justify-content: center;
+        }
+
+        .float-tool-row {
+            display: flex;
+            align-items: center;
+            gap: 2px; 
+        }
+
+        .float-input-group {
+            display: flex;
+            align-items: center;
+            height: 28px; 
+            background: transparent !important; 
+            border: 1px solid #c8e1d5; 
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .float-font-btn {
+            padding: 0 8px;
+            font-size: 13px; 
+            color: #004d40; 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 110px; 
+            justify-content: space-between;
+            height: 100%;
+        }
+        .float-font-btn:hover { background: rgba(186, 214, 200, 0.4); }
+        
+        .float-size-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            border-left: 1px solid #c8e1d5;
+        }
+        .float-size-wrapper i {
+            position: absolute;
+            right: 6px;
+            font-size: 10px;
+            color: #004d40;
+            pointer-events: none; 
+        }
+        
+        .float-size-select {
+            width: 48px; 
+            height: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            text-align: center;
+            font-size: 13px;
+            color: #004d40;
+            background-color: transparent !important; 
+            outline: none !important;
+            cursor: pointer;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            padding-left: 4px;
+            padding-right: 14px; 
+        }
+        .float-size-select option { background: #ffffff; color: #333333; }
+
+        .float-mini-btn {
+            width: 28px; 
+            height: 28px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #004d40; 
+            font-size: 14px; 
+            transition: all 0.1s;
+            position: relative;
+        }
+        .float-mini-btn:hover { background: #d1e5db; }
+        .float-mini-btn:active { transform: scale(0.95); background: #c0dacc; }
+
+        .float-mini-btn strong { font-family: 'Times New Roman', serif; font-size: 15px; }
+
+        .float-divider {
+            width: 1px;
+            height: 18px;
+            background: #c8e1d5;
+            margin: 0 2px;
+        }
+
+        .float-color-btn {
+            flex-direction: column;
+            gap: 2px;
+            padding-top: 4px;
+        }
+        .float-color-bar {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .arrange-icon-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        .arrange-arrow { position: absolute; font-size: 9px; background: #f5f9f7; border-radius: 50%; padding: 1px; top: -2px; right: -4px; color: #004d40; transition: background 0.1s; }
+        .float-mini-btn:hover .arrange-arrow { background: #d1e5db; }
+    `;
+    document.head.appendChild(style);
+
+    // --- 3. INJECT THE NEW HTML ---
+    floatBar.innerHTML = `
+        <div class="float-drag-grip" id="float-drag-handle" title="Drag to move">
+            <div class="grip-dots">
+                <span></span><span></span>
+                <span></span><span></span>
+                <span></span><span></span>
+            </div>
+        </div>
+        
+        <div class="float-tools-col">
+            <div class="float-tool-row">
+                <div class="float-input-group">
+                    <div class="float-font-btn" id="float-font" onclick="toggleCustomDropdown('float'); event.stopPropagation();">
+                        <span id="float-font-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Arial</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </div>
+                    <div class="float-size-wrapper">
+                        <select id="float-size" class="float-size-select" onchange="setTrueFontSize(this.value + 'px')">
+                            <option value="8">8</option><option value="9">9</option>
+                            <option value="10">10</option><option value="11">11</option>
+                            <option value="12">12</option><option value="14">14</option>
+                            <option value="16" selected>16</option><option value="18">18</option>
+                            <option value="20">20</option><option value="24">24</option>
+                            <option value="28">28</option><option value="32">32</option>
+                            <option value="36">36</option><option value="48">48</option>
+                            <option value="72">72</option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                
+                <div class="float-divider"></div>
+                
+                <div class="float-mini-btn float-color-btn" title="Text Color">
+                    <strong style="font-family: Arial, sans-serif;">A</strong>
+                    <div class="float-color-bar" id="float-text-color-bar" style="background: #004d40;"></div>
+                    <input type="color" value="#004d40" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
+                           onclick="execCmd('foreColor', this.value)" 
+                           oninput="execCmd('foreColor', this.value); document.getElementById('float-text-color-bar').style.background=this.value;">
+                </div>
+
+                <div class="float-mini-btn float-color-btn" title="Highlight Color">
+                    <i class="fas fa-marker" style="transform: rotate(-15deg); font-size: 12px;"></i>
+                    <div class="float-color-bar" id="float-bg-color-bar" style="background: #ffff00;"></div>
+                    <input type="color" value="#ffff00" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
+                           onclick="execCmd('hiliteColor', this.value)" 
+                           oninput="execCmd('hiliteColor', this.value); document.getElementById('float-bg-color-bar').style.background=this.value;">
+                </div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('removeFormat')" title="Clear Formatting"><i class="fas fa-eraser"></i></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="bringFront()" title="Bring to Front">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-arrow-up arrange-arrow"></i>
+                    </div>
+                </div>
+                <div class="float-mini-btn" onclick="sendBack()" title="Send to Back">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-arrow-down arrange-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="float-tool-row">
+                <div class="float-mini-btn" onclick="execCmd('bold')" title="Bold"><strong>B</strong></div>
+                <div class="float-mini-btn" onclick="execCmd('italic')" title="Italic"><strong><em>I</em></strong></div>
+                <div class="float-mini-btn" onclick="execCmd('underline')" title="Underline"><strong style="text-decoration: underline;">U</strong></div>
+                <div class="float-mini-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><strong style="text-decoration: line-through;">S</strong></div>
+                
+                <div class="float-divider"></div>
+                
+                <div class="float-mini-btn" onclick="execCmd('subscript')" title="Subscript"><strong style="font-family: Arial, sans-serif; font-size: 13px;">X<sub>1</sub></strong></div>
+                <div class="float-mini-btn" onclick="execCmd('superscript')" title="Superscript"><strong style="font-family: Arial, sans-serif; font-size: 13px;">X<sup>1</sup></strong></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></div>
+            </div>
+        </div>
+    `;
+
+    // --- 4. RESTORE CRITICAL ELEMENTS ---
+    if (fontDropdownList) {
+        floatBar.appendChild(fontDropdownList);
+    }
+
+    // --- 5. THE DRAGGING ENGINE ---
+    const handle = document.getElementById('float-drag-handle');
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let initialLeft, initialTop;
+
+    if (handle) {
+        handle.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault(); 
+            
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialLeft = floatBar.offsetLeft;
+            initialTop = floatBar.offsetTop;
+            
+            document.body.style.cursor = 'grabbing';
+        });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        floatBar.style.left = (initialLeft + dx) + 'px';
+        floatBar.style.top = (initialTop + dy) + 'px';
+        floatBar.dataset.dragged = "true";
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            document.body.style.cursor = 'default';
+        }
+    });
+
+    floatBar.addEventListener('mousedown', function(e) {
+        const tag = e.target.tagName.toUpperCase();
+        if (tag === 'INPUT' || tag === 'SELECT') return;
+        e.preventDefault(); 
+    }, true);
+
+    // --- 6. CRASH-SAFE POSITIONING LOGIC ---
+    if (typeof window.showFloatToolbar === 'function' && !window._floatPosPatchedV80) {
+        const originalShowFloat = window.showFloatToolbar;
+        window.showFloatToolbar = function() {
+            originalShowFloat.apply(this, arguments);
+            
+            if (!state.selectedEl || floatBar.style.display === 'none') return;
+
+            if (floatBar.dataset.dragged !== "true") {
+                const rect = state.selectedEl.getBoundingClientRect();
+                let top = rect.top - 85; 
+                let left = rect.left;
+                if(top < 10) top = rect.bottom + 20; 
+                if(left < 10) left = 10;
+                
+                floatBar.style.top = top + 'px';
+                floatBar.style.left = left + 'px';
+            }
+        };
+        window._floatPosPatchedV80 = true;
+    }
+
+    if (typeof window.selectElement === 'function' && !window._floatDragResetPatchedV80) {
+        const originalSelect = window.selectElement;
+        window.selectElement = function(el) {
+            if (state.selectedEl !== el) {
+                floatBar.dataset.dragged = "false";
+            }
+            originalSelect.apply(this, arguments);
+        };
+        window._floatDragResetPatchedV80 = true;
+    }
+    
+    // --- 7. SYNC FONT SIZES WITH NEW INPUT ID ---
+    if (typeof window.updateFloatToolbarValues === 'function' && !window._floatUpdatePatchedV80) {
+        const originalUpdateFloatValues = window.updateFloatToolbarValues;
+        window.updateFloatToolbarValues = function() {
+            try { originalUpdateFloatValues.apply(this, arguments); } catch (err) {}
+            const ribbonSize = document.getElementById('font-size');
+            if (ribbonSize) {
+                const szFloat = document.getElementById('float-size');
+                if (szFloat) szFloat.value = ribbonSize.value;
+            }
+        };
+        window._floatUpdatePatchedV80 = true;
+    }
+
+})();
+/* =========================================================================
    Formatting & Drag-Lock fix | fixes text size from home tab and fixes
    the "sticky box" drag bug while preserving triple-click selection.
    ========================================================================= */
