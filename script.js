@@ -13590,6 +13590,76 @@ function initBasicBorders() {
     console.log("✅ Writer's Suite (11 Tools) added successfully.");
 })();
 /* =========================================================================
+   Crop mode exit fix, Converts fixed pixels back to percentages upon exiting 
+   thus, allowing the image to natively stretch when the wrapper is resized.
+   ========================================================================= */
+window.toggleCrop = function() {
+    if(!state.selectedEl) {
+        if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Notice', "Please select an image to crop first.");
+        return;
+    }
+    const el = state.selectedEl;
+    const img = el.querySelector('.element-content img');
+    
+    if(!img) {
+        if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Notice', "Only images can be cropped.");
+        return;
+    }
+
+    state.cropMode = !state.cropMode;
+    
+    const cropBtn = document.getElementById('crop-btn');
+    const statusMsg = document.getElementById('status-msg');
+
+    if(state.cropMode) {
+        el.classList.add('cropping');
+        if (cropBtn) cropBtn.classList.add('active-tool');
+        if (statusMsg) statusMsg.innerText = "Crop Mode: Drag handles to clip. Drag image to pan.";
+        
+        // Convert to fixed pixels so mouse panning math works flawlessly
+        const w = img.offsetWidth;
+        const h = img.offsetHeight;
+        const parentW = el.offsetWidth || 1;
+        const parentH = el.offsetHeight || 1;
+        
+        img.style.width = w + 'px';
+        img.style.height = h + 'px';
+        img.style.maxWidth = 'none';
+        img.style.maxHeight = 'none';
+        img.style.position = 'absolute';
+        
+        // If it was stored as a percentage from a previous crop, convert it to pixels
+        const currentLeft = img.style.left || '0px';
+        const currentTop = img.style.top || '0px';
+        
+        if (currentLeft.includes('%')) {
+            img.style.left = (parseFloat(currentLeft) / 100 * parentW) + 'px';
+        }
+        if (currentTop.includes('%')) {
+            img.style.top = (parseFloat(currentTop) / 100 * parentH) + 'px';
+        }
+        
+    } else {
+        el.classList.remove('cropping');
+        if (cropBtn) cropBtn.classList.remove('active-tool');
+        if (statusMsg) statusMsg.innerText = "Element Selected";
+        
+        // Convert fixed pixels back into percentages.
+        // This natively restores the browser's ability to stretch the image when the box is resized.
+        const wrapperW = el.offsetWidth || 1;
+        const wrapperH = el.offsetHeight || 1;
+        const imgW = img.offsetWidth;
+        const imgH = img.offsetHeight;
+        const imgL = parseFloat(img.style.left) || 0;
+        const imgT = parseFloat(img.style.top) || 0;
+
+        img.style.width = ((imgW / wrapperW) * 100) + '%';
+        img.style.height = ((imgH / wrapperH) * 100) + '%';
+        img.style.left = ((imgL / wrapperW) * 100) + '%';
+        img.style.top = ((imgT / wrapperH) * 100) + '%';
+    }
+};
+/* =========================================================================
    FEATURE: Infinite Panning Hand Tool (Middle-Click & Status Bar Toggle)
    ========================================================================= */
 (function installPanningHand() {
@@ -14016,8 +14086,341 @@ function initBasicBorders() {
             }
         }
     }, 1500);
+/* =========================================================================
+   V95.0 - THE DEFINITIVE CROP ANCHOR FIX
+   (REPLACEMENT) Includes both MouseDown and MouseMove to fix the NaNpx bug
+   ========================================================================= */
+;(function installDefinitiveCropFix() {
+    console.log("🛠️ V95.0 Definitive Crop Anchor Fix initializing...");
 
+    // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
+    window.handleMouseDown = function(e) {
+        if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
+            if(typeof window.deselect === 'function') window.deselect();
+            state.dragMode = 'marquee';
+            state.dragData = { startX: e.clientX, startY: e.clientY };
+            if(!document.getElementById('marquee-box')) {
+                const box = document.createElement('div');
+                box.id = 'marquee-box';
+                box.style.cssText = 'position:fixed; border:1px solid rgba(0,118,112,0.8); background:rgba(0,118,112,0.2); z-index:9999; pointer-events:none;';
+                document.body.appendChild(box);
+            }
+            return;
+        }
+
+        if(state.cropMode && state.selectedEl) {
+            if(e.target.classList.contains('resize-handle')) {
+                state.dragMode = 'resize';
+                
+                // ✨ THE FIX: We MUST capture the image's starting Left & Top here!
+                const img = state.selectedEl.querySelector('img');
+                const startImgLeft = img ? (parseFloat(img.style.left) || 0) : 0;
+                const startImgTop = img ? (parseFloat(img.style.top) || 0) : 0;
+
+                state.dragData = {
+                    dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
+                    w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
+                    l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
+                    scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
+                    scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                    imgL: startImgLeft, // ✨ Saved to memory
+                    imgT: startImgTop   // ✨ Saved to memory
+                };
+                e.preventDefault(); return;
+            }
+            if(e.target.tagName === 'IMG' && e.target.closest('.pub-element') === state.selectedEl) {
+                state.dragMode = 'pan-image';
+                state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(e.target.style.left) || 0, t: parseFloat(e.target.style.top) || 0 };
+                e.preventDefault(); return;
+            }
+            if(!e.target.closest('.pub-element.cropping')) if(typeof toggleCrop === 'function') toggleCrop();
+        }
+
+        if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
+            if(e.target.classList.contains('rotate-handle')) {
+                state.dragMode = 'rotate';
+                if (state.multiSelected && state.multiSelected.length > 1) {
+                    let minL = Infinity, maxR = -Infinity, minT = Infinity, maxB = -Infinity;
+                    let minSx = Infinity, maxSx = -Infinity, minSy = Infinity, maxSy = -Infinity;
+                    state.multiSelected.forEach(el => {
+                        const l = parseFloat(el.style.left) || el.offsetLeft;
+                        const t = parseFloat(el.style.top) || el.offsetTop;
+                        const w = el.offsetWidth, h = el.offsetHeight;
+                        if(l < minL) minL = l; if(l + w > maxR) maxR = l + w;
+                        if(t < minT) minT = t; if(t + h > maxB) maxB = t + h;
+                        const r = el.getBoundingClientRect();
+                        if(r.left < minSx) minSx = r.left; if(r.right > maxSx) maxSx = r.right;
+                        if(r.top < minSy) minSy = r.top; if(r.bottom > maxSy) maxSy = r.bottom;
+                    });
+                    const cx = minL + (maxR - minL) / 2, cy = minT + (maxB - minT) / 2;
+                    const screenCx = minSx + (maxSx - minSx) / 2, screenCy = minSy + (maxSy - minSy) / 2;
+                    const hr = e.target.getBoundingClientRect();
+                    state.dragData = { 
+                        cx: cx, cy: cy, screenCx: screenCx, screenCy: screenCy,
+                        startAngle: Math.atan2(hr.top + hr.height/2 - screenCy, hr.left + hr.width/2 - screenCx),
+                        items: state.multiSelected.map(el => {
+                            const style = window.getComputedStyle(el);
+                            const rot = style.transform !== 'none' ? Math.atan2(style.transform.split('(')[1].split(')')[0].split(',')[1], style.transform.split('(')[1].split(')')[0].split(',')[0]) * (180/Math.PI) : 0;
+                            return { el: el, w: el.offsetWidth, h: el.offsetHeight, dx: ((parseFloat(el.style.left) || el.offsetLeft) + el.offsetWidth/2) - cx, dy: ((parseFloat(el.style.top) || el.offsetTop) + el.offsetHeight/2) - cy, origRot: rot };
+                        })
+                    };
+                } else {
+                    const rect = state.selectedEl.getBoundingClientRect();
+                    state.dragData = { cx: rect.left + rect.width/2, cy: rect.top + rect.height/2 };
+                }
+            } else {
+                state.dragMode = 'resize';
+                state.dragData = {
+                    dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
+                    w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
+                    l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
+                    scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
+                    scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1
+                };
+            }
+            e.preventDefault(); return;
+        }
+
+        const el = e.target.closest('.pub-element');
+        if(el) {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault(); e.stopImmediatePropagation(); 
+                state.multiSelected = state.multiSelected || [];
+                if (state.selectedEl && state.multiSelected.length === 0) {
+                    state.multiSelected.push(state.selectedEl); state.selectedEl = null;
+                }
+                if (state.multiSelected.includes(el)) {
+                    state.multiSelected = state.multiSelected.filter(m => m !== el); el.classList.remove('selected');
+                } else {
+                    state.multiSelected.push(el); el.classList.add('selected');
+                }
+                if (state.multiSelected.length === 0) { if(typeof window.deselect === 'function') window.deselect(); } 
+                else if (state.multiSelected.length === 1) { if(typeof window.selectElement === 'function') window.selectElement(state.multiSelected[0]); state.multiSelected = []; } 
+                else {
+                    if(document.getElementById('status-msg')) document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
+                    if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+                }
+                return;
+            }
+
+            const isMulti = state.multiSelected && state.multiSelected.includes(el);
+            if (!isMulti) {
+                if(state.selectedEl !== el && typeof window.selectElement === 'function') window.selectElement(el);
+                if(state.multiSelected && state.multiSelected.length > 0) { state.multiSelected.forEach(m => m.classList.remove('selected')); state.multiSelected = []; }
+            }
+
+            if(el.querySelector('svg') || el.querySelector('img') || el.getAttribute('data-type') === 'shape') {
+                state.dragMode = 'drag';
+                state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
+                if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+                e.preventDefault(); return;
+            }
+
+            const rect = el.getBoundingClientRect(), edgeSize = 15;
+            const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
+            const activeEl = document.activeElement, isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
+            if (nearEdge || !isEditingText) {
+                state.dragMode = 'drag';
+                state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
+                if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+                if(!isEditingText) e.preventDefault(); 
+            }
+        }
+    };
+
+    // --- 2. MOUSE MOVE: Perfectly mapped counter-translation ---
+    window.handleMouseMove = function(e) {
+        const cd = document.getElementById('coord-display'); 
+        if(cd) cd.innerText = `X: ${e.clientX} | Y: ${e.clientY}`;
+        
+        if(!state.dragMode && !state.cropMode) {
+            const el = e.target.closest('.pub-element');
+            if(el) {
+                const isShape = el.querySelector('img') || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
+                const rect = el.getBoundingClientRect();
+                if (isShape) { el.style.cursor = 'move'; } 
+                else { const edgeSize = 15; el.style.cursor = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text'; }
+            }
+        }
+        
+        if(!state.dragMode) return;
+        
+        if(state.dragMode === 'marquee') {
+            const box = document.getElementById('marquee-box');
+            if(box) {
+                const paperRect = paper.getBoundingClientRect();
+                const clampedX = Math.max(paperRect.left, Math.min(e.clientX, paperRect.right));
+                const clampedY = Math.max(paperRect.top, Math.min(e.clientY, paperRect.bottom));
+                const startX = Math.max(paperRect.left, Math.min(state.dragData.startX, paperRect.right));
+                const startY = Math.max(paperRect.top, Math.min(state.dragData.startY, paperRect.bottom));
+                
+                box.style.left = Math.min(clampedX, startX) + 'px'; box.style.top = Math.min(clampedY, startY) + 'px';
+                box.style.width = Math.abs(clampedX - startX) + 'px'; box.style.height = Math.abs(clampedY - startY) + 'px';
+            }
+            return;
+        }
+        
+        if(!state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0)) return;
+        
+        const zoom = state.zoom || 1;
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        
+        if(state.dragMode === 'drag') {
+            if(state.dragData.multi && state.dragData.multi.length > 0) { 
+                state.dragData.multi.forEach(item => { item.el.style.left = (item.l + dx) + 'px'; item.el.style.top = (item.t + dy) + 'px'; }); 
+            } else { 
+                state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px'; 
+            }
+            if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+        }
+        else if(state.dragMode === 'pan-image') {
+            const img = state.selectedEl.querySelector('img'); 
+            img.style.left = (state.dragData.l + dx) + 'px'; img.style.top = (state.dragData.t + dy) + 'px';
+        }
+        else if(state.dragMode === 'rotate') {
+            if (state.multiSelected && state.multiSelected.length > 1) {
+                const d = state.dragData;
+                const currentAngle = Math.atan2(e.clientY - d.screenCy, e.clientX - d.screenCx);
+                const deltaRad = currentAngle - d.startAngle;
+                const deltaDeg = deltaRad * (180 / Math.PI);
+                const cosT = Math.cos(deltaRad); const sinT = Math.sin(deltaRad);
+                
+                d.items.forEach(item => {
+                    const new_dx = item.dx * cosT - item.dy * sinT;
+                    const new_dy = item.dx * sinT + item.dy * cosT;
+                    item.el.style.left = (d.cx + new_dx - item.w/2) + 'px';
+                    item.el.style.top = (d.cy + new_dy - item.h/2) + 'px';
+                    item.el.style.transform = `rotate(${item.origRot + deltaDeg}deg)`;
+                });
+            } else {
+                const angle = Math.atan2(e.clientY - state.dragData.cy, e.clientX - state.dragData.cx) * (180/Math.PI);
+                state.selectedEl.style.transform = `rotate(${angle + 90}deg)`;
+            }
+        }
+        else if(state.dragMode === 'resize') {
+            const d = state.dragData; 
+            const sX = Math.abs(d.scaleX) || 1;
+            const sY = Math.abs(d.scaleY) || 1;
+
+            let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
+            let imgDx = 0, imgDy = 0;
+            
+            // Container Width & Left Origin Shifts
+            if (d.dir.includes('e')) {
+                rawW = d.w + dx; 
+            } else if (d.dir.includes('w')) { 
+                rawW = d.w - dx; 
+                newL = d.l + dx; 
+                // Divides the screen delta by the image's scale so it perfectly compensates
+                if (state.cropMode) imgDx = -(dx / sX); 
+            }
+            
+            // Container Height & Top Origin Shifts
+            if (d.dir.includes('s')) {
+                rawH = d.h + dy; 
+            } else if (d.dir.includes('n')) { 
+                rawH = d.h - dy; 
+                newT = d.t + dy; 
+                if (state.cropMode) imgDy = -(dy / sY); 
+            }
+
+            // Aspect Ratio Lock (Standard Resize Only)
+            if (e.shiftKey && !state.cropMode) {
+                const safeW = d.w || 1; const safeH = d.h || 1;
+                const scaleX = Math.abs(rawW / safeW), scaleY = Math.abs(rawH / safeH);
+                let dominantScale = 1;
+                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleX;
+                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleY;
+                else dominantScale = Math.max(scaleX, scaleY);
+                rawW = (Math.sign(rawW) || 1) * Math.abs(safeW) * dominantScale;
+                rawH = (Math.sign(rawH) || 1) * Math.abs(safeH) * dominantScale;
+                if (d.dir.includes('w')) newL = (d.l + d.w) - rawW;
+                if (d.dir.includes('n')) newT = (d.t + d.h) - rawH;
+            }
+
+            if (state.cropMode) {
+                const img = state.selectedEl.querySelector('img');
+                if (img) {
+                    // ✨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
+                    if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
+                    if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
+                }
+                
+                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+            } else {
+                let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
+                if (rawW < 0) { rawW = Math.abs(rawW); if (d.dir.includes('e')) newL = d.l - rawW; finalScaleX = -1 * d.scaleX; } 
+                if (rawH < 0) { rawH = Math.abs(rawH); if (d.dir.includes('s')) newT = d.t - rawH; finalScaleY = -1 * d.scaleY; }
+                
+                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+
+                const img = state.selectedEl.querySelector('img');
+                if (img && d.imgW !== undefined) {
+                    const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
+                    img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
+                    img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';
+                }
+                
+                state.selectedEl.querySelector('.element-content').style.transform = `scale(${finalScaleX}, ${finalScaleY})`;
+                state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
+                if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
+            }
+            if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+        }
+    };
+
+    console.log("✅ Definitive Crop Anchor Fix installed.");
 })();
+})();
+/* =========================================================================
+   V99.0 - UNCLIPPED JUMBO CROP HANDLES (20px)
+   (REPLACEMENT FOR V98.0) Bumps handle size to 20px for better ergonomics.
+   ========================================================================= */
+;(function upgradeCropHandleSize() {
+    console.log("🛠️ V99.0 Unclipped Jumbo Crop Handles (20px) initializing...");
+    
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* 1. Stop the main wrapper from chopping off the handles */
+        .pub-element.cropping {
+            overflow: visible !important;
+        }
+
+        /* 2. Force the inner wrapper to do the actual image masking */
+        .pub-element.cropping .element-content {
+            overflow: hidden !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* 3. Enlarge the handles ONLY when the element is in crop mode */
+        .pub-element.cropping .resize-handle {
+            width: 20px !important;
+            height: 20px !important;
+            background-color: #f97316 !important; /* Bright orange */
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
+            border-radius: 50% !important; 
+            z-index: 20 !important;
+        }
+
+        /* 4. Re-center the handles based on the new 20px size (Half is 10px) */
+        .pub-element.cropping .rh-nw { top: -10px !important; left: -10px !important; }
+        .pub-element.cropping .rh-ne { top: -10px !important; right: -10px !important; }
+        .pub-element.cropping .rh-sw { bottom: -10px !important; left: -10px !important; }
+        .pub-element.cropping .rh-se { bottom: -10px !important; right: -10px !important; }
+        
+        .pub-element.cropping .rh-n  { top: -10px !important; left: calc(50% - 10px) !important; margin-left: 0 !important; }
+        .pub-element.cropping .rh-s  { bottom: -10px !important; left: calc(50% - 10px) !important; margin-left: 0 !important; }
+        .pub-element.cropping .rh-e  { top: calc(50% - 10px) !important; right: -10px !important; margin-top: 0 !important; }
+        .pub-element.cropping .rh-w  { top: calc(50% - 10px) !important; left: -10px !important; margin-top: 0 !important; }
+    `;
+    document.head.appendChild(style);
+})();
+
 /* =========================================================================
    MODERN SAVE SYSTEM (File System Access API + Title Sync)
    Upgrades the save dialog to allow syncing the chosen filename to the UI.
@@ -14277,6 +14680,30 @@ function initBasicBorders() {
 
     window.printFullDocument = () => window.print();
 })();
+/* =========================================================================
+   apply crop to images on print
+   ========================================================================= */
+const cropStyle = document.createElement('style');
+cropStyle.innerHTML = `
+    @media print {
+        .print-crop-mask {
+            overflow: hidden !important;
+            clip-path: inset(0) !important;
+            -webkit-clip-path: inset(0) !important;
+            contain: paint !important;
+        }
+    }
+`;
+document.head.appendChild(cropStyle);
+
+window.addEventListener('beforeprint', () => {
+    const spooler = document.getElementById('op-print-spooler');
+    if (spooler) {
+        spooler.querySelectorAll('img').forEach(img => {
+            if (img.parentElement) img.parentElement.classList.add('print-crop-mask');
+        });
+    }
+});
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
