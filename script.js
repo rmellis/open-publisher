@@ -15101,6 +15101,53 @@ window.toggleCrop = function() {
 
 })();
 /* =========================================================================
+   Text Print Rescue Module
+   Solves the "invisible default text" bug during printing.
+   ========================================================================= */
+;(function installTextPrintRescue() {
+    console.log("🖨️ Text Print Rescue Module initializing...");
+
+    const forceInlineTextStyles = () => {
+        // Find every element inside an interactive container
+        const allElements = document.querySelectorAll('.pub-element *');
+
+        allElements.forEach(el => {
+            // Filter down to elements that actually contain readable text
+            // (Ignoring empty wrappers, SVG paths, or image containers)
+            if (el.innerText && el.innerText.trim() !== '' && el.children.length === 0) {
+                
+                // Ask the browser what the text currently looks like on the screen
+                const computed = window.getComputedStyle(el);
+
+                // If the element doesn't have an explicit inline style, forcefully apply the computed one
+                if (!el.style.fontFamily || el.style.fontFamily === '') {
+                    el.style.setProperty('font-family', computed.fontFamily, 'important');
+                }
+                
+                if (!el.style.fontSize || el.style.fontSize === '') {
+                    el.style.setProperty('font-size', computed.fontSize, 'important');
+                }
+                
+                if (!el.style.color || el.style.color === '') {
+                    el.style.setProperty('color', computed.color, 'important');
+                }
+            }
+        });
+        console.log("🖨️ Text styles hardcoded for print spooler.");
+    };
+
+    // Intercept the browser's print command BEFORE the spooler takes its snapshot
+    window.addEventListener('beforeprint', forceInlineTextStyles, true);
+    
+    // Fallback: If the app uses a custom print button instead of the browser native Ctrl+P
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 'p') {
+            forceInlineTextStyles();
+        }
+    }, true);
+
+})();
+/* =========================================================================
    MODERN SAVE SYSTEM (File System Access API + Title Sync)
    Upgrades the save dialog to allow syncing the chosen filename to the UI.
    ========================================================================= */
