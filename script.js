@@ -14376,6 +14376,165 @@ window.toggleCrop = function() {
 })();
 })();
 /* =========================================================================
+   ADD-ON: BACKGROUND DEFENDER MODULE
+   Standalone script to protect background themes.
+   - Re-applies CSS locks when .opub files are loaded.
+   - Stealths the background during mouse drags to prevent Text Box ribbon.
+   ========================================================================= */
+;(function installBackgroundDefender() {
+    console.log("🛡️ Background Defender Module initializing...");
+
+    // 1. PASSIVE RE-LOCKER (Fixes .opub loading)
+    setInterval(() => {
+        document.querySelectorAll('.op-theme-container').forEach(container => {
+            const wrapper = container.closest('.pub-element');
+            if (wrapper) {
+                if (wrapper.getAttribute('data-is-theme') !== 'true') {
+                    wrapper.setAttribute('data-is-theme', 'true');
+                }
+                if (wrapper.style.zIndex !== '0') {
+                    wrapper.style.zIndex = '0';
+                }
+                wrapper.classList.remove('selected', 'active-element');
+            }
+        });
+    }, 250);
+
+    // 2. DELAYED MOUSE STEALTH (Fixes Text Box Ribbon)
+    let stealthTimer = null;
+    
+    const stealthBackgrounds = () => {
+        clearTimeout(stealthTimer);
+        document.querySelectorAll('[data-is-theme="true"]').forEach(el => {
+            el.classList.remove('pub-element', 'selected', 'active-element');
+        });
+    };
+    
+    const unstealthBackgrounds = () => {
+        document.querySelectorAll('[data-is-theme="true"]').forEach(el => {
+            if (!el.classList.contains('pub-element')) {
+                el.classList.add('pub-element');
+            }
+            el.classList.remove('selected', 'active-element');
+        });
+    };
+
+    // Event Listeners for Stealth
+    window.addEventListener('mousedown', stealthBackgrounds, true);
+    window.addEventListener('mousemove', (e) => { 
+        if (e.buttons > 0) stealthBackgrounds(); 
+    }, true);
+    
+    window.addEventListener('mouseup', () => { 
+        stealthTimer = setTimeout(unstealthBackgrounds, 150); 
+    }, true);
+    
+    document.addEventListener('mouseleave', () => { 
+        stealthTimer = setTimeout(unstealthBackgrounds, 150); 
+    }, true);
+    
+    // Failsafes for saving and printing
+    window.addEventListener('beforeprint', unstealthBackgrounds, true);
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p')) {
+            unstealthBackgrounds();
+        }
+    }, true);
+})();
+/* =========================================================================
+   Border Defender Module (Anti-Fade Patch)
+   ========================================================================= */
+;(function installBorderDefenderV3_2() {
+    console.log("🛡️ Border Defender V3.2 initializing...");
+
+    // 1. ABSOLUTE CSS LOCKS & ANTI-FADE
+    const style = document.createElement('style');
+    style.innerHTML = `
+        [data-is-border="true"] {
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+            opacity: 1 !important; /* Defeat native background fading */
+        }
+        [data-is-border="true"] * {
+            pointer-events: none !important;
+            opacity: 1 !important; /* Defeat native background fading */
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 2. IDENTIFY BORDERS
+    const identifyBorders = () => {
+        const paper = document.getElementById('paper');
+        if (!paper) return;
+        const paperRect = paper.getBoundingClientRect();
+
+        document.querySelectorAll('.pub-element').forEach(el => {
+            // Strictly ignore Background Themes
+            if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return; 
+            
+            // Tag explicitly named borders
+            if (el.id === 'native-blueprint-border' || el.querySelector('#native-blueprint-border') || el.querySelector('.page-border-wrapper')) {
+                el.setAttribute('data-is-border', 'true');
+                return;
+            }
+
+            // Tag loaded borders based on dimensions (95% of page)
+            if (el.getAttribute('data-is-border') !== 'true') {
+                const rect = el.getBoundingClientRect();
+                if (rect.width >= (paperRect.width * 0.95) && rect.height >= (paperRect.height * 0.95)) {
+                    el.setAttribute('data-is-border', 'true');
+                }
+            }
+        });
+    };
+
+    // 3. THE GHOST & ANTI-FADE LOOP
+    setInterval(() => {
+        identifyBorders();
+
+        document.querySelectorAll('[data-is-border="true"]').forEach(wrapper => {
+            // Strip selection states to prevent dragging
+            wrapper.classList.remove('selected', 'active-element', 'hovered');
+            
+            // Inline Locks & Anti-Fade
+            wrapper.style.setProperty('pointer-events', 'none', 'important');
+            wrapper.style.setProperty('user-select', 'none', 'important');
+            wrapper.style.setProperty('opacity', '1', 'important'); // Force solid color
+            wrapper.setAttribute('draggable', 'false');
+            if (wrapper.style.zIndex !== '2') wrapper.style.zIndex = '2';
+            
+            // Apply Math Spoofer
+            if (!wrapper._ghosted) {
+                wrapper._originalGetBoundingClientRect = wrapper.getBoundingClientRect;
+                wrapper.getBoundingClientRect = function() {
+                    if (document.body.getAttribute('data-stealth-active') === 'true') {
+                        return { top: -9999, left: -9999, right: -9999, bottom: -9999, width: 0, height: 0, x: -9999, y: -9999 };
+                    }
+                    return wrapper._originalGetBoundingClientRect.apply(this, arguments);
+                };
+                wrapper._ghosted = true;
+            }
+        });
+    }, 200);
+
+    // 4. STEALTH FLAG TOGGLE
+    let stealthTimer = null;
+    const startStealth = () => {
+        clearTimeout(stealthTimer);
+        document.body.setAttribute('data-stealth-active', 'true');
+    };
+    const stopStealth = () => {
+        document.body.removeAttribute('data-stealth-active');
+    };
+
+    window.addEventListener('mousedown', startStealth, true);
+    window.addEventListener('mousemove', (e) => { if (e.buttons > 0) startStealth(); }, true);
+    window.addEventListener('mouseup', () => { stealthTimer = setTimeout(stopStealth, 150); }, true);
+    document.addEventListener('mouseleave', () => { stealthTimer = setTimeout(stopStealth, 150); }, true);
+    window.addEventListener('beforeprint', stopStealth, true);
+})();
+/* =========================================================================
     The Theme Studio to replace the old themes on the page design tab.
     Clean, formatted, and documented for production use.
    ========================================================================= */
@@ -14519,7 +14678,7 @@ window.toggleCrop = function() {
     }
 
     // ==========================================
-    // 5. THEME INJECTION ENGINE
+    // 5. THEME INJECTION & SAVE BACKUP
     // ==========================================
     const applyThemeToCanvas = (swatch) => {
         const paper = document.getElementById('paper');
@@ -14535,6 +14694,16 @@ window.toggleCrop = function() {
 
         const type = swatch.getAttribute('data-type');
         const c1 = swatch.getAttribute('data-c1');
+        const c2 = swatch.getAttribute('data-c2') || '';
+        const url = swatch.getAttribute('data-url') || '';
+
+        // ✨ THE SAVE BACKUP: Anchor the configuration to the root document.
+        // The app's serializer will natively save these attributes into the .opub file.
+        paper.setAttribute('data-theme-saved', 'true');
+        paper.setAttribute('data-theme-type', type);
+        paper.setAttribute('data-theme-c1', c1);
+        paper.setAttribute('data-theme-c2', c2);
+        paper.setAttribute('data-theme-url', url);
 
         // Mute app's tab switching temporarily
         const originalSwitchTab = window.switchTab;
@@ -14555,7 +14724,7 @@ window.toggleCrop = function() {
             bgDiv.style.cssText = 'position:absolute; inset:0; width:100%; height:100%;';
             
             if (type === 'gradient') {
-                bgDiv.style.background = `linear-gradient(135deg, ${c1}, ${swatch.getAttribute('data-c2')})`;
+                bgDiv.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
             } else {
                 bgDiv.style.backgroundColor = c1;
             }
@@ -14565,7 +14734,7 @@ window.toggleCrop = function() {
                 const texDiv = document.createElement('div');
                 texDiv.className = 'op-theme-tex';
                 texDiv.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; background-repeat:repeat; opacity:1;';
-                texDiv.style.backgroundImage = `url('${swatch.getAttribute('data-url')}')`;
+                texDiv.style.backgroundImage = `url('${url}')`;
                 container.appendChild(texDiv);
             }
             
@@ -14591,7 +14760,13 @@ window.toggleCrop = function() {
 
         const sat = document.getElementById('ts-sat-slider').value;
         const bri = document.getElementById('ts-bri-slider').value;
-        const texStr = document.getElementById('ts-tex-slider').value / 100;
+        const texVal = document.getElementById('ts-tex-slider').value;
+        const texStr = texVal / 100;
+
+        // Backup slider states for saving
+        paper.setAttribute('data-theme-sat', sat);
+        paper.setAttribute('data-theme-bri', bri);
+        paper.setAttribute('data-theme-tex', texVal);
 
         const container = themeLayer.querySelector('.op-theme-container');
         if (container) container.style.filter = `saturate(${sat}%) brightness(${bri}%)`;
@@ -14609,6 +14784,12 @@ window.toggleCrop = function() {
             const existingTheme = paper.querySelector('[data-is-theme="true"]');
             if (existingTheme) existingTheme.remove();
             paper.style.background = '#ffffff';
+            
+            // Wipe save backup
+            paper.removeAttribute('data-theme-saved');
+            ['type', 'c1', 'c2', 'url', 'sat', 'bri', 'tex'].forEach(attr => {
+                paper.removeAttribute(`data-theme-${attr}`);
+            });
         }
         
         swatches.forEach(s => s.classList.remove('active'));
@@ -14621,7 +14802,6 @@ window.toggleCrop = function() {
 
     // ==========================================
     // 7. PRINT RESCUE HOOK
-    // Extracts background from scaled spooler wrappers
     // ==========================================
     window.addEventListener('beforeprint', () => {
         setTimeout(() => {
@@ -14649,14 +14829,85 @@ window.toggleCrop = function() {
     });
 
     // ==========================================
-    // 8. STACKING ENFORCER
+    // 8. THE SELF-HEALING ENGINE & Z-INDEX
     // ==========================================
     setInterval(() => {
-        const theme = document.querySelector('[data-is-theme="true"]');
+        const paper = document.getElementById('paper');
+        if (!paper) return;
+
+        let theme = document.querySelector('[data-is-theme="true"]');
+
+        // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
+        if (!theme && paper.getAttribute('data-theme-saved') === 'true') {
+            console.log("🛠️ Theme Studio: Reconstructing deleted theme wrapper from save file...");
+            if (typeof createWrapper === 'function') {
+                theme = createWrapper(`<div class="op-theme-container"></div>`); // temporary shell
+                theme.setAttribute('data-is-theme', 'true');
+                theme.setAttribute('data-type', 'box');
+                theme.style.cssText += 'left: 0px !important; top: 0px !important; width: 100% !important; height: 100% !important; z-index: 0 !important;';
+                if (typeof deselect === 'function') deselect();
+            }
+        }
+
+        // ✨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
+        if (theme && !theme.querySelector('.op-theme-bg') && paper.getAttribute('data-theme-saved') === 'true') {
+            console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
+            
+            const type = paper.getAttribute('data-theme-type');
+            const c1 = paper.getAttribute('data-theme-c1');
+            const c2 = paper.getAttribute('data-theme-c2');
+            const url = paper.getAttribute('data-theme-url');
+
+            if (type && c1) {
+                theme.innerHTML = ''; // Clear junk HTML from the save serializer
+                
+                const container = document.createElement('div');
+                container.className = 'op-theme-container';
+                container.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;';
+                
+                const bgDiv = document.createElement('div');
+                bgDiv.className = 'op-theme-bg';
+                bgDiv.style.cssText = 'position:absolute; inset:0; width:100%; height:100%;';
+                if (type === 'gradient') {
+                    bgDiv.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+                } else {
+                    bgDiv.style.backgroundColor = c1;
+                }
+                container.appendChild(bgDiv);
+
+                if (type === 'texture') {
+                    const texDiv = document.createElement('div');
+                    texDiv.className = 'op-theme-tex';
+                    texDiv.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; background-repeat:repeat; opacity:1;';
+                    texDiv.style.backgroundImage = `url('${url}')`;
+                    container.appendChild(texDiv);
+                }
+                theme.appendChild(container);
+
+                // Restore UI Sliders
+                const sat = paper.getAttribute('data-theme-sat');
+                const bri = paper.getAttribute('data-theme-bri');
+                const tex = paper.getAttribute('data-theme-tex');
+                
+                if (sat) document.getElementById('ts-sat-slider').value = sat;
+                if (bri) document.getElementById('ts-bri-slider').value = bri;
+                if (tex) document.getElementById('ts-tex-slider').value = tex;
+
+                // Restore UI Swatch highlight
+                const swatches = document.querySelectorAll('.ts-swatch');
+                swatches.forEach(s => s.classList.remove('active'));
+                const activeSwatch = Array.from(swatches).find(s => s.getAttribute('data-c1') === c1);
+                if (activeSwatch) activeSwatch.classList.add('active');
+
+                // Apply restored filter values directly to the new container
+                updateLiveFilters();
+            }
+        }
+
+        // Maintain Stacking Order
         if (theme && theme.style.zIndex !== '0') {
             theme.style.zIndex = '0';
         }
-        
         const border = document.getElementById('native-blueprint-border');
         if (border && border.style.zIndex !== '2') {
             border.style.zIndex = '2';
@@ -14665,7 +14916,6 @@ window.toggleCrop = function() {
 
     // ==========================================
     // 9. THE DELAYED MOUSE-STEALTH DEFENSE
-    // Prevents the Text Box ribbon from opening during dragging
     // ==========================================
     let stealthTimer = null;
     
@@ -14687,25 +14937,20 @@ window.toggleCrop = function() {
         }
     };
 
-    // Strip class immediately when mouse goes down
     window.addEventListener('mousedown', stealthTheme, true);
     
-    // Keep it stripped if actively dragging
     window.addEventListener('mousemove', (e) => {
         if (e.buttons > 0) stealthTheme();
     }, true);
 
-    // Wait 150ms AFTER let go before adding the class back
     window.addEventListener('mouseup', () => {
         stealthTimer = setTimeout(unstealthTheme, 150);
     }, true);
 
-    // Handle edge case where mouse is dragged outside the browser window
     document.addEventListener('mouseleave', () => {
         stealthTimer = setTimeout(unstealthTheme, 150);
     }, true);
 
-    // Defend against Ctrl+A (Select All)
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key.toLowerCase() === 'a') {
             stealthTheme();
@@ -14713,7 +14958,6 @@ window.toggleCrop = function() {
         }
     }, true);
 
-    // Failsafe: Guarantee theme is fully active before the printer snapshot
     window.addEventListener('beforeprint', unstealthTheme, true);
 
     // ==========================================
@@ -14782,7 +15026,80 @@ window.toggleCrop = function() {
     `;
     document.head.appendChild(style);
 })();
+/* =========================================================================
+   Border Eraser Module (UI Spacing Fix)
+   ========================================================================= */
+;(function installBorderEraserV2_3() {
+    console.log("🧹 Border Eraser V2.3 initializing...");
 
+    const injectInterval = setInterval(() => {
+        const removeThemeBtn = document.getElementById('ts-clear-theme-btn');
+        if (!removeThemeBtn) return; // Wait until the tab renders
+
+        // Prevent duplicates
+        if (document.getElementById('ts-clear-border-btn')) {
+            clearInterval(injectInterval);
+            return;
+        }
+
+        // 1. Build the Button Container (Tightened Margins)
+        const eraserBtn = document.createElement('div');
+        eraserBtn.id = 'ts-clear-border-btn';
+        eraserBtn.title = "Remove existing page borders";
+        
+        eraserBtn.style.cssText = `
+            display: inline-flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 73px !important;
+            min-width: 50px !important;
+            padding: 0 4px !important; /* Reduced padding */
+            margin-left: 0px !important; /* Snug up to the left button */
+            margin-right: 8px !important; /* Small gap before swatches */
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            box-sizing: border-box;
+            vertical-align: top;
+        `;
+
+        // 2. Build internal elements
+        eraserBtn.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 32px; width: 32px; margin-bottom: 2px;">
+                <i class="fas fa-border-none" style="font-size: 22px !important; color: var(--pub-color, #007670) !important; display: block !important;"></i>
+            </div>
+            <span style="font-size: 11px !important; font-family: 'Segoe UI', sans-serif !important; text-align: center !important; line-height: 1.2 !important; color: #333 !important; display: block !important; white-space: nowrap;">Remove<br>Border</span>
+        `;
+
+        // 3. Re-bind native hover states
+        eraserBtn.addEventListener('mouseenter', () => eraserBtn.style.background = 'rgba(0, 0, 0, 0.05)');
+        eraserBtn.addEventListener('mouseleave', () => eraserBtn.style.background = 'transparent');
+        eraserBtn.addEventListener('mousedown', () => eraserBtn.style.background = 'rgba(0, 0, 0, 0.1)');
+        eraserBtn.addEventListener('mouseup', () => eraserBtn.style.background = 'rgba(0, 0, 0, 0.05)');
+
+        // 4. The Purge Logic
+        eraserBtn.addEventListener('click', () => {
+            console.log("🧹 Executing Border Purge...");
+            let purged = false;
+            const borders = document.querySelectorAll('#native-blueprint-border, [data-is-border="true"], .page-border-wrapper');
+            
+            borders.forEach(border => {
+                let wrapper = border;
+                while (wrapper.parentElement && wrapper.parentElement.id !== 'paper') wrapper = wrapper.parentElement;
+                if (wrapper) { wrapper.remove(); purged = true; }
+            });
+
+            if (purged && typeof pushHistory === 'function') pushHistory();
+        });
+
+        // 5. Anchor it right next to the original button
+        removeThemeBtn.parentElement.insertBefore(eraserBtn, removeThemeBtn.nextSibling);
+        clearInterval(injectInterval);
+    }, 500);
+
+})();
 /* =========================================================================
    MODERN SAVE SYSTEM (File System Access API + Title Sync)
    Upgrades the save dialog to allow syncing the chosen filename to the UI.
