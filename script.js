@@ -14442,48 +14442,63 @@ window.toggleCrop = function() {
     }, true);
 })();
 /* =========================================================================
-   Border Defender Module (Anti-Fade Patch)
+   Border Defender Module (+ Anti-Fade Patch)
+   - Safely ignores imported .doc/.pub files because they are <img> based.
    ========================================================================= */
-;(function installBorderDefenderV3_2() {
-    console.log("🛡️ Border Defender V3.2 initializing...");
+;(function installBorderDefenderV5() {
+    console.log("🛡️ Border Defender V5 (Shape DNA) initializing...");
 
     // 1. ABSOLUTE CSS LOCKS & ANTI-FADE
     const style = document.createElement('style');
     style.innerHTML = `
-        [data-is-border="true"] {
-            pointer-events: none !important;
-            user-select: none !important;
-            -webkit-user-drag: none !important;
-            opacity: 1 !important; /* Defeat native background fading */
+        [data-is-border="true"] { 
+            pointer-events: none !important; 
+            user-select: none !important; 
+            -webkit-user-drag: none !important; 
+            opacity: 1 !important; 
         }
-        [data-is-border="true"] * {
-            pointer-events: none !important;
-            opacity: 1 !important; /* Defeat native background fading */
+        [data-is-border="true"] * { 
+            pointer-events: none !important; 
+            opacity: 1 !important; 
         }
     `;
     document.head.appendChild(style);
 
-    // 2. IDENTIFY BORDERS
-    const identifyBorders = () => {
+    // 2. THE SHAPE DNA FINDER
+    const processBorders = () => {
         const paper = document.getElementById('paper');
         if (!paper) return;
         const paperRect = paper.getBoundingClientRect();
 
         document.querySelectorAll('.pub-element').forEach(el => {
-            // Strictly ignore Background Themes
-            if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return; 
-            
-            // Tag explicitly named borders
+            // Ignore Background Themes
+            if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return;
+
+            // Check if it's a freshly clicked native border
             if (el.id === 'native-blueprint-border' || el.querySelector('#native-blueprint-border') || el.querySelector('.page-border-wrapper')) {
                 el.setAttribute('data-is-border', 'true');
                 return;
             }
 
-            // Tag loaded borders based on dimensions (95% of page)
+            // Check if it is a loaded border from an .opub save file
             if (el.getAttribute('data-is-border') !== 'true') {
                 const rect = el.getBoundingClientRect();
-                if (rect.width >= (paperRect.width * 0.95) && rect.height >= (paperRect.height * 0.95)) {
-                    el.setAttribute('data-is-border', 'true');
+                
+                const isFullWidth = rect.width >= (paperRect.width * 0.95);
+                const isFullHeight = rect.height >= (paperRect.height * 0.95);
+                
+                if (isFullWidth && isFullHeight) {
+                    // ✨ THE SHAPE DNA FILTER ✨
+                    // Based on the native HTML, borders are SVG shapes. Imported documents are not.
+                    const isShapeType = el.getAttribute('data-type') === 'shape';
+                    const hasSVG = el.querySelector('svg') !== null;
+                    const hasNoImages = el.querySelector('img') === null; // Exclude imported docs
+                    
+                    const isBackZ = el.style.zIndex === '2' || el.style.zIndex === '1' || el.style.zIndex === '0' || !el.style.zIndex;
+
+                    if ((isShapeType || hasSVG) && hasNoImages && isBackZ) {
+                        el.setAttribute('data-is-border', 'true');
+                    }
                 }
             }
         });
@@ -14491,20 +14506,31 @@ window.toggleCrop = function() {
 
     // 3. THE GHOST & ANTI-FADE LOOP
     setInterval(() => {
-        identifyBorders();
+        processBorders();
 
         document.querySelectorAll('[data-is-border="true"]').forEach(wrapper => {
-            // Strip selection states to prevent dragging
+            // Strip selection highlights
             wrapper.classList.remove('selected', 'active-element', 'hovered');
             
-            // Inline Locks & Anti-Fade
+            // Apply inline CSS locks
             wrapper.style.setProperty('pointer-events', 'none', 'important');
             wrapper.style.setProperty('user-select', 'none', 'important');
-            wrapper.style.setProperty('opacity', '1', 'important'); // Force solid color
+            wrapper.style.setProperty('opacity', '1', 'important');
             wrapper.setAttribute('draggable', 'false');
-            if (wrapper.style.zIndex !== '2') wrapper.style.zIndex = '2';
             
-            // Apply Math Spoofer
+            // Lock internal container (from user's HTML snippet)
+            const content = wrapper.querySelector('.element-content');
+            if (content) content.style.setProperty('pointer-events', 'none', 'important');
+
+            if (wrapper.style.zIndex !== '2') wrapper.style.zIndex = '2';
+
+            // Recursively lock children
+            Array.from(wrapper.querySelectorAll('*')).forEach(child => {
+                child.setAttribute('draggable', 'false');
+                child.style.setProperty('pointer-events', 'none', 'important');
+            });
+
+            // Math Spoofer (Ghost Protocol)
             if (!wrapper._ghosted) {
                 wrapper._originalGetBoundingClientRect = wrapper.getBoundingClientRect;
                 wrapper.getBoundingClientRect = function() {
@@ -14520,12 +14546,12 @@ window.toggleCrop = function() {
 
     // 4. STEALTH FLAG TOGGLE
     let stealthTimer = null;
-    const startStealth = () => {
-        clearTimeout(stealthTimer);
-        document.body.setAttribute('data-stealth-active', 'true');
+    const startStealth = () => { 
+        clearTimeout(stealthTimer); 
+        document.body.setAttribute('data-stealth-active', 'true'); 
     };
-    const stopStealth = () => {
-        document.body.removeAttribute('data-stealth-active');
+    const stopStealth = () => { 
+        document.body.removeAttribute('data-stealth-active'); 
     };
 
     window.addEventListener('mousedown', startStealth, true);
@@ -14533,6 +14559,7 @@ window.toggleCrop = function() {
     window.addEventListener('mouseup', () => { stealthTimer = setTimeout(stopStealth, 150); }, true);
     document.addEventListener('mouseleave', () => { stealthTimer = setTimeout(stopStealth, 150); }, true);
     window.addEventListener('beforeprint', stopStealth, true);
+    
 })();
 /* =========================================================================
     The Theme Studio to replace the old themes on the page design tab.
