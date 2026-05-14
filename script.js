@@ -15908,12 +15908,14 @@ window.addEventListener('beforeprint', () => {
     }
 });
 /* =========================================================================
-   SEAMLESS PDF PRINT ENGINE
+   V118.0 - PDF PRINT ENGINE (The Filter-Bake & Crop Fix)
+   Permanently bakes CSS filters into the image pixels via a temporary Canvas,
+   while correctly passing through the exact Crop Box coordinate percentages.
    ========================================================================= */
-(function installV115SeamlessPrintEngine() {
-    console.log("🖨️ Seamless PDF Print Engine initializing...");
+(function installV118PrintEngine() {
+    console.log("🖨️ V118.0 Filter-Bake & Crop Print Engine initializing...");
 
-    // 1. Destroy rogue print CSS from old frameworks (Cleanup)
+    // 1. Destroy rogue print CSS from old frameworks
     const toxicCSSNuker = new MutationObserver((mutations) => {
         mutations.forEach(m => {
             m.addedNodes.forEach(node => {
@@ -15926,19 +15928,43 @@ window.addEventListener('beforeprint', () => {
     });
     toxicCSSNuker.observe(document.head, { childList: true });
 
+    // 2. Patch serializer so it permanently remembers image opacity and filters
+    if (!window._serializePatchedForPrint) {
+        if (typeof serializeCurrentPage === 'function') {
+            const originalSerialize = serializeCurrentPage;
+            window.serializeCurrentPage = function() {
+                const page = originalSerialize();
+                const domEls = document.getElementById('paper').querySelectorAll('.pub-element');
+                page.elements.forEach((data, i) => {
+                    const domEl = domEls[i];
+                    if (domEl && data.imgSrc) {
+                        const img = domEl.querySelector('img');
+                        if (img) {
+                            data.imgStyle = data.imgStyle || {};
+                            data.imgStyle.opacity = img.style.opacity;
+                            data.imgStyle.filter = img.style.filter;
+                        }
+                    }
+                });
+                return page;
+            };
+        }
+        window._serializePatchedForPrint = true;
+    }
+
     window.printFullDocument = async function() {
         // Save current typing state
         if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
             if (typeof serializeCurrentPage === 'function') state.pages[state.currentPageIndex] = serializeCurrentPage();
         }
 
-        // Show UI Loading State with the new Print Icon
+        // Show UI Loading State
         if (typeof DialogSystem !== 'undefined') {
             DialogSystem.show('Preparing Print Job...', `
                 <div style="text-align:center; padding: 10px;">
                     <p id="pdf-print-status" style="margin-bottom:15px; font-size:14px; font-weight:bold; color: #333; display:flex; align-items:center; justify-content:center; gap:8px;">
                         <i class="fas fa-print" style="color:var(--pub-color, #007670); font-size:18px;"></i>
-                        <span>Assembling high-fidelity pages...</span>
+                        <span>Processing image filters...</span>
                     </p>
                     <div style="width:100%; background:#e2e8f0; border-radius:10px; overflow:hidden; height:12px;">
                         <div id="pdf-print-progress" style="width:0%; height:100%; background:var(--pub-color, #007670); transition: width 0.2s;"></div>
@@ -15949,12 +15975,10 @@ window.addEventListener('beforeprint', () => {
             const btn = document.getElementById('custom-dialog-confirm');
             if (btn) btn.style.display = 'none';
             
-            // Force the dialog overlay to have a solid background so it hides our staging area
             const overlay = document.getElementById('custom-dialog-overlay');
             if (overlay) overlay.style.background = 'rgba(255, 255, 255, 0.98)';
         }
 
-        // 2. The Staging Area 
         const stagingArea = document.createElement('div');
         stagingArea.id = 'pdf-print-staging';
         stagingArea.style.cssText = 'position: fixed; top: 0; left: 0; z-index: 100; overflow: visible; display: flex; align-items: flex-start; justify-content: flex-start;';
@@ -15973,20 +15997,17 @@ window.addEventListener('beforeprint', () => {
                 if (statusEl) statusEl.querySelector('span').innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 if (progressEl) progressEl.style.width = `${((i) / totalPages) * 100}%`;
 
-                // Extract exact pixel dimensions
                 const pW = parseFloat(page.width) || 794;
                 const pH = parseFloat(page.height) || 1123;
                 const orientation = pW > pH ? 'l' : 'p';
                 const format = [pW, pH];
 
-                // Initialize PDF or add a new page with specific dimensions
                 if (!doc) {
                     doc = new jsPDF({ orientation: orientation, unit: 'px', format: format });
                 } else {
                     doc.addPage(format, orientation);
                 }
 
-                // Build the DOM node for this page in the staging area
                 let pageWrapper = document.createElement('div');
                 pageWrapper.style.width = pW + 'px';
                 pageWrapper.style.height = pH + 'px';
@@ -15994,16 +16015,89 @@ window.addEventListener('beforeprint', () => {
                 pageWrapper.style.position = 'relative';
                 pageWrapper.style.overflow = 'hidden';
 
-                page.elements.forEach(el => {
+                for (let el of page.elements) {
                     let elDiv = document.createElement('div');
-                    elDiv.style.cssText = `position: absolute; left: ${el.left}; top: ${el.top}; width: ${el.width}; height: ${el.height}; z-index: ${el.zIndex}; transform: ${el.transform || 'none'};`;
+                    
+                    // Force overflow: hidden so images stay inside their cropped bounds
+                    elDiv.style.cssText = `position: absolute; left: ${el.left}; top: ${el.top}; width: ${el.width}; height: ${el.height}; z-index: ${el.zIndex}; transform: ${el.transform || 'none'}; overflow: hidden; box-sizing: border-box;`;
 
                     if (el.imgSrc) {
                         let img = document.createElement('img');
-                        img.src = el.imgSrc;
-                        img.style.cssText = 'display: block; width: 100%; height: 100%; object-fit: fill;';
-                        if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        
+                        // 1. Start with default full-size styling
+                        img.style.cssText = 'display: block; width: 100%; height: 100%; object-fit: fill; position: absolute; top: 0; left: 0;';
+                        
+                        // 2. ✨ RESTORED: Map the exact Crop Coordinates! ✨
+                        if (el.imgStyle) {
+                            Object.assign(img.style, el.imgStyle);
+                        }
+
+                        let currentFilter = '';
+                        let currentOpacity = '1';
+
+                        if (el.imgStyle) {
+                            if (el.imgStyle.opacity !== undefined) currentOpacity = el.imgStyle.opacity;
+                            if (el.imgStyle.filter) currentFilter = el.imgStyle.filter;
+                        }
+                        
+                        // Fail-safe: Pull live filters and crop positions directly from the DOM
+                        if (page === state.pages[state.currentPageIndex]) {
+                            const activeEl = Array.from(document.querySelectorAll('.pub-element')).find(e => e.style.left === el.left && e.style.top === el.top);
+                            if (activeEl) {
+                                const activeImg = activeEl.querySelector('img');
+                                if (activeImg) {
+                                    currentFilter = activeImg.style.filter || currentFilter;
+                                    currentOpacity = activeImg.style.opacity || currentOpacity;
+                                    // Override with live crop math just to be safe
+                                    if (activeImg.style.width) img.style.width = activeImg.style.width;
+                                    if (activeImg.style.height) img.style.height = activeImg.style.height;
+                                    if (activeImg.style.left) img.style.left = activeImg.style.left;
+                                    if (activeImg.style.top) img.style.top = activeImg.style.top;
+                                }
+                            }
+                        }
+
+                        // 3. ✨ THE BAKE FIX: Render the image with its raw pixels merged with the filters
+                        if ((currentFilter && currentFilter !== 'none') || currentOpacity !== '1') {
+                            try {
+                                const bakedSrc = await new Promise((resolve, reject) => {
+                                    const tempImg = new Image();
+                                    tempImg.crossOrigin = "Anonymous"; // Fixes CORS blocking
+                                    tempImg.onload = () => {
+                                        const c = document.createElement('canvas');
+                                        c.width = tempImg.naturalWidth || 800;
+                                        c.height = tempImg.naturalHeight || 800;
+                                        const ctx = c.getContext('2d');
+                                        
+                                        if (currentFilter && currentFilter !== 'none') ctx.filter = currentFilter;
+                                        ctx.globalAlpha = parseFloat(currentOpacity);
+                                        ctx.drawImage(tempImg, 0, 0, c.width, c.height);
+                                        resolve(c.toDataURL('image/png'));
+                                    };
+                                    tempImg.onerror = reject;
+                                    tempImg.src = el.imgSrc;
+                                });
+                                img.src = bakedSrc;
+                                
+                                // Strip the CSS filters now that they are baked into the pixels!
+                                img.style.filter = 'none';
+                                img.style.WebkitFilter = 'none';
+                                img.style.opacity = '1';
+                            } catch(e) {
+                                console.warn("CORS blocked filter baking, falling back to CSS.");
+                                img.src = el.imgSrc;
+                                img.style.filter = currentFilter;
+                                img.style.WebkitFilter = currentFilter;
+                                img.style.opacity = currentOpacity;
+                            }
+                        } else {
+                            img.src = el.imgSrc;
+                            img.style.opacity = currentOpacity;
+                        }
+
                         elDiv.appendChild(img);
+                    } else if (el.clipPath) {
+                        elDiv.innerHTML = `<div style="width:100%; height:100%; background:${el.bg}; clip-path:${el.clipPath}; -webkit-clip-path:${el.clipPath};"></div>`;
                     } else {
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
@@ -16011,68 +16105,65 @@ window.addEventListener('beforeprint', () => {
                         elDiv.innerHTML = `<div style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; font-size: 16px; position: absolute; inset: 0;">${cleanHTML}</div>`;
                     }
                     pageWrapper.appendChild(elDiv);
-                });
+                }
 
                 stagingArea.appendChild(pageWrapper);
 
-                // Give the browser a tiny delay to physically paint the DOM elements
                 await new Promise(resolve => setTimeout(resolve, 50));
 
-                // Take the high-res snapshot
                 const canvas = await html2canvas(pageWrapper, { 
-                    scale: 2, // 2x scale for crisp printing
+                    scale: 2, 
                     useCORS: true,
                     logging: false,
                     backgroundColor: page.background || '#ffffff'
                 });
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                
-                // Add the snapshot to the PDF exactly at the page dimensions
                 doc.addImage(imgData, 'JPEG', 0, 0, pW, pH);
 
-                stagingArea.innerHTML = ''; // Clear stage for the next page
+                stagingArea.innerHTML = ''; 
             }
 
             if (progressEl) progressEl.style.width = '100%';
             if (statusEl) statusEl.querySelector('span').innerText = "Launching Print Dialog...";
 
-            // Cleanup staging
             stagingArea.remove();
 
-            // Deselect to clear cursors/highlights
             if (document.activeElement) document.activeElement.blur();
             if (window.getSelection) window.getSelection().removeAllRanges();
             if (typeof window.deselect === 'function') window.deselect();
 
-            // 3. EXECUTE PRINT VIA HIDDEN IFRAME
             setTimeout(() => {
                 if (typeof DialogSystem !== 'undefined') DialogSystem.close();
                 
-                // Inject the auto-print command into the PDF
                 doc.autoPrint();
-                
-                // Generate a Blob URL
                 const blob = doc.output('blob');
                 const url = URL.createObjectURL(blob);
                 
-                // Create a hidden iframe to hold the PDF and trigger the print natively
+                document.querySelectorAll('.op-print-frame').forEach(f => f.remove());
+                
                 const printIframe = document.createElement('iframe');
-                printIframe.style.position = 'fixed';
-                printIframe.style.right = '-9999px';
-                printIframe.style.bottom = '-9999px';
-                printIframe.style.width = '0';
-                printIframe.style.height = '0';
-                printIframe.style.border = 'none';
+                printIframe.className = 'op-print-frame';
+                printIframe.style.cssText = 'position: fixed; right: -9999px; bottom: -9999px; width: 0; height: 0; border: none;';
                 printIframe.src = url;
                 
                 document.body.appendChild(printIframe);
                 
-                // Clean up the URL and iframe to prevent memory leaks (5 mins is plenty for them to print)
+                const cleanupFrame = () => {
+                    if (printIframe && printIframe.parentNode) {
+                        printIframe.remove();
+                        URL.revokeObjectURL(url);
+                    }
+                    window.removeEventListener('focus', cleanupFrame);
+                    window.removeEventListener('mousemove', cleanupFrame);
+                    window.removeEventListener('click', cleanupFrame);
+                };
+
                 setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    printIframe.remove();
-                }, 300000);
+                    window.addEventListener('focus', cleanupFrame);
+                    window.addEventListener('mousemove', cleanupFrame, { once: true });
+                    window.addEventListener('click', cleanupFrame, { once: true });
+                }, 2000);
                 
             }, 500);
 
@@ -16085,7 +16176,6 @@ window.addEventListener('beforeprint', () => {
         }
     };
 
-    // Override the Ctrl+P shortcut
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
             e.preventDefault(); 
@@ -16094,6 +16184,7 @@ window.addEventListener('beforeprint', () => {
         }
     }, true);
 })();
+
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
