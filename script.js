@@ -15908,6 +15908,193 @@ window.addEventListener('beforeprint', () => {
     }
 });
 /* =========================================================================
+   SEAMLESS PDF PRINT ENGINE
+   ========================================================================= */
+(function installV115SeamlessPrintEngine() {
+    console.log("🖨️ Seamless PDF Print Engine initializing...");
+
+    // 1. Destroy rogue print CSS from old frameworks (Cleanup)
+    const toxicCSSNuker = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.tagName === 'STYLE' && node.className === 'op-dynamic-print-style') {
+                    node.innerHTML = '';
+                    node.disabled = true;
+                }
+            });
+        });
+    });
+    toxicCSSNuker.observe(document.head, { childList: true });
+
+    window.printFullDocument = async function() {
+        // Save current typing state
+        if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
+            if (typeof serializeCurrentPage === 'function') state.pages[state.currentPageIndex] = serializeCurrentPage();
+        }
+
+        // Show UI Loading State with the new Print Icon
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Preparing Print Job...', `
+                <div style="text-align:center; padding: 10px;">
+                    <p id="pdf-print-status" style="margin-bottom:15px; font-size:14px; font-weight:bold; color: #333; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <i class="fas fa-print" style="color:var(--pub-color, #007670); font-size:18px;"></i>
+                        <span>Assembling high-fidelity pages...</span>
+                    </p>
+                    <div style="width:100%; background:#e2e8f0; border-radius:10px; overflow:hidden; height:12px;">
+                        <div id="pdf-print-progress" style="width:0%; height:100%; background:var(--pub-color, #007670); transition: width 0.2s;"></div>
+                    </div>
+                </div>
+            `, null, true);
+            
+            const btn = document.getElementById('custom-dialog-confirm');
+            if (btn) btn.style.display = 'none';
+            
+            // Force the dialog overlay to have a solid background so it hides our staging area
+            const overlay = document.getElementById('custom-dialog-overlay');
+            if (overlay) overlay.style.background = 'rgba(255, 255, 255, 0.98)';
+        }
+
+        // 2. The Staging Area 
+        const stagingArea = document.createElement('div');
+        stagingArea.id = 'pdf-print-staging';
+        stagingArea.style.cssText = 'position: fixed; top: 0; left: 0; z-index: 100; overflow: visible; display: flex; align-items: flex-start; justify-content: flex-start;';
+        document.body.appendChild(stagingArea);
+
+        try {
+            const { jsPDF } = window.jspdf;
+            let doc = null;
+            
+            const totalPages = state.pages.length;
+            const progressEl = document.getElementById('pdf-print-progress');
+            const statusEl = document.getElementById('pdf-print-status');
+
+            for (let i = 0; i < totalPages; i++) {
+                const page = state.pages[i];
+                if (statusEl) statusEl.querySelector('span').innerText = `Rendering page ${i + 1} of ${totalPages}...`;
+                if (progressEl) progressEl.style.width = `${((i) / totalPages) * 100}%`;
+
+                // Extract exact pixel dimensions
+                const pW = parseFloat(page.width) || 794;
+                const pH = parseFloat(page.height) || 1123;
+                const orientation = pW > pH ? 'l' : 'p';
+                const format = [pW, pH];
+
+                // Initialize PDF or add a new page with specific dimensions
+                if (!doc) {
+                    doc = new jsPDF({ orientation: orientation, unit: 'px', format: format });
+                } else {
+                    doc.addPage(format, orientation);
+                }
+
+                // Build the DOM node for this page in the staging area
+                let pageWrapper = document.createElement('div');
+                pageWrapper.style.width = pW + 'px';
+                pageWrapper.style.height = pH + 'px';
+                pageWrapper.style.backgroundColor = page.background || '#ffffff';
+                pageWrapper.style.position = 'relative';
+                pageWrapper.style.overflow = 'hidden';
+
+                page.elements.forEach(el => {
+                    let elDiv = document.createElement('div');
+                    elDiv.style.cssText = `position: absolute; left: ${el.left}; top: ${el.top}; width: ${el.width}; height: ${el.height}; z-index: ${el.zIndex}; transform: ${el.transform || 'none'};`;
+
+                    if (el.imgSrc) {
+                        let img = document.createElement('img');
+                        img.src = el.imgSrc;
+                        img.style.cssText = 'display: block; width: 100%; height: 100%; object-fit: fill;';
+                        if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        elDiv.appendChild(img);
+                    } else {
+                        const sX = el.scaleX || "1";
+                        const sY = el.scaleY || "1";
+                        let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
+                        elDiv.innerHTML = `<div style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; font-size: 16px; position: absolute; inset: 0;">${cleanHTML}</div>`;
+                    }
+                    pageWrapper.appendChild(elDiv);
+                });
+
+                stagingArea.appendChild(pageWrapper);
+
+                // Give the browser a tiny delay to physically paint the DOM elements
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // Take the high-res snapshot
+                const canvas = await html2canvas(pageWrapper, { 
+                    scale: 2, // 2x scale for crisp printing
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: page.background || '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                
+                // Add the snapshot to the PDF exactly at the page dimensions
+                doc.addImage(imgData, 'JPEG', 0, 0, pW, pH);
+
+                stagingArea.innerHTML = ''; // Clear stage for the next page
+            }
+
+            if (progressEl) progressEl.style.width = '100%';
+            if (statusEl) statusEl.querySelector('span').innerText = "Launching Print Dialog...";
+
+            // Cleanup staging
+            stagingArea.remove();
+
+            // Deselect to clear cursors/highlights
+            if (document.activeElement) document.activeElement.blur();
+            if (window.getSelection) window.getSelection().removeAllRanges();
+            if (typeof window.deselect === 'function') window.deselect();
+
+            // 3. EXECUTE PRINT VIA HIDDEN IFRAME
+            setTimeout(() => {
+                if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+                
+                // Inject the auto-print command into the PDF
+                doc.autoPrint();
+                
+                // Generate a Blob URL
+                const blob = doc.output('blob');
+                const url = URL.createObjectURL(blob);
+                
+                // Create a hidden iframe to hold the PDF and trigger the print natively
+                const printIframe = document.createElement('iframe');
+                printIframe.style.position = 'fixed';
+                printIframe.style.right = '-9999px';
+                printIframe.style.bottom = '-9999px';
+                printIframe.style.width = '0';
+                printIframe.style.height = '0';
+                printIframe.style.border = 'none';
+                printIframe.src = url;
+                
+                document.body.appendChild(printIframe);
+                
+                // Clean up the URL and iframe to prevent memory leaks (5 mins is plenty for them to print)
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    printIframe.remove();
+                }, 300000);
+                
+            }, 500);
+
+        } catch (err) {
+            console.error("PDF Print Engine Failed:", err);
+            if (typeof DialogSystem !== 'undefined') {
+                DialogSystem.alert('Print Error', 'An error occurred while generating the print file. Please try downloading the PDF instead.');
+            }
+            if (stagingArea) stagingArea.remove();
+        }
+    };
+
+    // Override the Ctrl+P shortcut
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+            e.preventDefault(); 
+            e.stopImmediatePropagation(); 
+            window.printFullDocument();
+        }
+    }, true);
+})();
+/* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
