@@ -15908,12 +15908,14 @@ window.addEventListener('beforeprint', () => {
     }
 });
 /* =========================================================================
-   PURE PDF ENGINE (Image Crop Fix & WordArt Pixel-Lock)
+   PURE PDF ENGINE (UI Update - Custom PNG Icon & Scaling Fixes)
+   - Adopts v4.4.4 Terminology for Assembling Publication.
    - Restores outer/inner wrappers to properly crop rotated images.
    - Bakes WordArt to PNGs using strict pixel locking to prevent 100% blowouts.
+   - UI: Uses custom provided PNG icon for the print dialog.
    ========================================================================= */
 (function installPerfectPdfEngine() {
-    console.log("🖨️ Pure PDF Engine (Dual Fixes) initializing...");
+    console.log("🖨️ Pure PDF Engine (Custom PNG UI & Scaling Fix) initializing...");
 
     // Nuke old styles
     document.querySelectorAll('.op-dynamic-print-style').forEach(e => e.remove());
@@ -15926,19 +15928,26 @@ window.addEventListener('beforeprint', () => {
         }
 
         if (typeof DialogSystem !== 'undefined') {
+            // UI UPDATE
             DialogSystem.show('Preparing Print Job...', `
-                <div style="text-align:center; padding: 10px;">
-                    <p id="pdf-print-status" style="margin-bottom:15px; font-size:14px; font-weight:bold; color: #333; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        <i class="fas fa-print" style="color:var(--pub-color, #007670); font-size:18px;"></i>
-                        <span>Assembling PDF document...</span>
+                <div style="text-align:center; padding: 20px 10px; font-family: 'Comfortaa', 'Afacad Flux', sans-serif;">
+                    <div style="margin-bottom: 20px; display: flex; justify-content: center;">
+                        <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/mIgjxEe.png" style="width: 80px; height: auto;" alt="Print Icon" />
+                    </div>
+                    <p id="pdf-print-status" style="margin-bottom:20px; font-size:18px; color: #000; font-weight: 400;">
+                        Assembling Publication...
                     </p>
-                    <div style="width:100%; background:#e2e8f0; border-radius:10px; overflow:hidden; height:12px;">
-                        <div id="pdf-print-progress" style="width:0%; height:100%; background:var(--pub-color, #007670); transition: width 0.2s;"></div>
+                    <div style="width: 100%; height: 20px; border: 2px solid #006052; border-radius: 20px; padding: 2px; background: transparent; overflow: hidden; box-sizing: border-box;">
+                        <div id="pdf-print-progress" style="width: 0%; height: 100%; background: #006052; border-radius: 20px; transition: width 0.3s ease;"></div>
                     </div>
                 </div>
+                <style>
+                    /* Custom override to match screenshot header exactly */
+                    #custom-dialog-header { background-color: #006052 !important; color: white !important; font-size: 20px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; }
+                    #custom-dialog-close { color: white !important; opacity: 0.8; }
+                    #custom-dialog-confirm { display: none !important; }
+                </style>
             `, null, true);
-            const btn = document.getElementById('custom-dialog-confirm');
-            if (btn) btn.style.display = 'none';
         }
 
         const stagingArea = document.createElement('div');
@@ -15970,7 +15979,7 @@ window.addEventListener('beforeprint', () => {
 
             for (let i = 0; i < totalPages; i++) {
                 const page = state.pages[i];
-                if (statusEl) statusEl.querySelector('span').innerText = `Rendering page ${i + 1} of ${totalPages}...`;
+                if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 if (progressEl) progressEl.style.width = `${((i) / totalPages) * 100}%`;
 
                 const pW = parseFloat(page.width) || 794;
@@ -15992,7 +16001,7 @@ window.addEventListener('beforeprint', () => {
                 for (let el of page.elements) {
                     let elDiv = document.createElement('div');
                     
-                    // ✨ FIX 1: OUTER WRAPPER (Handles Position & Rotation)
+                    // OUTER WRAPPER: Handles Positioning and Rotation strictly (NO overflow hidden here)
                     elDiv.style.position = 'absolute';
                     elDiv.style.left = el.left;
                     elDiv.style.top = el.top;
@@ -16002,7 +16011,7 @@ window.addEventListener('beforeprint', () => {
                     elDiv.style.transform = el.transform || 'none';
 
                     if (el.imgSrc) {
-                        // ✨ FIX 1: INNER WRAPPER (Handles the crop mask so images aren't huge)
+                        // INNER WRAPPER: Handles the crop mask so images aren't huge
                         let cropDiv = document.createElement('div');
                         cropDiv.style.width = '100%';
                         cropDiv.style.height = '100%';
@@ -16084,10 +16093,11 @@ window.addEventListener('beforeprint', () => {
                 stagingArea.appendChild(pageWrapper);
 
                 // =====================================================================
-                // ✨ FIX 2: WORDART PIXEL-LOCK COMPOSITOR ✨
+                // ✨ FIX: WORDART PIXEL-LOCK COMPOSITOR ✨
+                // Terminology Updated to printable format
                 // Safely merges gradient text to PNGs locked to strict dimensions
                 // =====================================================================
-                if (statusEl) statusEl.querySelector('span').innerText = `Converting WordArt to images on page ${i + 1}...`;
+                if (statusEl) statusEl.innerText = `Converting WordArt to a printable format on page ${i + 1}...`;
                 
                 const wordArts = Array.from(pageWrapper.querySelectorAll('*')).filter(node => {
                     if (node.nodeType !== 1) return false;
@@ -16171,6 +16181,7 @@ window.addEventListener('beforeprint', () => {
                 }
                 // =====================================================================
 
+                // Terminology Update: Implementing textures
                 const bgUrls = [];
                 pageWrapper.querySelectorAll('*').forEach(node => {
                     const bg = node.style.backgroundImage;
@@ -16181,7 +16192,7 @@ window.addEventListener('beforeprint', () => {
                 });
 
                 if (bgUrls.length > 0) {
-                    if (statusEl) statusEl.querySelector('span').innerText = `Downloading textures for page ${i + 1}...`;
+                    if (statusEl) statusEl.innerText = `Implementing textures for page ${i + 1}...`;
                     await Promise.all(bgUrls.map(url => {
                         return new Promise(resolve => {
                             const img = new Image(); img.crossOrigin = "Anonymous";
@@ -16190,7 +16201,7 @@ window.addEventListener('beforeprint', () => {
                     }));
                 }
 
-                if (statusEl) statusEl.querySelector('span').innerText = `Rendering page ${i + 1} of ${totalPages}...`;
+                if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 
                 const canvas = await html2canvas(pageWrapper, { 
                     scale: 2, useCORS: true, logging: false, backgroundColor: page.background || '#ffffff'
@@ -16203,7 +16214,7 @@ window.addEventListener('beforeprint', () => {
             }
 
             if (progressEl) progressEl.style.width = '100%';
-            if (statusEl) statusEl.querySelector('span').innerText = "Launching Print Dialog...";
+            if (statusEl) statusEl.innerText = "Launching Print Dialog...";
             stagingArea.remove();
 
             setTimeout(() => {
