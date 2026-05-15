@@ -15908,17 +15908,14 @@ window.addEventListener('beforeprint', () => {
     }
 });
 /* =========================================================================
-   PRINT ENGINE UPDATE - VERSION 4.4.2
-   Features:
-   1. Texture Proxy: Routes transparenttextures.com through wsrv.nl CDN.
-   2. WordArt Compositor: Rasterizes gradient text into pure Base64 PNGs 
-      to permanently bypass the html2canvas gradient clipping bug.
-   3. Pure PDF Output: Generates 1 to N pages without native print conflicts.
+   PURE PDF ENGINE (Image Crop Fix & WordArt Pixel-Lock)
+   - Restores outer/inner wrappers to properly crop rotated images.
+   - Bakes WordArt to PNGs using strict pixel locking to prevent 100% blowouts.
    ========================================================================= */
-(function installPrintUpdateV442() {
-    console.log("🖨️ Print Engine v4.4.2 initializing...");
+(function installPerfectPdfEngine() {
+    console.log("🖨️ Pure PDF Engine (Dual Fixes) initializing...");
 
-    // Clean out old toxic styles/spoolers
+    // Nuke old styles
     document.querySelectorAll('.op-dynamic-print-style').forEach(e => e.remove());
     const oldSpooler = document.getElementById('op-print-spooler');
     if (oldSpooler) oldSpooler.remove();
@@ -15956,7 +15953,6 @@ window.addEventListener('beforeprint', () => {
             const progressEl = document.getElementById('pdf-print-progress');
             const statusEl = document.getElementById('pdf-print-status');
 
-            // Safely capture global Theme & Border
             const livePaper = document.getElementById('paper');
             let themeHtml = ''; let borderHtml = '';
             
@@ -15965,7 +15961,6 @@ window.addEventListener('beforeprint', () => {
                 if (liveTheme) {
                     let rawHtml = liveTheme.outerHTML;
                     rawHtml = rawHtml.replace(/inset:\s*0[^;]*;/gi, 'top:0; left:0; bottom:0; right:0; width:100%; height:100%;');
-                    // FIX 1: The Texture Proxy
                     rawHtml = rawHtml.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
                     themeHtml = rawHtml;
                 }
@@ -15996,11 +15991,29 @@ window.addEventListener('beforeprint', () => {
 
                 for (let el of page.elements) {
                     let elDiv = document.createElement('div');
-                    elDiv.style.cssText = `position: absolute; left: ${el.left}; top: ${el.top}; width: ${el.width}; height: ${el.height}; z-index: ${el.zIndex}; transform: ${el.transform || 'none'}; overflow: hidden; box-sizing: border-box;`;
+                    
+                    // ✨ FIX 1: OUTER WRAPPER (Handles Position & Rotation)
+                    elDiv.style.position = 'absolute';
+                    elDiv.style.left = el.left;
+                    elDiv.style.top = el.top;
+                    elDiv.style.width = el.width;
+                    elDiv.style.height = el.height;
+                    elDiv.style.zIndex = el.zIndex;
+                    elDiv.style.transform = el.transform || 'none';
 
                     if (el.imgSrc) {
+                        // ✨ FIX 1: INNER WRAPPER (Handles the crop mask so images aren't huge)
+                        let cropDiv = document.createElement('div');
+                        cropDiv.style.width = '100%';
+                        cropDiv.style.height = '100%';
+                        cropDiv.style.position = 'relative';
+                        cropDiv.style.overflow = 'hidden';
+                        cropDiv.style.clipPath = 'inset(0)';
+                        cropDiv.style.contain = 'paint';
+
                         let img = document.createElement('img');
-                        img.style.cssText = 'display: block; width: 100%; height: 100%; object-fit: fill; position: absolute; top: 0; left: 0;';
+                        img.src = el.imgSrc;
+                        
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
 
                         let currentFilter = ''; let currentOpacity = '1';
@@ -16046,21 +16059,23 @@ window.addEventListener('beforeprint', () => {
                                 img.style.filter = 'none'; img.style.WebkitFilter = 'none'; img.style.opacity = '1';
                             } catch(e) {
                                 img.src = el.imgSrc;
-                                img.style.filter = currentFilter; img.style.WebkitFilter = currentFilter; img.style.opacity = currentOpacity;
+                                img.style.filter = currentFilter; img.style.opacity = currentOpacity;
                             }
                         } else {
                             img.src = el.imgSrc; img.style.opacity = currentOpacity;
                         }
-                        elDiv.appendChild(img);
+                        
+                        cropDiv.appendChild(img);
+                        elDiv.appendChild(cropDiv);
+                        
                     } else if (el.clipPath) {
                         elDiv.innerHTML = `<div style="width:100%; height:100%; background:${el.bg}; clip-path:${el.clipPath}; -webkit-clip-path:${el.clipPath};"></div>`;
                     } else {
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
-                        // FIX 1: The Texture Proxy (for text elements)
                         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
-                        elDiv.innerHTML = `<div style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; position: absolute; top:0; left:0; bottom:0; right:0;">${cleanHTML}</div>`;
+                        elDiv.innerHTML = `<div class="element-content" style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;">${cleanHTML}</div>`;
                     }
                     pageWrapper.appendChild(elDiv);
                 }
@@ -16069,7 +16084,8 @@ window.addEventListener('beforeprint', () => {
                 stagingArea.appendChild(pageWrapper);
 
                 // =====================================================================
-                // FIX 2: THE WORDART IMAGE COMPOSITOR
+                // ✨ FIX 2: WORDART PIXEL-LOCK COMPOSITOR ✨
+                // Safely merges gradient text to PNGs locked to strict dimensions
                 // =====================================================================
                 if (statusEl) statusEl.querySelector('span').innerText = `Converting WordArt to images on page ${i + 1}...`;
                 
@@ -16093,14 +16109,14 @@ window.addEventListener('beforeprint', () => {
                         const w = node.offsetWidth || 300;
                         const h = node.offsetHeight || 100;
 
-                        // 1. Draw Gradient Background
+                        // 1. Render Gradient Block
                         const gradDiv = document.createElement('div');
                         gradDiv.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:${w}px; height:${h}px; background:${bgImage};`;
                         document.body.appendChild(gradDiv);
                         const gradCanvas = await html2canvas(gradDiv, { scale: 2, logging: false });
                         gradDiv.remove();
 
-                        // 2. Draw Text Mask
+                        // 2. Render Text Mask
                         const maskNode = node.cloneNode(true);
                         maskNode.style.setProperty('text-shadow', 'none', 'important');
                         maskNode.style.setProperty('-webkit-text-stroke', '0px', 'important');
@@ -16108,12 +16124,11 @@ window.addEventListener('beforeprint', () => {
                         maskNode.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
                         maskNode.style.setProperty('background', 'none', 'important');
                         maskNode.style.setProperty('background-image', 'none', 'important');
+                        maskNode.style.setProperty('-webkit-background-clip', 'initial', 'important');
 
                         node.style.visibility = 'hidden'; 
                         node.parentNode.insertBefore(maskNode, node);
-
                         const maskCanvas = await html2canvas(maskNode, { scale: 2, logging: false, backgroundColor: null });
-
                         maskNode.remove();
                         node.style.visibility = 'visible';
 
@@ -16127,27 +16142,31 @@ window.addEventListener('beforeprint', () => {
                         ctx.globalCompositeOperation = 'source-in';
                         ctx.drawImage(gradCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
 
-                        // 4. Swap into DOM
+                        // 4. Inject Image mathematically locked to pixels (prevents blowout)
+                        node.style.position = 'relative';
+                        if (comp.display === 'inline') node.style.display = 'inline-block';
+                        
                         const img = document.createElement('img');
                         img.src = finalCanvas.toDataURL('image/png');
                         img.style.position = 'absolute';
-                        img.style.top = '0';
-                        img.style.left = '0';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
+                        img.style.top = '0px';
+                        img.style.left = '0px';
+                        img.style.width = w + 'px';   // Locked explicit pixel width
+                        img.style.height = h + 'px';  // Locked explicit pixel height
                         img.style.objectFit = 'contain';
                         img.style.pointerEvents = 'none';
 
+                        // Make original text transparent so it acts as a layout skeleton
                         node.style.setProperty('background', 'none', 'important');
                         node.style.setProperty('background-image', 'none', 'important');
                         node.style.setProperty('color', 'transparent', 'important');
                         node.style.setProperty('-webkit-text-fill-color', 'transparent', 'important');
                         node.style.setProperty('-webkit-background-clip', 'initial', 'important');
 
-                        node.parentNode.insertBefore(img, node);
+                        node.appendChild(img);
 
                     } catch (e) {
-                        console.error("WordArt Image Rasterizer bypassed:", e);
+                        console.error("WordArt Rasterizer bypassed:", e);
                     }
                 }
                 // =====================================================================
