@@ -14526,7 +14526,7 @@ window.toggleCrop = function() {
     overlayWrapper = document.createElement('div'); 
     overlayWrapper.id = 'ts-overlay-wrapper'; 
 
-    overlayWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden;'; 
+    overlayWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; overflow: hidden;'; 
     overlayWrapper.setAttribute('data-html2canvas-ignore', 'true'); 
     document.body.appendChild(overlayWrapper); 
 
