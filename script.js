@@ -16332,7 +16332,60 @@ window.addEventListener('beforeprint', () => {
         }
     }, true);
 })();
+/* =========================================================================
+   WORDART FILTER ADD-ON
+   Safely purges broken or unwanted WordArt styles from the UI gallery.
+   ========================================================================= */
+(function installWordArtFilter() {
+    console.log("🛠️ WordArt Filter initializing...");
 
+    // Deduplicated list of broken WordArt IDs
+    const brokenWordArts = [
+        6, 8, 10, 13, 17, 18, 24, 25, 28, 34, 55, 57, 60, 80, 90, 96, 
+        102, 103, 109, 112, 113, 117, 118, 124, 125, 128, 131, 138, 
+        140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 155, 
+        160, 168, 169, 175, 177, 178, 181, 182, 184, 185, 187, 189, 
+        190, 192, 193, 194, 195, 198, 199, 200
+    ];
+
+    // Wait a brief moment to ensure all other expansion packs have finished 
+    // hooking into window.showWordArtModal before we intercept it.
+    setTimeout(() => {
+        if (typeof window.showWordArtModal === 'function') {
+            const originalShowModal = window.showWordArtModal;
+            
+            window.showWordArtModal = function() {
+                // 1. Run the original function chain which builds the UI grid
+                originalShowModal.apply(this, arguments);
+
+                // 2. Locate the dynamically generated grids
+                const grids = [
+                    document.getElementById('wordart-grid'),
+                    document.getElementById('dialog-wordart-grid')
+                ];
+
+                // 3. Sweep the grids and remove the broken elements
+                grids.forEach(grid => {
+                    if (!grid) return;
+                    
+                    const galleryItems = grid.querySelectorAll('.gallery-item');
+                    galleryItems.forEach(item => {
+                        const waText = item.querySelector('.wa-text');
+                        if (waText) {
+                            const isBroken = brokenWordArts.some(id => 
+                                waText.classList.contains(`wa-style-${id}`)
+                            );
+                            
+                            if (isBroken) {
+                                item.remove(); // Completely erase it from the DOM
+                            }
+                        }
+                    });
+                });
+            };
+        }
+    }, 2000); 
+})();
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
