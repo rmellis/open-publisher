@@ -15926,9 +15926,35 @@ window.addEventListener('beforeprint', () => {
     const oldSpooler = document.getElementById('op-print-spooler');
     if (oldSpooler) oldSpooler.remove();
 
+    // U+205F four-per-em space: prints like a normal space but won't break into separate rotated inline boxes
+    const PRINT_MATH_SPACE = '\u205F';
+
+    const flattenWaTextForPrint = (wa) => {
+        const text = (wa.innerText || wa.textContent || '').replace(/\s+/g, ' ').trim();
+        wa.textContent = '';
+        if (text) {
+            wa.appendChild(document.createTextNode(text.split(' ').join(PRINT_MATH_SPACE)));
+        }
+        wa.style.setProperty('white-space', 'nowrap', 'important');
+        wa.style.setProperty('word-spacing', '0', 'important');
+    };
+
+    const fixWordArtSpacesInHtml = (html) => {
+        if (!html || !html.includes('wa-text')) return html;
+        return html.replace(/(<[^>]*\bwa-text\b[^>]*>)([\s\S]*?)(<\/div>)/gi, (_, open, body, close) => {
+            const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            return open + text.split(' ').join(PRINT_MATH_SPACE) + close;
+        });
+    };
+
     window.printFullDocument = async function() {
         if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
             if (typeof serializeCurrentPage === 'function') state.pages[state.currentPageIndex] = serializeCurrentPage();
+            state.pages.forEach((page) => {
+                page.elements.forEach((el) => {
+                    if (el.innerHTML) el.innerHTML = fixWordArtSpacesInHtml(el.innerHTML);
+                });
+            });
         }
 
         if (typeof DialogSystem !== 'undefined') {
@@ -16141,6 +16167,7 @@ window.addEventListener('beforeprint', () => {
 
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
                         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
+                        cleanHTML = fixWordArtSpacesInHtml(cleanHTML);
                         
                         // The inner content stays exactly where it was before relative to the page
                         elDiv.innerHTML = `
@@ -16155,22 +16182,28 @@ window.addEventListener('beforeprint', () => {
                 if (borderHtml) pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
                 stagingArea.appendChild(pageWrapper);
 
+                pageWrapper.querySelectorAll('.wa-text').forEach(flattenWaTextForPrint);
+
                 // Compositor Pass 1: Rasterize gradient backgrounds and apply text masks
                 if (statusEl) statusEl.innerText = `Converting WordArt to a printable format on page ${i + 1}...`;
                 
-                const wordArts = Array.from(pageWrapper.querySelectorAll('*')).filter(node => {
-                    if (node.nodeType !== 1) return false;
-                    let comp; try { comp = window.getComputedStyle(node); } catch(e) { return false; }
+                const wordArts = Array.from(pageWrapper.querySelectorAll('.wa-text')).filter(node => {
+                    if (node.getAttribute('data-wa-print-baked') === 'true') return false;
+                    let comp;
+                    try { comp = window.getComputedStyle(node); } catch (e) { return false; }
                     if (!comp) return false;
-
-                    const wClip = comp.webkitBackgroundClip || ''; const bClip = comp.backgroundClip || '';
-                    const fill = comp.webkitTextFillColor || ''; const inline = node.getAttribute('style') || '';
-
-                    return (wClip === 'text' || bClip === 'text' || fill === 'transparent' || inline.includes('clip: text') || inline.includes('text-fill-color: transparent'));
+                    const wClip = comp.webkitBackgroundClip || comp.backgroundClip || '';
+                    const fill = comp.webkitTextFillColor || '';
+                    const hasClip = wClip === 'text' || fill === 'transparent';
+                    if (!hasClip) return false;
+                    const bgImage = comp.backgroundImage !== 'none' ? comp.backgroundImage : comp.background;
+                    return bgImage && bgImage !== 'none';
                 });
 
                 for (let node of wordArts) {
                     try {
+                        flattenWaTextForPrint(node);
+
                         const comp = window.getComputedStyle(node);
                         const bgImage = comp.backgroundImage !== 'none' ? comp.backgroundImage : comp.background;
                         if (!bgImage || bgImage === 'none') continue;
@@ -16185,6 +16218,7 @@ window.addEventListener('beforeprint', () => {
                         gradDiv.remove();
 
                         const maskNode = node.cloneNode(true);
+                        flattenWaTextForPrint(maskNode);
                         maskNode.style.setProperty('text-shadow', 'none', 'important');
                         maskNode.style.setProperty('-webkit-text-stroke', '0px', 'important');
                         maskNode.style.setProperty('color', '#000000', 'important');
@@ -16192,41 +16226,49 @@ window.addEventListener('beforeprint', () => {
                         maskNode.style.setProperty('background', 'none', 'important');
                         maskNode.style.setProperty('background-image', 'none', 'important');
                         maskNode.style.setProperty('-webkit-background-clip', 'initial', 'important');
+                        maskNode.style.setProperty('white-space', 'nowrap', 'important');
+                        maskNode.style.setProperty('display', 'block', 'important');
 
-                        node.style.visibility = 'hidden'; 
-                        node.parentNode.insertBefore(maskNode, node);
+                        const captureBox = document.createElement('div');
+                        captureBox.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${w}px;height:${h}px;display:flex;align-items:center;justify-content:center;overflow:visible;`;
+                        captureBox.appendChild(maskNode);
+                        document.body.appendChild(captureBox);
+
                         const maskCanvas = await html2canvas(maskNode, { scale: 2, logging: false, backgroundColor: null });
-                        maskNode.remove();
-                        node.style.visibility = 'visible';
+                        captureBox.remove();
 
                         const finalCanvas = document.createElement('canvas');
                         finalCanvas.width = maskCanvas.width;
                         finalCanvas.height = maskCanvas.height;
                         const ctx = finalCanvas.getContext('2d');
-                        
+
                         ctx.drawImage(maskCanvas, 0, 0);
                         ctx.globalCompositeOperation = 'source-in';
                         ctx.drawImage(gradCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
 
-                        node.style.position = 'relative';
-                        if (comp.display === 'inline') node.style.display = 'inline-block';
-                        
-                        const img = document.createElement('img');
-                        img.src = finalCanvas.toDataURL('image/png');
-                        img.style.position = 'absolute';
-                        img.style.top = '0px';
-                        img.style.left = '0px';
-                        img.style.width = w + 'px';
-                        img.style.height = h + 'px';
-                        img.style.objectFit = 'contain';
-                        img.style.pointerEvents = 'none';
+                        Array.from(node.classList).forEach(cls => {
+                            if (cls.startsWith('wa-style-')) node.classList.remove(cls);
+                        });
 
+                        node.innerHTML = '';
+                        node.setAttribute('data-wa-print-baked', 'true');
+                        node.style.position = 'relative';
+                        node.style.width = w + 'px';
+                        node.style.height = h + 'px';
+                        node.style.margin = '0';
                         node.style.setProperty('background', 'none', 'important');
                         node.style.setProperty('background-image', 'none', 'important');
-                        node.style.setProperty('color', 'transparent', 'important');
-                        node.style.setProperty('-webkit-text-fill-color', 'transparent', 'important');
-                        node.style.setProperty('-webkit-background-clip', 'initial', 'important');
+                        node.style.setProperty('-webkit-background-clip', 'border-box', 'important');
+                        node.style.setProperty('background-clip', 'border-box', 'important');
+                        node.style.setProperty('filter', 'none', 'important');
 
+                        const img = document.createElement('img');
+                        img.src = finalCanvas.toDataURL('image/png');
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'contain';
+                        img.style.pointerEvents = 'none';
+                        img.style.display = 'block';
                         node.appendChild(img);
 
                     } catch (e) {
