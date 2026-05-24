@@ -16471,16 +16471,16 @@ window.addEventListener('beforeprint', () => {
 /**
  * ============================================================================
  * PUBLICATION PRINT ENGINE
- * Version: 4.6.0 (The Iframe Sandbox Spooler)
+ * Version: 4.6.2 (Auto-Rotation Mixed Orientation Fix)
  * * Features:
- * - Completely shields the print job from the app's CSS to fix missing pages.
- * - Forces the iframe's internal width to match the paper, destroying the 58% bug.
- * - Exact Pixel `@page` sizing eliminates fractional white borders natively.
- * - Bypasses all Legacy Chromium / Electron print defects.
+ * - Bypasses Legacy Electron mixed-orientation bugs via Auto-Rotation Normalization.
+ * - Forces every page to perfectly match Page 1's physical container size.
+ * - Dynamically rotates off-orientation pages 90 degrees to prevent zoom squashing.
+ * - 100.4% Micro-Bleed completely annihilates fractional white borders.
  * ============================================================================
  */
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v4.6.0...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v4.6.2...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -16515,7 +16515,6 @@ window.addEventListener('beforeprint', () => {
         });
     };
 
-    // Override the master print function globally
     window.printFullDocument = async function() {
         // Pre-Flight: Force browser to commit layout repaints
         document.querySelectorAll('.pub-element').forEach(el => el.getBoundingClientRect());
@@ -16576,10 +16575,15 @@ window.addEventListener('beforeprint', () => {
                 if (liveBorder) borderHtml = liveBorder.outerHTML;
             }
 
-            // Determine global document size based on page 1
-            const globalPW = parseFloat(state.pages[0].width) || 794;
-            const globalPH = parseFloat(state.pages[0].height) || 1123;
+            // Determine the Master Layout based ENTIRELY on Page 1
+            const masterPW = parseFloat(state.pages[0].width) || 794;
+            const masterPH = parseFloat(state.pages[0].height) || 1123;
+            const masterIsPortrait = masterPW <= masterPH;
             
+            // Convert exact pixels to physical inches (96 DPI standard) for the iframe
+            const widthInches = (masterPW / 96).toFixed(3);
+            const heightInches = (masterPH / 96).toFixed(3);
+
             let iframeHTMLString = '';
 
             for (let i = 0; i < totalPages; i++) {
@@ -16824,7 +16828,9 @@ window.addEventListener('beforeprint', () => {
                         flattenWaTextForPrint(maskNode);
                         
                         Array.from(maskNode.classList).forEach(cls => {
-                            if (cls.startsWith('wa-style-')) maskNode.classList.remove(cls);
+                            if (cls.startsWith('wa-style-')) {
+                                maskNode.classList.remove(cls);
+                            }
                         });
 
                         maskNode.style.setProperty('text-shadow', 'none', 'important');
@@ -16948,18 +16954,30 @@ window.addEventListener('beforeprint', () => {
                 if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 await sleep(100); 
                 
-                // Use scale 2 to prevent out-of-memory crashes on massive documents
+                // Scale 3 ensures maximum pixel density before the physical print mappings apply
                 const canvas = await html2canvas(pageWrapper, { 
-                    scale: 2, useCORS: true, logging: false, backgroundColor: page.background || '#ffffff'
+                    scale: 3, useCORS: true, logging: false, backgroundColor: page.background || '#ffffff'
                 });
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const isPortrait = pW <= pH;
+
+                // ✨ AUTO-ROTATION NORMALIZATION ✨
+                // If this page's orientation doesn't match Page 1's orientation, we rotate it dynamically.
+                // This ensures the legacy Chromium printer receives a document where ALL pages are the exact same shape.
+                let imgStyle = '';
+                if (isPortrait !== masterIsPortrait) {
+                    // Rotate the image 90 degrees and apply the 1.004 scale for micro-bleed
+                    imgStyle = `position: absolute; top: 50%; left: 50%; width: ${pW}px !important; height: ${pH}px !important; transform: translate(-50%, -50%) rotate(90deg) scale(1.004); object-fit: fill; display: block; border: none; outline: none; margin: 0; padding: 0; max-width: none !important;`;
+                } else {
+                    // Normal orientation with -0.2% micro-bleed
+                    imgStyle = `position: absolute; top: -0.2%; left: -0.2%; width: 100.4% !important; height: 100.4% !important; object-fit: fill; display: block; border: none; outline: none; margin: 0; padding: 0; max-width: none !important;`;
+                }
                 
-                // Collect the rendered pages into a raw HTML string.
-                // We use EXACT pixel mapping here. No micro-bleeds needed.
+                // Collect the rendered page into the HTML string, locked exactly to the master layout size
                 iframeHTMLString += `
-                    <div class="page" style="width: ${pW}px; height: ${pH}px; margin: 0; padding: 0; page-break-after: always; break-after: page; overflow: hidden; background: white;">
-                        <img src="${imgData}" style="width: 100%; height: 100%; object-fit: fill; display: block; margin: 0; padding: 0; border: none; outline: none;">
+                    <div class="page" style="width: ${masterPW}px; height: ${masterPH}px; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: white; margin: 0; padding: 0;">
+                        <img src="${imgData}" style="${imgStyle}">
                     </div>
                 `;
 
@@ -16970,20 +16988,16 @@ window.addEventListener('beforeprint', () => {
             if (statusEl) statusEl.innerText = "Launching Printer...";
             stagingArea.remove();
 
-            // ✨ THE SANDBOX IFRAME ✨
-            // By building the print job inside a hidden iframe that perfectly matches the paper size,
-            // we completely bypass the Chromium 58% scaling bug and protect pagination from the app's CSS!
             const printIframe = document.createElement('iframe');
             printIframe.className = 'op-print-frame';
             
-            // Set the iframe's internal viewport to exactly match the paper width.
-            // This tricks the legacy Chromium print engine into calculating a perfect 1:1 scale ratio.
+            // Set the iframe's internal viewport to exactly match the Master paper width.
             printIframe.style.cssText = `
                 position: fixed; 
                 top: 0; 
                 left: 0; 
-                width: ${globalPW}px; 
-                height: ${globalPH}px; 
+                width: ${masterPW}px; 
+                height: 100vh; 
                 z-index: -9999; 
                 opacity: 0.01; 
                 pointer-events: none; 
@@ -16991,7 +17005,6 @@ window.addEventListener('beforeprint', () => {
             `;
             document.body.appendChild(printIframe);
 
-            // Construct the completely clean, isolated HTML document
             const iframeDoc = printIframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(`
@@ -17000,8 +17013,9 @@ window.addEventListener('beforeprint', () => {
                 <head>
                     <title>Print Document</title>
                     <style>
+                        /* ✨ THE UNIFIED MASTER LAYOUT ✨ */
                         @page { 
-                            size: ${globalPW}px ${globalPH}px !important; 
+                            size: ${widthInches}in ${heightInches}in !important; 
                             margin: 0 !important; 
                         }
                         html, body { 
@@ -17010,11 +17024,14 @@ window.addEventListener('beforeprint', () => {
                             background: white !important; 
                             -webkit-print-color-adjust: exact !important; 
                             print-color-adjust: exact !important;
-                            width: auto !important;
+                            width: ${widthInches}in !important;
+                            max-width: ${widthInches}in !important;
+                            min-width: ${widthInches}in !important;
                             height: auto !important;
                             overflow: visible !important;
                         }
-                        /* Remove the page break on the very last page so it doesn't print a blank sheet at the end */
+                        
+                        /* Stop the printer from kicking out a blank page at the end */
                         .page:last-child {
                             page-break-after: auto !important;
                             break-after: auto !important;
@@ -17028,17 +17045,13 @@ window.addEventListener('beforeprint', () => {
             `);
             iframeDoc.close();
 
-            // Wait a fraction of a second for the iframe to fully render the JPEGs, then trigger the print
             setTimeout(() => {
                 if (typeof DialogSystem !== 'undefined') DialogSystem.close();
                 
                 printIframe.contentWindow.focus();
                 printIframe.contentWindow.print();
                 
-                // Clean up the iframe after the print dialog resolves
-                setTimeout(() => {
-                    printIframe.remove();
-                }, 2000);
+                setTimeout(() => { printIframe.remove(); }, 2000);
             }, 500);
 
         } catch (err) {
