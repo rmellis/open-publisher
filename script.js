@@ -16563,7 +16563,462 @@ window.addEventListener('beforeprint', () => {
         }
     }, true);
 })();
+/* =========================================================================
+   ADD-ON: WORDART ENGINE v6.0 (Screenshot UI Match, 40 Styles, Select Logic)
+   Bakes complex text effects into pure PNG images. Matches the native UI 
+   banner design and fixes the Arch-Down mirroring bug perfectly.
+   ========================================================================= */
+(function installBetaWordArtV6() {
+    console.log("🛠️ WordArt Engine v6.0 (Native UI & 40 Styles) initializing...");
 
+    // 1. Inject the UI Button into the Insert Ribbon (Graphics Group)
+    setTimeout(() => {
+        const insertRibbon = document.getElementById('ribbon-insert');
+        if (insertRibbon && !document.getElementById('beta-wa-ribbon-btn')) {
+            const buttonHTML = `
+                <div class="tool-btn" id="beta-wa-ribbon-btn" onclick="showBetaWordArtModal()" title="Insert Image-Based WordArt">
+                    <div style="position:relative; display:flex; justify-content:center; align-items:center; width:26px; height:22px;">
+                        <i class="fas fa-font" style="font-size: 24px; color: var(--pub-dark, #005a55); margin:0;"></i>
+                    </div>
+                    <span style="line-height:1.1; text-align:center;">WordArt<br><span style="color:#d97706; font-size:9px; font-weight:bold;">(BETA)</span></span>
+                </div>
+            `;
+            
+            const groups = insertRibbon.querySelectorAll('.group');
+            const graphicsGroup = Array.from(groups).find(g => g.querySelector('.group-label')?.innerText === 'Graphics');
+            
+            if (graphicsGroup) {
+                const label = graphicsGroup.querySelector('.group-label');
+                if (label) label.insertAdjacentHTML('beforebegin', buttonHTML);
+            } else {
+                const newGroup = document.createElement('div');
+                newGroup.className = 'group';
+                newGroup.innerHTML = buttonHTML + '<div class="group-label">WordArt (Beta)</div>';
+                insertRibbon.appendChild(newGroup);
+            }
+        }
+    }, 1500);
+
+    // 2. The Core Canvas Rendering Engine
+    const generateWordArtPNG = async (text, styleId) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const baseFont = '900 130px "Arial Black", Impact, sans-serif';
+            ctx.font = baseFont;
+            
+            const totalWidth = ctx.measureText(text).width;
+            
+            const archUpStyles = [5, 19, 30, 37];
+            const archDownStyles = [6, 20, 38];
+            const isArchUp = archUpStyles.includes(styleId);
+            const isArchDown = archDownStyles.includes(styleId);
+            const isCurved = isArchUp || isArchDown;
+            
+            let cWidth = totalWidth + 80;
+            let cHeight = 220; 
+            let actualRadius = 0;
+            let angleSpan = 0;
+            let arcCenterY = 0;
+
+            if (isCurved) {
+                actualRadius = Math.max(250, totalWidth / (Math.PI * 0.7)); 
+                angleSpan = totalWidth / actualRadius;
+                
+                const sagitta = actualRadius * (1 - Math.cos(angleSpan / 2));
+                
+                cWidth = (2 * actualRadius * Math.sin(angleSpan / 2)) + 120;
+                cHeight = sagitta + 200; 
+                
+                canvas.width = cWidth;
+                canvas.height = cHeight;
+                
+                const cy = cHeight / 2;
+                const midpointOffset = (actualRadius + actualRadius * Math.cos(angleSpan / 2)) / 2;
+                arcCenterY = isArchUp ? (cy + midpointOffset) : (cy - midpointOffset);
+            } else {
+                canvas.width = cWidth;
+                canvas.height = cHeight;
+            }
+            
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+
+            const drawLayers = (layers, yOffset = 0) => {
+                layers.forEach(layer => {
+                    ctx.font = layer.font || baseFont;
+                    
+                    if (layer.shadow) {
+                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                    } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
+
+                    if (layer.stroke) {
+                        ctx.strokeStyle = layer.stroke.color; ctx.lineWidth = layer.stroke.width;
+                        ctx.strokeText(text, cx + (layer.ox||0), cy + yOffset + (layer.oy||0));
+                    }
+                    
+                    if (layer.fill) {
+                        let fillStyle = layer.fill;
+                        if (layer.gradient) {
+                            const grad = ctx.createLinearGradient(0, cy - 80, 0, cy + 80);
+                            layer.gradient.forEach(stop => grad.addColorStop(stop.pos, stop.color));
+                            fillStyle = grad;
+                        }
+                        ctx.fillStyle = fillStyle;
+                        ctx.fillText(text, cx + (layer.ox||0), cy + yOffset + (layer.oy||0));
+                    }
+                });
+            };
+
+            const drawCurved = (layers) => {
+                layers.forEach(layer => {
+                    ctx.save();
+                    ctx.font = layer.font || baseFont;
+                    
+                    if (layer.shadow) {
+                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                    } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
+                    
+                    let fillStyle = layer.fill;
+                    if (layer.gradient) {
+                        const grad = ctx.createLinearGradient(0, -100, 0, 100);
+                        layer.gradient.forEach(stop => grad.addColorStop(stop.pos, stop.color));
+                        fillStyle = grad;
+                    }
+
+                    let currentPos = 0;
+                    for (let i = 0; i < text.length; i++) {
+                        const char = text[i];
+                        const charWidth = ctx.measureText(char).width;
+                        const progress = (currentPos + (charWidth / 2)) / totalWidth;
+                        
+                        ctx.save();
+                        ctx.translate(cx, arcCenterY);
+                        
+                        // ✨ THE MIRROR FIX: Always sweep from negative to positive angle!
+                        // This forces the letters to map from left-to-right regardless of the arch direction.
+                        const angle = (-angleSpan / 2) + (progress * angleSpan);
+                        ctx.rotate(angle);
+                        
+                        ctx.translate(0, isArchUp ? -actualRadius : actualRadius);
+                        
+                        // Flip the letter upright if we are on the bottom of the circle
+                        if (!isArchUp) ctx.rotate(Math.PI);
+                        
+                        if (layer.stroke) {
+                            ctx.strokeStyle = layer.stroke.color; ctx.lineWidth = layer.stroke.width;
+                            ctx.strokeText(char, 0, 0); 
+                        }
+                        if (layer.fill) {
+                            ctx.fillStyle = fillStyle;
+                            ctx.fillText(char, 0, 0);
+                        }
+                        ctx.restore();
+                        currentPos += charWidth;
+                    }
+                    ctx.restore();
+                });
+            };
+
+            // --- 40 MASTER STYLES ---
+            switch(styleId) {
+                case 1: drawLayers([{ stroke: {color: '#1e3a8a', width: 22}, fill: '#1e3a8a', ox: 6, oy: 6 }, { gradient: [{pos:0, color:'#fef08a'}, {pos:1, color:'#d97706'}], stroke: {color: '#0ea5e9', width: 5}, fill: 'grad' }]); break;
+                case 2: drawLayers([{ gradient: [{pos:0, color:'#ffffff'}, {pos:0.45, color:'#9ca3af'}, {pos:0.5, color:'#4b5563'}, {pos:1, color:'#e2e8f0'}], stroke: {color: '#1f2937', width: 6}, fill: 'grad', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 5, y: 8} }]); break;
+                case 3: const grad3 = ctx.createLinearGradient(cx - (totalWidth/2), 0, cx + (totalWidth/2), 0); grad3.addColorStop(0, '#ef4444'); grad3.addColorStop(0.25, '#f59e0b'); grad3.addColorStop(0.5, '#10b981'); grad3.addColorStop(0.75, '#3b82f6'); grad3.addColorStop(1, '#8b5cf6'); drawLayers([{ fill: '#000000', ox: 10, oy: 10 }, { stroke: {color: '#ffffff', width: 6}, fill: grad3 }]); break;
+                case 4: drawLayers([{ stroke: {color: '#000000', width: 40}, fill: 'transparent' }, { stroke: {color: '#ffffff', width: 12}, fill: 'transparent' }, { fill: '#ec4899' }]); break;
+                case 5: drawCurved([{ stroke: {color: '#1e3a8a', width: 8}, fill: '#1e3a8a', shadow: {color: 'rgba(0,0,0,0.4)', blur: 8, x: 0, y: 6} }, { fill: '#3b82f6' }]); break;
+                case 6: drawCurved([{ stroke: {color: '#064e3b', width: 8}, fill: '#064e3b', shadow: {color: 'rgba(0,0,0,0.4)', blur: 8, x: 0, y: 6} }, { fill: '#10b981' }]); break;
+                case 7: drawLayers([{ stroke: {color: '#0ea5e9', width: 25}, fill: 'transparent', shadow: {color: '#0ea5e9', blur: 30, x: 0, y: 0}, font: '900 130px "Courier New", monospace' }, { stroke: {color: '#0ea5e9', width: 8}, fill: 'transparent', shadow: {color: '#0ea5e9', blur: 15, x: 0, y: 0}, font: '900 130px "Courier New", monospace' }, { fill: '#ffffff', font: '900 130px "Courier New", monospace' }]); break;
+                case 8: drawLayers([{ fill: '#d97706', ox: 20, oy: 20 }, { fill: '#f59e0b', ox: 13, oy: 13 }, { fill: '#fbbf24', ox: 6, oy: 6 }, { stroke: {color: '#000000', width: 4}, fill: '#ffffff' }]); break;
+                case 9: drawLayers([{ stroke: {color: '#854d0e', width: 14}, fill: '#713f12', ox: 6, oy: 6, shadow: {color: 'rgba(0,0,0,0.4)', blur: 8, x: 4, y: 4} }, { gradient: [{pos:0, color:'#fef08a'}, {pos:0.4, color:'#d4af37'}, {pos:0.6, color:'#b45309'}, {pos:1, color:'#fde047'}], stroke: {color: '#451a03', width: 4}, fill: 'grad' }]); break;
+                case 10: drawLayers([{ stroke: {color: '#1e3a8a', width: 30}, fill: 'transparent' }, { stroke: {color: '#ffffff', width: 14}, fill: 'transparent' }, { fill: '#1e3a8a' }]); break;
+                case 11: drawLayers([{ stroke: {color: '#22c55e', width: 15}, fill: 'transparent', shadow: {color: '#22c55e', blur: 20, x: 0, y: 0}, font: '900 130px "Courier New", monospace' }, { fill: '#000000', font: '900 130px "Courier New", monospace' }, { fill: '#4ade80', font: '900 130px "Courier New", monospace' }]); break;
+                case 12: drawLayers([{ stroke: {color: '#db2777', width: 30}, fill: 'transparent', shadow: {color: 'rgba(0,0,0,0.2)', blur: 10, x: 5, y: 5} }, { stroke: {color: '#ffffff', width: 12}, fill: 'transparent' }, { gradient: [{pos:0, color:'#fbcfe8'}, {pos:1, color:'#f472b6'}], fill: 'grad' }]); break;
+                case 13: drawLayers([{ stroke: {color: '#581c87', width: 12}, fill: '#581c87', shadow: {color: 'rgba(0,0,0,0.4)', blur: 10, x: 0, y: 10} }, { gradient: [{pos:0, color:'#f43f5e'}, {pos:0.5, color:'#f97316'}, {pos:1, color:'#fef08a'}], stroke: {color: '#ffe4e6', width: 4}, fill: 'grad' }]); break;
+                case 14: drawLayers([{ stroke: {color: '#064e3b', width: 25}, fill: '#064e3b' }, { stroke: {color: '#a7f3d0', width: 8}, fill: '#a7f3d0' }, { fill: '#10b981' }]); break;
+                case 15: drawLayers([{ stroke: {color: '#1e3a8a', width: 15}, fill: '#1e3a8a', shadow: {color: 'rgba(0,0,0,0.5)', blur: 15, x: 5, y: 5} }, { gradient: [{pos:0, color:'#38bdf8'}, {pos:1, color:'#0369a1'}], fill: 'grad' }]); break;
+                case 16: drawLayers([{ stroke: {color: '#d4af37', width: 10}, fill: '#4c1d95', shadow: {color: '#d4af37', blur: 15, x: 0, y: 0} }, { fill: '#4c1d95' }]); break;
+                case 17: drawLayers([{ stroke: {color: '#be185d', width: 20}, fill: 'transparent', shadow: {color: '#f472b6', blur: 30, x: 0, y: 0} }, { fill: '#fdf2f8', stroke: {color: '#f472b6', width: 4} }]); break;
+                case 18: drawLayers([{ stroke: {color: '#7f1d1d', width: 20}, fill: '#7f1d1d' }, { gradient: [{pos:0, color:'#fef08a'}, {pos:0.4, color:'#f97316'}, {pos:1, color:'#dc2626'}], fill: 'grad' }]); break;
+                case 19: drawCurved([{ stroke: {color: '#7f1d1d', width: 10}, fill: '#7f1d1d', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 5, y: 5} }, { fill: '#ef4444', stroke: {color: '#fca5a5', width: 3} }]); break;
+                case 20: drawCurved([{ stroke: {color: '#7c2d12', width: 10}, fill: '#7c2d12', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 5, y: 5} }, { fill: '#f97316', stroke: {color: '#fdba74', width: 3} }]); break;
+                case 21: drawLayers([{ stroke: {color: '#1e3a8a', width: 20}, fill: '#1e3a8a' }, { fill: 'transparent', stroke: {color: '#93c5fd', width: 4} }]); break;
+                case 22: drawLayers([{ stroke: {color: '#0ea5e9', width: 4}, fill: 'transparent', ox: 10, oy: 10 }, { fill: '#0f172a', stroke: {color: '#ffffff', width: 4} }]); break;
+                case 23: drawLayers([{ stroke: {color: '#3f2723', width: 25}, fill: '#3f2723' }, { stroke: {color: '#ffffff', width: 10}, fill: '#ffffff' }, { fill: '#10b981' }]); break;
+                case 24: drawLayers([{ stroke: {color: '#ffffff', width: 6}, fill: '#ffffff', shadow: {color: '#ffffff', blur: 15, x: 0, y: 0} }, { gradient: [{pos:0, color:'#1e1b4b'}, {pos:1, color:'#312e81'}], fill: 'grad' }]); break;
+                case 25: drawLayers([{ fill: '#9ca3af', ox: 15, oy: 15 }, { fill: '#d1d5db', ox: 10, oy: 10 }, { fill: '#f3f4f6', ox: 5, oy: 5 }, { stroke: {color: '#4b5563', width: 4}, fill: '#ffffff' }]); break;
+                case 26: drawLayers([{ fill: '#be185d', ox: 12, oy: 12 }, { fill: '#db2777', ox: 6, oy: 6 }, { stroke: {color: '#ffffff', width: 4}, fill: '#fbcfe8' }]); break;
+                case 27: drawLayers([{ stroke: {color: '#064e3b', width: 15}, fill: '#064e3b', shadow: {color: '#4ade80', blur: 20, x: 0, y: 0} }, { fill: '#84cc16' }]); break;
+                case 28: drawLayers([{ stroke: {color: '#450a0a', width: 10}, fill: '#450a0a', ox: 5, oy: 5 }, { gradient: [{pos:0, color:'#b91c1c'}, {pos:1, color:'#f59e0b'}], stroke: {color: '#fef08a', width: 3}, fill: 'grad' }]); break;
+                case 29: drawLayers([{ stroke: {color: '#db2777', width: 5}, fill: 'transparent', ox: -8, oy: -8 }, { stroke: {color: '#111827', width: 5}, fill: 'transparent' }]); break;
+                case 30: drawCurved([{ stroke: {color: '#451a03', width: 14}, fill: '#713f12', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 0, y: 5} }, { gradient: [{pos:0, color:'#fef08a'}, {pos:0.5, color:'#d4af37'}, {pos:1, color:'#b45309'}], fill: 'grad', stroke: {color: '#fef08a', width: 3} }]); break;
+                case 31: drawLayers([{ stroke: {color: '#0284c7', width: 24}, fill: 'transparent' }, { stroke: {color: '#bae6fd', width: 10}, fill: 'transparent' }, { fill: '#0ea5e9' }]); break;
+                case 32: drawLayers([{ stroke: {color: '#111827', width: 30}, fill: '#111827' }, { stroke: {color: '#ffffff', width: 8}, fill: '#ffffff' }, { fill: '#000000' }]); break;
+                
+                // --- NEW EXTENDED STYLES (33-40) ---
+                case 33: // Fire Flame
+                    drawLayers([
+                        { stroke: {color: '#450a0a', width: 12}, fill: '#450a0a', shadow: {color: '#ef4444', blur: 15, x: 0, y: 0} },
+                        { gradient: [{pos:0, color:'#fef08a'}, {pos:0.5, color:'#f97316'}, {pos:1, color:'#dc2626'}], fill: 'grad', stroke: {color: '#7f1d1d', width: 3} }
+                    ]); break;
+                case 34: // Frozen Ice
+                    drawLayers([
+                        { stroke: {color: '#082f49', width: 12}, fill: '#082f49', shadow: {color: '#38bdf8', blur: 15, x: 0, y: 0} },
+                        { gradient: [{pos:0, color:'#ffffff'}, {pos:0.5, color:'#bae6fd'}, {pos:1, color:'#0284c7'}], fill: 'grad', stroke: {color: '#e0f2fe', width: 3} }
+                    ]); break;
+                case 35: // 3D Comic Pop
+                    drawLayers([
+                        { stroke: {color: '#1e3a8a', width: 25}, fill: '#1e3a8a', ox: 10, oy: 10 },
+                        { stroke: {color: '#ffffff', width: 15}, fill: '#ffffff' },
+                        { fill: '#facc15', stroke: {color: '#000000', width: 4} }
+                    ]); break;
+                case 36: // Toxic Slime Outline
+                    drawLayers([
+                        { stroke: {color: '#064e3b', width: 20}, fill: '#064e3b', ox: 5, oy: 5 },
+                        { gradient: [{pos:0, color:'#a3e635'}, {pos:1, color:'#16a34a'}], fill: 'grad', stroke: {color: '#d9f99d', width: 2} }
+                    ]); break;
+                case 37: // Arch Up - Gold
+                    drawCurved([{ stroke: {color: '#451a03', width: 10}, fill: '#713f12', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 0, y: 8} }, { gradient: [{pos:0, color:'#fef08a'}, {pos:0.5, color:'#d4af37'}, {pos:1, color:'#b45309'}], fill: 'grad', stroke: {color: '#451a03', width: 2} }]); break;
+                case 38: // Arch Down - Ocean
+                    drawCurved([{ stroke: {color: '#082f49', width: 10}, fill: '#082f49', shadow: {color: 'rgba(0,0,0,0.5)', blur: 10, x: 0, y: 8} }, { gradient: [{pos:0, color:'#7dd3fc'}, {pos:0.5, color:'#0284c7'}, {pos:1, color:'#0369a1'}], fill: 'grad', stroke: {color: '#e0f2fe', width: 2} }]); break;
+                case 39: // 3D Bubblegum
+                    drawLayers([
+                        { fill: '#831843', ox: 15, oy: 15 }, { fill: '#be185d', ox: 10, oy: 10 },
+                        { fill: '#f472b6', ox: 5, oy: 5 }, { stroke: {color: '#000000', width: 4}, fill: '#fbcfe8' }
+                    ]); break;
+                case 40: // Retro Horizon
+                    const grad40 = ctx.createLinearGradient(0, cy - 60, 0, cy + 60);
+                    grad40.addColorStop(0, '#0284c7'); grad40.addColorStop(0.48, '#38bdf8');
+                    grad40.addColorStop(0.5, '#ffffff'); grad40.addColorStop(0.52, '#f97316'); grad40.addColorStop(1, '#db2777');
+                    drawLayers([
+                        { stroke: {color: '#ffffff', width: 8}, fill: '#ffffff', shadow: {color: '#db2777', blur: 15, x: 0, y: 0} },
+                        { fill: grad40, stroke: {color: '#000000', width: 2} }
+                    ]); break;
+            }
+
+            resolve(canvas.toDataURL('image/png'));
+        });
+    };
+
+    // 3. Render the Polished UI Modal (Exact Screenshot Match)
+    window.showBetaWordArtModal = function() {
+        const uiHTML = `
+            <style>
+                /* Overwrite default dialog styles to achieve the edge-to-edge banner */
+                #custom-dialog-header { display: none !important; }
+                .custom-dialog-footer { display: none !important; }
+                .custom-dialog-body { padding: 0 !important; background: #f3f4f6 !important; border-radius: 8px; overflow: hidden; }
+                
+                /* The Green Header Banner */
+                .wa-modal-header {
+                    background: var(--pub-dark, #005a55);
+                    padding: 30px 40px;
+                    text-align: center;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                }
+                .wa-modal-title {
+                    color: white;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 28px;
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+                
+                /* The Giant White Input Box */
+                .wa-modal-input {
+                    width: 100%;
+                    padding: 20px;
+                    font-size: 38px;
+                    font-family: 'Arial Black', Impact, sans-serif;
+                    text-align: center;
+                    color: #111;
+                    border: none;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    outline: none;
+                    transition: box-shadow 0.2s;
+                }
+                .wa-modal-input:focus {
+                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4);
+                }
+
+                /* Grid Area */
+                .wa-modal-grid-container {
+                    padding: 25px;
+                    background: #f1f5f9;
+                    max-height: 45vh;
+                    overflow-y: auto;
+                }
+                #beta-wa-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                }
+                
+                /* The Selectable Cards */
+                .beta-wa-card {
+                    background: white;
+                    border: 3px solid transparent;
+                    border-radius: 12px;
+                    height: 85px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 10px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+                    transition: all 0.15s ease-in-out;
+                    box-sizing: border-box;
+                }
+                .beta-wa-card:hover {
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+                    transform: translateY(-2px);
+                }
+                .beta-wa-card.selected {
+                    border-color: var(--pub-color, #007670);
+                    background: #f0fdf4; /* Very light green tint */
+                    box-shadow: 0 4px 8px rgba(0, 118, 112, 0.15);
+                }
+
+                /* Custom Footer */
+                .wa-modal-footer {
+                    padding: 15px 25px;
+                    background: #f1f5f9;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    border-bottom-left-radius: 8px;
+                    border-bottom-right-radius: 8px;
+                }
+                .wa-btn {
+                    padding: 10px 30px;
+                    font-size: 15px;
+                    font-weight: 700;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-family: 'Segoe UI', sans-serif;
+                    border: none;
+                    transition: all 0.2s;
+                }
+                .wa-btn-ok {
+                    background: var(--pub-dark, #005a55);
+                    color: white;
+                }
+                .wa-btn-ok:hover {
+                    background: var(--pub-color, #007670);
+                }
+                .wa-btn-cancel {
+                    background: white;
+                    color: var(--pub-dark, #005a55);
+                    border: 2px solid #cbd5e1;
+                }
+                .wa-btn-cancel:hover {
+                    background: #f8fafc;
+                    border-color: #94a3b8;
+                }
+                
+                /* Custom Scrollbar */
+                .wa-modal-grid-container::-webkit-scrollbar { width: 8px; }
+                .wa-modal-grid-container::-webkit-scrollbar-track { background: transparent; }
+                .wa-modal-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .wa-modal-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            </style>
+            
+            <div class="wa-modal-header">
+                <div class="wa-modal-title">Create WordArt</div>
+                <input type="text" id="beta-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="Your Text Here">
+            </div>
+            
+            <div class="wa-modal-grid-container">
+                <div id="beta-wa-grid"></div>
+            </div>
+            
+            <div class="wa-modal-footer">
+                <button class="wa-btn wa-btn-ok" id="wa-btn-ok">OK</button>
+                <button class="wa-btn wa-btn-cancel" id="wa-btn-cancel">Cancel</button>
+            </div>
+        `;
+
+        // We use the alert boolean to hide default buttons, then inject our custom CSS
+        DialogSystem.show('', uiHTML, null, true);
+        
+        // Expand the dialog box safely
+        setTimeout(() => {
+            const dialogBox = document.getElementById('custom-dialog-box');
+            if(dialogBox) {
+                dialogBox.style.width = '850px';
+                dialogBox.style.maxWidth = '95vw';
+                dialogBox.style.padding = '0'; // Remove default padding for edge-to-edge banner
+                dialogBox.style.backgroundColor = 'transparent';
+                dialogBox.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            }
+        }, 10);
+
+        const grid = document.getElementById('beta-wa-grid');
+        const textInput = document.getElementById('beta-wa-text');
+        
+        let selectedStyleId = 1; // Default selection
+
+        // The core insertion logic
+        const executeInsertion = async () => {
+            const finalStr = textInput.value.trim() || "WordArt";
+            DialogSystem.close(); 
+            
+            const finalImgData = await generateWordArtPNG(finalStr, selectedStyleId);
+            
+            if (typeof window.insertSmartImage === 'function') {
+                window.insertSmartImage(finalImgData);
+            } else if (typeof window.createWrapper === 'function') {
+                window.createWrapper(`<img src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:contain; position:absolute; top:0; left:0;">`);
+            }
+        };
+
+        // Bind the Footer Buttons
+        document.getElementById('wa-btn-ok').onclick = executeInsertion;
+        document.getElementById('wa-btn-cancel').onclick = () => DialogSystem.close();
+
+        // Populate the 40 styles into the 4-column grid
+        const renderPreviews = async () => {
+            for(let i = 1; i <= 40; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'beta-wa-card' + (i === 1 ? ' selected' : '');
+                
+                const previewData = await generateWordArtPNG("WordArt", i);
+                btn.innerHTML = `<img src="${previewData}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
+                
+                // Single Click: Select
+                btn.onclick = () => {
+                    grid.querySelectorAll('.beta-wa-card').forEach(c => c.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedStyleId = i;
+                };
+                
+                // Double Click: Select & Insert
+                btn.ondblclick = () => {
+                    selectedStyleId = i;
+                    executeInsertion();
+                };
+                
+                grid.appendChild(btn);
+            }
+        };
+        
+        renderPreviews();
+        
+        // Auto-focus and highlight the text input
+        setTimeout(() => { textInput.focus(); textInput.select(); }, 150);
+    };
+
+})();
 /* =========================================================================
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
