@@ -16566,7 +16566,7 @@ window.addEventListener('beforeprint', () => {
 /* =========================================================================
    ADD-ON: WORDART ENGINE v6.0 (Screenshot UI Match, 40 Styles, Select Logic)
    Bakes complex text effects into pure PNG images. Matches the native UI 
-   banner design and fixes the Arch-Down mirroring bug perfectly.
+   banner design, makes modal smoothly draggable, and fixes the Arch-Down bug.
    ========================================================================= */
 (function installBetaWordArtV6() {
     console.log("🛠️ WordArt Engine v6.0 (Native UI & 40 Styles) initializing...");
@@ -16703,15 +16703,14 @@ window.addEventListener('beforeprint', () => {
                         ctx.save();
                         ctx.translate(cx, arcCenterY);
                         
-                        // ✨ THE MIRROR FIX: Always sweep from negative to positive angle!
-                        // This forces the letters to map from left-to-right regardless of the arch direction.
-                        const angle = (-angleSpan / 2) + (progress * angleSpan);
+                        // ✨ THE MIRROR FIX
+                        const angle = isArchUp 
+                            ? (-angleSpan / 2) + (progress * angleSpan) 
+                            : (angleSpan / 2) - (progress * angleSpan);
+                            
                         ctx.rotate(angle);
                         
                         ctx.translate(0, isArchUp ? -actualRadius : actualRadius);
-                        
-                        // Flip the letter upright if we are on the bottom of the circle
-                        if (!isArchUp) ctx.rotate(Math.PI);
                         
                         if (layer.stroke) {
                             ctx.strokeStyle = layer.stroke.color; ctx.lineWidth = layer.stroke.width;
@@ -16824,6 +16823,10 @@ window.addEventListener('beforeprint', () => {
                     text-align: center;
                     border-top-left-radius: 8px;
                     border-top-right-radius: 8px;
+                    cursor: grab; /* Shows it's draggable */
+                }
+                .wa-modal-header:active {
+                    cursor: grabbing;
                 }
                 .wa-modal-title {
                     color: white;
@@ -16831,6 +16834,7 @@ window.addEventListener('beforeprint', () => {
                     font-size: 28px;
                     font-weight: 600;
                     margin-bottom: 20px;
+                    pointer-events: none; /* Let drag pass through */
                 }
                 
                 /* The Giant White Input Box */
@@ -16885,7 +16889,7 @@ window.addEventListener('beforeprint', () => {
                 }
                 .beta-wa-card.selected {
                     border-color: var(--pub-color, #007670);
-                    background: #f0fdf4; /* Very light green tint */
+                    background: #f0fdf4; 
                     box-shadow: 0 4px 8px rgba(0, 118, 112, 0.15);
                 }
 
@@ -16933,9 +16937,9 @@ window.addEventListener('beforeprint', () => {
                 .wa-modal-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             </style>
             
-            <div class="wa-modal-header">
+            <div class="wa-modal-header" id="wa-modal-header">
                 <div class="wa-modal-title">Create WordArt</div>
-                <input type="text" id="beta-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="Your Text Here">
+                <input type="text" id="beta-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="">
             </div>
             
             <div class="wa-modal-grid-container">
@@ -16948,27 +16952,68 @@ window.addEventListener('beforeprint', () => {
             </div>
         `;
 
-        // We use the alert boolean to hide default buttons, then inject our custom CSS
         DialogSystem.show('', uiHTML, null, true);
         
-        // Expand the dialog box safely
+        // 🛠️ Updated Drag Logic
         setTimeout(() => {
             const dialogBox = document.getElementById('custom-dialog-box');
             if(dialogBox) {
                 dialogBox.style.width = '850px';
                 dialogBox.style.maxWidth = '95vw';
-                dialogBox.style.padding = '0'; // Remove default padding for edge-to-edge banner
+                dialogBox.style.padding = '0';
                 dialogBox.style.backgroundColor = 'transparent';
                 dialogBox.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+
+                const header = document.getElementById('wa-modal-header');
+                if (header) {
+                    let isDragging = false;
+
+                    header.addEventListener('mousedown', function(e) {
+                        if (e.target.tagName.toLowerCase() === 'input') return;
+                        
+                        isDragging = true;
+                        const rect = dialogBox.getBoundingClientRect();
+                        
+                        // ✨ THE DRAG FIX: Calculate the exact mouse offset from the modal's top-left corner
+                        const offsetX = e.clientX - rect.left;
+                        const offsetY = e.clientY - rect.top;
+
+                        // Force fixed positioning relative to the viewport and clear conflicts
+                        dialogBox.style.position = 'fixed';
+                        dialogBox.style.transform = 'none';
+                        dialogBox.style.margin = '0';
+                        dialogBox.style.bottom = 'auto';
+                        dialogBox.style.right = 'auto';
+                        
+                        // Apply the exact starting position so it doesn't snap anywhere
+                        dialogBox.style.left = (e.clientX - offsetX) + 'px';
+                        dialogBox.style.top = (e.clientY - offsetY) + 'px';
+
+                        const onMouseMove = (me) => {
+                            if (!isDragging) return;
+                            // Move the modal by updating the position matching the exact original offset
+                            dialogBox.style.left = (me.clientX - offsetX) + 'px';
+                            dialogBox.style.top = (me.clientY - offsetY) + 'px';
+                        };
+
+                        const onMouseUp = () => {
+                            isDragging = false;
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                        };
+
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+                }
             }
         }, 10);
 
         const grid = document.getElementById('beta-wa-grid');
         const textInput = document.getElementById('beta-wa-text');
         
-        let selectedStyleId = 1; // Default selection
+        let selectedStyleId = 1;
 
-        // The core insertion logic
         const executeInsertion = async () => {
             const finalStr = textInput.value.trim() || "WordArt";
             DialogSystem.close(); 
@@ -16982,11 +17027,9 @@ window.addEventListener('beforeprint', () => {
             }
         };
 
-        // Bind the Footer Buttons
         document.getElementById('wa-btn-ok').onclick = executeInsertion;
         document.getElementById('wa-btn-cancel').onclick = () => DialogSystem.close();
 
-        // Populate the 40 styles into the 4-column grid
         const renderPreviews = async () => {
             for(let i = 1; i <= 40; i++) {
                 const btn = document.createElement('div');
@@ -16995,14 +17038,12 @@ window.addEventListener('beforeprint', () => {
                 const previewData = await generateWordArtPNG("WordArt", i);
                 btn.innerHTML = `<img src="${previewData}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
                 
-                // Single Click: Select
                 btn.onclick = () => {
                     grid.querySelectorAll('.beta-wa-card').forEach(c => c.classList.remove('selected'));
                     btn.classList.add('selected');
                     selectedStyleId = i;
                 };
                 
-                // Double Click: Select & Insert
                 btn.ondblclick = () => {
                     selectedStyleId = i;
                     executeInsertion();
@@ -17014,8 +17055,7 @@ window.addEventListener('beforeprint', () => {
         
         renderPreviews();
         
-        // Auto-focus and highlight the text input
-        setTimeout(() => { textInput.focus(); textInput.select(); }, 150);
+        setTimeout(() => { textInput.focus(); }, 150);
     };
 
 })();
