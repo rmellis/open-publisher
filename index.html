@@ -316,6 +316,18 @@
     <div class="mini-btn" onclick="execFloatCmd('justifyRight')"><i class="fas fa-align-right"></i></div>
 </div>
 
+<div id="wa-float-toolbar">
+    <div class="wa-drag-handle" onmousedown="startDragWaToolbar(event)" title="Drag Toolbar">
+        <i class="fas fa-grip-vertical"></i>
+    </div>
+    <div class="mini-btn text-btn" onclick="if(typeof window.showBetaWordArtModal === 'function') window.showBetaWordArtModal(state.selectedEl)" title="Edit Text">
+        <i class="fas fa-pen" style="margin-right:5px;"></i> Edit Text
+    </div>
+    <div class="mini-btn text-btn" onclick="if(typeof window.showBetaWordArtModal === 'function') window.showBetaWordArtModal(state.selectedEl)" title="Change Style">
+        <i class="fas fa-palette" style="margin-right:5px;"></i> Change Style
+    </div>
+</div>
+
 <div class="dropdown-menu" id="table-dropdown" style="width: 220px; padding: 10px;">
     <div id="table-grid-label" style="text-align:center; margin-bottom:5px; font-size:12px;">0 x 0 Table</div>
     <div id="table-picker-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px;"></div>

@@ -227,6 +227,48 @@ body {
 }
 #float-toolbar .mini-btn:hover { background-color: #e6f2fa; color: #000; border: 1px solid #cce8ff; }
 
+/* --- WORDART FLOAT TOOLBAR --- */
+#wa-float-toolbar {
+    position: absolute;
+    z-index: 5000;
+    background: #4ca696;
+    border: 2px solid #3b877a;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 6px 10px;
+    border-radius: 30px;
+    display: none;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap; 
+    flex-wrap: nowrap;
+    font-family: 'Segoe UI', sans-serif;
+}
+.wa-drag-handle {
+    cursor: grab;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+.wa-drag-handle:hover { color: #ffffff; }
+.wa-drag-handle:active { cursor: grabbing; }
+
+#wa-float-toolbar .mini-btn { 
+    height: 30px; display: inline-flex; 
+    color: #ffffff; border-radius: 15px; transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid transparent;
+    align-items: center;
+    justify-content: center;
+}
+#wa-float-toolbar .mini-btn:hover { background-color: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255,255,255,0.4); transform: translateY(-1px); }
+#wa-float-toolbar .text-btn { width: auto; padding: 0 14px; font-weight: 700; font-size: 13px; }
+
+
 #float-toolbar select { 
     height: 26px; font-size: 12px; border: 1px solid #e1dfdd; 
     background: white; margin-right: 4px; border-radius: 2px;
@@ -241,7 +283,7 @@ body {
 }
 #float-toolbar input[type=number]:focus { outline: none; border-color: #0078d4; }
 
-#float-toolbar .separator { 
+#float-toolbar .separator, #wa-float-toolbar .separator { 
     width: 1px; height: 18px; background: #e1dfdd; margin: 0 4px; display: inline-block; vertical-align: middle;
 }
 
@@ -634,7 +676,7 @@ td, th {
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important; display: block;
     }
-    .title-bar, .ribbon-container, .sidebar, .ruler-c, .ruler-h, .ruler-v, .status-bar, .modal-overlay, #coord-display, #float-toolbar, #sidebar-toggle-trigger, .sidebar-collapse-btn { display: none !important; }
+    .title-bar, .ribbon-container, .sidebar, .ruler-c, .ruler-h, .ruler-v, .status-bar, .modal-overlay, #coord-display, #float-toolbar, #wa-float-toolbar, #sidebar-toggle-trigger, .sidebar-collapse-btn { display: none !important; }
     .workspace, .canvas-area, .viewport { 
         position: absolute; top: 0; left: 0; margin: 0; padding: 0; 
         background: white; display: block; overflow: visible; width: 100%; height: 100%;

@@ -2389,7 +2389,7 @@ function handleMouseMove(e) {
         state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
         
         // Hide toolbar while dragging
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
     else if(state.dragMode === 'pan-image') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
@@ -2495,7 +2495,7 @@ function handleMouseMove(e) {
             }
         }
 
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
 }
 
@@ -2542,13 +2542,23 @@ function deselect() {
     }
     state.selectedEl = null;
     document.getElementById('status-msg').innerText = "Ready";
-    floatToolbar.style.display = 'none';
+    { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+    const waToolbar = document.getElementById('wa-float-toolbar');
+    if (waToolbar) waToolbar.style.display = 'none';
 }
 
 // Double Click Edit
 document.addEventListener('dblclick', (e) => {
     const el = e.target.closest('.pub-element');
     if(el) {
+        const betaWa = el.querySelector('.beta-wa-img');
+        if(betaWa) {
+            if (typeof window.showBetaWordArtModal === 'function') {
+                window.showBetaWordArtModal(el);
+            }
+            return;
+        }
+
         const wa = el.querySelector('.wa-text');
         if(wa) {
             wa.classList.add('editing');
@@ -2571,34 +2581,77 @@ function showFloatToolbar() {
     
     const el = state.selectedEl;
     const isImage = el.querySelector('img');
+    const isBetaWordArt = el.querySelector('.beta-wa-img');
     const isSvg = el.querySelector('svg');
     const isShape = el.getAttribute('data-type') === 'shape';
     const isWordArt = el.querySelector('.wa-text');
     const isTable = el.querySelector('table');
     
-    if(isImage || (isShape && !isWordArt && !isTable)) {
-        floatToolbar.style.display = 'none';
-        return;
-    }
+    const waToolbar = document.getElementById('wa-float-toolbar');
     
-    if(isSvg && !isWordArt && !isShape) {
-         floatToolbar.style.display = 'none';
-         return;
+    // Always reset both
+    { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+    if (waToolbar) waToolbar.style.display = 'none';
+    
+    let activeToolbar = null;
+    
+    if (isBetaWordArt) {
+        activeToolbar = waToolbar;
+    } else {
+        // Standard negative logic for the text toolbar
+        if(isImage || (isShape && !isWordArt && !isTable)) return;
+        if(isSvg && !isWordArt && !isShape) return;
+        activeToolbar = floatToolbar;
     }
 
+    if (!activeToolbar) return;
+
     const rect = state.selectedEl.getBoundingClientRect();
-    floatToolbar.style.display = 'flex';
+    activeToolbar.style.display = 'flex';
     
     let top = rect.top - 80; 
     let left = rect.left;
     
+    if (activeToolbar === waToolbar) top -= 20;
+    
     if(top < 10) top = rect.bottom + 20; 
     if(left < 10) left = 10;
     
-    floatToolbar.style.top = top + 'px';
-    floatToolbar.style.left = left + 'px';
+    activeToolbar.style.top = top + 'px';
+    activeToolbar.style.left = left + 'px';
     
-    updateFloatToolbarValues();
+    if (activeToolbar === floatToolbar) {
+        updateFloatToolbarValues();
+    }
+}
+
+// --- WA TOOLBAR DRAG LOGIC ---
+let waToolbarDrag = { active: false, startX: 0, startY: 0, initLeft: 0, initTop: 0 };
+function startDragWaToolbar(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const tb = document.getElementById('wa-float-toolbar');
+    waToolbarDrag.active = true;
+    waToolbarDrag.startX = e.clientX;
+    waToolbarDrag.startY = e.clientY;
+    waToolbarDrag.initLeft = parseInt(tb.style.left || 0, 10);
+    waToolbarDrag.initTop = parseInt(tb.style.top || 0, 10);
+    
+    document.addEventListener('mousemove', doDragWaToolbar);
+    document.addEventListener('mouseup', stopDragWaToolbar);
+}
+function doDragWaToolbar(e) {
+    if(!waToolbarDrag.active) return;
+    const dx = e.clientX - waToolbarDrag.startX;
+    const dy = e.clientY - waToolbarDrag.startY;
+    const tb = document.getElementById('wa-float-toolbar');
+    tb.style.left = (waToolbarDrag.initLeft + dx) + 'px';
+    tb.style.top = (waToolbarDrag.initTop + dy) + 'px';
+}
+function stopDragWaToolbar() {
+    waToolbarDrag.active = false;
+    document.removeEventListener('mousemove', doDragWaToolbar);
+    document.removeEventListener('mouseup', stopDragWaToolbar);
 }
 
 // --- MENU ACTIONS ---
@@ -2685,7 +2738,7 @@ function deleteSelected() {
         state.selectedEl=null; 
         updateThumbnails();
         pushHistory();
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     } 
 }
 function copyEl() { if(state.selectedEl) state.copiedEl = state.selectedEl.cloneNode(true); }
@@ -3828,7 +3881,7 @@ function handleMouseMove(e) {
             state.selectedEl.style.left = (state.dragData.l + dx) + 'px';
             state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
         }
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
     else if(state.dragMode === 'pan-image') {
         const dx = (e.clientX - state.dragData.startX) / zoom; const dy = (e.clientY - state.dragData.startY) / zoom;
@@ -3871,7 +3924,7 @@ function handleMouseMove(e) {
             
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
 }
 
@@ -3894,7 +3947,7 @@ function handleMouseUp() {
             if(state.multiSelected.length === 1) { selectElement(state.multiSelected[0]); state.multiSelected = []; } 
             else if(state.multiSelected.length > 1) {
                 document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                floatToolbar.style.display = 'none';
+                { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
             }
         }
     } else if(state.dragMode) {
@@ -3915,7 +3968,7 @@ function deselect() {
     }
     state.selectedEl = null;
     document.getElementById('status-msg').innerText = "Ready";
-    floatToolbar.style.display = 'none';
+    { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
 }
 
 // 6. Override Delete
@@ -3925,13 +3978,13 @@ function deleteSelected() {
         state.multiSelected = [];
         updateThumbnails();
         pushHistory();
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     } else if(state.selectedEl) { 
         state.selectedEl.remove(); 
         state.selectedEl=null; 
         updateThumbnails();
         pushHistory();
-        floatToolbar.style.display = 'none';
+        { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     } 
 }
 /* =========================================================================
@@ -4602,7 +4655,7 @@ window.handleMouseDown = function(e) {
                  state.multiSelected = [];
             } else {
                  if(document.getElementById('status-msg')) document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                 if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+                 if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
                  // Fire app render loops to draw the bounding box
                  if(typeof forceRepaint === 'function') forceRepaint();
                  if(typeof drawSelectionUI === 'function') drawSelectionUI();
@@ -4675,7 +4728,7 @@ window.handleMouseMove = function(e) {
     if(state.dragMode === 'drag') {
         if(state.dragData.multi && state.dragData.multi.length > 0) { state.dragData.multi.forEach(item => { item.el.style.left = (item.l + dx) + 'px'; item.el.style.top = (item.t + dy) + 'px'; }); } 
         else { state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px'; }
-        if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+        if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
     else if(state.dragMode === 'pan-image') {
         const img = state.selectedEl.querySelector('img'); img.style.left = (state.dragData.l + dx) + 'px'; img.style.top = (state.dragData.t + dy) + 'px';
@@ -4712,7 +4765,7 @@ window.handleMouseMove = function(e) {
             state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
-        if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+        if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
 };
 
@@ -4726,7 +4779,7 @@ window.handleMouseUp = function() {
                 if (!(rect.right < elRect.left || rect.left > elRect.right || rect.bottom < elRect.top || rect.top > elRect.bottom)) { state.multiSelected.push(el); el.classList.add('selected'); }
             });
             if(state.multiSelected.length === 1) { window.selectElement(state.multiSelected[0]); state.multiSelected = []; } 
-            else if(state.multiSelected.length > 1) { document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected"; if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none'; }
+            else if(state.multiSelected.length > 1) { document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected"; if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; } }
         }
     } else if(state.dragMode) {
         setTimeout(() => { if(typeof updateThumbnails === 'function') updateThumbnails(); }, 50); if(typeof pushHistory === 'function') pushHistory(); 
@@ -10865,7 +10918,7 @@ window.handleMouseDown = function(e) {
             } else {
                  if(state.selectedEl) { state.selectedEl.classList.remove('selected'); state.selectedEl = null; }
                  document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                 if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+                 if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
             }
             return;
         }
@@ -10943,7 +10996,7 @@ window.handleMouseMove = function(e) {
         } else {
             state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
         }
-        if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+        if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     } 
     else if(state.dragMode === 'pan-image') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
@@ -11010,7 +11063,7 @@ window.handleMouseMove = function(e) {
             state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
-        if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+        if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
 };
 
@@ -11033,7 +11086,7 @@ window.handleMouseUp = function() {
                 state.multiSelected = [];
             } else if(state.multiSelected.length > 1) {
                 document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+                if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
             }
         }
     } else if(state.dragMode) {
@@ -12357,7 +12410,7 @@ window.handleMouseUp = function() {
                 state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; 
                 state.selectedEl.style.top = (state.dragData.t + dy) + 'px'; 
             }
-            if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+            if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
         // 4. Panning inside Crop Box
         else if(state.dragMode === 'pan-image') {
@@ -12442,7 +12495,7 @@ window.handleMouseUp = function() {
                 
                 if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
             }
-            if(typeof floatToolbar !== 'undefined') floatToolbar.style.display = 'none';
+            if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
     };
 })();
@@ -14178,7 +14231,7 @@ window.toggleCrop = function() {
                 else if (state.multiSelected.length === 1) { if(typeof window.selectElement === 'function') window.selectElement(state.multiSelected[0]); state.multiSelected = []; } 
                 else {
                     if(document.getElementById('status-msg')) document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                    if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+                    if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
                 }
                 return;
             }
@@ -14252,7 +14305,7 @@ window.toggleCrop = function() {
             } else { 
                 state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px'; 
             }
-            if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+            if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
         else if(state.dragMode === 'pan-image') {
             const img = state.selectedEl.querySelector('img'); 
@@ -14348,7 +14401,7 @@ window.toggleCrop = function() {
                 state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
                 if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
             }
-            if(typeof floatToolbar !== 'undefined' && floatToolbar) floatToolbar.style.display = 'none';
+            if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
     };
 
@@ -17470,7 +17523,7 @@ window.addEventListener('beforeprint', () => {
     };
 
     // 3. Render the Polished UI Modal (Exact Screenshot Match)
-    window.showBetaWordArtModal = function() {
+    window.showBetaWordArtModal = function(editTarget = null) {
         const uiHTML = `
             <style>
                 /* Overwrite default dialog styles to achieve the edge-to-edge banner */
@@ -17724,6 +17777,24 @@ window.addEventListener('beforeprint', () => {
         }, 10);
 
         const textInput = document.getElementById('beta-wa-text');
+        
+        if (editTarget) {
+            const img = editTarget.querySelector('.beta-wa-img');
+            if (img) {
+                textInput.value = img.getAttribute('data-beta-wa-text') || "WordArt";
+                const sId = parseInt(img.getAttribute('data-beta-wa-style'));
+                if (sId) {
+                    grid.dataset.selectedId = sId;
+                    grid.querySelectorAll('.beta-wa-card').forEach(c => c.classList.remove('selected'));
+                    const selectedBtn = grid.children[sId - 1];
+                    if (selectedBtn) {
+                        selectedBtn.classList.add('selected');
+                        // Scroll to the selected item slightly delayed to ensure DOM is ready
+                        setTimeout(() => selectedBtn.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+                    }
+                }
+            }
+        }
 
         const executeInsertion = async () => {
             const finalStr = textInput.value.trim() || "WordArt";
@@ -17731,11 +17802,52 @@ window.addEventListener('beforeprint', () => {
             DialogSystem.close(); 
             
             const finalImgData = await generateWordArtPNG(finalStr, styleId);
+            const safeStr = finalStr.replace(/"/g, '&quot;');
             
-            if (typeof window.insertSmartImage === 'function') {
-                window.insertSmartImage(finalImgData);
-            } else if (typeof window.createWrapper === 'function') {
-                window.createWrapper(`<img src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:contain; position:absolute; top:0; left:0;">`);
+            if (editTarget) {
+                const img = editTarget.querySelector('.beta-wa-img');
+                if (img) {
+                    img.src = finalImgData;
+                    img.setAttribute('data-beta-wa-text', finalStr);
+                    img.setAttribute('data-beta-wa-style', styleId);
+                }
+            } else {
+                const img = new Image();
+                img.onload = function() {
+                    const el = document.createElement('div');
+                    el.className = 'pub-element';
+                    el.style.left = '50px';
+                    el.style.top = '50px';
+                    el.style.width = img.naturalWidth + 'px';
+                    el.style.height = img.naturalHeight + 'px';
+                    el.style.zIndex = 10;
+                    el.setAttribute('data-scaleX', "1");
+                    el.setAttribute('data-scaleY', "1");
+                    
+                    el.innerHTML = `
+                        <div class="element-content">
+                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:contain; position:absolute; top:0; left:0;">
+                        </div>
+                        <div class="resize-handle rh-nw" data-dir="nw"></div>
+                        <div class="resize-handle rh-n" data-dir="n"></div>
+                        <div class="resize-handle rh-ne" data-dir="ne"></div>
+                        <div class="resize-handle rh-e" data-dir="e"></div>
+                        <div class="resize-handle rh-se" data-dir="se"></div>
+                        <div class="resize-handle rh-s" data-dir="s"></div>
+                        <div class="resize-handle rh-sw" data-dir="sw"></div>
+                        <div class="resize-handle rh-w" data-dir="w"></div>
+                        <div class="rotate-stick"></div>
+                        <div class="rotate-handle"></div>
+                    `;
+                    const paper = document.getElementById('paper');
+                    if (paper) {
+                        paper.appendChild(el);
+                        if (typeof selectElement === 'function') selectElement(el);
+                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                        if (typeof pushHistory === 'function') pushHistory();
+                    }
+                };
+                img.src = finalImgData;
             }
         };
 
