@@ -429,8 +429,8 @@ function serializeCurrentPage() {
         };
 
         const content = el.querySelector('.element-content');
-        const img = content.querySelector('img');
-        const shapeDiv = content.querySelector('div');
+        const img = content ? content.querySelector('img') : null;
+        const shapeDiv = content ? content.querySelector('div') : null;
 
         if (img) {
             data.imgSrc = img.src;
@@ -448,7 +448,7 @@ function serializeCurrentPage() {
             data.clipPath = shapeDiv.style.clipPath;
             data.bg = shapeDiv.style.background;
         } else {
-            data.innerHTML = content.innerHTML;
+            data.innerHTML = content ? content.innerHTML : '';
         }
 
         p.elements.push(data);
@@ -16460,7 +16460,7 @@ window.addEventListener('beforeprint', () => {
                 
                 // Collect the rendered page into the HTML string, locked exactly to the master layout size
                 iframeHTMLString += `
-                    <div class="page" style="width: ${masterPW}px; height: ${masterPH}px; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: white; margin: 0; padding: 0;">
+                    <div class="page" style="width: ${widthInches}in; height: ${heightInches}in; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: white; margin: 0; padding: 0; box-sizing: border-box;">
                         <img src="${imgData}" style="${imgStyle}">
                     </div>
                 `;
