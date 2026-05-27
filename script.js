@@ -5087,6 +5087,9 @@ window.initWordArt = function() {
     // Helper to sync visibility based on selection and user preference
     const refreshVisibility = (el) => {
         if (el && el.querySelector('img')) {
+            const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
+            const titleEl = panel.querySelector('.op-sidebar-title');
+            if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
             if (userCollapsed) {
                 panel.classList.remove('visible');
                 expander.classList.add('visible');
@@ -5832,6 +5835,9 @@ window.initWordArt = function() {
 
     const refreshVisibility = (el) => {
         if (el && el.querySelector('img')) {
+            const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
+            const titleEl = panel.querySelector('.op-sidebar-title');
+            if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
             if (userCollapsed) {
                 panel.classList.remove('visible'); expander.classList.add('visible'); if (vp) vp.style.width = '';
             } else {
