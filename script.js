@@ -17481,7 +17481,7 @@ window.addEventListener('beforeprint', () => {
                 /* The Green Header Banner */
                 .wa-modal-header {
                     background: var(--pub-dark, #005a55);
-                    padding: 25px 40px;
+                    padding: 15px 25px;
                     text-align: center;
                     border-top-left-radius: 8px;
                     border-top-right-radius: 8px;
@@ -17494,17 +17494,17 @@ window.addEventListener('beforeprint', () => {
                 .wa-modal-title {
                     color: white;
                     font-family: 'Segoe UI', sans-serif;
-                    font-size: 28px;
+                    font-size: 20px;
                     font-weight: 600;
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
                     pointer-events: none; /* Let drag pass through */
                 }
                 .wa-close-btn {
                     position: absolute;
-                    top: 15px;
-                    right: 20px;
+                    top: 10px;
+                    right: 15px;
                     color: rgba(255, 255, 255, 0.7);
-                    font-size: 20px;
+                    font-size: 16px;
                     font-family: sans-serif;
                     cursor: pointer;
                     transition: color 0.2s;
@@ -17517,13 +17517,13 @@ window.addEventListener('beforeprint', () => {
                 /* The Giant White Input Box */
                 .wa-modal-input {
                     width: 100%;
-                    padding: 15px 20px;
-                    font-size: 32px;
+                    padding: 12px 15px;
+                    font-size: 24px;
                     font-family: 'Arial Black', Impact, sans-serif;
                     text-align: center;
                     color: #111;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 4px;
                     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
                     outline: none;
                     transition: box-shadow 0.2s;
@@ -17534,15 +17534,15 @@ window.addEventListener('beforeprint', () => {
 
                 /* Grid Area */
                 .wa-modal-grid-container {
-                    padding: 20px 25px;
+                    padding: 15px 20px;
                     background: #f1f5f9;
-                    max-height: 60vh;
+                    max-height: 55vh;
                     overflow-y: auto;
                 }
                 #beta-wa-grid {
                     display: grid;
-                    grid-template-columns: repeat(6, 1fr);
-                    gap: 15px;
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 10px;
                 }
                 
                 /* The Selectable Cards */
@@ -17550,11 +17550,11 @@ window.addEventListener('beforeprint', () => {
                     background: white;
                     border: 3px solid transparent;
                     border-radius: 12px;
-                    height: 85px;
+                    height: 65px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 10px;
+                    padding: 6px;
                     cursor: pointer;
                     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
                     transition: all 0.15s ease-in-out;
@@ -17572,17 +17572,17 @@ window.addEventListener('beforeprint', () => {
 
                 /* Custom Footer */
                 .wa-modal-footer {
-                    padding: 15px 25px;
+                    padding: 10px 20px;
                     background: #f1f5f9;
                     display: flex;
                     justify-content: flex-end;
-                    gap: 12px;
+                    gap: 10px;
                     border-bottom-left-radius: 8px;
                     border-bottom-right-radius: 8px;
                 }
                 .wa-btn {
-                    padding: 10px 30px;
-                    font-size: 15px;
+                    padding: 8px 24px;
+                    font-size: 14px;
                     font-weight: 700;
                     border-radius: 20px;
                     cursor: pointer;
@@ -17680,7 +17680,7 @@ window.addEventListener('beforeprint', () => {
         setTimeout(() => {
             const dialogBox = document.getElementById('custom-dialog-box');
             if(dialogBox) {
-                dialogBox.style.width = '1050px';
+                dialogBox.style.width = '850px';
                 dialogBox.style.maxWidth = '95vw';
                 dialogBox.style.padding = '0';
                 dialogBox.style.backgroundColor = 'transparent';
