@@ -17892,4 +17892,6 @@ setTimeout(() => {
     document.querySelectorAll('.wa-text').forEach(el => el.setAttribute('spellcheck', 'false'));
     if(window.initWordArt) window.initWordArt();
     if(window.ContextRibbonSystem) window.ContextRibbonSystem.init();
+
+    console.log("✅ Main script evaluated.");
 }, 500);

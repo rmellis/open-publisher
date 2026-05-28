@@ -77,6 +77,144 @@
 </head>
 
   <body>
+<div id="splash-screen" style="position: fixed; top: calc(50vh - 150px); left: calc(50vw - 225px); width: 450px; max-width: 90vw; background: transparent; z-index: 999999; box-shadow: 0 15px 40px rgba(0,0,0,0.6); border-radius: 12px; transition: opacity 0.5s ease; cursor: grab;">
+    <div id="splash-close" style="position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; background: #e74c3c; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: sans-serif; font-weight: bold; cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" onclick="document.getElementById('splash-screen').style.opacity=0; setTimeout(()=>document.getElementById('splash-screen').remove(), 500);">X</div>
+    <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/QxPAA35.png" style="width: 100%; height: auto; display: block; border-radius: 12px; pointer-events: none;" alt="Open Publisher">
+    <style>
+        #splash-console::-webkit-scrollbar { display: none !important; }
+        #splash-console { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+    </style>
+    <div id="splash-console" style="position: absolute; bottom: 5%; left: 5.5%; right: 5.5%; height: 21%; background: transparent; color: #ffffff; font-family: monospace; font-size: 11px; overflow-y: auto; white-space: nowrap; text-align: left; padding: 5px; box-sizing: border-box; line-height: 1.2; cursor: text;" onmousedown="event.stopPropagation()">
+        <div>> System Initializing...</div>
+    </div>
+</div>
+<script>
+(function(){
+    var splash = document.getElementById('splash-screen');
+    if (splash) {
+        var isDragging = false, offsetX, offsetY;
+        splash.addEventListener('mousedown', function(e) {
+            if(e.target.id === 'splash-close' || e.target.closest('#splash-console')) return;
+            isDragging = true;
+            var rect = splash.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            splash.style.cursor = 'grabbing';
+            // Disable css transitions so it doesn't lag while dragging
+            splash.style.transition = 'none';
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            splash.style.left = (e.clientX - offsetX) + 'px';
+            splash.style.top = (e.clientY - offsetY) + 'px';
+        });
+        document.addEventListener('mouseup', function() {
+            if(isDragging) {
+                isDragging = false;
+                splash.style.cursor = 'grab';
+                splash.style.transition = 'opacity 0.5s ease';
+            }
+        });
+    }
+
+    var oldLog = console.log;
+    var splashConsole = document.getElementById('splash-console');
+    window._allowSplashLogs = false;
+    console.log = function() {
+        oldLog.apply(console, arguments);
+        if (splashConsole && window._allowSplashLogs) {
+            var msg = Array.from(arguments).map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+            var line = document.createElement('div');
+            line.textContent = '> ' + msg;
+            splashConsole.appendChild(line);
+            splashConsole.scrollTop = splashConsole.scrollHeight;
+        }
+    };
+
+    // Simulated Boot Sequence to show activity during the delay
+    var bootMessages = [
+        "Virtual Document Model mounted.",
+        "Canvas Memory allocated.",
+        "Ribbon Controller initialized.",
+        "Core Typography Engine loaded.",
+        "System Fonts parsed.",
+        "Google Fonts Integration loaded.",
+        "Advanced SVG Ads Library initialized.",
+        "Ruler Highlight Script initialized.",
+        "Keyboard Nudge Script initialized.",
+        "Context Tools Script initialized.",
+        "Scratch Area Fading Script initialized.",
+        "Smart Text Interaction Script initialized.",
+        "Anti-Lag Script initialized.",
+        "Universal Paste Fix initialized.",
+        "Advanced Vector Shapes Library initialized.",
+        "Vector Outlines pre-rendered.",
+        "Smart Formatting Router & Ribbon Fix initialized.",
+        "Enhanced Table Ribbons Script initialized.",
+        "Smart Image Script initialized.",
+        "Aspect Ratio Lock Script initialized.",
+        "Writer's Suite Script initialized.",
+        "Infinite Panning Hand Script initialized.",
+        "Table Templates Script initialized.",
+        "Definitive Crop Anchor Fix initialized.",
+        "Background Defender Module initialized.",
+        "Glass Vault Minimap initialized.",
+        "Border Defender V5 initialized.",
+        "Theme Studio initialized.",
+        "Border Eraser V2.3 initialized.",
+        "Text Print Rescue Module initialized.",
+        "Print Spooler Iframe initialized.",
+        "Theme Generator injected.",
+        "PDF Export Spooler warmed up.",
+        "Analytics Telemetry loaded.",
+        "Beta WordArt Handlers registered.",
+        "Legacy WordArt Handlers registered.",
+        "Global Event Listeners attached.",
+        "Undo/Redo State Manager bound.",
+        "Workspace State synced.",
+        "LocalStorage Auto-Saves checked.",
+        "UI Layout Repaints finalized."
+    ];
+    var bootIndex = 0;
+    var bootInterval = setInterval(function() {
+        window._allowSplashLogs = true;
+        if (bootIndex < bootMessages.length) {
+            console.log("✅ " + bootMessages[bootIndex]);
+            bootIndex++;
+        } else {
+            clearInterval(bootInterval);
+            console.log("✅ Open Publisher successfully initialized.");
+            var countdown = 4;
+            var countdownInterval = setInterval(function() {
+                window._allowSplashLogs = true;
+                if (countdown > 0) {
+                    console.log("⏳ Closing in " + countdown + " seconds, press any key to keep open...");
+                    countdown--;
+                } else {
+                    clearInterval(countdownInterval);
+                    document.removeEventListener('keydown', abortHandler);
+                    var splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        splash.style.opacity = '0';
+                        setTimeout(function() { splash.remove(); }, 500);
+                    }
+                }
+                window._allowSplashLogs = false;
+            }, 1000);
+            
+            var abortHandler = function() {
+                window._allowSplashLogs = true;
+                clearInterval(countdownInterval);
+                console.log("🛑 Aborted by user. Splash screen will remain open.");
+                document.removeEventListener('keydown', abortHandler);
+                window._allowSplashLogs = false;
+            };
+            document.addEventListener('keydown', abortHandler);
+        }
+        window._allowSplashLogs = false;
+    }, 150);
+})();
+</script>
 <input type="file" id="img-upload" style="display:none" accept="image/*">
 <input type="file" id="file-open" style="display:none" accept=".opub, .json, .pub, .pubx, .doc, .docx">
 <input type="file" id="document-upload" style="display:none" accept=".pub, .doc, .docx" onchange="handleFileUpload(event)">
