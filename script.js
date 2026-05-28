@@ -18288,9 +18288,11 @@ window.showWebClipartModal = function() {
             if (btn.dataset.tool === tool) {
                 btn.style.backgroundColor = '#e0f2f1';
                 btn.style.borderColor = '#007670';
+                btn.style.borderRadius = '4px';
             } else {
                 btn.style.backgroundColor = '';
                 btn.style.borderColor = 'transparent';
+                btn.style.borderRadius = '';
             }
         });
         document.querySelectorAll('.finish-drawing-btn').forEach(btn => btn.style.display = 'flex');
