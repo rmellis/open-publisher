@@ -12254,7 +12254,7 @@ window.handleMouseUp = function() {
     console.log("🛠️ Smart Image Script initializing...");
 
     // 1. The Bulletproof Image Builder
-    window.insertSmartImage = function(imageSrc) {
+    window.insertSmartImage = function(imageSrc, fallbackSrc) {
         const paper = document.getElementById('paper');
         
         const spinner = document.createElement('div');
@@ -12283,7 +12283,33 @@ window.handleMouseUp = function() {
         }
 
         const img = new Image();
+        let fallbackAttempted = false;
+
+        img.onerror = function() {
+            if (fallbackSrc && !fallbackAttempted) {
+                console.warn("Primary image failed to load (onerror), falling back to:", fallbackSrc);
+                fallbackAttempted = true;
+                img.src = fallbackSrc;
+            } else {
+                if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
+                DialogSystem.alert('Error', 'Failed to load image. It may not exist on the server.');
+            }
+        };
         img.onload = function() {
+            // Check if the proxy returned a 1x1 error pixel instead of a 404
+            if (img.naturalWidth <= 1 && fallbackSrc && !fallbackAttempted) {
+                console.warn("Primary image returned 1x1 pixel, falling back to:", fallbackSrc);
+                fallbackAttempted = true;
+                img.src = fallbackSrc;
+                return;
+            }
+            
+            if (img.naturalWidth <= 1) {
+                if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
+                DialogSystem.alert('Error', 'The image loaded but appears to be empty or corrupted.');
+                return;
+            }
+
             if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
             let finalWidth = img.naturalWidth;
             let finalHeight = img.naturalHeight;
@@ -12314,7 +12340,7 @@ window.handleMouseUp = function() {
             // Inject the HTML with the exact resize handles so it behaves normally
             el.innerHTML = `
                 <div class="element-content">
-                    <img src="${imageSrc}" style="width: 100%; height: 100%; object-fit: fill; pointer-events: none; display: block; position: absolute; top: 0; left: 0;">
+                    <img src="${img.src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
                 </div>
                 <div class="resize-handle rh-nw" data-dir="nw"></div>
                 <div class="resize-handle rh-n" data-dir="n"></div>
@@ -12335,12 +12361,7 @@ window.handleMouseUp = function() {
                 if (typeof pushHistory === 'function') pushHistory();
             }
         };
-        img.onerror = function() {
-            if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
-            if (typeof DialogSystem !== 'undefined') {
-                DialogSystem.alert('Error', 'Failed to load the image.');
-            }
-        };
+        
         img.src = imageSrc;
     };
 
@@ -18152,7 +18173,7 @@ window.showWebClipartModal = function() {
                 if (selectedFilename) {
                     DialogSystem.close();
                     if(window.insertSmartImage) {
-                        window.insertSmartImage(highResBaseUrl + selectedFilename);
+                        window.insertSmartImage(highResBaseUrl + selectedFilename, thumbBaseUrl + selectedFilename);
                     } else {
                         DialogSystem.alert('Error', 'Image insertion function not found.');
                     }
@@ -18164,8 +18185,15 @@ window.showWebClipartModal = function() {
         const fragment = document.createDocumentFragment();
         const allCards = [];
         
-        for (let i = 0; i < webClipartLibrary.length; i++) {
-            const filename = webClipartLibrary[i];
+        // Create a shuffled copy of the library so it's different every time
+        const shuffledLibrary = [...webClipartLibrary];
+        for (let i = shuffledLibrary.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledLibrary[i], shuffledLibrary[j]] = [shuffledLibrary[j], shuffledLibrary[i]];
+        }
+        
+        for (let i = 0; i < shuffledLibrary.length; i++) {
+            const filename = shuffledLibrary[i];
             
             // Clean up the filename to create a human-readable custom name for tags
             let customName = filename.replace(/\.png$/i, '');
@@ -18191,7 +18219,7 @@ window.showWebClipartModal = function() {
             card.ondblclick = () => {
                 DialogSystem.close();
                 if(window.insertSmartImage) {
-                    window.insertSmartImage(highResBaseUrl + filename);
+                    window.insertSmartImage(highResBaseUrl + filename, thumbBaseUrl + filename);
                 } else {
                     DialogSystem.alert('Error', 'Image insertion function not found.');
                 }
