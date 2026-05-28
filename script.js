@@ -17948,7 +17948,6 @@ window.showWebClipartModal = function() {
                 font-size: 20px;
                 font-weight: 600;
                 margin-bottom: 12px;
-                pointer-events: none;
             }
             .wa-close-btn {
                 position: absolute;
@@ -17998,7 +17997,13 @@ window.showWebClipartModal = function() {
         </style>
         <div class="wa-modal-header" id="clipart-modal-header">
             <div class="wa-close-btn" id="clipart-close-x"><i class="fas fa-times"></i></div>
-            <div class="wa-modal-title">Clipart Gallery</div>
+            <div class="wa-modal-title" style="display: flex; align-items: center; gap: 20px;">
+                <span>Clipart Gallery</span>
+                <div id="clipart-search-wrapper" style="position: relative; flex-grow: 1; max-width: 400px; font-weight: normal; font-size: 14px;">
+                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
+                    <input type="text" id="clipart-search-input" placeholder="Search for clipart (e.g., 'tree', 'computer', 'apple')..." style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 20px; border: 1px solid #ddd; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.9); user-select: text; -webkit-user-select: text;">
+                </div>
+            </div>
         </div>
         <div class="clipart-grid-container" id="clipart-grid-container" style="height: 50vh;">
             <!-- Grid goes here -->
@@ -18025,7 +18030,7 @@ window.showWebClipartModal = function() {
             if (header) {
                 let isDragging = false;
                 header.addEventListener('mousedown', function(e) {
-                    if (e.target.tagName.toLowerCase() === 'input' || e.target.id === 'clipart-close-x') return;
+                    if (e.target.closest('#clipart-search-wrapper') || e.target.closest('#clipart-close-x')) return;
                     isDragging = true;
                     const rect = dialogBox.getBoundingClientRect();
                     const offsetX = e.clientX - rect.left;
@@ -18152,11 +18157,23 @@ window.showWebClipartModal = function() {
 
         // We can create the empty divs in one go, 3400 divs is fast enough (~10ms)
         const fragment = document.createDocumentFragment();
+        const allCards = [];
+        
         for (let i = 0; i < webClipartLibrary.length; i++) {
             const filename = webClipartLibrary[i];
+            
+            // Clean up the filename to create a human-readable custom name for tags
+            let customName = filename.replace(/\.png$/i, '');
+            customName = customName.replace(/-\d+$/, ''); // Remove trailing ID numbers
+            customName = customName.replace(/_PNG_Clip_Art|_PNG_Clipart|_PNG_Image|_Clip_Art_PNG_Image|_Clip_Art|_Clipart|_PNG/gi, '');
+            customName = customName.replace(/_/g, ' ');
+            customName = customName.trim();
+
             const card = document.createElement('div');
             card.className = 'clipart-card';
             card.dataset.filename = filename;
+            card.dataset.customName = customName.toLowerCase();
+            card.title = customName; // Use custom name as hover tooltip
             
             card.onclick = () => {
                 if (selectedElement) selectedElement.classList.remove('selected');
@@ -18177,8 +18194,28 @@ window.showWebClipartModal = function() {
             
             observer.observe(card);
             fragment.appendChild(card);
+            allCards.push(card);
         }
         grid.appendChild(fragment);
+
+        // Search Bar Logic
+        const searchInput = document.getElementById('clipart-search-input');
+        if (searchInput) {
+            searchInput.oninput = (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const terms = query.split(' ').filter(t => t.length > 0);
+                
+                allCards.forEach(card => {
+                    if (terms.length === 0) {
+                        card.style.display = 'flex';
+                        return;
+                    }
+                    const name = card.dataset.customName;
+                    const matches = terms.every(term => name.includes(term));
+                    card.style.display = matches ? 'flex' : 'none';
+                });
+            };
+        }
     }, 10);
 };
 
