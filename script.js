@@ -17955,8 +17955,9 @@ window.showWebClipartModal = function() {
             
             .wa-modal-header {
                 background: var(--pub-dark, #005a55);
-                padding: 15px 25px;
-                text-align: center;
+                padding: 16px 25px;
+                display: flex;
+                align-items: center;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 cursor: grab;
@@ -17968,15 +17969,22 @@ window.showWebClipartModal = function() {
                 font-family: 'Segoe UI', sans-serif;
                 font-size: 20px;
                 font-weight: 600;
-                margin-bottom: 12px;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-grow: 1;
+                padding-right: 30px; /* Space for the close button */
             }
             .wa-close-btn {
                 position: absolute;
-                top: 10px;
-                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                right: 20px;
                 color: rgba(255, 255, 255, 0.7);
-                font-size: 16px;
+                font-size: 20px;
                 cursor: pointer;
+                z-index: 2;
             }
             .wa-close-btn:hover { color: white; }
             
@@ -18017,14 +18025,14 @@ window.showWebClipartModal = function() {
             }
         </style>
         <div class="wa-modal-header" id="clipart-modal-header">
-            <div class="wa-close-btn" id="clipart-close-x"><i class="fas fa-times"></i></div>
-            <div class="wa-modal-title" style="display: flex; align-items: center; gap: 20px;">
+            <div class="wa-modal-title">
                 <span>Clipart Gallery</span>
                 <div id="clipart-search-wrapper" style="position: relative; flex-grow: 1; max-width: 400px; font-weight: normal; font-size: 14px;">
-                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
-                    <input type="text" id="clipart-search-input" placeholder="Search for clipart (e.g., 'tree', 'computer', 'apple')..." style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 20px; border: 1px solid #ddd; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.9); user-select: text; -webkit-user-select: text;">
+                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
+                    <input type="text" id="clipart-search-input" placeholder="Search for clipart (e.g., 'tree', 'computer', 'apple')..." style="width: 100%; padding: 10px 15px 10px 40px; border-radius: 20px; border: 1px solid #ddd; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.95); user-select: text; -webkit-user-select: text; font-family: 'Segoe UI', sans-serif;">
                 </div>
             </div>
+            <div class="wa-close-btn" id="clipart-close-x"><i class="fas fa-times"></i></div>
         </div>
         <div class="clipart-grid-container" id="clipart-grid-container" style="height: 50vh;">
             <!-- Grid goes here -->
