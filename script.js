@@ -18081,6 +18081,9 @@ window.showWebClipartModal = function() {
         const loadQueue = [];
         
         const processQueue = () => {
+            // Priority sort: currently visible items jump to the front of the queue
+            loadQueue.sort((a, b) => (b.isIntersecting ? 1 : 0) - (a.isIntersecting ? 1 : 0));
+
             while (activeLoads < maxConcurrent && loadQueue.length > 0) {
                 const card = loadQueue.shift();
                 const filename = card.dataset.filename;
@@ -18091,6 +18094,7 @@ window.showWebClipartModal = function() {
                     card.innerHTML = '';
                     card.appendChild(img);
                     card.loaded = true;
+                    observer.unobserve(card); // Unobserve only when fully loaded
                     activeLoads--;
                     processQueue();
                 };
@@ -18119,14 +18123,15 @@ window.showWebClipartModal = function() {
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+                const card = entry.target;
+                card.isIntersecting = entry.isIntersecting; // Continuously track visibility status
+
                 if (entry.isIntersecting) {
-                    const card = entry.target;
                     if (!card.loaded && !card.queued) {
                         card.queued = true;
                         card.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: #007670; font-size: 24px; opacity: 0.5;"></i>';
                         loadQueue.push(card);
                         processQueue();
-                        observer.unobserve(card);
                     }
                 }
             });
