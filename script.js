@@ -8111,7 +8111,7 @@ if (!window._thumbObserverRunning) {
         if (!grid) return;
 
         const html = `<div id="dialog-clipart-container"></div>`;
-        DialogSystem.show('Classic Clipart', html, null, true);
+        DialogSystem.show('Emojis', html, null, true);
         
         const dialogBox = document.getElementById('custom-dialog-box');
         if(dialogBox) { 
@@ -12255,12 +12255,39 @@ window.handleMouseUp = function() {
 
     // 1. The Bulletproof Image Builder
     window.insertSmartImage = function(imageSrc) {
+        const paper = document.getElementById('paper');
+        
+        const spinner = document.createElement('div');
+        spinner.innerHTML = `
+            <div style="text-align: center; color: #007670; font-family: 'Segoe UI', Arial, sans-serif; background: rgba(255,255,255,0.9); padding: 20px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 50px; margin-bottom: 15px;"></i>
+                <div style="font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Importing Image...</div>
+                <div style="font-size: 14px; opacity: 0.7; margin-top: 5px;">Please wait</div>
+            </div>
+        `;
+        spinner.style.position = paper ? 'absolute' : 'fixed';
+        spinner.style.top = '0';
+        spinner.style.left = '0';
+        spinner.style.width = paper ? '100%' : '100vw';
+        spinner.style.height = paper ? '100%' : '100vh';
+        spinner.style.backgroundColor = 'transparent';
+        spinner.style.display = 'flex';
+        spinner.style.alignItems = 'center';
+        spinner.style.justifyContent = 'center';
+        spinner.style.zIndex = '999999';
+        
+        if (paper) {
+            paper.appendChild(spinner);
+        } else {
+            document.body.appendChild(spinner);
+        }
+
         const img = new Image();
         img.onload = function() {
+            if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
             let finalWidth = img.naturalWidth;
             let finalHeight = img.naturalHeight;
 
-            const paper = document.getElementById('paper');
             // Use actual paper size, fallback to A4 if missing
             const maxWidth = (paper ? paper.offsetWidth : 794) - 40;
             const maxHeight = (paper ? paper.offsetHeight : 1123) - 40;
@@ -12306,6 +12333,12 @@ window.handleMouseUp = function() {
                 if (typeof selectElement === 'function') selectElement(el);
                 if (typeof updateThumbnails === 'function') updateThumbnails();
                 if (typeof pushHistory === 'function') pushHistory();
+            }
+        };
+        img.onerror = function() {
+            if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
+            if (typeof DialogSystem !== 'undefined') {
+                DialogSystem.alert('Error', 'Failed to load the image.');
             }
         };
         img.src = imageSrc;
@@ -17887,6 +17920,268 @@ forceRepaint = function() {
         originalForceRepaint();
     }, 10);
 };
+window.showWebClipartModal = function() {
+    if (typeof webClipartLibrary === 'undefined' || typeof webClipartBaseUrl === 'undefined') {
+        DialogSystem.show('Error', '<p>Clipart library not loaded.</p>', null, true);
+        return;
+    }
+    
+    const uiHTML = `
+        <style>
+            #custom-dialog-header { display: none !important; }
+            .custom-dialog-footer { display: none !important; }
+            .custom-dialog-body { padding: 0 !important; background: #f3f4f6 !important; border-radius: 8px; overflow: hidden; }
+            
+            .wa-modal-header {
+                background: var(--pub-dark, #005a55);
+                padding: 15px 25px;
+                text-align: center;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                cursor: grab;
+                position: relative;
+            }
+            .wa-modal-header:active { cursor: grabbing; }
+            .wa-modal-title {
+                color: white;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                pointer-events: none;
+            }
+            .wa-close-btn {
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 16px;
+                cursor: pointer;
+            }
+            .wa-close-btn:hover { color: white; }
+            
+            .clipart-grid-container {
+                height: 500px;
+                overflow-y: auto;
+                padding: 20px;
+                background: white;
+            }
+            
+            .clipart-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 15px;
+            }
+            
+            .clipart-card {
+                aspect-ratio: 1;
+                border: 2px solid transparent;
+                border-radius: 8px;
+                padding: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+            }
+            
+            .clipart-card:hover {
+                transform: scale(1.05);
+                border-color: #007670;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            .clipart-card.selected {
+                border-color: #007670;
+                background-color: rgba(0, 118, 112, 0.1);
+                box-shadow: 0 4px 12px rgba(0, 118, 112, 0.2);
+            }
+        </style>
+        <div class="wa-modal-header" id="clipart-modal-header">
+            <div class="wa-close-btn" id="clipart-close-x"><i class="fas fa-times"></i></div>
+            <div class="wa-modal-title">Clipart Gallery</div>
+        </div>
+        <div class="clipart-grid-container" id="clipart-grid-container" style="height: 50vh;">
+            <!-- Grid goes here -->
+        </div>
+        <div class="wa-modal-footer" style="padding: 15px; text-align: right; border-top: 1px solid #eee; background: #fafafa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+            <button id="clipart-btn-cancel" class="btn-secondary" style="margin-right: 10px;">Cancel</button>
+            <button id="clipart-btn-ok" class="btn-primary" disabled>OK</button>
+        </div>
+    `;
+
+    DialogSystem.show('', uiHTML, null, true);
+    
+    // Style the dialog box exactly like beta wordart
+    setTimeout(() => {
+        const dialogBox = document.getElementById('custom-dialog-box');
+        if(dialogBox) {
+            dialogBox.style.width = '850px';
+            dialogBox.style.maxWidth = '95vw';
+            dialogBox.style.padding = '0';
+            dialogBox.style.backgroundColor = 'transparent';
+            dialogBox.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+
+            const header = document.getElementById('clipart-modal-header');
+            if (header) {
+                let isDragging = false;
+                header.addEventListener('mousedown', function(e) {
+                    if (e.target.tagName.toLowerCase() === 'input' || e.target.id === 'clipart-close-x') return;
+                    isDragging = true;
+                    const rect = dialogBox.getBoundingClientRect();
+                    const offsetX = e.clientX - rect.left;
+                    const offsetY = e.clientY - rect.top;
+
+                    dialogBox.style.position = 'fixed';
+                    dialogBox.style.transform = 'none';
+                    dialogBox.style.margin = '0';
+                    dialogBox.style.bottom = 'auto';
+                    dialogBox.style.right = 'auto';
+                    dialogBox.style.left = (e.clientX - offsetX) + 'px';
+                    dialogBox.style.top = (e.clientY - offsetY) + 'px';
+
+                    const onMouseMove = (me) => {
+                        if (!isDragging) return;
+                        dialogBox.style.left = (me.clientX - offsetX) + 'px';
+                        dialogBox.style.top = (me.clientY - offsetY) + 'px';
+                    };
+
+                    const onMouseUp = () => {
+                        isDragging = false;
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+            
+            const closeBtn = document.getElementById('clipart-close-x');
+            if (closeBtn) closeBtn.onclick = () => DialogSystem.close();
+        }
+
+        // Render using IntersectionObserver to prevent UI locking
+        const container = document.getElementById('clipart-grid-container');
+        if (!container) return;
+        
+        const grid = document.createElement('div');
+        grid.className = 'clipart-grid';
+        container.appendChild(grid);
+
+        const thumbBaseUrl = "https://wsrv.nl/?url=acr.floydcraft.co.uk/clipart-thumbs/";
+        const highResBaseUrl = "https://wsrv.nl/?url=acr.floydcraft.co.uk/clipart/";
+        
+        let activeLoads = 0;
+        const maxConcurrent = 5;
+        const loadQueue = [];
+        
+        const processQueue = () => {
+            while (activeLoads < maxConcurrent && loadQueue.length > 0) {
+                const card = loadQueue.shift();
+                const filename = card.dataset.filename;
+                activeLoads++;
+                
+                const img = new Image();
+                img.onload = () => {
+                    card.innerHTML = '';
+                    card.appendChild(img);
+                    card.loaded = true;
+                    activeLoads--;
+                    processQueue();
+                };
+                img.onerror = () => {
+                    setTimeout(() => {
+                        activeLoads--;
+                        card.retries = (card.retries || 0) + 1;
+                        loadQueue.push(card); // Retry by pushing back into queue
+                        processQueue();
+                    }, 1500);
+                };
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.objectFit = 'contain';
+                img.style.pointerEvents = 'none';
+                img.style.animation = 'fadeIn 0.3s';
+                
+                // Fallback to high-res version if the thumbnail fails to load after 2 attempts
+                if (card.retries >= 2) {
+                    img.src = `${highResBaseUrl}${filename}`;
+                } else {
+                    img.src = `${thumbBaseUrl}${filename}`;
+                }
+            }
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const card = entry.target;
+                    if (!card.loaded && !card.queued) {
+                        card.queued = true;
+                        card.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: #007670; font-size: 24px; opacity: 0.5;"></i>';
+                        loadQueue.push(card);
+                        processQueue();
+                        observer.unobserve(card);
+                    }
+                }
+            });
+        }, { root: container, rootMargin: '300px' });
+
+        let selectedFilename = null;
+        let selectedElement = null;
+        
+        const closeBtn = document.getElementById('clipart-close-x');
+        if (closeBtn) closeBtn.onclick = () => DialogSystem.close();
+
+        const btnOk = document.getElementById('clipart-btn-ok');
+        const btnCancel = document.getElementById('clipart-btn-cancel');
+
+        if (btnCancel) btnCancel.onclick = () => DialogSystem.close();
+        if (btnOk) {
+            btnOk.onclick = () => {
+                if (selectedFilename) {
+                    DialogSystem.close();
+                    if(window.insertSmartImage) {
+                        window.insertSmartImage(highResBaseUrl + selectedFilename);
+                    } else {
+                        DialogSystem.alert('Error', 'Image insertion function not found.');
+                    }
+                }
+            };
+        }
+
+        // We can create the empty divs in one go, 3400 divs is fast enough (~10ms)
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < webClipartLibrary.length; i++) {
+            const filename = webClipartLibrary[i];
+            const card = document.createElement('div');
+            card.className = 'clipart-card';
+            card.dataset.filename = filename;
+            
+            card.onclick = () => {
+                if (selectedElement) selectedElement.classList.remove('selected');
+                card.classList.add('selected');
+                selectedElement = card;
+                selectedFilename = filename;
+                if (btnOk) btnOk.disabled = false;
+            };
+
+            card.ondblclick = () => {
+                DialogSystem.close();
+                if(window.insertSmartImage) {
+                    window.insertSmartImage(highResBaseUrl + filename);
+                } else {
+                    DialogSystem.alert('Error', 'Image insertion function not found.');
+                }
+            };
+            
+            observer.observe(card);
+            fragment.appendChild(card);
+        }
+        grid.appendChild(fragment);
+    }, 10);
+};
+
 // Initialize Everything Once the DOM is Ready
 setTimeout(() => {
     document.querySelectorAll('.wa-text').forEach(el => el.setAttribute('spellcheck', 'false'));
