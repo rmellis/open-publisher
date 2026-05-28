@@ -22,6 +22,51 @@ body {
     min-width: 320px;
 }
 
+/* Custom Drawing Slider */
+.drawing-size-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px;
+    border-radius: 5px;
+    border: 1px solid #005a55;
+    background: #f3f2f1; /* fallback */
+    outline: none;
+}
+.drawing-size-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #005a55;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    cursor: pointer;
+    margin-top: -6px; /* (10 track / 2) - (20 thumb / 2) + 1px border = -6px */
+}
+.drawing-size-slider::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 5px;
+    border: none;
+    background: transparent; /* let the input background show through */
+}
+.drawing-size-slider::-moz-range-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #005a55;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+.drawing-size-slider::-moz-range-track {
+    height: 10px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+}
+
 /* --- TITLE BAR --- */
 .title-bar {
     height: 35px;

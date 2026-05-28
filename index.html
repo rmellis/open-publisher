@@ -329,6 +329,7 @@
             <div class="tool-btn" onclick="showClipartModal()"><i class="fas fa-icons"></i>Emojis</div>
             <div class="group-label">Illustrations</div>
         </div>
+
         <div class="group">
             <div class="tool-btn" onclick="toggleShapeMenu(this); event.stopPropagation();"><i class="fas fa-shapes"></i>Shapes <i class="fas fa-caret-down"></i></div>
             <div class="tool-btn" onclick="showWordArtModal()">
@@ -349,6 +350,27 @@
         <div class="group">
             <div class="tool-btn" onclick="toggleTableMenu(this); event.stopPropagation();"><i class="fas fa-table"></i>Table <i class="fas fa-caret-down"></i></div>
             <div class="group-label">Tables</div>
+        </div>
+        <div class="group drawing-tools-group" style="flex-direction: column; align-items: stretch; justify-content: flex-start; padding-top: 2px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 2px; margin-top: 4px;">
+                <div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt"></i>Pencil</div>
+                <div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush"></i>Brush</div>
+                <div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can"></i>Spray</div>
+                <div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser"></i>Eraser</div>
+                <div class="tool-btn" onclick="if(typeof undoDrawing==='function') undoDrawing()"><i class="fas fa-undo"></i>Undo</div>
+                
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-left: 10px;">
+                    <span style="font-size:11px; color:#005a55; text-transform:uppercase; margin-bottom:4px; font-weight:bold;">Color</span>
+                    <input type="color" class="drawing-color-picker" value="#000000" style="width:30px; height:30px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 3px rgba(0,0,0,0.5); outline: none;" title="Drawing Color" oninput="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)">
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; padding: 0 10px;">
+                <span style="font-size:11px; color:#005a55; text-transform:uppercase; font-weight:bold;">Size</span>
+                <input type="range" class="drawing-size-slider" min="1" max="50" value="2" style="flex-grow: 1; cursor: pointer; margin: 0;" title="Brush Size" oninput="if(typeof updateDrawingSize==='function') updateDrawingSize(this.value)">
+            </div>
+            
+            <div class="group-label">Drawing</div>
         </div>
     </div>
 
@@ -403,6 +425,10 @@
         <div class="group">
             <div class="tool-btn" onclick="triggerUpload()"><i class="fas fa-image"></i>Insert</div>
             <div class="group-label">Insert</div>
+        </div>
+        <div class="group">
+            <div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush"></i>Edit</div>
+            <div class="group-label">Draw</div>
         </div>
         <div class="group">
             <div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint"></i>Recolor <i class="fas fa-caret-down"></i></div>
