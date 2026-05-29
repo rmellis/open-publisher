@@ -237,6 +237,52 @@ body {
 .custom-select:hover { border-color: #99c9ef; }
 .custom-select span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* Modern Toolbar UI for Typography */
+.modern-select {
+    border: 1px solid #ccc; background: white; height: 22px; 
+    font-size: 12px; display: flex; align-items: center; 
+    justify-content: space-between; cursor: pointer; border-radius: 4px;
+    user-select: none; overflow: hidden;
+}
+.modern-select span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; color: var(--pub-dark); }
+.modern-select .arrow-box {
+    background: var(--pub-dark); color: white; width: 22px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+}
+.modern-select:hover { border-color: var(--pub-dark); }
+
+.modern-spinner {
+    display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; height: 22px; width: 54px;
+}
+.modern-spinner input {
+    width: 34px; border: none; outline: none; padding-left: 6px; 
+    color: var(--pub-dark); font-family: inherit; font-size: 12px;
+}
+.modern-spinner .spin-btns {
+    display: flex; flex-direction: column; width: 20px; background: var(--pub-dark); color: white; border-left: 1px solid var(--pub-dark);
+}
+.modern-spinner .spin-btns div {
+    flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 7px;
+}
+.modern-spinner .spin-btns div:first-child i { transform: translateY(1.5px); }
+.modern-spinner .spin-btns div:last-child i { transform: translateY(-1.5px); }
+.modern-spinner .spin-btns div:hover { background: var(--pub-color); }
+.modern-spinner:hover { border-color: var(--pub-dark); }
+
+.modern-format-btn {
+    width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--pub-dark); font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid transparent;
+}
+.modern-format-btn:hover { background-color: rgba(0, 118, 112, 0.15); }
+.modern-format-btn.active { background-color: var(--pub-dark); color: white; }
+
+.modern-color-picker {
+    width: 22px; height: 22px; border: none; padding: 0; cursor: pointer;
+    border-radius: 4px; overflow: hidden; outline: none; background: transparent;
+}
+.modern-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.modern-color-picker::-webkit-color-swatch { border: none; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,0.2) inset; }
+
 .custom-dropdown {
     position: absolute; top: 100%; left: 0; width: 250px; 
     background: white; border: 1px solid #ccc; max-height: 300px; 

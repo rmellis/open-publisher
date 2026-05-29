@@ -2655,11 +2655,29 @@ function stopDragWaToolbar() {
 }
 
 // --- MENU ACTIONS ---
+window.lastStandardTab = 'home';
 function switchTab(t) {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('.ribbon-toolbar').forEach(x => x.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('ribbon-'+t).classList.add('active');
+    
+    let tabEl = null;
+    if (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.contains('tab')) {
+        tabEl = event.currentTarget;
+    } else {
+        tabEl = document.getElementById('tab-' + t) || 
+                document.querySelector(`.tab[onclick*="'${t}'"]`) || 
+                document.querySelector(`.tab[onclick*='"${t}"']`);
+    }
+    
+    if (tabEl) {
+        tabEl.classList.add('active');
+        if (!tabEl.classList.contains('contextual-tab')) {
+            window.lastStandardTab = t;
+        }
+    }
+    
+    let rb = document.getElementById('ribbon-'+t);
+    if(rb) rb.classList.add('active');
 }
 
 function toggleMargins() {
@@ -4853,9 +4871,12 @@ window.ContextRibbonSystem = {
         else if (isText) { document.getElementById('tab-format-text').style.display = 'inline-block'; tabIdToOpen = 'format-text'; }
         if (tabIdToOpen) window.switchTab(tabIdToOpen);
     },
-    hideAllTabs: function(switchToHome = true) {
+    hideAllTabs: function() {
         document.querySelectorAll('.contextual-tab').forEach(tab => { tab.style.display = 'none'; });
-        if (switchToHome) window.switchTab('home');
+        let activeTab = document.querySelector('.tab.active');
+        if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
+            window.switchTab(window.lastStandardTab || 'home');
+        }
     }
 };
 
@@ -6862,43 +6883,48 @@ window.initWordArt = function() {
             const fontGroup = document.createElement('div');
             fontGroup.className = 'group';
             fontGroup.innerHTML = `
-                <div style="display:flex; flex-direction:column; padding: 2px;">
-                    <div class="ctx-row">
-                        <div class="input-group" style="margin:0; height:100%;">
-                            <div class="ribbon-input" id="ctx-font-btn-${target.suffix}" style="width: 120px; height: 24px; background: white; cursor:pointer; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 6px;" onclick="window._currentRibbonSuffix='${target.suffix}'; toggleCustomDropdown('ctx-ribbon'); event.stopPropagation();">
-                                <span id="ctx-font-label-${target.suffix}" style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Arial</span> 
-                                <i class="fas fa-chevron-down" style="color:#666; font-size: 10px;"></i>
+                <div style="display:flex; flex-direction:column; gap:6px; padding: 2px;">
+                    <div style="display:flex; gap:6px; align-items: center;">
+                        <div class="font-picker-container" style="width: 140px;">
+                            <div class="modern-select" id="ctx-font-btn-${target.suffix}" onclick="window._currentRibbonSuffix='${target.suffix}'; toggleCustomDropdown('ctx-ribbon'); event.stopPropagation();">
+                                <span id="ctx-font-label-${target.suffix}">Arial</span> 
+                                <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                             </div>
                         </div>
-                        <div class="input-group" style="margin:0; height:100%;">
-                            <input type="number" id="ctx-font-size-${target.suffix}" value="16" min="8" max="144" style="width:45px; height: 24px; text-align:center; box-sizing: border-box; margin:0; padding:0 2px; font-size: 12px;" onchange="setTrueFontSize(this.value + 'px')">
+                        
+                        <div class="modern-spinner">
+                            <input type="text" id="ctx-font-size-${target.suffix}" value="16" onchange="setTrueFontSize(this.value + 'px')">
+                            <div class="spin-btns">
+                                <div onclick="document.getElementById('ctx-font-size-${target.suffix}').value=parseInt(document.getElementById('ctx-font-size-${target.suffix}').value)+1; setTrueFontSize(document.getElementById('ctx-font-size-${target.suffix}').value + 'px')"><i class="fas fa-chevron-up"></i></div>
+                                <div onclick="document.getElementById('ctx-font-size-${target.suffix}').value=Math.max(1,parseInt(document.getElementById('ctx-font-size-${target.suffix}').value)-1); setTrueFontSize(document.getElementById('ctx-font-size-${target.suffix}').value + 'px')"><i class="fas fa-chevron-down"></i></div>
+                            </div>
                         </div>
                         
-                        <div style="width:1px; height:16px; background:#ccc; margin:0 2px;"></div>
+                        <div style="width:1px; height:20px; background:#ccc; margin:0 2px;"></div>
                         
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('removeFormat')" title="Clear Formatting"><i class="fas fa-eraser"></i></div>
+                        <div class="modern-format-btn" onclick="execCmd('removeFormat')" title="Clear Formatting"><i class="fas fa-eraser"></i></div>
                     </div>
                     
-                    <div class="ctx-row">
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('bold')" title="Bold"><i class="fas fa-bold"></i></div>
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('italic')" title="Italic"><i class="fas fa-italic"></i></div>
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('underline')" title="Underline"><i class="fas fa-underline"></i></div>
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></div>
+                    <div style="display:flex; gap: 4px; align-items: center;">
+                        <div class="modern-format-btn" onclick="execCmd('bold')" title="Bold"><i class="fas fa-bold"></i></div>
+                        <div class="modern-format-btn" style="font-family: serif; font-style: italic; font-weight: bold; font-size: 18px; padding-top: 2px;" onclick="execCmd('italic')" title="Italic">I</div>
+                        <div class="modern-format-btn" onclick="execCmd('underline')" title="Underline"><i class="fas fa-underline"></i></div>
+                        <div class="modern-format-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></div>
                         
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('subscript')" title="Subscript"><i class="fas fa-subscript"></i></div>
-                        <div class="mini-btn ctx-btn-strict" onclick="execCmd('superscript')" title="Superscript"><i class="fas fa-superscript"></i></div>
+                        <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('subscript')" title="Subscript"><i class="fas fa-subscript"></i></div>
+                        <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('superscript')" title="Superscript"><i class="fas fa-superscript"></i></div>
                         
-                        <div style="width:1px; height:16px; background:#ccc; margin:0 2px;"></div>
+                        <div style="width:1px; height:20px; background:#ccc; margin:0 2px;"></div>
                         
-                        <div class="mini-btn ctx-btn-strict ctx-color-strict" title="Text Color">
-                            <i class="fas fa-font" style="color:var(--pub-color); margin-top: -2px;"></i>
-                            <div style="height:3px; background:black; width:16px; position:absolute; bottom:2px;" id="ctx-text-color-bar-${target.suffix}"></div>
+                        <div class="modern-format-btn" style="position:relative;" title="Text Color">
+                            <i class="fas fa-font" style="margin-top: -2px;"></i>
+                            <div style="height:3px; background:black; width:16px; position:absolute; bottom:3px; border-radius: 2px;" id="ctx-text-color-bar-${target.suffix}"></div>
                             <input type="color" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="execCmd('foreColor', this.value); document.getElementById('ctx-text-color-bar-${target.suffix}').style.background=this.value;">
                         </div>
                         
-                        <div class="mini-btn ctx-btn-strict ctx-color-strict" title="Highlight Color">
+                        <div class="modern-format-btn" style="position:relative;" title="Highlight Color">
                             <i class="fas fa-highlighter" style="margin-top: -2px;"></i>
-                            <div style="height:3px; background:yellow; width:16px; position:absolute; bottom:2px;" id="ctx-bg-color-bar-${target.suffix}"></div>
+                            <div style="height:3px; background:yellow; width:16px; position:absolute; bottom:3px; border-radius: 2px;" id="ctx-bg-color-bar-${target.suffix}"></div>
                             <input type="color" value="#ffff00" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="execCmd('hiliteColor', this.value); document.getElementById('ctx-bg-color-bar-${target.suffix}').style.background=this.value;">
                         </div>
                     </div>

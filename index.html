@@ -281,21 +281,29 @@
             <div class="group-label">Clipboard</div>
         </div>
         <div class="group">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-                <div class="font-picker-container" style="width:140px;">
-                    <div class="custom-select" id="ribbon-font-btn" onclick="toggleCustomDropdown('ribbon')">
+            <div style="display:flex; flex-direction:column; gap:6px; margin-bottom: 2px;">
+                <div class="font-picker-container" style="width:180px;">
+                    <div class="modern-select" id="ribbon-font-btn" onclick="toggleCustomDropdown('ribbon')">
                         <span id="ribbon-font-label">Segoe UI</span>
-                        <i class="fas fa-caret-down" style="font-size:10px;"></i>
+                        <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                     </div>
-                    </div>
+                </div>
                 
-                <div style="display:flex; gap:2px; align-items: center;">
-                    <input type="number" id="font-size" class="ribbon-input" style="width:50px;" value="12" min="1" max="200" onchange="setTrueFontSize(this.value + 'px')">
+                <div style="display:flex; justify-content: space-between; align-items: center; width: 180px;">
+                    <div class="modern-spinner">
+                        <input type="text" id="font-size" value="12" onchange="setTrueFontSize(this.value + 'px')">
+                        <div class="spin-btns">
+                            <div onclick="document.getElementById('font-size').value=parseInt(document.getElementById('font-size').value)+1; setTrueFontSize(document.getElementById('font-size').value + 'px')"><i class="fas fa-chevron-up"></i></div>
+                            <div onclick="document.getElementById('font-size').value=Math.max(1,parseInt(document.getElementById('font-size').value)-1); setTrueFontSize(document.getElementById('font-size').value + 'px')"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                    </div>
                     
-                    <div class="mini-btn" onclick="execCmd('bold')"><i class="fas fa-bold"></i></div>
-                    <div class="mini-btn" onclick="execCmd('italic')"><i class="fas fa-italic"></i></div>
-                    <div class="mini-btn" onclick="execCmd('underline')"><i class="fas fa-underline"></i></div>
-                    <input type="color" id="text-color" style="width:25px; height:25px; border:none; padding:0; cursor:pointer;" onchange="execCmd('foreColor', this.value)" title="Text Color">
+                    <div style="display:flex; gap: 4px;">
+                        <div class="modern-format-btn" onclick="execCmd('bold')" title="Bold"><i class="fas fa-bold"></i></div>
+                        <div class="modern-format-btn" style="font-family: serif; font-style: italic; font-weight: bold; font-size: 18px; padding-top: 2px;" onclick="execCmd('italic')" title="Italic">I</div>
+                        <div class="modern-format-btn" onclick="execCmd('underline')" title="Underline"><i class="fas fa-underline"></i></div>
+                    </div>
+                    <input type="color" id="text-color" class="modern-color-picker" onchange="execCmd('foreColor', this.value)" title="Text Color" value="#000000">
                 </div>
             </div>
             <div class="group-label">Font</div>
