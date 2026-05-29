@@ -14160,7 +14160,7 @@ window.toggleCrop = function() {
                         <i class="fas fa-table" style="font-size: 24px; color: var(--pub-dark, #005a55); margin:0;"></i>
                         <i class="fas fa-pen" style="font-size: 11px; position:absolute; bottom: -5px; right: -6px; color: var(--pub-dark, #005a55); text-shadow: 1px 1px 0px var(--ribbon-bg, #f3f2f1), -1px -1px 0px var(--ribbon-bg, #f3f2f1), 1px -1px 0px var(--ribbon-bg, #f3f2f1), -1px 1px 0px var(--ribbon-bg, #f3f2f1); margin:0;"></i>
                     </div>
-                    <span style="line-height:1.1; text-align:center;">Styled<br>Table<br>Templates</span>
+                    <span style="line-height:1.1; text-align:center;">Styled<br>Templates</span>
                 </div>
             `;
             

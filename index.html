@@ -325,7 +325,7 @@
         <div class="group">
             <div class="tool-btn" onclick="addTextBox()"><i class="fas fa-font"></i>Text Box</div>
             <div class="tool-btn" onclick="triggerUpload()"><i class="fas fa-image"></i>Picture</div>
-            <div class="tool-btn" onclick="showWebClipartModal()"><img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:24px; height:24px; object-fit:contain; margin-bottom:2px; pointer-events:none;">Clipart</div>
+            <div class="tool-btn" onclick="showWebClipartModal()"><img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:22px; height:22px; object-fit:contain; margin-bottom:0px; pointer-events:none;">Clipart</div>
             <div class="tool-btn" onclick="showClipartModal()"><i class="fas fa-icons"></i>Emojis</div>
             <div class="group-label">Illustrations</div>
         </div>
@@ -334,11 +334,11 @@
             <div class="tool-btn" onclick="toggleShapeMenu(this); event.stopPropagation();"><i class="fas fa-shapes"></i>Shapes <i class="fas fa-caret-down"></i></div>
             <div class="tool-btn" onclick="showWordArtModal()">
                 <i class="fas fa-text-width"></i>
-                <span style="line-height:1.1; text-align:center;">WordArt<br><span style="color:#d97706; font-size:9px; font-weight:bold;">(LEGACY)</span></span>
+                <span style="line-height:1.1; text-align:center;">WordArt<br><span style="color:#005a55; font-size:9px; font-weight:bold;">(LEGACY)</span></span>
             </div>
             <div class="tool-btn" id="beta-wa-ribbon-btn" onclick="if(typeof window.showBetaWordArtModal === 'function') window.showBetaWordArtModal()" title="Insert Image-Based WordArt">
-                <i class="fas fa-font"></i>
-                <span style="line-height:1.1; text-align:center;">WordArt<br><span style="color:#d97706; font-size:9px; font-weight:bold;">(BETA)</span></span>
+                <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/PEtJfoR.png" style="width:22px; height:22px; object-fit:contain; margin-bottom:0px; pointer-events:none;">
+                <span style="line-height:1.1; text-align:center;">WordArt<br><span style="color:#005a55; font-size:9px; font-weight:bold;">(BETA)</span></span>
             </div>
             <div class="tool-btn" onclick="initBasicBorders(); toggleBorderMenu(this); event.stopPropagation();"><i class="fas fa-border-style"></i>Borders</div>
             <div class="group-label">Graphics</div>
@@ -351,23 +351,21 @@
             <div class="tool-btn" onclick="toggleTableMenu(this); event.stopPropagation();"><i class="fas fa-table"></i>Table <i class="fas fa-caret-down"></i></div>
             <div class="group-label">Tables</div>
         </div>
-        <div class="group drawing-tools-group" style="flex-direction: column; align-items: stretch; justify-content: flex-start; padding-top: 2px;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 2px; margin-top: 4px;">
-                <div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt"></i>Pencil</div>
-                <div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush"></i>Brush</div>
-                <div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can"></i>Spray</div>
-                <div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser"></i>Eraser</div>
-                <div class="tool-btn" onclick="if(typeof undoDrawing==='function') undoDrawing()"><i class="fas fa-undo"></i>Undo</div>
-                
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-left: 10px;">
-                    <span style="font-size:11px; color:#005a55; text-transform:uppercase; margin-bottom:4px; font-weight:bold;">Color</span>
-                    <input type="color" class="drawing-color-picker" value="#000000" style="width:30px; height:30px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 3px rgba(0,0,0,0.5); outline: none;" title="Drawing Color" oninput="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)">
-                </div>
-            </div>
-            
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: -2px; padding: 0 10px; position: relative; z-index: 10;">
+        <div class="group drawing-tools-group" style="position: relative; padding-top: 5px;">
+            <div style="position: absolute; top: 0px; left: 15px; right: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 10;">
                 <span style="font-size:11px; color:#005a55; text-transform:uppercase; font-weight:bold;">Size</span>
-                <input type="range" class="drawing-size-slider" min="1" max="50" value="2" style="flex-grow: 1; cursor: pointer; margin: 0;" title="Brush Size" oninput="if(typeof updateDrawingSize==='function') updateDrawingSize(this.value)">
+                <input type="range" class="drawing-size-slider" min="1" max="50" value="2" style="flex-grow: 1; cursor: pointer; margin: 0; background: linear-gradient(to right, #005a55 2.04%, #f3f2f1 2.04%);" title="Brush Size" oninput="if(typeof updateDrawingSize==='function') updateDrawingSize(this.value)">
+            </div>
+
+            <div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')" style="margin-top: 10px;"><i class="fas fa-pencil-alt"></i>Pencil</div>
+            <div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')" style="margin-top: 10px;"><i class="fas fa-paint-brush"></i>Brush</div>
+            <div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')" style="margin-top: 10px;"><i class="fas fa-spray-can"></i>Spray</div>
+            <div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')" style="margin-top: 10px;"><i class="fas fa-eraser"></i>Eraser</div>
+            <div class="tool-btn" onclick="if(typeof undoDrawing==='function') undoDrawing()" style="margin-top: 10px;"><i class="fas fa-undo"></i>Undo</div>
+            
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-left: 10px; margin-top: 10px;">
+                <span style="font-size:11px; color:#005a55; text-transform:uppercase; margin-bottom:4px; font-weight:bold;">Color</span>
+                <input type="color" class="drawing-color-picker" value="#000000" style="width:30px; height:30px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 3px rgba(0,0,0,0.5); outline: none;" title="Drawing Color" oninput="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)">
             </div>
             
             <div class="group-label">Drawing</div>

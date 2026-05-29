@@ -196,7 +196,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-width: 50px;
     height: 65px;
     border: 1px solid transparent;
@@ -205,7 +205,7 @@ body {
     font-size: 11px;
     color: #333;
     gap: 4px;
-    padding: 2px;
+    padding: 8px 2px 2px 2px;
     text-align: center;
     position: relative;
 }
