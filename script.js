@@ -5051,6 +5051,97 @@ window.switchTab = function(t) {
     if(toolbar) toolbar.classList.add('active');
 };
 
+// --- 2A. TABLE LAYOUT SIDEBAR ---
+(function installSidebarTableLayout() {
+    document.getElementById('op-table-sidebar')?.remove();
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #op-table-sidebar {
+            position: fixed; right: 0px; top: 205px; bottom: 20px; width: 290px;
+            background: rgba(245, 245, 245, 0.7); backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-left: 1px solid rgba(0, 0, 0, 0.1); box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+            padding: 20px 16px; z-index: 99999;
+            font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+            transform: translateX(110%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: none;
+        }
+        #op-table-sidebar::-webkit-scrollbar { display: none; }
+        #op-table-sidebar.visible { transform: translateX(0); }
+        .op-sidebar-btn { 
+            background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;
+            color: #333; transition: all 0.2s; margin-bottom: 6px;
+        }
+        .op-sidebar-btn:last-child { margin-bottom: 0; }
+        .op-sidebar-btn:hover { background: #fff; border-color: var(--pub-color, #007670); color: var(--pub-color, #007670); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .op-sidebar-btn i { font-size: 14px; width: 16px; text-align: center; }
+        .op-sidebar-btn.danger:hover { border-color: #c00; color: #c00; }
+        
+        .op-sidebar-grid-container {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+        }
+        .op-sidebar-grid-btn {
+            background: rgba(255,255,255,0.5); width: 100%; height: 32px; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .op-sidebar-grid-btn:hover { background: #fff; border-color: var(--pub-color, #007670); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .op-sidebar-grid-btn i { font-size: 14px; color: #555; }
+    `;
+    document.head.appendChild(style);
+
+    const panel = document.createElement('div');
+    panel.id = 'op-table-sidebar';
+    panel.innerHTML = `
+        <div class="op-sidebar-header">
+            <span class="op-sidebar-title">Table Layout</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Rows & Columns</span>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Above</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Below</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Left/Right</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Delete</span>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()"><i class="fas fa-minus-circle" style="color:#c00"></i> Delete Row</div>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()"><i class="fas fa-minus-circle" style="color:#c00"></i> Delete Column</div>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) { ContextRibbonActions.deleteRow(); if(window.deleteSelected) window.deleteSelected(); }"><i class="fas fa-trash-alt" style="color:#c00"></i> Delete Table</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Cell Size</span>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.distributeRows()"><i class="fas fa-arrows-alt-v"></i> Distribute Rows</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.distributeCols()"><i class="fas fa-arrows-alt-h"></i> Distribute Columns</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Alignment</span>
+            <div class="op-sidebar-grid-container">
+                <div class="op-sidebar-grid-btn" title="Top Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Top Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Top Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'right')"><i class="fas fa-align-right"></i></div>
+                
+                <div class="op-sidebar-grid-btn" title="Center Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Center Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'right')"><i class="fas fa-align-right"></i></div>
+                
+                <div class="op-sidebar-grid-btn" title="Bottom Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Bottom Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Bottom Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'right')"><i class="fas fa-align-right"></i></div>
+            </div>
+        </div>
+    `;
+
+    document.querySelector('.workspace').appendChild(panel);
+})();
+
 // --- 2. CONTEXTUAL RIBBONS & ACTIONS ---
 window.ContextRibbonActions = {
     alignCenter: function() {
@@ -5134,7 +5225,7 @@ window.ContextRibbonSystem = {
 
         const tabsC = document.querySelector('.ribbon-tabs');
         if (tabsC && !document.getElementById('tab-format-text')) {
-            tabsC.insertAdjacentHTML('beforeend', `<div class="tab contextual-tab tab-text" onclick="switchTab('format-text')" id="tab-format-text">Text Box Tools</div><div class="tab contextual-tab tab-wordart" onclick="switchTab('format-wordart')" id="tab-format-wordart">WordArt Tools</div><div class="tab contextual-tab tab-pic" onclick="switchTab('format-pic')" id="tab-format-pic">Picture Tools</div><div class="tab contextual-tab tab-shape" onclick="switchTab('format-shape')" id="tab-format-shape">Drawing Tools</div><div class="tab contextual-tab tab-table" onclick="switchTab('table-design')" id="tab-table-design">Table Design</div><div class="tab contextual-tab tab-table" onclick="switchTab('table-layout')" id="tab-table-layout">Table Layout</div>`);
+            tabsC.insertAdjacentHTML('beforeend', `<div class="tab contextual-tab tab-text" onclick="switchTab('format-text')" id="tab-format-text">Text Box Tools</div><div class="tab contextual-tab tab-wordart" onclick="switchTab('format-wordart')" id="tab-format-wordart">WordArt Tools</div><div class="tab contextual-tab tab-pic" onclick="switchTab('format-pic')" id="tab-format-pic">Picture Tools</div><div class="tab contextual-tab tab-shape" onclick="switchTab('format-shape')" id="tab-format-shape">Drawing Tools</div><div class="tab contextual-tab tab-table" onclick="switchTab('table-design')" id="tab-table-design">Table Design</div>`);
         }
 
         const ribC = document.querySelector('.ribbon-container');
@@ -5145,7 +5236,6 @@ window.ContextRibbonSystem = {
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><i class="fas fa-fill-drip" style="color:var(--pub-color)"></i> Fill Color</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-layout">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.insertTableRow()"><i class="fas fa-plus" style="color:var(--pub-color)"></i> Row</div><div class="tool-btn" onclick="ContextRibbonActions.insertTableCol()"><i class="fas fa-plus" style="color:var(--pub-color)"></i> Col</div><div class="group-label">Rows & Columns</div></div>${arrGroup}</div>
             `);
         }
 
@@ -5161,7 +5251,7 @@ window.ContextRibbonSystem = {
         const isImage = el.querySelector('img'), isShape = el.getAttribute('data-type') === 'shape', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
-        else if (isTable) { document.getElementById('tab-table-design').style.display = 'inline-block'; document.getElementById('tab-table-layout').style.display = 'inline-block'; tabIdToOpen = 'table-design'; } 
+        else if (isTable) { document.getElementById('tab-table-design').style.display = 'inline-block'; tabIdToOpen = 'table-design'; document.getElementById('op-table-sidebar')?.classList.add('visible'); } 
         else if (isShape) { document.getElementById('tab-format-shape').style.display = 'inline-block'; tabIdToOpen = 'format-shape'; } 
         else if (isWordArt) { document.getElementById('tab-format-wordart').style.display = 'inline-block'; tabIdToOpen = 'format-wordart'; } 
         else if (isText) { document.getElementById('tab-format-text').style.display = 'inline-block'; tabIdToOpen = 'format-text'; }
@@ -5169,6 +5259,7 @@ window.ContextRibbonSystem = {
     },
     hideAllTabs: function() {
         document.querySelectorAll('.contextual-tab').forEach(tab => { tab.style.display = 'none'; });
+        document.getElementById('op-table-sidebar')?.classList.remove('visible');
         let activeTab = document.querySelector('.tab.active');
         if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
             window.switchTab(window.lastStandardTab || 'home');
@@ -12803,7 +12894,7 @@ window.handleMouseUp = function() {
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="group-label">Arrange</div></div>`;
 
-        if (designTab && layoutTab) {
+        if (designTab) {
             clearInterval(checkRibbons);
 
             // --- REBUILD: Table Design ---
@@ -12848,52 +12939,6 @@ window.handleMouseUp = function() {
                         </select>
                     </div>
                     <div class="group-label">Spacing</div>
-                </div>
-                ${arrGroup}
-            `;
-
-            // --- REBUILD: Table Layout ---
-            layoutTab.innerHTML = `
-                ${clipGroup}
-                <div class="group">
-                    <div style="display:flex; flex-direction:column; gap:2px; justify-content:center; height:100%;">
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Above</div>
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Below</div>
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:110px; padding:0 6px;" onclick="ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="font-size:12px; margin-right:4px; color:var(--pub-color)"></i>Insert Left/Right</div>
-                    </div>
-                    <div class="group-label">Rows & Columns</div>
-                </div>
-                <div class="group">
-                    <div style="display:flex; flex-direction:column; gap:2px; justify-content:center; height:100%;">
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px;" onclick="ContextRibbonActions.deleteRow()"><i class="fas fa-minus-circle" style="font-size:12px; margin-right:4px; color:#c00;"></i>Row</div>
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px;" onclick="ContextRibbonActions.deleteCol()"><i class="fas fa-minus-circle" style="font-size:12px; margin-right:4px; color:#c00;"></i>Column</div>
-                        <div class="tool-btn" style="height:20px; flex-direction:row; justify-content:flex-start; min-width:80px; padding:0 6px; color:#c00;" onclick="ContextRibbonActions.deleteRow(); deleteSelected()"><i class="fas fa-trash-alt" style="font-size:12px; margin-right:4px; color:#c00;"></i>Table</div>
-                    </div>
-                    <div class="group-label">Delete</div>
-                </div>
-                <div class="group">
-                    <div style="display:flex; flex-direction:column; gap:4px; justify-content:center; height:100%;">
-                        <div class="tool-btn" style="height:22px; flex-direction:row; justify-content:flex-start; min-width:90px; padding:0 6px;" onclick="ContextRibbonActions.distributeRows()"><i class="fas fa-arrows-alt-v" style="font-size:12px; margin-right:4px;"></i>Distribute Rows</div>
-                        <div class="tool-btn" style="height:22px; flex-direction:row; justify-content:flex-start; min-width:90px; padding:0 6px;" onclick="ContextRibbonActions.distributeCols()"><i class="fas fa-arrows-alt-h" style="font-size:12px; margin-right:4px;"></i>Distribute Cols</div>
-                    </div>
-                    <div class="group-label">Cell Size</div>
-                </div>
-                <div class="group">
-                    <!-- FIX: Goldilocks height (20px) for the 9-grid alignment cells -->
-                    <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#eee; padding:2px; border-radius:2px;">
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Left" onclick="ContextRibbonActions.cellAlign('top', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Center" onclick="ContextRibbonActions.cellAlign('top', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Top Right" onclick="ContextRibbonActions.cellAlign('top', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
-                        
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center Left" onclick="ContextRibbonActions.cellAlign('middle', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center" onclick="ContextRibbonActions.cellAlign('middle', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Center Right" onclick="ContextRibbonActions.cellAlign('middle', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
-                        
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Left" onclick="ContextRibbonActions.cellAlign('bottom', 'left')"><i class="fas fa-align-left" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Center" onclick="ContextRibbonActions.cellAlign('bottom', 'center')"><i class="fas fa-align-center" style="font-size:10px;"></i></div>
-                        <div class="mini-btn" style="background:#fff; width:22px; height:20px;" title="Bottom Right" onclick="ContextRibbonActions.cellAlign('bottom', 'right')"><i class="fas fa-align-right" style="font-size:10px;"></i></div>
-                    </div>
-                    <div class="group-label">Alignment</div>
                 </div>
                 ${arrGroup}
             `;
