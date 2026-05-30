@@ -463,6 +463,14 @@ function renderPage(pageData) {
     paper.style.width = pageData.width;
     paper.style.height = pageData.height;
     paper.style.background = pageData.background;
+
+    if (typeof window.setPageFormatIcon === 'function') {
+        if (parseFloat(pageData.width) > 800) {
+            window.setPageFormatIcon('Letter');
+        } else {
+            window.setPageFormatIcon('A4');
+        }
+    }
     
     paper.querySelector('.page-header').innerHTML = pageData.header;
     paper.querySelector('.page-footer').innerHTML = pageData.footer;
@@ -570,9 +578,21 @@ function addNewPage() {
         state.pages[state.currentPageIndex] = serializeCurrentPage();
     }
 
+    // Automatically detect optimal default page size based on user's region
+    let defaultW = '794px'; // A4 default
+    let defaultH = '1123px';
+    try {
+        const locale = navigator.language || navigator.userLanguage || '';
+        const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
+        if (letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX')) {
+            defaultW = '816px'; // US Letter
+            defaultH = '1056px';
+        }
+    } catch(e) {}
+
     const newPage = {
         id: Date.now(),
-        width: '794px', height: '1123px', // A4 Default
+        width: defaultW, height: defaultH,
         background: '#ffffff',
         header: 'Header (Type here)', 
         footer: 'Footer (Type here)',
