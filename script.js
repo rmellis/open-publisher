@@ -5095,15 +5095,33 @@ const ContextMenuActions = {
         const content = state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
         if(!content || !content.innerText.trim()) return;
 
-        const text = content.innerHTML.trim();
-        if(text.startsWith('<span class="drop-cap"')) {
+        if(content.querySelector('.drop-cap')) {
             DialogSystem.alert('Notice', 'Drop cap already applied.');
             return;
         }
 
-        const firstChar = content.innerText.charAt(0);
-        // We use string replacement to inject the drop cap HTML
-        content.innerHTML = `<span class="drop-cap" style="float:left; font-size:3.5em; line-height:0.8; padding-right:8px; padding-top:4px; font-weight:bold; color:var(--pub-color);">${firstChar}</span>` + content.innerHTML.substring(1);
+        // Safely extract the first visible character without breaking HTML tags
+        function extractFirstChar(node) {
+            for (let child of node.childNodes) {
+                if (child.nodeType === 3) { // TEXT_NODE
+                    const match = child.textContent.match(/\S/);
+                    if (match) {
+                        const char = match[0];
+                        child.textContent = child.textContent.replace(char, '');
+                        return char;
+                    }
+                } else if (child.nodeType === 1) { // ELEMENT_NODE
+                    const char = extractFirstChar(child);
+                    if (char) return char;
+                }
+            }
+            return null;
+        }
+
+        const firstChar = extractFirstChar(content);
+        if (!firstChar) return;
+
+        content.insertAdjacentHTML('afterbegin', `<span class="drop-cap" style="float:left; font-size:3.5em; line-height:0.8; padding-right:8px; padding-top:4px; font-weight:bold; color:var(--pub-color);">${firstChar}</span>`);
         pushHistory();
     },
     formatTextBox: function() {
@@ -5151,16 +5169,46 @@ const ContextMenuActions = {
         if(!state.selectedEl) return;
         DialogSystem.alert('Exporting...', 'Generating high-resolution image of element...');
         
-        // Use html2canvas to render just the selected element wrapper (ignoring resize handles)
         const el = state.selectedEl;
         const content = el.querySelector('.element-content');
         
-        html2canvas(content, { backgroundColor: null, scale: 3 }).then(canvas => {
+        // Clone the content to use the print engine's rendering logic
+        const clone = content.cloneNode(true);
+        
+        // Apply print engine's HTML cleaning (removes live editing states that break html2canvas)
+        let cleanHTML = clone.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
+        cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
+        if (typeof fixWordArtSpacesInHtml === 'function') {
+            cleanHTML = fixWordArtSpacesInHtml(cleanHTML);
+        }
+        clone.innerHTML = cleanHTML;
+
+        // Create a staging area exactly like the print engine
+        const stagingArea = document.createElement('div');
+        stagingArea.style.cssText = 'position: fixed; top: -10000px; left: -10000px; z-index: -100; overflow: visible; display: block; opacity: 0.01; pointer-events: none;';
+        
+        clone.style.width = el.style.width || 'auto';
+        clone.style.height = el.style.height || 'auto';
+        
+        stagingArea.appendChild(clone);
+        document.body.appendChild(stagingArea);
+        
+        // Apply print engine's WordArt flattening (must be in DOM for getComputedStyle)
+        if (typeof flattenWaTextForPrint === 'function') {
+            clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
+        }
+        
+        html2canvas(clone, { backgroundColor: null, scale: 3, useCORS: true, logging: false }).then(canvas => {
             const a = document.createElement('a');
             a.href = canvas.toDataURL('image/png');
             a.download = 'publisher-element.png';
             a.click();
+            stagingArea.remove();
             DialogSystem.close(); // Close the exporting alert
+        }).catch(err => {
+            stagingArea.remove();
+            DialogSystem.close();
+            console.error(err);
         });
     },
     addBuildingBlock: function() {
@@ -7772,67 +7820,7 @@ window.initWordArt = function() {
 
     console.log("✅ Smart Text Interaction (Stable) added successfully.");
 })();
-/* =========================================================================
-   OPENPUBLISHER ADDON: Automate Landscape mode
-   ========================================================================= */
-if (typeof window.originalRenderPage === 'undefined') {
-    window.originalRenderPage = window.renderPage;
-}
 
-window.renderPage = function(page) {
-    if (page && page.elements && page.elements.length > 0) {
-        // Only run this heavy check once per page load
-        if (!page._orientationChecked) {
-            page._orientationChecked = true; 
-
-            // Find the background photograph that LibreOffice generated
-            const bgElement = page.elements.find(el => el.imgSrc && el.imgSrc.startsWith('data:image'));
-
-            if (bgElement) {
-                // Secretly load the image in the background to measure its true pixels
-                const img = new Image();
-                img.onload = function() {
-                    
-                    // CHECK: Is the photo wider than it is tall?
-                    if (img.width > img.height) {
-                        page.width = "1123px";
-                        page.height = "794px";
-                    } else {
-                        page.width = "794px";
-                        page.height = "1123px";
-                    }
-
-                    // Force the OpenPublisher HTML wrapper to change shape
-                    const paperElement = document.getElementById('paper');
-                    if (paperElement) {
-                        paperElement.style.width = page.width;
-                        paperElement.style.height = page.height;
-                    }
-
-                    // Now that the canvas is the correct shape, finish drawing the text!
-                    if (typeof window.originalRenderPage === 'function') {
-                        window.originalRenderPage(page);
-                    }
-                };
-                img.src = bgElement.imgSrc;
-                
-                // Pause the app while the image loads!
-                return; 
-            }
-        }
-    }
-
-    // Normal fallback for pages that have already been checked
-    const paperElement = document.getElementById('paper');
-    if (paperElement && page.width && page.height) {
-        paperElement.style.width = page.width;
-        paperElement.style.height = page.height;
-    }
-
-    if (typeof window.originalRenderPage === 'function') {
-        window.originalRenderPage(page);
-    }
-};
 /* =========================================================================
    PERFORMANCE ADDON: Smart Thumbnail Debouncer (Anti-Freeze)
    ========================================================================= */
