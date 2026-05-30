@@ -13,7 +13,8 @@ let state = {
     historyIndex: -1,
     cropMode: false,
     lastRange: null, 
-    isProgrammaticUpdate: false 
+    isProgrammaticUpdate: false,
+    snap: { grid: false, guides: true, objects: true }
 };
 
 const paper = document.getElementById('paper');
@@ -2382,11 +2383,72 @@ function handleMouseMove(e) {
 
     const zoom = state.zoom;
     
+    function applySnapping(x, y, elW, elH) {
+        let resX = x; let resY = y;
+        const tolerance = 8;
+        
+        // 1. Grid
+        if (state.snap.grid) {
+            const gx = Math.round(x / 20) * 20;
+            const gy = Math.round(y / 20) * 20;
+            if (Math.abs(x - gx) <= tolerance) resX = gx;
+            if (Math.abs(y - gy) <= tolerance) resY = gy;
+        }
+        
+        // 2. Guides (Margin guides at ~40px)
+        if (state.snap.guides) {
+            const margin = 40;
+            const pw = 794; const ph = 1123;
+            if (Math.abs(x - margin) <= tolerance) resX = margin;
+            if (Math.abs((x + elW) - (pw - margin)) <= tolerance) resX = (pw - margin) - elW;
+            if (Math.abs(y - margin) <= tolerance) resY = margin;
+            if (Math.abs((y + elH) - (ph - margin)) <= tolerance) resY = (ph - margin) - elH;
+            
+            // Centerlines
+            if (Math.abs((x + elW/2) - pw/2) <= tolerance) resX = pw/2 - elW/2;
+            if (Math.abs((y + elH/2) - ph/2) <= tolerance) resY = ph/2 - elH/2;
+        }
+        
+        // 3. Objects
+        if (state.snap.objects && state.selectedEl) {
+            const siblings = Array.from(document.querySelectorAll('#paper > .pub-element')).filter(n => n !== state.selectedEl);
+            let snappedX = false; let snappedY = false;
+            for (let sib of siblings) {
+                const sL = parseFloat(sib.style.left);
+                const sT = parseFloat(sib.style.top);
+                const sW = sib.offsetWidth;
+                const sH = sib.offsetHeight;
+                
+                if (!snappedX) {
+                    if (Math.abs(x - sL) <= tolerance) { resX = sL; snappedX = true; } // Left to Left
+                    else if (Math.abs((x + elW) - (sL + sW)) <= tolerance) { resX = (sL + sW) - elW; snappedX = true; } // Right to Right
+                    else if (Math.abs(x - (sL + sW)) <= tolerance) { resX = sL + sW; snappedX = true; } // Left to Right
+                    else if (Math.abs((x + elW) - sL) <= tolerance) { resX = sL - elW; snappedX = true; } // Right to Left
+                    else if (Math.abs((x + elW/2) - (sL + sW/2)) <= tolerance) { resX = (sL + sW/2) - elW/2; snappedX = true; } // Center X
+                }
+                if (!snappedY) {
+                    if (Math.abs(y - sT) <= tolerance) { resY = sT; snappedY = true; }
+                    else if (Math.abs((y + elH) - (sT + sH)) <= tolerance) { resY = (sT + sH) - elH; snappedY = true; }
+                    else if (Math.abs(y - (sT + sH)) <= tolerance) { resY = sT + sH; snappedY = true; }
+                    else if (Math.abs((y + elH) - sT) <= tolerance) { resY = sT - elH; snappedY = true; }
+                    else if (Math.abs((y + elH/2) - (sT + sH/2)) <= tolerance) { resY = (sT + sH/2) - elH/2; snappedY = true; }
+                }
+                if (snappedX && snappedY) break;
+            }
+        }
+        return { x: resX, y: resY };
+    }
+
     if(state.dragMode === 'drag') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
-        state.selectedEl.style.left = (state.dragData.l + dx) + 'px';
-        state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
+        let rawX = state.dragData.l + dx;
+        let rawY = state.dragData.t + dy;
+        
+        const snapped = applySnapping(rawX, rawY, state.selectedEl.offsetWidth, state.selectedEl.offsetHeight);
+        
+        state.selectedEl.style.left = snapped.x + 'px';
+        state.selectedEl.style.top = snapped.y + 'px';
         
         // Hide toolbar while dragging
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
@@ -3289,15 +3351,43 @@ function toggleBorderMenu(btn) {
 }
 function toggleRecolorMenu(btn) {
     const m = document.getElementById('recolor-dropdown');
-    const r = btn.getBoundingClientRect();
-    m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
-    m.style.display = 'block';
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
 }
 function toggleSizeMenu(btn) {
     const m = document.getElementById('size-dropdown');
-    const r = btn.getBoundingClientRect();
-    m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
-    m.style.display = 'block';
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
+}
+function toggleSnapMenu(btn) {
+    const m = document.getElementById('snap-dropdown');
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
+}
+function toggleColorBlindMenu(btn) {
+    const m = document.getElementById('color-blind-dropdown');
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
 }
 
 function saveDocument() {
@@ -3623,6 +3713,162 @@ window.setZoom = function(z) {
     const paperEl = document.getElementById('paper');
     if (paperEl) paperEl.style.transform = `scale(${z})`;
     if (window.syncRulers) window.syncRulers();
+};
+
+window.fitToPage = function() {
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+    const padding = 80; // 40px padding on top/bottom
+    const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
+    const scaleY = (viewport.clientHeight - padding) / paperEl.offsetHeight;
+    const z = Math.min(scaleX, scaleY);
+    setZoom(Math.max(0.2, Math.min(3.0, z)));
+    viewport.scrollTop = 0;
+    viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * z - viewport.clientWidth)/2);
+};
+
+window.fitToWidth = function() {
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+    const padding = 80;
+    const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
+    setZoom(Math.max(0.2, Math.min(3.0, scaleX)));
+    viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * scaleX - viewport.clientWidth)/2);
+};
+
+window.applySnapping = function(x, y, elW, elH, el, e) {
+    if (e && (e.ctrlKey || e.metaKey)) return { x, y };
+    
+    let resX = x; let resY = y;
+    
+    let sgY = document.getElementById('smart-guide-y');
+    if(!sgY) { sgY = document.createElement('div'); sgY.id='smart-guide-y'; sgY.style.cssText='position:absolute; width:1px; height:100%; background:#007670; top:0; left:0; z-index:9999; display:none; pointer-events:none;'; document.getElementById('paper').appendChild(sgY); }
+    let sgX = document.getElementById('smart-guide-x');
+    if(!sgX) { sgX = document.createElement('div'); sgX.id='smart-guide-x'; sgX.style.cssText='position:absolute; width:100%; height:1px; background:#007670; left:0; top:0; z-index:9999; display:none; pointer-events:none;'; document.getElementById('paper').appendChild(sgX); }
+    
+    sgY.style.display = 'none';
+    sgX.style.display = 'none';
+
+    if (state.snap.grid) {
+        const tol = 15;
+        const gx = Math.round(x / 20) * 20;
+        const gy = Math.round(y / 20) * 20;
+        if (Math.abs(x - gx) <= tol) resX = gx;
+        if (Math.abs(y - gy) <= tol) resY = gy;
+    }
+    
+    let snappedToGuideX = false;
+    let snappedToGuideY = false;
+
+    if (state.snap.guides) {
+        const tol = 8;
+        const margin = 48;
+        const pw = 794; const ph = 1123;
+        
+        if (Math.abs(x - margin) <= tol) { resX = margin; snappedToGuideX = true; sgY.style.left = margin+'px'; }
+        else if (Math.abs((x + elW) - (pw - margin)) <= tol) { resX = (pw - margin) - elW; snappedToGuideX = true; sgY.style.left = (pw-margin)+'px'; }
+        else if (Math.abs((x + elW/2) - pw/2) <= tol) { resX = pw/2 - elW/2; snappedToGuideX = true; sgY.style.left = (pw/2)+'px'; }
+
+        if (Math.abs(y - margin) <= tol) { resY = margin; snappedToGuideY = true; sgX.style.top = margin+'px'; }
+        else if (Math.abs((y + elH) - (ph - margin)) <= tol) { resY = (ph - margin) - elH; snappedToGuideY = true; sgX.style.top = (ph-margin)+'px'; }
+        else if (Math.abs((y + elH/2) - ph/2) <= tol) { resY = ph/2 - elH/2; snappedToGuideY = true; sgX.style.top = (ph/2)+'px'; }
+    }
+    
+    if (state.snap.objects && el) {
+        const tol = 8;
+        const siblings = Array.from(document.querySelectorAll('#paper > .pub-element')).filter(n => n !== el && !state.multiSelected?.includes(n));
+        let snappedObjX = false; let snappedObjY = false;
+        
+        for (let sib of siblings) {
+            const sL = parseFloat(sib.style.left); const sT = parseFloat(sib.style.top);
+            const sW = sib.offsetWidth; const sH = sib.offsetHeight;
+            
+            if (!snappedToGuideX && !snappedObjX) {
+                if (Math.abs(x - sL) <= tol) { resX = sL; snappedObjX = true; sgY.style.left = sL+'px'; } 
+                else if (Math.abs((x + elW) - (sL + sW)) <= tol) { resX = (sL + sW) - elW; snappedObjX = true; sgY.style.left = (sL+sW)+'px'; } 
+                else if (Math.abs(x - (sL + sW)) <= tol) { resX = sL + sW; snappedObjX = true; sgY.style.left = (sL+sW)+'px'; } 
+                else if (Math.abs((x + elW) - sL) <= tol) { resX = sL - elW; snappedObjX = true; sgY.style.left = sL+'px'; } 
+                else if (Math.abs((x + elW/2) - (sL + sW/2)) <= tol) { resX = (sL + sW/2) - elW/2; snappedObjX = true; sgY.style.left = (sL+sW/2)+'px'; } 
+            }
+            if (!snappedToGuideY && !snappedObjY) {
+                if (Math.abs(y - sT) <= tol) { resY = sT; snappedObjY = true; sgX.style.top = sT+'px'; }
+                else if (Math.abs((y + elH) - (sT + sH)) <= tol) { resY = (sT + sH) - elH; snappedObjY = true; sgX.style.top = (sT+sH)+'px'; }
+                else if (Math.abs(y - (sT + sH)) <= tol) { resY = sT + sH; snappedObjY = true; sgX.style.top = (sT+sH)+'px'; }
+                else if (Math.abs((y + elH) - sT) <= tol) { resY = sT - elH; snappedObjY = true; sgX.style.top = sT+'px'; }
+                else if (Math.abs((y + elH/2) - (sT + sH/2)) <= tol) { resY = (sT + sH/2) - elH/2; snappedObjY = true; sgX.style.top = (sT+sH/2)+'px'; }
+            }
+            if ((snappedToGuideX || snappedObjX) && (snappedToGuideY || snappedObjY)) break;
+        }
+        if (snappedObjX) snappedToGuideX = true;
+        if (snappedObjY) snappedToGuideY = true;
+    }
+    
+    if (snappedToGuideX) sgY.style.display = 'block';
+    if (snappedToGuideY) sgX.style.display = 'block';
+
+    return { x: resX, y: resY };
+};
+
+document.addEventListener('mouseup', () => {
+    const sgX = document.getElementById('smart-guide-x');
+    const sgY = document.getElementById('smart-guide-y');
+    if (sgX) sgX.style.display = 'none';
+    if (sgY) sgY.style.display = 'none';
+});
+
+window.toggleSnapOption = function(option, btn) {
+    const isTurningOn = !state.snap[option];
+    state.snap[option] = isTurningOn;
+    btn.querySelector('.check').style.opacity = isTurningOn ? '1' : '0';
+    
+    if (option === 'grid' && isTurningOn) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Show Grid?', '<p>You enabled Snap to Grid. Would you like to make the grid background visually visible on the canvas as well?</p>', () => {
+                const paperEl = document.getElementById('paper');
+                if (paperEl && !paperEl.classList.contains('theme-grid')) {
+                    paperEl.classList.add('theme-grid');
+                }
+            });
+            setTimeout(() => {
+                const footer = document.querySelector('#custom-dialog-box .custom-dialog-footer');
+                if (footer) {
+                    const btns = footer.querySelectorAll('button');
+                    if (btns.length >= 2) {
+                        btns[0].innerText = 'No, Keep Hidden';
+                        btns[1].innerText = 'Yes, Show Grid';
+                    }
+                }
+            }, 10);
+        }
+    } else if (option === 'grid' && !isTurningOn) {
+        const paperEl = document.getElementById('paper');
+        if (paperEl && paperEl.classList.contains('theme-grid') && typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Hide Grid?', '<p>You disabled Snap to Grid. Would you like to hide the grid background as well?</p>', () => {
+                paperEl.classList.remove('theme-grid');
+            });
+            setTimeout(() => {
+                const footer = document.querySelector('#custom-dialog-box .custom-dialog-footer');
+                if (footer) {
+                    const btns = footer.querySelectorAll('button');
+                    if (btns.length >= 2) {
+                        btns[0].innerText = 'No, Keep Visible';
+                        btns[1].innerText = 'Yes, Hide Grid';
+                    }
+                }
+            }, 10);
+        }
+    }
+};
+
+window.setProofMode = function(filterStr) {
+    const paperEl = document.getElementById('paper');
+    const banner = document.getElementById('color-blind-banner');
+    if (paperEl) paperEl.style.filter = filterStr;
+    if (banner) {
+        banner.style.display = filterStr === 'none' ? 'none' : 'block';
+    }
 };
 /* =========================================================================
    WORD DOCUMENT CONVERSION ENDPOINT (.doc / .docx)
@@ -4226,11 +4472,61 @@ function handleMouseMove(e) {
     if(state.dragMode === 'drag') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
+        
+        function applySnapping(x, y, elW, elH, el) {
+            let resX = x; let resY = y;
+            const tolerance = 8;
+            if (state.snap.grid) {
+                const gx = Math.round(x / 20) * 20;
+                const gy = Math.round(y / 20) * 20;
+                if (Math.abs(x - gx) <= tolerance) resX = gx;
+                if (Math.abs(y - gy) <= tolerance) resY = gy;
+            }
+            if (state.snap.guides) {
+                const margin = 40;
+                const pw = 794; const ph = 1123;
+                if (Math.abs(x - margin) <= tolerance) resX = margin;
+                if (Math.abs((x + elW) - (pw - margin)) <= tolerance) resX = (pw - margin) - elW;
+                if (Math.abs(y - margin) <= tolerance) resY = margin;
+                if (Math.abs((y + elH) - (ph - margin)) <= tolerance) resY = (ph - margin) - elH;
+                if (Math.abs((x + elW/2) - pw/2) <= tolerance) resX = pw/2 - elW/2;
+                if (Math.abs((y + elH/2) - ph/2) <= tolerance) resY = ph/2 - elH/2;
+            }
+            if (state.snap.objects && el) {
+                const siblings = Array.from(document.querySelectorAll('#paper > .pub-element')).filter(n => n !== el && !state.multiSelected?.includes(n));
+                let snappedX = false; let snappedY = false;
+                for (let sib of siblings) {
+                    const sL = parseFloat(sib.style.left); const sT = parseFloat(sib.style.top);
+                    const sW = sib.offsetWidth; const sH = sib.offsetHeight;
+                    if (!snappedX) {
+                        if (Math.abs(x - sL) <= tolerance) { resX = sL; snappedX = true; } 
+                        else if (Math.abs((x + elW) - (sL + sW)) <= tolerance) { resX = (sL + sW) - elW; snappedX = true; } 
+                        else if (Math.abs(x - (sL + sW)) <= tolerance) { resX = sL + sW; snappedX = true; } 
+                        else if (Math.abs((x + elW) - sL) <= tolerance) { resX = sL - elW; snappedX = true; } 
+                        else if (Math.abs((x + elW/2) - (sL + sW/2)) <= tolerance) { resX = (sL + sW/2) - elW/2; snappedX = true; } 
+                    }
+                    if (!snappedY) {
+                        if (Math.abs(y - sT) <= tolerance) { resY = sT; snappedY = true; }
+                        else if (Math.abs((y + elH) - (sT + sH)) <= tolerance) { resY = (sT + sH) - elH; snappedY = true; }
+                        else if (Math.abs(y - (sT + sH)) <= tolerance) { resY = sT + sH; snappedY = true; }
+                        else if (Math.abs((y + elH) - sT) <= tolerance) { resY = sT - elH; snappedY = true; }
+                        else if (Math.abs((y + elH/2) - (sT + sH/2)) <= tolerance) { resY = (sT + sH/2) - elH/2; snappedY = true; }
+                    }
+                    if (snappedX && snappedY) break;
+                }
+            }
+            return { x: resX, y: resY };
+        }
+
         if(state.dragData.multi && state.dragData.multi.length > 0) {
-            state.dragData.multi.forEach(item => { item.el.style.left = (item.l + dx) + 'px'; item.el.style.top = (item.t + dy) + 'px'; });
+            state.dragData.multi.forEach(item => { 
+                const s = applySnapping(item.l + dx, item.t + dy, item.el.offsetWidth, item.el.offsetHeight, item.el);
+                item.el.style.left = s.x + 'px'; item.el.style.top = s.y + 'px'; 
+            });
         } else {
-            state.selectedEl.style.left = (state.dragData.l + dx) + 'px';
-            state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
+            const s = applySnapping(state.dragData.l + dx, state.dragData.t + dy, state.selectedEl.offsetWidth, state.selectedEl.offsetHeight, state.selectedEl);
+            state.selectedEl.style.left = s.x + 'px';
+            state.selectedEl.style.top = s.y + 'px';
         }
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
@@ -4844,9 +5140,9 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><i class="fas fa-fill-drip" style="color:var(--pub-color)"></i> Fill Color</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-layout">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.insertTableRow()"><i class="fas fa-plus" style="color:var(--pub-color)"></i> Row</div><div class="tool-btn" onclick="ContextRibbonActions.insertTableCol()"><i class="fas fa-plus" style="color:var(--pub-color)"></i> Col</div><div class="group-label">Rows & Columns</div></div>${arrGroup}</div>
@@ -14721,9 +15017,13 @@ window.toggleCrop = function() {
         
         if(state.dragMode === 'drag') {
             if(state.dragData.multi && state.dragData.multi.length > 0) { 
-                state.dragData.multi.forEach(item => { item.el.style.left = (item.l + dx) + 'px'; item.el.style.top = (item.t + dy) + 'px'; }); 
+                state.dragData.multi.forEach(item => { 
+                    const s = window.applySnapping(item.l + dx, item.t + dy, item.el.offsetWidth, item.el.offsetHeight, item.el, e);
+                    item.el.style.left = s.x + 'px'; item.el.style.top = s.y + 'px'; 
+                }); 
             } else { 
-                state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px'; 
+                const s = window.applySnapping(state.dragData.l + dx, state.dragData.t + dy, state.selectedEl.offsetWidth, state.selectedEl.offsetHeight, state.selectedEl, e);
+                state.selectedEl.style.left = s.x + 'px'; state.selectedEl.style.top = s.y + 'px'; 
             }
             if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
@@ -19002,6 +19302,13 @@ setTimeout(() => {
     document.querySelectorAll('.wa-text').forEach(el => el.setAttribute('spellcheck', 'false'));
     if(window.initWordArt) window.initWordArt();
     if(window.ContextRibbonSystem) window.ContextRibbonSystem.init();
+
+    // Sync drawing size sliders to fill properly if browser restored previous values
+    document.querySelectorAll('.drawing-size-slider').forEach(slider => {
+        if (typeof updateDrawingSize === 'function') {
+            updateDrawingSize(slider.value);
+        }
+    });
 
     console.log("✅ Main script evaluated.");
 }, 500);

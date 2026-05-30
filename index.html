@@ -79,6 +79,23 @@
 </head>
 
   <body>
+    <!-- Color Blindness Filters -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <filter id="protanopia">
+                <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0  0.558, 0.442, 0, 0, 0  0, 0.242, 0.758, 0, 0  0, 0, 0, 1, 0"/>
+            </filter>
+            <filter id="deuteranopia">
+                <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0  0.7, 0.3, 0, 0, 0  0, 0.3, 0.7, 0, 0  0, 0, 0, 1, 0"/>
+            </filter>
+            <filter id="tritanopia">
+                <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0  0, 0.433, 0.567, 0, 0  0, 0.475, 0.525, 0, 0  0, 0, 0, 1, 0"/>
+            </filter>
+            <filter id="achromatopsia">
+                <feColorMatrix type="matrix" values="0.299, 0.587, 0.114, 0, 0  0.299, 0.587, 0.114, 0, 0  0.299, 0.587, 0.114, 0, 0  0, 0, 0, 1, 0"/>
+            </filter>
+        </defs>
+    </svg>
 <div id="splash-screen" style="position: fixed; top: calc(50vh - 150px); left: calc(50vw - 225px); width: 450px; max-width: 90vw; background: transparent; z-index: 999999; box-shadow: 0 15px 40px rgba(0,0,0,0.6); border-radius: 12px; transition: opacity 0.5s ease; cursor: grab;">
     <div id="splash-close" style="position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; background: #e74c3c; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: sans-serif; font-weight: bold; cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" onclick="document.getElementById('splash-screen').style.opacity=0; setTimeout(()=>document.getElementById('splash-screen').remove(), 500);">X</div>
     <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/QxPAA35.png" style="width: 100%; height: auto; display: block; border-radius: 12px; pointer-events: none;" alt="Open Publisher">
@@ -327,6 +344,10 @@
             <div class="tool-btn" onclick="changeSize()"><i class="fas fa-expand"></i>Size</div>
             <div class="group-label">Page Setup</div>
         </div>
+        <div class="group">
+            <div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet"></i>Snap To <i class="fas fa-caret-down"></i></div>
+            <div class="group-label">Layout</div>
+        </div>
     </div>
 
 <div class="ribbon-toolbar" id="ribbon-insert">
@@ -446,7 +467,15 @@
             <div class="tool-btn" onclick="setZoom(0.75)"><i class="fas fa-search-minus"></i>75%</div>
             <div class="tool-btn" onclick="setZoom(1.0)"><i class="fas fa-search"></i>100%</div>
             <div class="tool-btn" onclick="setZoom(1.5)"><i class="fas fa-search-plus"></i>150%</div>
+            <div class="tool-btn" onclick="fitToPage()"><i class="far fa-file"></i>Fit Page</div>
+            <div class="tool-btn" onclick="fitToWidth()"><i class="fas fa-arrows-alt-h"></i>Fit Width</div>
             <div class="group-label">Zoom</div>
+        </div>
+        <div class="group">
+            <div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet"></i>Snap To <i class="fas fa-caret-down"></i></div>
+            <div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-boundaries')"><i class="far fa-object-ungroup"></i>Bounds</div>
+            <div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph"></i>¶ Blocks</div>
+            <div class="group-label">Layout</div>
         </div>
         <div class="group">
             <div class="tool-btn" onclick="toggleMargins()"><i class="far fa-square"></i>Margins</div>
@@ -454,6 +483,10 @@
             <div class="tool-btn" onclick="toggleGrid()"><i class="fas fa-border-all"></i>Grid</div>
             <div class="tool-btn" onclick="toggleBaselines()"><i class="fas fa-bars"></i>Baselines</div>
             <div class="group-label">Show</div>
+        </div>
+        <div class="group">
+            <div class="tool-btn" onclick="toggleColorBlindMenu(this); event.stopPropagation();"><i class="fas fa-eye"></i>Color Proof <i class="fas fa-caret-down"></i></div>
+            <div class="group-label">Accessibility</div>
         </div>
     </div>
 
@@ -570,6 +603,40 @@
     <div style="padding:5px; cursor:pointer; display:flex; align-items:center;" onclick="applyImgFilter('sepia(1) hue-rotate(140deg) saturate(3)')"><div class="dropdown-item-preview" style="background:teal;"></div>Teal Tint</div>
     <div style="padding:5px; cursor:pointer; display:flex; align-items:center;" onclick="applyImgFilter('sepia(1) hue-rotate(30deg) saturate(5)')"><div class="dropdown-item-preview" style="background:orange;"></div>Orange Tint</div>
     <div style="padding:5px; cursor:pointer; display:flex; align-items:center;" onclick="applyImgFilter('invert(100%)')"><div class="dropdown-item-preview" style="background:black;"></div>Invert</div>
+</div>
+
+<!-- Color Blind Banner -->
+<div id="color-blind-banner" style="display:none; position:fixed; top:20px; left:calc(50vw - 175px); width:350px; background:#e74c3c; color:white; text-align:center; padding:15px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); z-index:9999999; font-weight:bold; font-family:sans-serif; cursor:grab;">
+    <i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i>Color blind mode is enabled. This is for proofing only and will not be printed.
+</div>
+<script>
+    const cbBanner = document.getElementById('color-blind-banner');
+    let isDraggingCB = false, cbStartX, cbStartY, cbInitLeft, cbInitTop;
+    cbBanner.addEventListener('mousedown', (e) => {
+        isDraggingCB = true; cbStartX = e.clientX; cbStartY = e.clientY;
+        cbInitLeft = cbBanner.offsetLeft; cbInitTop = cbBanner.offsetTop;
+        cbBanner.style.cursor = 'grabbing';
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDraggingCB) return;
+        cbBanner.style.left = (cbInitLeft + (e.clientX - cbStartX)) + 'px';
+        cbBanner.style.top = (cbInitTop + (e.clientY - cbStartY)) + 'px';
+    });
+    window.addEventListener('mouseup', () => { isDraggingCB = false; cbBanner.style.cursor = 'grab'; });
+</script>
+
+<div class="dropdown-menu" id="snap-dropdown" style="width: 200px;">
+    <div class="dropdown-item" onclick="toggleSnapOption('grid', this)"><i class="fas fa-check check" style="width:20px; opacity:0; transition:0.2s;"></i><i class="fas fa-border-all" style="width:22px; color:var(--pub-color);"></i>Snap to Grid</div>
+    <div class="dropdown-item" onclick="toggleSnapOption('guides', this)"><i class="fas fa-check check" style="width:20px; opacity:1; transition:0.2s;"></i><i class="fas fa-ruler-combined" style="width:22px; color:var(--pub-color);"></i>Snap to Guides</div>
+    <div class="dropdown-item" onclick="toggleSnapOption('objects', this)"><i class="fas fa-check check" style="width:20px; opacity:1; transition:0.2s;"></i><i class="fas fa-shapes" style="width:22px; color:var(--pub-color);"></i>Snap to Objects</div>
+</div>
+
+<div class="dropdown-menu" id="color-blind-dropdown" style="width: 240px;">
+    <div class="dropdown-item" onclick="setProofMode('none')"><i class="fas fa-eye" style="width:26px; color:var(--pub-color);"></i>Normal Vision</div>
+    <div class="dropdown-item" onclick="setProofMode('url(#protanopia)')"><i class="fas fa-low-vision" style="width:26px; color:var(--pub-color);"></i>Protanopia (Red-Blind)</div>
+    <div class="dropdown-item" onclick="setProofMode('url(#deuteranopia)')"><i class="fas fa-low-vision" style="width:26px; color:var(--pub-color);"></i>Deuteranopia (Green-Blind)</div>
+    <div class="dropdown-item" onclick="setProofMode('url(#tritanopia)')"><i class="fas fa-low-vision" style="width:26px; color:var(--pub-color);"></i>Tritanopia (Blue-Blind)</div>
+    <div class="dropdown-item" onclick="setProofMode('url(#achromatopsia)')"><i class="fas fa-adjust" style="width:26px; color:var(--pub-color);"></i>Achromatopsia (Grayscale)</div>
 </div>
 
 <div class="dropdown-menu" id="border-dropdown" style="width: 280px;">

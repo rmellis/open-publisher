@@ -634,6 +634,18 @@ td, th {
 .rotate-stick { position: absolute; top: -40px; left: 50%; width: 1px; height: 40px; background: var(--selection); display: none; }
 .pub-element.selected .rotate-handle, .pub-element.selected .rotate-stick { display: block; }
 
+/* --- View Tab Toggles --- */
+#paper.show-boundaries .pub-element {
+    outline: 2px solid var(--pub-color) !important;
+}
+
+#paper.show-text-blocks .pub-element[contenteditable="true"],
+#paper.show-text-blocks .pub-element [contenteditable="true"] {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px) !important;
+    background-size: 8px 8px !important;
+    background-color: rgba(240, 240, 240, 0.4) !important;
+}
+
 /* --- MODALS & MENUS --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -663,8 +675,23 @@ td, th {
 /* Dropdowns */
 .dropdown-menu {
     position: absolute; background: white; border: 1px solid #ccc;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1); display: none; z-index: 3000;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1); display: none; z-index: 999999;
     padding: 5px; max-height: 400px; overflow-y: auto; width: 320px;
+}
+#snap-dropdown, #color-blind-dropdown {
+    border-radius: 6px; border: 1px solid var(--pub-color); overflow: hidden; padding: 2px;
+    box-shadow: 0 4px 12px rgba(0, 118, 112, 0.15); font-size: 13px;
+}
+#snap-dropdown .dropdown-item, #color-blind-dropdown .dropdown-item {
+    border-radius: 4px; border: 1px solid transparent; height: 26px; margin-bottom: 2px;
+    justify-content: flex-start !important; padding: 0 10px; box-sizing: border-box; width: 100%;
+}
+#snap-dropdown .dropdown-item:last-child, #color-blind-dropdown .dropdown-item:last-child {
+    margin-bottom: 0;
+}
+#snap-dropdown .dropdown-item:hover, #color-blind-dropdown .dropdown-item:hover {
+    background: rgba(0, 118, 112, 0.1) !important; 
+    border-color: transparent !important;
 }
 .dropdown-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .dropdown-item { width: 45px; height: 45px; border: 1px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
