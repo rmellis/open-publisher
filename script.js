@@ -591,6 +591,8 @@ function redo() {
 
 function restoreSnapshot(snap) {
     state.pages = JSON.parse(JSON.stringify(snap.pages));
+    if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
+    state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
     state.currentPageIndex = snap.idx;
     renderPage(state.pages[state.currentPageIndex]);
     updateSidebar();
@@ -3491,6 +3493,8 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 const data = JSON.parse(evt.target.result);
                 document.getElementById('doc-title').innerText = data.title;
                 state.pages = data.pages;
+                if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
+                state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
                 state.currentPageIndex = 0;
                 renderPage(state.pages[0]);
                 setTimeout(() => {
@@ -7959,7 +7963,10 @@ window.initWordArt = function() {
                     try {
                         const data = JSON.parse(evt.target.result);
                         document.getElementById('doc-title').innerText = data.title;
-                        state.pages = data.pages; state.currentPageIndex = 0;
+                        state.pages = data.pages; 
+                        if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
+                        state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
+                        state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         setTimeout(() => {
                             if (typeof updateThumbnails === 'function') updateThumbnails();
