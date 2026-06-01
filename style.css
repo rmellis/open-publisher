@@ -425,6 +425,25 @@ body {
 }
 .page-thumb img { width: 100%; height: 100%; object-fit: contain; }
 
+/* Thumbnail Loading Spinner */
+.thumb-spinner {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.85);
+    z-index: 5;
+}
+.thumb-spinner::after {
+    content: '';
+    width: 24px; height: 24px;
+    border: 3px solid rgba(0, 118, 112, 0.2);
+    border-top-color: var(--pub-color);
+    border-radius: 50%;
+    animation: thumb-spin 0.7s linear infinite;
+}
+@keyframes thumb-spin {
+    to { transform: rotate(360deg); }
+}
+
 .page-thumb-container.active .page-thumb { 
     border: 2px solid var(--pub-color); 
     box-shadow: 0 0 0 1px rgba(0,118,112,0.2);

@@ -595,7 +595,7 @@ function restoreSnapshot(snap) {
     state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
     state.currentPageIndex = snap.idx;
     renderPage(state.pages[state.currentPageIndex]);
-    updateSidebar();
+    setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
 }
 
 // --- PAGE MANAGEMENT ---
@@ -639,9 +639,11 @@ function addNewPage() {
 
 function switchPage(newIndex) {
     if (newIndex === state.currentPageIndex) return;
+    // Save current page state
     state.pages[state.currentPageIndex] = serializeCurrentPage();
     state.currentPageIndex = newIndex;
     renderPage(state.pages[newIndex]);
+    // Note: renderPage naturally calls updateSidebar() at the end, which instantly updates all thumbnails
 }
 
 function deletePage(index, event) {
@@ -675,6 +677,37 @@ function handleNewDocument() {
     });
 }
 
+function renderThumbnailHTML(pageData) {
+    if (!pageData) return '';
+    const pW = parseFloat(pageData.width) || 794;
+    const pH = parseFloat(pageData.height) || 1123;
+    const scale = 100 / pW;
+
+    let inner = '';
+    if (pageData.elements && pageData.elements.length > 0) {
+        pageData.elements.forEach(data => {
+            const sX = data.scaleX || "1";
+            const sY = data.scaleY || "1";
+            let content = '';
+            if (data.imgSrc) {
+                const s = data.imgStyle || {};
+                const styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}`;
+                content = `<img src="${data.imgSrc}" style="${styleStr}">`;
+            } else if (data.clipPath) {
+                content = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
+            } else {
+                content = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+            }
+            inner += `<div style="position:absolute; left:${data.left}; top:${data.top}; width:${data.width}; height:${data.height}; transform:${data.transform || 'none'}; z-index:${data.zIndex || 10};">
+                <div style="transform: scale(${sX}, ${sY}); width:100%; height:100%; overflow:hidden; position:relative; transform-origin: top left; outline:none; border:none;">${content}</div>
+            </div>`;
+        });
+    }
+
+    const html = `<div style="position:relative; width:${pW}px; height:${pH}px; background:${pageData.background || '#ffffff'}; overflow:hidden; transform-origin: top left; pointer-events: none;">${inner}</div>`;
+    return `<div style="transform: scale(${scale}); transform-origin: top left; width: ${pW}px; height: ${pH}px; pointer-events:none;">${html}</div>`;
+}
+
 function updateSidebar() {
     const sb = document.getElementById('sidebar');
     const btn = sb.querySelector('.page-add-btn');
@@ -696,10 +729,14 @@ function updateSidebar() {
         div.className = `page-thumb-container ${i === state.currentPageIndex ? 'active' : ''}`;
         div.onclick = () => switchPage(i);
         
+        const pW = parseFloat(p.width) || 794;
+        const pH = parseFloat(p.height) || 1123;
+        const thumbHeight = pH * (100 / pW);
+
         div.innerHTML = `
             <div class="page-del-btn" onclick="deletePage(${i}, event)" title="Delete Page"><i class="fas fa-times"></i></div>
-            <div class="page-thumb" id="thumb-${i}">
-                ${p.thumb ? `<img src="${p.thumb}">` : '<div style="color:#ccc;text-align:center;padding-top:50px;">...</div>'}
+            <div class="page-thumb" id="thumb-${i}" style="height: ${thumbHeight}px;">
+                ${renderThumbnailHTML(p)}
             </div>
             <small>Page ${i+1}</small>
         `;
@@ -709,56 +746,23 @@ function updateSidebar() {
 }
 
 function updateThumbnails() {
+    // Keep it fast: just serialize the current page and update its thumbnail HTML directly
+    state.pages[state.currentPageIndex] = serializeCurrentPage();
     generateThumbnail(state.currentPageIndex);
 }
 
 function generateThumbnail(index) {
-    if (index !== state.currentPageIndex) return;
-    const original = document.getElementById('paper');
-    const clone = original.cloneNode(true);
-    
-    clone.querySelectorAll('.resize-handle, .rotate-handle, .rotate-stick, .margin-guides').forEach(el => el.remove());
-    
-    const headers = clone.querySelectorAll('.page-header, .page-footer');
-    headers.forEach(h => {
-        h.classList.remove('visible'); 
-        h.style.display = 'flex';
-        h.style.border = 'none';
-        if (!state.headersVisible && !h.innerText.trim()) h.style.display = 'none';
-    });
+    const pageData = state.pages[index];
+    if (!pageData) return;
+    const thumbEl = document.getElementById(`thumb-${index}`);
+    if (thumbEl) {
+        thumbEl.innerHTML = renderThumbnailHTML(pageData);
+    }
+}
 
-    clone.querySelectorAll('.selected, .cropping').forEach(el => {
-        el.classList.remove('selected'); 
-        el.classList.remove('cropping');
-        el.style.outline = 'none';
-    });
-
-    clone.style.position = 'absolute';
-    clone.style.top = '0';
-    clone.style.left = '0';
-    clone.style.zIndex = '-9999'; 
-    clone.style.pointerEvents = 'none';
-    clone.style.transform = 'none'; 
-    
-    document.getElementById('viewport').appendChild(clone);
-
-    html2canvas(clone, { 
-        scale: 0.2, 
-        logging: false, 
-        useCORS: true,
-        backgroundColor: null 
-    }).then(canvas => {
-        const dataUrl = canvas.toDataURL();
-        if(state.pages[index]) {
-            state.pages[index].thumb = dataUrl;
-            const img = document.querySelector(`#thumb-${index} img`);
-            if(img) img.src = state.pages[index].thumb;
-            else updateSidebar(); 
-        }
-        clone.remove();
-    }).catch(err => {
-        clone.remove();
-    });
+// generateAllThumbnails is essentially a no-op now, because updateSidebar already renders everything synchronously
+function generateAllThumbnails() {
+    updateSidebar();
 }
 
 function toggleHeaderFooter(forceState) {
@@ -3495,10 +3499,12 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 state.pages = data.pages;
                 if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                 state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
+                state.history = [];
+                state.historyIndex = -1;
                 state.currentPageIndex = 0;
                 renderPage(state.pages[0]);
                 setTimeout(() => {
-                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
                     if (typeof pushHistory === 'function') pushHistory(); 
                 }, 500);
             } catch(err) { 
@@ -4351,6 +4357,8 @@ function uploadAndConvertDoc(file) {
                     setTimeout(() => {
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
+                        state.history = [];
+                        state.historyIndex = -1;
                         state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         
@@ -7877,30 +7885,17 @@ window.initWordArt = function() {
 
     let thumbnailTimer = null;
 
-    // Overwrite the global updateThumbnails function
+    // Lightweight debounce — the new generateThumbnail handles its own sequencing
     window.updateThumbnails = function() {
-        // Clear any pending renders if the user keeps clicking
         if (thumbnailTimer) clearTimeout(thumbnailTimer);
-
-        // Defer the heavy html2canvas process by 1.5 seconds
         thumbnailTimer = setTimeout(() => {
-            // CRITICAL: Abort if the user is actively dragging, cropping, or typing!
+            // Skip if the user is actively dragging, cropping, or typing
             if (state.dragMode || state.cropMode || (document.activeElement && document.activeElement.isContentEditable)) {
-                // Re-queue it for later
                 window.updateThumbnails();
                 return;
             }
-
-            // Use requestIdleCallback to render in the background without blocking the UI
-            if (window.requestIdleCallback) {
-                requestIdleCallback(() => {
-                    if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
-                });
-            } else {
-                // Fallback for older browsers
-                if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
-            }
-        }, 1500); 
+            if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
+        }, 300); 
     };
 
     console.log("✅ Anti-Lag successfully applied.");
@@ -7966,10 +7961,12 @@ window.initWordArt = function() {
                         state.pages = data.pages; 
                         if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                         state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
+                        state.history = [];
+                        state.historyIndex = -1;
                         state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         setTimeout(() => {
-                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                            if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
                             if (typeof pushHistory === 'function') pushHistory();
                         }, 500);
                     } catch(err) {
@@ -8310,6 +8307,8 @@ function uploadAndConvertPub(file) {
                     setTimeout(() => {
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
+                        state.history = [];
+                        state.historyIndex = -1;
                         state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         
@@ -19531,16 +19530,8 @@ window.addEventListener('beforeprint', () => {
    INP FIX (Overrides for heavy functions)
    ========================================================================= */
 
-// 1. Hijack the heavy canvas renderer
-const originalUpdateThumbnails = updateThumbnails;
-let thumbTimer;
-updateThumbnails = function() {
-    clearTimeout(thumbTimer);
-    // Wait 500ms after the user stops interacting before freezing the main thread
-    thumbTimer = setTimeout(() => {
-        originalUpdateThumbnails();
-    }, 500); 
-};
+// 1. Thumbnail debouncing is now handled by the Anti-Lag Script above.
+//    No additional wrapping needed here.
 
 // 2. Hijack the heavy history serializer (FIXED: Debounce & Spam Filter)
 const originalPushHistory = pushHistory;
