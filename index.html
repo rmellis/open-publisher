@@ -465,15 +465,15 @@
          <div class="group">
             <div class="tool-btn" onclick="setZoom(0.6)"><i class="fas fa-search-minus"></i>60%</div>
             <div class="tool-btn" onclick="setZoom(0.75)"><i class="fas fa-search-minus"></i>75%</div>
-            <div class="tool-btn" onclick="setZoom(1.0)"><i class="fas fa-search"></i>100%</div>
+            <div class="tool-btn" title="Quick Zoom (F9)" onclick="setZoom(1.0)"><i class="fas fa-search"></i>100%</div>
             <div class="tool-btn" onclick="setZoom(1.5)"><i class="fas fa-search-plus"></i>150%</div>
-            <div class="tool-btn" onclick="fitToPage()"><i class="far fa-file"></i>Fit Page</div>
+            <div class="tool-btn" title="Fit Page (Ctrl+Shift+L)" onclick="fitToPage()"><i class="far fa-file"></i>Fit Page</div>
             <div class="tool-btn" onclick="fitToWidth()"><i class="fas fa-arrows-alt-h"></i>Fit Width</div>
             <div class="group-label">Zoom</div>
         </div>
         <div class="group">
             <div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet"></i>Snap To <i class="fas fa-caret-down"></i></div>
-            <div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-boundaries')"><i class="far fa-object-ungroup"></i>Bounds</div>
+            <div class="tool-btn" title="Toggle Boundaries (Ctrl+Shift+O)" onclick="document.getElementById('paper').classList.toggle('show-boundaries')"><i class="far fa-object-ungroup"></i>Bounds</div>
             <div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph"></i>¶ Blocks</div>
             <div class="group-label">Layout</div>
         </div>

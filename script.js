@@ -160,6 +160,30 @@ document.addEventListener('selectionchange', () => {
             redo();
             return;
         }
+        // Toggle Boundaries
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'o' || e.key === 'O')) {
+            e.preventDefault();
+            const paper = document.getElementById('paper');
+            if (paper) paper.classList.toggle('show-boundaries');
+            return;
+        }
+        // Quick Zoom
+        if (e.key === 'F9') {
+            e.preventDefault();
+            if (state.zoom !== 1.0) {
+                state._lastZoomLevel = state.zoom;
+                setZoom(1.0);
+            } else if (state._lastZoomLevel && state._lastZoomLevel !== 1.0) {
+                setZoom(state._lastZoomLevel);
+            }
+            return;
+        }
+        // Whole Page View
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+            e.preventDefault();
+            if (typeof fitToPage === 'function') fitToPage();
+            return;
+        }
         // Copy
         if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
             if (state.selectedEl && !isTextEditing()) {
