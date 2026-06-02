@@ -469,11 +469,23 @@ function serializeCurrentPage() {
                 maxWidth: img.style.maxWidth,
                 maxHeight: img.style.maxHeight
             };
+            data.isImage = true;
         } else if (shapeDiv && shapeDiv.style.clipPath) {
             data.clipPath = shapeDiv.style.clipPath;
             data.bg = shapeDiv.style.background;
         } else {
-            data.innerHTML = content ? content.innerHTML : '';
+            if (shapeDiv && shapeDiv.style.backgroundImage && shapeDiv.style.backgroundImage.includes('data:image')) {
+                data.bgImage = shapeDiv.style.backgroundImage;
+                const oldBg = shapeDiv.style.backgroundImage;
+                shapeDiv.style.backgroundImage = 'none';
+                data.innerHTML = content ? content.innerHTML : '';
+                shapeDiv.style.backgroundImage = oldBg;
+            } else {
+                data.innerHTML = content ? content.innerHTML : '';
+            }
+            if (data.innerHTML.includes('<img') || data.innerHTML.includes('<IMG')) {
+                data.isImageFallback = true;
+            }
         }
 
         p.elements.push(data);
@@ -527,7 +539,7 @@ function renderPage(pageData) {
         let inner = '';
         if (data.imgSrc) {
             const s = data.imgStyle || {};
-            const styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}`;
+            const styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
             inner = `<img src="${data.imgSrc}" style="${styleStr}">`;
         } else if (data.clipPath) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
@@ -642,8 +654,13 @@ function switchPage(newIndex) {
     // Save current page state
     state.pages[state.currentPageIndex] = serializeCurrentPage();
     state.currentPageIndex = newIndex;
+    
+    if (state.pages[newIndex]._needsRender) {
+        state.pages[newIndex]._needsRender = false;
+    }
+    
     renderPage(state.pages[newIndex]);
-    // Note: renderPage naturally calls updateSidebar() at the end, which instantly updates all thumbnails
+    updateSidebar();
 }
 
 function deletePage(index, event) {
@@ -678,34 +695,63 @@ function handleNewDocument() {
 }
 
 function renderThumbnailHTML(pageData) {
-    if (!pageData) return '';
+    if (!pageData) return document.createElement('div');
     const pW = parseFloat(pageData.width) || 794;
     const pH = parseFloat(pageData.height) || 1123;
     const scale = 100 / pW;
 
-    let inner = '';
+    const outerWrapper = document.createElement('div');
+    outerWrapper.style.cssText = `transform: scale(${scale}); transform-origin: top left; width: ${pW}px; height: ${pH}px; pointer-events: none;`;
+
+    const innerWrapper = document.createElement('div');
+    innerWrapper.style.cssText = `position: relative; width: ${pW}px; height: ${pH}px; background: ${pageData.background || '#ffffff'}; overflow: hidden; transform-origin: top left; pointer-events: none;`;
+
     if (pageData.elements && pageData.elements.length > 0) {
         pageData.elements.forEach(data => {
             const sX = data.scaleX || "1";
             const sY = data.scaleY || "1";
-            let content = '';
-            if (data.imgSrc) {
+            
+            const elBox = document.createElement('div');
+            elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
+            
+            const scaleBox = document.createElement('div');
+            scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+
+            if (data.imgSrc && data.imgSrc !== '') {
+                const imgDiv = document.createElement('div');
                 const s = data.imgStyle || {};
-                const styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}`;
-                content = `<img src="${data.imgSrc}" style="${styleStr}">`;
+                
+                // Use a div with background-image instead of an img tag to bypass any weird img rendering bugs
+                imgDiv.style.cssText = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                
+                // Add the image overlay
+                let objFit = s.objectFit || '100% 100%';
+                if (objFit === 'fill') objFit = '100% 100%';
+                if (objFit === 'contain') objFit = 'contain';
+                
+                imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
+                
+                scaleBox.appendChild(imgDiv);
+
             } else if (data.clipPath) {
-                content = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
+                const clipDiv = document.createElement('div');
+                clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
+                scaleBox.appendChild(clipDiv);
             } else {
-                content = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+                scaleBox.innerHTML = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+                if (data.bgImage) {
+                    const childDiv = scaleBox.querySelector('div');
+                    if (childDiv) childDiv.style.backgroundImage = data.bgImage;
+                }
             }
-            inner += `<div style="position:absolute; left:${data.left}; top:${data.top}; width:${data.width}; height:${data.height}; transform:${data.transform || 'none'}; z-index:${data.zIndex || 10};">
-                <div style="transform: scale(${sX}, ${sY}); width:100%; height:100%; overflow:hidden; position:relative; transform-origin: top left; outline:none; border:none;">${content}</div>
-            </div>`;
+            
+            elBox.appendChild(scaleBox);
+            innerWrapper.appendChild(elBox);
         });
     }
 
-    const html = `<div style="position:relative; width:${pW}px; height:${pH}px; background:${pageData.background || '#ffffff'}; overflow:hidden; transform-origin: top left; pointer-events: none;">${inner}</div>`;
-    return `<div style="transform: scale(${scale}); transform-origin: top left; width: ${pW}px; height: ${pH}px; pointer-events:none;">${html}</div>`;
+    outerWrapper.appendChild(innerWrapper);
+    return outerWrapper;
 }
 
 function updateSidebar() {
@@ -728,18 +774,30 @@ function updateSidebar() {
         const div = document.createElement('div');
         div.className = `page-thumb-container ${i === state.currentPageIndex ? 'active' : ''}`;
         div.onclick = () => switchPage(i);
+        div.oncontextmenu = (e) => {
+            e.preventDefault();
+            showMinimapContextMenu(e, i);
+        };
         
         const pW = parseFloat(p.width) || 794;
         const pH = parseFloat(p.height) || 1123;
         const thumbHeight = pH * (100 / pW);
-
+        
         div.innerHTML = `
             <div class="page-del-btn" onclick="deletePage(${i}, event)" title="Delete Page"><i class="fas fa-times"></i></div>
             <div class="page-thumb" id="thumb-${i}" style="height: ${thumbHeight}px;">
-                ${renderThumbnailHTML(p)}
             </div>
             <small>Page ${i+1}</small>
         `;
+        
+        const thumbContainer = div.querySelector('.page-thumb');
+        if (p._needsRender) {
+            thumbContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--pub-color); font-size: 24px;"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+        } else {
+            const thumbNode = renderThumbnailHTML(p);
+            thumbContainer.appendChild(thumbNode);
+        }
+
         sb.appendChild(div);
     });
     sb.appendChild(btn);
@@ -756,7 +814,8 @@ function generateThumbnail(index) {
     if (!pageData) return;
     const thumbEl = document.getElementById(`thumb-${index}`);
     if (thumbEl) {
-        thumbEl.innerHTML = renderThumbnailHTML(pageData);
+        thumbEl.innerHTML = '';
+        thumbEl.appendChild(renderThumbnailHTML(pageData));
     }
 }
 
@@ -849,6 +908,7 @@ function initThemes() {
 
 // --- BORDERS ---
 function setPageBorder(type, doPush = true) {
+    if (!type) type = 'none';
     const div = document.getElementById('page-border');
     div.setAttribute('data-style', type);
     div.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box;'; 
@@ -2071,8 +2131,10 @@ function initTemplates() {
 }
 
 function loadTemplate(t) {
-    DialogSystem.show('Load Template', '<p>Load this template? This will replace your current page content.</p>', () => {
-        state.pages[state.currentPageIndex] = serializeCurrentPage(); // Save current just in case
+    DialogSystem.show('Load Template', '<p>Load this template? This will replace your ENTIRE document and start fresh.</p>', () => {
+        state.pages = []; // Wipe document
+        state.history = [];
+        state.historyIndex = -1;
         
         const newElements = t.els.map(el => {
             return {
@@ -2092,7 +2154,11 @@ function loadTemplate(t) {
            elements: newElements
         };
         
-        renderPage(p);
+        state.pages.push(p);
+        state.currentPageIndex = 0;
+        
+        renderPage(state.pages[0]);
+        updateSidebar();
         document.getElementById('template-modal').style.display = 'none';
         pushHistory();
     });
@@ -4362,6 +4428,7 @@ function uploadAndConvertDoc(file) {
                         state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         
+                        updateSidebar();
                         if(typeof updateThumbnails === 'function') updateThumbnails();
                         if(typeof pushHistory === 'function') pushHistory(); 
                         
@@ -8312,6 +8379,7 @@ function uploadAndConvertPub(file) {
                         state.currentPageIndex = 0;
                         renderPage(state.pages[0]);
                         
+                        updateSidebar();
                         if(typeof updateThumbnails === 'function') updateThumbnails();
                         if(typeof pushHistory === 'function') pushHistory(); 
                         DialogSystem.close(); 
@@ -16352,7 +16420,6 @@ window.toggleCrop = function() {
                 
                 panel.style.display = 'block'; 
                 
-                // Track horizontal and vertical changes perfectly
                 if (panel.dataset.top !== rect.top + 'px' || 
                     panel.dataset.height !== rect.height + 'px' ||
                     panel.dataset.left !== rect.left + 'px' || 
@@ -16406,7 +16473,11 @@ window.toggleCrop = function() {
 
         if (lockedIndex !== lastLockedIndex) { 
             nodeMap.clear(); 
-            inner.innerHTML = ''; 
+            document.querySelectorAll('.ts-glass-panel').forEach(panel => {
+                panel.style.backgroundColor = 'transparent';
+                const inner = panel.querySelector('.ts-mirror-inner');
+                if (inner) inner.innerHTML = '';
+            });
             lastLockedIndex = lockedIndex; 
         } 
 
@@ -20274,3 +20345,132 @@ setTimeout(() => {
 
     console.log("✅ Main script evaluated.");
 }, 500);
+
+// --- MINIMAP CONTEXT MENU ---
+function showMinimapContextMenu(e, index) {
+    state.contextMenuTargetIndex = index;
+    const menu = document.getElementById('minimap-context-menu');
+    if (!menu) return;
+    menu.style.display = 'flex';
+    
+    // Position menu
+    let x = e.clientX;
+    let y = e.clientY;
+    
+    // Ensure it doesn't go off-screen
+    const rect = menu.getBoundingClientRect();
+    if (x + 180 > window.innerWidth) x = window.innerWidth - 180;
+    if (y + 190 > window.innerHeight) y = window.innerHeight - 190;
+    
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+}
+
+document.addEventListener('click', () => {
+    const menu = document.getElementById('minimap-context-menu');
+    if (menu) menu.style.display = 'none';
+});
+
+document.addEventListener('contextmenu', (e) => {
+    if (!e.target.closest('.page-thumb-container')) {
+        const menu = document.getElementById('minimap-context-menu');
+        if (menu) menu.style.display = 'none';
+    }
+});
+
+function contextAddPage() {
+    addNewPage(state.contextMenuTargetIndex);
+}
+
+function contextDuplicatePage() {
+    const index = state.contextMenuTargetIndex;
+    const pageToCopy = state.pages[index];
+    if (!pageToCopy) return;
+    
+    // If it's the current page, serialize it first to ensure we get latest changes
+    if (index === state.currentPageIndex) {
+        state.pages[index] = serializeCurrentPage();
+    }
+    
+    // Deep clone the page
+    const clonedPage = JSON.parse(JSON.stringify(state.pages[index]));
+    
+    // Assign a new ID
+    clonedPage.id = Date.now() + Math.floor(Math.random() * 1000);
+    
+    // Insert after the target index
+    state.pages.splice(index + 1, 0, clonedPage);
+    state.currentPageIndex = index + 1;
+    
+    renderPage(state.pages[state.currentPageIndex]);
+    updateSidebar();
+    
+    setTimeout(() => {
+        if(typeof updateThumbnails === 'function') updateThumbnails();
+        pushHistory(); 
+    }, 50);
+}
+
+function contextMoveUp() {
+    const index = state.contextMenuTargetIndex;
+    if(index > 0) {
+        // 1. Permanently save current canvas BEFORE modifying the array!
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+
+        // 2. Perform the mathematical swap
+        const item = state.pages.splice(index, 1)[0];
+        state.pages.splice(index - 1, 0, item);
+
+        // 3. Track where the user's active page went
+        let targetIndex = state.currentPageIndex;
+        if (state.currentPageIndex === index) {
+            targetIndex = index - 1;
+        } else if (state.currentPageIndex === index - 1) {
+            targetIndex = index;
+        }
+        state.currentPageIndex = targetIndex;
+
+        // 4. Update the UI instantly
+        renderPage(state.pages[state.currentPageIndex]);
+        pushHistory();
+        
+        // 5. Update sidebar immediately
+        updateSidebar();
+        const correctThumb = document.querySelectorAll('.page-thumb')[targetIndex];
+        if (correctThumb) correctThumb.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    }
+}
+
+function contextMoveDown() {
+    const index = state.contextMenuTargetIndex;
+    if(index < state.pages.length - 1) {
+        // 1. Permanently save current canvas BEFORE modifying the array!
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+
+        // 2. Perform the mathematical swap
+        const item = state.pages.splice(index, 1)[0];
+        state.pages.splice(index + 1, 0, item);
+
+        // 3. Track where the user's active page went
+        let targetIndex = state.currentPageIndex;
+        if (state.currentPageIndex === index) {
+            targetIndex = index + 1;
+        } else if (state.currentPageIndex === index + 1) {
+            targetIndex = index;
+        }
+        state.currentPageIndex = targetIndex;
+
+        // 4. Update the UI instantly
+        renderPage(state.pages[state.currentPageIndex]);
+        pushHistory();
+
+        // 5. Update sidebar immediately
+        updateSidebar();
+        const correctThumb = document.querySelectorAll('.page-thumb')[targetIndex];
+        if (correctThumb) correctThumb.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    }
+}
+
+function contextDeletePage() {
+    deletePage(state.contextMenuTargetIndex, { stopPropagation: () => {} });
+}

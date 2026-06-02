@@ -713,9 +713,19 @@
     </div>
 </div>
 
+<div id="minimap-context-menu">
+    <div class="cm-item" onclick="contextAddPage()"><i class="fas fa-plus"></i> Add New Page</div>
+    <div class="cm-item" onclick="contextDuplicatePage()"><i class="fas fa-copy"></i> Duplicate Page</div>
+    <div class="cm-separator"></div>
+    <div class="cm-item" onclick="contextMoveUp()"><i class="fas fa-arrow-up"></i> Move Up</div>
+    <div class="cm-item" onclick="contextMoveDown()"><i class="fas fa-arrow-down"></i> Move Down</div>
+    <div class="cm-separator"></div>
+    <div class="cm-item" onclick="contextDeletePage()"><i class="fas fa-trash-alt" style="color:#d32f2f;"></i> <span style="color:#d32f2f;">Delete Page</span></div>
+</div>
+
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.8.8"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>
