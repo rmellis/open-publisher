@@ -20165,12 +20165,10 @@ window.showWebClipartModal = function() {
 };
 /* =======================================================
    PICTURE PLACEHOLDER ADDON
-   Paste this at the very bottom of your script.js
 ======================================================== */
 
 function addPicturePlaceholder() {
-    // Passes YOUR server's link through a CDN to automatically apply print-safe CORS headers.
-    // Because it's your server, the CDN won't be blocked like it was with Imgur.
+    // Passes the placeholder's link through a CDN to automatically apply print-safe CORS headers.
     const placeholderUrl = "https://wsrv.nl/?url=saw.floydcraft.co.uk/ImagePlaceholder.png";
     
     // crossorigin="anonymous" is REQUIRED by html2canvas for printing.
@@ -20179,7 +20177,7 @@ function addPicturePlaceholder() {
     el.style.width = '400px';
     el.style.height = '400px';
     
-    // REQUIRED so your custom print engine loop actually processes it
+    // REQUIRED so OpenPublisher's custom print engine loop actually processes it
     el.setAttribute('data-type', 'image');
     el.setAttribute('data-is-placeholder', 'true'); 
     
