@@ -200,6 +200,39 @@ document.addEventListener('selectionchange', () => {
              }
         }
         
+        // Bold (Ctrl+B), Italic (Ctrl+I), Underline (Ctrl+U)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B') && isTextEditing()) {
+            e.preventDefault();
+            document.execCommand('bold');
+            pushHistory();
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'I') && isTextEditing()) {
+            e.preventDefault();
+            document.execCommand('italic');
+            pushHistory();
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U') && isTextEditing()) {
+            e.preventDefault();
+            document.execCommand('underline');
+            pushHistory();
+            return;
+        }
+
+        // Clear Formatting (Ctrl+Space)
+        if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
+            if (isTextEditing()) {
+                e.preventDefault();
+                document.execCommand('removeFormat');
+                // Reset to default font and size
+                document.execCommand('fontName', false, 'Segoe UI');
+                document.execCommand('fontSize', false, '3'); // size 3 = ~12px
+                pushHistory();
+            }
+            return;
+        }
+        
         // Only delete if not editing text
         if(e.key === 'Delete' && !isTextEditing()) {
             deleteSelected();
