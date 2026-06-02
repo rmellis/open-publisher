@@ -18113,13 +18113,31 @@ window.addEventListener('beforeprint', () => {
         }
     };
 
-    const bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '' } = {}) => new Promise((resolve, reject) => {
+    const parseImageLayoutValue = (value, base) => {
+        const raw = (value ?? '').toString().trim();
+        if (!raw) return 0;
+        if (raw.endsWith('%')) return (parseFloat(raw) / 100) * base;
+        return parseFloat(raw) || 0;
+    };
+
+    const isDefaultFillImageLayout = (imgStyle = {}) => {
+        const w = (imgStyle.width || '100%').toString().trim();
+        const h = (imgStyle.height || '100%').toString().trim();
+        const l = (imgStyle.left ?? '0').toString().trim();
+        const t = (imgStyle.top ?? '0').toString().trim();
+        const leftZero = l === '0' || l === '0px' || l === '0%';
+        const topZero = t === '0' || t === '0px' || t === '0%';
+        return w === '100%' && h === '100%' && leftZero && topZero;
+    };
+
+    const bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
         const tempImg = new Image();
         if (!src.startsWith('data:')) tempImg.crossOrigin = 'Anonymous';
         tempImg.onload = () => {
+            const scale = 2;
             const c = document.createElement('canvas');
-            c.width = displayW * 2;
-            c.height = displayH * 2;
+            c.width = displayW * scale;
+            c.height = displayH * scale;
             const ctx = c.getContext('2d');
             let finalFilter = filter;
             if (finalFilter && finalFilter.includes('blur')) {
@@ -18130,7 +18148,15 @@ window.addEventListener('beforeprint', () => {
             if (clipPath) applyClipPathRegion(ctx, clipPath, c.width, c.height);
             if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
             ctx.globalAlpha = parseFloat(opacity);
-            ctx.drawImage(tempImg, 0, 0, c.width, c.height);
+            if (isDefaultFillImageLayout(imgStyle)) {
+                ctx.drawImage(tempImg, 0, 0, c.width, c.height);
+            } else {
+                const imgW = parseImageLayoutValue(imgStyle.width, displayW) * scale;
+                const imgH = parseImageLayoutValue(imgStyle.height, displayH) * scale;
+                const imgL = parseImageLayoutValue(imgStyle.left, displayW) * scale;
+                const imgT = parseImageLayoutValue(imgStyle.top, displayH) * scale;
+                ctx.drawImage(tempImg, imgL, imgT, imgW, imgH);
+            }
             ctx.restore();
             resolve(c.toDataURL('image/png'));
         };
@@ -18144,6 +18170,7 @@ window.addEventListener('beforeprint', () => {
         await sleep(100);
 
         if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
+            if (state.cropMode && typeof window.toggleCrop === 'function') window.toggleCrop();
             if (typeof serializeCurrentPage === 'function') state.pages[state.currentPageIndex] = serializeCurrentPage();
             state.pages.forEach((page) => {
                 page.elements.forEach((el) => {
@@ -18319,13 +18346,21 @@ window.addEventListener('beforeprint', () => {
 
                         let img = document.createElement('img');
                         img.src = finalSrc;
+                        const savedImgStyle = { ...(el.imgStyle || {}) };
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
                         img.style.clipPath = 'none';
                         img.style.webkitClipPath = 'none';
 
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.objectFit = 'fill';
+                        if (isDefaultFillImageLayout(savedImgStyle)) {
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'fill';
+                        } else {
+                            img.style.position = savedImgStyle.position || 'absolute';
+                            img.style.maxWidth = savedImgStyle.maxWidth || 'none';
+                            img.style.maxHeight = savedImgStyle.maxHeight || 'none';
+                            if (savedImgStyle.objectFit) img.style.objectFit = savedImgStyle.objectFit;
+                        }
 
                         let currentFilter = ''; let currentOpacity = '1';
                         if (el.imgStyle) {
@@ -18358,7 +18393,8 @@ window.addEventListener('beforeprint', () => {
                                 const bakedSrc = await bakeImageForPrint(finalSrc, displayW, displayH, {
                                     filter: currentFilter,
                                     opacity: currentOpacity,
-                                    clipPath: shapeClipPath
+                                    clipPath: shapeClipPath,
+                                    imgStyle: savedImgStyle
                                 });
                                 await loadImageStrict(img, bakedSrc);
                                 img.style.filter = 'none';
