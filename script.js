@@ -508,6 +508,8 @@ function serializeCurrentPage() {
             if (imgClipPath && imgClipPath !== 'none') {
                 data.imgStyle.clipPath = imgClipPath;
             }
+            const imgObjectFit = img.style.objectFit;
+            if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
             data.isImage = true;
         } else if (shapeDiv && shapeDiv.style.clipPath) {
             data.clipPath = shapeDiv.style.clipPath;
@@ -607,6 +609,7 @@ function renderPage(pageData) {
         if (data.cropMode) el.classList.add('cropping');
         if (data.shrinkOverflow) applyShrinkOverflow(el);
         if (data.growFit) applyGrowFit(el);
+        if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
         paper.appendChild(el);
     });
     
@@ -614,6 +617,7 @@ function renderPage(pageData) {
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
     updatePageNumbers();
     updateSidebar();
+    scheduleEmojiMigrate();
 }
 
 // --- HISTORY MANAGEMENT ---
@@ -1173,8 +1177,8 @@ function initClipart() {
 
             div.appendChild(img);
             div.onclick = () => {
-                 createWrapper(`<img src="${url}" style="width:100%; height:100%; position:absolute; top:0; left:0;">`);
                  document.getElementById('clipart-modal').style.display = 'none';
+                 insertEmojiFromUrl(url);
             };
             grid.appendChild(div);
         });
@@ -2222,6 +2226,89 @@ function loadTemplate(t) {
 }
 
 // --- ELEMENTS & MANIPULATION ---
+function prepareTwemojiSvgMarkup(svgText) {
+    if (!svgText || !svgText.includes('<svg')) return svgText;
+    let svg = svgText.trim();
+    svg = svg.replace(/\bpreserveAspectRatio\s*=\s*["'][^"']*["']/gi, '');
+    svg = svg.replace(/\bwidth\s*=\s*["'][^"']*["']/gi, '');
+    svg = svg.replace(/\bheight\s*=\s*["'][^"']*["']/gi, '');
+    const stretchStyle = 'width:100%;height:100%;display:block;position:absolute;top:0;left:0;overflow:visible;';
+    if (/<svg[^>]*style\s*=/i.test(svg)) {
+        svg = svg.replace(/<svg([^>]*?)style\s*=\s*["']([^"']*)["']/i, `<svg$1preserveAspectRatio="none" style="${stretchStyle}$2"`);
+    } else {
+        svg = svg.replace(/<svg/i, `<svg preserveAspectRatio="none" style="${stretchStyle}"`);
+    }
+    return svg;
+}
+
+function applyEmojiStretch(root) {
+    if (!root) return;
+    root.querySelectorAll('svg').forEach(svg => {
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.display = 'block';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.overflow = 'visible';
+    });
+    root.querySelectorAll('img').forEach(img => {
+        const fit = img.style.objectFit;
+        if (fit && fit !== 'fill' && fit !== 'stretch') return;
+        img.style.objectFit = 'fill';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.position = 'absolute';
+        img.style.top = '0';
+        img.style.left = '0';
+        img.style.maxWidth = 'none';
+        img.style.maxHeight = 'none';
+    });
+}
+
+async function insertEmojiFromUrl(url) {
+    let markup;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Emoji fetch failed');
+        markup = prepareTwemojiSvgMarkup(await res.text());
+    } catch (e) {
+        markup = `<img src="${url}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;">`;
+    }
+    const el = createWrapper(markup);
+    el.setAttribute('data-type', 'emoji');
+    el.style.width = '100px';
+    el.style.height = '100px';
+    applyEmojiStretch(el.querySelector('.element-content'));
+    return el;
+}
+
+let emojiMigrateTimer = null;
+function scheduleEmojiMigrate() {
+    clearTimeout(emojiMigrateTimer);
+    emojiMigrateTimer = setTimeout(async () => {
+        const imgs = Array.from(document.querySelectorAll('.pub-element img[src*="twemoji"]'));
+        let migrated = false;
+        for (const img of imgs) {
+            const content = img.closest('.element-content');
+            const el = img.closest('.pub-element');
+            if (!content || !el) continue;
+            try {
+                const res = await fetch(img.src);
+                if (!res.ok) continue;
+                content.innerHTML = prepareTwemojiSvgMarkup(await res.text());
+                el.setAttribute('data-type', 'emoji');
+                applyEmojiStretch(content);
+                migrated = true;
+            } catch (e) { /* keep img fallback */ }
+        }
+        if (migrated && typeof state !== 'undefined' && typeof serializeCurrentPage === 'function') {
+            state.pages[state.currentPageIndex] = serializeCurrentPage();
+        }
+    }, 80);
+}
+
 function createWrapper(htmlContent) {
     const el = document.createElement('div');
     el.className = 'pub-element';
@@ -11674,6 +11761,7 @@ window.initShapes = function() {
 
         // Retroactively fix any broken images already sitting on the canvas!
         setTimeout(() => {
+            if (typeof scheduleEmojiMigrate === 'function') scheduleEmojiMigrate();
             document.querySelectorAll('.pub-element img').forEach(img => {
                 if (img.style.pointerEvents === 'none') {
                     img.style.pointerEvents = 'auto';
