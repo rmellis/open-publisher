@@ -494,6 +494,7 @@ function serializeCurrentPage() {
 
         if (img) {
             data.imgSrc = img.src;
+            const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
             data.imgStyle = {
                 width: img.style.width,
                 height: img.style.height,
@@ -504,6 +505,9 @@ function serializeCurrentPage() {
                 maxWidth: img.style.maxWidth,
                 maxHeight: img.style.maxHeight
             };
+            if (imgClipPath && imgClipPath !== 'none') {
+                data.imgStyle.clipPath = imgClipPath;
+            }
             data.isImage = true;
         } else if (shapeDiv && shapeDiv.style.clipPath) {
             data.clipPath = shapeDiv.style.clipPath;
@@ -575,7 +579,10 @@ function renderPage(pageData) {
         let inner = '';
         if (data.imgSrc) {
             const s = data.imgStyle || {};
-            const styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            if (s.clipPath && s.clipPath !== 'none') {
+                styleStr += ` clip-path:${s.clipPath}; -webkit-clip-path:${s.clipPath};`;
+            }
             inner = `<img src="${data.imgSrc}" style="${styleStr}">`;
         } else if (data.clipPath) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
@@ -761,7 +768,11 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 const s = data.imgStyle || {};
                 
                 // Use a div with background-image instead of an img tag to bypass any weird img rendering bugs
-                imgDiv.style.cssText = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                if (s.clipPath && s.clipPath !== 'none') {
+                    thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                }
+                imgDiv.style.cssText = thumbImgCss;
                 
                 // Add the image overlay
                 let objFit = s.objectFit || '100% 100%';
@@ -5697,7 +5708,12 @@ window.ContextRibbonActions = {
     cropToShape: function() {
         if(state.selectedEl && state.selectedEl.querySelector('img') && typeof DialogSystem !== 'undefined') {
             DialogSystem.show('Crop to Shape', `<select id="ctx-crop-shape" style="width:100%; padding:8px;"><option value="none">Remove Crop</option><option value="circle(50%)">Circle / Oval</option><option value="polygon(50% 0%, 0% 100%, 100% 100%)">Triangle</option><option value="polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)">Star</option></select>`, () => {
-                state.selectedEl.querySelector('img').style.clipPath = document.getElementById('ctx-crop-shape').value === 'none' ? 'none' : document.getElementById('ctx-crop-shape').value; pushHistory();
+                const shape = document.getElementById('ctx-crop-shape').value;
+                const img = state.selectedEl.querySelector('img');
+                const clip = shape === 'none' ? 'none' : shape;
+                img.style.clipPath = clip;
+                img.style.webkitClipPath = clip;
+                pushHistory();
             });
         }
     },
@@ -17965,6 +17981,75 @@ window.addEventListener('beforeprint', () => {
         });
     };
 
+    const getImageShapeClipPath = (el, page, livePaper) => {
+        let shapeClip = (el.imgStyle && el.imgStyle.clipPath) ? el.imgStyle.clipPath : '';
+        if ((!shapeClip || shapeClip === 'none') && page === state.pages[state.currentPageIndex] && livePaper) {
+            const l1 = parseFloat(el.left) || 0;
+            const t1 = parseFloat(el.top) || 0;
+            const liveEls = Array.from(livePaper.querySelectorAll('.pub-element'));
+            const activeEl = liveEls.find(e => Math.abs((parseFloat(e.style.left) || 0) - l1) < 2 && Math.abs((parseFloat(e.style.top) || 0) - t1) < 2);
+            if (activeEl) {
+                const activeImg = activeEl.querySelector('img');
+                if (activeImg) {
+                    const comp = window.getComputedStyle(activeImg);
+                    if (comp.clipPath && comp.clipPath !== 'none') shapeClip = comp.clipPath;
+                    else if (activeImg.style.clipPath && activeImg.style.clipPath !== 'none') shapeClip = activeImg.style.clipPath;
+                }
+            }
+        }
+        return (shapeClip && shapeClip !== 'none') ? shapeClip : '';
+    };
+
+    const applyClipPathRegion = (ctx, clipPath, w, h) => {
+        const normalized = (clipPath || '').trim();
+        if (!normalized || normalized === 'none') return;
+        if (/^circle\(/i.test(normalized)) {
+            ctx.beginPath();
+            ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.clip();
+            return;
+        }
+        const polyMatch = normalized.match(/^polygon\(\s*([^)]+)\)/i);
+        if (polyMatch) {
+            const coords = polyMatch[1].split(/\s*,\s*/);
+            ctx.beginPath();
+            coords.forEach((pair, i) => {
+                const nums = pair.trim().split(/\s+/);
+                const x = (parseFloat(nums[0]) / 100) * w;
+                const y = (parseFloat(nums[1]) / 100) * h;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.clip();
+        }
+    };
+
+    const bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '' } = {}) => new Promise((resolve, reject) => {
+        const tempImg = new Image();
+        if (!src.startsWith('data:')) tempImg.crossOrigin = 'Anonymous';
+        tempImg.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = displayW * 2;
+            c.height = displayH * 2;
+            const ctx = c.getContext('2d');
+            let finalFilter = filter;
+            if (finalFilter && finalFilter.includes('blur')) {
+                const scaleFactor = c.width / displayW;
+                finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scaleFactor}px)`);
+            }
+            ctx.save();
+            if (clipPath) applyClipPathRegion(ctx, clipPath, c.width, c.height);
+            if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
+            ctx.globalAlpha = parseFloat(opacity);
+            ctx.drawImage(tempImg, 0, 0, c.width, c.height);
+            ctx.restore();
+            resolve(c.toDataURL('image/png'));
+        };
+        tempImg.onerror = reject;
+        tempImg.src = src;
+    });
+
     window.printFullDocument = async function() {
         // Pre-Flight: Force browser to commit layout repaints
         document.querySelectorAll('.pub-element').forEach(el => el.getBoundingClientRect());
@@ -18129,8 +18214,15 @@ window.addEventListener('beforeprint', () => {
                         cropDiv.style.height = '100%';
                         cropDiv.style.position = 'relative';
                         cropDiv.style.overflow = 'hidden';
-                        cropDiv.style.clipPath = 'inset(0)';
                         cropDiv.style.contain = 'paint';
+
+                        const shapeClipPath = getImageShapeClipPath(el, page, livePaper);
+                        if (shapeClipPath) {
+                            cropDiv.style.clipPath = shapeClipPath;
+                            cropDiv.style.webkitClipPath = shapeClipPath;
+                        } else {
+                            cropDiv.style.clipPath = 'inset(0)';
+                        }
 
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
@@ -18140,6 +18232,8 @@ window.addEventListener('beforeprint', () => {
                         let img = document.createElement('img');
                         img.src = finalSrc;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        img.style.clipPath = 'none';
+                        img.style.webkitClipPath = 'none';
 
                         img.style.width = '100%';
                         img.style.height = '100%';
@@ -18167,38 +18261,31 @@ window.addEventListener('beforeprint', () => {
                             }
                         }
 
-                        if ((currentFilter && currentFilter !== 'none') || currentOpacity !== '1') {
+                        const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || 400;
+                        const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
+                        const needsBake = shapeClipPath || (currentFilter && currentFilter !== 'none') || currentOpacity !== '1';
+
+                        if (needsBake) {
                             try {
-                                const bakedSrc = await new Promise((resolve, reject) => {
-                                    const tempImg = new Image();
-                                    if (!finalSrc.startsWith('data:')) tempImg.crossOrigin = "Anonymous"; 
-                                    tempImg.onload = () => {
-                                        const c = document.createElement('canvas');
-                                        const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || tempImg.naturalWidth || 400;
-                                        const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || tempImg.naturalHeight || 400;
-                                        
-                                        c.width = displayW * 2; 
-                                        c.height = displayH * 2;
-                                        
-                                        const ctx = c.getContext('2d');
-                                        let finalFilter = currentFilter;
-                                        if (finalFilter.includes('blur')) {
-                                            const scaleFactor = c.width / displayW;
-                                            finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scaleFactor}px)`);
-                                        }
-                                        if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
-                                        ctx.globalAlpha = parseFloat(currentOpacity);
-                                        
-                                        ctx.drawImage(tempImg, 0, 0, c.width, c.height);
-                                        resolve(c.toDataURL('image/png'));
-                                    };
-                                    tempImg.onerror = reject; tempImg.src = finalSrc;
+                                const bakedSrc = await bakeImageForPrint(finalSrc, displayW, displayH, {
+                                    filter: currentFilter,
+                                    opacity: currentOpacity,
+                                    clipPath: shapeClipPath
                                 });
                                 await loadImageStrict(img, bakedSrc);
-                                img.style.filter = 'none'; img.style.WebkitFilter = 'none'; img.style.opacity = '1';
+                                img.style.filter = 'none';
+                                img.style.WebkitFilter = 'none';
+                                img.style.opacity = '1';
+                                cropDiv.style.clipPath = 'none';
+                                cropDiv.style.webkitClipPath = 'none';
                             } catch(e) {
                                 await loadImageStrict(img, finalSrc);
-                                img.style.filter = currentFilter; img.style.opacity = currentOpacity;
+                                img.style.filter = currentFilter;
+                                img.style.opacity = currentOpacity;
+                                if (shapeClipPath) {
+                                    cropDiv.style.clipPath = shapeClipPath;
+                                    cropDiv.style.webkitClipPath = shapeClipPath;
+                                }
                             }
                         } else {
                             await loadImageStrict(img, finalSrc);
