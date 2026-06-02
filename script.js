@@ -450,7 +450,8 @@ function serializeCurrentPage() {
             cropMode: el.classList.contains('cropping'),
             imgStyle: {},
             scaleX: el.getAttribute('data-scaleX') || "1",
-            scaleY: el.getAttribute('data-scaleY') || "1"
+            scaleY: el.getAttribute('data-scaleY') || "1",
+            shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true'
         };
 
         const content = el.querySelector('.element-content');
@@ -535,6 +536,7 @@ function renderPage(pageData) {
         const sY = data.scaleY || "1";
         el.setAttribute('data-scaleX', sX);
         el.setAttribute('data-scaleY', sY);
+        if (data.shrinkOverflow) el.setAttribute('data-shrink-overflow', 'true');
 
         let inner = '';
         if (data.imgSrc) {
@@ -562,11 +564,13 @@ function renderPage(pageData) {
         `;
 
         if (data.cropMode) el.classList.add('cropping');
+        if (data.shrinkOverflow) applyShrinkOverflow(el);
         paper.appendChild(el);
     });
     
     toggleHeaderFooter(state.headersVisible);
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
+    updatePageNumbers();
     updateSidebar();
 }
 
@@ -694,7 +698,7 @@ function handleNewDocument() {
     });
 }
 
-function renderThumbnailHTML(pageData) {
+function renderThumbnailHTML(pageData, pageIndex) {
     if (!pageData) return document.createElement('div');
     const pW = parseFloat(pageData.width) || 794;
     const pH = parseFloat(pageData.height) || 1123;
@@ -742,6 +746,13 @@ function renderThumbnailHTML(pageData) {
                 if (data.bgImage) {
                     const childDiv = scaleBox.querySelector('div');
                     if (childDiv) childDiv.style.backgroundImage = data.bgImage;
+                }
+                // Update page number spans in thumbnails
+                if (data.type === 'page-number' && typeof pageIndex === 'number') {
+                    const curSpan = scaleBox.querySelector('.pn-current');
+                    const totSpan = scaleBox.querySelector('.pn-total');
+                    if (curSpan) curSpan.textContent = pageIndex + 1;
+                    if (totSpan) totSpan.textContent = state.pages.length;
                 }
             }
             
@@ -794,7 +805,7 @@ function updateSidebar() {
         if (p._needsRender) {
             thumbContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--pub-color); font-size: 24px;"><i class="fas fa-circle-notch fa-spin"></i></div>`;
         } else {
-            const thumbNode = renderThumbnailHTML(p);
+            const thumbNode = renderThumbnailHTML(p, i);
             thumbContainer.appendChild(thumbNode);
         }
 
@@ -815,7 +826,7 @@ function generateThumbnail(index) {
     const thumbEl = document.getElementById(`thumb-${index}`);
     if (thumbEl) {
         thumbEl.innerHTML = '';
-        thumbEl.appendChild(renderThumbnailHTML(pageData));
+        thumbEl.appendChild(renderThumbnailHTML(pageData, index));
     }
 }
 
@@ -2200,6 +2211,36 @@ function createWrapper(htmlContent) {
 
 function addTextBox() { 
     createWrapper('<div style="padding:10px; height:100%; word-wrap:break-word;" contenteditable="true">Click to edit text</div>'); 
+}
+
+function insertPageNumber() {
+    const pageNum = state.currentPageIndex + 1;
+    const totalPages = state.pages.length;
+    const el = createWrapper(`<div style="padding:5px 15px; height:100%; display:flex; align-items:center; justify-content:center; font-family:inherit; font-size:14px; color:#333; white-space:nowrap; user-select:none; pointer-events:none;" contenteditable="false"><span class="pn-current">${pageNum}</span>&nbsp;/&nbsp;<span class="pn-total">${totalPages}</span></div>`);
+    el.setAttribute('data-type', 'page-number');
+    el.style.width = '80px';
+    el.style.height = '35px';
+    // Position at bottom center of the page
+    const paperW = parseFloat(paper.style.width) || 794;
+    const paperH = parseFloat(paper.style.height) || 1123;
+    el.style.left = ((paperW / 2) - 40) + 'px';
+    el.style.top = (paperH - 60) + 'px';
+}
+
+function updatePageNumbers() {
+    // Update all page number elements on the current page
+    const totalPages = state.pages.length;
+    const currentPageNum = state.currentPageIndex + 1;
+    
+    paper.querySelectorAll('.pub-element[data-type="page-number"]').forEach(el => {
+        const content = el.querySelector('.element-content');
+        if (content) {
+            const curSpan = content.querySelector('.pn-current');
+            const totSpan = content.querySelector('.pn-total');
+            if (curSpan) curSpan.textContent = currentPageNum;
+            if (totSpan) totSpan.textContent = totalPages;
+        }
+    });
 }
 
 function initTablePicker() {
@@ -5212,6 +5253,25 @@ const ContextMenuActions = {
         }
         pushHistory();
     },
+    toggleShrinkOverflow: function() {
+        if(!state.selectedEl) return;
+        const el = state.selectedEl;
+        const btn = document.getElementById('btn-shrink-overflow');
+        if (el.getAttribute('data-shrink-overflow') === 'true') {
+            el.removeAttribute('data-shrink-overflow');
+            el.removeAttribute('data-original-font-size'); // Reset baseline
+            if (window.shrinkObserver) window.shrinkObserver.unobserve(el);
+            const content = el.querySelector('.element-content > div') || el.querySelector('.element-content');
+            if(content) content.style.fontSize = ''; // reset to CSS default or float-toolbar set size
+            if (btn) btn.classList.remove('active');
+        } else {
+            el.setAttribute('data-shrink-overflow', 'true');
+            if (window.shrinkObserver) window.shrinkObserver.observe(el);
+            if (btn) btn.classList.add('active');
+            applyShrinkOverflow(el);
+        }
+        pushHistory();
+    },
     dropCap: function() {
         // Simulates Publisher's Drop Cap by floating the first letter
         if(!state.selectedEl) return;
@@ -5455,6 +5515,46 @@ window.switchTab = function(t) {
 })();
 
 // --- 2. CONTEXTUAL RIBBONS & ACTIONS ---
+window.shrinkObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+        if (entry.target.getAttribute('data-shrink-overflow') === 'true') {
+            applyShrinkOverflow(entry.target);
+        }
+    }
+});
+
+document.addEventListener('input', function(e) {
+    if(e.target.isContentEditable) {
+        const pubEl = e.target.closest('.pub-element');
+        if(pubEl && pubEl.getAttribute('data-shrink-overflow') === 'true') {
+            applyShrinkOverflow(pubEl);
+        }
+    }
+});
+
+window.applyShrinkOverflow = function(el) {
+    const content = el.querySelector('.element-content > div') || el.querySelector('.element-content');
+    if(!content) return;
+    
+    // Check if we already stored the original font size on this element
+    let originalSize = parseFloat(el.getAttribute('data-original-font-size'));
+    
+    // If not, store its current computed size as the baseline
+    if (!originalSize || isNaN(originalSize)) {
+        originalSize = parseFloat(window.getComputedStyle(content).fontSize) || 16;
+        el.setAttribute('data-original-font-size', originalSize);
+    }
+    
+    let size = originalSize;
+    content.style.fontSize = size + 'px';
+    
+    // Shrink down if there's overflow, but stop at 6px so it's not totally invisible
+    while((content.scrollHeight > el.clientHeight || content.scrollWidth > el.clientWidth) && size > 6) {
+        size -= 1;
+        content.style.fontSize = size + 'px';
+    }
+};
+
 window.ContextRibbonActions = {
     alignCenter: function() {
         if(!state.selectedEl) return;
@@ -5527,6 +5627,7 @@ window.ContextRibbonSystem = {
                 .tab-text.active, .tab-pic.active, .tab-shape.active, .tab-table.active, .tab-wordart.active { color: var(--pub-color) !important; }
                 .contextual-toolbar { display: none; }
                 .contextual-toolbar.active { display: flex; }
+                .tool-btn.active { background: rgba(0, 118, 112, 0.1) !important; border: 2px solid var(--pub-color) !important; border-radius: 6px !important; }
             `;
             document.head.appendChild(style);
         }
@@ -5543,7 +5644,7 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><i class="fas fa-fill-drip" style="color:var(--pub-color)"></i> Fill Color</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
@@ -5566,7 +5667,18 @@ window.ContextRibbonSystem = {
         else if (isTable) { document.getElementById('tab-table-design').style.display = 'inline-block'; tabIdToOpen = 'table-design'; document.getElementById('op-table-sidebar')?.classList.add('visible'); } 
         else if (isShape) { document.getElementById('tab-format-shape').style.display = 'inline-block'; tabIdToOpen = 'format-shape'; } 
         else if (isWordArt) { document.getElementById('tab-format-wordart').style.display = 'inline-block'; tabIdToOpen = 'format-wordart'; } 
-        else if (isText) { document.getElementById('tab-format-text').style.display = 'inline-block'; tabIdToOpen = 'format-text'; }
+        else if (isText) { 
+            document.getElementById('tab-format-text').style.display = 'inline-block'; 
+            tabIdToOpen = 'format-text'; 
+            const shrinkBtn = document.getElementById('btn-shrink-overflow');
+            if (shrinkBtn) {
+                if (el.getAttribute('data-shrink-overflow') === 'true') {
+                    shrinkBtn.classList.add('active');
+                } else {
+                    shrinkBtn.classList.remove('active');
+                }
+            }
+        }
         if (tabIdToOpen) window.switchTab(tabIdToOpen);
     },
     hideAllTabs: function() {
