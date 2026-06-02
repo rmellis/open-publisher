@@ -451,7 +451,8 @@ function serializeCurrentPage() {
             imgStyle: {},
             scaleX: el.getAttribute('data-scaleX') || "1",
             scaleY: el.getAttribute('data-scaleY') || "1",
-            shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true'
+            shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true',
+            growFit: el.getAttribute('data-grow-fit') === 'true'
         };
 
         const content = el.querySelector('.element-content');
@@ -565,6 +566,7 @@ function renderPage(pageData) {
 
         if (data.cropMode) el.classList.add('cropping');
         if (data.shrinkOverflow) applyShrinkOverflow(el);
+        if (data.growFit) applyGrowFit(el);
         paper.appendChild(el);
     });
     
@@ -5265,10 +5267,41 @@ const ContextMenuActions = {
             if(content) content.style.fontSize = ''; // reset to CSS default or float-toolbar set size
             if (btn) btn.classList.remove('active');
         } else {
+            // Disable growFit if active
+            el.removeAttribute('data-grow-fit');
+            const growBtn = document.getElementById('btn-grow-fit');
+            if(growBtn) growBtn.classList.remove('active');
+
             el.setAttribute('data-shrink-overflow', 'true');
             if (window.shrinkObserver) window.shrinkObserver.observe(el);
             if (btn) btn.classList.add('active');
             applyShrinkOverflow(el);
+        }
+        pushHistory();
+    },
+    toggleGrowFit: function() {
+        if(!state.selectedEl) return;
+        const el = state.selectedEl;
+        const btn = document.getElementById('btn-grow-fit');
+        if (el.getAttribute('data-grow-fit') === 'true') {
+            el.removeAttribute('data-grow-fit');
+            if (window.shrinkObserver && el.getAttribute('data-shrink-overflow') !== 'true') {
+                window.shrinkObserver.unobserve(el);
+            }
+            if (btn) btn.classList.remove('active');
+        } else {
+            // Disable shrinkOverflow if active
+            el.removeAttribute('data-shrink-overflow');
+            el.removeAttribute('data-original-font-size');
+            const content = el.querySelector('.element-content > div') || el.querySelector('.element-content');
+            if(content) content.style.fontSize = '';
+            const shrinkBtn = document.getElementById('btn-shrink-overflow');
+            if(shrinkBtn) shrinkBtn.classList.remove('active');
+
+            el.setAttribute('data-grow-fit', 'true');
+            if (window.shrinkObserver) window.shrinkObserver.observe(el);
+            if (btn) btn.classList.add('active');
+            applyGrowFit(el);
         }
         pushHistory();
     },
@@ -5520,6 +5553,9 @@ window.shrinkObserver = new ResizeObserver(entries => {
         if (entry.target.getAttribute('data-shrink-overflow') === 'true') {
             applyShrinkOverflow(entry.target);
         }
+        if (entry.target.getAttribute('data-grow-fit') === 'true') {
+            applyGrowFit(entry.target);
+        }
     }
 });
 
@@ -5528,6 +5564,9 @@ document.addEventListener('input', function(e) {
         const pubEl = e.target.closest('.pub-element');
         if(pubEl && pubEl.getAttribute('data-shrink-overflow') === 'true') {
             applyShrinkOverflow(pubEl);
+        }
+        if(pubEl && pubEl.getAttribute('data-grow-fit') === 'true') {
+            applyGrowFit(pubEl);
         }
     }
 });
@@ -5553,6 +5592,20 @@ window.applyShrinkOverflow = function(el) {
         size -= 1;
         content.style.fontSize = size + 'px';
     }
+};
+
+window.applyGrowFit = function(el) {
+    const content = el.querySelector('.element-content > div') || el.querySelector('.element-content');
+    if(!content) return;
+    
+    // Temporarily set height very small to force scrollHeight to represent the exact content height
+    const currentH = el.style.height;
+    el.style.height = '10px';
+    
+    let newHeight = content.scrollHeight;
+    if (newHeight < 20) newHeight = 20; // Enforce minimum height
+    
+    el.style.height = newHeight + 'px';
 };
 
 window.ContextRibbonActions = {
@@ -5644,7 +5697,7 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><i class="fas fa-fill-drip" style="color:var(--pub-color)"></i> Fill Color</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
@@ -5676,6 +5729,14 @@ window.ContextRibbonSystem = {
                     shrinkBtn.classList.add('active');
                 } else {
                     shrinkBtn.classList.remove('active');
+                }
+            }
+            const growBtn = document.getElementById('btn-grow-fit');
+            if (growBtn) {
+                if (el.getAttribute('data-grow-fit') === 'true') {
+                    growBtn.classList.add('active');
+                } else {
+                    growBtn.classList.remove('active');
                 }
             }
         }
