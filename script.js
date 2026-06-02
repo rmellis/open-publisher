@@ -20163,7 +20163,76 @@ window.showWebClipartModal = function() {
         }
     }, 10);
 };
+/* =======================================================
+   PICTURE PLACEHOLDER ADDON
+   Paste this at the very bottom of your script.js
+======================================================== */
 
+function addPicturePlaceholder() {
+    // Passes YOUR server's link through a CDN to automatically apply print-safe CORS headers.
+    // Because it's your server, the CDN won't be blocked like it was with Imgur.
+    const placeholderUrl = "https://wsrv.nl/?url=saw.floydcraft.co.uk/ImagePlaceholder.png";
+    
+    // crossorigin="anonymous" is REQUIRED by html2canvas for printing.
+    const el = createWrapper(`<img src="${placeholderUrl}" crossorigin="anonymous" style="width:100%; height:100%; object-fit:fill; pointer-events:none;">`);
+    
+    el.style.width = '400px';
+    el.style.height = '400px';
+    
+    // REQUIRED so your custom print engine loop actually processes it
+    el.setAttribute('data-type', 'image');
+    el.setAttribute('data-is-placeholder', 'true'); 
+    
+    el.ondblclick = function(e) {
+        e.stopPropagation();
+        
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        
+        fileInput.onchange = function(evt) {
+            if (evt.target.files && evt.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(readerEvt) {
+                    const img = el.querySelector('.element-content img');
+                    if (img) {
+                        img.src = readerEvt.target.result;
+                        img.removeAttribute('crossorigin'); // Remove security tag for local files
+                        img.style.objectFit = 'fill'; 
+                        el.removeAttribute('data-is-placeholder');
+                        if (typeof pushHistory === 'function') pushHistory();
+                    }
+                };
+                reader.readAsDataURL(evt.target.files[0]);
+            }
+        };
+        
+        fileInput.click();
+    };
+}
+
+// Auto-inject the UI Button into the Ribbon
+setTimeout(() => {
+    const uploadBtn = document.querySelector('.tool-btn[onclick="triggerUpload()"]') || 
+                      Array.from(document.querySelectorAll('.tool-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes('triggerUpload'));
+                      
+    if (uploadBtn) {
+        const group = uploadBtn.closest('.group');
+        if (group) {
+            const placeholderBtn = document.createElement('div');
+            placeholderBtn.className = 'tool-btn';
+            placeholderBtn.title = "Insert Picture Placeholder";
+            placeholderBtn.onclick = addPicturePlaceholder;
+            
+            placeholderBtn.innerHTML = `
+                <i class="far fa-image" style="border: 1px dashed #005a55; padding: 2px;"></i>
+                <span>Placeholder</span>
+            `;
+            
+            group.insertBefore(placeholderBtn, uploadBtn.nextSibling);
+        }
+    }
+}, 1000);
 /* =========================================================================
    FEATURE: MS Paint-Style Drawing Engine
    ========================================================================= */
