@@ -686,6 +686,18 @@
 <div style="height:25px; background:var(--pub-color); color:white; display:flex; align-items:center; padding:0 10px; font-size:11px; justify-content:space-between;" class="status-bar">
     <span id="status-msg">Ready</span>
     <span id="page-count-status">Page 1 of 1</span>
+    <div id="zoom-slider-container">
+        <button id="zoom-out-btn" class="zoom-slider-btn" onclick="setZoom(Math.max(0.1, Math.round((state.zoom - 0.1)*10)/10))" title="Zoom Out">
+            <i class="fas fa-minus"></i>
+        </button>
+        <input type="range" id="zoom-slider" min="10" max="300" value="60" step="1"
+            oninput="setZoom(this.value / 100)"
+            title="Drag to zoom">
+        <button id="zoom-in-btn" class="zoom-slider-btn" onclick="setZoom(Math.min(3.0, Math.round((state.zoom + 0.1)*10)/10))" title="Zoom In">
+            <i class="fas fa-plus"></i>
+        </button>
+        <span id="zoom-level-display" onclick="setZoom(1.0)" title="Click for 100%">60%</span>
+    </div>
 </div>
 
 <div class="modal-overlay" id="clipart-modal" onclick="closeModal(this)">
@@ -729,7 +741,7 @@
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.8.5"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.8.6"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>

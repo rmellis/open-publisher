@@ -805,6 +805,101 @@ td, th {
 .wa-style-60 { color: transparent; -webkit-text-stroke: 2px #ffeb3b; filter: drop-shadow(0 0 2px #000); }
 
 
+/* --- ZOOM SLIDER (Status Bar) --- */
+#zoom-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding-left: 15px;
+}
+
+.zoom-slider-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 10px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.15s;
+    padding: 0;
+}
+.zoom-slider-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+.zoom-slider-btn:active {
+    background: rgba(255,255,255,0.35);
+}
+
+#zoom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+#zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+#zoom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+#zoom-slider::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+}
+
+/* Firefox */
+#zoom-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+#zoom-slider::-moz-range-track {
+    background: rgba(255,255,255,0.3);
+    height: 4px;
+    border-radius: 2px;
+    border: none;
+}
+
+#zoom-level-display {
+    min-width: 36px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.9;
+    user-select: none;
+}
+#zoom-level-display:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
 /* Print Override */
 @media print {
     @page { margin: 0; size: auto; }

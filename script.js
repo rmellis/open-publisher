@@ -3889,6 +3889,11 @@ window.setZoom = function(z) {
     const paperEl = document.getElementById('paper');
     if (paperEl) paperEl.style.transform = `scale(${z})`;
     if (window.syncRulers) window.syncRulers();
+    // Sync status bar zoom slider
+    const slider = document.getElementById('zoom-slider');
+    if (slider) slider.value = Math.round(z * 100);
+    const display = document.getElementById('zoom-level-display');
+    if (display) display.textContent = Math.round(z * 100) + '%';
 };
 
 window.fitToPage = function() {
