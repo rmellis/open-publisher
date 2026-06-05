@@ -507,6 +507,7 @@
             <div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint"></i>Recolor <i class="fas fa-caret-down"></i></div>
             <div class="tool-btn" onclick="applyImgFilter('brightness(1.2) contrast(1.2)')"><i class="fas fa-sun"></i>Corrections</div>
             <div class="tool-btn" onclick="applyImgFilter('none')"><i class="fas fa-undo"></i>Reset</div>
+            <div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt"></i>Compress</div>
             <div class="group-label">Adjust</div>
         </div>
         <div class="group">
@@ -741,7 +742,7 @@
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.8.8"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.8.12"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>
