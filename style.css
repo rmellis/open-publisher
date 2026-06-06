@@ -1277,3 +1277,8 @@ body::-webkit-scrollbar-thumb:hover,
     background: rgba(0, 118, 112, 0.2);
     margin: 4px 0;
 }
+
+/* Prevent vector shape borders from scaling unevenly when stretched */
+svg .shape-path, svg .shape-path * {
+    vector-effect: non-scaling-stroke;
+}
