@@ -16412,23 +16412,32 @@ window.toggleCrop = function() {
             let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
             let imgDx = 0, imgDy = 0;
             
-            // Container Width & Left Origin Shifts
-            if (d.dir.includes('e')) {
-                rawW = d.w + dx; 
-            } else if (d.dir.includes('w')) { 
-                rawW = d.w - dx; 
-                newL = d.l + dx; 
-                // Divides the screen delta by the image's scale so it perfectly compensates
-                if (state.cropMode) imgDx = -(dx / sX); 
-            }
-            
-            // Container Height & Top Origin Shifts
-            if (d.dir.includes('s')) {
-                rawH = d.h + dy; 
-            } else if (d.dir.includes('n')) { 
-                rawH = d.h - dy; 
-                newT = d.t + dy; 
-                if (state.cropMode) imgDy = -(dy / sY); 
+            if (e.ctrlKey || e.metaKey) {
+                // Center Resize Shifts
+                if (d.dir.includes('e')) { rawW = d.w + 2 * dx; newL = d.l - dx; }
+                else if (d.dir.includes('w')) { rawW = d.w - 2 * dx; newL = d.l + dx; if (state.cropMode) imgDx = -(dx / sX); }
+                
+                if (d.dir.includes('s')) { rawH = d.h + 2 * dy; newT = d.t - dy; }
+                else if (d.dir.includes('n')) { rawH = d.h - 2 * dy; newT = d.t + dy; if (state.cropMode) imgDy = -(dy / sY); }
+            } else {
+                // Container Width & Left Origin Shifts
+                if (d.dir.includes('e')) {
+                    rawW = d.w + dx; 
+                } else if (d.dir.includes('w')) { 
+                    rawW = d.w - dx; 
+                    newL = d.l + dx; 
+                    // Divides the screen delta by the image's scale so it perfectly compensates
+                    if (state.cropMode) imgDx = -(dx / sX); 
+                }
+                
+                // Container Height & Top Origin Shifts
+                if (d.dir.includes('s')) {
+                    rawH = d.h + dy; 
+                } else if (d.dir.includes('n')) { 
+                    rawH = d.h - dy; 
+                    newT = d.t + dy; 
+                    if (state.cropMode) imgDy = -(dy / sY); 
+                }
             }
 
             // Aspect Ratio Lock (Standard Resize Only)
@@ -16441,8 +16450,14 @@ window.toggleCrop = function() {
                 else dominantScale = Math.max(scaleX, scaleY);
                 rawW = (Math.sign(rawW) || 1) * Math.abs(safeW) * dominantScale;
                 rawH = (Math.sign(rawH) || 1) * Math.abs(safeH) * dominantScale;
-                if (d.dir.includes('w')) newL = (d.l + d.w) - rawW;
-                if (d.dir.includes('n')) newT = (d.t + d.h) - rawH;
+                
+                if (e.ctrlKey || e.metaKey) {
+                    newL = d.l + (d.w - rawW) / 2;
+                    newT = d.t + (d.h - rawH) / 2;
+                } else {
+                    if (d.dir.includes('w')) newL = (d.l + d.w) - rawW;
+                    if (d.dir.includes('n')) newT = (d.t + d.h) - rawH;
+                }
             }
 
             if (state.cropMode) {
