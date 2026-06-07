@@ -2919,6 +2919,12 @@ document.addEventListener('dblclick', (e) => {
             wa.focus();
             return;
         }
+
+        const isShape = el.getAttribute('data-type') === 'shape';
+        if (isShape && typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
+            ContextMenuActions.formatTextBox();
+            return;
+        }
         
         const content = el.querySelector('.element-content div, .element-content table');
         if(content) { 
@@ -11403,6 +11409,7 @@ window.initShapes = function() {
             let currentBg = "#ffffff";
             let currentBc = "#000000";
             let currentBt = 0;
+            let currentFillType = 'solid';
             
             const isShape = state.selectedEl.getAttribute('data-type') === 'shape';
             const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
@@ -11413,20 +11420,74 @@ window.initShapes = function() {
                 const innerG = svgOuter.querySelector('g[fill="transparent"]');
                 if (!innerG) {
                     const fill = svgOuter.getAttribute('fill');
-                    if (fill && fill.startsWith('#')) currentBg = fill;
+                    if (fill) {
+                        if (fill.startsWith('#')) currentBg = fill;
+                        else if (fill.startsWith('url(#grad-')) currentFillType = 'gradient';
+                    }
                 }
                 const stroke = svgOuter.getAttribute('stroke');
                 if (stroke && stroke.startsWith('#')) currentBc = stroke;
                 
                 const strokeWidth = svgOuter.getAttribute('stroke-width');
                 if (strokeWidth) currentBt = parseInt(strokeWidth);
+            } else if (content) {
+                const bg = content.style.background;
+                if (bg && bg.includes('gradient')) currentFillType = 'gradient';
+                else if (bg) currentBg = bg;
             }
 
             const form = `
                 <div class="input-group" style="margin-bottom:10px;">
-                    <label>Fill Color:</label>
-                    <input type="color" id="ctx-box-bg" value="${currentBg}">
+                    <label>Fill Type:</label>
+                    <select id="ctx-box-fill-type" onchange="
+                        document.getElementById('ctx-box-solid-panel').style.display = this.value==='solid' ? 'block' : 'none';
+                        document.getElementById('ctx-box-gradient-panel').style.display = this.value==='gradient' ? 'block' : 'none';
+                    ">
+                        <option value="solid" ${currentFillType==='solid'?'selected':''}>Solid Color</option>
+                        <option value="gradient" ${currentFillType==='gradient'?'selected':''}>Gradient Fill</option>
+                    </select>
                 </div>
+                
+                <div id="ctx-box-solid-panel" style="display:${currentFillType==='solid'?'block':'none'};">
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <label>Fill Color:</label>
+                        <input type="color" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}">
+                    </div>
+                </div>
+
+                <div id="ctx-box-gradient-panel" style="display:${currentFillType==='gradient'?'block':'none'}; padding:10px; background:#f9f9f9; border:1px solid #ddd; margin-bottom:10px; border-radius:4px;">
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <label>Gradient Preset:</label>
+                        <select id="ctx-box-grad-preset" onchange="document.getElementById('ctx-custom-grad').style.display = this.value==='custom' ? 'block' : 'none';">
+                            <option value="custom">Custom 2-Color</option>
+                            <option value="gold">Metallic Gold</option>
+                            <option value="silver">Metallic Silver</option>
+                            <option value="chrome">Metallic Chrome</option>
+                            <option value="bronze">Metallic Bronze</option>
+                            <option value="sunset">Sunset Glow</option>
+                            <option value="ocean">Ocean Blue</option>
+                        </select>
+                    </div>
+                    
+                    <div id="ctx-custom-grad" style="display:block; margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; margin-bottom:4px;">Custom Colors:</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="color" id="ctx-box-grad-1" value="#ff0000" title="Start Color">
+                            <input type="color" id="ctx-box-grad-2" value="#0000ff" title="End Color">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Gradient Style:</label>
+                        <select id="ctx-box-grad-style">
+                            <option value="linear_90">Linear (Left to Right)</option>
+                            <option value="linear_180">Linear (Top to Bottom)</option>
+                            <option value="linear_45">Linear (Diagonal)</option>
+                            <option value="radial">Radial (Center Out)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="input-group" style="margin-bottom:10px;">
                     <label>Border / Stroke Color:</label>
                     <input type="color" id="ctx-box-bc" value="${currentBc}">
@@ -11441,38 +11502,98 @@ window.initShapes = function() {
             `;
 
             DialogSystem.show('Format Properties', form, () => {
+                const fillType = document.getElementById('ctx-box-fill-type').value;
                 const bg = document.getElementById('ctx-box-bg').value;
                 const bc = document.getElementById('ctx-box-bc').value;
                 const bt = document.getElementById('ctx-box-bt').value;
+                
+                const gradPreset = document.getElementById('ctx-box-grad-preset').value;
+                const gradC1 = document.getElementById('ctx-box-grad-1').value;
+                const gradC2 = document.getElementById('ctx-box-grad-2').value;
+                const gradStyle = document.getElementById('ctx-box-grad-style').value;
+                
+                // Define Presets
+                const presets = {
+                    gold: [{o:0, c:"#bf953f"}, {o:25, c:"#fcf6ba"}, {o:50, c:"#b38728"}, {o:75, c:"#fbf5b7"}, {o:100, c:"#aa771c"}],
+                    silver: [{o:0, c:"#e0e0e0"}, {o:25, c:"#f8f8f8"}, {o:50, c:"#b0b0b0"}, {o:75, c:"#f0f0f0"}, {o:100, c:"#909090"}],
+                    chrome: [{o:0, c:"#d1d5da"}, {o:48, c:"#ffffff"}, {o:50, c:"#8b939c"}, {o:100, c:"#d1d5da"}],
+                    bronze: [{o:0, c:"#cd7f32"}, {o:50, c:"#e6b080"}, {o:100, c:"#b3621b"}],
+                    sunset: [{o:0, c:"#ff5e62"}, {o:100, c:"#ff9966"}],
+                    ocean: [{o:0, c:"#2E3192"}, {o:100, c:"#1BFFFF"}],
+                    custom: [{o:0, c:gradC1}, {o:100, c:gradC2}]
+                };
+                
+                const stops = presets[gradPreset] || presets.custom;
 
                 if (isShape && svgOuter) {
                     const isHollow = svgOuter.querySelector('g[fill="transparent"]') !== null;
+                    const svgRoot = svgOuter.closest('svg');
                     
-                    // If it's hollow and they leave it white, keep it transparent so the background shows through
-                    if (isHollow && bg === "#ffffff") {
-                        svgOuter.setAttribute('fill', 'transparent');
-                    } else {
-                        // Strip the hardcoded transparent inner-locks so the chosen color correctly applies
-                        svgOuter.setAttribute('fill', bg);
+                    // Cleanup old gradients
+                    const oldDefs = svgRoot.querySelector('defs');
+                    if (oldDefs) oldDefs.remove();
+
+                    if (fillType === 'solid') {
+                        if (isHollow && bg === "#ffffff") {
+                            svgOuter.setAttribute('fill', 'transparent');
+                        } else {
+                            svgOuter.setAttribute('fill', bg);
+                            svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
+                        }
+                    } else if (fillType === 'gradient') {
+                        const gradId = 'grad-' + Math.random().toString(36).substr(2, 9);
+                        let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                        
+                        const isRadial = gradStyle === 'radial';
+                        let gradEl = document.createElementNS('http://www.w3.org/2000/svg', isRadial ? 'radialGradient' : 'linearGradient');
+                        gradEl.setAttribute('id', gradId);
+                        
+                        if (!isRadial) {
+                            if (gradStyle === 'linear_90') { gradEl.setAttribute('x1', '0%'); gradEl.setAttribute('y1', '0%'); gradEl.setAttribute('x2', '100%'); gradEl.setAttribute('y2', '0%'); }
+                            else if (gradStyle === 'linear_180') { gradEl.setAttribute('x1', '0%'); gradEl.setAttribute('y1', '0%'); gradEl.setAttribute('x2', '0%'); gradEl.setAttribute('y2', '100%'); }
+                            else if (gradStyle === 'linear_45') { gradEl.setAttribute('x1', '0%'); gradEl.setAttribute('y1', '0%'); gradEl.setAttribute('x2', '100%'); gradEl.setAttribute('y2', '100%'); }
+                        }
+                        
+                        stops.forEach(s => {
+                            let stopEl = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                            stopEl.setAttribute('offset', s.o + '%');
+                            stopEl.setAttribute('stop-color', s.c);
+                            gradEl.appendChild(stopEl);
+                        });
+                        
+                        defs.appendChild(gradEl);
+                        svgRoot.insertBefore(defs, svgRoot.firstChild);
+                        
+                        svgOuter.setAttribute('fill', `url(#${gradId})`);
                         svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
                     }
                     
                     svgOuter.setAttribute('stroke', bc);
                     svgOuter.setAttribute('stroke-width', bt);
                     
-                    // Strip inner stroke-width locks so the outline thickness scales properly from the parent wrapper
                     svgOuter.querySelectorAll('[stroke-width]').forEach(el => {
                         if (el !== svgOuter) el.removeAttribute('stroke-width');
                     });
 
-                    // Clear HTML box borders to prevent double-bordering boxes around the SVG
                     if (content) {
                         content.style.background = 'transparent';
                         content.style.border = 'none';
                     }
                 } else if (content) {
                     // Standard HTML Text Box Formatting
-                    content.style.background = bg;
+                    if (fillType === 'solid') {
+                        content.style.background = bg;
+                    } else {
+                        const cssStops = stops.map(s => `${s.c} ${s.o}%`).join(', ');
+                        if (gradStyle === 'radial') {
+                            content.style.background = `radial-gradient(circle, ${cssStops})`;
+                        } else {
+                            let angle = '90deg';
+                            if (gradStyle === 'linear_180') angle = '180deg';
+                            if (gradStyle === 'linear_45') angle = '135deg';
+                            content.style.background = `linear-gradient(${angle}, ${cssStops})`;
+                        }
+                    }
                     content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
                 }
                 

@@ -1019,6 +1019,21 @@ td, th {
     border-color: transparent;
 }
 
+.custom-dialog select {
+    padding: 4px 8px;
+    border: 1px solid var(--pub-color);
+    border-radius: 4px;
+    background: white;
+    font-family: inherit;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+}
+
+.custom-dialog select:focus {
+    box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.2);
+}
+
 /* Modal Buttons */
 .custom-dialog button {
     padding: 8px 16px; 
