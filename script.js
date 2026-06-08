@@ -11423,6 +11423,7 @@ window.initShapes = function() {
                     if (fill) {
                         if (fill.startsWith('#')) currentBg = fill;
                         else if (fill.startsWith('url(#grad-')) currentFillType = 'gradient';
+                        else if (fill.startsWith('url(#pat-')) currentFillType = 'pattern';
                     }
                 }
                 const stroke = svgOuter.getAttribute('stroke');
@@ -11432,7 +11433,10 @@ window.initShapes = function() {
                 if (strokeWidth) currentBt = parseInt(strokeWidth);
             } else if (content) {
                 const bg = content.style.background;
-                if (bg && bg.includes('gradient')) currentFillType = 'gradient';
+                if (bg && bg.includes('gradient')) {
+                    if (bg.includes('repeating') || bg.includes('conic')) currentFillType = 'pattern';
+                    else currentFillType = 'gradient';
+                }
                 else if (bg) currentBg = bg;
             }
 
@@ -11442,9 +11446,11 @@ window.initShapes = function() {
                     <select id="ctx-box-fill-type" onchange="
                         document.getElementById('ctx-box-solid-panel').style.display = this.value==='solid' ? 'block' : 'none';
                         document.getElementById('ctx-box-gradient-panel').style.display = this.value==='gradient' ? 'block' : 'none';
+                        document.getElementById('ctx-box-pattern-panel').style.display = this.value==='pattern' ? 'block' : 'none';
                     ">
                         <option value="solid" ${currentFillType==='solid'?'selected':''}>Solid Color</option>
                         <option value="gradient" ${currentFillType==='gradient'?'selected':''}>Gradient Fill</option>
+                        <option value="pattern" ${currentFillType==='pattern'?'selected':''}>Pattern Fill</option>
                     </select>
                 </div>
                 
@@ -11487,6 +11493,39 @@ window.initShapes = function() {
                         </select>
                     </div>
                 </div>
+                
+                <div id="ctx-box-pattern-panel" style="display:${currentFillType==='pattern'?'block':'none'}; padding:10px; background:#f9f9f9; border:1px solid #ddd; margin-bottom:10px; border-radius:4px;">
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <label>Pattern Style:</label>
+                        <select id="ctx-box-pat-style">
+                            <option value="dots">Tiny Dots</option>
+                            <option value="lines_diag">Diagonal Lines</option>
+                            <option value="crosshatch">Crosshatch</option>
+                            <option value="checker">Checkerboard</option>
+                            <option value="lines_v">Vertical Lines</option>
+                            <option value="lines_h">Horizontal Lines</option>
+                            <option value="grid">Square Grid</option>
+                            <option value="polka">Polka Dots</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <label style="font-size:12px;">Pattern</label>
+                            <input type="color" id="ctx-box-pat-fg" value="#ff0000">
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <label style="font-size:12px;">Background</label>
+                            <input type="color" id="ctx-box-pat-bg" value="#0000ff">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pattern Scale:</label>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="range" id="ctx-box-pat-scale" min="0.2" max="3" step="0.1" value="1.0" oninput="document.getElementById('ctx-box-pat-scale-val').innerText = this.value + 'x'">
+                            <span id="ctx-box-pat-scale-val" style="font-size:12px; width:30px;">1.0x</span>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="input-group" style="margin-bottom:10px;">
                     <label>Border / Stroke Color:</label>
@@ -11507,10 +11546,15 @@ window.initShapes = function() {
                 const bc = document.getElementById('ctx-box-bc').value;
                 const bt = document.getElementById('ctx-box-bt').value;
                 
-                const gradPreset = document.getElementById('ctx-box-grad-preset').value;
-                const gradC1 = document.getElementById('ctx-box-grad-1').value;
-                const gradC2 = document.getElementById('ctx-box-grad-2').value;
-                const gradStyle = document.getElementById('ctx-box-grad-style').value;
+                const gradPreset = document.getElementById('ctx-box-grad-preset') ? document.getElementById('ctx-box-grad-preset').value : 'custom';
+                const gradC1 = document.getElementById('ctx-box-grad-1') ? document.getElementById('ctx-box-grad-1').value : '#ff0000';
+                const gradC2 = document.getElementById('ctx-box-grad-2') ? document.getElementById('ctx-box-grad-2').value : '#0000ff';
+                const gradStyle = document.getElementById('ctx-box-grad-style') ? document.getElementById('ctx-box-grad-style').value : 'linear_90';
+                
+                const patStyle = document.getElementById('ctx-box-pat-style') ? document.getElementById('ctx-box-pat-style').value : 'dots';
+                const patFg = document.getElementById('ctx-box-pat-fg') ? document.getElementById('ctx-box-pat-fg').value : '#ff0000';
+                const patBg = document.getElementById('ctx-box-pat-bg') ? document.getElementById('ctx-box-pat-bg').value : '#0000ff';
+                const patScale = document.getElementById('ctx-box-pat-scale') ? parseFloat(document.getElementById('ctx-box-pat-scale').value) : 1.0;
                 
                 // Define Presets
                 const presets = {
@@ -11566,6 +11610,86 @@ window.initShapes = function() {
                         
                         svgOuter.setAttribute('fill', `url(#${gradId})`);
                         svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
+                    } else if (fillType === 'pattern') {
+                        const patId = 'pat-' + Math.random().toString(36).substr(2, 9);
+                        let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                        let patEl = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                        patEl.setAttribute('id', patId);
+                        patEl.setAttribute('patternUnits', 'userSpaceOnUse');
+                        patEl.setAttribute('patternTransform', `scale(${patScale})`);
+                        
+                        let bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bgRect.setAttribute('width', '100%');
+                        bgRect.setAttribute('height', '100%');
+                        bgRect.setAttribute('fill', patBg);
+                        patEl.appendChild(bgRect);
+
+                        if (patStyle === 'dots') {
+                            patEl.setAttribute('width', '10');
+                            patEl.setAttribute('height', '10');
+                            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            circle.setAttribute('cx', '5'); circle.setAttribute('cy', '5');
+                            circle.setAttribute('r', '2'); circle.setAttribute('fill', patFg);
+                            patEl.appendChild(circle);
+                        } else if (patStyle === 'lines_diag') {
+                            patEl.setAttribute('width', '10');
+                            patEl.setAttribute('height', '10');
+                            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('d', 'M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2');
+                            path.setAttribute('stroke', patFg); path.setAttribute('stroke-width', '2');
+                            patEl.appendChild(path);
+                        } else if (patStyle === 'crosshatch') {
+                            patEl.setAttribute('width', '10');
+                            patEl.setAttribute('height', '10');
+                            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('d', 'M0,0 l10,10 M10,0 l-10,10');
+                            path.setAttribute('stroke', patFg); path.setAttribute('stroke-width', '1');
+                            patEl.appendChild(path);
+                        } else if (patStyle === 'checker') {
+                            patEl.setAttribute('width', '20');
+                            patEl.setAttribute('height', '20');
+                            let r1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            r1.setAttribute('width', '10'); r1.setAttribute('height', '10'); r1.setAttribute('fill', patFg);
+                            let r2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            r2.setAttribute('x', '10'); r2.setAttribute('y', '10');
+                            r2.setAttribute('width', '10'); r2.setAttribute('height', '10'); r2.setAttribute('fill', patFg);
+                            patEl.appendChild(r1); patEl.appendChild(r2);
+                        } else if (patStyle === 'lines_v') {
+                            patEl.setAttribute('width', '10');
+                            patEl.setAttribute('height', '10');
+                            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('d', 'M5,0 l0,10');
+                            path.setAttribute('stroke', patFg); path.setAttribute('stroke-width', '2');
+                            patEl.appendChild(path);
+                        } else if (patStyle === 'lines_h') {
+                            patEl.setAttribute('width', '10');
+                            patEl.setAttribute('height', '10');
+                            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('d', 'M0,5 l10,0');
+                            path.setAttribute('stroke', patFg); path.setAttribute('stroke-width', '2');
+                            patEl.appendChild(path);
+                        } else if (patStyle === 'grid') {
+                            patEl.setAttribute('width', '20');
+                            patEl.setAttribute('height', '20');
+                            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('d', 'M20,0 l0,20 l-20,0');
+                            path.setAttribute('fill', 'none');
+                            path.setAttribute('stroke', patFg); path.setAttribute('stroke-width', '1');
+                            patEl.appendChild(path);
+                        } else if (patStyle === 'polka') {
+                            patEl.setAttribute('width', '20');
+                            patEl.setAttribute('height', '20');
+                            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            circle.setAttribute('cx', '10'); circle.setAttribute('cy', '10');
+                            circle.setAttribute('r', '6'); circle.setAttribute('fill', patFg);
+                            patEl.appendChild(circle);
+                        }
+
+                        defs.appendChild(patEl);
+                        svgRoot.insertBefore(defs, svgRoot.firstChild);
+                        
+                        svgOuter.setAttribute('fill', `url(#${patId})`);
+                        svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
                     }
                     
                     svgOuter.setAttribute('stroke', bc);
@@ -11583,7 +11707,7 @@ window.initShapes = function() {
                     // Standard HTML Text Box Formatting
                     if (fillType === 'solid') {
                         content.style.background = bg;
-                    } else {
+                    } else if (fillType === 'gradient') {
                         const cssStops = stops.map(s => `${s.c} ${s.o}%`).join(', ');
                         if (gradStyle === 'radial') {
                             content.style.background = `radial-gradient(circle, ${cssStops})`;
@@ -11592,6 +11716,33 @@ window.initShapes = function() {
                             if (gradStyle === 'linear_180') angle = '180deg';
                             if (gradStyle === 'linear_45') angle = '135deg';
                             content.style.background = `linear-gradient(${angle}, ${cssStops})`;
+                        }
+                    } else if (fillType === 'pattern') {
+                        content.style.backgroundColor = patBg;
+                        if (patStyle === 'dots') {
+                            content.style.backgroundImage = `radial-gradient(${patFg} 20%, transparent 20%)`;
+                            content.style.backgroundSize = `${10 * patScale}px ${10 * patScale}px`;
+                        } else if (patStyle === 'lines_diag') {
+                            content.style.backgroundImage = `repeating-linear-gradient(45deg, ${patFg} 0, ${patFg} ${2 * patScale}px, transparent ${2 * patScale}px, transparent ${10 * patScale}px)`;
+                            content.style.backgroundSize = 'auto';
+                        } else if (patStyle === 'crosshatch') {
+                            content.style.backgroundImage = `repeating-linear-gradient(45deg, ${patFg} 0, ${patFg} ${1 * patScale}px, transparent ${1 * patScale}px, transparent ${10 * patScale}px), repeating-linear-gradient(-45deg, ${patFg} 0, ${patFg} ${1 * patScale}px, transparent ${1 * patScale}px, transparent ${10 * patScale}px)`;
+                            content.style.backgroundSize = 'auto';
+                        } else if (patStyle === 'checker') {
+                            content.style.backgroundImage = `conic-gradient(${patFg} 90deg, transparent 90deg 180deg, ${patFg} 180deg 270deg, transparent 270deg)`;
+                            content.style.backgroundSize = `${20 * patScale}px ${20 * patScale}px`;
+                        } else if (patStyle === 'lines_v') {
+                            content.style.backgroundImage = `repeating-linear-gradient(90deg, ${patFg} 0, ${patFg} ${2 * patScale}px, transparent ${2 * patScale}px, transparent ${10 * patScale}px)`;
+                            content.style.backgroundSize = 'auto';
+                        } else if (patStyle === 'lines_h') {
+                            content.style.backgroundImage = `repeating-linear-gradient(0deg, ${patFg} 0, ${patFg} ${2 * patScale}px, transparent ${2 * patScale}px, transparent ${10 * patScale}px)`;
+                            content.style.backgroundSize = 'auto';
+                        } else if (patStyle === 'grid') {
+                            content.style.backgroundImage = `repeating-linear-gradient(0deg, ${patFg} 0, ${patFg} ${1 * patScale}px, transparent ${1 * patScale}px, transparent ${20 * patScale}px), repeating-linear-gradient(90deg, ${patFg} 0, ${patFg} ${1 * patScale}px, transparent ${1 * patScale}px, transparent ${20 * patScale}px)`;
+                            content.style.backgroundSize = 'auto';
+                        } else if (patStyle === 'polka') {
+                            content.style.backgroundImage = `radial-gradient(${patFg} 30%, transparent 30%)`;
+                            content.style.backgroundSize = `${20 * patScale}px ${20 * patScale}px`;
                         }
                     }
                     content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
