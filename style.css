@@ -581,6 +581,7 @@ body {
     position: absolute; cursor: text; 
     user-select: text; 
     z-index: 10;
+    pointer-events: none;
 }
 .pub-element.selected { outline: 1px solid var(--selection); }
 
@@ -640,6 +641,7 @@ td, th {
     width: 15px; height: 15px; background: white; border: 1px solid var(--selection);
     position: absolute; display: none; z-index: 1001; cursor: pointer;
     border-radius: 2px;
+    pointer-events: auto;
 }
 .pub-element.selected .resize-handle { display: block; }
 
@@ -936,12 +938,12 @@ td, th {
 .custom-dialog-overlay {
     position: fixed; 
     inset: 0; 
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.15); /* Lightened to improve live preview visibility */
     display: none; 
     align-items: center; 
     justify-content: center; 
     z-index: 9999;
-    backdrop-filter: blur(2px); /* Win 11 style glass effect */
+    /* backdrop-filter removed so live preview behind the modal is crystal clear */
 }
 
 .custom-dialog {
@@ -1152,8 +1154,8 @@ body::-webkit-scrollbar-thumb:hover,
         box-shadow: none !important;
         overflow: hidden !important; 
         
-        /* THE MAGIC BULLET: Zoom physically shrinks the box model AND absolute coordinates proportionately! */
-        zoom: 0.98 !important; 
+        /* Zoom removed: CSS zoom breaks Chrome's 3D perspective rasterization (causes massive offsets). 
+           Users should use the native Print Dialog 'Scale' option if micro-bleeds are needed. */
         
         /* Strict Page Breaking */
         break-inside: avoid !important;

@@ -66,7 +66,23 @@ const DialogSystem = {
         // Quick helper for simple alerts with only an OK button
         this.show(title, `<p style="margin:0;">${msg}</p>`, null, true);
     },
+    spinner: function(msg) {
+        const overlay = document.getElementById('custom-dialog-overlay');
+        overlay.innerHTML = `
+            <div class="custom-dialog" style="transform: translate(0px, 0px); width:300px; text-align:center;">
+                <div class="custom-dialog-body" style="padding:40px;">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size:3rem; color:#0f766e; margin-bottom:15px;"></i>
+                    <p style="margin:0; font-weight:500; color:#333;">${msg}</p>
+                </div>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+    },
     close: function() {
+        if (window._dialogCancelHook) {
+            window._dialogCancelHook();
+            window._dialogCancelHook = null;
+        }
         const overlay = document.getElementById('custom-dialog-overlay');
         if (overlay) overlay.style.display = 'none';
     },
@@ -489,6 +505,12 @@ function serializeCurrentPage() {
         };
 
         const content = el.querySelector('.element-content');
+        
+        data.contentCssText = content ? content.style.cssText : '';
+        data.rx3d = content ? content.getAttribute('data-3d-rx') : null;
+        data.ry3d = content ? content.getAttribute('data-3d-ry') : null;
+        data.rz3d = content ? content.getAttribute('data-3d-rz') : null;
+        data.p3d = content ? content.getAttribute('data-3d-p') : null;
         const img = content ? content.querySelector('img') : null;
         const shapeDiv = content ? content.querySelector('div') : null;
 
@@ -591,9 +613,16 @@ function renderPage(pageData) {
         } else {
             inner = data.innerHTML;
         }
+        
+        const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
+        let d3d = '';
+        if (data.rx3d) d3d += ` data-3d-rx="${data.rx3d}"`;
+        if (data.ry3d) d3d += ` data-3d-ry="${data.ry3d}"`;
+        if (data.rz3d) d3d += ` data-3d-rz="${data.rz3d}"`;
+        if (data.p3d) d3d += ` data-3d-p="${data.p3d}"`;
 
         el.innerHTML = `
-            <div class="element-content" style="transform: scale(${sX}, ${sY});">${inner}</div>
+            <div class="element-content" style="${css}"${d3d}>${inner}</div>
             <div class="resize-handle rh-nw" data-dir="nw"></div>
             <div class="resize-handle rh-n" data-dir="n"></div>
             <div class="resize-handle rh-ne" data-dir="ne"></div>
@@ -766,6 +795,7 @@ function renderThumbnailHTML(pageData, pageIndex) {
             
             const scaleBox = document.createElement('div');
             scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+            if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
 
             if (data.imgSrc && data.imgSrc !== '') {
                 const imgDiv = document.createElement('div');
@@ -2921,6 +2951,60 @@ document.addEventListener('dblclick', (e) => {
         }
 
         const isShape = el.getAttribute('data-type') === 'shape';
+        
+        // UN-FLATTEN 3D IMAGES
+        if (el.hasAttribute('data-original-state')) {
+            try {
+                const s = JSON.parse(decodeURIComponent(el.getAttribute('data-original-state')));
+                
+                // BACKUP THE PNG STATE FOR CANCEL
+                const pngContentHTML = el.querySelector('.element-content').outerHTML;
+                const pngWidth = el.style.width;
+                const pngHeight = el.style.height;
+                const pngLeft = el.style.left;
+                const pngTop = el.style.top;
+                const pngType = el.getAttribute('data-type');
+                const pngOriginalState = el.getAttribute('data-original-state');
+                
+                const content = el.querySelector('.element-content');
+                if (content) {
+                    content.outerHTML = s.html;
+                }
+                el.style.width = s.w;
+                el.style.height = s.h;
+                el.style.left = s.l;
+                el.style.top = s.t;
+                el.setAttribute('data-type', s.type);
+                el.removeAttribute('data-original-state');
+                
+                selectElement(el);
+                
+                if (typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
+                    ContextMenuActions.formatTextBox();
+                    
+                    // Attach our own cancel hook wrapper to restore the PNG instantly!
+                    if (window._dialogCancelHook) {
+                        const originalHook = window._dialogCancelHook;
+                        window._dialogCancelHook = () => {
+                            originalHook(); 
+                            const curContent = el.querySelector('.element-content');
+                            if(curContent) curContent.outerHTML = pngContentHTML;
+                            el.style.width = pngWidth;
+                            el.style.height = pngHeight;
+                            el.style.left = pngLeft;
+                            el.style.top = pngTop;
+                            el.setAttribute('data-type', pngType);
+                            el.setAttribute('data-original-state', pngOriginalState);
+                            selectElement(el);
+                        };
+                    }
+                }
+                return;
+            } catch(err) {
+                console.error("Failed to unflatten state", err);
+            }
+        }
+        
         if (isShape && typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
             ContextMenuActions.formatTextBox();
             return;
@@ -5219,6 +5303,7 @@ const ContextMenuSystem = {
             html += this.buildItem('Delete', 'fa-trash', 'deleteSelected()');
             html += this.buildDivider();
             html += this.buildItem('Save as Picture...', 'fa-file-image', 'ContextMenuActions.saveAsPicture()');
+            html += this.buildItem('Flatten to Image (Fix 3D)', 'fa-compress', 'ContextMenuActions.flattenToImage()');
             html += this.buildItem('Add to Building Blocks', 'fa-puzzle-piece', 'ContextMenuActions.addBuildingBlock()');
         }
 
@@ -5536,6 +5621,7 @@ const ContextMenuActions = {
         // Apply print engine's HTML cleaning (removes live editing states that break html2canvas)
         let cleanHTML = clone.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
+        cleanHTML = cleanHTML.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
         if (typeof fixWordArtSpacesInHtml === 'function') {
             cleanHTML = fixWordArtSpacesInHtml(cleanHTML);
         }
@@ -5568,6 +5654,188 @@ const ContextMenuActions = {
             DialogSystem.close();
             console.error(err);
         });
+    },
+    flattenToImage: async function() {
+        if(!state.selectedEl) return;
+        DialogSystem.spinner('Rasterizing 3D Element...');
+        
+        const el = state.selectedEl;
+        const content = el.querySelector('.element-content');
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        
+        // 1. Save original 3D state
+        const originalTransform = content.style.transform;
+        const originalStyle = content.style.transformStyle;
+        const rx = content.getAttribute('data-3d-rx');
+        const ry = content.getAttribute('data-3d-ry');
+        const rz = content.getAttribute('data-3d-rz');
+        const p = content.getAttribute('data-3d-p');
+        
+        // 2. Temporarily remove 3D to get a clean 2D raster
+        content.style.transform = 'none';
+        content.style.transformStyle = 'flat';
+        
+        try {
+            // 3. Render flat 2D state using html2canvas (handles CORS, CSS, fonts perfectly)
+            const flatCanvas = await html2canvas(content, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+            const flatBase64 = flatCanvas.toDataURL('image/png');
+            
+            // Restore 3D immediately so user doesn't see a flicker
+            content.style.transform = originalTransform;
+            content.style.transformStyle = originalStyle;
+            
+            // 4. Project the 2D image into 3D using foreignObject
+            const pad = Math.max(w, h, 200); 
+            const svgW = w + pad * 2;
+            const svgH = h + pad * 2;
+            
+            const svgString = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}">
+                    <foreignObject width="100%" height="100%">
+                        <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%; height:100%; position:relative;">
+                            <img src="${flatBase64}" style="
+                                position: absolute;
+                                left: ${pad}px;
+                                top: ${pad}px;
+                                width: ${w}px;
+                                height: ${h}px;
+                                transform: ${originalTransform};
+                                transform-origin: center;
+                                transform-style: preserve-3d;
+                                object-fit: fill;
+                            "/>
+                        </div>
+                    </foreignObject>
+                </svg>
+            `;
+            
+            const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = svgW * 2;
+                canvas.height = svgH * 2;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(2, 2);
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(url);
+                
+                try {
+                    // Extract pixel data from the raw, padded 3D canvas
+                    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const l = pixels.data.length;
+                    let bound = { top: null, left: null, right: null, bottom: null };
+                    
+                    for (let i = 0; i < l; i += 4) {
+                        if (pixels.data[i + 3] !== 0) {
+                            const x = (i / 4) % canvas.width;
+                            const y = ~~((i / 4) / canvas.width);
+                            if (bound.top === null) bound.top = y;
+                            if (bound.left === null || x < bound.left) bound.left = x;
+                            if (bound.right === null || x > bound.right) bound.right = x;
+                            if (bound.bottom === null || y > bound.bottom) bound.bottom = y;
+                        }
+                    }
+                    
+                    let finalDataUrl;
+                    let newWidth = w;
+                    let newHeight = h;
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    
+                    if (bound.top === null) {
+                        // Empty canvas fallback
+                        const cropCanvas = document.createElement('canvas');
+                        cropCanvas.width = w * 2;
+                        cropCanvas.height = h * 2;
+                        const cropCtx = cropCanvas.getContext('2d');
+                        cropCtx.drawImage(canvas, pad * 2, pad * 2, w * 2, h * 2, 0, 0, w * 2, h * 2);
+                        finalDataUrl = cropCanvas.toDataURL('image/png');
+                    } else {
+                        // Trim to exact 3D visual bounds
+                        const trimWidth = bound.right - bound.left + 1;
+                        const trimHeight = bound.bottom - bound.top + 1;
+                        
+                        const cropCanvas = document.createElement('canvas');
+                        cropCanvas.width = trimWidth;
+                        cropCanvas.height = trimHeight;
+                        const cropCtx = cropCanvas.getContext('2d');
+                        cropCtx.drawImage(canvas, bound.left, bound.top, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
+                        
+                        finalDataUrl = cropCanvas.toDataURL('image/png');
+                        
+                        // Calculate offset from the original top-left corner
+                        const offsetCanvasX = bound.left - (pad * 2);
+                        const offsetCanvasY = bound.top - (pad * 2);
+                        
+                        offsetX = offsetCanvasX / 2;
+                        offsetY = offsetCanvasY / 2;
+                        
+                        newWidth = trimWidth / 2;
+                        newHeight = trimHeight / 2;
+                    }
+                    
+                    const originalHtml = content.outerHTML;
+                    
+                    content.innerHTML = '<img src="' + finalDataUrl + '" style="width:100%; height:100%; object-fit:fill; pointer-events:none;">';
+                    
+                    content.style.transform = '';
+                    content.style.transformStyle = '';
+                    content.style.backfaceVisibility = '';
+                    content.style.background = 'transparent';
+                    content.style.border = 'none';
+                    content.removeAttribute('data-3d-rx');
+                    content.removeAttribute('data-3d-ry');
+                    content.removeAttribute('data-3d-rz');
+                    content.removeAttribute('data-3d-p');
+                    
+                    // Save the original state so we can un-flatten it later
+                    const originalState = {
+                        html: originalHtml, 
+                        w: el.style.width,
+                        h: el.style.height,
+                        l: el.style.left,
+                        t: el.style.top,
+                        type: el.getAttribute('data-type')
+                    };
+                    el.setAttribute('data-original-state', encodeURIComponent(JSON.stringify(originalState)));
+                    el.setAttribute('data-type', 'image');
+                    
+                    // Adjust the bounding box of the element to perfectly wrap the 3D-rotated image!
+                    el.style.left = (parseFloat(el.style.left || 0) + offsetX) + 'px';
+                    el.style.top = (parseFloat(el.style.top || 0) + offsetY) + 'px';
+                    el.style.width = newWidth + 'px';
+                    el.style.height = newHeight + 'px';
+                    
+                    if (typeof selectElement === 'function') {
+                        selectElement(el); // Refresh handles
+                    }
+                    
+                    serializeCurrentPage();
+                    DialogSystem.close();
+                } catch(e) {
+                    console.error(e);
+                    DialogSystem.close();
+                    DialogSystem.alert('Error', 'Canvas cropping failed.');
+                }
+            };
+            img.onerror = () => {
+                DialogSystem.close();
+                DialogSystem.alert('Error', 'Failed to render 3D projection.');
+            };
+            img.src = url;
+            
+        } catch(err) {
+            console.error(err);
+            content.style.transform = originalTransform;
+            content.style.transformStyle = originalStyle;
+            DialogSystem.close();
+            DialogSystem.alert('Error', '2D Rasterization failed.');
+        }
     },
     addBuildingBlock: function() {
         if(!state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0)) return;
@@ -6135,7 +6403,16 @@ window.handleMouseMove = function(e) {
                 img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
                 img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';
             }
-            state.selectedEl.querySelector('.element-content').style.transform = `scale(${finalScaleX}, ${finalScaleY})`;
+            const _contentEl = state.selectedEl.querySelector('.element-content');
+            let _t3d = '';
+            if (_contentEl) {
+                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                const p = _contentEl.getAttribute('data-3d-p') || 800;
+                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+            }
             state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
@@ -11411,9 +11688,36 @@ window.initShapes = function() {
             let currentBt = 0;
             let currentFillType = 'solid';
             
+            let currentGradPreset = 'custom';
+            let currentGradC1 = '#ff0000';
+            let currentGradC2 = '#0000ff';
+            let currentGradStyle = 'linear_90';
+            
+            let currentPatStyle = 'dots';
+            let currentPatFg = '#ff0000';
+            let currentPatBg = '#0000ff';
+            let currentPatScale = 1.0;
+            
             const isShape = state.selectedEl.getAttribute('data-type') === 'shape';
             const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
             const content = state.selectedEl.querySelector('.element-content');
+            
+            if (content) {
+                const configAttr = content.getAttribute('data-format-config');
+                if (configAttr) {
+                    try {
+                        const config = JSON.parse(decodeURIComponent(configAttr));
+                        if (config.gradPreset) currentGradPreset = config.gradPreset;
+                        if (config.gradC1) currentGradC1 = config.gradC1;
+                        if (config.gradC2) currentGradC2 = config.gradC2;
+                        if (config.gradStyle) currentGradStyle = config.gradStyle;
+                        if (config.patStyle) currentPatStyle = config.patStyle;
+                        if (config.patFg) currentPatFg = config.patFg;
+                        if (config.patBg) currentPatBg = config.patBg;
+                        if (config.patScale) currentPatScale = parseFloat(config.patScale);
+                    } catch(e) {}
+                }
+            }
 
             // Populate the dialog with the existing colors
             if (isShape && svgOuter) {
@@ -11439,6 +11743,74 @@ window.initShapes = function() {
                 }
                 else if (bg) currentBg = bg;
             }
+            
+            let current3dRx = 0; let current3dRy = 0; let current3dRz = 0; let current3dP = 800;
+            
+            // Live Preview Capture State
+            let originalSvgDefs = '';
+            let originalSvgFill = '';
+            let originalSvgStroke = '';
+            let originalSvgStrokeWidth = '';
+            let originalCssBackground = '';
+            let originalCssBackgroundImage = '';
+            let originalCssBackgroundColor = '';
+            let originalCssBackgroundSize = '';
+            let originalCssBorder = '';
+            let originalCssTransform = '';
+
+            // Universal 3D Capture (Now applied to content for all elements)
+            if (content) {
+                current3dRx = content.getAttribute('data-3d-rx') || 0;
+                current3dRy = content.getAttribute('data-3d-ry') || 0;
+                current3dRz = content.getAttribute('data-3d-rz') || 0;
+                current3dP = content.getAttribute('data-3d-p') || 800;
+                originalCssTransform = content.style.transform || '';
+                content.style.transformStyle = 'preserve-3d';
+            }
+
+            if (isShape && svgOuter) {
+                const defs = svgOuter.closest('svg').querySelector('defs');
+                if (defs) originalSvgDefs = defs.outerHTML;
+                originalSvgFill = svgOuter.getAttribute('fill') || '';
+                originalSvgStroke = svgOuter.getAttribute('stroke') || '';
+                originalSvgStrokeWidth = svgOuter.getAttribute('stroke-width') || '';
+            } else if (content) {
+                originalCssBackground = content.style.background || '';
+                originalCssBackgroundImage = content.style.backgroundImage || '';
+                originalCssBackgroundColor = content.style.backgroundColor || '';
+                originalCssBackgroundSize = content.style.backgroundSize || '';
+                originalCssBorder = content.style.border || '';
+            }
+            
+            window._dialogCancelHook = () => {
+                if (content) {
+                    content.style.transform = originalCssTransform;
+                    content.setAttribute('data-3d-rx', current3dRx);
+                    content.setAttribute('data-3d-ry', current3dRy);
+                    content.setAttribute('data-3d-rz', current3dRz);
+                    content.setAttribute('data-3d-p', current3dP);
+                }
+                
+                if (isShape && svgOuter) {
+                    const svgRoot = svgOuter.closest('svg');
+                    const defs = svgRoot.querySelector('defs');
+                    if (defs) defs.remove();
+                    if (originalSvgDefs) svgRoot.insertAdjacentHTML('afterbegin', originalSvgDefs);
+                    
+                    if (originalSvgFill) svgOuter.setAttribute('fill', originalSvgFill); else svgOuter.removeAttribute('fill');
+                    if (originalSvgStroke) svgOuter.setAttribute('stroke', originalSvgStroke); else svgOuter.removeAttribute('stroke');
+                    if (originalSvgStrokeWidth) svgOuter.setAttribute('stroke-width', originalSvgStrokeWidth); else svgOuter.removeAttribute('stroke-width');
+                    
+                    // Cleanup legacy transform on svg if user had an old save
+                    svgOuter.style.transform = '';
+                } else if (content) {
+                    content.style.background = originalCssBackground;
+                    content.style.backgroundImage = originalCssBackgroundImage;
+                    content.style.backgroundColor = originalCssBackgroundColor;
+                    content.style.backgroundSize = originalCssBackgroundSize;
+                    content.style.border = originalCssBorder;
+                }
+            };
 
             const form = `
                 <div class="input-group" style="margin-bottom:10px;">
@@ -11465,31 +11837,31 @@ window.initShapes = function() {
                     <div class="input-group" style="margin-bottom:10px;">
                         <label>Gradient Preset:</label>
                         <select id="ctx-box-grad-preset" onchange="document.getElementById('ctx-custom-grad').style.display = this.value==='custom' ? 'block' : 'none';">
-                            <option value="custom">Custom 2-Color</option>
-                            <option value="gold">Metallic Gold</option>
-                            <option value="silver">Metallic Silver</option>
-                            <option value="chrome">Metallic Chrome</option>
-                            <option value="bronze">Metallic Bronze</option>
-                            <option value="sunset">Sunset Glow</option>
-                            <option value="ocean">Ocean Blue</option>
+                            <option value="custom" ${currentGradPreset==='custom'?'selected':''}>Custom 2-Color</option>
+                            <option value="gold" ${currentGradPreset==='gold'?'selected':''}>Metallic Gold</option>
+                            <option value="silver" ${currentGradPreset==='silver'?'selected':''}>Metallic Silver</option>
+                            <option value="chrome" ${currentGradPreset==='chrome'?'selected':''}>Metallic Chrome</option>
+                            <option value="bronze" ${currentGradPreset==='bronze'?'selected':''}>Metallic Bronze</option>
+                            <option value="sunset" ${currentGradPreset==='sunset'?'selected':''}>Sunset Glow</option>
+                            <option value="ocean" ${currentGradPreset==='ocean'?'selected':''}>Ocean Blue</option>
                         </select>
                     </div>
                     
                     <div id="ctx-custom-grad" style="display:block; margin-bottom:10px;">
                         <label style="display:block; font-size:12px; margin-bottom:4px;">Custom Colors:</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="color" id="ctx-box-grad-1" value="#ff0000" title="Start Color">
-                            <input type="color" id="ctx-box-grad-2" value="#0000ff" title="End Color">
+                            <input type="color" id="ctx-box-grad-1" value="${currentGradC1}" title="Start Color">
+                            <input type="color" id="ctx-box-grad-2" value="${currentGradC2}" title="End Color">
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>Gradient Style:</label>
                         <select id="ctx-box-grad-style">
-                            <option value="linear_90">Linear (Left to Right)</option>
-                            <option value="linear_180">Linear (Top to Bottom)</option>
-                            <option value="linear_45">Linear (Diagonal)</option>
-                            <option value="radial">Radial (Center Out)</option>
+                            <option value="linear_90" ${currentGradStyle==='linear_90'?'selected':''}>Linear (Left to Right)</option>
+                            <option value="linear_180" ${currentGradStyle==='linear_180'?'selected':''}>Linear (Top to Bottom)</option>
+                            <option value="linear_45" ${currentGradStyle==='linear_45'?'selected':''}>Linear (Diagonal)</option>
+                            <option value="radial" ${currentGradStyle==='radial'?'selected':''}>Radial (Center Out)</option>
                         </select>
                     </div>
                 </div>
@@ -11498,31 +11870,31 @@ window.initShapes = function() {
                     <div class="input-group" style="margin-bottom:10px;">
                         <label>Pattern Style:</label>
                         <select id="ctx-box-pat-style">
-                            <option value="dots">Tiny Dots</option>
-                            <option value="lines_diag">Diagonal Lines</option>
-                            <option value="crosshatch">Crosshatch</option>
-                            <option value="checker">Checkerboard</option>
-                            <option value="lines_v">Vertical Lines</option>
-                            <option value="lines_h">Horizontal Lines</option>
-                            <option value="grid">Square Grid</option>
-                            <option value="polka">Polka Dots</option>
+                            <option value="dots" ${currentPatStyle==='dots'?'selected':''}>Tiny Dots</option>
+                            <option value="lines_diag" ${currentPatStyle==='lines_diag'?'selected':''}>Diagonal Lines</option>
+                            <option value="crosshatch" ${currentPatStyle==='crosshatch'?'selected':''}>Crosshatch</option>
+                            <option value="checker" ${currentPatStyle==='checker'?'selected':''}>Checkerboard</option>
+                            <option value="lines_v" ${currentPatStyle==='lines_v'?'selected':''}>Vertical Lines</option>
+                            <option value="lines_h" ${currentPatStyle==='lines_h'?'selected':''}>Horizontal Lines</option>
+                            <option value="grid" ${currentPatStyle==='grid'?'selected':''}>Square Grid</option>
+                            <option value="polka" ${currentPatStyle==='polka'?'selected':''}>Polka Dots</option>
                         </select>
                     </div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                         <div style="display:flex; flex-direction:column; align-items:center;">
                             <label style="font-size:12px;">Pattern</label>
-                            <input type="color" id="ctx-box-pat-fg" value="#ff0000">
+                            <input type="color" id="ctx-box-pat-fg" value="${currentPatFg}">
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:center;">
                             <label style="font-size:12px;">Background</label>
-                            <input type="color" id="ctx-box-pat-bg" value="#0000ff">
+                            <input type="color" id="ctx-box-pat-bg" value="${currentPatBg}">
                         </div>
                     </div>
                     <div class="input-group">
                         <label>Pattern Scale:</label>
                         <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="range" id="ctx-box-pat-scale" min="0.2" max="3" step="0.1" value="1.0" oninput="document.getElementById('ctx-box-pat-scale-val').innerText = this.value + 'x'">
-                            <span id="ctx-box-pat-scale-val" style="font-size:12px; width:30px;">1.0x</span>
+                            <input type="range" id="ctx-box-pat-scale" min="0.2" max="3" step="0.1" value="${currentPatScale}" oninput="document.getElementById('ctx-box-pat-scale-val').innerText = this.value + 'x'">
+                            <span id="ctx-box-pat-scale-val" style="font-size:12px; width:30px;">${currentPatScale}x</span>
                         </div>
                     </div>
                 </div>
@@ -11538,9 +11910,42 @@ window.initShapes = function() {
                 <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
                     Tip: Set thickness to 0 to remove the border.
                 </div>
+                
+                <hr style="margin:15px 0; border:none; border-top:1px solid #ddd;">
+                <div style="font-weight:bold; margin-bottom:10px;">3D Rotation & Depth</div>
+                
+                <div class="input-group">
+                    <label>Perspective (Depth):</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="range" id="ctx-box-3d-p" min="100" max="2000" step="50" value="${current3dP}" oninput="document.getElementById('ctx-val-3d-p').innerText = this.value + 'px'">
+                        <span id="ctx-val-3d-p" style="font-size:12px; width:40px;">${current3dP}px</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>X Rotation (Pitch):</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="range" id="ctx-box-3d-rx" min="-180" max="180" step="1" value="${current3dRx}" oninput="document.getElementById('ctx-val-3d-rx').innerText = this.value + '°'">
+                        <span id="ctx-val-3d-rx" style="font-size:12px; width:30px;">${current3dRx}°</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Y Rotation (Yaw):</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="range" id="ctx-box-3d-ry" min="-180" max="180" step="1" value="${current3dRy}" oninput="document.getElementById('ctx-val-3d-ry').innerText = this.value + '°'">
+                        <span id="ctx-val-3d-ry" style="font-size:12px; width:30px;">${current3dRy}°</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Z Rotation (Roll):</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="range" id="ctx-box-3d-rz" min="-180" max="180" step="1" value="${current3dRz}" oninput="document.getElementById('ctx-val-3d-rz').innerText = this.value + '°'">
+                        <span id="ctx-val-3d-rz" style="font-size:12px; width:30px;">${current3dRz}°</span>
+                    </div>
+                </div>
             `;
 
-            DialogSystem.show('Format Properties', form, () => {
+            window._applyFormatPreview = () => {
+                if (!document.getElementById('ctx-box-fill-type')) return;
                 const fillType = document.getElementById('ctx-box-fill-type').value;
                 const bg = document.getElementById('ctx-box-bg').value;
                 const bc = document.getElementById('ctx-box-bc').value;
@@ -11555,6 +11960,13 @@ window.initShapes = function() {
                 const patFg = document.getElementById('ctx-box-pat-fg') ? document.getElementById('ctx-box-pat-fg').value : '#ff0000';
                 const patBg = document.getElementById('ctx-box-pat-bg') ? document.getElementById('ctx-box-pat-bg').value : '#0000ff';
                 const patScale = document.getElementById('ctx-box-pat-scale') ? parseFloat(document.getElementById('ctx-box-pat-scale').value) : 1.0;
+                
+                const val3dRx = document.getElementById('ctx-box-3d-rx') ? document.getElementById('ctx-box-3d-rx').value : 0;
+                const val3dRy = document.getElementById('ctx-box-3d-ry') ? document.getElementById('ctx-box-3d-ry').value : 0;
+                const val3dRz = document.getElementById('ctx-box-3d-rz') ? document.getElementById('ctx-box-3d-rz').value : 0;
+                const val3dP = document.getElementById('ctx-box-3d-p') ? document.getElementById('ctx-box-3d-p').value : 800;
+                
+                const transform3DStr = `perspective(${val3dP}px) rotateX(${val3dRx}deg) rotateY(${val3dRy}deg) rotateZ(${val3dRz}deg)`;
                 
                 // Define Presets
                 const presets = {
@@ -11695,6 +12107,8 @@ window.initShapes = function() {
                     svgOuter.setAttribute('stroke', bc);
                     svgOuter.setAttribute('stroke-width', bt);
                     
+                    svgOuter.style.transform = ''; // Clear legacy transform from SVG
+                    
                     svgOuter.querySelectorAll('[stroke-width]').forEach(el => {
                         if (el !== svgOuter) el.removeAttribute('stroke-width');
                     });
@@ -11748,8 +12162,55 @@ window.initShapes = function() {
                     content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
                 }
                 
-                if (typeof pushHistory === 'function') pushHistory();
+                // Universal 3D Formatting
+                if (content) {
+                    content.setAttribute('data-3d-rx', val3dRx);
+                    content.setAttribute('data-3d-ry', val3dRy);
+                    content.setAttribute('data-3d-rz', val3dRz);
+                    content.setAttribute('data-3d-p', val3dP);
+                    content.style.transform = transform3DStr;
+                    content.style.transformOrigin = 'center';
+                    // Fix blurriness on SVG rendering during 3D transform
+                    content.style.transformStyle = 'preserve-3d';
+                    content.style.backfaceVisibility = 'hidden'; 
+                    
+                    // Save formatting state for next open
+                    const formatConfig = {
+                        gradPreset, gradC1, gradC2, gradStyle,
+                        patStyle, patFg, patBg, patScale
+                    };
+                    content.setAttribute('data-format-config', encodeURIComponent(JSON.stringify(formatConfig)));
+                }
+            };
+            
+            DialogSystem.show('Format Properties', form, () => {
+                window._applyFormatPreview();
+                
+                const rx = parseFloat(content.getAttribute('data-3d-rx')) || 0;
+                const ry = parseFloat(content.getAttribute('data-3d-ry')) || 0;
+                const rz = parseFloat(content.getAttribute('data-3d-rz')) || 0;
+                const has3D = (rx !== 0 || ry !== 0 || rz !== 0);
+                
+                window._dialogCancelHook = null;
+                
+                if (has3D && typeof ContextMenuActions !== 'undefined' && ContextMenuActions.flattenToImage) {
+                    setTimeout(() => {
+                        ContextMenuActions.flattenToImage();
+                    }, 50);
+                } else {
+                    if (typeof pushHistory === 'function') pushHistory();
+                }
             });
+            
+            // Attach live preview listeners
+            setTimeout(() => {
+                const dlg = document.getElementById('custom-dialog-box');
+                if (!dlg) return;
+                dlg.querySelectorAll('select, input').forEach(el => {
+                    el.addEventListener('input', window._applyFormatPreview);
+                    el.addEventListener('change', window._applyFormatPreview);
+                });
+            }, 50);
         };
     }
     
@@ -12646,7 +13107,16 @@ window.handleMouseMove = function(e) {
                 img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
                 img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';
             }
-            state.selectedEl.querySelector('.element-content').style.transform = `scale(${finalScaleX}, ${finalScaleY})`;
+            const _contentEl = state.selectedEl.querySelector('.element-content');
+            let _t3d = '';
+            if (_contentEl) {
+                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                const p = _contentEl.getAttribute('data-3d-p') || 800;
+                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+            }
             state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
@@ -13585,9 +14055,26 @@ window.handleMouseUp = function() {
                         // Restore the scaling wrapper so resized textboxes print correctly
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
-                        // Strip contenteditable so the browser doesn't try to render editing cursors
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
-                        elDiv.innerHTML = `<div class="element-content" style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;">${cleanHTML}</div>`;
+                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;`;
+                        
+                        // FIX: Extract perspective to parent to fix vanishing point shift in Chrome print rasterizer
+                        let pVal = null;
+                        css = css.replace(/perspective\s*\(\s*([^)]+)\s*\)/i, (match, p1) => {
+                            pVal = p1;
+                            return ''; 
+                        });
+                        if (pVal) {
+                            elDiv.style.perspective = pVal;
+                            elDiv.style.perspectiveOrigin = 'center';
+                        }
+                        
+                        // FIX: Strip hardware compositor properties during print spooling
+                        css = css.replace(/transform-style:\s*preserve-3d;?/gi, '');
+                        css = css.replace(/backface-visibility:\s*hidden;?/gi, '');
+                        if (!css.includes('width:')) css += '; width:100%; height:100%;';
+                        
+                        elDiv.innerHTML = `<div class="element-content" style="${css}">${cleanHTML}</div>`;
                     }
                     
                     pageWrapper.appendChild(elDiv);
@@ -14830,7 +15317,16 @@ window.handleMouseUp = function() {
                     img.style.top = (d.imgT * ratioY) + 'px';
                 }
                 
-                state.selectedEl.querySelector('.element-content').style.transform = `scale(${finalScaleX}, ${finalScaleY})`;
+                const _contentEl = state.selectedEl.querySelector('.element-content');
+            let _t3d = '';
+            if (_contentEl) {
+                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                const p = _contentEl.getAttribute('data-3d-p') || 800;
+                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+            }
                 state.selectedEl.setAttribute('data-scaleX', finalScaleX); 
                 state.selectedEl.setAttribute('data-scaleY', finalScaleY);
                 
@@ -16757,7 +17253,16 @@ window.toggleCrop = function() {
                     img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';
                 }
                 
-                state.selectedEl.querySelector('.element-content').style.transform = `scale(${finalScaleX}, ${finalScaleY})`;
+                const _contentEl = state.selectedEl.querySelector('.element-content');
+            let _t3d = '';
+            if (_contentEl) {
+                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                const p = _contentEl.getAttribute('data-3d-p') || 800;
+                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+            }
                 state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
                 if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
             }
@@ -18258,7 +18763,17 @@ window.toggleCrop = function() {
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
-                        elDiv.innerHTML = '<div class="element-content" style="transform: scale(' + sX + ', ' + sY + '); width:100%; height:100%; transform-origin: top left; outline: none; border: none;">' + cleanHTML + '</div>';
+                        
+                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;`;
+                        
+                        let pVal = null;
+                        css = css.replace(/perspective\s*\(\s*([^)]+)\s*\)/i, (match, p1) => { pVal = p1; return ''; });
+                        if (pVal) { elDiv.style.perspective = pVal; elDiv.style.perspectiveOrigin = 'center'; }
+                        
+                        css = css.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
+                        if (!css.includes('width:')) css += '; width:100%; height:100%;';
+                        
+                        elDiv.innerHTML = `<div class="element-content" style="${css}">${cleanHTML}</div>`;
                     }
                     scaler.appendChild(elDiv);
                 });
@@ -18724,9 +19239,21 @@ window.addEventListener('beforeprint', () => {
                         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
                         cleanHTML = fixWordArtSpacesInHtml(cleanHTML);
                         
+                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;`;
+                        css += " overflow: visible !important;";
+                        
+                        let pVal = null;
+                        css = css.replace(/perspective\s*\(\s*([^)]+)\s*\)/i, (match, p1) => { pVal = p1; return ''; });
+                        
+                        css = css.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
+                        if (!css.includes('width:')) css += '; width:100%; height:100%;';
+                        
+                        let parentStyle = `position: absolute; top: ${pad}px; left: ${pad}px; width: ${el.width}; height: ${el.height}; overflow: visible !important;`;
+                        if (pVal) { parentStyle += ` perspective: ${pVal}; perspective-origin: center;`; }
+                        
                         elDiv.innerHTML = `
-                            <div style="position: absolute; top: ${pad}px; left: ${pad}px; width: ${el.width}; height: ${el.height}; overflow: visible !important;">
-                                <div class="element-content" style="transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none; overflow: visible !important;">
+                            <div style="${parentStyle}">
+                                <div class="element-content" style="${css}">
                                     ${cleanHTML}
                                 </div>
                             </div>
