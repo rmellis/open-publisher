@@ -11697,12 +11697,14 @@ window.initShapes = function() {
             let currentPatFg = '#ff0000';
             let currentPatBg = '#0000ff';
             let currentPatScale = 1.0;
+            let currentOpacity = 1.0;
             
             const isShape = state.selectedEl.getAttribute('data-type') === 'shape';
             const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
             const content = state.selectedEl.querySelector('.element-content');
             
             if (content) {
+                if (content.style.opacity) currentOpacity = parseFloat(content.style.opacity);
                 const configAttr = content.getAttribute('data-format-config');
                 if (configAttr) {
                     try {
@@ -11715,6 +11717,7 @@ window.initShapes = function() {
                         if (config.patFg) currentPatFg = config.patFg;
                         if (config.patBg) currentPatBg = config.patBg;
                         if (config.patScale) currentPatScale = parseFloat(config.patScale);
+                        if (config.opacity !== undefined) currentOpacity = parseFloat(config.opacity);
                     } catch(e) {}
                 }
             }
@@ -11757,6 +11760,7 @@ window.initShapes = function() {
             let originalCssBackgroundSize = '';
             let originalCssBorder = '';
             let originalCssTransform = '';
+            let originalCssOpacity = '';
 
             // Universal 3D Capture (Now applied to content for all elements)
             if (content) {
@@ -11780,6 +11784,7 @@ window.initShapes = function() {
                 originalCssBackgroundColor = content.style.backgroundColor || '';
                 originalCssBackgroundSize = content.style.backgroundSize || '';
                 originalCssBorder = content.style.border || '';
+                originalCssOpacity = content.style.opacity || '';
             }
             
             window._dialogCancelHook = () => {
@@ -11809,6 +11814,7 @@ window.initShapes = function() {
                     content.style.backgroundColor = originalCssBackgroundColor;
                     content.style.backgroundSize = originalCssBackgroundSize;
                     content.style.border = originalCssBorder;
+                    content.style.opacity = originalCssOpacity;
                 }
             };
 
@@ -11899,6 +11905,14 @@ window.initShapes = function() {
                     </div>
                 </div>
 
+                <div class="input-group" style="margin-bottom:15px; margin-top:10px;">
+                    <label>Object Opacity:</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="range" id="ctx-box-opacity" min="0" max="100" step="1" value="${Math.round(currentOpacity * 100)}" oninput="document.getElementById('ctx-box-opacity-val').innerText = this.value + '%'">
+                        <span id="ctx-box-opacity-val" style="font-size:12px; width:40px;">${Math.round(currentOpacity * 100)}%</span>
+                    </div>
+                </div>
+
                 <div class="input-group" style="margin-bottom:10px;">
                     <label>Border / Stroke Color:</label>
                     <input type="color" id="ctx-box-bc" value="${currentBc}">
@@ -11965,6 +11979,8 @@ window.initShapes = function() {
                 const val3dRy = document.getElementById('ctx-box-3d-ry') ? document.getElementById('ctx-box-3d-ry').value : 0;
                 const val3dRz = document.getElementById('ctx-box-3d-rz') ? document.getElementById('ctx-box-3d-rz').value : 0;
                 const val3dP = document.getElementById('ctx-box-3d-p') ? document.getElementById('ctx-box-3d-p').value : 800;
+                
+                const opacityVal = document.getElementById('ctx-box-opacity') ? parseFloat(document.getElementById('ctx-box-opacity').value) / 100 : 1.0;
                 
                 const transform3DStr = `perspective(${val3dP}px) rotateX(${val3dRx}deg) rotateY(${val3dRy}deg) rotateZ(${val3dRz}deg)`;
                 
@@ -12173,11 +12189,13 @@ window.initShapes = function() {
                     // Fix blurriness on SVG rendering during 3D transform
                     content.style.transformStyle = 'preserve-3d';
                     content.style.backfaceVisibility = 'hidden'; 
+                    content.style.opacity = opacityVal;
                     
                     // Save formatting state for next open
                     const formatConfig = {
                         gradPreset, gradC1, gradC2, gradStyle,
-                        patStyle, patFg, patBg, patScale
+                        patStyle, patFg, patBg, patScale,
+                        opacity: opacityVal
                     };
                     content.setAttribute('data-format-config', encodeURIComponent(JSON.stringify(formatConfig)));
                 }
