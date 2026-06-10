@@ -183,14 +183,13 @@ body {
     pointer-events: none;
 }
 
-#theme-group {
-    width: 800px; 
+#theme-group, #scheme-group {
     overflow-x: auto; 
     white-space: nowrap;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
-#theme-group::-webkit-scrollbar { display: none; }
+#theme-group::-webkit-scrollbar, #scheme-group::-webkit-scrollbar { display: none; }
 
 .tool-btn {
     display: flex;

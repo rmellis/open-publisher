@@ -14,7 +14,26 @@ let state = {
     cropMode: false,
     lastRange: null, 
     isProgrammaticUpdate: false,
-    snap: { grid: false, guides: true, objects: true }
+    snap: { grid: false, guides: true, objects: true },
+    currentScheme: 'Classic'
+};
+
+const colorSchemes = {
+    "Classic": ["#2C3E50", "#E74C3C", "#ECF0F1", "#3498DB", "#F1C40F"],
+    "Oceanic": ["#0B3C5D", "#328CC1", "#1D2731", "#D9B310", "#F5F5F5"],
+    "Sunset": ["#FF5E62", "#FF9966", "#FFD275", "#2C3E50", "#FFFFFF"],
+    "Forest": ["#2E4600", "#486B00", "#A2C523", "#7D4427", "#F0F3BD"],
+    "Berry": ["#4A154B", "#611F69", "#E01E5A", "#2BAC76", "#FFFFFF"],
+    "Monochrome": ["#000000", "#333333", "#666666", "#999999", "#CCCCCC"],
+    "Pastel": ["#FFB3BA", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF"],
+    "Neon": ["#FF00FF", "#00FFFF", "#00FF00", "#FFFF00", "#111111"],
+    "Corporate": ["#003366", "#006699", "#3399CC", "#66B2FF", "#E6F2FF"],
+    "Earth": ["#5C4033", "#8B5A2B", "#CD853F", "#DEB887", "#F5DEB3"],
+    "Cyberpunk": ["#FCEE09", "#00FFF5", "#FF003C", "#711C91", "#133E7C"],
+    "Vintage": ["#3B2F2F", "#A67C00", "#FCF6BA", "#B38728", "#FBF5B7"],
+    "Minimal": ["#222831", "#393E46", "#00ADB5", "#EEEEEE", "#FFFFFF"],
+    "Autumn": ["#C0392B", "#D35400", "#F39C12", "#F1C40F", "#2C3E50"],
+    "Spring": ["#27AE60", "#2ECC71", "#F1C40F", "#E67E22", "#E74C3C"]
 };
 
 const paper = document.getElementById('paper');
@@ -121,6 +140,7 @@ const DialogSystem = {
 window.onload = function() {
     DialogSystem.init(); // Initialize the Modal System
     initRulers();
+    initColorSchemes();
     initThemes();
     initShapes();
     //initClipart(); //disabled to provent lag, LazyLoad method used somewhere below
@@ -982,7 +1002,7 @@ function initThemes() {
     
     colors.forEach(c => {
         const swatch = document.createElement('div');
-        swatch.style.width = '60px';
+        swatch.style.width = '40px';
         swatch.style.height = '40px';
         swatch.style.background = c;
         swatch.style.display = 'inline-block';
@@ -990,11 +1010,151 @@ function initThemes() {
         swatch.style.border = '1px solid #999';
         swatch.style.cursor = 'pointer';
         swatch.style.verticalAlign = 'middle';
-        swatch.style.borderRadius = '2px'; // Round Corners Update
+        swatch.style.borderRadius = '4px';
         swatch.title = "Apply Background";
-        swatch.onclick = () => { paper.style.background = c; pushHistory(); };
+        swatch.className = 'theme-swatch-item';
+        swatch.onclick = () => { 
+            document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #999');
+            swatch.style.border = '3px solid #007670';
+            paper.style.background = c; 
+            pushHistory(); 
+        };
         container.appendChild(swatch);
     });
+}
+
+// --- COLOR SCHEMES ENGINE ---
+function initColorSchemes() {
+    const container = document.getElementById('scheme-group');
+    if (!container) return;
+    
+    Object.keys(colorSchemes).forEach(schemeName => {
+        const colors = colorSchemes[schemeName];
+        
+        const swatchContainer = document.createElement('div');
+        swatchContainer.className = 'scheme-swatch-container';
+        swatchContainer.setAttribute('data-scheme-id', schemeName);
+        swatchContainer.style.display = 'inline-block';
+        swatchContainer.style.margin = '2px 6px';
+        swatchContainer.style.cursor = 'pointer';
+        swatchContainer.style.verticalAlign = 'top';
+        swatchContainer.style.padding = '4px';
+        swatchContainer.style.border = '2px solid transparent';
+        swatchContainer.style.borderRadius = '6px';
+        swatchContainer.style.transition = '0.2s';
+        if (state.currentScheme === schemeName) {
+            swatchContainer.style.border = '2px solid #007670';
+            swatchContainer.style.background = 'rgba(0, 118, 112, 0.1)';
+        }
+        swatchContainer.title = schemeName;
+        swatchContainer.onclick = () => applyColorScheme(schemeName);
+        
+        const bar = document.createElement('div');
+        bar.style.display = 'flex';
+        bar.style.width = '60px';
+        bar.style.height = '24px';
+        bar.style.border = '1px solid #999';
+        bar.style.borderRadius = '4px';
+        bar.style.overflow = 'hidden';
+        
+        colors.forEach(c => {
+            const block = document.createElement('div');
+            block.style.flex = '1';
+            block.style.background = c;
+            bar.appendChild(block);
+        });
+        
+        const label = document.createElement('div');
+        label.innerText = schemeName;
+        label.style.fontSize = '9px';
+        label.style.textAlign = 'center';
+        label.style.marginTop = '2px';
+        label.style.color = '#333';
+        
+        swatchContainer.appendChild(bar);
+        swatchContainer.appendChild(label);
+        container.appendChild(swatchContainer);
+    });
+}
+
+function applyColorScheme(schemeName) {
+    if (!colorSchemes[schemeName]) return;
+    state.currentScheme = schemeName;
+    
+    // UI Feedback
+    document.querySelectorAll('.scheme-swatch-container').forEach(c => {
+        if (c.getAttribute('data-scheme-id') === schemeName) {
+            c.style.border = '2px solid #007670';
+            c.style.background = 'rgba(0, 118, 112, 0.1)';
+        } else {
+            c.style.border = '2px solid transparent';
+            c.style.background = 'transparent';
+        }
+    });
+    
+    // Update all elements dynamically
+    document.querySelectorAll('.pub-element').forEach(el => {
+        applySingleElementScheme(el, schemeName);
+    });
+    
+    pushHistory();
+}
+
+function applySingleElementScheme(el, schemeName) {
+    if (!colorSchemes[schemeName]) return;
+    const colors = colorSchemes[schemeName];
+    
+    const isShape = el.getAttribute('data-type') === 'shape';
+    const svgOuter = el.querySelector('svg .shape-path') || el.querySelector('svg g') || el.querySelector('svg');
+    const content = el.querySelector('.element-content');
+    const cssShape = content ? content.querySelector('div[style*="clip-path"]') : null;
+    
+    if (content) {
+        const spans = content.querySelectorAll('span[data-scheme-text]');
+        spans.forEach(span => {
+            const idx = parseInt(span.getAttribute('data-scheme-text'));
+            if (!isNaN(idx) && colors[idx]) span.style.color = colors[idx];
+        });
+        if (content.hasAttribute('data-scheme-text') || el.hasAttribute('data-scheme-text')) {
+            const idx = parseInt(content.getAttribute('data-scheme-text') || el.getAttribute('data-scheme-text'));
+            if (!isNaN(idx) && colors[idx]) content.style.color = colors[idx];
+        }
+    }
+    
+    if (el.hasAttribute('data-scheme-fill')) {
+        const idx = parseInt(el.getAttribute('data-scheme-fill'));
+        if (!isNaN(idx) && colors[idx]) {
+            if (isShape && svgOuter && svgOuter.querySelector) {
+                // If the shape has explicit paths
+                const paths = svgOuter.querySelectorAll('*');
+                if (paths.length) paths.forEach(p => p.setAttribute('fill', colors[idx]));
+                else svgOuter.setAttribute('fill', colors[idx]);
+            } else if (isShape && cssShape) {
+                cssShape.style.background = colors[idx];
+            } else if (content) {
+                content.style.background = colors[idx];
+            }
+        }
+    }
+    
+    if (el.hasAttribute('data-scheme-stroke')) {
+        const idx = parseInt(el.getAttribute('data-scheme-stroke'));
+        if (!isNaN(idx) && colors[idx]) {
+            if (isShape && svgOuter && svgOuter.querySelector) {
+                const paths = svgOuter.querySelectorAll('*');
+                if (paths.length) paths.forEach(p => { if(p.getAttribute('stroke')!=='none') p.setAttribute('stroke', colors[idx]); });
+                else svgOuter.setAttribute('stroke', colors[idx]);
+            } else if (isShape && cssShape) {
+                cssShape.style.border = `2px solid ${colors[idx]}`;
+            } else if (content) {
+                content.style.borderColor = colors[idx];
+                if (!content.style.borderStyle || content.style.borderStyle === 'none') {
+                    content.style.borderStyle = 'solid';
+                    content.style.borderWidth = '1px';
+                }
+            }
+        }
+    }
 }
 
 // --- BORDERS ---
@@ -1072,9 +1232,12 @@ function initShapes() {
     basicShapes.forEach((s) => {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
-        item.innerHTML = `<div style="width:25px; height:25px; background:#007670; clip-path:${s.c}"></div>`;
+        item.innerHTML = `<div class="shape-preview-basic" style="width:25px; height:25px; background:#007670; clip-path:${s.c}"></div>`;
         item.onclick = () => {
-            addShapeElement(s.c, '#007670');
+            const currentBgCol = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : '#007670';
+            const el = addShapeElement(s.c, currentBgCol);
+            el.setAttribute('data-scheme-fill', '3'); // Accent 1
+            if (typeof applySingleElementScheme === 'function') applySingleElementScheme(el, state.currentScheme);
             document.getElementById('shape-dropdown').style.display = 'none';
         };
         grid.appendChild(item);
@@ -1119,9 +1282,19 @@ function initShapes() {
     outlineShapes.forEach(s => {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
-        item.innerHTML = `<svg viewBox="0 0 100 100" style="width:25px; height:25px;">${s.svg}</svg>`;
+        let previewSvg = s.svg;
+        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="#005a55"`)
+                               .replace(/fill="black"/g, `fill="#007670"`);
+        item.innerHTML = `<svg class="shape-preview-outline" viewBox="0 0 100 100" style="width:25px; height:25px;">${previewSvg}</svg>`;
         item.onclick = () => {
-            createWrapper(`<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">${s.svg}</svg>`);
+            const el = createWrapper(`<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">${s.svg}</svg>`);
+            el.setAttribute('data-type', 'shape');
+            el.setAttribute('data-scheme-stroke', '0'); // Primary Dark
+            // Ensure vector shapes without a predefined fill stay transparent, but those with fill get Accent 1
+            if (s.svg.includes('fill="black"') || s.svg.includes('fill="#')) {
+                el.setAttribute('data-scheme-fill', '3');
+            }
+            if (typeof applySingleElementScheme === 'function') applySingleElementScheme(el, state.currentScheme);
             document.getElementById('shape-dropdown').style.display = 'none';
         };
         gridOutline.appendChild(item);
@@ -2373,7 +2546,10 @@ function createWrapper(htmlContent) {
 }
 
 function addTextBox() { 
-    createWrapper('<div style="padding:10px; height:100%; word-wrap:break-word;" contenteditable="true">Click to edit text</div>'); 
+    const el = createWrapper('<div style="padding:10px; height:100%; word-wrap:break-word;" contenteditable="true">Click to edit text</div>'); 
+    el.setAttribute('data-scheme-text', '0');
+    applySingleElementScheme(el, state.currentScheme);
+    return el;
 }
 
 function insertPageNumber() {
@@ -2501,6 +2677,7 @@ function addShapeElement(clip, bg) {
     const el = createWrapper(`<div style="width:100%; height:100%; background:${bg}; clip-path:${clip}"></div>`);
     el.style.width = '100px'; el.style.height = '100px';
     el.setAttribute('data-type', 'shape');
+    return el;
 }
 
 function triggerUpload() { document.getElementById('img-upload').click(); }
@@ -11628,19 +11805,24 @@ window.initShapes = function() {
             item.title = shape.name;
             item.style.cssText = "aspect-ratio: 1; border: 1px solid transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: all 0.1s;";
             
-            item.innerHTML = `<svg viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="var(--pub-color)" stroke="var(--pub-dark)" stroke-width="2">${shape.markup}</g></svg>`;
+            item.innerHTML = `<svg class="shape-preview-vector" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="#007670" stroke="#005a55" stroke-width="2">${shape.markup}</g></svg>`;
             
             item.onmouseover = () => { item.style.background = '#e0f2fe'; item.style.borderColor = '#7dd3fc'; };
             item.onmouseout = () => { item.style.background = 'transparent'; item.style.borderColor = 'transparent'; };
             
             item.onclick = () => {
-                const svgString = `<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0;"><g class="shape-path" vector-effect="non-scaling-stroke" fill="var(--pub-color, #007670)" stroke="#005a55" stroke-width="2">${shape.markup}</g></svg>`;
+                const insFill = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : '#007670';
+                const insStroke = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][0] : '#005a55';
+                const svgString = `<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0;"><g class="shape-path" vector-effect="non-scaling-stroke" fill="${insFill}" stroke="${insStroke}" stroke-width="2">${shape.markup}</g></svg>`;
                 
                 if (typeof createWrapper === 'function') {
                     const el = createWrapper(svgString);
                     el.setAttribute('data-type', 'shape');
+                    el.setAttribute('data-scheme-fill', '3');
+                    el.setAttribute('data-scheme-stroke', '0');
                     el.style.width = '100px'; 
                     el.style.height = '100px';
+                    if (typeof applySingleElementScheme === 'function') applySingleElementScheme(el, state.currentScheme);
                 }
                 dropdown.style.display = 'none';
             };
@@ -11703,6 +11885,10 @@ window.initShapes = function() {
             const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
             const content = state.selectedEl.querySelector('.element-content');
             
+            if (isShape && svgOuter) {
+                const fillAttr = svgOuter.getAttribute('fill');
+                if (fillAttr === 'transparent' || fillAttr === 'none') currentFillType = 'none';
+            }
             if (content) {
                 if (content.style.opacity) currentOpacity = parseFloat(content.style.opacity);
                 const configAttr = content.getAttribute('data-format-config');
@@ -11724,14 +11910,12 @@ window.initShapes = function() {
 
             // Populate the dialog with the existing colors
             if (isShape && svgOuter) {
-                const innerG = svgOuter.querySelector('g[fill="transparent"]');
-                if (!innerG) {
-                    const fill = svgOuter.getAttribute('fill');
-                    if (fill) {
-                        if (fill.startsWith('#')) currentBg = fill;
-                        else if (fill.startsWith('url(#grad-')) currentFillType = 'gradient';
-                        else if (fill.startsWith('url(#pat-')) currentFillType = 'pattern';
-                    }
+                const fill = svgOuter.getAttribute('fill');
+                if (fill === 'none' || fill === 'transparent') currentFillType = 'none';
+                else if (fill) {
+                    if (fill.startsWith('#')) currentBg = fill;
+                    else if (fill.startsWith('url(#grad-')) currentFillType = 'gradient';
+                    else if (fill.startsWith('url(#pat-')) currentFillType = 'pattern';
                 }
                 const stroke = svgOuter.getAttribute('stroke');
                 if (stroke && stroke.startsWith('#')) currentBc = stroke;
@@ -11740,7 +11924,9 @@ window.initShapes = function() {
                 if (strokeWidth) currentBt = parseInt(strokeWidth);
             } else if (content) {
                 const bg = content.style.background;
-                if (bg && bg.includes('gradient')) {
+                if (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') {
+                    currentFillType = 'none';
+                } else if (bg && bg.includes('gradient')) {
                     if (bg.includes('repeating') || bg.includes('conic')) currentFillType = 'pattern';
                     else currentFillType = 'gradient';
                 }
@@ -11761,6 +11947,8 @@ window.initShapes = function() {
             let originalCssBorder = '';
             let originalCssTransform = '';
             let originalCssOpacity = '';
+            let originalDataSchemeFill = '';
+            let originalDataSchemeStroke = '';
 
             // Universal 3D Capture (Now applied to content for all elements)
             if (content) {
@@ -11786,6 +11974,8 @@ window.initShapes = function() {
                 originalCssBorder = content.style.border || '';
                 originalCssOpacity = content.style.opacity || '';
             }
+            originalDataSchemeFill = state.selectedEl.getAttribute('data-scheme-fill') || '';
+            originalDataSchemeStroke = state.selectedEl.getAttribute('data-scheme-stroke') || '';
             
             window._dialogCancelHook = () => {
                 if (content) {
@@ -11816,6 +12006,12 @@ window.initShapes = function() {
                     content.style.border = originalCssBorder;
                     content.style.opacity = originalCssOpacity;
                 }
+                
+                if (originalDataSchemeFill) state.selectedEl.setAttribute('data-scheme-fill', originalDataSchemeFill);
+                else state.selectedEl.removeAttribute('data-scheme-fill');
+                
+                if (originalDataSchemeStroke) state.selectedEl.setAttribute('data-scheme-stroke', originalDataSchemeStroke);
+                else state.selectedEl.removeAttribute('data-scheme-stroke');
             };
 
             const form = `
@@ -11825,7 +12021,9 @@ window.initShapes = function() {
                         document.getElementById('ctx-box-solid-panel').style.display = this.value==='solid' ? 'block' : 'none';
                         document.getElementById('ctx-box-gradient-panel').style.display = this.value==='gradient' ? 'block' : 'none';
                         document.getElementById('ctx-box-pattern-panel').style.display = this.value==='pattern' ? 'block' : 'none';
+                        window._applyFormatPreview();
                     ">
+                        <option value="none" ${currentFillType==='none'?'selected':''}>No Fill (Transparent)</option>
                         <option value="solid" ${currentFillType==='solid'?'selected':''}>Solid Color</option>
                         <option value="gradient" ${currentFillType==='gradient'?'selected':''}>Gradient Fill</option>
                         <option value="pattern" ${currentFillType==='pattern'?'selected':''}>Pattern Fill</option>
@@ -11835,7 +12033,12 @@ window.initShapes = function() {
                 <div id="ctx-box-solid-panel" style="display:${currentFillType==='solid'?'block':'none'};">
                     <div class="input-group" style="margin-bottom:10px;">
                         <label>Fill Color:</label>
-                        <input type="color" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}">
+                        <div>
+                            <input type="color" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}" oninput="this.removeAttribute('data-scheme-index'); window._applyFormatPreview();">
+                            <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
+                                ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bg').value='${c}'; document.getElementById('ctx-box-bg').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -11915,7 +12118,12 @@ window.initShapes = function() {
 
                 <div class="input-group" style="margin-bottom:10px;">
                     <label>Border / Stroke Color:</label>
-                    <input type="color" id="ctx-box-bc" value="${currentBc}">
+                    <div>
+                        <input type="color" id="ctx-box-bc" value="${currentBc}" oninput="this.removeAttribute('data-scheme-index'); window._applyFormatPreview();">
+                        <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
+                            ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bc').value='${c}'; document.getElementById('ctx-box-bc').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
+                        </div>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Border Thickness (px):</label>
@@ -11961,9 +12169,19 @@ window.initShapes = function() {
             window._applyFormatPreview = () => {
                 if (!document.getElementById('ctx-box-fill-type')) return;
                 const fillType = document.getElementById('ctx-box-fill-type').value;
-                const bg = document.getElementById('ctx-box-bg').value;
-                const bc = document.getElementById('ctx-box-bc').value;
+                const bgInput = document.getElementById('ctx-box-bg');
+                const bcInput = document.getElementById('ctx-box-bc');
+                const bg = bgInput.value;
+                const bc = bcInput.value;
                 const bt = document.getElementById('ctx-box-bt').value;
+                
+                const schemeFill = bgInput.getAttribute('data-scheme-index');
+                if (schemeFill !== null && fillType === 'solid') state.selectedEl.setAttribute('data-scheme-fill', schemeFill);
+                else state.selectedEl.removeAttribute('data-scheme-fill');
+                
+                const schemeStroke = bcInput.getAttribute('data-scheme-index');
+                if (schemeStroke !== null) state.selectedEl.setAttribute('data-scheme-stroke', schemeStroke);
+                else state.selectedEl.removeAttribute('data-scheme-stroke');
                 
                 const gradPreset = document.getElementById('ctx-box-grad-preset') ? document.getElementById('ctx-box-grad-preset').value : 'custom';
                 const gradC1 = document.getElementById('ctx-box-grad-1') ? document.getElementById('ctx-box-grad-1').value : '#ff0000';
@@ -12005,11 +12223,22 @@ window.initShapes = function() {
                     const oldDefs = svgRoot.querySelector('defs');
                     if (oldDefs) oldDefs.remove();
 
-                    if (fillType === 'solid') {
+                    const cleanChildren = (attr) => {
+                        svgOuter.querySelectorAll('*').forEach(el => {
+                            if (el.getAttribute(attr) !== 'none') el.removeAttribute(attr);
+                        });
+                    };
+
+                    if (fillType === 'none') {
+                        svgOuter.setAttribute('fill', 'transparent');
+                        cleanChildren('fill');
+                    } else if (fillType === 'solid') {
                         if (isHollow && bg === "#ffffff") {
                             svgOuter.setAttribute('fill', 'transparent');
+                            cleanChildren('fill');
                         } else {
                             svgOuter.setAttribute('fill', bg);
+                            cleanChildren('fill');
                             svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
                         }
                     } else if (fillType === 'gradient') {
@@ -12037,6 +12266,7 @@ window.initShapes = function() {
                         svgRoot.insertBefore(defs, svgRoot.firstChild);
                         
                         svgOuter.setAttribute('fill', `url(#${gradId})`);
+                        cleanChildren('fill');
                         svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
                     } else if (fillType === 'pattern') {
                         const patId = 'pat-' + Math.random().toString(36).substr(2, 9);
@@ -12117,11 +12347,13 @@ window.initShapes = function() {
                         svgRoot.insertBefore(defs, svgRoot.firstChild);
                         
                         svgOuter.setAttribute('fill', `url(#${patId})`);
+                        cleanChildren('fill');
                         svgOuter.querySelectorAll('[fill="transparent"]').forEach(el => el.removeAttribute('fill'));
                     }
                     
                     svgOuter.setAttribute('stroke', bc);
                     svgOuter.setAttribute('stroke-width', bt);
+                    cleanChildren('stroke');
                     
                     svgOuter.style.transform = ''; // Clear legacy transform from SVG
                     
@@ -12135,7 +12367,9 @@ window.initShapes = function() {
                     }
                 } else if (content) {
                     // Standard HTML Text Box Formatting
-                    if (fillType === 'solid') {
+                    if (fillType === 'none') {
+                        content.style.background = 'transparent';
+                    } else if (fillType === 'solid') {
                         content.style.background = bg;
                     } else if (fillType === 'gradient') {
                         const cssStops = stops.map(s => `${s.c} ${s.o}%`).join(', ');
