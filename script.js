@@ -1,4 +1,16 @@
 /* --- GLOBAL STATE --- */
+window.ribbonScrollInterval = null;
+window.startRibbonScroll = (id, amount) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    window.ribbonScrollInterval = setInterval(() => {
+        el.scrollLeft += amount;
+    }, 20);
+};
+window.stopRibbonScroll = () => {
+    clearInterval(window.ribbonScrollInterval);
+};
+
 let state = {
     pages: [], 
     currentPageIndex: 0,
@@ -143,6 +155,7 @@ window.onload = function() {
     initColorSchemes();
     initThemes();
     initShapes();
+    initRibbonResponsiveness();
     //initClipart(); //disabled to provent lag, LazyLoad method used somewhere below
     initWordArt();
     initAds();
@@ -6027,10 +6040,94 @@ setTimeout(() => ContextMenuSystem.init(), 500);
    THE MASTER ADDON: RIBBONS, MARQUEE, GROUPING, CROP-SCALE & WORDART
 ========================================================================= */
 
+// --- RIBBON RESPONSIVENESS ---
+function initRibbonResponsiveness() {
+    const toolbars = document.querySelectorAll('.ribbon-toolbar');
+
+    toolbars.forEach(tb => {
+        // Create Wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ribbon-toolbar-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+        wrapper.style.flexGrow = '1';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.display = tb.classList.contains('active') ? 'flex' : 'none';
+        
+        tb.parentNode.insertBefore(wrapper, tb);
+        wrapper.appendChild(tb);
+
+        // Create Left Pan Arrow
+        const panLeft = document.createElement('div');
+        panLeft.className = 'ribbon-pan-arrow left';
+        panLeft.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        
+        // Create Right Pan Arrow
+        const panRight = document.createElement('div');
+        panRight.className = 'ribbon-pan-arrow right';
+        panRight.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        
+        wrapper.appendChild(panLeft);
+        wrapper.appendChild(panRight);
+
+        // Pan Logic
+        let scrollInterval;
+        const startPan = (amt, arrowBtn) => {
+            arrowBtn.classList.add('clicked');
+            scrollInterval = setInterval(() => { tb.scrollLeft += amt; }, 20);
+        };
+        const stopPan = () => clearInterval(scrollInterval);
+
+        panLeft.onmousedown = () => startPan(-15, panLeft);
+        panLeft.onmouseup = stopPan;
+        panLeft.onmouseleave = stopPan;
+
+        panRight.onmousedown = () => startPan(15, panRight);
+        panRight.onmouseup = stopPan;
+        panRight.onmouseleave = stopPan;
+
+        // Visibility Observer
+        const checkScroll = () => {
+            if (wrapper.style.display === 'none') return;
+            
+            if (tb.scrollWidth > tb.clientWidth && Math.ceil(tb.scrollLeft + tb.clientWidth) < tb.scrollWidth) {
+                panRight.classList.add('visible');
+            } else {
+                panRight.classList.remove('visible');
+            }
+
+            if (tb.scrollLeft > 0) {
+                panLeft.classList.add('visible');
+            } else {
+                panLeft.classList.remove('visible');
+            }
+        };
+
+        tb.addEventListener('scroll', checkScroll);
+        new ResizeObserver(checkScroll).observe(tb);
+        
+        // Also allow mousewheel scrolling inside ribbon
+        tb.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                tb.scrollLeft += e.deltaY;
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Save reference for tab switching
+        tb._wrapper = wrapper;
+    });
+
+    // We no longer attach click listeners here because contextual tabs are created dynamically.
+    // Wrapper visibility is now managed inside switchTab().
+}
+
 // --- 1. TAB SWITCHING FIX ---
 window.switchTab = function(t) {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('.ribbon-toolbar').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.ribbon-toolbar-wrapper').forEach(w => w.style.display = 'none');
+    
     let targetTab = document.getElementById('tab-' + t); 
     if (!targetTab) {
         document.querySelectorAll('.tab').forEach(tab => {
@@ -6039,8 +6136,15 @@ window.switchTab = function(t) {
         });
     }
     if (targetTab) targetTab.classList.add('active');
+    
     const toolbar = document.getElementById('ribbon-' + t);
-    if(toolbar) toolbar.classList.add('active');
+    if(toolbar) {
+        toolbar.classList.add('active');
+        if (toolbar._wrapper) {
+            toolbar._wrapper.style.display = 'flex';
+            setTimeout(() => toolbar.dispatchEvent(new Event('scroll')), 50);
+        }
+    }
 };
 
 // --- 2A. TABLE LAYOUT SIDEBAR ---

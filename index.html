@@ -447,10 +447,14 @@
             <div class="tool-btn" onclick="toggleHeaderFooter()"><i class="fas fa-columns"></i>H/F Toggle</div>
             <div class="group-label">Layout</div>
         </div>
-        <div class="group" id="scheme-group" style="width: 500px; overflow-x: auto; white-space: nowrap;">
+        <div class="group" style="position: relative; display: flex; align-items: center; padding-bottom: 15px; min-width: 420px; border-right: 1px solid #ccc; margin-right: 10px;">
+            <div onmousedown="window.startRibbonScroll('scheme-group', -5)" onmouseup="window.stopRibbonScroll()" onmouseleave="window.stopRibbonScroll()" style="cursor:pointer; background:var(--pub-color); color:white; width:16px; height:45px; display:flex; align-items:center; justify-content:center; border-radius:3px; margin:0 5px;"><i class="fas fa-chevron-left" style="font-size:10px;"></i></div>
+            <div id="scheme-group" class="hide-scrollbar" style="width: 350px; overflow-x: hidden; white-space: nowrap; display: flex; align-items: center; scroll-behavior: auto;">
+            </div>
+            <div onmousedown="window.startRibbonScroll('scheme-group', 5)" onmouseup="window.stopRibbonScroll()" onmouseleave="window.stopRibbonScroll()" style="cursor:pointer; background:var(--pub-color); color:white; width:16px; height:45px; display:flex; align-items:center; justify-content:center; border-radius:3px; margin:0 5px;"><i class="fas fa-chevron-right" style="font-size:10px;"></i></div>
             <div class="group-label">Color Schemes</div>
         </div>
-        <div class="group" id="theme-group" style="width: 500px; overflow-x: auto; white-space: nowrap;">
+        <div class="group" id="theme-group" style="width: 500px; overflow-x: hidden; white-space: nowrap;">
             <div class="group-label">Page Background</div>
         </div>
     </div>

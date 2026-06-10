@@ -11,6 +11,9 @@
 
 * { box-sizing: border-box; user-select: none; -webkit-user-drag: none; }
 
+.hide-scrollbar::-webkit-scrollbar { display: none !important; }
+.hide-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
 body {
     margin: 0; padding: 0;
     height: 100vh;
@@ -160,7 +163,11 @@ body {
     align-items: center;
     gap: 5px;
     overflow-x: auto;
+    position: relative;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
+.ribbon-toolbar::-webkit-scrollbar { display: none !important; }
 .ribbon-toolbar.active { display: flex; }
 
 .group {
@@ -190,6 +197,48 @@ body {
     -ms-overflow-style: none;
 }
 #theme-group::-webkit-scrollbar, #scheme-group::-webkit-scrollbar { display: none; }
+.ribbon-pan-arrow {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 24px;
+    background: rgba(243, 242, 241, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, background 0.1s ease;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.ribbon-pan-arrow.left { left: 0; border-right: 1px solid #dcdcdc; }
+.ribbon-pan-arrow.right { right: 0; border-left: 1px solid #dcdcdc; }
+.ribbon-pan-arrow.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.ribbon-pan-arrow:hover {
+    background: #e1dfdd;
+}
+
+@keyframes arrow-throb {
+    0%, 100% { transform: scale(1); color: inherit; }
+    50% { transform: scale(1.3); color: var(--pub-color); }
+}
+.ribbon-pan-arrow i {
+    animation: arrow-throb 2s ease-in-out 1;
+    transition: transform 0.2s;
+}
+.ribbon-pan-arrow.clicked i {
+    animation: none !important;
+}
+.ribbon-pan-arrow:hover i {
+    animation: none;
+    transform: scale(1.1);
+    color: var(--pub-dark);
+}
 
 .tool-btn {
     display: flex;
