@@ -708,6 +708,7 @@ td, th {
 .rotate-handle {
     position: absolute; top: -50px; left: calc(50% - 8px); width: 16px; height: 16px;
     background: #28a745; border-radius: 50%; display: none;
+    pointer-events: auto;
     cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='white' stroke='black' stroke-width='1.5' style='transform: rotate(45deg)'><path d='M21 11c0 5.5-4.5 10-10 10-3.9 0-7.2-2.3-8.9-5.6l2.4-1.2C5.7 16.5 8.1 18 11 18c3.9 0 7-3.1 7-7s-3.1-7-7-7c-1.3 0-2.5.4-3.6 1L10 8H3V1l2.6 2.6C7.2 2.3 9 1.5 11 1.5c5.5 0 10 4.5 10 9.5z'/></svg>") 12 12, pointer;
 }
 .rotate-stick { position: absolute; top: -40px; left: 50%; width: 1px; height: 40px; background: var(--selection); display: none; }
