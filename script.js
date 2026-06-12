@@ -9446,9 +9446,203 @@ window.initWordArt = function() {
                 };
                 reader.readAsText(file);
             }
+            
+            // --- E. HANDLE EXCEL SPREADSHEETS (.xls, .xlsx) ---
+            else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+                if (typeof uploadAndConvertExcel === 'function') uploadAndConvertExcel(file, fileName);
+            }
         });
     }
 })();
+/* =========================================================================
+   EXCEL SPREADSHEET CONVERSION ENDPOINT (.xls / .xlsx)
+   ========================================================================= */
+function uploadAndConvertExcel(file, fileName) {
+    const isModern = fileName.endsWith('.xlsx');
+    
+    // --- 1. THE PRE-FLIGHT MENU ---
+    const promptHtml = `
+        <style>
+            .op-import-modal { font-family: 'Segoe UI', sans-serif; color: #334155; width: 100%; box-sizing: border-box; }
+            .op-import-modal p { margin-top: 0; font-size: 13px; margin-bottom: 12px; font-weight: 500; }
+            .op-import-card { display: block; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease; background: #ffffff; width: 100%; box-sizing: border-box; }
+            .op-import-card:hover { border-color: #94a3b8; background: #f8fafc; }
+            .op-import-card:has(input:checked) { border-color: #0ea5e9; background: #f0f9ff; }
+            .op-import-card.safe-mode { border-color: #fde68a; background: #fffbeb; }
+            .op-import-card.safe-mode:hover { border-color: #fcd34d; background: #fef3c7; }
+            .op-import-card.safe-mode:has(input:checked) { border-color: #f59e0b; background: #fef3c7; }
+            .op-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+            .op-import-card input[type="radio"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #0ea5e9; }
+            .op-import-card.safe-mode input[type="radio"] { accent-color: #d97706; }
+            .op-import-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-size: 13px; }
+            .icon-edit { background: #e0f2fe; color: #0284c7; }
+            .icon-safe { background: #fef3c7; color: #d97706; }
+            .op-import-title { font-weight: 600; font-size: 13px; color: #0f172a; }
+            .title-safe { color: #92400e; }
+            .op-import-desc { font-size: 11.5px; color: #64748b; line-height: 1.4; margin-left: 24px; display: block; white-space: normal; }
+            .desc-safe { color: #92400e; }
+            .op-import-actions { display: flex; gap: 8px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+            .op-btn { flex: 1; padding: 8px 0; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; transition: all 0.2s; border: none; text-align: center; }
+            .op-btn-cancel { background: #f1f5f9; color: #475569; }
+            .op-btn-cancel:hover { background: #e2e8f0; color: #0f172a; }
+            .op-btn-start { background: #0ea5e9; color: white; }
+            .op-btn-start:hover { background: #0284c7; }
+        </style>
+
+        <div class="op-import-modal">
+            <p>Select how to process this Spreadsheet file:</p>
+            <label class="op-import-card" style="${!isModern ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                <div class="op-card-header">
+                    <input type="radio" name="importModeExcel" id="mode-styled-excel" value="styled" ${isModern ? 'checked' : 'disabled'}>
+                    <div class="op-import-icon icon-edit"><i class="fas fa-palette"></i></div>
+                    <span class="op-import-title">Styled Data Mode (ExcelJS)</span>
+                </div>
+                <span class="op-import-desc">Retains cell colors, font formatting, and alignments. Best for styled reports. ${!isModern ? '<br><b>(Requires .xlsx format)</b>' : ''}</span>
+            </label>
+
+            <label class="op-import-card safe-mode">
+                <div class="op-card-header">
+                    <input type="radio" name="importModeExcel" id="mode-raw-excel" value="raw" ${!isModern ? 'checked' : ''}>
+                    <div class="op-import-icon icon-safe"><i class="fas fa-table"></i></div>
+                    <span class="op-import-title title-safe">Raw Data Mode (SheetJS)</span>
+                </div>
+                <span class="op-import-desc desc-safe">Extracts only the raw text and structure. Best for large or overly-complex files.</span>
+            </label>
+
+            <div class="op-import-actions">
+                <button id="btn-cancel-excel" class="op-btn op-btn-cancel">Cancel</button>
+                <button id="btn-start-excel" class="op-btn op-btn-start"><i class="fas fa-cloud-upload-alt" style="margin-right:6px;"></i>Start</button>
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show('Import Spreadsheet', promptHtml, null, true);
+    
+    setTimeout(() => {
+        const dialogContent = document.getElementById('custom-dialog-content');
+        if (dialogContent && dialogContent.parentElement) {
+            dialogContent.parentElement.style.width = '520px';
+            dialogContent.parentElement.style.maxWidth = '95vw';
+        }
+    }, 10);    
+    
+    const defaultConfirm = document.getElementById('custom-dialog-confirm');
+    const defaultCancel = document.getElementById('custom-dialog-cancel');
+    if (defaultConfirm) defaultConfirm.style.display = 'none';
+    if (defaultCancel) defaultCancel.style.display = 'none';
+
+    document.getElementById('btn-cancel-excel').onclick = () => DialogSystem.close();
+
+    document.getElementById('btn-start-excel').onclick = () => {
+        const mode = document.getElementById('mode-styled-excel').checked ? 'styled' : 'raw';
+        DialogSystem.close();
+        
+        // Execute extraction
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const buffer = evt.target.result;
+                let tableHTML = '';
+                
+                // Use ExcelJS for modern .xlsx files (retains colors & styles)
+                if (mode === 'styled' && typeof ExcelJS !== 'undefined') {
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(buffer);
+                    const worksheet = workbook.worksheets[0];
+                    
+                    let html = '<table style="width: 100%; border-collapse: collapse; font-family: inherit; font-size: 12px;">';
+                    
+                    worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+                        html += '<tr>';
+                        row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
+                            let cellStyle = 'border: 1px solid #cbd5e1; padding: 4px 8px;';
+                            
+                            // Background color
+                            if (cell.fill && cell.fill.type === 'pattern' && cell.fill.fgColor && cell.fill.fgColor.argb) {
+                                let argb = cell.fill.fgColor.argb;
+                                if (argb.length === 8) {
+                                    const a = parseInt(argb.substring(0, 2), 16) / 255;
+                                    const r = parseInt(argb.substring(2, 4), 16);
+                                    const g = parseInt(argb.substring(4, 6), 16);
+                                    const b = parseInt(argb.substring(6, 8), 16);
+                                    cellStyle += `background-color: rgba(${r},${g},${b},${a});`;
+                                } else {
+                                    cellStyle += `background-color: #${argb};`;
+                                }
+                            }
+                            
+                            // Font color & weight
+                            if (cell.font) {
+                                if (cell.font.color && cell.font.color.argb) {
+                                    let argb = cell.font.color.argb;
+                                    if (argb.length === 8) {
+                                        cellStyle += `color: #${argb.substring(2)};`;
+                                    } else {
+                                        cellStyle += `color: #${argb};`;
+                                    }
+                                }
+                                if (cell.font.bold) cellStyle += 'font-weight: bold;';
+                                if (cell.font.italic) cellStyle += 'font-style: italic;';
+                            }
+                            
+                            // Alignment
+                            if (cell.alignment) {
+                                if (cell.alignment.horizontal) cellStyle += `text-align: ${cell.alignment.horizontal};`;
+                                if (cell.alignment.vertical) cellStyle += `vertical-align: ${cell.alignment.vertical};`;
+                            }
+                            
+                            const cellValue = cell.text || cell.value || '';
+                            html += `<td style="${cellStyle}" contenteditable="true">${cellValue}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</table>';
+                    tableHTML = html;
+                } 
+                // Fallback to SheetJS for raw data
+                else if (typeof XLSX !== 'undefined') {
+                    const data = new Uint8Array(buffer);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    let rawHtml = XLSX.utils.sheet_to_html(worksheet, { editable: true });
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(rawHtml, 'text/html');
+                    const table = doc.querySelector('table');
+                    if (!table) throw new Error("No table found in spreadsheet");
+                    
+                    table.style.width = '100%';
+                    table.style.borderCollapse = 'collapse';
+                    table.style.fontFamily = 'inherit';
+                    table.style.fontSize = '12px';
+                    
+                    const tds = table.querySelectorAll('td, th');
+                    tds.forEach(td => {
+                        td.style.border = '1px solid #cbd5e1';
+                        td.style.padding = '4px 8px';
+                        td.setAttribute('contenteditable', 'true');
+                    });
+                    tableHTML = table.outerHTML;
+                } else {
+                    if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Excel parsing libraries not loaded.");
+                    return;
+                }
+                
+                if (typeof createWrapper === 'function' && tableHTML) {
+                    const wrapper = createWrapper(tableHTML);
+                    wrapper.setAttribute('data-type', 'table');
+                    wrapper.style.width = '500px';
+                    wrapper.style.height = 'auto';
+                }
+            } catch(err) {
+                if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error parsing spreadsheet: " + err);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+}
+
 /* =========================================================================
    PUBLISHER DOCUMENT CONVERSION ENDPOINT (.pub / .pubx)
    (Fixed FormData Key)
