@@ -4497,7 +4497,8 @@ function saveDocument() {
     state.pages[state.currentPageIndex] = serializeCurrentPage();
     const docData = {
         title: document.getElementById('doc-title').innerText,
-        pages: state.pages
+        pages: state.pages,
+        colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
     const a = document.createElement('a');
@@ -4537,6 +4538,11 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 const data = JSON.parse(evt.target.result);
                 document.getElementById('doc-title').innerText = data.title;
                 state.pages = data.pages;
+                if (data.colorModel === 'CMYK') {
+                    document.getElementById('paper').classList.add('cmyk-mode');
+                } else {
+                    document.getElementById('paper').classList.remove('cmyk-mode');
+                }
                 if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                 state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
                 state.history = [];
@@ -22928,3 +22934,197 @@ function contextMoveDown() {
 function contextDeletePage() {
     deletePage(state.contextMenuTargetIndex, { stopPropagation: () => {} });
 }
+
+window.showInfoModal = function() {
+    const isCMYK = document.getElementById('paper').classList.contains('cmyk-mode');
+    
+    const html = `
+    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px;">
+        <!-- Commercial Print Settings -->
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
+            <div style="background: #f1f5f9; color: var(--pub-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                <i class="fas fa-palette"></i>
+            </div>
+            <div style="flex-grow: 1;">
+                <h3 style="margin: 0 0 5px 0; font-size: 16px; color: #1e293b;">Commercial Print Settings</h3>
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b; line-height: 1.4;">
+                    If you are sending this document to a professional printing service, they may require the CMYK color model. Switching to CMYK will apply a soft-proof filter that simulates how your document will look when printed with physical ink (which has a narrower color gamut than a screen).
+                </p>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="colorModel" value="RGB" ${!isCMYK ? 'checked' : ''} onchange="toggleColorModel('RGB')"> 
+                        RGB (Digital Display)
+                    </label>
+                    <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="colorModel" value="CMYK" ${isCMYK ? 'checked' : ''} onchange="toggleColorModel('CMYK')"> 
+                        CMYK (Commercial Print)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Checker -->
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
+            <div style="background: #fdf2f8; color: #db2777; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <div style="flex-grow: 1;">
+                <h3 style="margin: 0 0 5px 0; font-size: 16px; color: #1e293b;">Design Checker</h3>
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b; line-height: 1.4;">
+                    Run a diagnostic scan on your document to find potential issues before printing or exporting. This will automatically catch text overflow, low-resolution images, or objects that have been accidentally dragged off the page canvas.
+                </p>
+                <button onclick="runDesignChecker()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                    <i class="fas fa-search" style="margin-right: 5px;"></i> Run Design Checker
+                </button>
+                <div id="design-checker-results" style="margin-top: 15px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Document Info', html, null, true);
+    }
+};
+
+window.toggleColorModel = function(model) {
+    const paper = document.getElementById('paper');
+    if (model === 'CMYK') {
+        paper.classList.add('cmyk-mode');
+    } else {
+        paper.classList.remove('cmyk-mode');
+    }
+};
+
+window.runDesignChecker = function() {
+    const resultsContainer = document.getElementById('design-checker-results');
+    if (!resultsContainer) return;
+    
+    resultsContainer.style.display = 'block';
+    resultsContainer.innerHTML = '<div style="color: #64748b; font-size: 13px; display:flex; align-items:center; gap:5px;"><i class="fas fa-spinner fa-spin"></i> Scanning document...</div>';
+    
+    setTimeout(() => {
+        const issues = [];
+        const paper = document.getElementById('paper');
+        const paperRect = paper.getBoundingClientRect();
+        
+        const elements = paper.querySelectorAll('.pub-element');
+        
+        elements.forEach(el => {
+            // 1. Check Text Overflow
+            if (el.dataset.type === 'text') {
+                const contentDiv = el.querySelector('.element-content div[contenteditable]');
+                if (contentDiv) {
+                    // Check if scrollHeight is strictly greater than clientHeight
+                    // Some browsers add fractional differences, so giving a 2px leeway
+                    if (contentDiv.scrollHeight > contentDiv.clientHeight + 2 || contentDiv.scrollWidth > contentDiv.clientWidth + 2) {
+                        issues.push({
+                            type: 'Text Overflow',
+                            icon: 'fas fa-text-height',
+                            color: '#eab308',
+                            desc: 'A text box has content that is cut off and not fully visible.',
+                            element: el
+                        });
+                    }
+                }
+            }
+            
+            // 2. Check Low-Res Images
+            if (el.dataset.type === 'image') {
+                const img = el.querySelector('img');
+                if (img) {
+                    // Stretched larger than native resolution = pixelation
+                    if (img.clientWidth > img.naturalWidth || img.clientHeight > img.naturalHeight) {
+                        issues.push({
+                            type: 'Low-Res Image',
+                            icon: 'fas fa-image',
+                            color: '#3b82f6',
+                            desc: 'An image is stretched beyond its original resolution and may look pixelated when printed.',
+                            element: el
+                        });
+                    }
+                }
+            }
+            
+            // 3. Check Off-Page Objects
+            const elRect = el.getBoundingClientRect();
+            // Completely outside
+            if (elRect.right < paperRect.left || elRect.left > paperRect.right || elRect.bottom < paperRect.top || elRect.top > paperRect.bottom) {
+                issues.push({
+                    type: 'Off-Page Object',
+                    icon: 'fas fa-object-ungroup',
+                    color: '#ef4444',
+                    desc: 'An object is positioned completely off the page canvas.',
+                    element: el
+                });
+            } else if (elRect.left < paperRect.left - 5 || elRect.right > paperRect.right + 5 || elRect.top < paperRect.top - 5 || elRect.bottom > paperRect.bottom + 5) {
+                 issues.push({
+                    type: 'Partially Off-Page',
+                    icon: 'fas fa-crop-alt',
+                    color: '#f97316',
+                    desc: 'An object is partially hanging off the edge of the page canvas.',
+                    element: el
+                });
+            }
+        });
+        
+        // Render Results
+        if (issues.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 10px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-check-circle" style="font-size: 16px;"></i> No design issues found! Your document looks great.
+                </div>
+            `;
+        } else {
+            let html = `
+                <div style="margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                    Found ${issues.length} potential issue${issues.length > 1 ? 's' : ''}:
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+            `;
+            
+            issues.forEach((issue) => {
+                html += `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid ${issue.color}; padding: 10px; border-radius: 4px; display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="color: ${issue.color}; margin-top: 2px;"><i class="${issue.icon}"></i></div>
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 600; font-size: 13px; color: #334155;">${issue.type}</div>
+                            <div style="font-size: 11px; color: #64748b;">${issue.desc}</div>
+                        </div>
+                        <button onclick="highlightIssueElement('${issue.element.id}')" title="Locate Element" style="background: none; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; padding: 4px 8px; color: #475569; transition: background 0.15s;">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            resultsContainer.innerHTML = html;
+        }
+    }, 600);
+};
+
+window.highlightIssueElement = function(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+    
+    if (typeof selectElement === 'function') {
+        selectElement(el, new Event('click'));
+    }
+    
+    el.style.transition = 'box-shadow 0.2s, transform 0.2s';
+    el.style.boxShadow = '0 0 0 4px #ef4444';
+    el.style.transform = 'scale(1.02)';
+    el.style.zIndex = '9999';
+    
+    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    
+    setTimeout(() => {
+        el.style.boxShadow = '';
+        el.style.transform = '';
+        el.style.zIndex = '';
+        setTimeout(() => { el.style.transition = ''; }, 200);
+    }, 1500);
+};

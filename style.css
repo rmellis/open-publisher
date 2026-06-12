@@ -575,6 +575,10 @@ body {
     flex-shrink: 0; 
 }
 
+#paper.cmyk-mode {
+    filter: url(#cmyk-sim);
+}
+
 #paper.theme-grid::after {
     content: '';
     position: absolute; inset: 0;
