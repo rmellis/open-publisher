@@ -4507,6 +4507,112 @@ function saveDocument() {
     a.click();
 }
 
+/* =========================================================================
+   PACK AND GO (COMMERCIAL PRINTER EXPORT)
+   ========================================================================= */
+async function packAndGo() {
+    if (typeof JSZip === 'undefined') {
+        if(typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', 'Zip library not loaded. Check your connection.');
+        return;
+    }
+    
+    // UI Progress Indicator
+    const progressHtml = `
+        <div style="text-align:center; padding: 10px;">
+            <p id="pack-status" style="margin-bottom:15px; font-weight:bold;">Analyzing Document Assets...</p>
+            <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                <div id="pack-progress" style="width:0%; height:100%; background:var(--pub-color); transition: width 0.3s;"></div>
+            </div>
+        </div>
+    `;
+    if(typeof DialogSystem !== 'undefined') DialogSystem.show('Pack and Go', progressHtml, null, true);
+    
+    setTimeout(() => {
+        if(document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
+        if(document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
+    }, 10);
+    
+    // Wait for UI to render
+    await new Promise(r => setTimeout(r, 100));
+    
+    try {
+        const zip = new JSZip();
+        const imgFolder = zip.folder("Images");
+        
+        // 1. Serialize State
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+        const docData = {
+            title: document.getElementById('doc-title').innerText,
+            pages: state.pages,
+            colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
+        };
+        let docString = JSON.stringify(docData);
+        
+        // 2. Extract Base64 Images
+        if(document.getElementById('pack-status')) document.getElementById('pack-status').innerText = 'Extracting Images...';
+        if(document.getElementById('pack-progress')) document.getElementById('pack-progress').style.width = '30%';
+        await new Promise(r => setTimeout(r, 50));
+        
+        let imgCount = 1;
+        docString = docString.replace(/data:image\/(png|jpeg|gif|webp);base64,([a-zA-Z0-9+/=]+)/g, function(match, ext, data) {
+            let filename = `image_${imgCount}.${ext}`;
+            imgFolder.file(filename, data, {base64: true});
+            imgCount++;
+            return `Images/${filename}`;
+        });
+        
+        // 3. Scan for Typography
+        if(document.getElementById('pack-status')) document.getElementById('pack-status').innerText = 'Compiling Fonts...';
+        if(document.getElementById('pack-progress')) document.getElementById('pack-progress').style.width = '60%';
+        await new Promise(r => setTimeout(r, 50));
+        
+        let usedFonts = new Set();
+        const fontRegex = /font-family:\\?['"]?([^\\'";]+)\\?['"]?/gi;
+        let match;
+        while ((match = fontRegex.exec(docString)) !== null) {
+            let font = match[1].trim();
+            font = font.split(',')[0].replace(/['"]/g, '').trim();
+            usedFonts.add(font);
+        }
+        usedFonts.delete('inherit');
+        usedFonts.delete('sans-serif');
+        usedFonts.delete('serif');
+        
+        let fontsText = "--- Open Publisher: Pack and Go Font Manifest ---\n\n";
+        fontsText += "The following fonts are required to correctly render this document.\n";
+        fontsText += "Standard web fonts can be downloaded for free via Google Fonts (fonts.google.com).\n\n";
+        usedFonts.forEach(f => {
+            fontsText += `- ${f}\n`;
+        });
+        zip.file("Fonts.txt", fontsText);
+        
+        // 4. Save Native Project File
+        if(document.getElementById('pack-status')) document.getElementById('pack-status').innerText = 'Building Archive...';
+        if(document.getElementById('pack-progress')) document.getElementById('pack-progress').style.width = '85%';
+        await new Promise(r => setTimeout(r, 50));
+        
+        zip.file(docData.title + ".opub", docString);
+        
+        // 5. Generate ZIP
+        const content = await zip.generateAsync({type:"blob"});
+        if(document.getElementById('pack-progress')) document.getElementById('pack-progress').style.width = '100%';
+        if(document.getElementById('pack-status')) document.getElementById('pack-status').innerText = 'Download Starting...';
+        
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = docData.title.replace(/\s+/g, '_') + '_PackAndGo.zip';
+        a.click();
+        
+        setTimeout(() => { if(typeof DialogSystem !== 'undefined') DialogSystem.close(); }, 1500);
+        
+    } catch(err) {
+        if(typeof DialogSystem !== 'undefined') {
+            DialogSystem.close();
+            DialogSystem.alert('Error', 'Failed to generate package: ' + err);
+        }
+    }
+}
+
 function openDocument() { document.getElementById('file-open').click(); }
 
 // --- STANDARD FILE OPEN MENU ---
