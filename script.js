@@ -14,6 +14,7 @@ window.stopRibbonScroll = () => {
 let state = {
     pages: [], 
     currentPageIndex: 0,
+    isSpreadMode: false,
     zoom: 1.0,
     copiedData: null,
     selectedEl: null,
@@ -506,9 +507,9 @@ function serializeCurrentPage() {
     const p = {
         id: existingPage.id || Date.now(),
         thumb: existingPage.thumb, // <--- PRESERVE THUMBNAIL
-        width: paper.style.width,
-        height: paper.style.height,
-        background: paper.style.background,
+        width: paper.style.width || '794px',
+        height: paper.style.height || '1123px',
+        background: paper.style.background || 'white',
         header: paper.querySelector('.page-header').innerHTML,
         footer: paper.querySelector('.page-footer').innerHTML,
         borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',
@@ -597,11 +598,19 @@ function renderPage(pageData) {
     paper.style.background = pageData.background;
 
     if (typeof window.setPageFormatIcon === 'function') {
-        if (parseFloat(pageData.width) > 800) {
+        let w = parseFloat(pageData.width);
+        if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
+        if (w > 800) {
             window.setPageFormatIcon('Letter');
         } else {
             window.setPageFormatIcon('A4');
         }
+    }
+    
+    if (typeof state !== 'undefined' && state.isSpreadMode) {
+        paper.classList.add('is-spread');
+    } else {
+        paper.classList.remove('is-spread');
     }
     
     paper.querySelector('.page-header').innerHTML = pageData.header;
@@ -618,6 +627,10 @@ function renderPage(pageData) {
     pageData.elements.forEach(data => {
         const el = document.createElement('div');
         el.className = 'pub-element';
+        if (data.innerHTML && data.innerHTML.includes('spread-fold-line')) {
+            el.classList.add('ignore-selection');
+            el.style.pointerEvents = 'none';
+        }
         el.style.left = data.left;
         el.style.top = data.top;
         el.style.width = data.width;
@@ -740,14 +753,20 @@ function addNewPage() {
         }
     } catch(e) {}
 
+    let pageW = defaultW;
+    let initialElements = [];
+    if (typeof state !== 'undefined' && state.isSpreadMode) {
+        pageW = (parseInt(defaultW) * 2) + 'px';
+    }
+
     const newPage = {
         id: Date.now(),
-        width: defaultW, height: defaultH,
+        width: pageW, height: defaultH,
         background: '#ffffff',
         header: 'Header (Type here)', 
         footer: 'Footer (Type here)',
         borderStyle: 'none',
-        elements: []
+        elements: initialElements
     };
     
     state.pages.push(newPage);
@@ -907,11 +926,17 @@ function updateSidebar() {
         const pH = parseFloat(p.height) || 1123;
         const thumbHeight = pH * (100 / pW);
         
+        let labelText = state.isSpreadMode ? `Page ${(i*2)+1} - ${(i*2)+2}` : `Page ${i+1}`;
+        const pW_Inches = (pW / 96).toFixed(1);
+        const pH_Inches = (pH / 96).toFixed(1);
+        let sizeText = `<span style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">${pW_Inches} x ${pH_Inches} in</span>`;
+        
         div.innerHTML = `
             <div class="page-del-btn" onclick="deletePage(${i}, event)" title="Delete Page"><i class="fas fa-times"></i></div>
             <div class="page-thumb" id="thumb-${i}" style="height: ${thumbHeight}px;">
+                ${sizeText}
             </div>
-            <small>Page ${i+1}</small>
+            <small>${labelText}</small>
         `;
         
         const thumbContainer = div.querySelector('.page-thumb');
@@ -3887,7 +3912,11 @@ function changeSize() {
         const newW = document.getElementById('dialog-width').value;
         const newH = document.getElementById('dialog-height').value;
         if(newW && newH) {
-            paper.style.width = newW + 'px';
+            let finalW = newW + 'px';
+            if (typeof state !== 'undefined' && state.isSpreadMode) {
+                finalW = (parseInt(newW) * 2) + 'px';
+            }
+            paper.style.width = finalW;
             paper.style.height = newH + 'px';
             pushHistory();
             const sizeDrop = document.getElementById('size-dropdown');
@@ -3896,11 +3925,19 @@ function changeSize() {
     });
 }
 function setPageSize(format) {
-    if(format === 'A4') {
-        paper.style.width = '794px'; paper.style.height = '1123px';
-    } else if(format === 'Letter') {
-        paper.style.width = '816px'; paper.style.height = '1056px';
+    let w = '794px';
+    let h = '1123px';
+    if(format === 'Letter') {
+        w = '816px';
+        h = '1056px';
     }
+    
+    if (typeof state !== 'undefined' && state.isSpreadMode) {
+        w = (parseInt(w) * 2) + 'px';
+    }
+    
+    paper.style.width = w;
+    paper.style.height = h;
     pushHistory();
     const sizeDrop = document.getElementById('size-dropdown');
     if(sizeDrop) sizeDrop.style.display = 'none';
@@ -4498,6 +4535,7 @@ function saveDocument() {
     const docData = {
         title: document.getElementById('doc-title').innerText,
         pages: state.pages,
+        isSpreadMode: state.isSpreadMode || false,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
@@ -4644,6 +4682,20 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 const data = JSON.parse(evt.target.result);
                 document.getElementById('doc-title').innerText = data.title;
                 state.pages = data.pages;
+                
+                // Read Spreads state (or infer for legacy saves)
+                if (data.isSpreadMode !== undefined) {
+                    state.isSpreadMode = data.isSpreadMode;
+                } else if (data.pages && data.pages.length > 0) {
+                    const w = parseInt(data.pages[0].width) || 0;
+                    state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
+                } else {
+                    state.isSpreadMode = false;
+                }
+                
+                const btn = document.getElementById('spread-mode-btn');
+                if (btn) btn.classList.toggle('active', state.isSpreadMode);
+
                 if (data.colorModel === 'CMYK') {
                     document.getElementById('paper').classList.add('cmyk-mode');
                 } else {
@@ -5801,6 +5853,7 @@ function handleMouseUp() {
             
             state.multiSelected = [];
             paper.querySelectorAll('.pub-element').forEach(el => {
+                if (el.classList.contains('ignore-selection') || el.style.pointerEvents === 'none') return;
                 const elRect = el.getBoundingClientRect();
                 if (!(rect.right < elRect.left || rect.left > elRect.right || rect.bottom < elRect.top || rect.top > elRect.bottom)) {
                     state.multiSelected.push(el); el.classList.add('selected');
@@ -5853,7 +5906,10 @@ function deleteSelected() {
 /* =========================================================================
    MULTI-PAGE PRINT SPOOLER ENGINE
    ========================================================================= */
-function printFullDocument() {
+function printFullDocument(isBooklet = false) {
+    if (!isBooklet && typeof serializeCurrentPage === 'function') {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
     // 1. Create or find our secret print container
     let printSpooler = document.getElementById('op-print-spooler');
     if (!printSpooler) {
@@ -5916,6 +5972,197 @@ function printFullDocument() {
             printSpooler.innerHTML = '';
         }, 1000); 
     }, 100);
+}
+
+/* =========================================================================
+   BOOKLET IMPOSITION (SADDLE-STITCH) ENGINE
+   ========================================================================= */
+function printBooklet() {
+    if (state.pages.length === 0) return;
+    
+    const executeBookletPrint = () => {
+        if (typeof serializeCurrentPage === 'function') {
+            state.pages[state.currentPageIndex] = serializeCurrentPage();
+        }
+        
+        // 1. Temporarily split spreads back to single pages in memory if needed
+        let singlePages = [];
+        if (state.isSpreadMode) {
+            state.pages.forEach(spread => {
+                const singleW = parseInt(spread.width) / 2;
+                let leftPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
+                let rightPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
+                
+                spread.elements.forEach(el => {
+                    let elLeft = parseFloat(el.left);
+                    if (elLeft < singleW) {
+                        leftPage.elements.push(JSON.parse(JSON.stringify(el)));
+                    } else {
+                        let newEl = JSON.parse(JSON.stringify(el));
+                        newEl.left = (elLeft - singleW) + 'px';
+                        rightPage.elements.push(newEl);
+                    }
+                });
+                singlePages.push(leftPage, rightPage);
+            });
+        } else {
+            singlePages = JSON.parse(JSON.stringify(state.pages));
+        }
+        
+        // 2. Pad to multiple of 4
+        while (singlePages.length % 4 !== 0) {
+            singlePages.push({
+                width: singlePages[0].width,
+                height: singlePages[0].height,
+                background: '#ffffff',
+                elements: []
+            });
+        }
+        
+        // 3. Saddle-Stitch Imposition
+        let imposedSpreads = [];
+        let numPages = singlePages.length;
+        let singleW = parseInt(singlePages[0].width);
+        
+        for (let i = 0; i < numPages / 2; i++) {
+            let leftIndex, rightIndex;
+            if (i % 2 === 0) {
+                leftIndex = numPages - 1 - i;
+                rightIndex = i;
+            } else {
+                leftIndex = i;
+                rightIndex = numPages - 1 - i;
+            }
+            
+            let leftPage = singlePages[leftIndex];
+            let rightPage = singlePages[rightIndex];
+            
+            let spread = {
+                width: (singleW * 2) + 'px',
+                height: leftPage.height,
+                background: leftPage.background,
+                elements: []
+            };
+            
+            leftPage.elements.forEach(el => {
+                if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
+                spread.elements.push(JSON.parse(JSON.stringify(el)));
+            });
+            rightPage.elements.forEach(el => {
+                if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
+                let newEl = JSON.parse(JSON.stringify(el));
+                newEl.left = (parseFloat(newEl.left) + singleW) + 'px';
+                spread.elements.push(newEl);
+            });
+            
+            // Add the fold line down the center
+            spread.elements.push({
+                left: singleW + 'px',
+                top: '0px',
+                width: '1px',
+                height: spread.height,
+                zIndex: 9999,
+                innerHTML: "<div style='width:1px; height:100%; border-left: 1px dashed #999; pointer-events:none;' class='spread-fold-line'></div>"
+            });
+            
+            imposedSpreads.push(spread);
+        }
+        
+        window._isBookletPrinting = true;
+        window._imposedSpreads = imposedSpreads;
+        printFullDocument(true); // Trigger the print hook
+    };
+
+    if (!state.isSpreadMode && typeof DialogSystem !== 'undefined') {
+        const dialogHtml = `
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 5px;">
+                <div style="flex: 1;">
+                    <p style="margin: 0 0 15px 0; font-size: 14px; line-height: 1.5; color: #334155; text-align: left;">
+                        The Booklet print feature is designed to be used with <b>Spreads</b> enabled in the View menu. 
+                    </p>
+                    <p style="margin: 0 0 15px 0; font-size: 13px; line-height: 1.5; color: #64748b; text-align: left; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-info-circle" style="color: #0f766e; margin-right: 5px;"></i>
+                        To turn on Spreads, click the <b>View</b> tab and select <b>Spreads</b> like in the image to the right.
+                    </p>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #334155; text-align: left; font-weight: 500;">
+                        Are you sure you want to continue printing without Spreads?
+                    </p>
+                </div>
+                <div style="flex-shrink: 0; width: 170px;">
+                    <img src="https://saw.floydcraft.co.uk/spreads.jpg" alt="Spreads Button" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); display: block;">
+                </div>
+            </div>
+        `;
+        DialogSystem.show('Spreads Recommended', dialogHtml, () => {
+            executeBookletPrint();
+        });
+    } else {
+        executeBookletPrint();
+    }
+}
+
+/* =========================================================================
+   SPREAD VIEW (BOOKLET DESIGN) TOGGLE
+   ========================================================================= */
+function toggleSpreadMode() {
+    if (typeof serializeCurrentPage === 'function') {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
+    
+    state.isSpreadMode = !state.isSpreadMode;
+    const btn = document.getElementById('spread-mode-btn');
+    if (btn) btn.classList.toggle('active', state.isSpreadMode);
+
+    if (state.isSpreadMode) {
+        let newPages = [];
+        for (let i = 0; i < state.pages.length; i += 2) {
+            let p1 = state.pages[i];
+            let p2 = state.pages[i+1];
+            let singleW = parseInt(p1.width) || 794;
+            let spread = {
+                width: (singleW * 2) + 'px',
+                height: p1.height || '1123px',
+                background: p1.background,
+                elements: JSON.parse(JSON.stringify(p1.elements))
+            };
+            if (p2) {
+                p2.elements.forEach(el => {
+                    let newEl = JSON.parse(JSON.stringify(el));
+                    newEl.left = (parseFloat(newEl.left) + singleW) + 'px';
+                    spread.elements.push(newEl);
+                });
+            }
+            
+            newPages.push(spread);
+        }
+        state.pages = newPages;
+        state.currentPageIndex = Math.floor(state.currentPageIndex / 2);
+    } else {
+        let newPages = [];
+        state.pages.forEach(spread => {
+            const singleW = parseInt(spread.width) / 2;
+            let p1 = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
+            let p2 = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
+            
+            spread.elements.forEach(el => {
+                if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
+                
+                if (parseFloat(el.left) < singleW) {
+                    p1.elements.push(JSON.parse(JSON.stringify(el)));
+                } else {
+                    let newEl = JSON.parse(JSON.stringify(el));
+                    newEl.left = (parseFloat(newEl.left) - singleW) + 'px';
+                    p2.elements.push(newEl);
+                }
+            });
+            newPages.push(p1, p2);
+        });
+        state.pages = newPages;
+        state.currentPageIndex = state.currentPageIndex * 2;
+    }
+    
+    renderPage(state.pages[state.currentPageIndex]);
+    updateSidebar();
 }
 
 /* =========================================================================
@@ -9147,6 +9394,19 @@ window.initWordArt = function() {
                         const data = JSON.parse(evt.target.result);
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = data.pages; 
+                        
+                        // Read Spreads state (or infer for legacy saves)
+                        if (data.isSpreadMode !== undefined) {
+                            state.isSpreadMode = data.isSpreadMode;
+                        } else if (data.pages && data.pages.length > 0) {
+                            const w = parseInt(data.pages[0].width) || 0;
+                            state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
+                        } else {
+                            state.isSpreadMode = false;
+                        }
+                        
+                        const btn = document.getElementById('spread-mode-btn');
+                        if (btn) btn.classList.toggle('active', state.isSpreadMode);
                         if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                         state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
                         state.history = [];
@@ -12801,7 +13061,11 @@ window.initShapes = function() {
         window._formatHooked = true;
         window.loadTemplate = function(t) {
             originalLoad(t);
-            if (t.w && t.w > 800) {
+            let w = t.w;
+            if (typeof state !== 'undefined' && state.isSpreadMode) {
+                w = w / 2;
+            }
+            if (w && w > 800) {
                 window.setPageFormatIcon('Letter');
             } else {
                 window.setPageFormatIcon('A4');
@@ -18660,9 +18924,14 @@ window.toggleCrop = function() {
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
-        if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[state.currentPageIndex] = serializeCurrentPage();
+        let pagesToPrint = state && state.pages ? state.pages : [];
+        if (window._isBookletPrinting && window._imposedSpreads) {
+            pagesToPrint = window._imposedSpreads;
+        }
+
+        if (pagesToPrint && pagesToPrint.length > 0) {
+            if (!window._isBookletPrinting && typeof serializeCurrentPage === 'function') {
+                pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
             }
         }
 
@@ -18675,8 +18944,8 @@ window.toggleCrop = function() {
         let pW = '794px';
         let pH = '1123px';
         
-        if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
-            const firstPage = state.pages[0];
+        if (pagesToPrint && pagesToPrint.length > 0) {
+            const firstPage = pagesToPrint[0];
             pW = firstPage.width || '794px';
             pH = firstPage.height || '1123px';
             if (parseFloat(pW) > parseFloat(pH)) isLandscape = true;
@@ -18768,8 +19037,8 @@ window.toggleCrop = function() {
         printSpooler.className = browserClass;
         printSpooler.innerHTML = '';
 
-        if (typeof state !== 'undefined' && state.pages) {
-            state.pages.forEach((page) => {
+        if (pagesToPrint) {
+            pagesToPrint.forEach((page) => {
                 let pageWrapper = document.createElement('div');
                 pageWrapper.className = 'op-print-page';
                 let scaler = document.createElement('div');
@@ -18824,7 +19093,20 @@ window.toggleCrop = function() {
         }
     });
 
-    window.printFullDocument = () => window.print();
+    // Safari fires afterprint early and beforeprint multiple times. 
+    // Maintain the booklet state until the user physically interacts with the app again.
+    const clearBookletState = () => {
+        window._isBookletPrinting = false;
+        window._imposedSpreads = null;
+    };
+    window.addEventListener('mousedown', clearBookletState);
+    window.addEventListener('keydown', clearBookletState);
+    window.addEventListener('touchstart', clearBookletState);
+
+    window.printFullDocument = (isBooklet = false) => {
+        if (!isBooklet) clearBookletState();
+        window.print();
+    };
 })();
 /* =========================================================================
    apply crop to images on print
@@ -18998,15 +19280,25 @@ window.addEventListener('beforeprint', () => {
         tempImg.src = src;
     });
 
-    window.printFullDocument = async function() {
+    window.printFullDocument = async function(isBooklet = false) {
+        if (!isBooklet) {
+            window._isBookletPrinting = false;
+            window._imposedSpreads = null;
+        }
+        
+        let pagesToPrint = typeof state !== 'undefined' && state.pages ? state.pages : [];
+        if (window._isBookletPrinting && window._imposedSpreads) {
+            pagesToPrint = window._imposedSpreads;
+        }
+
         // Pre-Flight: Force browser to commit layout repaints
         document.querySelectorAll('.pub-element').forEach(el => el.getBoundingClientRect());
         await sleep(100);
 
-        if (typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
-            if (state.cropMode && typeof window.toggleCrop === 'function') window.toggleCrop();
-            if (typeof serializeCurrentPage === 'function') state.pages[state.currentPageIndex] = serializeCurrentPage();
-            state.pages.forEach((page) => {
+        if (pagesToPrint && pagesToPrint.length > 0) {
+            if (state && state.cropMode && typeof window.toggleCrop === 'function') window.toggleCrop();
+            if (!window._isBookletPrinting && typeof serializeCurrentPage === 'function') pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
+            pagesToPrint.forEach((page) => {
                 page.elements.forEach((el) => {
                     if (el.innerHTML) el.innerHTML = fixWordArtSpacesInHtml(el.innerHTML);
                 });
@@ -19040,7 +19332,7 @@ window.addEventListener('beforeprint', () => {
         document.body.appendChild(stagingArea);
 
         try {
-            const totalPages = state.pages.length;
+            const totalPages = pagesToPrint.length;
             const progressEl = document.getElementById('pdf-print-progress');
             const statusEl = document.getElementById('pdf-print-status');
 
@@ -19060,8 +19352,8 @@ window.addEventListener('beforeprint', () => {
             }
 
             // Determine the Master Layout based ENTIRELY on Page 1
-            const masterPW = parseFloat(state.pages[0].width) || 794;
-            const masterPH = parseFloat(state.pages[0].height) || 1123;
+            const masterPW = parseFloat(pagesToPrint[0].width) || 794;
+            const masterPH = parseFloat(pagesToPrint[0].height) || 1123;
             const masterIsPortrait = masterPW <= masterPH;
             
             // Convert exact pixels to physical inches (96 DPI standard) for the iframe
@@ -19071,7 +19363,7 @@ window.addEventListener('beforeprint', () => {
             let iframeHTMLString = '';
 
             for (let i = 0; i < totalPages; i++) {
-                const page = state.pages[i];
+                const page = pagesToPrint[i];
                 if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 if (progressEl) progressEl.style.width = `${((i) / totalPages) * 100}%`;
 

@@ -2486,3 +2486,16 @@ svg .shape-path, svg .shape-path * {
         .pub-element.cropping .rh-s  { bottom: -10px !important; left: calc(50% - 10px) !important; margin-left: 0 !important; }
         .pub-element.cropping .rh-e  { top: calc(50% - 10px) !important; right: -10px !important; margin-top: 0 !important; }
         .pub-element.cropping .rh-w  { top: calc(50% - 10px) !important; left: -10px !important; margin-top: 0 !important; }
+
+#paper.is-spread::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(255,255,255,0.5) 50%, rgba(0,0,0,0.05) 100%);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(0,0,0,0.05);
+    pointer-events: none;
+    z-index: 99999;
+}
