@@ -4668,45 +4668,34 @@ document.getElementById('file-open').addEventListener('change', (e) => {
     }
 });
 
-window.downloadPDF = async function() {
-    deselect();
-    const oldZoom = state.zoom;
-    setZoom(1.0);
-    
-    const guides = document.getElementById('margin-guides');
-    const wasVisible = guides.style.display !== 'none';
-    guides.style.display = 'none';
-    
-    if (!state.headersVisible) {
-        paper.querySelector('.page-header').style.display = 'none';
-        paper.querySelector('.page-footer').style.display = 'none';
+window.exportNativePDF = function() {
+    if(typeof DialogSystem !== 'undefined') {
+        const msg = `
+            <div style="text-align: center; font-size: 14px; margin-bottom: 10px;">
+                <p>Open Publisher uses your browser's native print engine to generate perfect, high-resolution vector PDFs.</p>
+                <br>
+                <p>In the print dialog that opens, simply change your <b>Destination</b> or <b>Printer</b> to <b>"Save as PDF"</b>.</p>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="btn-proceed-pdf" style="background:#0ea5e9; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Open Print Dialog</button>
+            </div>
+        `;
+        DialogSystem.show('Export High-Res PDF', msg, null, true);
+        
+        setTimeout(() => {
+            if(document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
+            if(document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
+            
+            document.getElementById('btn-proceed-pdf').onclick = () => {
+                DialogSystem.close();
+                setTimeout(() => {
+                    if (typeof printFullDocument === 'function') printFullDocument();
+                }, 300);
+            };
+        }, 10);
+    } else {
+        if (typeof printFullDocument === 'function') printFullDocument();
     }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'px',
-        format: [794, 1123] 
-    });
-
-    const canvas = await html2canvas(paper, { 
-        scale: 2, 
-        useCORS: true,
-        backgroundColor: paper.style.backgroundColor || '#ffffff'
-    }); 
-    
-    const imgData = canvas.toDataURL('image/jpeg', 0.9);
-    doc.addImage(imgData, 'JPEG', 0, 0, 794, 1123);
-    
-    if(wasVisible) guides.style.display = 'block';
-    if (!state.headersVisible) {
-        paper.querySelector('.page-header').style.removeProperty('display');
-        paper.querySelector('.page-footer').style.removeProperty('display');
-    }
-    setZoom(oldZoom);
-
-    const name = document.getElementById('doc-title').innerText || 'Publication';
-    doc.save(name + '.pdf');
 };
 
 // --- NEW WORDART SYNC FUNCTION ---
