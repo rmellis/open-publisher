@@ -46,7 +46,7 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.9.9">
+    <link rel="stylesheet" href="style.css?v=4.10.0">
 	<script src="clipart-data.js"></script>
 	<script type="application/ld+json">
 {
@@ -768,7 +768,7 @@
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.9.9"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.10.0"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>
@@ -776,6 +776,773 @@
     <p>Features: <a href="#">Export to PDF</a>, <a href="#">No Signup Required</a>, <a href="#">Privacy Focused</a>.</p>
     <small>Open Publisher</small>
 </footer>
-  </body>
+  
+<!-- ==========================================
+     EXTRACTED MODULAR UI TEMPLATES
+     ========================================== -->
+
+<template id="template-op-table-sidebar">
+<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Table Layout</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Rows & Columns</span>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Above</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Below</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Left/Right</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Delete</span>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()"><i class="fas fa-minus-circle" style="color:#c00"></i> Delete Row</div>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()"><i class="fas fa-minus-circle" style="color:#c00"></i> Delete Column</div>
+            <div class="op-sidebar-btn danger" onclick="if(window.ContextRibbonActions) { ContextRibbonActions.deleteRow(); if(window.deleteSelected) window.deleteSelected(); }"><i class="fas fa-trash-alt" style="color:#c00"></i> Delete Table</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Cell Size</span>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.distributeRows()"><i class="fas fa-arrows-alt-v"></i> Distribute Rows</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.distributeCols()"><i class="fas fa-arrows-alt-h"></i> Distribute Columns</div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Alignment</span>
+            <div class="op-sidebar-grid-container">
+                <div class="op-sidebar-grid-btn" title="Top Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Top Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Top Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('top', 'right')"><i class="fas fa-align-right"></i></div>
+                
+                <div class="op-sidebar-grid-btn" title="Center Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Center Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('middle', 'right')"><i class="fas fa-align-right"></i></div>
+                
+                <div class="op-sidebar-grid-btn" title="Bottom Left" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'left')"><i class="fas fa-align-left"></i></div>
+                <div class="op-sidebar-grid-btn" title="Bottom Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'center')"><i class="fas fa-align-center"></i></div>
+                <div class="op-sidebar-grid-btn" title="Bottom Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'right')"><i class="fas fa-align-right"></i></div>
+            </div>
+        </div>
+</template>
+
+<template id="template-op-image-sidebar">
+<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Format Picture</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
+                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Visibility</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-transparency">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="transparency" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Light & Tone</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Brightness</span><span class="op-slider-num" id="val-brightness">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="brightness" min="0" max="200" value="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Contrast</span><span class="op-slider-num" id="val-contrast">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="contrast" min="0" max="200" value="100">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Color Settings</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-saturate">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Grayscale</span><span class="op-slider-num" id="val-grayscale">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="grayscale" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Effects</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Blur</span><span class="op-slider-num" id="val-blur">0px</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="blur" min="0" max="10" value="0" step="0.5">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Sepia</span><span class="op-slider-num" id="val-sepia">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="sepia" min="0" max="100" value="0">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Invert</span><span class="op-slider-num" id="val-invert">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="invert" min="0" max="100" value="0">
+            </div>
+        </div>
+</template>
+
+<template id="template-op-wordart-sidebar">
+<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Format WordArt</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
+                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Text Shape</span>
+            <div class="wa-shape-grid" id="wa-shape-controls">
+                <button class="wa-shape-btn active" data-shape="none" title="Straight Text">
+                    <svg viewBox="0 0 24 24"><text x="12" y="16" font-size="12" text-anchor="middle" font-weight="bold" fill="currentColor">ABC</text></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="arch-up" title="Arch Up">
+                    <svg viewBox="0 0 24 24"><path d="M 4,16 Q 12,6 20,16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="arch-down" title="Arch Down">
+                    <svg viewBox="0 0 24 24"><path d="M 4,8 Q 12,18 20,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="circle" title="Circle">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 3"/></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="wave" title="Wave">
+                    <svg viewBox="0 0 24 24"><path d="M 3,12 Q 7.5,6 12,12 T 21,12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Color & Effects</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-wa-saturate">100%</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="saturate" min="0" max="200" value="100" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-wa-opacity">0%</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="opacity" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Drop Shadow</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow X</span><span class="op-slider-num" id="val-wa-shadowX">2px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="shadowX" min="-50" max="50" value="2" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow Y</span><span class="op-slider-num" id="val-wa-shadowY">2px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="shadowY" min="-50" max="50" value="2" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow Blur</span><span class="op-slider-num" id="val-wa-blur">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="blur" min="0" max="25" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Typography</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Font Weight</span><span class="op-slider-num" id="val-wa-fontWeight">400</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="fontWeight" min="100" max="900" value="400" step="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Letter Spacing</span><span class="op-slider-num" id="val-wa-spacing">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="spacing" min="-10" max="50" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Word Spacing</span><span class="op-slider-num" id="val-wa-wordSpacing">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="wordSpacing" min="-20" max="50" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Line Height</span><span class="op-slider-num" id="val-wa-lineHeight">1.2x</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="lineHeight" min="0.5" max="3" value="1.2" step="0.1">
+            </div>
+        </div>
+</template>
+
+<template id="template-op-image-sidebar">
+<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Format Picture</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
+                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Visibility</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-transparency">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="transparency" min="0" max="100" value="0">
+            </div>
+        </div>
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Light & Tone</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Brightness</span><span class="op-slider-num" id="val-brightness">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="brightness" min="0" max="200" value="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Contrast</span><span class="op-slider-num" id="val-contrast">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="contrast" min="0" max="200" value="100">
+            </div>
+        </div>
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Color Settings</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-saturate">100%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Grayscale</span><span class="op-slider-num" id="val-grayscale">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="grayscale" min="0" max="100" value="0">
+            </div>
+        </div>
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Effects</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Blur</span><span class="op-slider-num" id="val-blur">0px</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="blur" min="0" max="10" value="0" step="0.5">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Sepia</span><span class="op-slider-num" id="val-sepia">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="sepia" min="0" max="100" value="0">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Invert</span><span class="op-slider-num" id="val-invert">0%</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="invert" min="0" max="100" value="0">
+            </div>
+        </div>
+</template>
+
+<template id="template-op-wordart-sidebar">
+<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Format WordArt</span>
+            <div class="op-sidebar-top-btns">
+                <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
+                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        
+        <div class="op-sidebar-section" id="wa-color-sec">
+            <span class="op-section-label">Color & Effects</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-wa-saturate">100%</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="saturate" min="0" max="200" value="100" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-wa-opacity">0%</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="opacity" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section" id="wa-shadow-sec">
+            <span class="op-section-label">Drop Shadow</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow X</span><span class="op-slider-num" id="val-wa-shadowX">2px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="shadowX" min="-50" max="50" value="2" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow Y</span><span class="op-slider-num" id="val-wa-shadowY">2px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="shadowY" min="-50" max="50" value="2" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Shadow Blur</span><span class="op-slider-num" id="val-wa-blur">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="blur" min="0" max="25" value="0">
+            </div>
+        </div>
+
+        <div class="op-sidebar-section" id="wa-typo-sec">
+            <span class="op-section-label">Typography</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Font Weight</span><span class="op-slider-num" id="val-wa-fontWeight">400</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="fontWeight" min="100" max="900" value="400" step="100">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Letter Spacing</span><span class="op-slider-num" id="val-wa-spacing">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="spacing" min="-10" max="50" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Word Spacing</span><span class="op-slider-num" id="val-wa-wordSpacing">0px</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="wordSpacing" min="-20" max="50" value="0" step="1">
+            </div>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Line Height</span><span class="op-slider-num" id="val-wa-lineHeight">1.2x</span></div>
+                <input type="range" class="wa-sidebar-input" data-waf="lineHeight" min="0.5" max="3" value="1.2" step="0.1">
+            </div>
+        </div>
+        
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Text Shape</span>
+            <div class="wa-shape-grid" id="wa-shape-controls">
+                <button class="wa-shape-btn active" data-shape="none" title="Straight Text">
+                    <svg viewBox="0 0 24 24"><text x="12" y="16" font-size="12" text-anchor="middle" font-weight="bold" fill="currentColor">ABC</text></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="arch-up" title="Arch Up">
+                    <svg viewBox="0 0 24 24"><path d="M 4,16 Q 12,6 20,16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="arch-down" title="Arch Down">
+                    <svg viewBox="0 0 24 24"><path d="M 4,8 Q 12,18 20,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </button>
+                <button class="wa-shape-btn" data-shape="circle" title="Circle">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 3"/></svg>
+                </button>
+            </div>
+            <div class="wa-note">Note: Not fully compatible with all WordArt styles. Effects are disabled while a shape is applied. If applying a shape breaks your text, just click undo.</div>
+        </div>
+</template>
+
+
+<!-- ==========================================
+     EXTRACTED MODULAR UI TEMPLATES (2)
+     ========================================== -->
+
+<template id="template-floatBar-1">
+<div class="float-drag-grip" id="float-drag-handle" title="Drag to move">
+            <div class="grip-dots">
+                <span></span><span></span>
+                <span></span><span></span>
+                <span></span><span></span>
+            </div>
+        </div>
+        
+        <div class="float-tools-col">
+            <div class="float-tool-row">
+                <div class="float-input-group">
+                    <div class="float-font-btn" id="float-font" onclick="toggleFloatFontDropdown(); event.stopPropagation();">
+                        <span id="float-font-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Arial</span>
+                        <div class="drop-arrow"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                    <div class="float-size-wrapper">
+                        <div class="float-font-btn" id="float-size-btn" onclick="toggleFloatSizeDropdown(); event.stopPropagation();" style="width: 60px;">
+                            <span id="float-size-label">16</span>
+                            <div class="drop-arrow"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                        <div class="custom-dropdown" id="float-size-list" style="display:none; position:absolute; top:24px; left:0; width:60px; z-index:10000;">
+                            <div class="float-size-item" onclick="selectFloatSize('8px'); event.stopPropagation();">8</div>
+                            <div class="float-size-item" onclick="selectFloatSize('9px'); event.stopPropagation();">9</div>
+                            <div class="float-size-item" onclick="selectFloatSize('10px'); event.stopPropagation();">10</div>
+                            <div class="float-size-item" onclick="selectFloatSize('11px'); event.stopPropagation();">11</div>
+                            <div class="float-size-item" onclick="selectFloatSize('12px'); event.stopPropagation();">12</div>
+                            <div class="float-size-item" onclick="selectFloatSize('14px'); event.stopPropagation();">14</div>
+                            <div class="float-size-item" onclick="selectFloatSize('16px'); event.stopPropagation();">16</div>
+                            <div class="float-size-item" onclick="selectFloatSize('18px'); event.stopPropagation();">18</div>
+                            <div class="float-size-item" onclick="selectFloatSize('20px'); event.stopPropagation();">20</div>
+                            <div class="float-size-item" onclick="selectFloatSize('24px'); event.stopPropagation();">24</div>
+                            <div class="float-size-item" onclick="selectFloatSize('28px'); event.stopPropagation();">28</div>
+                            <div class="float-size-item" onclick="selectFloatSize('32px'); event.stopPropagation();">32</div>
+                            <div class="float-size-item" onclick="selectFloatSize('36px'); event.stopPropagation();">36</div>
+                            <div class="float-size-item" onclick="selectFloatSize('48px'); event.stopPropagation();">48</div>
+                            <div class="float-size-item" onclick="selectFloatSize('72px'); event.stopPropagation();">72</div>
+                            <div class="float-size-item" onclick="selectFloatSize('80px'); event.stopPropagation();">80</div>
+                            <div class="float-size-item" onclick="selectFloatSize('96px'); event.stopPropagation();">96</div>
+                            <div class="float-size-item" onclick="selectFloatSize('110px'); event.stopPropagation();">110</div>
+                            <div class="float-size-item" onclick="selectFloatSize('120px'); event.stopPropagation();">120</div>
+                            <div class="float-size-item" onclick="selectFloatSize('130px'); event.stopPropagation();">130</div>
+                            <div class="float-size-item" onclick="selectFloatSize('144px'); event.stopPropagation();">144</div>
+                            <div class="float-size-item" onclick="selectFloatSize('160px'); event.stopPropagation();">160</div>
+                            <div class="float-size-item" onclick="selectFloatSize('200px'); event.stopPropagation();">200</div>
+                            <div class="float-size-item" onclick="selectFloatSize('256px'); event.stopPropagation();">256</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="float-divider"></div>
+                
+                <div class="float-mini-btn float-color-btn" title="Text Color">
+                    <strong style="font-family: Arial, sans-serif;">A</strong>
+                    <div class="float-color-bar" id="float-text-color-bar" style="background: #004d40;"></div>
+                    <input type="color" value="#004d40" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
+                           onclick="execCmd('foreColor', this.value)" 
+                           oninput="execCmd('foreColor', this.value); document.getElementById('float-text-color-bar').style.background=this.value;">
+                </div>
+
+                <div class="float-mini-btn float-color-btn" title="Highlight Color">
+                    <i class="fas fa-marker" style="transform: rotate(-15deg); font-size: 13px;"></i>
+                    <div class="float-color-bar" id="float-bg-color-bar" style="background: #ffff00;"></div>
+                    <input type="color" value="#ffff00" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
+                           onclick="execCmd('hiliteColor', this.value)" 
+                           oninput="execCmd('hiliteColor', this.value); document.getElementById('float-bg-color-bar').style.background=this.value;">
+                </div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('removeFormat')" title="Clear Formatting"><i class="fas fa-eraser"></i></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="bringFront()" title="Bring to Front">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-arrow-up arrange-arrow"></i>
+                    </div>
+                </div>
+                <div class="float-mini-btn" onclick="sendBack()" title="Send to Back">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-arrow-down arrange-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="float-tool-row">
+                <div class="float-mini-btn" onclick="execCmd('bold')" title="Bold"><strong>B</strong></div>
+                <div class="float-mini-btn" onclick="execCmd('italic')" title="Italic"><strong><em>I</em></strong></div>
+                <div class="float-mini-btn" onclick="execCmd('underline')" title="Underline"><strong style="text-decoration: underline;">U</strong></div>
+                <div class="float-mini-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><strong style="text-decoration: line-through;">S</strong></div>
+                
+                <div class="float-divider"></div>
+                
+                <div class="float-mini-btn" onclick="execCmd('subscript')" title="Subscript"><strong style="font-family: Arial, sans-serif; font-size: 13px;">X<sub>1</sub></strong></div>
+                <div class="float-mini-btn" onclick="execCmd('superscript')" title="Superscript"><strong style="font-family: Arial, sans-serif; font-size: 13px;">X<sup>1</sup></strong></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></div>
+
+                <div class="float-divider"></div>
+
+                <div class="float-mini-btn" onclick="execCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></div>
+                <div class="float-mini-btn" onclick="execCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></div>
+            </div>
+        </div>
+</template>
+
+<template id="template-designTab-2">
+${clipGroup}
+                <div class="group">
+                    <div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-paint-roller" style="color:var(--pub-color)"></i>Zebra</div>
+                    <div class="group-label">Styles</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; align-items:center; justify-content:center; gap:5px; height:100%;">
+                        <div class="mini-btn ctx-btn-strict ctx-color-strict" style="width:40px; height:35px;" title="Cell Fill Color">
+                            <i class="fas fa-fill-drip" style="font-size:18px; color:var(--pub-color); margin-top:-2px;"></i>
+                            <div style="height:5px; background:#ffffff; width:30px; position:absolute; bottom:2px; border:1px solid #ccc;" id="ctx-cell-fill-bar"></div>
+                            <input type="color" value="#ffffff" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="ContextRibbonActions.cellFill(this.value); document.getElementById('ctx-cell-fill-bar').style.background=this.value;">
+                        </div>
+                    </div>
+                    <div class="group-label">Shading</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; justify-content:center; gap:6px; height:100%;">
+                        <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                            <i class="fas fa-border-all" style="color:#666; width:14px; text-align:center;"></i>
+                            <div class="modern-spinner" style="width: 54px;">
+                                <input type="text" id="ctx-tbl-border" value="1" onchange="ContextRibbonActions.applyBorderThickness(this.value)">
+                                <div class="spin-btns">
+                                    <div onclick="document.getElementById('ctx-tbl-border').value=Math.min(10, parseInt(document.getElementById('ctx-tbl-border').value)+1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border').value)"><i class="fas fa-chevron-up"></i></div>
+                                    <div onclick="document.getElementById('ctx-tbl-border').value=Math.max(0, parseInt(document.getElementById('ctx-tbl-border').value)-1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border').value)"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                            </div>
+                            px
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                            <i class="fas fa-palette" style="color:#666; width:14px; text-align:center;"></i>
+                            <input type="color" class="modern-color-picker" value="#000000" style="width: 54px; height: 22px;" onchange="ContextRibbonActions.tableBorderColor(this.value)"> 
+                            Color
+                        </div>
+                    </div>
+                    <div class="group-label">Borders</div>
+                </div>
+                <div class="group">
+                    <div style="display:flex; flex-direction:column; padding: 2px; justify-content:center; align-items:center; height:100%;">
+                        <span style="font-size:10px; color:var(--pub-dark); margin-bottom:4px; font-weight:bold;">Cell margins</span>
+                        <div class="modern-select" id="ctx-margin-btn" style="position: relative; width: 85px;" onclick="
+                            const m = document.getElementById('ctx-margin-dropdown');
+                            if(m.style.display === 'block') {
+                                m.style.display = 'none';
+                            } else {
+                                document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
+                                const rect = this.getBoundingClientRect();
+                                m.style.left = rect.left + 'px';
+                                m.style.top = (rect.bottom + 2) + 'px';
+                                m.style.display = 'block';
+                            }
+                            event.stopPropagation();
+                        ">
+                            <span id="ctx-margin-label" style="font-size: 11px;">Default</span>
+                            <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
+                        </div>
+                    </div>
+                    <div class="group-label">Spacing</div>
+                </div>
+                ${arrGroup}
+                <div class="group" style="padding-right: 12px;">
+                    <div style="display:grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 2px 4px; height:100%; align-content: center;">
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('modern')" title="Modern Teal Header">
+                            <div style="width:24px; height:18px; border-radius:4px; border:1px solid #aaa; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:var(--pub-color); display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#f9f9f9; border-top:1px solid #aaa; display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #aaa; display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('minimal')" title="Minimalist Lines">
+                            <div style="width:24px; height:18px; border-radius:0px; border:none; border-top:2px solid #000; border-bottom:2px solid #000; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#fff; border-bottom:1px solid #000;"></div>
+                                <div style="flex:1; background:#fff;"></div>
+                                <div style="flex:1; background:#fff;"></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('soft')" title="Soft Gray Header">
+                            <div style="width:24px; height:18px; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.15); overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#e0e0e0; display:flex;"><div style="flex:1;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #eee;"></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #eee;"></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('accent')" title="Teal Accent Column">
+                            <div style="width:24px; height:18px; border-radius:3px; border:1px solid var(--pub-color); overflow:hidden; display:flex;">
+                                <div style="width:30%; background:var(--pub-color); border-right:1px solid var(--pub-color);"></div>
+                                <div style="flex:1; background:#fff; display:flex; flex-direction:column;">
+                                    <div style="flex:1; border-bottom:1px solid var(--pub-color);"></div>
+                                    <div style="flex:1; border-bottom:1px solid var(--pub-color);"></div>
+                                    <div style="flex:1;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('dark')" title="Dark Mode">
+                            <div style="width:24px; height:18px; border-radius:4px; border:1px solid #444; background:#222; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#111; display:flex;"><div style="flex:1;border-right:1px solid #444;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#2a2a2a; border-top:1px solid #444; display:flex;"><div style="flex:1;border-right:1px solid #444;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#222; border-top:1px solid #444; display:flex;"><div style="flex:1;border-right:1px solid #444;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('bordered')" title="Teal Grid Outline">
+                            <div style="width:24px; height:18px; border-radius:4px; border:2px solid var(--pub-color); overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:rgba(0,118,112,0.1); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px dashed var(--pub-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px dashed var(--pub-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('elegant')" title="Elegant Gold/Cream">
+                            <div style="width:24px; height:18px; border-radius:0px; border:1px solid #d4c4b7; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#f4f0ec; border-bottom:2px solid #d4c4b7; display:flex;"><div style="flex:1;border-right:1px solid #efeae6;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; display:flex;"><div style="flex:1;border-right:1px solid #efeae6;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #efeae6; display:flex;"><div style="flex:1;border-right:1px solid #efeae6;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('highlight')" title="Teal Highlight">
+                            <div style="width:24px; height:18px; border-radius:0px; border:none; border-top:1px solid #ccc; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#fff; border-bottom:2px solid var(--pub-color);"></div>
+                                <div style="flex:1; background:#fff; border-bottom:1px solid #eee;"></div>
+                                <div style="flex:1; background:#fff;"></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('ocean')" title="Ocean Blue">
+                            <div style="width:24px; height:18px; border-radius:4px; border:1px solid #1E3A8A; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#1E3A8A; display:flex;"><div style="flex:1;border-right:1px solid #1E3A8A;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#EFF6FF; border-top:1px solid #93C5FD; display:flex;"><div style="flex:1;border-right:1px solid #93C5FD;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #93C5FD; display:flex;"><div style="flex:1;border-right:1px solid #93C5FD;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('sunset')" title="Sunset Orange">
+                            <div style="width:24px; height:18px; border-radius:4px; border:1px solid #EA580C; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#EA580C; display:flex;"><div style="flex:1;border-right:1px solid #EA580C;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#FFF7ED; border-top:1px solid #FDBA74; display:flex;"><div style="flex:1;border-right:1px solid #FDBA74;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #FDBA74; display:flex;"><div style="flex:1;border-right:1px solid #FDBA74;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('corporate')" title="Corporate Gray">
+                            <div style="width:24px; height:18px; border-radius:0px; border:1px solid #1F2937; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#F3F4F6; border-bottom:1px solid #1F2937; display:flex;"><div style="flex:1;border-right:1px solid #E5E7EB;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; display:flex;"><div style="flex:1;border-right:1px solid #E5E7EB;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #E5E7EB; display:flex;"><div style="flex:1;border-right:1px solid #E5E7EB;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('monochrome')" title="Monochrome">
+                            <div style="width:24px; height:18px; border-radius:0px; border:2px solid #000; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#000; display:flex;"><div style="flex:1;border-right:1px solid #000;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #000; display:flex;"><div style="flex:1;border-right:1px solid #000;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #000; display:flex;"><div style="flex:1;border-right:1px solid #000;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('neon')" title="Neon Hacker">
+                            <div style="width:24px; height:18px; border-radius:3px; border:1px solid #39FF14; background:#000; box-shadow:0 0 3px #39FF14; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#111; border-bottom:1px solid #39FF14; display:flex;"><div style="flex:1;border-right:1px solid #1F8A0B;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#000; display:flex;"><div style="flex:1;border-right:1px solid #1F8A0B;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#000; border-top:1px solid #1F8A0B; display:flex;"><div style="flex:1;border-right:1px solid #1F8A0B;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('pastel')" title="Pastel Lavender">
+                            <div style="width:24px; height:18px; border-radius:4px; background:#F5F3FF; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#DDD6FE; display:flex;"><div style="flex:1;border-right:1px solid #fff;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px solid #fff; display:flex;"><div style="flex:1;border-right:1px solid #fff;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px solid #fff; display:flex;"><div style="flex:1;border-right:1px solid #fff;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('ledger')" title="Ledger">
+                            <div style="width:24px; height:18px; border-radius:0px; border:1px solid #ccc; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#fff; border-bottom:2px double #000; display:flex;"><div style="flex:1;border-right:1px solid #eee;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#ECFDF5; display:flex;"><div style="flex:1;border-right:1px solid #eee;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #eee; display:flex;"><div style="flex:1;border-right:1px solid #eee;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('transparent')" title="Transparent Gridlines">
+                            <div style="width:24px; height:18px; border-radius:0px; border:1px dashed #ccc; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; display:flex;"><div style="flex:1;border-right:1px dashed #eee;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px dashed #eee; display:flex;"><div style="flex:1;border-right:1px dashed #eee;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px dashed #eee; display:flex;"><div style="flex:1;border-right:1px dashed #eee;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('forest')" title="Forest Green">
+                            <div style="width:24px; height:18px; border-radius:4px; border:1px solid #166534; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#166534; display:flex;"><div style="flex:1;border-right:1px solid #166534;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#F0FDF4; border-top:1px solid #86EFAC; display:flex;"><div style="flex:1;border-right:1px solid #86EFAC;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #86EFAC; display:flex;"><div style="flex:1;border-right:1px solid #86EFAC;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('ruby')" title="Ruby Red">
+                            <div style="width:24px; height:18px; border-radius:0px; border:3px double #991B1B; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#991B1B; display:flex;"><div style="flex:1;border-right:1px solid #FECACA;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #FECACA; display:flex;"><div style="flex:1;border-right:1px solid #FECACA;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px solid #FECACA; display:flex;"><div style="flex:1;border-right:1px solid #FECACA;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('gold')" title="Gold">
+                            <div style="width:24px; height:18px; border-radius:0px; border:2px solid #B45309; background:#FEF3C7; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#F59E0B; display:flex;"><div style="flex:1;border-right:1px solid #D97706;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#FEF3C7; border-top:1px solid #D97706; display:flex;"><div style="flex:1;border-right:1px solid #D97706;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#FEF3C7; border-top:1px solid #D97706; display:flex;"><div style="flex:1;border-right:1px solid #D97706;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('hacker')" title="Cyber Hacker">
+                            <div style="width:24px; height:18px; border-radius:0px; border:1px solid #06B6D4; background:#111827; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#111827; border-bottom:2px solid #06B6D4; display:flex;"><div style="flex:1;border-right:1px solid #0891B2;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#111827; display:flex;"><div style="flex:1;border-right:1px solid #0891B2;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#111827; border-top:1px solid #0891B2; display:flex;"><div style="flex:1;border-right:1px solid #0891B2;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('checker')" title="Checkerboard">
+                            <div style="width:24px; height:18px; border-radius:0px; border:2px solid #000; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; display:flex;"><div style="flex:1;background:#eee;border-right:1px solid #000;"></div><div style="flex:1;background:#fff;"></div></div>
+                                <div style="flex:1; border-top:1px solid #000; display:flex;"><div style="flex:1;background:#fff;border-right:1px solid #000;"></div><div style="flex:1;background:#eee;"></div></div>
+                                <div style="flex:1; border-top:1px solid #000; display:flex;"><div style="flex:1;background:#eee;border-right:1px solid #000;"></div><div style="flex:1;background:#fff;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('blueprint')" title="Blueprint">
+                            <div style="width:24px; height:18px; border-radius:0px; border:2px solid #fff; background:#1D4ED8; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; border-bottom:2px solid #fff; display:flex;"><div style="flex:1;border-right:1px dashed #fff;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; display:flex;"><div style="flex:1;border-right:1px dashed #fff;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px dashed #fff; display:flex;"><div style="flex:1;border-right:1px dashed #fff;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('comic')" title="Comic Book">
+                            <div style="width:24px; height:18px; border-radius:4px; border:3px solid #000; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:#FDE047; border-bottom:3px solid #000; display:flex;"><div style="flex:1;border-right:2px solid #000;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; display:flex;"><div style="flex:1;border-right:2px solid #000;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:2px solid #000; display:flex;"><div style="flex:1;border-right:2px solid #000;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                        <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('dotted')" title="Dotted Outline">
+                            <div style="width:24px; height:18px; border-radius:0px; border:2px dotted #9CA3AF; overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; border-bottom:2px dotted #9CA3AF; display:flex;"><div style="flex:1;border-right:1px dotted #9CA3AF;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; display:flex;"><div style="flex:1;border-right:1px dotted #9CA3AF;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; border-top:1px dotted #9CA3AF; display:flex;"><div style="flex:1;border-right:1px dotted #9CA3AF;"></div><div style="flex:1;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <style>
+                        .template-btn { cursor:pointer; padding:3px; border:1px solid transparent; border-radius:4px; transition:all 0.1s; display: flex; align-items: center; justify-content: center; background:#fff; }
+                        .template-btn:hover { background:rgba(0,118,112,0.1); border-color:var(--pub-color); transform:scale(1.1); box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+                    </style>
+                    <div class="group-label">Templates</div>
+                </div>
+</template>
+
+<template id="template-studioContainer-3">
+<div class="ts-ribbon-container">
+            <div id="ts-clear-theme-btn" title="Remove Theme">
+                <i class="fas fa-eraser"></i>
+                <span style="line-height: 1.2;">Remove<br>Theme</span>
+            </div>
+            
+            <div class="ts-divider"></div>
+            ${swatchesHTML}
+            <div class="ts-divider"></div>
+            
+            <div class="ts-sliders">
+                <div class="ts-slider-group">
+                    <label style="white-space: nowrap; padding-right: 10px;">Saturation <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
+                    <input type="range" id="ts-sat-slider" class="ts-slider" min="0" max="200" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
+                </div>
+                <div class="ts-slider-group">
+                    <label style="white-space: nowrap; padding-right: 10px;">Brightness <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
+                    <input type="range" id="ts-bri-slider" class="ts-slider" min="50" max="150" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
+                </div>
+                <div class="ts-slider-group">
+                    <label style="white-space: nowrap; padding-right: 10px;">Texture <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
+                    <input type="range" id="ts-tex-slider" class="ts-slider" min="0" max="100" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
+                </div>
+            </div>
+        </div>
+        <div class="group-label">Theme Studio</div>
+</template>
+
+<template id="template-dropdown-4">
+<div id="border-menu-scroll-container" style="padding:15px; width:100%; box-sizing:border-box; background:white; border-radius:8px; border:2px solid var(--pub-color, #007670); max-height:450px; overflow-y:auto; overflow-x:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <label style="font-size:12px; font-weight:bold; color:#333;">Thickness</label>
+                <span id="border-weight-label" style="font-size:12px; color:#666;">10px</span>
+            </div>
+            
+            <input type="range" id="border-weight" min="1" max="50" value="10" style="width:100%; margin-bottom:15px; cursor:pointer; accent-color: var(--pub-color, #007670);">
+            
+            <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:10px; color:#333;">Color</label>
+            ${swatchesHTML}
+            <div id="custom-color-wrapper" style="position:relative; width:100%; height:32px; margin-bottom:20px; border-radius:6px; border:1px solid #cbd5e1; background-color:#000000; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#ffffff; text-shadow:0px 1px 3px rgba(0,0,0,0.8); pointer-events:none;">Custom Color</div>
+                <input type="color" id="border-color" value="#000000" style="position:absolute; inset:-10px; width:150%; height:150%; opacity:0; cursor:pointer;">
+            </div>
+            <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:8px; color:#333;">Style (100)</label>
+            <div id="border-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;"></div>
+        </div>
+</template>
+
+<template id="template-analysisGroup-5">
+<div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readability')"><i class="fas fa-glasses" style="color:var(--pub-color)"></i>Grade</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('tone')"><i class="fas fa-theater-masks" style="color:var(--pub-color)"></i>Tone</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('concise')"><i class="fas fa-compress-alt" style="color:var(--pub-color)"></i>Concise</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('passive')"><i class="fas fa-search-location" style="color:var(--pub-color)"></i>Passive</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('repetition')"><i class="fas fa-clone" style="color:var(--pub-color)"></i>Echoes</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('stats')"><i class="fas fa-calculator" style="color:var(--pub-color)"></i>Stats</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readTime')"><i class="fas fa-clock" style="color:var(--pub-color)"></i>Time</div>
+            
+            <!-- NEW 4 FEATURES -->
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('sentiment')"><i class="fas fa-smile-beam" style="color:var(--pub-color)"></i>Sentiment</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('seo')"><i class="fas fa-search" style="color:var(--pub-color)"></i>Keywords</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('jargon')"><i class="fas fa-graduation-cap" style="color:var(--pub-color)"></i>Jargon</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('cadence')"><i class="fas fa-wave-square" style="color:var(--pub-color)"></i>Cadence</div>
+            
+            <div class="group-label">Analysis Suite</div>
+</template>
+
+<template id="template-focusGroup-6">
+<div class="tool-btn" id="focus-mode-btn" onclick="window.WritersSuite.toggleFocusMode()"><i class="fas fa-eye"></i>Focus Mode</div>
+            <div class="group-label">Environment</div>
+</template>
+
+</body>
   
 </html>
