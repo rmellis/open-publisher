@@ -270,6 +270,29 @@ document.addEventListener('selectionchange', () => {
             return;
         }
 
+        // Small Caps (Ctrl+Shift+K)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'k' || e.key === 'K') && isTextEditing()) {
+            e.preventDefault();
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                const range = selection.getRangeAt(0);
+                let parent = selection.anchorNode;
+                if (parent.nodeType === 3) parent = parent.parentNode;
+                
+                const div = document.createElement('div');
+                div.appendChild(range.cloneContents());
+                let html = div.innerHTML;
+                
+                if (window.getComputedStyle(parent).fontVariant === 'small-caps') {
+                    document.execCommand('insertHTML', false, '<span style="font-variant: normal;">' + html + '</span>');
+                } else {
+                    document.execCommand('insertHTML', false, '<span style="font-variant: small-caps;">' + html + '</span>');
+                }
+                pushHistory();
+            }
+            return;
+        }
+
         // Clear Formatting (Ctrl+Space)
         if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
             if (isTextEditing()) {
