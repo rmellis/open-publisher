@@ -4546,6 +4546,479 @@ function saveDocument() {
 }
 
 /* =========================================================================
+   EXPORT AS HTML (SINGLE FILE EMAIL NEWSLETTER EXPORT)
+   ========================================================================= */
+
+function showExportHTMLModal() {
+    const html = `
+        <style>
+            .html-export-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                cursor: pointer;
+                padding: 10px;
+                border: 1px solid transparent;
+                border-radius: 6px;
+                margin-bottom: 6px;
+                transition: all 0.2s;
+            }
+            .html-export-row:has(input:checked) {
+                background-color: #e0f2f1;
+                border-color: #b2dfdb;
+            }
+            .html-export-row:not(:has(input:checked)) {
+                background-color: transparent;
+                border-color: transparent;
+            }
+            .html-export-row:hover:not(:has(input:checked)) {
+                background-color: rgba(0,0,0,0.02);
+            }
+            .html-export-row input[type="checkbox"] {
+                appearance: none;
+                -webkit-appearance: none;
+                min-width: 20px;
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--pub-color);
+                border-radius: 4px;
+                outline: none;
+                cursor: pointer;
+                position: relative;
+                margin-top: 2px;
+                background: white;
+                transition: all 0.2s;
+            }
+            .html-export-row input[type="checkbox"]:checked {
+                background-color: var(--pub-color);
+            }
+            .html-export-row input[type="checkbox"]:checked::after {
+                content: '';
+                position: absolute;
+                left: 6px;
+                top: 2px;
+                width: 4px;
+                height: 9px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+            }
+            .html-export-title {
+                font-size: 16px;
+                font-weight: bold;
+                color: var(--pub-color);
+                margin-bottom: 6px;
+                margin-top: 15px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+        </style>
+        <div style="margin: -20px; padding: 10px 20px 0 20px; max-height: 85vh; overflow-y: auto; overflow-x: hidden;">
+            <p style="margin-bottom: 0px; font-size: 14px; color: #555;">Advanced export options for generating self-contained, highly compatible HTML files.</p>
+            
+            <h4 class="html-export-title"><i class="fas fa-columns" style="width: 20px; text-align: center;"></i> Layout & Compatibility</h4>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-seamless" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Seamless Newsletter Layout</strong><span style="font-size: 12px; color: #444; display: block;">Removes gaps, shadows, and margins between pages for continuous scrolling.</span></div>
+            </label>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-email">
+                <div><strong style="display: block; font-size: 14px; color: #111;">Optimize for Email Clients (Image Fallback)</strong><span style="font-size: 12px; color: #444; display: block;">Renders the entire document as a single image wrapped in a legacy table structure. Perfect for Mailchimp, Gmail, and Outlook. Disables text copying.</span></div>
+            </label>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-base64" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Embed External Images (Single-File Export)</strong><span style="font-size: 12px; color: #444; display: block;">Attempts to convert external Clipart URLs into Base64 Data URIs so the HTML file works completely offline.</span></div>
+            </label>
+
+            <h4 class="html-export-title"><i class="fas fa-desktop" style="width: 20px; text-align: center;"></i> Responsiveness & Viewing Experience</h4>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-autoscale" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Auto-Scale to Fit Screen (Mobile Friendly)</strong><span style="font-size: 12px; color: #444; display: block;">Injects a viewport meta tag and CSS scale to make the fixed-width flyer shrink to fit mobile screens.</span></div>
+            </label>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-selectable" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Enable Text Selection / Copying</strong><span style="font-size: 12px; color: #444; display: block;">Allows viewers to highlight and copy text. (Ignored if Email Optimization is checked).</span></div>
+            </label>
+
+            <h4 class="html-export-title"><i class="fas fa-tags" style="width: 20px; text-align: center;"></i> SEO & Metadata</h4>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-seo" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Inject SEO & Social Meta Tags</strong><span style="font-size: 12px; color: #444; display: block;">Uses the Analysis Suite to extract keywords and summary text for Twitter/Facebook preview cards.</span></div>
+            </label>
+
+            <h4 class="html-export-title"><i class="fas fa-code" style="width: 20px; text-align: center;"></i> Code Output & Polish</h4>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-minify">
+                <div><strong style="display: block; font-size: 14px; color: #111;">Minify Output</strong><span style="font-size: 12px; color: #444; display: block;">Strips unnecessary whitespace and line breaks to minimize file size.</span></div>
+            </label>
+            
+            <label class="html-export-row">
+                <input type="checkbox" id="html-opt-fonts" checked>
+                <div><strong style="display: block; font-size: 14px; color: #111;">Include Web Fonts</strong><span style="font-size: 12px; color: #444; display: block;">Injects Google Fonts links to ensure typography renders accurately.</span></div>
+            </label>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; position: sticky; bottom: 0; background: white; padding: 15px 20px 20px 20px; margin-left: -20px; margin-right: -20px; border-top: 1px solid #eee; z-index: 10;">
+                <button class="op-btn op-btn-cancel" onclick="DialogSystem.close()">Cancel</button>
+                <button class="op-btn" style="background: var(--pub-color); color: white;" onclick="
+                    const opts = {
+                        seamless: document.getElementById('html-opt-seamless').checked,
+                        email: document.getElementById('html-opt-email').checked,
+                        base64: document.getElementById('html-opt-base64').checked,
+                        autoscale: document.getElementById('html-opt-autoscale').checked,
+                        selectable: document.getElementById('html-opt-selectable').checked,
+                        seo: document.getElementById('html-opt-seo').checked,
+                        minify: document.getElementById('html-opt-minify').checked,
+                        fonts: document.getElementById('html-opt-fonts').checked
+                    };
+                    DialogSystem.close();
+                    if(typeof exportAsHTML === 'function') exportAsHTML(opts);
+                ">
+                    <i class="fas fa-file-code" style="margin-right: 8px;"></i> Generate HTML File
+                </button>
+            </div>
+        </div>
+    `;
+    
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Advanced HTML Export', html, null, true);
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('custom-dialog-confirm');
+            if (confirmBtn && confirmBtn.parentElement) {
+                confirmBtn.parentElement.style.display = 'none';
+            }
+        }, 10);
+    }
+}
+
+async function exportAsHTML(opts = {}) {
+    if (typeof opts === 'boolean') opts = { seamless: opts };
+    // Save current page state first
+    state.pages[state.currentPageIndex] = serializeCurrentPage();
+    
+    const docTitle = document.getElementById('doc-title').innerText || 'Publication1';
+    
+    // --- Progress Dialog ---
+    const progressHtml = `
+        <div style="text-align:center; padding: 10px;">
+            <p id="html-export-status" style="margin-bottom:15px; font-weight:bold;">Preparing HTML Export...</p>
+            <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                <div id="html-export-progress" style="width:0%; height:100%; background:var(--pub-color); transition: width 0.3s;"></div>
+            </div>
+        </div>
+    `;
+    if (typeof DialogSystem !== 'undefined') DialogSystem.show('Export as HTML', progressHtml, null, true);
+    
+    setTimeout(() => {
+        if (document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
+        if (document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
+    }, 10);
+    
+    await new Promise(r => setTimeout(r, 100));
+    
+    try {
+        // --- 1. Scan for used fonts ---
+        const setStatus = (msg, pct) => {
+            const s = document.getElementById('html-export-status');
+            const p = document.getElementById('html-export-progress');
+            if (s) s.innerText = msg;
+            if (p) p.style.width = pct + '%';
+        };
+        
+        setStatus('Scanning typography...', 15);
+        await new Promise(r => setTimeout(r, 50));
+        
+        const usedFonts = new Set();
+        state.pages.forEach(page => {
+            const pageStr = JSON.stringify(page);
+            const fontRegex = /font-family:\s*['"]?([^'";,}\\]+)/gi;
+            let m;
+            while ((m = fontRegex.exec(pageStr)) !== null) {
+                let font = m[1].trim().replace(/['"]/g, '');
+                if (font && font !== 'inherit' && font !== 'sans-serif' && font !== 'serif' && font !== 'monospace') {
+                    usedFonts.add(font);
+                }
+            }
+        });
+        
+        // Build a Google Fonts link that only includes fonts actually used
+        let fontLink = '';
+        const googleFontFamilies = [];
+        usedFonts.forEach(f => {
+            // Skip system fonts
+            const systemFonts = ['Arial', 'Segoe UI', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Helvetica', 'sans-serif', 'serif'];
+            if (!systemFonts.includes(f)) {
+                googleFontFamilies.push('family=' + f.replace(/\s+/g, '+') + ':wght@400;700');
+            }
+        });
+        if (opts.fonts !== false && googleFontFamilies.length > 0) {
+            fontLink = `<link href="https://fonts.googleapis.com/css2?${googleFontFamilies.join('&')}&display=swap" rel="stylesheet">`;
+        }
+        
+        // --- 1.5 Setup Print Spooler for Computed Styles ---
+        setStatus('Generating exact computed styles...', 30);
+        await new Promise(r => setTimeout(r, 50));
+        
+        let printSpooler = document.getElementById('op-html-spooler');
+        if (!printSpooler) {
+            printSpooler = document.createElement('div');
+            printSpooler.id = 'op-html-spooler';
+            printSpooler.style.position = 'absolute';
+            printSpooler.style.left = '-9999px';
+            printSpooler.style.opacity = '0.01'; // Changed from visibility:hidden for html2canvas
+            printSpooler.style.pointerEvents = 'none';
+            document.body.appendChild(printSpooler);
+        }
+        printSpooler.innerHTML = '';
+        
+        let pagesHTML = '';
+        
+        for (let i = 0; i < state.pages.length; i++) {
+            setStatus(`Rendering page ${i + 1} of ${state.pages.length}...`, 30 + Math.round((i / state.pages.length) * 50));
+            await new Promise(r => setTimeout(r, 20));
+            
+            const page = state.pages[i];
+            const pW = parseFloat(page.width) || 794;
+            const pH = parseFloat(page.height) || 1123;
+            
+            // Build the page in the spooler to get computed styles
+            let pageWrapper = document.createElement('div');
+            pageWrapper.className = 'op-page';
+            pageWrapper.style.position = 'relative';
+            pageWrapper.style.width = pW + 'px';
+            pageWrapper.style.minHeight = pH + 'px';
+            pageWrapper.style.background = page.background || '#ffffff';
+            pageWrapper.style.margin = opts.seamless ? '0 auto' : '0 auto 30px auto';
+            pageWrapper.style.overflow = 'hidden';
+            pageWrapper.style.boxShadow = opts.seamless ? 'none' : '0 2px 15px rgba(0,0,0,0.12)';
+            pageWrapper.style.boxSizing = 'border-box';
+            
+            if (page.elements) {
+                for (const data of page.elements) {
+                    if (data.innerHTML && data.innerHTML.includes('spread-fold-line')) continue;
+                    
+                    let elDiv = document.createElement('div');
+                    elDiv.style.position = 'absolute';
+                    elDiv.style.left = data.left;
+                    elDiv.style.top = data.top;
+                    elDiv.style.width = data.width;
+                    elDiv.style.height = data.height;
+                    elDiv.style.zIndex = data.zIndex || 10;
+                    if (data.transform && data.transform !== 'none') elDiv.style.transform = data.transform;
+                    
+                    let contentDiv = document.createElement('div');
+                    contentDiv.style.width = '100%';
+                    contentDiv.style.height = '100%';
+                    contentDiv.style.overflow = 'hidden';
+                    contentDiv.style.position = 'relative';
+                    contentDiv.style.cssText += (data.contentCssText || `transform: scale(${data.scaleX || 1}, ${data.scaleY || 1});`);
+                    
+                    if (data.imgSrc) {
+                        let img = document.createElement('img');
+                        let src = data.imgSrc;
+                        if (opts.base64 && !src.startsWith('data:')) {
+                            try {
+                                const response = await fetch(src, { mode: 'cors', credentials: 'omit' });
+                                const blob = await response.blob();
+                                src = await new Promise((resolve) => {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => resolve(reader.result);
+                                    reader.readAsDataURL(blob);
+                                });
+                            } catch (e) {
+                                console.warn('CORS blocked base64 conversion for:', src);
+                            }
+                        }
+                        img.src = src;
+                        Object.assign(img.style, data.imgStyle || { width:'100%', height:'100%' });
+                        contentDiv.appendChild(img);
+                    } else if (data.clipPath) {
+                        let bgDiv = document.createElement('div');
+                        bgDiv.style.width = '100%';
+                        bgDiv.style.height = '100%';
+                        bgDiv.style.background = data.bg;
+                        bgDiv.style.clipPath = data.clipPath;
+                        contentDiv.appendChild(bgDiv);
+                    } else {
+                        contentDiv.innerHTML = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+                    }
+                    
+                    elDiv.appendChild(contentDiv);
+                    pageWrapper.appendChild(elDiv);
+                }
+            }
+            
+            printSpooler.appendChild(pageWrapper);
+            
+            // --- Inline Computed Styles ---
+            // For Tables and WordArt, we extract the exact styles calculated by the browser
+            // and hard-bake them into the style attribute, dodging CORS and email client limitations!
+            const targetElements = pageWrapper.querySelectorAll('.wa-text, .wa-wrapper, table, th, td, tr, .pub-table');
+            targetElements.forEach(el => {
+                const comp = window.getComputedStyle(el);
+                const props = [
+                    'color', 'background', 'font-family', 'font-size', 'font-weight', 'font-style', 'letter-spacing',
+                    'text-shadow', 'text-transform', 'text-align', 'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
+                    'border-collapse', 'padding', 'margin', 'filter', '-webkit-text-stroke', '-webkit-background-clip', 'transform'
+                ];
+                let inlineStr = '';
+                props.forEach(p => {
+                    const val = comp.getPropertyValue(p);
+                    if (val && val !== 'none' && val !== 'normal' && val !== '0px' && val !== 'rgba(0, 0, 0, 0)' && val !== 'transparent' && val !== 'matrix(1, 0, 0, 1, 0, 0)') {
+                        inlineStr += `${p}: ${val}; `;
+                    }
+                });
+                
+                // Keep background-clip for WordArt gradients
+                if (el.className.includes('wa-style-') && comp.webkitBackgroundClip === 'text') {
+                    inlineStr += `-webkit-background-clip: text; -webkit-text-fill-color: transparent; `;
+                }
+                
+                el.style.cssText += inlineStr;
+            });
+            
+            if (opts.email && typeof html2canvas !== 'undefined') {
+                const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: page.background || '#ffffff' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.85);
+                const tbl = `
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: ${opts.seamless ? '0 auto' : '0 auto 30px auto'};">
+    <tr>
+        <td align="center">
+            <img src="${imgData}" width="${pW}" style="display:block; max-width:100%; height:auto; border:0;" />
+        </td>
+    </tr>
+</table>`;
+                pagesHTML += `\n<!-- Page ${i + 1} -->\n` + tbl;
+            } else {
+                pagesHTML += `\n<!-- Page ${i + 1} -->\n` + pageWrapper.outerHTML;
+            }
+            printSpooler.innerHTML = ''; // Clean up after capturing
+        }
+        
+        // Clean up spooler entirely
+        if(printSpooler) document.body.removeChild(printSpooler);
+        
+        // --- 3. Assemble final HTML ---
+        setStatus('Assembling HTML file...', 85);
+        await new Promise(r => setTimeout(r, 50));
+        
+        let seoTags = '';
+        if (opts.seo) {
+            let fullText = '';
+            state.pages.forEach(p => p.elements && p.elements.forEach(e => {
+                if(e.innerHTML && !e.innerHTML.includes('spread-fold-line')) {
+                    let temp = document.createElement('div');
+                    temp.innerHTML = e.innerHTML.replace(/<[^>]+>/g, ' ');
+                    fullText += temp.textContent + ' ';
+                }
+            }));
+            if (fullText.length > 20) {
+                const stopWords = ['the','is','at','which','and','on','a','an','in','of','to','for','with','it','as','be','are','that','this','from','by','or','you','your','we','our','will','can'];
+                const words = fullText.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(Boolean);
+                const frequency = {};
+                words.forEach(w => { if (w.length > 2 && !stopWords.includes(w)) frequency[w] = (frequency[w] || 0) + 1; });
+                const keywords = Object.keys(frequency).sort((a, b) => frequency[b] - frequency[a]).slice(0, 5).join(', ');
+                const desc = fullText.substring(0, 150).replace(/\s+/g, ' ').trim() + '...';
+                seoTags = `
+    <meta name="description" content="${desc}">
+    <meta name="keywords" content="${keywords}">
+    <meta property="og:title" content="${docTitle}">
+    <meta property="og:description" content="${desc}">
+    <meta property="og:type" content="article">`;
+            }
+        }
+
+        let finalHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${docTitle}</title>${seoTags}
+    ${fontLink}
+    <style>
+        /* Open Publisher HTML Export */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: ${opts.seamless ? (state.pages[0]?.background || '#ffffff') : '#f0f0f0'};
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: ${opts.seamless ? '0' : '20px 0'};
+            ${opts.selectable !== false && !opts.email ? '' : 'user-select: none; -webkit-user-select: none;'}
+        }
+        .op-page {
+            page-break-after: always;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .op-page:last-child {
+            page-break-after: auto;
+            margin-bottom: 0 !important;
+        }
+        img { border: 0; display: block; }
+        @media print {
+            body { background: white; padding: 0; }
+            .op-page { box-shadow: none !important; margin-bottom: 0 !important; }
+        }
+        ${opts.autoscale !== false ? `
+        @media (max-width: ${state.pages[0]?.width || 794}px) {
+            .op-page, table {
+                transform-origin: top center;
+                transform: scale(calc(100vw / ${state.pages[0]?.width || 794}));
+                margin-bottom: calc(-100vw * (1 - (100vw / ${state.pages[0]?.width || 794}))) !important;
+            }
+        }
+        ` : `
+        @media (max-width: 850px) {
+            .op-page {
+                transform-origin: top center;
+                transform: scale(0.5);
+                margin-bottom: -40% !important;
+            }
+        }`}
+    </style>
+</head>
+<body>
+    <!--
+        Generated by Open Publisher (https://openpublisher.app)
+        Document: ${docTitle}
+        Pages: ${state.pages.length}
+        Date: ${new Date().toISOString().split('T')[0]}
+    -->
+${pagesHTML}
+</body>
+</html>`;
+        
+        if (opts.minify) {
+            finalHTML = finalHTML.replace(/>\s+</g, '><').trim();
+        }
+        
+        // --- 4. Download ---
+        setStatus('Downloading...', 100);
+        await new Promise(r => setTimeout(r, 100));
+        
+        const blob = new Blob([finalHTML], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = docTitle.replace(/\s+/g, '_') + '.html';
+        a.click();
+        
+        setTimeout(() => { if (typeof DialogSystem !== 'undefined') DialogSystem.close(); }, 1200);
+        
+    } catch (err) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.close();
+            DialogSystem.alert('Export Error', 'Failed to export HTML: ' + err.message);
+        }
+    }
+}
+
+/* =========================================================================
    PACK AND GO (COMMERCIAL PRINTER EXPORT)
    ========================================================================= */
 async function packAndGo() {
