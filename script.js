@@ -5153,7 +5153,14 @@ document.getElementById('file-open').addEventListener('change', (e) => {
         reader.onload = (evt) => {
             try {
                 const data = JSON.parse(evt.target.result);
-                document.getElementById('doc-title').innerText = data.title;
+                
+                // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
+                if (data.isTemplate) {
+                    document.getElementById('doc-title').innerText = "Untitled Publication";
+                } else {
+                    document.getElementById('doc-title').innerText = data.title;
+                }
+                
                 state.pages = data.pages;
                 
                 // Read Spreads state (or infer for legacy saves)
@@ -19301,7 +19308,7 @@ window.toggleCrop = function() {
 (function upgradeSaveSystem() {
     
     // Overwrite the original save function
-    window.saveDocument = async function() {
+    window.saveDocument = async function(isTemplate = false) {
         
         // 1. Serialize the current page before saving
         state.pages[state.currentPageIndex] = serializeCurrentPage();
@@ -19311,7 +19318,8 @@ window.toggleCrop = function() {
         
         const docData = {
             title: currentTitle,
-            pages: state.pages
+            pages: state.pages,
+            isTemplate: isTemplate
         };
         
         const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
@@ -19336,7 +19344,14 @@ window.toggleCrop = function() {
                 // ✨ THE FIX: Update the UI with the exact name they typed!
                 // We strip the ".opub" extension off so it looks clean in the toolbar
                 const newName = fileHandle.name.replace(/\.opub$/i, '');
-                document.getElementById('doc-title').innerText = newName;
+                
+                // If they just saved a template, instantly rename their current working session 
+                // so they don't accidentally overwrite the template on their next Ctrl+S
+                if (isTemplate) {
+                    document.getElementById('doc-title').innerText = "Untitled " + newName;
+                } else {
+                    document.getElementById('doc-title').innerText = newName;
+                }
                 
                 // Optional: Flash a quick success message
                 if (typeof DialogSystem !== 'undefined') {
