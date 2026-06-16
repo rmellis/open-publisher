@@ -46,8 +46,8 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.10.5">
-	<script src="clipart-data.js?v=4.10.5"></script>
+    <link rel="stylesheet" href="style.css?v=4.10.6">
+	<script src="clipart-data.js?v=4.10.6"></script>
 	<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -345,6 +345,15 @@
                 </div>
             </div>
             <div class="group-label">Font</div>
+        </div>
+        <div class="group">
+            <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                 <div class="mini-btn" onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></div>
+                 <div class="mini-btn" onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></div>
+                 <div class="mini-btn" onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></div>
+            </div>
+            <div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v"></i>Line<br>Spacing</div>
+            <div class="group-label">Paragraph</div>
         </div>
         <div class="group">
             <div class="tool-btn" onclick="selectAllElements()"><i class="fas fa-mouse-pointer"></i>Select All</div>
@@ -772,7 +781,7 @@
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.10.5"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script><script  src="./script.js?v=4.10.6"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>

@@ -4126,6 +4126,46 @@ function execCmd(cmd, val) {
     if(!state.isProgrammaticUpdate) updateFloatToolbarValues();
 }
 
+window.showLineSpacingModal = function() {
+    if (!state.selectedEl) {
+        DialogSystem.alert('Notice', 'Please select a text box first.');
+        return;
+    }
+    
+    // Attempt to parse current exact spacing
+    const content = state.selectedEl.querySelector('.element-content');
+    let currentVal = '';
+    if (content && content.style.lineHeight && content.style.lineHeight.includes('pt')) {
+        currentVal = parseInt(content.style.lineHeight);
+    }
+    
+    const html = `
+        <div style="padding: 10px;">
+            <p style="margin-top:0;">Set the absolute line height (Exact point size). Leave blank to revert to normal spacing.</p>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:15px;">
+                <label>Exact Spacing (pt):</label>
+                <input type="number" id="exact-line-spacing-input" class="modern-input" placeholder="e.g. 14" value="${currentVal}" style="width:100px;">
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show('<i class="fas fa-arrows-alt-v" style="margin-right:8px;"></i>Line Spacing Options', html, () => {
+        const val = document.getElementById('exact-line-spacing-input').value;
+        window.applyExactLineSpacing(val ? val + 'pt' : 'normal');
+    });
+};
+
+window.applyExactLineSpacing = function(val) {
+    if(state.selectedEl) {
+        const content = state.selectedEl.querySelector('.element-content');
+        if(content) {
+            content.style.lineHeight = val;
+            pushHistory();
+            forceRepaint();
+        }
+    }
+};
+
 function toggleSpellCheck() {
     state.spellCheck = !state.spellCheck;
     document.body.setAttribute('spellcheck', state.spellCheck);
@@ -7702,11 +7742,11 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
         }
 
@@ -15887,6 +15927,7 @@ window.handleMouseUp = function() {
                             <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                         </div>
                     </div>
+                    <div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div>
                     <div class="group-label">Spacing</div>
                 </div>
                 ${arrGroup}
