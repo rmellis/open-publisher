@@ -293,6 +293,26 @@ document.addEventListener('selectionchange', () => {
             return;
         }
 
+        // Superscript (Ctrl+Shift++)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '+' || e.key === '=')) {
+            if (isTextEditing()) {
+                e.preventDefault();
+                document.execCommand('superscript');
+                pushHistory();
+            }
+            return;
+        }
+
+        // Subscript (Ctrl+=)
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === '=') {
+            if (isTextEditing()) {
+                e.preventDefault();
+                document.execCommand('subscript');
+                pushHistory();
+            }
+            return;
+        }
+
         // Clear Formatting (Ctrl+Space)
         if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
             if (isTextEditing()) {
