@@ -256,6 +256,7 @@ body {
     padding: 8px 2px 2px 2px;
     text-align: center;
     position: relative;
+    white-space: nowrap;
 }
 .tool-btn.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
 .tool-btn:hover:not(.disabled) { background: #cce8ff; border-color: #99d1ff; }
