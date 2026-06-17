@@ -1799,6 +1799,22 @@ svg .shape-path, svg .shape-path * {
         .ctx-row { display: flex; gap: 4px; align-items: center; height: 24px; margin-bottom: 4px; }
         .ctx-row:last-child { margin-bottom: 0; }
         .ctx-btn-strict { height: 24px; width: 24px; display: flex; align-items: center; justify-content: center; padding: 0; box-sizing: border-box; }
+        #tab-table-design .group { display: flex; align-items: center; justify-content: center; padding: 0 10px; border-right: 1px solid #ddd; }
+#tab-table-design .group:last-child { border-right: none; }
+
+/* Table Cell Selection Highlights */
+.op-selected-cell {
+    background-color: rgba(0, 118, 112, 0.15) !important;
+    position: relative;
+}
+.op-selected-cell::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 2px solid var(--pub-color);
+    pointer-events: none;
+    z-index: 10;
+}
         .ctx-color-strict { flex-direction: column; position: relative; overflow: hidden; }
 
 /* Extracted Block 10 */

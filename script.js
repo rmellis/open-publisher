@@ -7637,8 +7637,14 @@ const ContextMenuSystem = {
                 html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
                 html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
                 html += this.buildDivider();
-                html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
-                html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
+                
+                if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
+                    html += this.buildItem('Merge Cells', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeSelectedCells()');
+                } else {
+                    html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
+                    html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
+                }
+                
                 html += this.buildDivider();
                 html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
                 html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
@@ -16086,6 +16092,151 @@ window.handleMouseUp = function() {
 (function enhanceTableRibbons() {
     console.log("🛠️ Enhanced Table Ribbons Script initializing...");
 
+    // --- NEW: Table Multi-Cell Selection State ---
+    window._tableSelectionStartCell = null;
+    window._tableSelectedCells = [];
+
+    // Helper: Map DOM table to a 2D logical grid to handle colspans/rowspans
+    function getTableGridMap(table) {
+        const grid = [];
+        const cellMap = new Map(); // Maps cell DOM element to {r, c, rs, cs}
+        
+        for (let r = 0; r < table.rows.length; r++) {
+            const row = table.rows[r];
+            if (!grid[r]) grid[r] = [];
+            
+            let c = 0;
+            for (let i = 0; i < row.cells.length; i++) {
+                const cell = row.cells[i];
+                // Skip already filled grid slots
+                while (grid[r][c] !== undefined) c++;
+                
+                const rs = parseInt(cell.getAttribute('rowspan') || 1);
+                const cs = parseInt(cell.getAttribute('colspan') || 1);
+                
+                cellMap.set(cell, { r, c, rs, cs });
+                
+                for (let yy = 0; yy < rs; yy++) {
+                    for (let xx = 0; xx < cs; xx++) {
+                        if (!grid[r + yy]) grid[r + yy] = [];
+                        grid[r + yy][c + xx] = cell;
+                    }
+                }
+                c += cs;
+            }
+        }
+        return { grid, cellMap };
+    }
+
+    // Helper: Calculate bounding box between two cells
+    function getBoundingBox(gridInfo, cellA, cellB) {
+        const infoA = gridInfo.cellMap.get(cellA);
+        const infoB = gridInfo.cellMap.get(cellB);
+        if (!infoA || !infoB) return null;
+
+        let minR = Math.min(infoA.r, infoB.r);
+        let maxR = Math.max(infoA.r + infoA.rs - 1, infoB.r + infoB.rs - 1);
+        let minC = Math.min(infoA.c, infoB.c);
+        let maxC = Math.max(infoA.c + infoA.cs - 1, infoB.c + infoB.cs - 1);
+
+        // Expand bounds if partial merged cells are caught
+        let expanded = true;
+        while (expanded) {
+            expanded = false;
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    const cNode = gridInfo.grid[r][c];
+                    if (!cNode) continue;
+                    const cInfo = gridInfo.cellMap.get(cNode);
+                    if (cInfo.r < minR) { minR = cInfo.r; expanded = true; }
+                    if (cInfo.r + cInfo.rs - 1 > maxR) { maxR = cInfo.r + cInfo.rs - 1; expanded = true; }
+                    if (cInfo.c < minC) { minC = cInfo.c; expanded = true; }
+                    if (cInfo.c + cInfo.cs - 1 > maxC) { maxC = cInfo.c + cInfo.cs - 1; expanded = true; }
+                }
+            }
+        }
+        return { minR, maxR, minC, maxC };
+    }
+
+    // Bind document-level drag events for tables
+    document.addEventListener('mousedown', (e) => {
+        const cell = e.target.closest('td, th');
+
+        // If right-clicking on an already selected cell, do not clear the selection
+        if (e.button === 2 && cell && window._tableSelectedCells.includes(cell)) {
+            return;
+        }
+
+        // If clicking inside the context menu, do not clear the selection
+        if (e.target.closest('.pub-context-menu')) {
+            return;
+        }
+
+        // Clear previous selection if clicking outside or left-clicking
+        if (window._tableSelectedCells.length > 0) {
+            window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+            window._tableSelectedCells = [];
+            window._tableSelectionStartCell = null;
+        }
+
+        if (cell && cell.closest('.workspace')) {
+            window._tableSelectionStartCell = cell;
+            // Don't add the visual class yet; wait until they actually drag across a boundary
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!window._tableSelectionStartCell) return;
+        if (e.buttons !== 1) { // Left mouse button must be held down to drag
+            window._tableSelectionStartCell = null;
+            return;
+        }
+
+        // Because contenteditable can swallow mouseover during native text drag, we use elementFromPoint
+        const hoveredEl = document.elementFromPoint(e.clientX, e.clientY);
+        if (!hoveredEl) return;
+
+        const cell = hoveredEl.closest('td, th');
+        if (!cell) return;
+        
+        const table = cell.closest('table');
+        const startTable = window._tableSelectionStartCell.closest('table');
+        if (table !== startTable) return;
+
+        // If we are still just inside the original cell, don't trigger the multi-cell selection yet
+        // This preserves native text selection behavior within a single cell.
+        if (cell === window._tableSelectionStartCell && window._tableSelectedCells.length <= 1) return;
+
+        // Clear previous visual highlights
+        window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+        window._tableSelectedCells = [];
+
+        const gridInfo = getTableGridMap(table);
+        const bbox = getBoundingBox(gridInfo, window._tableSelectionStartCell, cell);
+        if (!bbox) return;
+
+        // Collect all cells in bbox
+        const uniqueCells = new Set();
+        for (let r = bbox.minR; r <= bbox.maxR; r++) {
+            for (let c = bbox.minC; c <= bbox.maxC; c++) {
+                if (gridInfo.grid[r] && gridInfo.grid[r][c]) {
+                    uniqueCells.add(gridInfo.grid[r][c]);
+                }
+            }
+        }
+
+        window._tableSelectedCells = Array.from(uniqueCells);
+        window._tableSelectedCells.forEach(c => c.classList.add('op-selected-cell'));
+        
+        // Force clear native text selection to avoid confusing dual-highlights
+        window.getSelection().removeAllRanges();
+    });
+
+    document.addEventListener('mouseup', () => {
+        // Just stop tracking the drag initiator. The selection bounding box remains highlighted.
+        window._tableSelectionStartCell = null;
+    });
+
     // 1. EXTEND THE CONTEXT ACTIONS
     ContextRibbonActions.getActiveCell = function() {
         if (!state.selectedEl || !state.selectedEl.querySelector('table')) return null;
@@ -16216,6 +16367,66 @@ window.handleMouseUp = function() {
         nextCell.remove();
         pushHistory();
     };
+
+    ContextRibbonActions.mergeSelectedCells = function() {
+        if (!window._tableSelectedCells || window._tableSelectedCells.length <= 1) return;
+        
+        const table = window._tableSelectedCells[0].closest('table');
+        if (!table) return;
+
+        const gridInfo = getTableGridMap(table);
+        
+        // Find absolute top-left anchor cell
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        window._tableSelectedCells.forEach(cell => {
+            const info = gridInfo.cellMap.get(cell);
+            if (info.r < minR) minR = info.r;
+            if (info.r + info.rs - 1 > maxR) maxR = info.r + info.rs - 1;
+            if (info.c < minC) minC = info.c;
+            if (info.c + info.cs - 1 > maxC) maxC = info.c + info.cs - 1;
+        });
+
+        const anchorCell = gridInfo.grid[minR][minC];
+        if (!anchorCell) return;
+
+        // Set dimensions
+        anchorCell.setAttribute('rowspan', (maxR - minR + 1));
+        anchorCell.setAttribute('colspan', (maxC - minC + 1));
+
+        // Merge content and delete others
+        let mergedHtml = anchorCell.innerHTML;
+        const isEmptyHtml = (html) => {
+            let str = html.replace(/&nbsp;/g, '').replace(/<br\s*\/?>/gi, '').replace(/\s+/g, '').trim();
+            return str === '' && !html.includes('<img') && !html.includes('<svg') && !html.includes('<canvas');
+        };
+
+        if (isEmptyHtml(mergedHtml)) {
+            mergedHtml = '';
+        }
+
+        window._tableSelectedCells.forEach(cell => {
+            if (cell !== anchorCell) {
+                if (!isEmptyHtml(cell.innerHTML)) {
+                    if (mergedHtml !== '') mergedHtml += '<br>';
+                    mergedHtml += cell.innerHTML;
+                }
+                cell.remove();
+            }
+        });
+        
+        if (mergedHtml === '') {
+            mergedHtml = '<br>'; // Keep one break for focus/caret
+        }
+
+        anchorCell.innerHTML = mergedHtml;
+        
+        // Clear selection
+        window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+        window._tableSelectedCells = [];
+        
+        pushHistory();
+    };
+
 
     ContextRibbonActions.cellAlign = function(vAlign, hAlign) {
         const cell = this.getActiveCell();
