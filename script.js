@@ -324,6 +324,37 @@ document.addEventListener('selectionchange', () => {
             return;
         }
 
+        // Font Size Nudge (Ctrl+Shift+> to increase, Ctrl+Shift+< to decrease)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '>' || e.key === '.' || e.key === '<' || e.key === ',')) {
+            if (isTextEditing()) {
+                e.preventDefault();
+                const increase = (e.key === '>' || e.key === '.');
+                let currentSize = 12;
+                if (state.lastRange) {
+                    let node = state.lastRange.startContainer;
+                    if (node.nodeType === 3) {
+                        node = node.parentNode;
+                    } else {
+                        const offset = state.lastRange.startOffset;
+                        if (node.childNodes.length > offset) {
+                            let child = node.childNodes[offset];
+                            if (child.nodeType === 3) child = child.parentNode;
+                            if (child && child.nodeType === 1) node = child;
+                        }
+                    }
+                    if (node && node.nodeType === 1) {
+                        currentSize = parseInt(window.getComputedStyle(node).fontSize) || 12;
+                    }
+                }
+                const newSize = increase ? currentSize + 1 : Math.max(1, currentSize - 1);
+                setTrueFontSize(newSize + 'px');
+                
+                const floatLabel = document.getElementById('float-size-label');
+                if (floatLabel) floatLabel.innerText = newSize;
+            }
+            return;
+        }
+
         // Clear Formatting (Ctrl+Space)
         if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
             if (isTextEditing()) {
@@ -4085,6 +4116,12 @@ function setTrueFontSize(val) {
                 floatSelect.appendChild(newOpt);
             }
             floatSelect.value = numVal;
+        }
+        
+        // Immediately capture the new selection range so rapid consecutive font changes (or shortcuts) don't fail
+        const currentSel = window.getSelection();
+        if (currentSel.rangeCount > 0) {
+            state.lastRange = currentSel.getRangeAt(0).cloneRange();
         }
         
         pushHistory();
