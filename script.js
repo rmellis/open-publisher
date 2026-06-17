@@ -202,6 +202,12 @@ document.addEventListener('selectionchange', () => {
 });
 
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab' && document.activeElement && document.activeElement.isContentEditable) {
+            e.preventDefault();
+            if (window.handleTabKey) window.handleTabKey(e);
+            return;
+        }
+
         // Key Shortcuts
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
             e.preventDefault();
@@ -4611,6 +4617,209 @@ function showQRCodeModal() {
 function showTemplateModal() { document.getElementById('template-modal').style.display = 'flex'; }
 function closeModal(el) { el.style.display = 'none'; }
 
+// --- TABS DIALOG ---
+window.tabDialog = {
+    tabs: [],
+    
+    open: function() {
+        if (!window._activeIndentBlock) {
+            DialogSystem.alert('Notice', 'Please select a text box and click inside a paragraph first to set tabs for that paragraph.');
+            return;
+        }
+        
+        const rawTabs = window._activeIndentBlock.getAttribute('data-tabs');
+        this.tabs = rawTabs ? JSON.parse(rawTabs) : [];
+        
+        const html = `
+            <div style="width: 380px; font-size: 13px;">
+                <p style="font-size: 12px; color: #555; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">
+                    <strong>What are Tabs?</strong> Tabs allow you to align text precisely across the page. Double-click the ruler to set a stop, choose an alignment, and optionally add a leader line (like dots or dashes).
+                </p>
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label style="font-weight: bold; margin-bottom: 5px; display: block;">Tab stop position:</label>
+                        <input type="text" id="tab-position-input" value="100" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 4px; border: 1px solid #999;">
+                        <select id="tab-list" size="8" style="width: 100%; box-sizing: border-box; height: 120px; border: 1px solid #999;"></select>
+                    </div>
+                    <div style="flex: 1;">
+                        <fieldset style="margin-bottom: 10px; border: 1px solid #ccc; padding: 5px 10px;">
+                            <legend style="padding: 0 5px; color: #555;">Alignment</legend>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="left" style="accent-color: var(--pub-color);" checked> Left</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="center" style="accent-color: var(--pub-color);"> Center</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="right" style="accent-color: var(--pub-color);"> Right</label>
+                            <label style="display: block;"><input type="radio" name="tab-align" value="decimal" style="accent-color: var(--pub-color);"> Decimal</label>
+                        </fieldset>
+                        <fieldset style="border: 1px solid #ccc; padding: 5px 10px;">
+                            <legend style="padding: 0 5px; color: #555;">Leader</legend>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="none" style="accent-color: var(--pub-color);" checked> 1 None</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dotted" style="accent-color: var(--pub-color);"> 2 .......</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dashed" style="accent-color: var(--pub-color);"> 3 -------</label>
+                            <label style="display: block;"><input type="radio" name="tab-leader" value="solid" style="accent-color: var(--pub-color);"> 4 _______</label>
+                        </fieldset>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button class="btn-secondary" onclick="window.tabDialog.setTab()" style="padding: 4px 10px;">Set</button>
+                    <button class="btn-secondary" onclick="window.tabDialog.clearTab()" style="padding: 4px 10px;">Clear</button>
+                    <button class="btn-secondary" onclick="window.tabDialog.clearAllTabs()" style="padding: 4px 10px;">Clear All</button>
+                </div>
+                <div style="margin-top: 10px; font-size: 11px; color: #666; font-style: italic;">
+                    Note: After configuring, press the 'Tab' key inside the text box to jump to these stops.
+                </div>
+            </div>
+        `;
+        
+        DialogSystem.show('Tabs', html, () => {
+            this.applyAndClose();
+        });
+        
+        // Wait for DOM injection
+        setTimeout(() => {
+            this.renderList();
+            const input = document.getElementById('tab-position-input');
+            if(input) input.focus();
+        }, 10);
+    },
+    
+    renderList: function() {
+        const list = document.getElementById('tab-list');
+        list.innerHTML = '';
+        this.tabs.sort((a,b) => a.pos - b.pos);
+        this.tabs.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.pos;
+            let leaderText = t.leader === 'none' ? '' : ` (${t.leader})`;
+            opt.textContent = `${t.pos}px - ${t.align}${leaderText}`;
+            list.appendChild(opt);
+        });
+    },
+    
+    setTab: function() {
+        const posInput = document.getElementById('tab-position-input').value;
+        const pos = parseFloat(posInput);
+        if (isNaN(pos) || pos <= 0) return;
+        
+        const align = document.querySelector('input[name="tab-align"]:checked').value;
+        const leader = document.querySelector('input[name="tab-leader"]:checked').value;
+        
+        this.tabs = this.tabs.filter(t => Math.abs(t.pos - pos) > 1);
+        this.tabs.push({ pos, align, leader });
+        this.renderList();
+        document.getElementById('tab-position-input').value = '';
+    },
+    
+    clearTab: function() {
+        const list = document.getElementById('tab-list');
+        if (list.selectedIndex < 0) return;
+        const pos = parseFloat(list.options[list.selectedIndex].value);
+        this.tabs = this.tabs.filter(t => t.pos !== pos);
+        this.renderList();
+    },
+    
+    clearAllTabs: function() {
+        this.tabs = [];
+        this.renderList();
+    },
+    
+    applyAndClose: function() {
+        if (!window._activeIndentBlock) return;
+        
+        if (this.tabs.length === 0) {
+            window._activeIndentBlock.removeAttribute('data-tabs');
+        } else {
+            this.tabs.sort((a,b) => a.pos - b.pos);
+            window._activeIndentBlock.setAttribute('data-tabs', JSON.stringify(this.tabs));
+        }
+        
+        pushHistory();
+    }
+};
+
+window.handleTabKey = function(e) {
+    if (!window._activeIndentBlock) {
+        document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        return;
+    }
+    const block = window._activeIndentBlock;
+    
+    const rawTabs = block.getAttribute('data-tabs');
+    let tabs = rawTabs ? JSON.parse(rawTabs) : [];
+    if (tabs.length === 0) {
+        document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        return;
+    }
+    
+    if (!block.classList.contains('op-tab-container')) {
+        const html = block.innerHTML;
+        block.innerHTML = '';
+        block.classList.add('op-tab-container');
+        const span = document.createElement('span');
+        span.className = 'op-tab-block op-tab-block-left';
+        if (!html || html.trim() === '') span.innerHTML = '&#8203;'; else span.innerHTML = html;
+        block.appendChild(span);
+        
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(span);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+    
+    const sel = window.getSelection();
+    if (sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    
+    let currentSpan = range.commonAncestorContainer;
+    while (currentSpan && currentSpan.nodeType !== 1) currentSpan = currentSpan.parentNode;
+    while (currentSpan && !currentSpan.classList?.contains('op-tab-block')) {
+        if (currentSpan === block || !currentSpan.parentNode) break;
+        currentSpan = currentSpan.parentNode;
+    }
+    
+    if (!currentSpan || !currentSpan.classList?.contains('op-tab-block')) {
+        currentSpan = block.querySelector('.op-tab-block') || block.lastElementChild;
+    }
+    
+    if (!currentSpan) return;
+    
+    const existingSpacers = block.querySelectorAll('.op-tab-spacer').length;
+    const tabDef = tabs[Math.min(existingSpacers, tabs.length - 1)];
+    
+    const spacer = document.createElement('span');
+    spacer.className = 'op-tab-spacer';
+    spacer.contentEditable = 'false';
+    if (tabDef.leader !== 'none') spacer.classList.add(`op-tab-leader-${tabDef.leader}`);
+    
+    const newTextSpan = document.createElement('span');
+    newTextSpan.className = `op-tab-block op-tab-block-${tabDef.align === 'decimal' ? 'right' : tabDef.align}`;
+
+    try {
+        const extractRange = document.createRange();
+        extractRange.setStart(range.endContainer, range.endOffset);
+        extractRange.setEndAfter(currentSpan.lastChild || currentSpan);
+        const extractedContent = extractRange.extractContents();
+        if (extractedContent.textContent.length > 0) {
+            newTextSpan.appendChild(extractedContent);
+        } else {
+            newTextSpan.innerHTML = '&#8203;';
+        }
+    } catch (err) {
+        newTextSpan.innerHTML = '&#8203;';
+    }
+    
+    block.insertBefore(spacer, currentSpan.nextSibling);
+    block.insertBefore(newTextSpan, spacer.nextSibling);
+    
+    const newRange = document.createRange();
+    newRange.selectNodeContents(newTextSpan);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+    
+    pushHistory();
+};
+
 function toggleShapeMenu(btn) {
     const m = document.getElementById('shape-dropdown');
     const r = btn.getBoundingClientRect();
@@ -5468,6 +5677,13 @@ window.initRulers = function() {
     const vp = document.getElementById('viewport');
     if(vp) vp.addEventListener('scroll', window.syncRulers);
     window.addEventListener('resize', window.syncRulers);
+
+    h.addEventListener('dblclick', (e) => {
+        if (!state.selectedEl || !state.selectedEl.querySelector('[contenteditable="true"]')) return;
+        // Make sure we have an active indent block assigned
+        if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
+        window.tabDialog.open();
+    });
 
     window.initIndentMarkersLogic();
 
@@ -6630,6 +6846,7 @@ function deselect() {
     state.selectedEl = null;
     document.getElementById('status-msg').innerText = "Ready";
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+    if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
 }
 
 // 6. Override Delete
@@ -20405,6 +20622,33 @@ window.addEventListener('beforeprint', () => {
 
                 if (borderHtml) pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
                 stagingArea.appendChild(pageWrapper);
+
+                // --- TAB PRINT RESCUE MODULE ---
+                // html2canvas fails spectacularly on flex-grow calculations.
+                // We bake exact computed pixel widths into the inline styles to freeze the layout.
+                pageWrapper.querySelectorAll('.op-tab-container').forEach(container => {
+                    const children = Array.from(container.children);
+                    children.forEach(child => {
+                        const w = child.getBoundingClientRect().width;
+                        child.style.flexGrow = '0';
+                        child.style.flexShrink = '0';
+                        child.style.width = `${w}px`;
+                        child.style.minWidth = `${w}px`;
+                        child.style.maxWidth = `${w}px`;
+                        
+                        // html2canvas gradient fallback
+                        if (child.classList.contains('op-tab-spacer')) {
+                            child.style.overflow = 'hidden';
+                            child.style.whiteSpace = 'nowrap';
+                            if (child.classList.contains('op-tab-leader-dotted') || child.classList.contains('op-tab-leader-dashed')) {
+                                child.style.backgroundImage = 'none';
+                                const char = child.classList.contains('op-tab-leader-dotted') ? '.' : '-';
+                                child.innerText = char.repeat(Math.ceil(w / 6) + 2);
+                                child.style.letterSpacing = child.classList.contains('op-tab-leader-dotted') ? '4px' : '2px';
+                            }
+                        }
+                    });
+                });
 
                 pageWrapper.querySelectorAll('.wa-text').forEach(flattenWaTextForPrint);
 

@@ -2526,3 +2526,56 @@ svg .shape-path, svg .shape-path * {
     pointer-events: none;
     z-index: 99999;
 }
+
+/* --- ADVANCED TAB RENDERING ENGINE --- */
+.op-tab-container {
+    display: flex !important;
+    width: 100%;
+    align-items: baseline;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.op-tab-block {
+    flex-grow: 0;
+    white-space: pre-wrap;
+    min-width: 1px;
+}
+
+.op-tab-block-left { text-align: left; }
+.op-tab-block-right { text-align: right; }
+.op-tab-block-center { text-align: center; }
+
+.op-tab-spacer {
+    flex-grow: 1;
+    min-width: 20px;
+    display: inline-block;
+    vertical-align: baseline;
+    position: relative;
+    user-select: none;
+    pointer-events: none;
+}
+.op-tab-spacer::after {
+    content: '\00a0';
+    visibility: hidden;
+}
+
+.op-tab-leader-dotted {
+    background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+    background-size: 8px 100%;
+    background-position: bottom;
+    background-repeat: repeat-x;
+}
+
+.op-tab-leader-dashed {
+    background-image: linear-gradient(to right, currentColor 4px, transparent 4px);
+    background-size: 8px 1px;
+    background-position: bottom;
+    background-repeat: repeat-x;
+}
+
+.op-tab-leader-solid {
+    border-bottom: 1px solid currentColor;
+}
