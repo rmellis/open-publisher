@@ -192,7 +192,10 @@ document.addEventListener('selectionchange', () => {
             const range = sel.getRangeAt(0);
             if(paper.contains(range.commonAncestorContainer)) {
                 state.lastRange = range.cloneRange();
-                if(state.selectedEl) updateFloatToolbarValues();
+                if(state.selectedEl) {
+                    updateFloatToolbarValues();
+                    if(window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
+                }
             }
         }
     }, 150); 
@@ -5452,12 +5455,21 @@ window.initRulers = function() {
     if(!h || !v) return;
 
     // Inject raw hardware canvases instead of thousands of HTML divs!
-    h.innerHTML = '<canvas id="ruler-h-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>';
+    h.innerHTML = `
+        <canvas id="ruler-h-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+        <div id="indent-markers" class="indent-marker-container">
+            <div id="im-first-line" class="indent-marker im-first-line" title="First Line Indent"></div>
+            <div id="im-hanging" class="indent-marker im-hanging" title="Hanging Indent"></div>
+            <div id="im-left" class="indent-marker im-left" title="Left Indent"></div>
+        </div>
+    `;
     v.innerHTML = '<canvas id="ruler-v-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>';
 
     const vp = document.getElementById('viewport');
     if(vp) vp.addEventListener('scroll', window.syncRulers);
     window.addEventListener('resize', window.syncRulers);
+
+    window.initIndentMarkersLogic();
 
     // Force the first draw
     setTimeout(window.syncRulers, 50);
@@ -5577,6 +5589,128 @@ window.syncRulers = function() {
         }
     }
     vCtx.stroke();
+
+    if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
+};
+
+window.initIndentMarkersLogic = function() {
+    let draggingMarker = null;
+    let startX = 0;
+    let startTextIndent = 0;
+    let startPaddingLeft = 0;
+
+    const markers = {
+        first: document.getElementById('im-first-line'),
+        hanging: document.getElementById('im-hanging'),
+        left: document.getElementById('im-left')
+    };
+
+    if (!markers.first) return;
+
+    function onMouseDown(e, type) {
+        if (!state.selectedEl || !window._activeIndentBlock) return;
+        draggingMarker = type;
+        startX = e.clientX;
+        
+        startTextIndent = parseFloat(window.getComputedStyle(window._activeIndentBlock).textIndent) || 0;
+        startPaddingLeft = parseFloat(window.getComputedStyle(window._activeIndentBlock).paddingLeft) || 0;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    markers.first.addEventListener('mousedown', (e) => onMouseDown(e, 'first'));
+    markers.hanging.addEventListener('mousedown', (e) => onMouseDown(e, 'hanging'));
+    markers.left.addEventListener('mousedown', (e) => onMouseDown(e, 'left'));
+
+    function onMouseMove(e) {
+        if (!draggingMarker || !window._activeIndentBlock) return;
+        const zoom = state.zoom || 1.0;
+        const deltaX = (e.clientX - startX) / zoom;
+        
+        if (draggingMarker === 'first') {
+            window._activeIndentBlock.style.textIndent = `${startTextIndent + deltaX}px`;
+        } else if (draggingMarker === 'hanging') {
+            let appliedDelta = deltaX;
+            if (startPaddingLeft + deltaX < 0) appliedDelta = -startPaddingLeft;
+            window._activeIndentBlock.style.paddingLeft = `${startPaddingLeft + appliedDelta}px`;
+            window._activeIndentBlock.style.textIndent = `${startTextIndent - appliedDelta}px`;
+        } else if (draggingMarker === 'left') {
+            let appliedDelta = deltaX;
+            if (startPaddingLeft + deltaX < 0) appliedDelta = -startPaddingLeft;
+            window._activeIndentBlock.style.paddingLeft = `${startPaddingLeft + appliedDelta}px`;
+        }
+        
+        window.updateIndentMarkersPosition();
+    }
+
+    function onMouseUp(e) {
+        draggingMarker = null;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        pushHistory();
+    }
+};
+
+window.updateIndentMarkersPosition = function() {
+    const container = document.getElementById('indent-markers');
+    if (!container) return;
+
+    if (!state.selectedEl || !state.selectedEl.querySelector('[contenteditable="true"]')) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Find active block
+    let activeBlock = null;
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) {
+        let node = sel.getRangeAt(0).commonAncestorContainer;
+        while (node && node !== state.selectedEl) {
+            if (node.nodeType === 1 && (node.tagName === 'DIV' || node.tagName === 'P')) {
+                activeBlock = node;
+                break;
+            }
+            node = node.parentNode;
+        }
+    }
+    
+    // Fallback to the contenteditable container itself if no block is found
+    if (!activeBlock) {
+        activeBlock = state.selectedEl.querySelector('[contenteditable="true"]');
+    }
+
+    window._activeIndentBlock = activeBlock;
+
+    const currentTextIndent = parseFloat(window.getComputedStyle(activeBlock).textIndent) || 0;
+    const currentPaddingLeft = parseFloat(window.getComputedStyle(activeBlock).paddingLeft) || 0;
+
+    const paperEl = document.getElementById('paper');
+    const hCanvas = document.getElementById('ruler-h-canvas');
+    if(!paperEl || !hCanvas) return;
+
+    const zoom = state.zoom || 1.0;
+    const hRect = hCanvas.parentElement.getBoundingClientRect();
+    const elRect = activeBlock.getBoundingClientRect();
+    
+    const baseOffsetX = (elRect.left - hRect.left);
+    const hangingPos = baseOffsetX + (currentPaddingLeft * zoom);
+    const firstLinePos = hangingPos + (currentTextIndent * zoom);
+
+    const markers = {
+        first: document.getElementById('im-first-line'),
+        hanging: document.getElementById('im-hanging'),
+        left: document.getElementById('im-left')
+    };
+
+    if (markers.first && markers.hanging && markers.left) {
+        container.style.display = 'block';
+        markers.first.style.left = `${firstLinePos - 5}px`;
+        markers.hanging.style.left = `${hangingPos - 5}px`;
+        markers.left.style.left = `${hangingPos - 5}px`;
+    }
 };
 
 window.setZoom = function(z) {

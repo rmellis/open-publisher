@@ -558,6 +558,32 @@ body {
 .tick-v { width: 100%; height: 1px; left: 0; }
 .tick-num { position: absolute; font-size: 8px; color: #333; }
 
+/* --- RULER INDENT MARKERS --- */
+.indent-marker-container {
+    position: absolute; top: 0; left: 0; bottom: 0; width: 0;
+    z-index: 50; display: none; pointer-events: none;
+}
+.indent-marker {
+    position: absolute; cursor: ew-resize; pointer-events: auto;
+    left: -5px; width: 10px;
+}
+.im-first-line {
+    top: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 7px solid #444; background: transparent !important;
+}
+.im-hanging {
+    bottom: 6px; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 7px solid #444; background: transparent !important;
+}
+.im-left {
+    bottom: 0; height: 5px; background: #444;
+}
+.im-first-line:hover, .im-first-line.active { border-top-color: var(--pub-color); }
+.im-hanging:hover, .im-hanging.active { border-bottom-color: var(--pub-color); }
+.im-left:hover, .im-left.active { background: var(--pub-color); }
+
 .viewport {
     overflow: auto;
     position: relative;
