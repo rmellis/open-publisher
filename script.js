@@ -16224,6 +16224,9 @@ window.handleMouseUp = function() {
         return { minR, maxR, minC, maxC };
     }
 
+    // --- CUSTOM TABLE CELL RESIZER & MULTI-CELL SELECTION LOGIC ---
+    window._tableResizeState = null;
+
     // Bind document-level drag events for tables
     document.addEventListener('mousedown', (e) => {
         const cell = e.target.closest('td, th');
@@ -16246,12 +16249,166 @@ window.handleMouseUp = function() {
         }
 
         if (cell && cell.closest('.workspace')) {
-            window._tableSelectionStartCell = cell;
-            // Don't add the visual class yet; wait until they actually drag across a boundary
+            const rect = cell.getBoundingClientRect();
+            const isRightEdge = Math.abs(e.clientX - rect.right) <= 8;
+            const isBottomEdge = Math.abs(e.clientY - rect.bottom) <= 8;
+            const isLeftEdge = Math.abs(e.clientX - rect.left) <= 8;
+            const isTopEdge = Math.abs(e.clientY - rect.top) <= 8;
+            
+            const isBorderClick = isRightEdge || isBottomEdge || isLeftEdge || isTopEdge;
+            
+            if (isBorderClick && !e.target.closest('.resize-handle')) {
+                const table = cell.closest('table');
+                const gridInfo = getTableGridMap(table);
+                const cInfo = gridInfo.cellMap.get(cell);
+                if (!cInfo) return;
+
+                let cellA = null, cellB = null;
+                let dir = '';
+                
+                if (isRightEdge || isLeftEdge) {
+                    dir = 'col';
+                    const targetCol = isRightEdge ? (cInfo.c + cInfo.cs - 1) : (cInfo.c - 1);
+                    if (targetCol >= 0 && gridInfo.grid[0]) {
+                        cellA = gridInfo.grid[0][targetCol] || gridInfo.grid[cInfo.r][targetCol];
+                        cellB = gridInfo.grid[0][targetCol + 1] || gridInfo.grid[cInfo.r][targetCol + 1];
+                    }
+                } else if (isBottomEdge || isTopEdge) {
+                    dir = 'row';
+                    const targetRow = isBottomEdge ? (cInfo.r + cInfo.rs - 1) : (cInfo.r - 1);
+                    if (targetRow >= 0 && gridInfo.grid[targetRow]) {
+                        cellA = (gridInfo.grid[targetRow][0] || cell).parentElement;
+                        if (gridInfo.grid[targetRow + 1]) {
+                            cellB = (gridInfo.grid[targetRow + 1][0] || cell).parentElement;
+                        }
+                    }
+                }
+                
+                if (!cellA || !cellB || cellA === cellB) {
+                    // This is an OUTER table edge. We do not want to resize the table via borders.
+                    // Return early so the native element drag logic can take over to move it.
+                    return;
+                }
+
+                // START CUSTOM RESIZE for INTERNAL boundaries
+                e.preventDefault(); // Stop text selection
+                e.stopPropagation(); // Stop element drag logic from firing
+                e.stopImmediatePropagation();
+                
+                // Freeze all column/row dimensions to absolute pixels to prevent layout shifts during zero-sum resizing
+                if (dir === 'col') {
+                    const firstRowCells = table.rows[0]?.cells;
+                    if (firstRowCells) {
+                        for (let i = 0; i < firstRowCells.length; i++) {
+                            const c = firstRowCells[i];
+                            c.style.width = c.offsetWidth + 'px';
+                        }
+                    }
+                } else if (dir === 'row') {
+                    const rows = table.rows;
+                    for (let i = 0; i < rows.length; i++) {
+                        const r = rows[i];
+                        r.style.height = r.offsetHeight + 'px';
+                    }
+                }
+                
+                window._tableResizeState = {
+                    dir: dir,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    cellA: cellA,
+                    cellB: cellB,
+                    startWA: cellA.offsetWidth || 0,
+                    startWB: cellB ? cellB.offsetWidth : 0,
+                    startHA: cellA.offsetHeight || 0,
+                    startHB: cellB ? cellB.offsetHeight : 0
+                };
+                return;
+            }
+
+            if (!isBorderClick && !e.target.closest('.resize-handle')) {
+                window._tableSelectionStartCell = cell;
+                // Don't add the visual class yet; wait until they actually drag across a boundary
+            }
         }
-    });
+    }, true);
 
     document.addEventListener('mousemove', (e) => {
+        // --- CUSTOM TABLE RESIZER (ACTIVE DRAG) ---
+        if (window._tableResizeState) {
+            const s = window._tableResizeState;
+            if (s.dir === 'col') {
+                const dx = e.clientX - s.startX;
+                const minW = 15;
+                let actualDx = dx;
+                
+                if (s.startWA + actualDx < minW) actualDx = minW - s.startWA;
+                if (s.cellB && s.startWB - actualDx < minW) actualDx = s.startWB - minW;
+                
+                s.cellA.style.width = (s.startWA + actualDx) + 'px';
+                if (s.cellB) s.cellB.style.width = (s.startWB - actualDx) + 'px';
+            } else if (s.dir === 'row') {
+                const dy = e.clientY - s.startY;
+                const minH = 15;
+                let actualDy = dy;
+                
+                if (s.startHA + actualDy < minH) actualDy = minH - s.startHA;
+                if (s.cellB && s.startHB - actualDy < minH) actualDy = s.startHB - minH;
+                
+                s.cellA.style.height = (s.startHA + actualDy) + 'px';
+                if (s.cellB) s.cellB.style.height = (s.startHB - actualDy) + 'px';
+            }
+            return;
+        }
+        
+        // --- HOVER CURSOR CHANGER ---
+        const cell = e.target.closest('td, th');
+        if (cell && cell.closest('.workspace') && !window._tableSelectionStartCell && !e.buttons) {
+            const rect = cell.getBoundingClientRect();
+            const isRightEdge = Math.abs(e.clientX - rect.right) <= 8;
+            const isBottomEdge = Math.abs(e.clientY - rect.bottom) <= 8;
+            const isLeftEdge = Math.abs(e.clientX - rect.left) <= 8;
+            const isTopEdge = Math.abs(e.clientY - rect.top) <= 8;
+            
+            if (isRightEdge || isBottomEdge || isLeftEdge || isTopEdge) {
+                const table = cell.closest('table');
+                const gridInfo = getTableGridMap(table);
+                const cInfo = gridInfo.cellMap.get(cell);
+                
+                let cellA = null, cellB = null;
+                if (cInfo) {
+                    if (isRightEdge || isLeftEdge) {
+                        const targetCol = isRightEdge ? (cInfo.c + cInfo.cs - 1) : (cInfo.c - 1);
+                        if (targetCol >= 0 && gridInfo.grid[0]) {
+                            cellA = gridInfo.grid[0][targetCol] || gridInfo.grid[cInfo.r][targetCol];
+                            cellB = gridInfo.grid[0][targetCol + 1] || gridInfo.grid[cInfo.r][targetCol + 1];
+                        }
+                    } else if (isBottomEdge || isTopEdge) {
+                        const targetRow = isBottomEdge ? (cInfo.r + cInfo.rs - 1) : (cInfo.r - 1);
+                        if (targetRow >= 0 && gridInfo.grid[targetRow]) {
+                            cellA = (gridInfo.grid[targetRow][0] || cell).parentElement;
+                            if (gridInfo.grid[targetRow + 1]) {
+                                cellB = (gridInfo.grid[targetRow + 1][0] || cell).parentElement;
+                            }
+                        }
+                    }
+                }
+                
+                if (!cellA || !cellB || cellA === cellB) {
+                    cell.style.cursor = 'move';
+                } else if (isRightEdge || isLeftEdge) {
+                    cell.style.cursor = 'col-resize';
+                } else {
+                    cell.style.cursor = 'row-resize';
+                }
+            } else {
+                cell.style.cursor = 'text';
+            }
+        } else if (cell && !e.buttons) {
+             cell.style.cursor = 'text';
+        }
+
+        // --- EXISTING MULTI-SELECT LOGIC ---
         if (!window._tableSelectionStartCell) return;
         if (e.buttons !== 1) { // Left mouse button must be held down to drag
             window._tableSelectionStartCell = null;
@@ -16262,23 +16419,23 @@ window.handleMouseUp = function() {
         const hoveredEl = document.elementFromPoint(e.clientX, e.clientY);
         if (!hoveredEl) return;
 
-        const cell = hoveredEl.closest('td, th');
-        if (!cell) return;
+        const hoverCell = hoveredEl.closest('td, th');
+        if (!hoverCell) return;
         
-        const table = cell.closest('table');
+        const table = hoverCell.closest('table');
         const startTable = window._tableSelectionStartCell.closest('table');
         if (table !== startTable) return;
 
         // If we are still just inside the original cell, don't trigger the multi-cell selection yet
         // This preserves native text selection behavior within a single cell.
-        if (cell === window._tableSelectionStartCell && window._tableSelectedCells.length <= 1) return;
+        if (hoverCell === window._tableSelectionStartCell && window._tableSelectedCells.length <= 1) return;
 
         // Clear previous visual highlights
         window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
         window._tableSelectedCells = [];
 
         const gridInfo = getTableGridMap(table);
-        const bbox = getBoundingBox(gridInfo, window._tableSelectionStartCell, cell);
+        const bbox = getBoundingBox(gridInfo, window._tableSelectionStartCell, hoverCell);
         if (!bbox) return;
 
         // Collect all cells in bbox
@@ -16299,6 +16456,7 @@ window.handleMouseUp = function() {
     });
 
     document.addEventListener('mouseup', () => {
+        window._tableResizeState = null;
         // Just stop tracking the drag initiator. The selection bounding box remains highlighted.
         window._tableSelectionStartCell = null;
     });
