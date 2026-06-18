@@ -7638,8 +7638,13 @@ const ContextMenuSystem = {
                 html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
                 html += this.buildDivider();
                 
+                const targetCell = e.target.closest('td, th');
+                const isMerged = targetCell && (parseInt(targetCell.getAttribute('colspan')) > 1 || parseInt(targetCell.getAttribute('rowspan')) > 1);
+
                 if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
                     html += this.buildItem('Merge Cells', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeSelectedCells()');
+                } else if (isMerged) {
+                    html += this.buildItem('Split Cells (revert)', 'fa-object-ungroup', 'if(window.ContextRibbonActions) ContextRibbonActions.splitSelectedCell()');
                 } else {
                     html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
                     html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
@@ -8433,6 +8438,14 @@ window.switchTab = function(t) {
                 <div class="op-sidebar-grid-btn" title="Bottom Center" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'center')"><i class="fas fa-align-center"></i></div>
                 <div class="op-sidebar-grid-btn" title="Bottom Right" onclick="if(window.ContextRibbonActions) ContextRibbonActions.cellAlign('bottom', 'right')"><i class="fas fa-align-right"></i></div>
             </div>
+        </div>
+
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Cell Margins</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Padding</span><span class="op-slider-num" id="val-cell-padding">0px</span></div>
+                <input type="range" class="op-table-slider" id="table-padding-slider" min="0" max="50" value="0" step="1" oninput="if(window.ContextRibbonActions) ContextRibbonActions.setCellPadding(this.value)" onchange="if(window.pushHistory) pushHistory()">
+            </div>
         </div>`;
 
     document.querySelector('.workspace').appendChild(panel);
@@ -8600,7 +8613,19 @@ window.ContextRibbonSystem = {
         const isImage = el.querySelector('img'), isShape = el.getAttribute('data-type') === 'shape', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
-        else if (isTable) { document.getElementById('tab-table-design').style.display = 'inline-block'; tabIdToOpen = 'table-design'; document.getElementById('op-table-sidebar')?.classList.add('visible'); } 
+        else if (isTable) { 
+            document.getElementById('tab-table-design').style.display = 'inline-block'; 
+            tabIdToOpen = 'table-design'; 
+            document.getElementById('op-table-sidebar')?.classList.add('visible'); 
+            const firstCell = el.querySelector('td, th');
+            if (firstCell) {
+                const padVal = parseInt(firstCell.style.padding) || 0;
+                const slider = document.getElementById('table-padding-slider');
+                const label = document.getElementById('val-cell-padding');
+                if (slider) slider.value = padVal;
+                if (label) label.innerText = padVal + 'px';
+            }
+        }
         else if (isShape) { document.getElementById('tab-format-shape').style.display = 'inline-block'; tabIdToOpen = 'format-shape'; } 
         else if (isWordArt) { document.getElementById('tab-format-wordart').style.display = 'inline-block'; tabIdToOpen = 'format-wordart'; } 
         else if (isText) { 
@@ -16427,6 +16452,64 @@ window.handleMouseUp = function() {
         pushHistory();
     };
 
+    ContextRibbonActions.splitSelectedCell = function() {
+        const anchorCell = this.getActiveCell();
+        if (!anchorCell) return;
+
+        const rSpan = parseInt(anchorCell.getAttribute('rowspan')) || 1;
+        const cSpan = parseInt(anchorCell.getAttribute('colspan')) || 1;
+
+        if (rSpan <= 1 && cSpan <= 1) return;
+
+        const table = anchorCell.closest('table');
+        if (!table) return;
+
+        const gridInfo = getTableGridMap(table);
+        const anchorInfo = gridInfo.cellMap.get(anchorCell);
+        if (!anchorInfo) return;
+
+        const startR = anchorInfo.r;
+        const startC = anchorInfo.c;
+
+        anchorCell.removeAttribute('rowspan');
+        anchorCell.removeAttribute('colspan');
+
+        for (let i = startR; i < startR + rSpan; i++) {
+            const tr = table.rows[i];
+            if (!tr) continue;
+
+            const colsToInsert = (i === startR) ? cSpan - 1 : cSpan;
+            
+            let insertBeforeNode = null;
+            for (let c = 0; c < tr.cells.length; c++) {
+                const physicalCell = tr.cells[c];
+                const physicalCellInfo = gridInfo.cellMap.get(physicalCell);
+                if (physicalCellInfo && physicalCellInfo.c >= startC + cSpan) {
+                    insertBeforeNode = physicalCell;
+                    break;
+                }
+            }
+
+            for (let k = 0; k < colsToInsert; k++) {
+                const newTd = document.createElement(anchorCell.tagName);
+                newTd.innerHTML = '<br>';
+                
+                if (insertBeforeNode) {
+                    tr.insertBefore(newTd, insertBeforeNode);
+                } else {
+                    tr.appendChild(newTd);
+                }
+            }
+        }
+
+        if (window._tableSelectedCells) {
+            window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+            window._tableSelectedCells = [];
+            window._tableSelectionStartCell = null;
+        }
+
+        pushHistory();
+    };
 
     ContextRibbonActions.cellAlign = function(vAlign, hAlign) {
         const cell = this.getActiveCell();
@@ -16435,6 +16518,20 @@ window.handleMouseUp = function() {
             cell.style.textAlign = hAlign;
             pushHistory();
         }
+    };
+
+    ContextRibbonActions.setCellPadding = function(val) {
+        const table = getTable();
+        if (!table) return;
+        
+        let targetCells = window._tableSelectedCells && window._tableSelectedCells.length > 0 ? window._tableSelectedCells : Array.from(table.querySelectorAll('td, th'));
+        
+        targetCells.forEach(td => {
+            td.style.padding = val + 'px';
+        });
+        
+        const label = document.getElementById('val-cell-padding');
+        if (label) label.innerText = val + 'px';
     };
 
     ContextRibbonActions.distributeCols = function() {

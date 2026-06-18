@@ -1504,6 +1504,18 @@ svg .shape-path, svg .shape-path * {
         .op-sidebar-grid-btn:hover { background: #fff; border-color: var(--pub-color, #007670); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .op-sidebar-grid-btn i { font-size: 14px; color: #555; }
 
+        /* Table Sidebar Slider (Teal Green Theme) */
+        .op-table-slider { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; cursor: pointer; margin-bottom: 10px; }
+        .op-table-slider::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #ccc; border-radius: 2px; }
+        .op-table-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--pub-color, #007670); border: 2.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-top: -6.5px; transition: transform 0.1s;
+        }
+        .op-table-slider:active::-webkit-slider-thumb { transform: scale(1.15); }
+        .op-table-slider::-moz-range-track { height: 3px; background: #ccc; border-radius: 2px; }
+        .op-table-slider::-moz-range-thumb { height: 14px; width: 14px; background: var(--pub-color, #007670); border: 2.5px solid #fff; border-radius: 50%; }
+
 /* Extracted Block 3 */
 .contextual-tab { display: none; font-weight: bold; margin-left: 5px; border-top: 3px solid transparent; color: white !important; opacity: 0.9; }
                 .contextual-tab.active { background: #fff !important; border-bottom: 2px solid #fff; color: #333 !important; opacity: 1; }
