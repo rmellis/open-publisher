@@ -16751,13 +16751,49 @@ window.handleMouseUp = function() {
 
     ContextRibbonActions.distributeCols = function() {
         const table = getTable();
-        if (table && table.rows.length > 0) {
-            const cols = table.rows[0].cells.length;
-            const pct = (100 / cols).toFixed(2) + '%';
-            for(let r=0; r<table.rows.length; r++) {
-                for(let c=0; c<table.rows[r].cells.length; c++) {
-                    table.rows[r].cells[c].style.width = pct;
+        if (!table || table.rows.length === 0) return;
+        
+        const targets = this.getTargetCells();
+        const gridInfo = getTableGridMap(table);
+        let targetCols = new Set();
+        
+        if (!targets || targets.length === 0 || targets.length === table.querySelectorAll('td, th').length) {
+            for(let c=0; c<gridInfo.grid[0].length; c++) targetCols.add(c);
+        } else {
+            targets.forEach(cell => {
+                const info = gridInfo.cellMap.get(cell);
+                if (info) {
+                    for (let c = info.c; c < info.c + info.cs; c++) targetCols.add(c);
                 }
+            });
+        }
+        
+        const colsArr = Array.from(targetCols);
+        if (colsArr.length > 0) {
+            let totalWidth = 0;
+            const cellsToResize = new Set();
+            const row0 = gridInfo.grid[0];
+            
+            // Freeze all columns first
+            const firstRowCells = table.rows[0].cells;
+            for(let i=0; i<firstRowCells.length; i++) {
+                firstRowCells[i].style.width = firstRowCells[i].offsetWidth + 'px';
+            }
+            
+            colsArr.forEach(c => {
+                const cell = row0[c];
+                if (cell) cellsToResize.add(cell);
+            });
+            
+            cellsToResize.forEach(cell => {
+                totalWidth += cell.offsetWidth;
+            });
+            
+            if (cellsToResize.size > 0) {
+                const newW = (totalWidth / cellsToResize.size) + 'px';
+                cellsToResize.forEach(cell => {
+                    cell.style.width = newW;
+                });
             }
             pushHistory();
         }
@@ -16765,12 +16801,37 @@ window.handleMouseUp = function() {
 
     ContextRibbonActions.distributeRows = function() {
         const table = getTable();
-        if (table) {
-            const rows = table.rows.length;
-            const pct = (100 / rows).toFixed(2) + '%';
-            for(let r=0; r<table.rows.length; r++) {
-                table.rows[r].style.height = pct;
+        if (!table || table.rows.length === 0) return;
+        
+        const targets = this.getTargetCells();
+        let targetRows = new Set();
+        
+        if (!targets || targets.length === 0 || targets.length === table.querySelectorAll('td, th').length) {
+            for(let r=0; r<table.rows.length; r++) targetRows.add(r);
+        } else {
+            const gridInfo = getTableGridMap(table);
+            targets.forEach(cell => {
+                const info = gridInfo.cellMap.get(cell);
+                if (info) {
+                    for (let r = info.r; r < info.r + info.rs; r++) targetRows.add(r);
+                }
+            });
+        }
+        
+        const rowsArr = Array.from(targetRows);
+        if (rowsArr.length > 0) {
+            let totalHeight = 0;
+            // Freeze all rows first to prevent layout shifts
+            for(let i=0; i<table.rows.length; i++) {
+                table.rows[i].style.height = table.rows[i].offsetHeight + 'px';
             }
+            rowsArr.forEach(r => {
+                if (table.rows[r]) totalHeight += table.rows[r].offsetHeight;
+            });
+            const newH = (totalHeight / rowsArr.length) + 'px';
+            rowsArr.forEach(r => {
+                if (table.rows[r]) table.rows[r].style.height = newH;
+            });
             pushHistory();
         }
     };
