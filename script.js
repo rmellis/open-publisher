@@ -16162,6 +16162,47 @@ window.handleMouseUp = function() {
     window._tableSelectionStartCell = null;
     window._tableSelectedCells = [];
 
+    // --- NEW: Table Select-All Handle ---
+    const tableSelectHandle = document.createElement('div');
+    tableSelectHandle.id = 'op-table-select-handle';
+    tableSelectHandle.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+    tableSelectHandle.style.cssText = `
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: var(--pub-color, #007670);
+        color: white;
+        border-radius: 3px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        cursor: pointer;
+        z-index: 10000;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        transform: translate(-9px, -9px);
+    `;
+    document.body.appendChild(tableSelectHandle);
+
+    let handleTargetTable = null;
+
+    tableSelectHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (handleTargetTable) {
+            window._tableSelectionStartCell = null;
+            window._tableSelectedCells = Array.from(handleTargetTable.querySelectorAll('td, th'));
+            document.querySelectorAll('.op-selected-cell').forEach(c => c.classList.remove('op-selected-cell'));
+            window._tableSelectedCells.forEach(c => c.classList.add('op-selected-cell'));
+            
+            const pubEl = handleTargetTable.closest('.pub-element');
+            if (pubEl && typeof selectElement === 'function') {
+                selectElement(pubEl);
+            }
+            if (window.ContextRibbonActions) ContextRibbonActions.showRibbons();
+        }
+    });
+
     // Helper: Map DOM table to a 2D logical grid to handle colspans/rowspans
     function getTableGridMap(table) {
         const grid = [];
@@ -16243,7 +16284,7 @@ window.handleMouseUp = function() {
 
         // Clear previous selection if clicking outside or left-clicking
         if (window._tableSelectedCells.length > 0) {
-            window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+            document.querySelectorAll('.op-selected-cell').forEach(c => c.classList.remove('op-selected-cell'));
             window._tableSelectedCells = [];
             window._tableSelectionStartCell = null;
         }
@@ -16334,6 +16375,36 @@ window.handleMouseUp = function() {
     }, true);
 
     document.addEventListener('mousemove', (e) => {
+        // --- TABLE SELECT HANDLE POSITIONING ---
+        if (!e.buttons) {
+            const isOnHandle = e.target.closest('#op-table-select-handle');
+            let table = null;
+            
+            const cell = e.target.closest('td, th');
+            if (cell && cell.closest('.workspace')) {
+                table = cell.closest('table');
+            } else {
+                const pubEl = e.target.closest('.pub-element');
+                if (pubEl && pubEl.querySelector('table')) {
+                    table = pubEl.querySelector('table');
+                }
+            }
+            
+            if (table) {
+                const rect = table.getBoundingClientRect();
+                tableSelectHandle.style.display = 'flex';
+                tableSelectHandle.style.left = (rect.left + window.scrollX) + 'px';
+                tableSelectHandle.style.top = (rect.top + window.scrollY) + 'px';
+                handleTargetTable = table;
+            } else if (!isOnHandle) {
+                tableSelectHandle.style.display = 'none';
+                handleTargetTable = null;
+            }
+        } else if (handleTargetTable && e.buttons > 0) {
+            // hide handle while dragging
+            tableSelectHandle.style.display = 'none';
+        }
+
         // --- CUSTOM TABLE RESIZER (ACTIVE DRAG) ---
         if (window._tableResizeState) {
             const s = window._tableResizeState;
@@ -16431,7 +16502,7 @@ window.handleMouseUp = function() {
         if (hoverCell === window._tableSelectionStartCell && window._tableSelectedCells.length <= 1) return;
 
         // Clear previous visual highlights
-        window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+        document.querySelectorAll('.op-selected-cell').forEach(c => c.classList.remove('op-selected-cell'));
         window._tableSelectedCells = [];
 
         const gridInfo = getTableGridMap(table);
@@ -16661,7 +16732,7 @@ window.handleMouseUp = function() {
         anchorCell.innerHTML = mergedHtml;
         
         // Clear selection
-        window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+        document.querySelectorAll('.op-selected-cell').forEach(c => c.classList.remove('op-selected-cell'));
         window._tableSelectedCells = [];
         
         pushHistory();
@@ -16718,7 +16789,7 @@ window.handleMouseUp = function() {
         }
 
         if (window._tableSelectedCells) {
-            window._tableSelectedCells.forEach(c => c.classList?.remove('op-selected-cell'));
+            document.querySelectorAll('.op-selected-cell').forEach(c => c.classList.remove('op-selected-cell'));
             window._tableSelectedCells = [];
             window._tableSelectionStartCell = null;
         }
