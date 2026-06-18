@@ -8575,7 +8575,48 @@ window.ContextRibbonActions = {
     insertTableRow: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { const row = state.selectedEl.querySelector('table').insertRow(); for(let i=0; i<state.selectedEl.querySelector('table').rows[0].cells.length; i++) { const cell = row.insertCell(); cell.style.cssText = "border-right:1px solid #000; border-bottom:1px solid #000; height:20px; outline:none;"; cell.setAttribute('contenteditable', 'true'); } pushHistory(); } },
     insertTableCol: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { for(let i=0; i<state.selectedEl.querySelector('table').rows.length; i++) { const cell = state.selectedEl.querySelector('table').rows[i].insertCell(); cell.style.cssText = "border-right:1px solid #000; border-bottom:1px solid #000; min-width:20px; outline:none;"; cell.setAttribute('contenteditable', 'true'); } pushHistory(); } },
     tableStyle: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { const t = state.selectedEl.querySelector('table'); for(let i=0; i<t.rows.length; i++) { t.rows[i].style.background = (i % 2 === 0) ? '#f2f2f2' : '#ffffff'; if(i===0) { t.rows[i].style.background = 'var(--pub-color)'; t.rows[i].style.color='white'; t.rows[i].style.fontWeight='bold'; } } pushHistory(); } },
-    tableBorders: function() { if(state.selectedEl && state.selectedEl.querySelector('table') && typeof DialogSystem !== 'undefined') { DialogSystem.show('Table Borders', '<div class="input-group"><label>Thickness (px):</label><input type="number" id="ctx-tbl-border" value="1" min="0" max="10"></div>', () => { const thic = document.getElementById('ctx-tbl-border').value; const t = state.selectedEl.querySelector('table'); t.style.borderTop = t.style.borderLeft = `${thic}px solid #000`; for(let r=0; r<t.rows.length; r++) { for(let c=0; c<t.rows[r].cells.length; c++) { t.rows[r].cells[c].style.borderRight = t.rows[r].cells[c].style.borderBottom = `${thic}px solid #000`; } } pushHistory(); }); } }
+    tableBorders: function() {
+        if(state.selectedEl && state.selectedEl.querySelector('table') && typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Table Borders', `
+                <div class="input-group">
+                    <label>Thickness (px):</label>
+                    <input type="number" id="ctx-tbl-border" value="1" min="0" max="64">
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label>Diagonal Line (Selected Cells):</label>
+                    <select id="ctx-tbl-diagonal" style="width:100%; padding:5px;">
+                        <option value="none">None</option>
+                        <option value="to bottom right">Top-Left to Bottom-Right</option>
+                        <option value="to top right">Bottom-Left to Top-Right</option>
+                    </select>
+                </div>
+            `, () => {
+                const thic = document.getElementById('ctx-tbl-border').value;
+                const diag = document.getElementById('ctx-tbl-diagonal').value;
+                const t = state.selectedEl.querySelector('table');
+                
+                t.style.borderTop = t.style.borderLeft = `${thic}px solid #000`;
+                for(let r=0; r<t.rows.length; r++) {
+                    for(let c=0; c<t.rows[r].cells.length; c++) {
+                        t.rows[r].cells[c].style.borderRight = t.rows[r].cells[c].style.borderBottom = `${thic}px solid #000`;
+                    }
+                }
+                
+                let targetCells = window._tableSelectedCells && window._tableSelectedCells.length > 0 ? window._tableSelectedCells : [t.rows[0].cells[0]];
+                
+                targetCells.forEach(cell => {
+                    if (diag === 'none') {
+                        cell.style.background = '';
+                    } else {
+                        const thickness = Math.max(1, parseInt(thic));
+                        cell.style.background = `linear-gradient(${diag}, transparent calc(50% - ${thickness/2}px), #000 calc(50% - ${thickness/2}px), #000 calc(50% + ${thickness/2}px), transparent calc(50% + ${thickness/2}px))`;
+                    }
+                });
+                
+                pushHistory();
+            });
+        }
+    }
 };
 
 window.ContextRibbonSystem = {
@@ -16192,8 +16233,8 @@ window.handleMouseUp = function() {
             return;
         }
 
-        // If clicking inside the context menu, do not clear the selection
-        if (e.target.closest('.pub-context-menu')) {
+        // If clicking inside the UI (context menu, ribbon, sidebars), do not clear the selection
+        if (e.target.closest('.pub-context-menu') || e.target.closest('.ribbon-container') || e.target.closest('.op-sidebar') || e.target.closest('#op-table-sidebar')) {
             return;
         }
 
@@ -16263,15 +16304,31 @@ window.handleMouseUp = function() {
     });
 
     // 1. EXTEND THE CONTEXT ACTIONS
-    ContextRibbonActions.getActiveCell = function() {
-        if (!state.selectedEl || !state.selectedEl.querySelector('table')) return null;
-        if (state.lastRange) {
-            let node = state.lastRange.startContainer;
-            if (node.nodeType === 3) node = node.parentNode;
-            const cell = node.closest('td, th');
-            if (cell && state.selectedEl.contains(cell)) return cell;
+    ContextRibbonActions.getTargetCells = function() {
+        if (window._tableSelectedCells && window._tableSelectedCells.length > 0) {
+            return window._tableSelectedCells;
         }
-        return state.selectedEl.querySelector('td, th'); 
+        if (state.selectedEl && state.selectedEl.querySelector('table')) {
+            if (state.lastRange) {
+                let node = state.lastRange.startContainer;
+                if (node.nodeType === 3) node = node.parentNode;
+                const cell = node.closest('td, th');
+                if (cell && state.selectedEl.contains(cell)) {
+                    return [cell];
+                }
+            }
+            if (window._tableSelectionStartCell && state.selectedEl.contains(window._tableSelectionStartCell)) {
+                return [window._tableSelectionStartCell];
+            }
+        }
+        return null; 
+    };
+
+    ContextRibbonActions.getActiveCell = function() {
+        const targets = this.getTargetCells();
+        if (targets && targets.length > 0) return targets[0];
+        if (state.selectedEl && state.selectedEl.querySelector('table')) return state.selectedEl.querySelector('td, th');
+        return null;
     };
 
     const getTable = () => state.selectedEl?.querySelector('table');
@@ -16562,9 +16619,19 @@ window.handleMouseUp = function() {
 
     // --- Design Logic ---
     ContextRibbonActions.cellFill = function(color) {
-        const cell = this.getActiveCell();
-        if (cell) {
-            cell.style.backgroundColor = color;
+        const table = getTable();
+        if (table) {
+            const targets = this.getTargetCells();
+            if (targets) {
+                targets.forEach(cell => cell.style.backgroundColor = color);
+            } else {
+                table.style.backgroundColor = color;
+                for(let r=0; r<table.rows.length; r++) {
+                    for(let c=0; c<table.rows[r].cells.length; c++) {
+                        table.rows[r].cells[c].style.backgroundColor = color;
+                    }
+                }
+            }
             pushHistory();
         }
     };
@@ -16572,10 +16639,17 @@ window.handleMouseUp = function() {
     ContextRibbonActions.tableBorderColor = function(color) {
         const table = getTable();
         if (table) {
-            table.style.borderColor = color;
-            for(let r=0; r<table.rows.length; r++) {
-                for(let c=0; c<table.rows[r].cells.length; c++) {
-                    table.rows[r].cells[c].style.borderColor = color;
+            let targetCells = this.getTargetCells();
+            if (targetCells) {
+                targetCells.forEach(cell => {
+                    cell.style.borderColor = color;
+                });
+            } else {
+                table.style.borderColor = color;
+                for(let r=0; r<table.rows.length; r++) {
+                    for(let c=0; c<table.rows[r].cells.length; c++) {
+                        table.rows[r].cells[c].style.borderColor = color;
+                    }
                 }
             }
             pushHistory();
@@ -16585,14 +16659,26 @@ window.handleMouseUp = function() {
     ContextRibbonActions.applyBorderThickness = function(px) {
         const table = getTable();
         if (table) {
-            const thick = `${px}px solid `;
-            for(let r=0; r<table.rows.length; r++) {
-                for(let c=0; c<table.rows[r].cells.length; c++) {
-                    const currentColor = table.rows[r].cells[c].style.borderColor || '#000000';
-                    table.rows[r].cells[c].style.border = thick + currentColor;
+            let targetCells = this.getTargetCells();
+
+            if (targetCells) {
+                targetCells.forEach(cell => {
+                    cell.style.borderWidth = `${px}px`;
+                    cell.style.borderStyle = 'solid';
+                    if (!cell.style.borderColor && table.style.borderColor) {
+                        cell.style.borderColor = table.style.borderColor;
+                    }
+                });
+            } else {
+                table.style.borderWidth = `${px}px`;
+                table.style.borderStyle = 'solid';
+                for(let r=0; r<table.rows.length; r++) {
+                    for(let c=0; c<table.rows[r].cells.length; c++) {
+                        table.rows[r].cells[c].style.borderWidth = `${px}px`;
+                        table.rows[r].cells[c].style.borderStyle = 'solid';
+                    }
                 }
             }
-            table.style.border = thick + (table.style.borderColor || '#000000');
             pushHistory();
         }
     };
@@ -17031,10 +17117,10 @@ window.handleMouseUp = function() {
                         <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
                             <i class="fas fa-border-all" style="color:#666; width:14px; text-align:center;"></i>
                             <div class="modern-spinner" style="width: 54px;">
-                                <input type="text" id="ctx-tbl-border" value="1" onchange="ContextRibbonActions.applyBorderThickness(this.value)">
+                                <input type="text" id="ctx-tbl-border-ribbon" value="1" onchange="ContextRibbonActions.applyBorderThickness(this.value)">
                                 <div class="spin-btns">
-                                    <div onclick="document.getElementById('ctx-tbl-border').value=Math.min(10, parseInt(document.getElementById('ctx-tbl-border').value)+1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border').value)"><i class="fas fa-chevron-up"></i></div>
-                                    <div onclick="document.getElementById('ctx-tbl-border').value=Math.max(0, parseInt(document.getElementById('ctx-tbl-border').value)-1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border').value)"><i class="fas fa-chevron-down"></i></div>
+                                    <div onclick="document.getElementById('ctx-tbl-border-ribbon').value=Math.min(64, parseInt(document.getElementById('ctx-tbl-border-ribbon').value)+1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border-ribbon').value)"><i class="fas fa-chevron-up"></i></div>
+                                    <div onclick="document.getElementById('ctx-tbl-border-ribbon').value=Math.max(0, parseInt(document.getElementById('ctx-tbl-border-ribbon').value)-1); ContextRibbonActions.applyBorderThickness(document.getElementById('ctx-tbl-border-ribbon').value)"><i class="fas fa-chevron-down"></i></div>
                                 </div>
                             </div>
                             px
