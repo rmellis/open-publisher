@@ -7555,12 +7555,13 @@ const ContextMenuSystem = {
         const isMarginGuides = e.target.classList.contains('margin-guides');
         
         const isSidebarBlank = e.target.closest('#sidebar') && !e.target.closest('.page-thumb-container');
+        const isRuler = e.target.closest('.ruler-h') || e.target.closest('.ruler-v') || e.target.closest('.ruler-c');
         
         // Let default browser menu happen on UI ribbons / sidebars (except blank area)
         if (e.target.closest('.ribbon-container') || (e.target.closest('.op-sidebar') && !isSidebarBlank) || e.target.closest('#sidebar') && !isSidebarBlank || e.target.closest('#op-table-sidebar')) return;
         
         // If they click on nothing relevant, return
-        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank) return;
+        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler) return;
 
         e.preventDefault();
         this.hide();
@@ -7574,7 +7575,24 @@ const ContextMenuSystem = {
         // Build dynamic menu based on target
         let html = '';
 
-        if (isSidebarBlank) {
+        if (isRuler) {
+            html += this.buildItem('Hide Rulers', 'fa-eye-slash', 'if(window.toggleRulers) window.toggleRulers()');
+            html += this.buildItem('Toggle Margins', 'fa-vector-square', 'if(window.toggleMargins) window.toggleMargins()');
+            html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
+            html += this.buildItem('Change Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
+            
+            html += this.buildDivider();
+            
+            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--pub-color); -webkit-text-stroke: 1px var(--pub-color);"></i>';
+            const checkGrid = 'Snap to Grid' + (state.snap.grid ? checkIcon : '');
+            const checkGuides = 'Snap to Guides' + (state.snap.guides ? checkIcon : '');
+            const checkObjects = 'Snap to Objects' + (state.snap.objects ? checkIcon : '');
+
+            html += this.buildItem(checkGrid, 'fa-border-all', "if(window.toggleSnapOption) window.toggleSnapOption('grid')");
+            html += this.buildItem(checkGuides, 'fa-ruler-combined', "if(window.toggleSnapOption) window.toggleSnapOption('guides')");
+            html += this.buildItem(checkObjects, 'fa-shapes', "if(window.toggleSnapOption) window.toggleSnapOption('objects')");
+        }
+        else if (isSidebarBlank) {
             html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
             html += this.buildItem('Duplicate Current Page', 'fa-copy', 'if(window.contextDuplicatePage) window.contextDuplicatePage()');
             html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
@@ -7597,6 +7615,7 @@ const ContextMenuSystem = {
             html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
             html += this.buildItem('Select All', 'fa-object-group', 'if(window.selectAllElements) window.selectAllElements()');
             html += this.buildDivider();
+            html += this.buildItem('Toggle Rulers', 'fa-ruler-combined', 'if(window.toggleRulers) window.toggleRulers()');
             html += this.buildItem('Toggle Boundaries', 'fa-border-all', "document.getElementById('paper').classList.toggle('show-boundaries')");
             html += this.buildItem('Toggle Focus Mode', 'fa-moon', 'if(window.WritersSuite && window.WritersSuite.toggleFocusMode) window.WritersSuite.toggleFocusMode()');
             html += this.buildItem('3D Topology View', 'fa-cube', 'if(window.toggle3DView) window.toggle3DView()');
