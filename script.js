@@ -19600,6 +19600,11 @@ window.toggleCrop = function() {
         const parentW = el.offsetWidth || 1;
         const parentH = el.offsetHeight || 1;
         
+        // ✨ BUG FIX: Prevent the container from collapsing when the child image is taken out of flow (position: absolute)
+        // If the container was relying on the child's natural size, this locks it in place.
+        el.style.width = parentW + 'px';
+        el.style.height = parentH + 'px';
+
         img.style.width = w + 'px';
         img.style.height = h + 'px';
         img.style.maxWidth = 'none';
