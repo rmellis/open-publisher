@@ -3275,10 +3275,14 @@ function initTablePicker() {
     }
 }
 
-function toggleTableMenu(btn) {
+function toggleTableMenu(btn, e) {
     const m = document.getElementById('table-dropdown');
-    const r = btn.getBoundingClientRect();
-    m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+    if (btn) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+    } else if (e) {
+        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+    }
     m.style.display = (m.style.display === 'block' ? 'none' : 'block');
 }
 
@@ -5190,10 +5194,14 @@ window.handleTabKey = function(e) {
     pushHistory();
 };
 
-function toggleShapeMenu(btn) {
+function toggleShapeMenu(btn, e) {
     const m = document.getElementById('shape-dropdown');
-    const r = btn.getBoundingClientRect();
-    m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+    if (btn) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+    } else if (e) {
+        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+    }
     m.style.display = 'block';
 }
 function toggleBorderMenu(btn) {
@@ -6417,7 +6425,7 @@ document.addEventListener('mouseup', () => {
 window.toggleSnapOption = function(option, btn) {
     const isTurningOn = !state.snap[option];
     state.snap[option] = isTurningOn;
-    btn.querySelector('.check').style.opacity = isTurningOn ? '1' : '0';
+    if (btn) btn.querySelector('.check').style.opacity = isTurningOn ? '1' : '0';
     
     if (option === 'grid' && isTurningOn) {
         if (typeof DialogSystem !== 'undefined') {
@@ -7372,9 +7380,31 @@ function printBooklet() {
             let spread = {
                 width: (singleW * 2) + 'px',
                 height: leftPage.height,
-                background: leftPage.background,
+                background: '#ffffff',
                 elements: []
             };
+
+            if (leftPage.background && leftPage.background !== 'transparent') {
+                spread.elements.push({
+                    left: '0px',
+                    top: '0px',
+                    width: singleW + 'px',
+                    height: spread.height,
+                    zIndex: -9999,
+                    innerHTML: `<div style="width:100%; height:100%; background: ${leftPage.background};"></div>`
+                });
+            }
+
+            if (rightPage.background && rightPage.background !== 'transparent') {
+                spread.elements.push({
+                    left: singleW + 'px',
+                    top: '0px',
+                    width: singleW + 'px',
+                    height: spread.height,
+                    zIndex: -9999,
+                    innerHTML: `<div style="width:100%; height:100%; background: ${rightPage.background};"></div>`
+                });
+            }
             
             leftPage.elements.forEach(el => {
                 if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
@@ -7519,158 +7549,213 @@ const ContextMenuSystem = {
     },
 
     handleRightClick: function(e) {
-        // Only override if clicking on the workspace/paper
-        const isPaper = e.target === paper || e.target.classList.contains('margin-guides');
-        const el = e.target.closest('.pub-element');
+        // Evaluate the exact target
+        const isPaperOrInside = e.target.closest('#paper') !== null;
+        const isWorkspace = e.target.closest('#viewport') !== null;
+        const isMarginGuides = e.target.classList.contains('margin-guides');
         
-        if (!isPaper && !el) return; // Let default browser menu happen on UI ribbons
+        // Let default browser menu happen on UI ribbons / sidebars
+        if (e.target.closest('.ribbon-container') || e.target.closest('.op-sidebar') || e.target.closest('#op-table-sidebar')) return;
         
+        // If they click on nothing relevant, return
+        if (!isPaperOrInside && !isWorkspace && !isMarginGuides) return;
+
         e.preventDefault();
         this.hide();
 
+        const el = e.target.closest('.pub-element');
+        
         // If right-clicking an element, select it first
         if(el && state.selectedEl !== el) selectElement(el);
-        if(isPaper) deselect();
+        if(!el && (isPaperOrInside || isMarginGuides)) deselect();
 
         // Build dynamic menu based on target
         let html = '';
 
-        if (isPaper) {
-            // --- 1. DEFAULT MENU (BLANK PAGE) ---
+        if (!el && isWorkspace && !isPaperOrInside && !isMarginGuides) {
+            // --- PASTEBOARD MENU ---
             const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
-            html += this.buildItem('Paste Options', 'fa-clipboard', `pasteEl()`, canPaste);
+            
+            html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
+            html += this.buildItem('Select All', 'fa-object-group', 'if(window.selectAllElements) window.selectAllElements()');
             html += this.buildDivider();
-            html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
-            html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
+            html += this.buildItem('Toggle Boundaries', 'fa-border-all', "document.getElementById('paper').classList.toggle('show-boundaries')");
+            html += this.buildItem('Toggle Focus Mode', 'fa-moon', 'if(window.WritersSuite && window.WritersSuite.toggleFocusMode) window.WritersSuite.toggleFocusMode()');
+            html += this.buildItem('3D Topology View', 'fa-cube', 'if(window.toggle3DView) window.toggle3DView()');
             html += this.buildDivider();
-            html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
-            html += this.buildItem('Format Background', 'fa-fill-drip', 'ContextMenuActions.formatBackground()');
-        } 
-        else if (el) {
-            const isImage = el.querySelector('img');
-            const isShape = el.getAttribute('data-type') === 'shape';
-            const isWordArt = el.querySelector('.wa-text');
-            const isTable = el.querySelector('table');
-            const isText = !isImage && !isShape && !isWordArt && !isTable;
-
-            // --- 2. PICTURE CONTEXT MENU ---
-            if (isImage) {
-                html += this.buildItem('Change Picture...', 'fa-exchange-alt', 'ContextMenuActions.changePicture()');
-                html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
-                html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
+            
+            html += this.buildFlyoutItem('Snapping...', 'fa-magnet', `
+                ${this.buildItem('Snap to Grid', 'fa-th', "if(window.toggleSnapOption) window.toggleSnapOption('grid')")}
+                ${this.buildItem('Snap to Objects', 'fa-object-align-left', "if(window.toggleSnapOption) window.toggleSnapOption('objects')")}
+            `);
+            
+            html += this.buildDivider();
+            html += this.buildItem('Page Orientation', 'fa-sync-alt', 'if(window.toggleOrientation) window.toggleOrientation()');
+            html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
+            html += this.buildItem('Run Design Checker', 'fa-stethoscope', 'if(window.showInfoModal) { window.showInfoModal(); setTimeout(window.runDesignChecker, 300); }');
+        }
+        else {
+            if (!el) {
+                // --- PAPER MENU ---
+                const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
+                
+                html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
+                html += this.buildItem('Paste in Place', 'fa-clipboard-check', `pasteEl(true)`, canPaste);
                 html += this.buildDivider();
-                html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
-                html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
-            }
-            // --- 3. TEXT BOX CONTEXT MENU ---
-            else if (isText || isWordArt) {
-                let clickedWord = "";
-                let clickedWordRange = null;
+                
+                const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--pub-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;
+                const waBetaPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/PEtJfoR.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
+                const clipartPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
 
-                const extractWordFromRange = (r, offset) => {
-                    if (r && r.startContainer.nodeType === 3) {
-                        const text = r.startContainer.textContent;
-                        let start = offset, end = offset;
-                        while (start > 0 && /[A-Za-z0-9_']/.test(text[start - 1])) start--;
-                        while (end < text.length && /[A-Za-z0-9_']/.test(text[end])) end++;
-                        const w = text.substring(start, end).trim();
-                        if (w) {
-                            const newRange = document.createRange();
-                            newRange.setStart(r.startContainer, start);
-                            newRange.setEnd(r.startContainer, end);
-                            return { word: w, range: newRange };
+                html += this.buildFlyoutItem('Insert...', 'fa-plus-circle', `
+                    ${this.buildItem('Text Box', 'fa-font', 'addTextBox()')}
+                    ${this.buildItem('Picture Placeholder', 'fa-image', 'addPicturePlaceholder()')}
+                    ${this.buildItem('WordArt Old', 'fa-text-width', 'showWordArtModal()')}
+                    ${this.buildItemRaw('WordArt New', waBetaPng, 'if(window.showBetaWordArtModal) window.showBetaWordArtModal()')}
+                    ${this.buildItemRaw('Clipart', clipartPng, 'if(window.showWebClipartModal) window.showWebClipartModal()')}
+                    ${this.buildItem('Shapes', 'fa-shapes', 'toggleShapeMenu(this)')}
+                    ${this.buildItem('Page Parts', 'fa-puzzle-piece', 'if(window.showPagePartsModal) window.showPagePartsModal()')}
+                    ${this.buildDivider()}
+                    ${this.buildItem('Coupons', 'fa-ticket-alt', 'showCouponModal()')}
+                    ${this.buildItem('Ads', 'fa-ad', 'showAdModal()')}
+                    ${this.buildItemRaw('QR Code', qrcodeSvg, 'showQRCodeModal()')}
+                    ${this.buildItem('Table', 'fa-table', 'toggleTableMenu(this)')}
+                    ${this.buildItem('Styled Tables', 'fa-border-all', 'if(window.openTableTemplatesModal) window.openTableTemplatesModal()')}
+                    ${this.buildItem('Symbol', 'fa-copyright', 'if(window.showSymbolModal) window.showSymbolModal()')}
+                    ${this.buildItem('Emojis', 'fa-icons', 'showClipartModal()')}
+                `);
+                
+                html += this.buildDivider();
+                html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
+                html += this.buildItem('Duplicate Page', 'fa-copy', 'if(window.contextDuplicatePage) window.contextDuplicatePage(true)');
+                html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
+                html += this.buildDivider();
+                html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
+                html += this.buildItem('Format Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
+            } else {
+                // --- ELEMENT MENUS ---
+                const isImage = el.querySelector('img');
+                const isShape = el.getAttribute('data-type') === 'shape';
+                const isWordArt = el.querySelector('.wa-text');
+                const isTable = el.querySelector('table');
+                const isText = !isImage && !isShape && !isWordArt && !isTable;
+
+                // 2. PICTURE CONTEXT MENU
+                if (isImage) {
+                    html += this.buildItem('Change Picture...', 'fa-exchange-alt', 'ContextMenuActions.changePicture()');
+                    html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
+                    html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
+                    html += this.buildDivider();
+                    html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
+                    html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
+                }
+                // 3. TEXT BOX CONTEXT MENU
+                else if (isText || isWordArt) {
+                    let clickedWord = "";
+                    let clickedWordRange = null;
+
+                    const extractWordFromRange = (r, offset) => {
+                        if (r && r.startContainer.nodeType === 3) {
+                            const text = r.startContainer.textContent;
+                            let start = offset, end = offset;
+                            while (start > 0 && /[A-Za-z0-9_']/.test(text[start - 1])) start--;
+                            while (end < text.length && /[A-Za-z0-9_']/.test(text[end])) end++;
+                            const w = text.substring(start, end).trim();
+                            if (w) {
+                                const newRange = document.createRange();
+                                newRange.setStart(r.startContainer, start);
+                                newRange.setEnd(r.startContainer, end);
+                                return { word: w, range: newRange };
+                            }
+                        }
+                        return null;
+                    };
+
+                    const sel = window.getSelection();
+                    
+                    if (sel && sel.toString().trim() && sel.rangeCount > 0) {
+                        const selText = sel.toString().trim();
+                        if (selText.split(/\s+/).length === 1) { 
+                            clickedWord = selText;
+                            clickedWordRange = sel.getRangeAt(0);
                         }
                     }
-                    return null;
-                };
 
-                const sel = window.getSelection();
-                
-                // 1. Try to use exactly what the user highlighted (if they highlighted a specific word)
-                if (sel && sel.toString().trim() && sel.rangeCount > 0) {
-                    const selText = sel.toString().trim();
-                    if (selText.split(/\\s+/).length === 1) { // Single word highlighted
-                        clickedWord = selText;
-                        clickedWordRange = sel.getRangeAt(0);
+                    if (!clickedWord && document.caretRangeFromPoint) {
+                        const r = document.caretRangeFromPoint(e.clientX, e.clientY);
+                        if (r) {
+                            const res = extractWordFromRange(r, r.startOffset);
+                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                        }
+                    } 
+                    else if (!clickedWord && document.caretPositionFromPoint) {
+                        const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                        if (pos) {
+                            const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
+                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                        }
                     }
-                }
 
-                // 2. Try the exact click coordinates
-                if (!clickedWord && document.caretRangeFromPoint) {
-                    const r = document.caretRangeFromPoint(e.clientX, e.clientY);
-                    if (r) {
+                    if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
+                        const r = sel.getRangeAt(0);
                         const res = extractWordFromRange(r, r.startOffset);
                         if (res) { clickedWord = res.word; clickedWordRange = res.range; }
                     }
-                } 
-                else if (!clickedWord && document.caretPositionFromPoint) {
-                    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-                    if (pos) {
-                        const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
-                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                    
+                    if (clickedWord && clickedWordRange) {
+                        window._currentSpellCheckWord = clickedWord;
+                        window._currentSpellCheckRange = clickedWordRange;
+                        html += '<div id="spell-check-results"></div>';
                     }
+
+                    html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
+                    html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
+                    html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
+                    html += this.buildDivider();
+                    html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
+                }
+                // 3.5. TABLE CONTEXT MENU
+                else if (isTable) {
+                    html += this.buildItem('Insert Row Above', 'fa-arrow-up', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()');
+                    html += this.buildItem('Insert Row Below', 'fa-arrow-down', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()');
+                    html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
+                    html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
+                    html += this.buildDivider();
+                    
+                    const targetCell = e.target.closest('td, th');
+                    const isMerged = targetCell && (parseInt(targetCell.getAttribute('colspan')) > 1 || parseInt(targetCell.getAttribute('rowspan')) > 1);
+
+                    if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
+                        html += this.buildItem('Merge Cells', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeSelectedCells()');
+                    } else if (isMerged) {
+                        html += this.buildItem('Split Cells (revert)', 'fa-object-ungroup', 'if(window.ContextRibbonActions) ContextRibbonActions.splitSelectedCell()');
+                    } else {
+                        html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
+                        html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
+                    }
+                    
+                    html += this.buildDivider();
+                    html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
+                    html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
+                }
+                // 4. SHAPE CONTEXT MENU
+                else if (isShape) {
+                    html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
+                    html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
                 }
 
-                // 3. Fallback to current cursor position
-                if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
-                    const r = sel.getRangeAt(0);
-                    const res = extractWordFromRange(r, r.startOffset);
-                    if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                }
-                
-                if (clickedWord && clickedWordRange) {
-                    window._currentSpellCheckWord = clickedWord;
-                    window._currentSpellCheckRange = clickedWordRange;
-                    html += '<div id="spell-check-results"></div>';
-                }
-
-                html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
-                html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
-                html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
+                // 5. UNIVERSAL OBJECT FUNCTIONS
                 html += this.buildDivider();
-                html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
-            }
-            // --- 3.5. TABLE CONTEXT MENU ---
-            else if (isTable) {
-                html += this.buildItem('Insert Row Above', 'fa-arrow-up', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()');
-                html += this.buildItem('Insert Row Below', 'fa-arrow-down', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()');
-                html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
-                html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
+                html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
+                html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
                 html += this.buildDivider();
-                
-                const targetCell = e.target.closest('td, th');
-                const isMerged = targetCell && (parseInt(targetCell.getAttribute('colspan')) > 1 || parseInt(targetCell.getAttribute('rowspan')) > 1);
-
-                if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
-                    html += this.buildItem('Merge Cells', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeSelectedCells()');
-                } else if (isMerged) {
-                    html += this.buildItem('Split Cells (revert)', 'fa-object-ungroup', 'if(window.ContextRibbonActions) ContextRibbonActions.splitSelectedCell()');
-                } else {
-                    html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
-                    html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
-                }
-                
+                html += this.buildItem('Copy', 'fa-copy', 'copyEl()');
+                html += this.buildItem('Delete', 'fa-trash', 'deleteSelected()');
                 html += this.buildDivider();
-                html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
-                html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
+                html += this.buildItem('Save as Picture...', 'fa-file-image', 'ContextMenuActions.saveAsPicture()');
+                html += this.buildItem('Flatten to Image (Fix 3D)', 'fa-compress', 'ContextMenuActions.flattenToImage()');
+                html += this.buildItem('Add to Building Blocks', 'fa-puzzle-piece', 'ContextMenuActions.addBuildingBlock()');
             }
-            // --- 4. SHAPE CONTEXT MENU ---
-            else if (isShape) {
-                html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
-                html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
-            }
-
-            // --- 5. UNIVERSAL OBJECT FUNCTIONS ---
-            html += this.buildDivider();
-            html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
-            html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
-            html += this.buildDivider();
-            html += this.buildItem('Copy', 'fa-copy', 'copyEl()');
-            html += this.buildItem('Delete', 'fa-trash', 'deleteSelected()');
-            html += this.buildDivider();
-            html += this.buildItem('Save as Picture...', 'fa-file-image', 'ContextMenuActions.saveAsPicture()');
-            html += this.buildItem('Flatten to Image (Fix 3D)', 'fa-compress', 'ContextMenuActions.flattenToImage()');
-            html += this.buildItem('Add to Building Blocks', 'fa-puzzle-piece', 'ContextMenuActions.addBuildingBlock()');
         }
 
         this.menuEl.innerHTML = html;
@@ -7729,8 +7814,25 @@ const ContextMenuSystem = {
 
     buildItem: function(label, icon, action, disabledClass = '') {
         // If disabled, don't pass the action
-        const clickAction = disabledClass ? '' : `onclick="${action}; ContextMenuSystem.hide();"`;
-        return `<div class="pub-context-item ${disabledClass}" ${clickAction}><i class="fas ${icon}"></i> ${label}</div>`;
+        const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
+        return `<div class="pub-context-item ${disabledClass}" ${clickAction}><i class="fas fa-fw ${icon}"></i> ${label}</div>`;
+    },
+
+    buildItemRaw: function(label, rawIconHtml, action, disabledClass = '') {
+        const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
+        return `<div class="pub-context-item ${disabledClass}" ${clickAction}><i class="fas fa-fw" style="display:inline-flex; align-items:center; justify-content:center; font-style:normal;">${rawIconHtml}</i> ${label}</div>`;
+    },
+    
+    buildFlyoutItem: function(label, icon, childrenHtml) {
+        return `
+            <div class="pub-context-item has-flyout">
+                <i class="fas fa-fw ${icon}"></i> ${label}
+                <i class="fas fa-caret-right"></i>
+                <div class="pub-flyout-menu">
+                    ${childrenHtml}
+                </div>
+            </div>
+        `;
     },
     
     buildDivider: function() {
@@ -7743,7 +7845,7 @@ const ContextMenuSystem = {
 };
 
 // --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
-const ContextMenuActions = {
+window.ContextMenuActions = {
     
     alignTextVertical: function(align) {
         if (!state.selectedEl) return;
@@ -7822,9 +7924,79 @@ const ContextMenuActions = {
 
     // -- Page Features --
     formatBackground: function() {
-        const form = `<div class="input-group"><label>Solid Color:</label><input type="color" id="ctx-bg-color" value="#ffffff"></div>`;
+        const form = `
+            <style>
+                #custom-dialog-header { background-color: #006052 !important; color: white !important; font-size: 18px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; border-bottom: none !important; }
+                #custom-dialog-close { color: white !important; opacity: 0.8; }
+                .ctx-bg-label { display:flex; align-items:center; cursor:pointer; font-weight:bold; color: #006052; font-size: 15px; }
+                .ctx-bg-input-container { margin-top:10px; margin-left: 24px; margin-bottom: 15px; padding-left: 12px; border-left: 2px solid rgba(0,96,82,0.15); }
+                .ctx-bg-input-group { display: flex; align-items: center; margin-bottom: 10px; }
+                .ctx-bg-input-group label { width: 75px; color: #444; font-size: 13px; font-weight: 600; }
+                .ctx-bg-input-group input[type="color"] { width: 50px; height: 30px; border: 1px solid #ccc; border-radius: 4px; padding: 0; cursor: pointer; }
+                .ctx-bg-input-group select { flex: 1; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; outline: none; }
+                .ctx-bg-input-group select:focus { border-color: #006052; }
+                .ctx-bg-info { background: rgba(0,96,82,0.04); border: 1px solid rgba(0,96,82,0.15); border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 12px; color: #006052; text-align: center; line-height: 1.4; }
+            </style>
+            <div style="padding: 5px;">
+                <div style="margin-bottom: 15px;">
+                    <label class="ctx-bg-label">
+                        <input type="radio" name="bg-type" value="solid" checked style="margin-right:8px; accent-color: #006052;"> Solid Color
+                    </label>
+                    <div class="ctx-bg-input-container">
+                        <div class="ctx-bg-input-group" style="margin-bottom: 0;">
+                            <label>Color:</label>
+                            <input type="color" id="ctx-bg-color" value="#ffffff">
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 5px;">
+                    <label class="ctx-bg-label">
+                        <input type="radio" name="bg-type" value="gradient" style="margin-right:8px; accent-color: #006052;"> Gradient
+                    </label>
+                    <div class="ctx-bg-input-container">
+                        <div class="ctx-bg-input-group">
+                            <label>Color 1:</label>
+                            <input type="color" id="ctx-bg-grad-1" value="#f0f0f0">
+                        </div>
+                        <div class="ctx-bg-input-group">
+                            <label>Color 2:</label>
+                            <input type="color" id="ctx-bg-grad-2" value="#d4d4d4">
+                        </div>
+                        <div class="ctx-bg-input-group" style="margin-bottom: 0;">
+                            <label>Direction:</label>
+                            <select id="ctx-bg-grad-dir">
+                                <option value="to bottom">Top to Bottom</option>
+                                <option value="to right">Left to Right</option>
+                                <option value="135deg">Diagonal</option>
+                                <option value="radial">Radial</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ctx-bg-info">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                    <strong>Looking for more?</strong><br>
+                    You can find more detailed themes and textures in <strong>Page Design &gt; Theme Studio</strong>
+                </div>
+            </div>
+        `;
         DialogSystem.show('Format Background', form, () => {
-            paper.style.background = document.getElementById('ctx-bg-color').value;
+            const paper = document.getElementById('paper');
+            const isSolid = document.querySelector('input[name="bg-type"]:checked').value === 'solid';
+            if (isSolid) {
+                paper.style.background = document.getElementById('ctx-bg-color').value;
+            } else {
+                const c1 = document.getElementById('ctx-bg-grad-1').value;
+                const c2 = document.getElementById('ctx-bg-grad-2').value;
+                const dir = document.getElementById('ctx-bg-grad-dir').value;
+                if (dir === 'radial') {
+                    paper.style.background = `radial-gradient(circle, ${c1}, ${c2})`;
+                } else {
+                    paper.style.background = `linear-gradient(${dir}, ${c1}, ${c2})`;
+                }
+            }
             pushHistory();
         });
     },
@@ -21131,7 +21303,7 @@ window.toggleCrop = function() {
                 pageWrapper.className = 'op-print-page';
                 let scaler = document.createElement('div');
                 scaler.className = 'op-print-scaler';
-                scaler.style.backgroundColor = page.background || '#ffffff';
+                scaler.style.background = page.background || '#ffffff';
 
                 page.elements.forEach(el => {
                     let elDiv = document.createElement('div');
@@ -21463,7 +21635,7 @@ window.addEventListener('beforeprint', () => {
                 pageWrapper.style.height = pH + 'px';
                 pageWrapper.style.position = 'relative';
                 pageWrapper.style.overflow = 'hidden';
-                pageWrapper.style.backgroundColor = page.background || '#ffffff';
+                pageWrapper.style.background = page.background || '#ffffff';
 
                 if (themeHtml) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
 
@@ -21869,8 +22041,11 @@ window.addEventListener('beforeprint', () => {
                 await sleep(100); 
                 
                 // Scale 3 ensures maximum pixel density before the physical print mappings apply
+                let h2cBg = page.background || '#ffffff';
+                if (h2cBg.includes('gradient')) h2cBg = null;
+
                 const canvas = await html2canvas(pageWrapper, { 
-                    scale: 3, useCORS: true, logging: false, backgroundColor: page.background || '#ffffff'
+                    scale: 3, useCORS: true, logging: false, backgroundColor: h2cBg
                 });
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -24399,8 +24574,8 @@ function contextAddPage() {
     addNewPage(state.contextMenuTargetIndex);
 }
 
-function contextDuplicatePage() {
-    const index = state.contextMenuTargetIndex;
+function contextDuplicatePage(fromPasteboard = false) {
+    const index = (fromPasteboard || state.contextMenuTargetIndex === undefined) ? state.currentPageIndex : state.contextMenuTargetIndex;
     const pageToCopy = state.pages[index];
     if (!pageToCopy) return;
     
