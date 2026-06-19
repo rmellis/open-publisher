@@ -7832,6 +7832,8 @@ const ContextMenuSystem = {
                     html += this.buildDivider();
                     html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
                     html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
+                    html += this.buildDivider();
+                    html += this.buildItem('Convert to Text', 'fa-align-left', 'if(window.ContextRibbonActions) ContextRibbonActions.convertTableToText()');
                 }
                 // 4. SHAPE CONTEXT MENU
                 else if (isShape) {
@@ -8883,6 +8885,73 @@ window.ContextRibbonActions = {
                 pushHistory();
             });
         }
+    },
+    convertTableToText: function() {
+        if(!state.selectedEl) return;
+        const t = state.selectedEl.querySelector('table');
+        if(!t) return;
+        if(typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Convert Table to Text', `
+                <div style="margin-bottom:15px; font-size:14px;">
+                    <p style="margin-top:0;">Separate text with:</p>
+                    <div style="margin-bottom:8px;"><label><input type="radio" name="ctx-tbl-sep" value="tab" checked> Tabs</label></div>
+                    <div style="margin-bottom:8px;"><label><input type="radio" name="ctx-tbl-sep" value="comma"> Commas</label></div>
+                    <div style="margin-bottom:8px;"><label><input type="radio" name="ctx-tbl-sep" value="para"> Paragraph marks</label></div>
+                    <div><label><input type="radio" name="ctx-tbl-sep" value="other" id="ctx-tbl-sep-other-radio"> Other: <input type="text" id="ctx-tbl-sep-other" style="width:30px; text-align:center; padding:2px; border:1px solid #ccc; border-radius:3px;" maxlength="1" onfocus="document.getElementById('ctx-tbl-sep-other-radio').checked=true"></label></div>
+                </div>
+            `, () => {
+                const sepRadios = document.getElementsByName('ctx-tbl-sep');
+                let sepType = 'tab';
+                for(let r of sepRadios) if(r.checked) sepType = r.value;
+                
+                let sep = ''; 
+                if(sepType === 'comma') sep = ', ';
+                else if(sepType === 'para') sep = '<br>';
+                else if(sepType === 'other') {
+                    const custom = document.getElementById('ctx-tbl-sep-other').value;
+                    sep = custom.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    if(!sep) sep = ' ';
+                } else {
+                    sep = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                }
+
+                let html = '';
+                for(let r=0; r<t.rows.length; r++) {
+                    let rowText = [];
+                    for(let c=0; c<t.rows[r].cells.length; c++) {
+                        let text = t.rows[r].cells[c].innerText.trim();
+                        text = text.replace(/\\n/g, '<br>');
+                        rowText.push(text);
+                    }
+                    html += rowText.join(sep);
+                    if(r < t.rows.length - 1) html += '<br>';
+                }
+
+                const div = document.createElement('div');
+                div.style.padding = '10px';
+                div.style.height = '100%';
+                div.style.wordWrap = 'break-word';
+                div.style.boxSizing = 'border-box';
+                div.innerHTML = html;
+                div.setAttribute('contenteditable', 'true');
+
+                const contentWrapper = state.selectedEl.querySelector('.element-content');
+                if (contentWrapper) {
+                    contentWrapper.innerHTML = '';
+                    contentWrapper.appendChild(div);
+                } else {
+                    // Fallback just in case
+                    state.selectedEl.innerHTML = '';
+                    state.selectedEl.appendChild(div);
+                }
+                
+                // Force ribbon switch from Table Design to Text Box Tools
+                if(typeof switchTab === 'function') switchTab('format-text');
+                if(typeof updateRibbon === 'function') updateRibbon();
+                
+                pushHistory();
+            });
+        }
     }
 };
 
@@ -8904,7 +8973,7 @@ window.ContextRibbonSystem = {
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--pub-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
             initRibbonResponsiveness();
         }
