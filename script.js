@@ -7559,12 +7559,15 @@ const ContextMenuSystem = {
         
         const isRibbonBlank = e.target.closest('.ribbon-container') && !e.target.closest('.tool-btn, .modern-select, .group-label, .ribbon-tabs, input, select');
         
+        const isTitleBar = e.target.closest('.title-bar') !== null || e.target.closest('.ribbon-tabs') !== null;
+        const isDocTitle = e.target.closest('#doc-title') !== null;
+        
         // Let default browser menu happen on UI ribbons / sidebars (except blank area)
-        if (e.target.closest('.ribbon-container') && !isRibbonBlank) return;
+        if (e.target.closest('.ribbon-container') && !isRibbonBlank && !isTitleBar) return;
         if ((e.target.closest('.op-sidebar') && !isSidebarBlank) || (e.target.closest('#sidebar') && !isSidebarBlank) || e.target.closest('#op-table-sidebar')) return;
         
         // If they click on nothing relevant, return
-        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler && !isRibbonBlank) return;
+        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler && !isRibbonBlank && !isTitleBar) return;
 
         e.preventDefault();
         this.hide();
@@ -7587,6 +7590,29 @@ const ContextMenuSystem = {
             html += this.buildItem('Toggle Grid Background', 'fa-border-all', 'if(window.toggleGrid) window.toggleGrid()');
             html += this.buildDivider();
             html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+        }
+        else if (isTitleBar) {
+            html += this.buildItem('Rename Publication', 'fa-pen', 'document.getElementById("doc-title").focus(); window.getSelection().selectAllChildren(document.getElementById("doc-title"));');
+            
+            if (isDocTitle) {
+                html += this.buildDivider();
+                
+                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--pub-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
+                
+                html += this.buildItem('Copy', 'fa-copy', clipboardMsg);
+                html += this.buildItem('Paste', 'fa-paste', clipboardMsg);
+            }
+            
+            html += this.buildDivider();
+            html += this.buildItem('Page Setup', 'fa-file-invoice', 'if(typeof changeSize === "function") changeSize()');
+            html += this.buildItem('Format Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
+            html += this.buildDivider();
+            html += this.buildItem('Save Publication', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
+            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
+            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
+            html += this.buildDivider();
+            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+            html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
         }
         else if (isRuler) {
             html += this.buildItem('Hide Rulers', 'fa-eye-slash', 'if(window.toggleRulers) window.toggleRulers()');
@@ -7865,12 +7891,12 @@ const ContextMenuSystem = {
     buildItem: function(label, icon, action, disabledClass = '') {
         // If disabled, don't pass the action
         const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
-        return `<div class="pub-context-item ${disabledClass}" ${clickAction}><i class="fas fa-fw ${icon}"></i> ${label}</div>`;
+        return `<div class="pub-context-item ${disabledClass}" onmousedown="event.preventDefault();" ${clickAction}><i class="fas fa-fw ${icon}"></i> ${label}</div>`;
     },
 
     buildItemRaw: function(label, rawIconHtml, action, disabledClass = '') {
         const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
-        return `<div class="pub-context-item ${disabledClass}" ${clickAction}><i class="fas fa-fw" style="display:inline-flex; align-items:center; justify-content:center; font-style:normal;">${rawIconHtml}</i> ${label}</div>`;
+        return `<div class="pub-context-item ${disabledClass}" onmousedown="event.preventDefault();" ${clickAction}><i class="fas fa-fw" style="display:inline-flex; align-items:center; justify-content:center; font-style:normal;">${rawIconHtml}</i> ${label}</div>`;
     },
     
     buildFlyoutItem: function(label, icon, childrenHtml) {
