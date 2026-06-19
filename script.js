@@ -7554,11 +7554,13 @@ const ContextMenuSystem = {
         const isWorkspace = e.target.closest('#viewport') !== null;
         const isMarginGuides = e.target.classList.contains('margin-guides');
         
-        // Let default browser menu happen on UI ribbons / sidebars
-        if (e.target.closest('.ribbon-container') || e.target.closest('.op-sidebar') || e.target.closest('#op-table-sidebar')) return;
+        const isSidebarBlank = e.target.closest('#sidebar') && !e.target.closest('.page-thumb-container');
+        
+        // Let default browser menu happen on UI ribbons / sidebars (except blank area)
+        if (e.target.closest('.ribbon-container') || (e.target.closest('.op-sidebar') && !isSidebarBlank) || e.target.closest('#sidebar') && !isSidebarBlank || e.target.closest('#op-table-sidebar')) return;
         
         // If they click on nothing relevant, return
-        if (!isPaperOrInside && !isWorkspace && !isMarginGuides) return;
+        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank) return;
 
         e.preventDefault();
         this.hide();
@@ -7572,7 +7574,23 @@ const ContextMenuSystem = {
         // Build dynamic menu based on target
         let html = '';
 
-        if (!el && isWorkspace && !isPaperOrInside && !isMarginGuides) {
+        if (isSidebarBlank) {
+            html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
+            html += this.buildItem('Duplicate Current Page', 'fa-copy', 'if(window.contextDuplicatePage) window.contextDuplicatePage()');
+            html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
+            
+            html += this.buildDivider();
+            
+            html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
+            html += this.buildItem('Collapse Sidebar', 'fa-compress-arrows-alt', "if(window.toggleSidebar) window.toggleSidebar(true)");
+            
+            html += this.buildDivider();
+            
+            html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
+            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
+            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
+        }
+        else if (!el && isWorkspace && !isPaperOrInside && !isMarginGuides) {
             // --- PASTEBOARD MENU ---
             const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
             
