@@ -7562,12 +7562,13 @@ const ContextMenuSystem = {
         const isTitleBar = e.target.closest('.title-bar') !== null || e.target.closest('.ribbon-tabs') !== null;
         const isDocTitle = e.target.closest('#doc-title') !== null;
         
-        // Let default browser menu happen on UI ribbons / sidebars (except blank area)
-        if (e.target.closest('.ribbon-container') && !isRibbonBlank && !isTitleBar) return;
-        if ((e.target.closest('.op-sidebar') && !isSidebarBlank) || (e.target.closest('#sidebar') && !isSidebarBlank) || e.target.closest('#op-table-sidebar')) return;
+        const isZoomBar = e.target.closest('#zoom-slider-container') !== null;
         
-        // If they click on nothing relevant, return
-        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler && !isRibbonBlank && !isTitleBar) return;
+        // Let default browser menu happen ONLY on text inputs and selects
+        const targetInput = e.target.closest('input');
+        if ((targetInput && targetInput.type !== 'range' && targetInput.type !== 'color') || e.target.closest('textarea') || e.target.closest('select')) {
+            return;
+        }
 
         e.preventDefault();
         this.hide();
@@ -7669,6 +7670,24 @@ const ContextMenuSystem = {
             html += this.buildItem('Page Orientation', 'fa-sync-alt', 'if(window.toggleOrientation) window.toggleOrientation()');
             html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
             html += this.buildItem('Run Design Checker', 'fa-stethoscope', 'if(window.showInfoModal) { window.showInfoModal(); setTimeout(window.runDesignChecker, 300); }');
+        }
+        else if (isZoomBar) {
+            // --- ZOOM BAR MENU ---
+            for (let i = 60; i <= 200; i += 10) {
+                const icon = i < 100 ? 'fa-search-minus' : (i > 100 ? 'fa-search-plus' : 'fa-search');
+                html += this.buildItem(i + '%', icon, `setZoom(${(i / 100).toFixed(2)})`);
+            }
+        }
+        else if (!isPaperOrInside && !isWorkspace && !el) {
+            // --- GENERIC FALLBACK MENU ---
+            html += this.buildItem('Toggle Fullscreen', 'fa-expand', 'if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } else { document.exitFullscreen(); }');
+            html += this.buildDivider();
+            html += this.buildItem('Save Publication', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
+            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
+            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
+            html += this.buildDivider();
+            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+            html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
         }
         else {
             if (!el) {
