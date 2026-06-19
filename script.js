@@ -3530,6 +3530,8 @@ document.getElementById('img-upload').addEventListener('change', (e) => {
     }
 });
 
+
+
 // --- CROP FEATURE ---
 function toggleCrop() {
     if(!state.selectedEl) {
@@ -3569,12 +3571,140 @@ function toggleCrop() {
     }
 }
 
+// --- SHAPE EDIT MODE LOGIC ---
+window.toggleShapeEditPoints = function(el) {
+    el = el || state.selectedEl;
+    if(!el) return;
+    if(state.shapeEditMode) {
+        window.exitShapeEditMode();
+        return;
+    }
+    
+    // Check if it's a shape
+    const dataType = el.getAttribute('data-type');
+    let type = null;
+    let contentDiv = el.querySelector('.element-content > div:not(.shape-text)') || el.querySelector('.element-content');
+    let svgPolygon = el.querySelector('svg polygon');
+    let points = [];
+    
+    if(dataType === 'shape' && contentDiv && contentDiv.style.clipPath && contentDiv.style.clipPath.includes('polygon')) {
+        type = 'clip-path';
+        // Parse clip-path polygon(x% y%, x% y%, ...)
+        const match = contentDiv.style.clipPath.match(/polygon\(([^)]+)\)/);
+        if(match) {
+            const pts = match[1].split(',').map(s => s.trim());
+            pts.forEach(p => {
+                const parts = p.split(' ');
+                if(parts.length >= 2) {
+                    points.push({
+                        x: parseFloat(parts[0]),
+                        y: parseFloat(parts[1])
+                    });
+                }
+            });
+        }
+    } else if(dataType === 'shape' && contentDiv && (!contentDiv.style.clipPath || contentDiv.style.clipPath.includes('inset'))) {
+        type = 'clip-path';
+        contentDiv.style.clipPath = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
+        points = [
+            {x: 0, y: 0},
+            {x: 100, y: 0},
+            {x: 100, y: 100},
+            {x: 0, y: 100}
+        ];
+    } else if(svgPolygon) {
+        type = 'svg-polygon';
+        // Parse points="x,y x,y"
+        const ptsAttr = svgPolygon.getAttribute('points');
+        if(ptsAttr) {
+            const pts = ptsAttr.trim().split(/[\s,]+/);
+            for(let i=0; i<pts.length; i+=2) {
+                if(i+1 < pts.length) {
+                    points.push({
+                        x: parseFloat(pts[i]),
+                        y: parseFloat(pts[i+1])
+                    });
+                }
+            }
+        }
+    } else {
+        return; // Not a supported shape
+    }
+    
+    if(points.length === 0) return;
+    
+    state.shapeEditMode = true;
+    el.classList.add('editing-shape');
+    document.getElementById('status-msg').innerText = "Shape Edit Mode: Drag points to modify shape.";
+    
+    window._shapeEditContext = { el, type, points, contentDiv, svgPolygon };
+    window.renderShapeEditHandles();
+};
+
+window.renderShapeEditHandles = function() {
+    if(!state.shapeEditMode || !window._shapeEditContext) return;
+    const { el, points, type } = window._shapeEditContext;
+    
+    // Remove existing handles
+    el.querySelectorAll('.shape-edit-handle').forEach(h => h.remove());
+    
+    points.forEach((pt, index) => {
+        const handle = document.createElement('div');
+        handle.className = 'shape-edit-handle';
+        handle.dataset.index = index;
+        
+        if(type === 'clip-path') {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        } else if(type === 'svg-polygon') {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        }
+        el.appendChild(handle);
+    });
+};
+
+window.exitShapeEditMode = function() {
+    if(!state.shapeEditMode) return;
+    state.shapeEditMode = false;
+    
+    let elToFlatten = null;
+    
+    if(window._shapeEditContext) {
+        const el = window._shapeEditContext.el;
+        el.classList.remove('editing-shape');
+        el.querySelectorAll('.shape-edit-handle').forEach(h => h.remove());
+        elToFlatten = el;
+        window._shapeEditContext = null;
+    }
+    document.getElementById('status-msg').innerText = "Element Selected";
+    
+    if (elToFlatten && window.ContextMenuActions && window.ContextMenuActions.flattenToImage) {
+        const previouslySelected = state.selectedEl;
+        state.selectedEl = elToFlatten;
+        window.ContextMenuActions.flattenToImage();
+        state.selectedEl = previouslySelected;
+    }
+};
+
 // --- INTERACTION LOGIC ---
 function handleMouseDown(e) {
     if(e.target === paper || e.target.classList.contains('margin-guides')) {
         deselect();
         return;
     }
+
+    if(state.shapeEditMode && e.target.classList.contains('shape-edit-handle')) {
+        state.dragMode = 'shape-point';
+        state.dragData = {
+            index: parseInt(e.target.dataset.index),
+            startX: e.clientX,
+            startY: e.clientY
+        };
+        e.preventDefault();
+        return;
+    }
+
 
     // Handle Cropping Logic
     if(state.cropMode && state.selectedEl) {
@@ -3788,6 +3918,51 @@ function handleMouseMove(e) {
         // Hide toolbar while dragging
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
+    else if(state.dragMode === 'shape-point') {
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        const el = state.selectedEl;
+        
+        // Convert dx, dy to percentages or SVG coords based on shape size
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        
+        const ptIndex = state.dragData.index;
+        const pt = window._shapeEditContext.points[ptIndex];
+        
+        if (window._shapeEditContext.type === 'clip-path') {
+            // Percentages
+            const pX = (dx / w) * 100;
+            const pY = (dy / h) * 100;
+            pt.x = Math.max(0, Math.min(100, pt.x + pX));
+            pt.y = Math.max(0, Math.min(100, pt.y + pY));
+            
+            // Apply new clip-path
+            const newPoints = window._shapeEditContext.points.map(p => `${p.x}% ${p.y}%`).join(', ');
+            window._shapeEditContext.contentDiv.style.clipPath = `polygon(${newPoints})`;
+        } else if (window._shapeEditContext.type === 'svg-polygon') {
+            // SVG viewbox is usually 0 0 100 100
+            const pX = (dx / w) * 100;
+            const pY = (dy / h) * 100;
+            pt.x = pt.x + pX;
+            pt.y = pt.y + pY;
+            
+            // Apply new points attribute
+            const newPoints = window._shapeEditContext.points.map(p => `${p.x},${p.y}`).join(' ');
+            window._shapeEditContext.svgPolygon.setAttribute('points', newPoints);
+        }
+        
+        // Update drag start so we do relative steps
+        state.dragData.startX = e.clientX;
+        state.dragData.startY = e.clientY;
+        
+        // Update handle position
+        const handle = document.querySelector(`.shape-edit-handle[data-index="${ptIndex}"]`);
+        if (handle) {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        }
+    }
     else if(state.dragMode === 'pan-image') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
@@ -3927,6 +4102,7 @@ function selectElement(el) {
 
 function deselect() {
     if(state.cropMode) toggleCrop(); 
+    if(state.shapeEditMode && typeof window.exitShapeEditMode === 'function') window.exitShapeEditMode();
 
     if(state.selectedEl) {
         state.selectedEl.classList.remove('selected');
@@ -7155,6 +7331,22 @@ function handleMouseDown(e) {
         if(!e.target.closest('.pub-element.cropping')) toggleCrop();
     }
 
+    if(state.shapeEditMode && state.selectedEl) {
+        if(e.target.classList.contains('shape-edit-handle')) {
+            state.dragMode = 'shape-point';
+            const handle = e.target;
+            const index = parseInt(handle.dataset.index);
+            state.dragData = {
+                index: index,
+                startX: e.clientX, startY: e.clientY,
+                startPtX: window._shapeEditContext.points[index].x,
+                startPtY: window._shapeEditContext.points[index].y,
+                rect: state.selectedEl.getBoundingClientRect()
+            };
+            e.preventDefault(); return;
+        }
+    }
+
     if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
         if(e.target.classList.contains('rotate-handle')) {
             state.dragMode = 'rotate';
@@ -7319,6 +7511,41 @@ function handleMouseMove(e) {
         }
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
+    else if(state.dragMode === 'shape-point') {
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        const el = state.selectedEl;
+        
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        
+        const ptIndex = state.dragData.index;
+        const pt = window._shapeEditContext.points[ptIndex];
+        
+        if (window._shapeEditContext.type === 'clip-path') {
+            const pX = (dx / w) * 100;
+            const pY = (dy / h) * 100;
+            pt.x = Math.max(0, Math.min(100, state.dragData.startPtX + pX));
+            pt.y = Math.max(0, Math.min(100, state.dragData.startPtY + pY));
+            
+            const newPoints = window._shapeEditContext.points.map(p => `${p.x}% ${p.y}%`).join(', ');
+            window._shapeEditContext.contentDiv.style.clipPath = `polygon(${newPoints})`;
+        } else if (window._shapeEditContext.type === 'svg-polygon') {
+            const pX = (dx / w) * 100;
+            const pY = (dy / h) * 100;
+            pt.x = state.dragData.startPtX + pX;
+            pt.y = state.dragData.startPtY + pY;
+            
+            const newPoints = window._shapeEditContext.points.map(p => `${p.x},${p.y}`).join(' ');
+            window._shapeEditContext.svgPolygon.setAttribute('points', newPoints);
+        }
+        
+        const handle = document.querySelector(`.shape-edit-handle[data-index="${ptIndex}"]`);
+        if (handle) {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        }
+    }
     else if(state.dragMode === 'pan-image') {
         const dx = (e.clientX - state.dragData.startX) / zoom; const dy = (e.clientY - state.dragData.startY) / zoom;
         const img = state.selectedEl.querySelector('img');
@@ -7361,6 +7588,30 @@ function handleMouseMove(e) {
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
         }
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+    } else if (state.dragMode === 'shape-point') {
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        
+        const w = state.dragData.rect.width / zoom;
+        const h = state.dragData.rect.height / zoom;
+        
+        const percentDx = (dx / w) * 100;
+        const percentDy = (dy / h) * 100;
+
+        let pt = window._shapeEditContext.points[state.dragData.index];
+        pt.x = state.dragData.startPtX + percentDx;
+        pt.y = state.dragData.startPtY + percentDy;
+
+        if (window._shapeEditContext.type === 'clip-path') {
+            const polygonStr = window._shapeEditContext.points.map(p => `${p.x}% ${p.y}%`).join(', ');
+            window._shapeEditContext.contentDiv.style.clipPath = `polygon(${polygonStr})`;
+        } else if (window._shapeEditContext.type === 'svg-polygon') {
+            const polygonStr = window._shapeEditContext.points.map(p => `${p.x},${p.y}`).join(' ');
+            window._shapeEditContext.svgPolygon.setAttribute('points', polygonStr);
+        }
+
+        window.renderShapeEditHandles();
+        return;
     }
 }
 
@@ -7397,6 +7648,7 @@ function handleMouseUp() {
 // 5. Override Deselect
 function deselect() {
     if(state.cropMode && typeof toggleCrop === 'function') toggleCrop(); 
+    if(state.shapeEditMode && typeof window.exitShapeEditMode === 'function') window.exitShapeEditMode();
     if(state.multiSelected) { state.multiSelected.forEach(el => el.classList.remove('selected')); state.multiSelected = []; }
     if(state.selectedEl) {
         state.selectedEl.classList.remove('selected');
@@ -8019,6 +8271,7 @@ const ContextMenuSystem = {
                 }
                 // 4. SHAPE CONTEXT MENU
                 else if (isShape) {
+                    html += this.buildItem('Edit Points', 'fa-draw-polygon', 'if(window.toggleShapeEditPoints) window.toggleShapeEditPoints()');
                     html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
                     html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
                 }
@@ -8554,9 +8807,49 @@ window.ContextMenuActions = {
         content.style.transform = 'none';
         content.style.transformStyle = 'flat';
         
+        // --- CLIP-PATH INTERCEPT FOR HTML2CANVAS ---
+        let shapeDiv = content.querySelector('div:not(.shape-text)') || content;
+        let clipStr = shapeDiv.style.clipPath || shapeDiv.style.webkitClipPath || '';
+        let clipPoints = null;
+        if (clipStr && clipStr.includes('polygon')) {
+            const match = clipStr.match(/polygon\(([^)]+)\)/);
+            if(match) {
+                clipPoints = match[1].split(',').map(s => {
+                    const parts = s.trim().split(' ').filter(p => p !== '');
+                    return { x: parseFloat(parts[0]), y: parseFloat(parts[1]) };
+                });
+            }
+            shapeDiv.style.clipPath = 'none';
+            shapeDiv.style.webkitClipPath = 'none';
+        }
+        
         try {
             // 3. Render flat 2D state using html2canvas (handles CORS, CSS, fonts perfectly)
-            const flatCanvas = await html2canvas(content, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+            let flatCanvas = await html2canvas(content, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+            
+            if (clipPoints && clipPoints.length > 2) {
+                const clipCanvas = document.createElement('canvas');
+                clipCanvas.width = flatCanvas.width;
+                clipCanvas.height = flatCanvas.height;
+                const cCtx = clipCanvas.getContext('2d');
+                cCtx.beginPath();
+                clipPoints.forEach((pt, i) => {
+                    const px = (pt.x / 100) * clipCanvas.width;
+                    const py = (pt.y / 100) * clipCanvas.height;
+                    if(i===0) cCtx.moveTo(px, py);
+                    else cCtx.lineTo(px, py);
+                });
+                cCtx.closePath();
+                cCtx.clip();
+                cCtx.drawImage(flatCanvas, 0, 0);
+                flatCanvas = clipCanvas;
+            }
+            
+            if (clipStr) {
+                shapeDiv.style.clipPath = clipStr;
+                shapeDiv.style.webkitClipPath = clipStr;
+            }
+
             const flatBase64 = flatCanvas.toDataURL('image/png');
             
             // Restore 3D immediately so user doesn't see a flicker
@@ -20052,6 +20345,7 @@ window.toggleCrop = function() {
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
         if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
+            if(state.shapeEditMode) window.exitShapeEditMode();
             if(typeof window.deselect === 'function') window.deselect();
             state.dragMode = 'marquee';
             state.dragData = { startX: e.clientX, startY: e.clientY };
@@ -20063,6 +20357,22 @@ window.toggleCrop = function() {
             }
             return;
         }
+
+        if(state.shapeEditMode && e.target.classList.contains('shape-edit-handle')) {
+            state.dragMode = 'shape-point';
+            const idx = parseInt(e.target.dataset.index);
+            state.dragData = { 
+                index: idx, 
+                startX: e.clientX, 
+                startY: e.clientY, 
+                startPtX: window._shapeEditContext.points[idx].x,
+                startPtY: window._shapeEditContext.points[idx].y,
+                handle: e.target 
+            };
+            e.preventDefault();
+            return;
+        }
+
 
         if(state.cropMode && state.selectedEl) {
             if(e.target.classList.contains('resize-handle')) {
@@ -20222,7 +20532,35 @@ window.toggleCrop = function() {
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
         
-        if(state.dragMode === 'drag') {
+        if(state.dragMode === 'shape-point') {
+            const w = state.selectedEl.offsetWidth;
+            const h = state.selectedEl.offsetHeight;
+            const ptIndex = state.dragData.index;
+            const pt = window._shapeEditContext.points[ptIndex];
+            
+            if (window._shapeEditContext.type === 'clip-path') {
+                const pX = (dx / w) * 100;
+                const pY = (dy / h) * 100;
+                pt.x = Math.max(0, Math.min(100, state.dragData.startPtX + pX));
+                pt.y = Math.max(0, Math.min(100, state.dragData.startPtY + pY));
+                
+                const newPoints = window._shapeEditContext.points.map(p => `${p.x}% ${p.y}%`).join(', ');
+                window._shapeEditContext.contentDiv.style.clipPath = `polygon(${newPoints})`;
+            } else if (window._shapeEditContext.type === 'svg-polygon') {
+                const pX = (dx / w) * 100;
+                const pY = (dy / h) * 100;
+                pt.x = state.dragData.startPtX + pX;
+                pt.y = state.dragData.startPtY + pY;
+                
+                const newPoints = window._shapeEditContext.points.map(p => `${p.x},${p.y}`).join(' ');
+                window._shapeEditContext.svgPolygon.setAttribute('points', newPoints);
+            }
+            
+            state.dragData.handle.style.left = pt.x + '%';
+            state.dragData.handle.style.top = pt.y + '%';
+            return;
+        }
+        else if(state.dragMode === 'drag') {
             if(state.dragData.multi && state.dragData.multi.length > 0) { 
                 state.dragData.multi.forEach(item => { 
                     const s = window.applySnapping(item.l + dx, item.t + dy, item.el.offsetWidth, item.el.offsetHeight, item.el, e);
