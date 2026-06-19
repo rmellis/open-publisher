@@ -46,7 +46,7 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.11.5">
+    <link rel="stylesheet" href="style.css?v=4.11.7">
 	<script src="clipart-data.js?v=4.11.4"></script>
 	<script type="application/ld+json">
 {
@@ -442,8 +442,11 @@
             <div class="group-label">Tables</div>
         </div>
         <div class="group">
-            <div class="tool-btn" onclick="insertPageNumber()" title="Insert a dynamic page number that updates automatically"><i class="fas fa-hashtag"></i>Page Number</div>
-            <div class="tool-btn" onclick="if(typeof showSymbolModal === 'function') showSymbolModal()" title="Insert Special Characters (©, —, •, €, etc.)"><i class="fas fa-copyright"></i>Symbol</div>
+            <div class="tool-btn" onclick="toggleBusinessInfoMenu(this); event.stopPropagation();"><i class="fas fa-id-card"></i>Business<br>Info <i class="fas fa-caret-down"></i></div>
+            <div style="display:flex; flex-direction:column; justify-content:center;">
+                <div class="tool-btn" onclick="insertPageNumber()" title="Insert a dynamic page number that updates automatically" style="padding: 2px 5px; height:auto; min-width:unset; flex-direction:row; align-items:center;"><i class="fas fa-hashtag" style="margin-right:5px; margin-bottom:0; font-size:12px;"></i>Page Number</div>
+                <div class="tool-btn" onclick="if(typeof showSymbolModal === 'function') showSymbolModal()" title="Insert Special Characters (©, —, •, €, etc.)" style="padding: 2px 5px; height:auto; min-width:unset; flex-direction:row; align-items:center;"><i class="fas fa-copyright" style="margin-right:5px; margin-bottom:0; font-size:12px;"></i>Symbol</div>
+            </div>
             <div class="group-label">Text</div>
         </div>
         <div class="group drawing-tools-group" style="position: relative; padding-top: 5px;">
@@ -616,6 +619,23 @@
     </div>
 </div>
 
+<div class="dropdown-menu" id="business-info-dropdown" style="width: 250px;">
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('name')"><i class="fas fa-user" style="width:20px;"></i> Individual Name</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('title')"><i class="fas fa-briefcase" style="width:20px;"></i> Job Title</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('organization')"><i class="fas fa-building" style="width:20px;"></i> Organization Name</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('address')"><i class="fas fa-map-marker-alt" style="width:20px;"></i> Address</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('contact')"><i class="fas fa-phone" style="width:20px;"></i> Contact Details</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('tagline')"><i class="fas fa-quote-left" style="width:20px;"></i> Tagline</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessInfoField('logo')"><i class="fas fa-image" style="width:20px;"></i> Logo</div>
+    <div style="height:1px; background:#ccc; margin:5px 0;"></div>
+    <div style="font-size:10px; padding:2px 10px; color:#666; font-weight:bold; text-transform:uppercase;">Bulk Placements</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessBulk('letterhead')"><i class="fas fa-file-invoice" style="width:20px;"></i> Letterhead</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessBulk('signature')"><i class="fas fa-file-signature" style="width:20px;"></i> Signature Block</div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px;" onclick="insertBusinessBulk('business-card')"><i class="fas fa-id-badge" style="width:20px;"></i> Business Card Layout</div>
+    <div style="height:1px; background:#ccc; margin:5px 0;"></div>
+    <div class="dropdown-item" style="width:100%; justify-content:flex-start; padding-left:10px; font-weight:bold; color:var(--pub-color);" onclick="showBusinessInfoModal()"><i class="fas fa-edit" style="width:20px;"></i> Edit Business Information...</div>
+</div>
+
 <div class="dropdown-menu" id="table-dropdown" style="width: 220px; padding: 10px;">
     <div id="table-grid-label" style="text-align:center; margin-bottom:5px; font-size:12px;">0 x 0 Table</div>
     <div id="table-picker-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px;"></div>
@@ -784,7 +804,7 @@
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>    <script src="script.js?v=4.11.6"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>    <script src="script.js?v=4.11.7"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>

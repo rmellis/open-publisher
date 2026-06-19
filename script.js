@@ -641,8 +641,9 @@ function serializeCurrentPage() {
         data.p3d = content ? content.getAttribute('data-3d-p') : null;
         const img = content ? content.querySelector('img') : null;
         const shapeDiv = content ? content.querySelector('div') : null;
+        const isTrueImage = img && (data.type === 'image' || data.type === 'emoji' || (content.children.length === 1 && content.children[0].tagName === 'IMG'));
 
-        if (img) {
+        if (isTrueImage) {
             data.imgSrc = img.src;
             const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
             data.imgStyle = {
@@ -3271,6 +3272,187 @@ function initTablePicker() {
             };
             
             grid.appendChild(cell);
+        }
+    }
+}
+
+function toggleBusinessInfoMenu(btn, e) {
+    const m = document.getElementById('business-info-dropdown');
+    document.querySelectorAll('.dropdown-menu').forEach(d => { if(d!==m) d.style.display = 'none'; });
+    if (btn) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+    } else if (e) {
+        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+    }
+    m.style.display = (m.style.display === 'block' ? 'none' : 'block');
+}
+
+function getBusinessInfo() {
+    try {
+        return JSON.parse(localStorage.getItem('op_business_info')) || {};
+    } catch(err) {
+        return {};
+    }
+}
+
+function saveBusinessInfo(data) {
+    localStorage.setItem('op_business_info', JSON.stringify(data));
+}
+
+function showBusinessInfoModal() {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    const info = getBusinessInfo();
+    const html = `
+        <div style="padding: 10px;">
+            <p style="margin-bottom: 15px; font-size: 13px;">Save your business details here to easily insert them into any document.</p>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Individual Name</label>
+                <input type="text" id="bi-name" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.name || ''}" placeholder="e.g. John Smith">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Job Title</label>
+                <input type="text" id="bi-title" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.title || ''}" placeholder="e.g. Manager">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Organization Name</label>
+                <input type="text" id="bi-organization" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.organization || ''}" placeholder="e.g. Acme Corp">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Address</label>
+                <textarea id="bi-address" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="123 Main St.">${info.address || ''}</textarea>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Contact Details (Phone/Fax/E-mail)</label>
+                <textarea id="bi-contact" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="Phone: 555-1234">${info.contact || ''}</textarea>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Tagline or Motto</label>
+                <input type="text" id="bi-tagline" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.tagline || ''}" placeholder="e.g. Quality First">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Logo (Base64 string or URL)</label>
+                <input type="text" id="bi-logo" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.logo || ''}" placeholder="Paste image URL here">
+                <input type="file" id="bi-logo-file" accept="image/*" style="display:none;" onchange="
+                    const file = this.files[0];
+                    if(file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('bi-logo').value = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                ">
+                <button type="button" style="margin-top:5px; padding: 4px 8px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; background: #eee;" onclick="document.getElementById('bi-logo-file').click()">Select Local Image</button>
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show("Edit Business Information", html, function() {
+        const data = {
+            name: document.getElementById('bi-name').value,
+            title: document.getElementById('bi-title').value,
+            organization: document.getElementById('bi-organization').value,
+            address: document.getElementById('bi-address').value,
+            contact: document.getElementById('bi-contact').value,
+            tagline: document.getElementById('bi-tagline').value,
+            logo: document.getElementById('bi-logo').value
+        };
+        saveBusinessInfo(data);
+    });
+}
+
+function insertBusinessInfoField(fieldName) {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    const info = getBusinessInfo();
+    const val = info[fieldName];
+    if (!val || val.trim() === '') {
+        showBusinessInfoModal();
+        return;
+    }
+    
+    if (fieldName === 'logo') {
+        const wrapper = createWrapper(`<img src="${val}" draggable="false" style="width:100%; height:100%; object-fit:contain; display:block;">`);
+        wrapper.style.width = '150px';
+        wrapper.style.height = '150px';
+    } else {
+        const textHTML = val.replace(/\n/g, '<br>');
+        createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;" contenteditable="true">${textHTML}</div>`);
+    }
+}
+
+function insertBusinessBulk(type) {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    const info = getBusinessInfo();
+    
+    if (!info.name && !info.organization) {
+        showBusinessInfoModal();
+        return;
+    }
+    
+    let html = '';
+    
+    if (type === 'letterhead') {
+        html = `
+        <div style="width:100%; height:100%; border-bottom: 2px solid #007670; font-family: sans-serif; padding-bottom: 10px; box-sizing: border-box; min-height: 100px;">
+            <div style="width: 100%;">
+                <div style="float: left; max-width: 50%;">
+                    ${info.logo ? `<img src="${info.logo}" style="max-height:80px; max-width:150px; object-fit:contain; position:static !important; width:auto !important; height:auto !important; display:inline-block !important;">` : `<h1 style="color:#007670; margin:0; padding:0; font-size: 24px;">${info.organization || info.name}</h1>`}
+                </div>
+                <div style="float: right; text-align:right; font-size:12px; color:#555; line-height: 1.4; max-width:50%;">
+                    ${info.organization && info.logo ? `<strong style="font-size:14px; color:#000;">${info.organization}</strong><br>` : ''}
+                    ${info.name ? `<strong>${info.name}</strong>${info.title ? ` - ${info.title}` : ''}<br>` : ''}
+                    ${info.address ? `${info.address.replace(/\n/g, '<br>')}<br>` : ''}
+                    ${info.contact ? `${info.contact.replace(/\n/g, ' | ')}` : ''}
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+        </div>
+        `;
+    } else if (type === 'signature') {
+        html = `
+        <div style="padding-top: 20px; width:100%; height:100%; font-family: sans-serif; min-height: 100px;">
+            <div style="border-top: 1px solid #ccc; width: 200px; margin-bottom: 10px;"></div>
+            <strong style="font-size:16px; color:#000;">${info.name || 'Your Name'}</strong><br>
+            ${info.title ? `<span style="font-style:italic; color:#666; font-size:14px;">${info.title}</span><br>` : ''}
+            ${info.organization ? `<strong style="font-size:14px; color:#000;">${info.organization}</strong><br>` : ''}
+            ${info.contact ? `<span style="font-size:12px; color:#555; line-height: 1.4;">${info.contact.replace(/\n/g, '<br>')}</span>` : ''}
+        </div>
+        `;
+    } else if (type === 'business-card') {
+        html = `
+        <div style="width:100%; height:100%; border: 1px solid #e1e1e1; padding: 20px; box-sizing: border-box; background: #fff; border-radius: 4px; font-family: sans-serif; min-height: 180px;">
+            <div style="width: 100%;">
+                <div style="float: left; max-width: 60%;">
+                    <h2 style="margin:0; color:#007670; font-size:18px; line-height:1.2;">${info.name || 'Name'}</h2>
+                    ${info.title ? `<span style="color:#666; font-size:12px;">${info.title}</span>` : ''}
+                </div>
+                <div style="float: right; max-width: 35%; text-align:right;">
+                    ${info.logo ? `<img src="${info.logo}" style="max-width:100px; max-height:50px; object-fit:contain; position:static !important; width:auto !important; height:auto !important; display:inline-block !important;">` : ''}
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+            <div style="line-height: 1.3; width: 100%; margin-top: 15px;">
+                ${info.organization ? `<strong style="font-size:14px; color:#000;">${info.organization}</strong><br>` : ''}
+                ${info.address ? `<span style="font-size:10px; color:#555;">${info.address.replace(/\n/g, ', ')}</span><br>` : ''}
+                ${info.contact ? `<span style="font-size:10px; color:#555;">${info.contact.replace(/\n/g, ' | ')}</span>` : ''}
+                ${info.tagline ? `<div style="margin-top:5px; font-style:italic; font-size:10px; color:#007670;">${info.tagline}</div>` : ''}
+            </div>
+        </div>
+        `;
+    }
+    
+    if (html) {
+        const wrapper = createWrapper(`<div style="width:100%; height:100%;" contenteditable="true">${html}</div>`);
+        if (type === 'letterhead') {
+            wrapper.style.width = '600px';
+            wrapper.style.height = '120px';
+        } else if (type === 'signature') {
+            wrapper.style.width = '300px';
+            wrapper.style.height = '150px';
+        } else if (type === 'business-card') {
+            wrapper.style.width = '350px';
+            wrapper.style.height = '200px';
         }
     }
 }
