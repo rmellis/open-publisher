@@ -7557,11 +7557,14 @@ const ContextMenuSystem = {
         const isSidebarBlank = e.target.closest('#sidebar') && !e.target.closest('.page-thumb-container');
         const isRuler = e.target.closest('.ruler-h') || e.target.closest('.ruler-v') || e.target.closest('.ruler-c');
         
+        const isRibbonBlank = e.target.closest('.ribbon-container') && !e.target.closest('.tool-btn, .modern-select, .group-label, .ribbon-tabs, input, select');
+        
         // Let default browser menu happen on UI ribbons / sidebars (except blank area)
-        if (e.target.closest('.ribbon-container') || (e.target.closest('.op-sidebar') && !isSidebarBlank) || e.target.closest('#sidebar') && !isSidebarBlank || e.target.closest('#op-table-sidebar')) return;
+        if (e.target.closest('.ribbon-container') && !isRibbonBlank) return;
+        if ((e.target.closest('.op-sidebar') && !isSidebarBlank) || (e.target.closest('#sidebar') && !isSidebarBlank) || e.target.closest('#op-table-sidebar')) return;
         
         // If they click on nothing relevant, return
-        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler) return;
+        if (!isPaperOrInside && !isWorkspace && !isMarginGuides && !isSidebarBlank && !isRuler && !isRibbonBlank) return;
 
         e.preventDefault();
         this.hide();
@@ -7575,7 +7578,17 @@ const ContextMenuSystem = {
         // Build dynamic menu based on target
         let html = '';
 
-        if (isRuler) {
+        if (isRibbonBlank) {
+            html += this.buildItem('Toggle Fullscreen', 'fa-expand', 'if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } else { document.exitFullscreen(); }');
+            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
+            html += this.buildItem('Save Project', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
+            html += this.buildDivider();
+            html += this.buildItem('Show / Hide Rulers', 'fa-ruler-combined', 'if(window.toggleRulers) window.toggleRulers()');
+            html += this.buildItem('Toggle Grid Background', 'fa-border-all', 'if(window.toggleGrid) window.toggleGrid()');
+            html += this.buildDivider();
+            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+        }
+        else if (isRuler) {
             html += this.buildItem('Hide Rulers', 'fa-eye-slash', 'if(window.toggleRulers) window.toggleRulers()');
             html += this.buildItem('Toggle Margins', 'fa-vector-square', 'if(window.toggleMargins) window.toggleMargins()');
             html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
