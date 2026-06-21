@@ -9261,6 +9261,41 @@ window.applyGrowFit = function(el) {
 };
 
 window.ContextRibbonActions = {
+    toggleAspectLock: function(locked) {
+        if (!state.selectedEl) return;
+        state.selectedEl.setAttribute('data-aspect-lock', locked ? 'true' : 'false');
+        if (locked) {
+            state.selectedEl.setAttribute('data-aspect-ratio', (state.selectedEl.offsetWidth / state.selectedEl.offsetHeight) || 1);
+        }
+    },
+    updateElementSize: function(dim, val) {
+        if (!state.selectedEl) return;
+        const el = state.selectedEl;
+        let newW = parseFloat(dim === 'w' ? val : (document.getElementById('ribbon-el-w')?.value || el.offsetWidth));
+        let newH = parseFloat(dim === 'h' ? val : (document.getElementById('ribbon-el-h')?.value || el.offsetHeight));
+        const isLocked = el.getAttribute('data-aspect-lock') === 'true';
+        const originalAspectRatio = parseFloat(el.getAttribute('data-aspect-ratio')) || (el.offsetWidth / el.offsetHeight) || 1;
+        
+        if (isLocked) {
+            if (dim === 'w') {
+                newH = newW / originalAspectRatio;
+                const hInput = document.getElementById('ribbon-el-h');
+                if (hInput) hInput.value = Math.round(newH);
+            } else if (dim === 'h') {
+                newW = newH * originalAspectRatio;
+                const wInput = document.getElementById('ribbon-el-w');
+                if (wInput) wInput.value = Math.round(newW);
+            }
+        } else {
+            el.setAttribute('data-aspect-ratio', (newW / newH) || 1);
+        }
+        
+        if (newW >= 10) el.style.width = newW + 'px';
+        if (newH >= 10) el.style.height = newH + 'px';
+        
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+        pushHistory();
+    },
     alignCenter: function() {
         if(!state.selectedEl) return;
         state.selectedEl.style.left = Math.max(0, (paper.clientWidth / 2) - (state.selectedEl.clientWidth / 2)) + 'px';
@@ -9439,6 +9474,7 @@ window.ContextRibbonSystem = {
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="group-label">Arrange</div></div>`;
         const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><input type="color" class="drawing-color-picker" value="#000000" style="width:25px; height:25px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onchange="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)"><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
+        const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:2px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><input type="number" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)" style="width:50px; font-size:11px; padding:2px; border:1px solid #ccc; border-radius:3px;"> px</div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><input type="number" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)" style="width:50px; font-size:11px; padding:2px; border:1px solid #ccc; border-radius:3px;"> px</div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer;" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
 
         const tabsC = document.querySelector('.ribbon-tabs');
         if (tabsC && !document.getElementById('tab-format-text')) {
@@ -9450,8 +9486,8 @@ window.ContextRibbonSystem = {
             ribC.insertAdjacentHTML('beforeend', `
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--pub-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--pub-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--pub-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--pub-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
             initRibbonResponsiveness();
@@ -9505,6 +9541,16 @@ window.ContextRibbonSystem = {
             }
         }
         if (tabIdToOpen) window.switchTab(tabIdToOpen);
+
+        const wInput = document.getElementById('ribbon-el-w');
+        const hInput = document.getElementById('ribbon-el-h');
+        const lockInput = document.getElementById('ribbon-el-lock');
+        if (wInput && hInput && lockInput) {
+            wInput.value = parseInt(el.offsetWidth);
+            hInput.value = parseInt(el.offsetHeight);
+            lockInput.checked = el.getAttribute('data-aspect-lock') === 'true';
+            if (!el.hasAttribute('data-aspect-ratio')) el.setAttribute('data-aspect-ratio', (el.offsetWidth / el.offsetHeight) || 1);
+        }
     },
     hideAllTabs: function() {
         document.querySelectorAll('.contextual-tab').forEach(tab => { tab.style.display = 'none'; });
@@ -20389,8 +20435,10 @@ window.toggleCrop = function() {
 
                 state.dragData = {
                     dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                    w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
-                    l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
+                    w: parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth, 
+                    h: parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight,
+                    l: parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft, 
+                    t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
                     imgL: startImgLeft, // ✨ Saved to memory
@@ -20443,8 +20491,10 @@ window.toggleCrop = function() {
                 state.dragMode = 'resize';
                 state.dragData = {
                     dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                    w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
-                    l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
+                    w: parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth, 
+                    h: parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight,
+                    l: parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft, 
+                    t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1
                 };
@@ -20638,7 +20688,7 @@ window.toggleCrop = function() {
             }
 
             // Aspect Ratio Lock (Standard Resize Only)
-            if (e.shiftKey && !state.cropMode) {
+            if ((e.shiftKey || state.selectedEl.getAttribute('data-aspect-lock') === 'true') && !state.cropMode) {
                 const safeW = d.w || 1; const safeH = d.h || 1;
                 const scaleX = Math.abs(rawW / safeW), scaleY = Math.abs(rawH / safeH);
                 let dominantScale = 1;
