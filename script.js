@@ -7322,10 +7322,10 @@ function handleMouseDown(e) {
             };
             e.preventDefault(); return;
         }
-        if(e.target.tagName === 'IMG' && e.target.closest('.pub-element') === state.selectedEl) {
+        const targetImg = e.target.tagName === 'IMG' ? e.target : e.target.querySelector('img');
+        if(targetImg && e.target.closest('.pub-element') === state.selectedEl && !e.target.classList.contains('resize-handle')) {
             state.dragMode = 'pan-image';
-            const img = e.target;
-            state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(img.style.left) || 0, t: parseFloat(img.style.top) || 0 };
+            state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(targetImg.style.left) || 0, t: parseFloat(targetImg.style.top) || 0 };
             e.preventDefault(); return;
         }
         if(!e.target.closest('.pub-element.cropping')) toggleCrop();
@@ -8952,13 +8952,15 @@ window.ContextMenuActions = {
                     
                     const originalHtml = content.outerHTML;
                     
-                    content.innerHTML = '<img src="' + finalDataUrl + '" style="width:100%; height:100%; object-fit:fill; pointer-events:none;">';
+                    // Generate a standard image element (matching V62 interaction fixes)
+                    content.innerHTML = '<img src="' + finalDataUrl + '" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0; pointer-events: auto;">';
                     
                     content.style.transform = '';
                     content.style.transformStyle = '';
                     content.style.backfaceVisibility = '';
                     content.style.background = 'transparent';
                     content.style.border = 'none';
+                    content.style.clipPath = '';
                     content.removeAttribute('data-3d-rx');
                     content.removeAttribute('data-3d-ry');
                     content.removeAttribute('data-3d-rz');
@@ -8975,6 +8977,8 @@ window.ContextMenuActions = {
                     };
                     el.setAttribute('data-original-state', encodeURIComponent(JSON.stringify(originalState)));
                     el.setAttribute('data-type', 'image');
+                    el.setAttribute('data-scaleX', '1');
+                    el.setAttribute('data-scaleY', '1');
                     
                     // Adjust the bounding box of the element to perfectly wrap the 3D-rotated image!
                     el.style.left = (parseFloat(el.style.left || 0) + offsetX) + 'px';
@@ -20394,9 +20398,10 @@ window.toggleCrop = function() {
                 };
                 e.preventDefault(); return;
             }
-            if(e.target.tagName === 'IMG' && e.target.closest('.pub-element') === state.selectedEl) {
+            const targetImg = e.target.tagName === 'IMG' ? e.target : e.target.querySelector('img');
+            if(targetImg && e.target.closest('.pub-element') === state.selectedEl && !e.target.classList.contains('resize-handle')) {
                 state.dragMode = 'pan-image';
-                state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(e.target.style.left) || 0, t: parseFloat(e.target.style.top) || 0 };
+                state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(targetImg.style.left) || 0, t: parseFloat(targetImg.style.top) || 0 };
                 e.preventDefault(); return;
             }
             if(!e.target.closest('.pub-element.cropping')) if(typeof toggleCrop === 'function') toggleCrop();
