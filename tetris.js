@@ -32,7 +32,7 @@
     const LOCK_DELAY = 500; // ms
 
     let audioCtx;
-    let themeAudio = new Audio('https://saw.floydcraft.co.uk/OpenPublisherTetrisTheme.mp3');
+    let themeAudio = new Audio('https://github.com/rmellis/open-publisher/releases/download/4.11.13/OpenPublisherTetrisTheme.mp3');
     themeAudio.loop = true;
     themeAudio.volume = 0.25;
 

@@ -1408,7 +1408,12 @@ function initShapes() {
     ];
 
     const svgDefs = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svgDefs.innerHTML = '<defs><marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" /></marker></defs>';
+    svgDefs.innerHTML = '<defs>' +
+        '<marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" /></marker>' +
+        '<marker id="ah-hollow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0.5, 9 3.5, 0 6.5" fill="white" stroke="context-stroke" stroke-width="1" /></marker>' +
+        '<marker id="ah-flat" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><line x1="5" y1="0" x2="5" y2="10" stroke="context-stroke" stroke-width="2" /></marker>' +
+        '<marker id="ah-diamond" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto"><polygon points="1 5, 5 1, 9 5, 5 9" fill="white" stroke="context-stroke" stroke-width="1" /></marker>' +
+        '</defs>';
     document.body.appendChild(svgDefs);
     svgDefs.style.display='none';
 
@@ -1431,6 +1436,39 @@ function initShapes() {
             document.getElementById('shape-dropdown').style.display = 'none';
         };
         gridOutline.appendChild(item);
+    });
+
+    // HOLLOW ARROWS LIST
+    const gridHollow = document.getElementById('shape-grid-hollow');
+    const hollowArrowShapes = [
+        // Standard Point (Hollow)
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-end="url(#ah-hollow)"/>'},
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-start="url(#ah-hollow)" marker-end="url(#ah-hollow)"/>'},
+        {svg: '<path d="M10,50 Q50,10 90,50" fill="none" stroke="black" stroke-width="2" marker-end="url(#ah-hollow)"/>'},
+        // Flat Stop
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-end="url(#ah-flat)"/>'},
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-start="url(#ah-flat)" marker-end="url(#ah-flat)"/>'},
+        {svg: '<path d="M10,50 Q50,10 90,50" fill="none" stroke="black" stroke-width="2" marker-end="url(#ah-flat)"/>'},
+        // Diamond
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-end="url(#ah-diamond)"/>'},
+        {svg: '<line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2" marker-start="url(#ah-diamond)" marker-end="url(#ah-diamond)"/>'},
+        {svg: '<path d="M10,50 Q50,10 90,50" fill="none" stroke="black" stroke-width="2" marker-end="url(#ah-diamond)"/>'}
+    ];
+
+    hollowArrowShapes.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        let previewSvg = s.svg;
+        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="#005a55"`);
+        item.innerHTML = `<svg class="shape-preview-outline" viewBox="0 0 100 100" style="width:25px; height:25px;">${previewSvg}</svg>`;
+        item.onclick = () => {
+            const el = createWrapper(`<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">${s.svg}</svg>`);
+            el.setAttribute('data-type', 'shape');
+            el.setAttribute('data-scheme-stroke', '0'); // Primary Dark
+            if (typeof applySingleElementScheme === 'function') applySingleElementScheme(el, state.currentScheme);
+            document.getElementById('shape-dropdown').style.display = 'none';
+        };
+        gridHollow.appendChild(item);
     });
 }
 
@@ -14588,7 +14626,18 @@ window.initShapes = function() {
             { name: 'Record', markup: `<circle cx="50" cy="50" r="30" />` }
         ],
         "Block Arrows": blockArrows,
-        "Hollow Arrows": makeHollow(blockArrows),
+        "Hollow Arrows": [
+            { name: 'Standard Hollow Point', markup: `<line x1="10" y1="50" x2="75" y2="50" fill="none" /><polygon points="75,30 95,50 75,70" fill="transparent" />` },
+            { name: 'Standard Hollow Double', markup: `<line x1="25" y1="50" x2="75" y2="50" fill="none" /><polygon points="25,30 5,50 25,70" fill="transparent" /><polygon points="75,30 95,50 75,70" fill="transparent" />` },
+            { name: 'Standard Hollow Curved', markup: `<path d="M 10,50 Q 50,10 75,50" fill="transparent" /><polygon points="65,35 85,60 85,35" fill="transparent" />` },
+            { name: 'Flat Stop', markup: `<line x1="10" y1="50" x2="85" y2="50" fill="none" /><line x1="85" y1="20" x2="85" y2="80" fill="none" />` },
+            { name: 'Flat Stop Double', markup: `<line x1="15" y1="50" x2="85" y2="50" fill="none" /><line x1="15" y1="20" x2="15" y2="80" fill="none" /><line x1="85" y1="20" x2="85" y2="80" fill="none" />` },
+            { name: 'Flat Stop Curved', markup: `<path d="M 10,50 Q 50,10 85,50" fill="transparent" /><line x1="75" y1="60" x2="95" y2="40" fill="none" />` },
+            { name: 'Diamond Hollow', markup: `<line x1="10" y1="50" x2="70" y2="50" fill="none" /><polygon points="70,50 82,38 94,50 82,62" fill="transparent" />` },
+            { name: 'Diamond Hollow Double', markup: `<line x1="30" y1="50" x2="70" y2="50" fill="none" /><polygon points="30,50 18,38 6,50 18,62" fill="transparent" /><polygon points="70,50 82,38 94,50 82,62" fill="transparent" />` },
+            { name: 'Diamond Hollow Curved', markup: `<path d="M 10,50 Q 50,10 70,50" fill="transparent" /><polygon points="70,50 82,38 94,50 82,62" fill="transparent" />` },
+            ...makeHollow(blockArrows)
+        ],
         "Polygons": polygons,
         "Hollow Polygons": makeHollow(polygons.slice(0, 10)), // Limit to first 10 so it's not overwhelming
         "Stars": stars,
