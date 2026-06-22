@@ -4135,6 +4135,9 @@ function selectElement(el) {
     el.classList.add('selected');
     document.getElementById('status-msg').innerText = "Element Selected";
     
+    if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
+        window.parseShadowToSliders();
+    }
     showFloatToolbar();
 }
 
@@ -9468,7 +9471,24 @@ window.ContextRibbonActions = {
         const floatBar = document.getElementById('float-toolbar'); if(floatBar) floatBar.style.display = 'none';
         const waModal = document.getElementById('wordart-modal'); if(waModal) { waModal.style.display = 'flex'; waModal.style.zIndex = '6000'; }
     },
-    addDropShadow: function() { if(state.selectedEl && state.selectedEl.querySelector('img')) { state.selectedEl.querySelector('img').style.filter = state.selectedEl.querySelector('img').style.filter.includes('drop-shadow') ? 'none' : 'drop-shadow(5px 5px 10px rgba(0,0,0,0.6))'; pushHistory(); } },
+    addDropShadow: function() { 
+        if(state.selectedEl) { 
+            const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
+            if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
+                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+            }
+            const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
+            const currentFilter = inner.style.filter || '';
+            if (currentFilter.includes('drop-shadow')) {
+                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(false);
+            } else {
+                inner.style.filter = (currentFilter + ' drop-shadow(5px 5px 10px rgba(0,0,0,0.6))').trim();
+                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
+            }
+            if (typeof pushHistory === 'function') pushHistory(); 
+        } 
+    },
     cropToShape: function() {
         if(state.selectedEl && state.selectedEl.querySelector('img') && typeof DialogSystem !== 'undefined') {
             DialogSystem.show('Crop to Shape', `<select id="ctx-crop-shape" style="width:100%; padding:8px;"><option value="none">Remove Crop</option><option value="circle(50%)">Circle / Oval</option><option value="polygon(50% 0%, 0% 100%, 100% 100%)">Triangle</option><option value="polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)">Star</option></select>`, () => {
@@ -9613,7 +9633,7 @@ window.ContextRibbonSystem = {
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--pub-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--pub-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--pub-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--pub-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
             initRibbonResponsiveness();
@@ -25877,4 +25897,130 @@ window.refreshSelectionPane = function() {
         row.appendChild(nameInput);
         list.appendChild(row);
     });
+};
+
+// ==========================================
+// SHADOW PANE LOGIC
+// ==========================================
+window.setShadowPaneVisibility = function(visible) {
+    let panel = document.getElementById('op-shadow-sidebar');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'op-shadow-sidebar';
+        panel.className = 'sidebar-panel op-sidebar';
+        panel.innerHTML = `
+            <div class="op-sidebar-header">
+                <span class="op-sidebar-title">Shadow Options</span>
+                <div class="op-sidebar-top-btns">
+                    <button class="op-header-btn" onclick="document.getElementById('op-shadow-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="op-sidebar-section">
+                <div class="op-sidebar-label">Shadow Color</div>
+                <input type="color" id="shadow-color-input" value="#000000" onchange="window.updateShadowFromSliders()" style="width: 100%; height: 30px; border: 1px solid #ccc; cursor: pointer;">
+            </div>
+            <div class="op-sidebar-section">
+                <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Transparency</span> <span style="font-weight:bold;"><span id="shadow-alpha-val">60</span>%</span></div>
+                <input type="range" id="shadow-alpha-slider" min="0" max="100" value="60" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-alpha-val').innerText=this.value; window.updateShadowFromSliders()">
+            </div>
+            <div class="op-sidebar-section">
+                <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Blur Radius</span> <span style="font-weight:bold;"><span id="shadow-blur-val">10</span>px</span></div>
+                <input type="range" id="shadow-blur-slider" min="0" max="100" value="10" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-blur-val').innerText=this.value; window.updateShadowFromSliders()">
+            </div>
+            <div class="op-sidebar-section">
+                <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>X Offset</span> <span style="font-weight:bold;"><span id="shadow-x-val">5</span>px</span></div>
+                <input type="range" id="shadow-x-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-x-val').innerText=this.value; window.updateShadowFromSliders()">
+            </div>
+            <div class="op-sidebar-section">
+                <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Y Offset</span> <span style="font-weight:bold;"><span id="shadow-y-val">5</span>px</span></div>
+                <input type="range" id="shadow-y-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-y-val').innerText=this.value; window.updateShadowFromSliders()">
+            </div>
+        `;
+        document.body.appendChild(panel);
+    }
+    
+    if (visible) {
+        document.querySelectorAll('.sidebar-panel.visible, .op-sidebar.visible').forEach(el => el.classList.remove('visible'));
+        panel.classList.add('visible');
+        window.parseShadowToSliders();
+    } else {
+        panel.classList.remove('visible');
+    }
+};
+
+window.parseShadowToSliders = function() {
+    if (!state.selectedEl) return;
+    const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
+    let inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
+    
+    // Fallback parsing if shadow was already applied to an inner element before hotfix
+    if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
+        inner = legacyInner;
+    }
+
+    const filter = inner.style.filter || '';
+    const match = filter.match(/drop-shadow\(([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px\s+(rgba?\([^)]+\)|#[0-9a-fA-F]+)\)/);
+    if (match) {
+        const x = parseFloat(match[1]);
+        const y = parseFloat(match[2]);
+        const blur = parseFloat(match[3]);
+        let colorStr = match[4];
+        
+        let r = 0, g = 0, b = 0, a = 0.6;
+        if (colorStr.startsWith('rgba') || colorStr.startsWith('rgb')) {
+            const rgbaMatch = colorStr.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/);
+            if (rgbaMatch) {
+                r = parseInt(rgbaMatch[1]);
+                g = parseInt(rgbaMatch[2]);
+                b = parseInt(rgbaMatch[3]);
+                a = rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1;
+            }
+        }
+        
+        const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        
+        document.getElementById('shadow-x-slider').value = x;
+        document.getElementById('shadow-x-val').innerText = x;
+        document.getElementById('shadow-y-slider').value = y;
+        document.getElementById('shadow-y-val').innerText = y;
+        document.getElementById('shadow-blur-slider').value = blur;
+        document.getElementById('shadow-blur-val').innerText = blur;
+        document.getElementById('shadow-alpha-slider').value = Math.round((1 - a) * 100);
+        document.getElementById('shadow-alpha-val').innerText = Math.round((1 - a) * 100);
+        document.getElementById('shadow-color-input').value = hex;
+    }
+};
+
+window.updateShadowFromSliders = function() {
+    if (!state.selectedEl) return;
+    const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
+    if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
+        legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+    }
+    const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
+    
+    const x = document.getElementById('shadow-x-slider').value;
+    const y = document.getElementById('shadow-y-slider').value;
+    const blur = document.getElementById('shadow-blur-slider').value;
+    const alphaSlider = document.getElementById('shadow-alpha-slider').value;
+    const hex = document.getElementById('shadow-color-input').value;
+    
+    let r = parseInt(hex.substring(1,3), 16);
+    let g = parseInt(hex.substring(3,5), 16);
+    let b = parseInt(hex.substring(5,7), 16);
+    let a = 1 - (alphaSlider / 100);
+    
+    const dropShadowStr = `drop-shadow(${x}px ${y}px ${blur}px rgba(${r},${g},${b},${a}))`;
+    
+    let currentFilter = inner.style.filter || '';
+    if (currentFilter.includes('drop-shadow')) {
+        inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, dropShadowStr).trim();
+    } else {
+        inner.style.filter = (currentFilter + ' ' + dropShadowStr).trim();
+    }
+    
+    clearTimeout(window.shadowHistoryTimeout);
+    window.shadowHistoryTimeout = setTimeout(() => {
+        if (typeof pushHistory === 'function') pushHistory();
+    }, 500);
 };
