@@ -5626,6 +5626,66 @@ function toggleSizeMenu(btn) {
         m.style.display = 'block';
     }
 }
+window.showRotationModal = function() {
+    if (!state.selectedEl) return;
+    let currentRot = 0;
+    if (state.selectedEl.style.transform && state.selectedEl.style.transform.includes('rotate')) {
+        const match = state.selectedEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+        if (match) currentRot = parseFloat(match[1]);
+    }
+    const form = `<div class="input-group"><label>Rotation (Degrees):</label><input type="number" id="exact-rotation-input" value="${currentRot}"></div>`;
+    DialogSystem.show('Exact Rotation', form, () => {
+        const deg = parseFloat(document.getElementById('exact-rotation-input').value) || 0;
+        let trans = state.selectedEl.style.transform || '';
+        if (trans.includes('rotate')) {
+            trans = trans.replace(/rotate\([-\d.]+deg\)/, `rotate(${deg}deg)`);
+        } else {
+            trans += ` rotate(${deg}deg)`;
+        }
+        state.selectedEl.style.transform = trans;
+        pushHistory();
+    });
+};
+
+window.toggleRotateMenu = function(btn) {
+    let m = document.getElementById('rotate-dropdown');
+    if (!m) {
+        m = document.createElement('div');
+        m.id = 'rotate-dropdown';
+        m.className = 'dropdown-menu';
+        m.style.cssText = 'min-width: 150px;';
+        
+        const createItem = (icon, text, onclick) => {
+            const d = document.createElement('div');
+            d.className = 'dropdown-item';
+            d.innerHTML = `<i class="fas ${icon}" style="width: 26px; text-align: center;"></i> <span>${text}</span>`;
+            d.onclick = () => { m.style.display = 'none'; onclick(); };
+            return d;
+        };
+
+        m.appendChild(createItem('fa-redo', 'Rotate Right 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(90); }));
+        m.appendChild(createItem('fa-undo', 'Rotate Left 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(-90); }));
+        m.appendChild(createItem('fa-arrows-alt-v', 'Flip Vertical', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('Y'); }));
+        m.appendChild(createItem('fa-arrows-alt-h', 'Flip Horizontal', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('X'); }));
+        
+        const sep = document.createElement('div');
+        sep.style.cssText = 'height: 1px; background: #e2e8f0; margin: 5px 0;';
+        m.appendChild(sep);
+        
+        m.appendChild(createItem('fa-sync-alt', 'More Rotation Options...', () => { window.showRotationModal(); }));
+        
+        document.body.appendChild(m);
+    }
+    
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom + 5) + 'px';
+        m.style.display = 'block';
+    }
+};
+
 function toggleSnapMenu(btn) {
     const m = document.getElementById('snap-dropdown');
     const isBlock = m.style.display === 'block';
@@ -9299,6 +9359,34 @@ window.applyGrowFit = function(el) {
 };
 
 window.ContextRibbonActions = {
+    rotateRelative: function(degDelta) {
+        if (!state.selectedEl) return;
+        let trans = state.selectedEl.style.transform || '';
+        let currentRot = 0;
+        const match = trans.match(/rotate\(([-\d.]+)deg\)/);
+        if (match) currentRot = parseFloat(match[1]);
+        const newRot = currentRot + degDelta;
+        if (match) {
+            trans = trans.replace(/rotate\([-\d.]+deg\)/, `rotate(${newRot}deg)`);
+        } else {
+            trans += ` rotate(${newRot}deg)`;
+        }
+        state.selectedEl.style.transform = trans;
+        pushHistory();
+    },
+    flipScale: function(axis) {
+        if (!state.selectedEl) return;
+        let trans = state.selectedEl.style.transform || '';
+        const scaleRegex = new RegExp(`scale${axis}\\(([-1]+)\\)`);
+        const match = trans.match(scaleRegex);
+        if (match) {
+            trans = trans.replace(scaleRegex, `scale${axis}(${match[1] === '-1' ? '1' : '-1'})`);
+        } else {
+            trans += ` scale${axis}(-1)`;
+        }
+        state.selectedEl.style.transform = trans;
+        pushHistory();
+    },
     toggleAspectLock: function(locked) {
         if (!state.selectedEl) return;
         state.selectedEl.setAttribute('data-aspect-lock', locked ? 'true' : 'false');
@@ -9510,7 +9598,7 @@ window.ContextRibbonActions = {
 window.ContextRibbonSystem = {
     init: function() {
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
-        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="group-label">Arrange</div></div>`;
+        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="group-label">Arrange</div></div>`;
         const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><input type="color" class="drawing-color-picker" value="#000000" style="width:25px; height:25px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onchange="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)"><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
         const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--pub-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
 
@@ -18291,7 +18379,7 @@ window.handleMouseUp = function() {
         const layoutTab = document.getElementById('ribbon-table-layout');
         
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
-        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="group-label">Arrange</div></div>`;
+        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="group-label">Arrange</div></div>`;
 
         if (designTab) {
             clearInterval(checkRibbons);
