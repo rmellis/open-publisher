@@ -865,24 +865,24 @@ td, th {
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1); display: none; z-index: 999999;
     padding: 5px; max-height: 400px; overflow-y: auto; width: 320px;
 }
-#snap-dropdown, #color-blind-dropdown, #business-info-dropdown, #rotate-dropdown, #margins-dropdown {
+#snap-dropdown, #color-blind-dropdown, #business-info-dropdown, #rotate-dropdown, #margins-dropdown, #size-dropdown {
     border-radius: 6px; border: 1px solid var(--pub-color); overflow: hidden; padding: 2px;
     box-shadow: 0 4px 12px rgba(0, 118, 112, 0.15); font-size: 13px;
 }
 #rotate-dropdown { width: 160px; }
-#snap-dropdown .dropdown-item, #color-blind-dropdown .dropdown-item, #business-info-dropdown .dropdown-item, #rotate-dropdown .dropdown-item, #margins-dropdown .dropdown-item {
+#snap-dropdown .dropdown-item, #color-blind-dropdown .dropdown-item, #business-info-dropdown .dropdown-item, #rotate-dropdown .dropdown-item, #margins-dropdown .dropdown-item, #size-dropdown .dropdown-item {
     border-radius: 4px; border: 1px solid transparent; height: 26px; margin-bottom: 2px;
     justify-content: flex-start !important; padding: 0 10px; box-sizing: border-box; width: 100%;
 }
-#snap-dropdown .dropdown-item:last-child, #color-blind-dropdown .dropdown-item:last-child, #business-info-dropdown .dropdown-item:last-child, #rotate-dropdown .dropdown-item:last-child, #margins-dropdown .dropdown-item:last-child {
+#snap-dropdown .dropdown-item:last-child, #color-blind-dropdown .dropdown-item:last-child, #business-info-dropdown .dropdown-item:last-child, #rotate-dropdown .dropdown-item:last-child, #margins-dropdown .dropdown-item:last-child, #size-dropdown .dropdown-item:last-child {
     margin-bottom: 0;
 }
-#snap-dropdown .dropdown-item:hover, #color-blind-dropdown .dropdown-item:hover, #business-info-dropdown .dropdown-item:hover, #rotate-dropdown .dropdown-item:hover, #margins-dropdown .dropdown-item:hover {
+#snap-dropdown .dropdown-item:hover, #color-blind-dropdown .dropdown-item:hover, #business-info-dropdown .dropdown-item:hover, #rotate-dropdown .dropdown-item:hover, #margins-dropdown .dropdown-item:hover, #size-dropdown .dropdown-item:hover {
     background: rgba(0, 118, 112, 0.1) !important; 
     border-color: transparent !important;
     color: var(--pub-color) !important;
 }
-#snap-dropdown .dropdown-item i, #color-blind-dropdown .dropdown-item i, #business-info-dropdown .dropdown-item i, #rotate-dropdown .dropdown-item i, #margins-dropdown .dropdown-item i {
+#snap-dropdown .dropdown-item i, #color-blind-dropdown .dropdown-item i, #business-info-dropdown .dropdown-item i, #rotate-dropdown .dropdown-item i, #margins-dropdown .dropdown-item i, #size-dropdown .dropdown-item i {
     color: var(--pub-color);
 }
 

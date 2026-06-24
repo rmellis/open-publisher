@@ -696,12 +696,18 @@ function renderPage(pageData) {
 
     if (typeof window.setPageFormatIcon === 'function') {
         let w = parseFloat(pageData.width);
+        let h = parseFloat(pageData.height || '1123');
         if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
-        if (w > 800) {
-            window.setPageFormatIcon('Letter');
-        } else {
-            window.setPageFormatIcon('A4');
-        }
+        
+        let fmt = 'A4';
+        if (w >= 1100) fmt = 'A3';
+        else if (w >= 1000) fmt = 'Tabloid';
+        else if (w >= 810 && h > 1100) fmt = 'Legal';
+        else if (w > 800) fmt = 'Letter';
+        else if (w < 400) fmt = 'BusinessCard';
+        else if (w < 600) fmt = 'A5';
+        
+        window.setPageFormatIcon(fmt);
     }
     
     if (typeof state !== 'undefined' && state.isSpreadMode) {
@@ -4514,8 +4520,17 @@ function setPageSize(format) {
     let w = '794px';
     let h = '1123px';
     if(format === 'Letter') {
-        w = '816px';
-        h = '1056px';
+        w = '816px'; h = '1056px';
+    } else if(format === 'A3') {
+        w = '1123px'; h = '1587px';
+    } else if(format === 'A5') {
+        w = '559px'; h = '794px';
+    } else if(format === 'Legal') {
+        w = '816px'; h = '1344px';
+    } else if(format === 'Tabloid') {
+        w = '1056px'; h = '1632px';
+    } else if(format === 'BusinessCard') {
+        w = '336px'; h = '192px';
     }
     
     if (typeof state !== 'undefined' && state.isSpreadMode) {
@@ -4524,6 +4539,10 @@ function setPageSize(format) {
     
     paper.style.width = w;
     paper.style.height = h;
+    
+    // Auto-update the UI format icon immediately
+    if (typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(format);
+    
     pushHistory();
     const sizeDrop = document.getElementById('size-dropdown');
     if(sizeDrop) sizeDrop.style.display = 'none';
@@ -15852,31 +15871,37 @@ window.initShapes = function() {
     indicator.title = "To change the page size, click 'Size' in the Home tab.";
     document.body.appendChild(indicator);
 
-    const svgA4 = `
-        <svg width="30" height="35" viewBox="0 0 24 28" style="display:block;">
-            <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L 20 2 C 21.1 2 22 2.9 22 4 L 22 28" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-            <text x="12" y="18" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#cbd5e1" text-anchor="middle">A4</text>
+    const makeIcon = (label, vw, w, fs, y) => `
+        <svg width="${w}" height="35" viewBox="0 0 ${vw} 28" style="display:block;">
+            <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L ${vw-4} 2 C ${vw-2.9} 2 ${vw-2} 2.9 ${vw-2} 4 L ${vw-2} 28" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+            <text x="${vw/2}" y="${y}" font-family="Arial, sans-serif" font-size="${fs}" font-weight="bold" fill="#cbd5e1" text-anchor="middle">${label}</text>
         </svg>
     `;
-
-    const svgLetter = `
-        <svg width="40" height="35" viewBox="0 0 32 28" style="display:block;">
-            <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L 28 2 C 29.1 2 30 2.9 30 4 L 30 28" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-            <text x="16" y="17" font-family="Arial, sans-serif" font-size="6.5" font-weight="bold" fill="#cbd5e1" text-anchor="middle">LETTER</text>
-        </svg>
-    `;
-
-    indicator.innerHTML = svgA4;
 
     window.setPageFormatIcon = function(format) {
-        if (format.toLowerCase() === 'letter') {
-            indicator.innerHTML = svgLetter;
-        } else {
-            indicator.innerHTML = svgA4;
+        let svg = '';
+        const f = format ? format.toLowerCase() : '';
+        if (f === 'letter') svg = makeIcon('LETTER', 32, 40, 6.5, 17);
+        else if (f === 'a3') svg = makeIcon('A3', 24, 30, 10, 18);
+        else if (f === 'a4') svg = makeIcon('A4', 24, 30, 10, 18);
+        else if (f === 'a5') svg = makeIcon('A5', 24, 30, 10, 18);
+        else if (f === 'legal') svg = makeIcon('LEGAL', 24, 30, 5.5, 17);
+        else if (f === 'tabloid') svg = makeIcon('TABLOID', 34, 42, 5.5, 17);
+        else if (f === 'businesscard') {
+            svg = `
+            <svg width="40" height="35" viewBox="0 0 36 28" style="display:block;">
+                <path d="M 2 20 L 2 4 C 2 2.9 2.9 2 4 2 L 32 2 C 33.1 2 34 2.9 34 4 L 34 20 C 34 21.1 33.1 22 32 22 L 4 22 C 2.9 22 2 21.1 2 20 Z" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
+                <text x="18" y="14" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#cbd5e1" text-anchor="middle">CARD</text>
+            </svg>`;
         }
+        else svg = makeIcon('CUSTOM', 34, 42, 5.5, 17);
+        
+        indicator.innerHTML = svg;
         indicator.style.transform = 'scale(1.1)';
         setTimeout(() => { indicator.style.transform = 'scale(1)'; }, 150);
     };
+
+    indicator.innerHTML = makeIcon('A4', 24, 30, 10, 18);
 
     const originalLoad = window.loadTemplate;
     if (typeof originalLoad === 'function' && !window._formatHooked) {
@@ -15884,27 +15909,21 @@ window.initShapes = function() {
         window.loadTemplate = function(t) {
             originalLoad(t);
             let w = t.w;
+            let h = t.h || 1123;
             if (typeof state !== 'undefined' && state.isSpreadMode) {
                 w = w / 2;
             }
-            if (w && w > 800) {
-                window.setPageFormatIcon('Letter');
-            } else {
-                window.setPageFormatIcon('A4');
-            }
+            let fmt = 'A4';
+            if (w >= 1100) fmt = 'A3';
+            else if (w >= 1000) fmt = 'Tabloid';
+            else if (w >= 810 && h > 1100) fmt = 'Legal';
+            else if (w > 800) fmt = 'Letter';
+            else if (w < 400) fmt = 'BusinessCard';
+            else if (w < 600) fmt = 'A5';
+            
+            window.setPageFormatIcon(fmt);
         };
     }
-
-    document.addEventListener('click', (e) => {
-        if (!e.target) return;
-        const text = e.target.textContent || e.target.innerText || '';
-        const cleanText = text.trim().toLowerCase();
-        if (cleanText === 'letter' || cleanText === 'us letter') {
-            window.setPageFormatIcon('Letter');
-        } else if (cleanText === 'a4') {
-            window.setPageFormatIcon('A4');
-        }
-    });
 })();
 /* =========================================================================
    BUG FIX: Firefox Native Undo Override & Button Stabilization
