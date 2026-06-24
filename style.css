@@ -507,12 +507,46 @@ body {
 }
 .page-thumb-container:hover .page-del-btn { opacity: 1; }
 
-.page-add-btn {
-    width: 100%; padding: 8px; background: #e1e1e1; border: 1px dashed #999;
-    cursor: pointer; text-align: center; font-size: 12px;
-    border-radius: 8px;
+.add-page-btns-wrapper {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    width: 100%;
 }
-.page-add-btn:hover { background: #d1d1d1; }
+.page-add-btn {
+    flex: 1;
+    position: relative;
+    padding: 7px 5px;
+    background: #3c7a73;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    border-radius: 8px;
+    border: none;
+    transition: 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.page-add-btn::before {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border: 1px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    pointer-events: none;
+}
+#master-page-btn {
+    flex: 0 0 auto;
+    padding: 7px 6px;
+    font-size: 11px;
+}
+.master-page-element, .master-page-element * {
+    pointer-events: none !important;
+    user-select: none !important;
+}
+.page-add-btn:hover { background: #2f6058; }
 
 .sidebar-collapse-btn {
     position: absolute; top: 5px; right: 5px;

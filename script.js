@@ -13,6 +13,7 @@ window.stopRibbonScroll = () => {
 
 let state = {
     pages: [], 
+    hasMasterPage: false,
     currentPageIndex: 0,
     isSpreadMode: false,
     zoom: 1.0,
@@ -610,7 +611,7 @@ function serializeCurrentPage() {
         elements: []
     };
 
-    const els = paper.querySelectorAll('.pub-element');
+    const els = paper.querySelectorAll('.pub-element:not(.master-page-element)');
     els.forEach(el => {
         const data = {
             left: el.style.left,
@@ -719,9 +720,19 @@ function renderPage(pageData) {
     paper.innerHTML = '';
     structural.forEach(el => paper.appendChild(el));
 
-    pageData.elements.forEach(data => {
+    let elementsToRender = [];
+    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0]) {
+        elementsToRender = state.pages[0].elements.map(e => Object.assign({}, e, { _isMaster: true }));
+    }
+    elementsToRender = elementsToRender.concat(pageData.elements.map(e => Object.assign({}, e, { _isMaster: false })));
+
+    elementsToRender.forEach(data => {
         const el = document.createElement('div');
         el.className = 'pub-element';
+        if (data._isMaster) {
+            el.classList.add('master-page-element');
+            el.style.pointerEvents = 'none';
+        }
         if (data.innerHTML && data.innerHTML.includes('spread-fold-line')) {
             el.classList.add('ignore-selection');
             el.style.pointerEvents = 'none';
@@ -875,6 +886,55 @@ function addNewPage() {
     }, 50);
 }
 
+function addMasterPage() {
+    if (state.hasMasterPage) {
+        switchPage(0);
+        return;
+    }
+
+    if(state.pages.length > 0) {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
+
+    let defaultW = '794px'; 
+    let defaultH = '1123px';
+    try {
+        const locale = navigator.language || navigator.userLanguage || '';
+        const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
+        if (letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX')) {
+            defaultW = '816px'; 
+            defaultH = '1056px';
+        }
+    } catch(e) {}
+
+    let pageW = defaultW;
+    if (typeof state !== 'undefined' && state.isSpreadMode) {
+        pageW = (parseInt(defaultW) * 2) + 'px';
+    }
+
+    const newPage = {
+        id: Date.now() + '-master',
+        width: pageW, height: defaultH,
+        background: '#ffffff',
+        header: 'Header (Type here)', 
+        footer: 'Footer (Type here)',
+        borderStyle: 'none',
+        elements: []
+    };
+    
+    state.hasMasterPage = true;
+    state.pages.unshift(newPage);
+    state.currentPageIndex = 0;
+    
+    renderPage(newPage);
+    updateSidebar();
+    
+    setTimeout(() => {
+        updateThumbnails();
+        pushHistory(); 
+    }, 50);
+}
+
 function switchPage(newIndex) {
     if (newIndex === state.currentPageIndex) return;
     // Save current page state
@@ -893,6 +953,9 @@ function deletePage(index, event) {
     event.stopPropagation();
     
     DialogSystem.show('Delete Page', '<p>Are you sure you want to permanently delete this page?</p>', () => {
+        if (state.hasMasterPage && index === 0) {
+            state.hasMasterPage = false;
+        }
         state.pages.splice(index, 1);
         if(state.pages.length === 0) {
             addNewPage();
@@ -994,7 +1057,7 @@ function renderThumbnailHTML(pageData, pageIndex) {
 
 function updateSidebar() {
     const sb = document.getElementById('sidebar');
-    const btn = sb.querySelector('.page-add-btn');
+    const btns = Array.from(sb.querySelectorAll('.page-add-btn'));
     sb.innerHTML = '';
     
     // Re-inject toggle button if cleared
@@ -1022,6 +1085,9 @@ function updateSidebar() {
         const thumbHeight = pH * (100 / pW);
         
         let labelText = state.isSpreadMode ? `Page ${(i*2)+1} - ${(i*2)+2}` : `Page ${i+1}`;
+        if (state.hasMasterPage && i === 0) {
+            labelText = 'Master Page';
+        }
         const pW_Inches = (pW / 96).toFixed(1);
         const pH_Inches = (pH / 96).toFixed(1);
         let sizeText = `<span style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">${pW_Inches} x ${pH_Inches} in</span>`;
@@ -1044,7 +1110,18 @@ function updateSidebar() {
 
         sb.appendChild(div);
     });
-    sb.appendChild(btn);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'add-page-btns-wrapper';
+    if (btns.length > 0) wrapper.appendChild(btns[0]);
+    if (btns.length > 1) {
+        if (state.hasMasterPage) {
+            btns[1].innerHTML = '<i class="fas fa-arrow-right"></i> Master';
+        } else {
+            btns[1].innerHTML = '<i class="fas fa-plus"></i> Master';
+        }
+        wrapper.appendChild(btns[1]);
+    }
+    sb.appendChild(wrapper);
 }
 
 function updateThumbnails() {
@@ -5715,6 +5792,7 @@ function saveDocument() {
     const docData = {
         title: document.getElementById('doc-title').innerText,
         pages: state.pages,
+        hasMasterPage: state.hasMasterPage || false,
         isSpreadMode: state.isSpreadMode || false,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
@@ -5980,8 +6058,13 @@ async function exportAsHTML(opts = {}) {
             pageWrapper.style.boxShadow = opts.seamless ? 'none' : '0 2px 15px rgba(0,0,0,0.12)';
             pageWrapper.style.boxSizing = 'border-box';
             
-            if (page.elements) {
-                for (const data of page.elements) {
+            let elementsToRender = page.elements || [];
+            if (state.hasMasterPage && i > 0 && state.pages[0] && state.pages[0].elements) {
+                elementsToRender = state.pages[0].elements.concat(elementsToRender);
+            }
+            
+            if (elementsToRender.length > 0) {
+                for (const data of elementsToRender) {
                     if (data.innerHTML && data.innerHTML.includes('spread-fold-line')) continue;
                     
                     let elDiv = document.createElement('div');
@@ -6342,6 +6425,7 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 }
                 
                 state.pages = data.pages;
+                state.hasMasterPage = data.hasMasterPage || false;
                 
                 // Read Spreads state (or infer for legacy saves)
                 if (data.isSpreadMode !== undefined) {
@@ -7797,7 +7881,7 @@ function printFullDocument(isBooklet = false) {
     printSpooler.innerHTML = ''; 
 
     // 2. Loop through every page saved in the state memory
-    state.pages.forEach((page) => {
+    state.pages.forEach((page, pageIndex) => {
         // Create a blank piece of paper for this page
         let pageWrapper = document.createElement('div');
         pageWrapper.className = 'op-print-page';
@@ -7807,7 +7891,12 @@ function printFullDocument(isBooklet = false) {
         pageWrapper.style.position = 'relative';
 
         // 3. Reconstruct every element on this specific page
-        page.elements.forEach(el => {
+        let elementsToRender = page.elements || [];
+        if (state.hasMasterPage && pageIndex > 0 && state.pages[0] && state.pages[0].elements) {
+             elementsToRender = state.pages[0].elements.concat(elementsToRender);
+        }
+        
+        elementsToRender.forEach(el => {
             let elDiv = document.createElement('div');
             elDiv.style.position = 'absolute';
             elDiv.style.left = el.left;
@@ -7863,12 +7952,17 @@ function printBooklet() {
         // 1. Temporarily split spreads back to single pages in memory if needed
         let singlePages = [];
         if (state.isSpreadMode) {
-            state.pages.forEach(spread => {
+            state.pages.forEach((spread, spreadIndex) => {
                 const singleW = parseInt(spread.width) / 2;
                 let leftPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
                 let rightPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
                 
-                spread.elements.forEach(el => {
+                let spreadElements = spread.elements || [];
+                if (state.hasMasterPage && spreadIndex > 0 && state.pages[0] && state.pages[0].elements) {
+                    spreadElements = state.pages[0].elements.concat(spreadElements);
+                }
+                
+                spreadElements.forEach(el => {
                     let elLeft = parseFloat(el.left);
                     if (elLeft < singleW) {
                         leftPage.elements.push(JSON.parse(JSON.stringify(el)));
@@ -7882,6 +7976,11 @@ function printBooklet() {
             });
         } else {
             singlePages = JSON.parse(JSON.stringify(state.pages));
+            if (state.hasMasterPage && state.pages[0] && state.pages[0].elements) {
+                for (let i = 1; i < singlePages.length; i++) {
+                    singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                }
+            }
         }
         
         // 2. Pad to multiple of 4
@@ -22622,7 +22721,12 @@ window.addEventListener('beforeprint', () => {
 
                 if (themeHtml) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
 
-                for (let el of page.elements) {
+                let elementsToRender = page.elements || [];
+                if (state.hasMasterPage && i > 0 && pagesToPrint === state.pages && state.pages[0] && state.pages[0].elements) {
+                    elementsToRender = state.pages[0].elements.concat(elementsToRender);
+                }
+
+                for (let el of elementsToRender) {
                     let elDiv = document.createElement('div');
                     
                     elDiv.style.position = 'absolute';
