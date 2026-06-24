@@ -1449,7 +1449,6 @@ body::-webkit-scrollbar-thumb:hover,
     min-width: 180px;
     display: none;
     flex-direction: column;
-    overflow: hidden;
 }
 
 #minimap-context-menu .cm-item {
@@ -1482,6 +1481,25 @@ body::-webkit-scrollbar-thumb:hover,
     height: 1px;
     background: rgba(0, 118, 112, 0.2);
     margin: 4px 0;
+}
+
+#minimap-context-menu .cm-has-submenu { position: relative; }
+#minimap-context-menu .cm-submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -1px;
+    background: #ffffff;
+    border: 1px solid var(--pub-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 118, 112, 0.2);
+    min-width: 160px;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 100000;
+}
+#minimap-context-menu .cm-has-submenu:hover .cm-submenu {
+    display: flex;
 }
 
 /* Prevent vector shape borders from scaling unevenly when stretched */

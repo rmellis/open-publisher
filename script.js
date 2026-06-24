@@ -602,6 +602,7 @@ function serializeCurrentPage() {
     const p = {
         id: existingPage.id || Date.now(),
         thumb: existingPage.thumb, // <--- PRESERVE THUMBNAIL
+        ignoreMasterPage: existingPage.ignoreMasterPage || false,
         width: paper.style.width || '794px',
         height: paper.style.height || '1123px',
         background: paper.style.background || 'white',
@@ -721,7 +722,7 @@ function renderPage(pageData) {
     structural.forEach(el => paper.appendChild(el));
 
     let elementsToRender = [];
-    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0]) {
+    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
         elementsToRender = state.pages[0].elements.map(e => Object.assign({}, e, { _isMaster: true }));
     }
     elementsToRender = elementsToRender.concat(pageData.elements.map(e => Object.assign({}, e, { _isMaster: false })));
@@ -1077,6 +1078,7 @@ function updateSidebar() {
         div.onclick = () => switchPage(i);
         div.oncontextmenu = (e) => {
             e.preventDefault();
+            e.stopPropagation();
             showMinimapContextMenu(e, i);
         };
         
@@ -6059,7 +6061,7 @@ async function exportAsHTML(opts = {}) {
             pageWrapper.style.boxSizing = 'border-box';
             
             let elementsToRender = page.elements || [];
-            if (state.hasMasterPage && i > 0 && state.pages[0] && state.pages[0].elements) {
+            if (state.hasMasterPage && i > 0 && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
                 elementsToRender = state.pages[0].elements.concat(elementsToRender);
             }
             
@@ -7892,7 +7894,7 @@ function printFullDocument(isBooklet = false) {
 
         // 3. Reconstruct every element on this specific page
         let elementsToRender = page.elements || [];
-        if (state.hasMasterPage && pageIndex > 0 && state.pages[0] && state.pages[0].elements) {
+        if (state.hasMasterPage && pageIndex > 0 && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
              elementsToRender = state.pages[0].elements.concat(elementsToRender);
         }
         
@@ -7958,7 +7960,7 @@ function printBooklet() {
                 let rightPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
                 
                 let spreadElements = spread.elements || [];
-                if (state.hasMasterPage && spreadIndex > 0 && state.pages[0] && state.pages[0].elements) {
+                if (state.hasMasterPage && spreadIndex > 0 && state.pages[0] && state.pages[0].elements && !spread.ignoreMasterPage) {
                     spreadElements = state.pages[0].elements.concat(spreadElements);
                 }
                 
@@ -7978,7 +7980,9 @@ function printBooklet() {
             singlePages = JSON.parse(JSON.stringify(state.pages));
             if (state.hasMasterPage && state.pages[0] && state.pages[0].elements) {
                 for (let i = 1; i < singlePages.length; i++) {
-                    singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                    if (!singlePages[i].ignoreMasterPage) {
+                        singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                    }
                 }
             }
         }
@@ -22722,7 +22726,7 @@ window.addEventListener('beforeprint', () => {
                 if (themeHtml) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
 
                 let elementsToRender = page.elements || [];
-                if (state.hasMasterPage && i > 0 && pagesToPrint === state.pages && state.pages[0] && state.pages[0].elements) {
+                if (state.hasMasterPage && i > 0 && pagesToPrint === state.pages && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
                     elementsToRender = state.pages[0].elements.concat(elementsToRender);
                 }
 
@@ -25630,6 +25634,17 @@ function showMinimapContextMenu(e, index) {
     state.contextMenuTargetIndex = index;
     const menu = document.getElementById('minimap-context-menu');
     if (!menu) return;
+    
+    const ignoreMasterIcon = menu.querySelector('#cm-ignore-master i');
+    const defaultMasterIcon = menu.querySelector('#cm-default-master i');
+    if (state.pages[index] && state.pages[index].ignoreMasterPage) {
+        if(ignoreMasterIcon) ignoreMasterIcon.style.opacity = '1';
+        if(defaultMasterIcon) defaultMasterIcon.style.opacity = '0';
+    } else {
+        if(ignoreMasterIcon) ignoreMasterIcon.style.opacity = '0';
+        if(defaultMasterIcon) defaultMasterIcon.style.opacity = '1';
+    }
+    
     menu.style.display = 'flex';
     
     // Position menu
@@ -25659,6 +25674,31 @@ document.addEventListener('contextmenu', (e) => {
 
 function contextAddPage() {
     addNewPage(state.contextMenuTargetIndex);
+}
+
+function contextSetIgnoreMaster(ignore) {
+    const idx = state.contextMenuTargetIndex;
+    if (idx === undefined || !state.pages[idx]) return;
+    if (idx === 0 && state.hasMasterPage) {
+        if (typeof DialogSystem !== 'undefined') DialogSystem.show('Invalid Operation', 'You cannot ignore the master page on the master page itself.');
+        return;
+    }
+    
+    if (idx === state.currentPageIndex && typeof serializeCurrentPage === 'function') {
+        state.pages[idx] = serializeCurrentPage();
+    }
+    
+    state.pages[idx].ignoreMasterPage = ignore;
+    
+    if (idx === state.currentPageIndex) {
+        renderPage(idx);
+    }
+    
+    updateSidebar();
+    saveState();
+    
+    const menu = document.getElementById('minimap-context-menu');
+    if (menu) menu.style.display = 'none';
 }
 
 function contextDuplicatePage(fromPasteboard = false) {
