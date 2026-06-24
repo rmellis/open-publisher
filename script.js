@@ -5796,6 +5796,8 @@ function saveDocument() {
         pages: state.pages,
         hasMasterPage: state.hasMasterPage || false,
         isSpreadMode: state.isSpreadMode || false,
+        rulerOriginX: state.rulerOriginX || 0,
+        rulerOriginY: state.rulerOriginY || 0,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
@@ -6428,6 +6430,8 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 
                 state.pages = data.pages;
                 state.hasMasterPage = data.hasMasterPage || false;
+                state.rulerOriginX = data.rulerOriginX || 0;
+                state.rulerOriginY = data.rulerOriginY || 0;
                 
                 // Read Spreads state (or infer for legacy saves)
                 if (data.isSpreadMode !== undefined) {
@@ -6609,6 +6613,7 @@ window.initRulers = function() {
     });
 
     window.initIndentMarkersLogic();
+    if (window.initRulerOriginLogic) window.initRulerOriginLogic();
 
     // Force the first draw
     setTimeout(window.syncRulers, 50);
@@ -6676,8 +6681,8 @@ window.syncRulers = function() {
     }
 
     // Offsets (Where is the paper on the screen?)
-    const offsetX = pRect.left - hRect.left;
-    const offsetY = pRect.top - vRect.top;
+    const offsetX = (pRect.left - hRect.left) + ((state.rulerOriginX || 0) * zoom);
+    const offsetY = (pRect.top - vRect.top) + ((state.rulerOriginY || 0) * zoom);
 
     // Visible ranges (ONLY draw what is currently on screen for extreme performance!)
     const startMmH = Math.floor(-offsetX / (pxPerMm * zoom));
@@ -6791,6 +6796,90 @@ window.initIndentMarkersLogic = function() {
         document.removeEventListener('mouseup', onMouseUp);
         pushHistory();
     }
+};
+
+window.initRulerOriginLogic = function() {
+    const rulerC = document.querySelector('.ruler-c');
+    if (!rulerC) return;
+    
+    let guideH = document.getElementById('ruler-origin-guide-h');
+    let guideV = document.getElementById('ruler-origin-guide-v');
+    
+    if (!guideH) {
+        guideH = document.createElement('div');
+        guideH.id = 'ruler-origin-guide-h';
+        guideH.className = 'ruler-origin-guide h';
+        document.body.appendChild(guideH);
+    }
+    if (!guideV) {
+        guideV = document.createElement('div');
+        guideV.id = 'ruler-origin-guide-v';
+        guideV.className = 'ruler-origin-guide v';
+        document.body.appendChild(guideV);
+    }
+
+    let isDraggingOrigin = false;
+    
+    function onMouseDown(e) {
+        if (e.button !== 0) return;
+        isDraggingOrigin = true;
+        guideH.style.display = 'block';
+        guideV.style.display = 'block';
+        
+        guideH.style.top = `${e.clientY}px`;
+        guideV.style.left = `${e.clientX}px`;
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function onMouseMove(e) {
+        if (!isDraggingOrigin) return;
+        guideH.style.top = `${e.clientY}px`;
+        guideV.style.left = `${e.clientX}px`;
+    }
+    
+    function onMouseUp(e) {
+        if (!isDraggingOrigin) return;
+        isDraggingOrigin = false;
+        guideH.style.display = 'none';
+        guideV.style.display = 'none';
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        
+        const paperEl = document.getElementById('paper');
+        if (!paperEl) return;
+        
+        const pRect = paperEl.getBoundingClientRect();
+        const zoom = state.zoom || 1.0;
+        
+        const dropX = e.clientX - pRect.left;
+        const dropY = e.clientY - pRect.top;
+        
+        state.rulerOriginX = dropX / zoom;
+        state.rulerOriginY = dropY / zoom;
+        
+        if (window.syncRulers) window.syncRulers();
+        if (typeof saveState === 'function') saveState();
+    }
+    
+    function onDoubleClick(e) {
+        state.rulerOriginX = 0;
+        state.rulerOriginY = 0;
+        if (window.syncRulers) window.syncRulers();
+        if (typeof saveState === 'function') saveState();
+    }
+    
+    rulerC.removeEventListener('mousedown', rulerC._originMouseDown);
+    rulerC.removeEventListener('dblclick', rulerC._originDoubleClick);
+    
+    rulerC._originMouseDown = onMouseDown;
+    rulerC._originDoubleClick = onDoubleClick;
+    
+    rulerC.addEventListener('mousedown', rulerC._originMouseDown);
+    rulerC.addEventListener('dblclick', rulerC._originDoubleClick);
 };
 
 window.updateIndentMarkersPosition = function() {
@@ -22177,7 +22266,11 @@ window.toggleCrop = function() {
         const docData = {
             title: currentTitle,
             pages: state.pages,
-            isTemplate: isTemplate
+            isTemplate: isTemplate,
+            hasMasterPage: state.hasMasterPage || false,
+            isSpreadMode: state.isSpreadMode || false,
+            rulerOriginX: state.rulerOriginX || 0,
+            rulerOriginY: state.rulerOriginY || 0
         };
         
         const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});

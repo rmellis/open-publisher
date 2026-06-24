@@ -584,7 +584,26 @@ body {
     grid-template-rows: 20px 1fr;
 }
 
-.ruler-c { background: #dadada; z-index: 20; border-right: 1px solid #999; border-bottom: 1px solid #999; }
+.ruler-c { background: #dadada; z-index: 20; border-right: 1px solid #999; border-bottom: 1px solid #999; cursor: crosshair; position: relative; }
+.ruler-origin-guide {
+    position: fixed;
+    background: transparent;
+    pointer-events: none;
+    z-index: 99999;
+    display: none;
+}
+.ruler-origin-guide.h {
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 1px dashed #555;
+}
+.ruler-origin-guide.v {
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px dashed #555;
+}
 .ruler-h { background: var(--ruler-bg); border-bottom: 1px solid #bbb; position: relative; overflow: hidden; }
 .ruler-v { background: var(--ruler-bg); border-right: 1px solid #bbb; position: relative; overflow: hidden; }
 .tick { position: absolute; background: #999; pointer-events: none; }
