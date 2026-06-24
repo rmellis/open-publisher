@@ -2326,7 +2326,6 @@ svg .shape-path, svg .shape-path * {
             border-radius: 6px;
             position: relative; /* For dropdown absolute positioning */
         }
-        }
         .float-font-btn {
             padding: 0 0 0 8px;
             font-size: 12px; 
