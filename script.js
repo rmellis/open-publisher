@@ -721,6 +721,16 @@ function renderPage(pageData) {
     paper.innerHTML = '';
     structural.forEach(el => paper.appendChild(el));
 
+    const marginGuides = paper.querySelector('.margin-guides');
+    if (marginGuides) {
+        const m = state.margins || {top: 48, right: 48, bottom: 48, left: 48};
+        marginGuides.style.inset = 'auto';
+        marginGuides.style.top = m.top + 'px';
+        marginGuides.style.right = m.right + 'px';
+        marginGuides.style.bottom = m.bottom + 'px';
+        marginGuides.style.left = m.left + 'px';
+    }
+
     let elementsToRender = [];
     if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
         elementsToRender = state.pages[0].elements.map(e => Object.assign({}, e, { _isMaster: true }));
@@ -5708,6 +5718,57 @@ function toggleSizeMenu(btn) {
         m.style.display = 'block';
     }
 }
+
+function toggleMarginsMenu(btn) {
+    const m = document.getElementById('margins-dropdown');
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
+}
+
+function showCustomMarginsModal() {
+    const cm = state.margins || {top: 48, right: 48, bottom: 48, left: 48};
+    const formHtml = `
+        <div class="input-group" style="margin-bottom:10px;">
+            <label>Top Margin (px):</label>
+            <input type="number" id="dialog-margin-top" value="${cm.top}">
+        </div>
+        <div class="input-group" style="margin-bottom:10px;">
+            <label>Bottom Margin (px):</label>
+            <input type="number" id="dialog-margin-bottom" value="${cm.bottom}">
+        </div>
+        <div class="input-group" style="margin-bottom:10px;">
+            <label>Left Margin (px):</label>
+            <input type="number" id="dialog-margin-left" value="${cm.left}">
+        </div>
+        <div class="input-group">
+            <label>Right Margin (px):</label>
+            <input type="number" id="dialog-margin-right" value="${cm.right}">
+        </div>
+    `;
+
+    DialogSystem.show('Custom Margins', formHtml, () => {
+        const t = parseInt(document.getElementById('dialog-margin-top').value) || 0;
+        const b = parseInt(document.getElementById('dialog-margin-bottom').value) || 0;
+        const l = parseInt(document.getElementById('dialog-margin-left').value) || 0;
+        const r = parseInt(document.getElementById('dialog-margin-right').value) || 0;
+        
+        state.margins = {top: t, right: r, bottom: b, left: l};
+        renderPage(state.pages[state.currentPageIndex]);
+        pushHistory();
+    });
+}
+
+function setMarginPreset(top, right, bottom, left) {
+    state.margins = {top: top, right: right, bottom: bottom, left: left};
+    renderPage(state.pages[state.currentPageIndex]);
+    pushHistory();
+}
+
 window.showRotationModal = function() {
     if (!state.selectedEl) return;
     let currentRot = 0;
@@ -5798,6 +5859,7 @@ function saveDocument() {
         isSpreadMode: state.isSpreadMode || false,
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
+        margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
@@ -6432,6 +6494,7 @@ document.getElementById('file-open').addEventListener('change', (e) => {
                 state.hasMasterPage = data.hasMasterPage || false;
                 state.rulerOriginX = data.rulerOriginX || 0;
                 state.rulerOriginY = data.rulerOriginY || 0;
+                state.margins = data.margins || {top: 48, right: 48, bottom: 48, left: 48};
                 
                 // Read Spreads state (or infer for legacy saves)
                 if (data.isSpreadMode !== undefined) {
@@ -22270,7 +22333,8 @@ window.toggleCrop = function() {
             hasMasterPage: state.hasMasterPage || false,
             isSpreadMode: state.isSpreadMode || false,
             rulerOriginX: state.rulerOriginX || 0,
-            rulerOriginY: state.rulerOriginY || 0
+            rulerOriginY: state.rulerOriginY || 0,
+            margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48}
         };
         
         const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
