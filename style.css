@@ -259,17 +259,19 @@ body {
     white-space: nowrap;
 }
 .tool-btn.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
-.tool-btn:hover:not(.disabled) { background: #cce8ff; border-color: #99d1ff; }
-.tool-btn.active-tool { background: #cce8ff; border-color: #0078d4; }
+.tool-btn:hover:not(.disabled) { background: rgba(0, 118, 112, 0.1); border-color: rgba(0, 118, 112, 0.5); border-radius: 6px; }
+.tool-btn.active-tool { background: rgba(0, 118, 112, 0.2); border-color: var(--pub-color); border-radius: 6px; }
 .tool-btn i { font-size: 22px; color: var(--pub-dark); }
+.tool-btn > i.fa-caret-down { font-size: 10px; margin-top: -6px; }
 
 .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
 .mini-btn {
     width: 30px; height: 28px;
     display: flex; align-items: center; justify-content: center;
-    border: 1px solid transparent; cursor: pointer; border-radius: 2px;
+    border: 1px solid transparent; cursor: pointer; border-radius: 6px;
 }
-.mini-btn:hover { background: #cce8ff; border-color: #99d1ff; }
+.mini-btn:hover { background: rgba(0, 118, 112, 0.1); border-color: rgba(0, 118, 112, 0.5); }
+.mini-btn.active-tool { background: rgba(0, 118, 112, 0.2); border-color: var(--pub-color); border-radius: 6px; }
 
 .ribbon-toolbar .mini-btn i { color: var(--pub-dark); }
 

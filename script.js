@@ -1128,6 +1128,7 @@ function updateSidebar() {
 
         sb.appendChild(div);
     });
+
     const wrapper = document.createElement('div');
     wrapper.className = 'add-page-btns-wrapper';
     if (btns.length > 0) wrapper.appendChild(btns[0]);
