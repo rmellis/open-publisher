@@ -7047,7 +7047,202 @@ window.setZoom = function(z) {
     if (slider) slider.value = Math.round(z * 100);
     const display = document.getElementById('zoom-level-display');
     if (display) display.textContent = Math.round(z * 100) + '%';
+    // Multi-page view
+    if (typeof updateMultiPageView === 'function') updateMultiPageView(z);
 };
+
+// --- MULTI-PAGE VIEW ---
+// When zoom is low enough, render read-only preview clones of all pages beside the active page
+window._multiPageActive = false;
+
+function updateMultiPageView(z) {
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+
+    const THRESHOLD = 0.45;
+
+    if (z <= THRESHOLD && state.pages.length > 1) {
+        if (!window._multiPageActive) enterMultiPageView(z);
+        else refreshMultiPageZoom(z);
+    } else if (window._multiPageActive) {
+        exitMultiPageView();
+    }
+}
+
+function enterMultiPageView(z) {
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+
+    // Save the current page before rendering previews
+    state.pages[state.currentPageIndex] = serializeCurrentPage();
+
+    window._multiPageActive = true;
+    viewport.classList.add('multi-page-mode');
+
+    // Create a wrapper to hold all page previews in a flow
+    let wrapper = document.getElementById('multi-page-wrapper');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.id = 'multi-page-wrapper';
+        viewport.appendChild(wrapper);
+    }
+    wrapper.innerHTML = '';
+
+    state.pages.forEach((pageData, i) => {
+        if (i === state.currentPageIndex) {
+            // The real paper is already in the viewport, so we add a placeholder marker
+            const marker = document.createElement('div');
+            marker.className = 'multi-page-slot multi-page-slot-active';
+            marker.setAttribute('data-page-index', i);
+
+            const pW = parseFloat(pageData.width) || 794;
+            const pH = parseFloat(pageData.height) || 1123;
+            marker.style.width = pW + 'px';
+            marker.style.height = pH + 'px';
+
+            // Page label
+            const label = document.createElement('div');
+            label.className = 'multi-page-label multi-page-label-active';
+            let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
+            label.textContent = labelText + ' (Editing)';
+            marker.appendChild(label);
+
+            wrapper.appendChild(marker);
+            return;
+        }
+
+        const slot = document.createElement('div');
+        slot.className = 'multi-page-slot';
+        slot.setAttribute('data-page-index', i);
+        slot.onclick = () => {
+            // Seamless in-place page switch without leaving multi-page view
+            const currentZoom = state.zoom;
+            // Move paper back to viewport temporarily so switchPage can work
+            const vp = document.getElementById('viewport');
+            const pp = document.getElementById('paper');
+            const wr = document.getElementById('multi-page-wrapper');
+            if (vp && pp && wr) {
+                vp.insertBefore(pp, wr);
+            }
+            window._multiPageActive = false;
+            if (wr) wr.remove();
+            switchPage(i);
+            // Re-enter multi-page view at the same zoom
+            enterMultiPageView(currentZoom);
+        };
+
+        const pW = parseFloat(pageData.width) || 794;
+        const pH = parseFloat(pageData.height) || 1123;
+        slot.style.width = pW + 'px';
+        slot.style.height = pH + 'px';
+
+        // Build a full-size preview (same as renderThumbnailHTML but at 1:1)
+        const previewContainer = document.createElement('div');
+        previewContainer.style.cssText = `position: relative; width: ${pW}px; height: ${pH}px; background: ${pageData.background || '#ffffff'}; overflow: hidden; pointer-events: none;`;
+
+        if (pageData.elements && pageData.elements.length > 0) {
+            pageData.elements.forEach(data => {
+                const sX = data.scaleX || "1";
+                const sY = data.scaleY || "1";
+
+                const elBox = document.createElement('div');
+                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
+
+                const scaleBox = document.createElement('div');
+                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+                if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
+
+                if (data.imgSrc && data.imgSrc !== '') {
+                    const imgDiv = document.createElement('div');
+                    const s = data.imgStyle || {};
+                    let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                    if (s.clipPath && s.clipPath !== 'none') {
+                        thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                    }
+                    imgDiv.style.cssText = thumbImgCss;
+                    let objFit = s.objectFit || '100% 100%';
+                    if (objFit === 'fill') objFit = '100% 100%';
+                    if (objFit === 'contain') objFit = 'contain';
+                    imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
+                    scaleBox.appendChild(imgDiv);
+                } else if (data.clipPath) {
+                    const clipDiv = document.createElement('div');
+                    clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
+                    scaleBox.appendChild(clipDiv);
+                } else {
+                    scaleBox.innerHTML = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+                }
+
+                elBox.appendChild(scaleBox);
+                previewContainer.appendChild(elBox);
+            });
+        }
+
+        slot.appendChild(previewContainer);
+
+        // Page label
+        const label = document.createElement('div');
+        label.className = 'multi-page-label';
+        let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
+        label.textContent = labelText;
+        slot.appendChild(label);
+
+        wrapper.appendChild(slot);
+    });
+
+    // Move #paper into the active slot
+    const activeSlot = wrapper.querySelector('.multi-page-slot-active');
+    if (activeSlot) {
+        activeSlot.insertBefore(paperEl, activeSlot.firstChild);
+    }
+
+    refreshMultiPageZoom(z);
+}
+
+function refreshMultiPageZoom(z) {
+    const wrapper = document.getElementById('multi-page-wrapper');
+    if (!wrapper) return;
+
+    // Calculate total width needed for all pages side-by-side at full (unscaled) size
+    const GAP = 30;
+    const PADDING = 40; // 20px padding on each side
+    let totalWidth = PADDING;
+    const slots = wrapper.querySelectorAll('.multi-page-slot');
+    slots.forEach((slot, i) => {
+        totalWidth += parseFloat(slot.style.width) || 794;
+        if (i < slots.length - 1) totalWidth += GAP;
+    });
+    totalWidth += PADDING;
+
+    wrapper.style.width = totalWidth + 'px';
+    wrapper.style.minWidth = totalWidth + 'px';
+    wrapper.style.transform = `scale(${z})`;
+
+    // Paper keeps scale(1) since wrapper handles zoom
+    const paperEl = document.getElementById('paper');
+    if (paperEl) paperEl.style.transform = 'scale(1)';
+}
+
+function exitMultiPageView() {
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+
+    window._multiPageActive = false;
+    viewport.classList.remove('multi-page-mode');
+
+    // Move paper back to viewport root
+    const wrapper = document.getElementById('multi-page-wrapper');
+    if (wrapper) {
+        viewport.insertBefore(paperEl, wrapper);
+        wrapper.remove();
+    }
+
+    // Restore paper zoom
+    paperEl.style.transform = `scale(${state.zoom})`;
+}
 
 window.fitToPage = function() {
     const viewport = document.getElementById('viewport');
