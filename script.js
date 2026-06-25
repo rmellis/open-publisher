@@ -9358,17 +9358,15 @@ window.ContextMenuActions = {
     },
 
     // -- Universal Features --
-    saveAsPicture: function() {
+    saveAsPicture: async function() {
         if(!state.selectedEl) return;
         DialogSystem.alert('Exporting...', 'Generating high-resolution image of element...');
         
         const el = state.selectedEl;
         const content = el.querySelector('.element-content');
         
-        // Clone the content to use the print engine's rendering logic
         const clone = content.cloneNode(true);
         
-        // Apply print engine's HTML cleaning (removes live editing states that break html2canvas)
         let cleanHTML = clone.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
         cleanHTML = cleanHTML.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
@@ -9377,7 +9375,6 @@ window.ContextMenuActions = {
         }
         clone.innerHTML = cleanHTML;
 
-        // Create a staging area exactly like the print engine
         const stagingArea = document.createElement('div');
         stagingArea.style.cssText = 'position: fixed; top: -10000px; left: -10000px; z-index: -100; overflow: visible; display: block; opacity: 0.01; pointer-events: none;';
         
@@ -9387,9 +9384,12 @@ window.ContextMenuActions = {
         stagingArea.appendChild(clone);
         document.body.appendChild(stagingArea);
         
-        // Apply print engine's WordArt flattening (must be in DOM for getComputedStyle)
         if (typeof flattenWaTextForPrint === 'function') {
             clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
+        }
+
+        if (typeof window.bakeSVGFiltersForHtml2Canvas === 'function') {
+            await window.bakeSVGFiltersForHtml2Canvas(clone, content);
         }
         
         html2canvas(clone, { backgroundColor: null, scale: 3, useCORS: true, logging: false }).then(canvas => {
@@ -23032,38 +23032,63 @@ window.addEventListener('beforeprint', () => {
         return w === '100%' && h === '100%' && leftZero && topZero;
     };
 
-    const bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
-        const tempImg = new Image();
-        if (!src.startsWith('data:')) tempImg.crossOrigin = 'Anonymous';
-        tempImg.onload = () => {
-            const scale = 2;
-            const c = document.createElement('canvas');
-            c.width = displayW * scale;
-            c.height = displayH * scale;
-            const ctx = c.getContext('2d');
-            let finalFilter = filter;
-            if (finalFilter && finalFilter.includes('blur')) {
-                const scaleFactor = c.width / displayW;
-                finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scaleFactor}px)`);
+    window.bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
+        const attemptLoad = (useCORS) => {
+            const tempImg = new Image();
+            let loadSrc = src;
+            if (!loadSrc.startsWith('data:')) {
+                if (useCORS) tempImg.crossOrigin = 'Anonymous';
+                loadSrc += (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
             }
-            ctx.save();
-            if (clipPath) applyClipPathRegion(ctx, clipPath, c.width, c.height);
-            if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
-            ctx.globalAlpha = parseFloat(opacity);
-            if (isDefaultFillImageLayout(imgStyle)) {
-                ctx.drawImage(tempImg, 0, 0, c.width, c.height);
-            } else {
-                const imgW = parseImageLayoutValue(imgStyle.width, displayW) * scale;
-                const imgH = parseImageLayoutValue(imgStyle.height, displayH) * scale;
-                const imgL = parseImageLayoutValue(imgStyle.left, displayW) * scale;
-                const imgT = parseImageLayoutValue(imgStyle.top, displayH) * scale;
-                ctx.drawImage(tempImg, imgL, imgT, imgW, imgH);
-            }
-            ctx.restore();
-            resolve(c.toDataURL('image/png'));
+            tempImg.onload = () => {
+                const scale = 2;
+                const c = document.createElement('canvas');
+                c.width = displayW * scale;
+                c.height = displayH * scale;
+                const ctx = c.getContext('2d');
+                
+                let finalFilter = filter;
+                if (finalFilter && finalFilter.includes('blur')) {
+                    const scaleFactor = c.width / displayW;
+                    finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scaleFactor}px)`);
+                }
+
+                const rasterCanvas = document.createElement('canvas');
+                rasterCanvas.width = c.width;
+                rasterCanvas.height = c.height;
+                const rasterCtx = rasterCanvas.getContext('2d');
+                
+                if (isDefaultFillImageLayout(imgStyle)) {
+                    rasterCtx.drawImage(tempImg, 0, 0, rasterCanvas.width, rasterCanvas.height);
+                } else {
+                    const imgW = parseImageLayoutValue(imgStyle.width, displayW) * scale;
+                    const imgH = parseImageLayoutValue(imgStyle.height, displayH) * scale;
+                    const imgL = parseImageLayoutValue(imgStyle.left, displayW) * scale;
+                    const imgT = parseImageLayoutValue(imgStyle.top, displayH) * scale;
+                    rasterCtx.drawImage(tempImg, imgL, imgT, imgW, imgH);
+                }
+
+                ctx.save();
+                if (clipPath) applyClipPathRegion(ctx, clipPath, c.width, c.height);
+                if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
+                ctx.globalAlpha = parseFloat(opacity);
+                
+                ctx.drawImage(rasterCanvas, 0, 0, c.width, c.height);
+                ctx.restore();
+                
+                try {
+                    resolve(c.toDataURL('image/png'));
+                } catch (e) {
+                    reject(e);
+                }
+            };
+            tempImg.onerror = (e) => {
+                if (useCORS) attemptLoad(false);
+                else reject(e);
+            };
+            tempImg.src = loadSrc;
         };
-        tempImg.onerror = reject;
-        tempImg.src = src;
+        attemptLoad(!src.startsWith('data:'));
     });
 
     window.printFullDocument = async function(isBooklet = false) {
@@ -23240,6 +23265,13 @@ window.addEventListener('beforeprint', () => {
                                 finalSrc = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgText)))}`;
                             }
                         } catch (e) { }
+
+                        // Force proxy for external URLs to guarantee CORS headers and bypass local SSL cert issues
+                        if (finalSrc && finalSrc.startsWith('http') && !finalSrc.includes('wsrv.nl')) {
+                            let cleanUrl = finalSrc.replace(/^https?:\/\//, '');
+                            if (cleanUrl.includes('acr.floydcraft')) cleanUrl = 'http://' + cleanUrl;
+                            finalSrc = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+                        }
 
                         let cropDiv = document.createElement('div');
                         cropDiv.style.width = '100%';
@@ -26691,6 +26723,140 @@ window.updateShadowFromSliders = function() {
     }, 500);
 };
 
+window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
+    const origImages = original.querySelectorAll('img');
+    const cloneImages = clone.querySelectorAll('img');
+    
+    for (let i = 0; i < cloneImages.length; i++) {
+        const cImg = cloneImages[i];
+        const oImg = origImages[i];
+        if (!oImg) continue;
+        
+        const comp = window.getComputedStyle(oImg);
+        let filter = comp.filter !== 'none' ? comp.filter : oImg.style.filter;
+        let opacity = comp.opacity !== '1' ? comp.opacity : oImg.style.opacity;
+        
+        if (!filter || filter === 'none') {
+            const inner = oImg.closest('.element-content');
+            if (inner) {
+                const iComp = window.getComputedStyle(inner);
+                if (iComp.filter && iComp.filter !== 'none') filter = iComp.filter;
+            }
+        }
+        
+        if ((filter && filter !== 'none') || (opacity && opacity !== '1')) {
+            let finalSrc = oImg.src;
+            try {
+                let isSvg = false;
+                let svgText = null;
+
+                if (finalSrc.includes('.svg') && !finalSrc.startsWith('data:')) {
+                    try {
+                        let fetchSrc = finalSrc;
+                        fetchSrc += (fetchSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
+                        const svgRes = await fetch(fetchSrc, { mode: 'cors' });
+                        if (svgRes.ok) {
+                            svgText = await svgRes.text();
+                            isSvg = true;
+                        }
+                    } catch (fetchErr) {
+                        console.warn("Could not fetch SVG for dimension normalization (SSL/CORS). Proceeding to direct bake.", fetchErr);
+                    }
+                } else if (finalSrc.startsWith('data:image/svg+xml')) {
+                    const parts = finalSrc.split(',');
+                    if (finalSrc.includes(';base64,')) {
+                        svgText = decodeURIComponent(escape(atob(parts[1])));
+                    } else {
+                        svgText = decodeURIComponent(parts[1]);
+                    }
+                    isSvg = true;
+                }
+
+                if (isSvg && svgText) {
+                    // Normalize dimensions
+                    svgText = svgText.replace(/\bpreserveAspectRatio\s*=\s*["'][^"']*["']/gi, '');
+                    svgText = svgText.replace(/<svg/i, '<svg preserveAspectRatio="none" width="100%" height="100%"');
+                    finalSrc = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgText)))}`;
+                }
+            } catch (e) {
+                console.warn("Failed to inject SVG filters:", e);
+            }
+
+            // Force proxy for external URLs to guarantee CORS headers and bypass local SSL cert issues
+            if (finalSrc && finalSrc.startsWith('http') && !finalSrc.includes('wsrv.nl')) {
+                let cleanUrl = finalSrc.replace(/^https?:\/\//, '');
+                if (cleanUrl.includes('acr.floydcraft')) cleanUrl = 'http://' + cleanUrl;
+                finalSrc = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+            }
+
+            // Fallback for raster images (PNG/JPG) using canvas baking
+            let displayW = oImg.naturalWidth || parseFloat(comp.width) || 300;
+            let displayH = oImg.naturalHeight || parseFloat(comp.height) || 300;
+
+            // PREVENT OUT-OF-MEMORY (OOM): Cap the baking resolution to prevent huge canvases for high-res images
+            const maxDim = 2000;
+            if (displayW > maxDim || displayH > maxDim) {
+                const ratio = Math.min(maxDim / displayW, maxDim / displayH);
+                displayW = Math.round(displayW * ratio);
+                displayH = Math.round(displayH * ratio);
+            }
+
+            try {
+                const bakedSrc = await window.bakeImageForPrint(finalSrc, displayW, displayH, {
+                    filter: filter !== 'none' ? filter : '',
+                    opacity: opacity !== '1' ? opacity : '1',
+                    clipPath: '',
+                    imgStyle: { width: '100%', height: '100%', objectFit: 'fill' }
+                });
+                
+                await new Promise(r => {
+                    cImg.onload = r;
+                    cImg.onerror = r;
+                    cImg.src = bakedSrc;
+                });
+                
+                cImg.style.filter = 'none';
+                cImg.style.opacity = '1';
+            } catch (e) {
+                console.warn('Export bake failed, fallback to style', e);
+                cImg.src = finalSrc;
+                cImg.style.filter = filter !== 'none' ? filter : '';
+                cImg.style.opacity = opacity !== '1' ? opacity : '1';
+            }
+        }
+    }
+};
+
+window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
+    const clone = paper.cloneNode(true);
+    const stagingArea = document.createElement('div');
+    stagingArea.style.cssText = 'position: fixed; top: -10000px; left: -10000px; z-index: -100; overflow: visible; display: block; opacity: 0.01; pointer-events: none;';
+    
+    clone.style.width = paper.style.width;
+    clone.style.height = paper.style.height;
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    
+    stagingArea.appendChild(clone);
+    document.body.appendChild(stagingArea);
+
+    if (typeof flattenWaTextForPrint === 'function') {
+        clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
+    }
+
+    await window.bakeSVGFiltersForHtml2Canvas(clone, paper);
+
+    const canvas = await html2canvas(clone, { 
+        scale: scaleMultiplier, 
+        useCORS: true, 
+        backgroundColor: state.pages[state.currentPageIndex]?.background || '#ffffff',
+        logging: false
+    });
+    
+    stagingArea.remove();
+    return canvas;
+};
+
 window.shareCurrentPageEmail = async function() {
     if (typeof DialogSystem !== 'undefined') {
         const progressHtml = `
@@ -26717,7 +26883,7 @@ window.shareCurrentPageEmail = async function() {
         const paper = document.getElementById('paper');
         if (!paper) throw new Error("Could not find current page.");
 
-        const canvas = await html2canvas(paper, { scale: 2, useCORS: true, backgroundColor: state.pages[state.currentPageIndex]?.background || '#ffffff' });
+        const canvas = await window.capturePageAsCanvasWithFilters(paper, 2);
         const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
         const base64Data = imgDataUrl.split(',')[1];
         
@@ -26740,6 +26906,95 @@ window.shareCurrentPageEmail = async function() {
         if (typeof DialogSystem !== 'undefined') {
             DialogSystem.close();
             setTimeout(() => DialogSystem.alert('Error', 'Failed to generate email: ' + err), 300);
+        }
+    }
+};
+
+window.exportImageResolutionSetting = 96;
+
+window.showExportImageModal = function() {
+    window.exportImageResolutionSetting = 96; // default
+
+    const html = `
+        <div style="padding: 10px 20px 0 20px;">
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">Export the current page as a JPEG image.</p>
+            
+            <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:20px;">
+                <div>
+                    <div style="font-weight:bold; color:var(--pub-dark); margin-bottom:4px;">Export Resolution</div>
+                    <div id="img-res-display" style="font-size:13px; color:#555;">Web (96 dpi)</div>
+                </div>
+                <button class="op-btn" style="padding:6px 12px; font-size:13px; background:white; color:var(--pub-color); border:1px solid var(--pub-color);" onclick="window.toggleImageResolution(this)">Change</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                <button class="op-btn op-btn-cancel" onclick="DialogSystem.close()">Cancel</button>
+                <button class="op-btn" style="background: var(--pub-color); color: white;" onclick="
+                    DialogSystem.close();
+                    if(typeof exportAsImage === 'function') exportAsImage(window.exportImageResolutionSetting);
+                ">
+                    <i class="fas fa-file-image" style="margin-right: 8px;"></i> Save Image
+                </button>
+            </div>
+        </div>
+    `;
+    
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Export as Image', html, null, true);
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('custom-dialog-confirm');
+            if (confirmBtn && confirmBtn.parentElement) {
+                confirmBtn.parentElement.style.display = 'none';
+            }
+        }, 10);
+    }
+};
+
+window.toggleImageResolution = function(btn) {
+    if (window.exportImageResolutionSetting === 96) {
+        window.exportImageResolutionSetting = 300;
+        document.getElementById('img-res-display').innerText = 'High Quality (300 dpi)';
+    } else {
+        window.exportImageResolutionSetting = 96;
+        document.getElementById('img-res-display').innerText = 'Web (96 dpi)';
+    }
+};
+
+window.exportAsImage = async function(dpi) {
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.alert('Exporting...', 'Generating image of current page...');
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('custom-dialog-confirm');
+            if (confirmBtn && confirmBtn.parentElement) {
+                confirmBtn.parentElement.style.display = 'none';
+            }
+        }, 10);
+    }
+
+    try {
+        if(typeof deselect === 'function') deselect();
+        await new Promise(r => setTimeout(r, 100));
+
+        const paper = document.getElementById('paper');
+        if (!paper) throw new Error("Could not find current page.");
+
+        const scale = dpi === 300 ? 3.125 : 1;
+
+        const canvas = await window.capturePageAsCanvasWithFilters(paper, scale);
+        
+        const docTitle = (document.getElementById('doc-title').innerText || 'Publication').replace(/[^a-zA-Z0-9 -]/g, '');
+        
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg', 0.95);
+        a.download = `${docTitle}_Page_${state.currentPageIndex + 1}.jpg`;
+        a.click();
+
+        if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+
+    } catch(err) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.close();
+            setTimeout(() => DialogSystem.alert('Error', 'Failed to generate image: ' + err), 300);
         }
     }
 };
