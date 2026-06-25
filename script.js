@@ -6596,6 +6596,36 @@ window.exportNativePDF = function() {
     }
 };
 
+window.exportXPS = function() {
+    if(typeof DialogSystem !== 'undefined') {
+        const msg = `
+            <div style="text-align: center; font-size: 14px; margin-bottom: 10px;">
+                <p>To save this document as an XPS file, you can use the built-in Windows XPS Document Writer.</p>
+                <br>
+                <p>In the print dialog that opens, simply change your <b>Destination</b> or <b>Printer</b> to <b>"Microsoft XPS Document Writer"</b>.</p>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="btn-proceed-xps" style="background:#0ea5e9; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Open Print Dialog</button>
+            </div>
+        `;
+        DialogSystem.show('Export as XPS', msg, null, true);
+        
+        setTimeout(() => {
+            if(document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
+            if(document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
+            
+            document.getElementById('btn-proceed-xps').onclick = () => {
+                DialogSystem.close();
+                setTimeout(() => {
+                    if (typeof printFullDocument === 'function') printFullDocument();
+                }, 300);
+            };
+        }, 10);
+    } else {
+        if (typeof printFullDocument === 'function') printFullDocument();
+    }
+};
+
 // --- NEW WORDART SYNC FUNCTION ---
 function syncWordArt(el) {
     const text = el.querySelector('.wa-text');
