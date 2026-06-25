@@ -8851,6 +8851,11 @@ const ContextMenuSystem = {
                     html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
                     html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
                     html += this.buildDivider();
+                    if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
+                        html += this.buildItem('Clear Cell Text (' + window._tableSelectedCells.length + ' cells)', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
+                    } else if (targetCell) {
+                        html += this.buildItem('Clear Cell Text', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
+                    }
                     html += this.buildItem('Convert to Text', 'fa-align-left', 'if(window.ContextRibbonActions) ContextRibbonActions.convertTableToText()');
                 }
                 // 4. SHAPE CONTEXT MENU
@@ -18378,6 +18383,26 @@ window.handleMouseUp = function() {
         }
 
         pushHistory();
+    };
+
+    window.clearSelectedCellText = function() {
+        let changed = false;
+        if (window._tableSelectedCells && window._tableSelectedCells.length > 0) {
+            window._tableSelectedCells.forEach(cell => {
+                cell.innerHTML = '<br>';
+                changed = true;
+            });
+        } else {
+            const activeCell = ContextRibbonActions.getActiveCell();
+            if (activeCell) {
+                activeCell.innerHTML = '<br>';
+                changed = true;
+            }
+        }
+        
+        if (changed) {
+            pushHistory();
+        }
     };
 
     ContextRibbonActions.cellAlign = function(vAlign, hAlign) {
