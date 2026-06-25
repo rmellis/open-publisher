@@ -1968,6 +1968,10 @@ svg .shape-path, svg .shape-path * {
         .scratch-area-item.selected {
             opacity: 0.8 !important;
         }
+        body.hide-scratch-area .scratch-area-item {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
 
 /* Extracted Block 11 */
 .xray-ctrl-panel { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 10000; pointer-events: all; }

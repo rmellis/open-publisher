@@ -4551,6 +4551,19 @@ function setPageSize(format) {
 
 function toggleGrid() { paper.classList.toggle('theme-grid'); }
 function toggleBaselines() { paper.classList.toggle('theme-baselines'); }
+function toggleScratchArea() {
+    const isHidden = document.body.classList.toggle('hide-scratch-area');
+    const btn = document.getElementById('scratch-area-toggle-btn');
+    if (btn) {
+        if (isHidden) {
+            btn.classList.remove('active-tool');
+            btn.innerHTML = '<i class="far fa-square"></i>Scratch Area';
+        } else {
+            btn.classList.add('active-tool');
+            btn.innerHTML = '<i class="fas fa-check-square"></i>Scratch Area';
+        }
+    }
+}
 
 function selectAllElements() {
     const all = document.querySelectorAll('.pub-element');
