@@ -26690,3 +26690,56 @@ window.updateShadowFromSliders = function() {
         if (typeof pushHistory === 'function') pushHistory();
     }, 500);
 };
+
+window.shareCurrentPageEmail = async function() {
+    if (typeof DialogSystem !== 'undefined') {
+        const progressHtml = `
+            <div style="text-align:center; padding: 10px;">
+                <p style="margin-bottom:15px; font-weight:bold;">Generating email attachment...</p>
+                <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                    <div style="width:50%; height:100%; background:var(--pub-color); transition: width 0.3s; animation: indeterminate 1.5s infinite linear;"></div>
+                </div>
+                <style>@keyframes indeterminate { 0% { width: 0%; margin-left: 0%; } 50% { width: 50%; margin-left: 25%; } 100% { width: 0%; margin-left: 100%; } }</style>
+            </div>
+        `;
+        DialogSystem.show('Share via Email', progressHtml, null, true);
+        
+        setTimeout(() => {
+            if (document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
+            if (document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
+        }, 10);
+    }
+
+    try {
+        if(typeof deselect === 'function') deselect();
+        await new Promise(r => setTimeout(r, 100));
+
+        const paper = document.getElementById('paper');
+        if (!paper) throw new Error("Could not find current page.");
+
+        const canvas = await html2canvas(paper, { scale: 2, useCORS: true, backgroundColor: state.pages[state.currentPageIndex]?.background || '#ffffff' });
+        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const base64Data = imgDataUrl.split(',')[1];
+        
+        const pW = parseFloat(paper.style.width) || 794;
+        const docTitle = (document.getElementById('doc-title').innerText || 'Publication').replace(/[^a-zA-Z0-9 -]/g, '');
+
+        const emlContent = `To: \r\nSubject: ${docTitle}\r\nMIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="boundary-op-email"\r\n\r\n--boundary-op-email\r\nContent-Type: text/html; charset="utf-8"\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<body style="background:#f0f0f0; padding:20px;">\r\n<table width="100%" cellpadding="0" cellspacing="0" border="0">\r\n    <tr>\r\n        <td align="center">\r\n            <img src="cid:pageimage" width="${pW}" style="display:block; max-width:100%; height:auto; border:0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);" />\r\n        </td>\r\n    </tr>\r\n</table>\r\n<div style="text-align:center; margin-top:30px; font-family:sans-serif; font-size:12px; color:#888;">\r\n    Created with <a href="https://openpublisher.app" style="color:#0ea5e9;">Open Publisher</a>\r\n</div>\r\n</body>\r\n</html>\r\n\r\n--boundary-op-email\r\nContent-Type: image/jpeg; name="page.jpg"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <pageimage>\r\nContent-Disposition: inline; filename="page.jpg"\r\n\r\n${base64Data}\r\n--boundary-op-email--`;
+
+        const blob = new Blob([emlContent], { type: 'message/rfc822' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${docTitle}.eml`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+
+    } catch(err) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.close();
+            setTimeout(() => DialogSystem.alert('Error', 'Failed to generate email: ' + err), 300);
+        }
+    }
+};
