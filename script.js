@@ -13356,14 +13356,20 @@ if (!window._thumbObserverRunning) {
                 .ywa-link { color: #0ea5e9; text-decoration: none; font-weight: 600; transition: color 0.2s; }
                 .ywa-link:hover { text-decoration: underline; color: #0284c7; }
 
-                /* Integrated Green Donate Button */
+                /* Integrated Green Donate Buttons */
+                .about-donate-container { display: flex; flex-direction: column; gap: 4px; opacity: 0; align-items: flex-start; }
+                .about-donate-label { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px; }
+                .about-donate-btns-wrapper { display: flex; gap: 8px; }
                 .about-donate-btn {
-                    display: inline-flex; align-items: center; gap: 6px;
-                    background: #007670; color: #ffffff; padding: 6px 14px; border-radius: 4px;
-                    text-decoration: none; font-weight: 600; font-size: 13px;
-                    transition: all 0.2s; border: none; cursor: pointer; opacity: 0; 
+                    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+                    color: #ffffff; padding: 6px 14px; border-radius: 4px;
+                    text-decoration: none; font-weight: 600; font-size: 13px; white-space: nowrap;
+                    transition: all 0.2s; border: none; cursor: pointer; 
                 }
-                .about-donate-btn:hover { background: #005a55; color: white; text-decoration: none; }
+                .patreon-btn { background: #FF424D; }
+                .patreon-btn:hover { background: #e03640; color: white; text-decoration: none; }
+                .paypal-btn { background: #0079C1; }
+                .paypal-btn:hover { background: #005a9c; color: white; text-decoration: none; }
 
                 /* Footer Dev Links (GitHub & CodePen) */
                 .about-center-links { display: flex; gap: 16px; opacity: 0; align-items: center; }
@@ -13398,9 +13404,17 @@ if (!window._thumbObserverRunning) {
                     </div>
                 </div>
 
-                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=ltait95@yahoo.co.uk&item_name=Support+Your+Web+Apps" target="_blank" id="about-donate-btn" class="about-donate-btn">
-                    <i class="fab fa-paypal"></i> Support the Project
-                </a>
+                <div id="about-donate-btn" class="about-donate-container">
+                    <div class="about-donate-label">Support the Project</div>
+                    <div class="about-donate-btns-wrapper">
+                        <a href="https://www.patreon.com/cw/OpenPublisher" target="_blank" class="about-donate-btn patreon-btn">
+                            <i class="fab fa-patreon"></i> Patreon
+                        </a>
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=ltait95@yahoo.co.uk&item_name=Support+Your+Web+Apps" target="_blank" class="about-donate-btn paypal-btn">
+                            <i class="fab fa-paypal"></i> PayPal
+                        </a>
+                    </div>
+                </div>
                 
                 <div id="about-center-links" class="about-center-links">
                     <a href="https://github.com/rmellis/open-publisher" target="_blank" class="about-footer-link">
@@ -13427,8 +13441,8 @@ if (!window._thumbObserverRunning) {
             const dialogBox = document.getElementById('custom-dialog-box');
 
             if (donateBtn && centerLinks && actionRow && dialogBox) {
-                // Lock the width so the text wraps beautifully
-                dialogBox.style.setProperty('width', '450px', 'important');
+                // Lock the width so the text wraps beautifully and buttons fit
+                dialogBox.style.setProperty('width', '520px', 'important');
                 dialogBox.style.setProperty('max-width', '95vw', 'important');
 
                 // Adjust footer to perfectly split 3 elements: Left, Center Block, Right
