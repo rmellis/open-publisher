@@ -46,7 +46,7 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.12.14">
+    <link rel="stylesheet" href="style.css?v=4.13.0">
 	<script src="clipart-data.js?v=4.12.0"></script>
 	<script type="application/ld+json">
 {
@@ -247,7 +247,7 @@
 <input type="file" id="img-upload" style="display:none" accept="image/*">
 <input type="file" id="file-open" style="display:none" accept=".opub, .json, .pub, .pubx, .doc, .docx">
 <input type="file" id="document-upload" style="display:none" accept=".pub, .doc, .docx" onchange="handleFileUpload(event)">
-<div class="title-bar">
+<div class="title-bar" style="position: relative;">
     <span class="app-title">
         <i class="fas fa-print"></i> Open Publisher
         <div class="undo-redo-controls">
@@ -257,6 +257,7 @@
         </div>
     </span>
     <div class="doc-name" contenteditable="true" id="doc-title">Publication1</div>
+    <span id="protected-indicator" style="display: none; position: absolute; right: 160px; top: 0; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 0 0 4px 4px; font-size: 11px; color: white; align-items: center; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); pointer-events: none;"><i class="fas fa-lock"></i> Protected</span>
     <span id="coord-display">X: 0 | Y: 0</span>
 </div>
 
@@ -291,6 +292,7 @@
         </div>
         <div class="group">
             <div class="tool-btn" onclick="if(typeof showInfoModal === 'function') showInfoModal()"><i class="fas fa-info-circle"></i>Info</div>
+            <div class="tool-btn" onclick="if(typeof showProtectDocumentModal === 'function') showProtectDocumentModal()"><i class="fas fa-lock"></i>Protect<br>Document</div>
             <div class="group-label">Document Info</div>
         </div>
         <div class="group">
@@ -877,11 +879,11 @@
 </div>
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
-    <link rel="stylesheet" href="style.css?v=4.12.14">
+    <link rel="stylesheet" href="style.css?v=4.13.0">
     <script src="clipart-data.js?v=4.12.0"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>
-    <script src="script.js?v=4.12.14"></script>
+    <script src="script.js?v=4.13.0"></script>
     <script src="tetris.js?v=4.12.0"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">

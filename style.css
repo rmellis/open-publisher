@@ -1163,7 +1163,7 @@ td, th {
 
 .custom-dialog {
     background: #fff; 
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     width: max-content; 
     min-width: 300px;
@@ -1178,9 +1178,9 @@ td, th {
 .custom-dialog-header {
     background: var(--pub-color); 
     color: #fff;
-    padding: 10px 15px; 
-    font-weight: 600; 
-    font-size: 14px;
+    padding: 12px 18px; 
+    font-weight: 700; 
+    font-size: 16px;
     display: flex; 
     justify-content: space-between; 
     align-items: center;
@@ -1253,20 +1253,21 @@ td, th {
 
 /* Modal Buttons */
 .custom-dialog button {
-    padding: 8px 16px; 
+    padding: 8px 24px; 
     border: none; 
-    border-radius: 4px; 
+    border-radius: 20px; 
     cursor: pointer;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 14px;
     transition: all 0.2s;
 }
 
-.btn-secondary { background: #eee; color: #333; }
-.btn-secondary:hover { background: #e0e0e0; }
+.btn-secondary { background: #e0e9e9; color: var(--pub-color); border: 2px solid var(--pub-color); }
+.btn-secondary:hover { background: #d0dede; }
 
-.btn-primary { background: var(--pub-color); color: white; }
-.btn-primary:hover { background: var(--pub-dark); }
+.btn-primary { background: var(--pub-color); color: white; border: 2px solid var(--pub-color); }
+.btn-primary:hover { background: var(--pub-dark); border-color: var(--pub-dark); }
 
 /* --- INSERT SYMBOL MODAL --- */
 .symbol-grid {

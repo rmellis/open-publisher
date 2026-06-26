@@ -25,6 +25,7 @@ let state = {
     spellCheck: true,
     history: [],
     historyIndex: -1,
+    documentPassword: null,
     cropMode: false,
     lastRange: null, 
     isProgrammaticUpdate: false,
@@ -90,10 +91,19 @@ const DialogSystem = {
         this.makeDraggable(document.getElementById('custom-dialog-box'), document.getElementById('custom-dialog-header'));
 
         // Setup the OK button
-        document.getElementById('custom-dialog-confirm').onclick = () => {
+        const confirmBtn = document.getElementById('custom-dialog-confirm');
+        confirmBtn.onclick = () => {
             if (onConfirm) onConfirm();
             this.close();
         };
+
+        // Allow pressing Enter in input fields to confirm
+        document.getElementById('custom-dialog-box').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName.toLowerCase() === 'input') {
+                e.preventDefault();
+                confirmBtn.click();
+            }
+        });
     },
     alert: function(title, msg) {
         // Quick helper for simple alerts with only an OK button
@@ -147,6 +157,11 @@ const DialogSystem = {
             document.onmouseup = null;
             document.onmousemove = null;
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -4745,6 +4760,11 @@ window.applyExactLineSpacing = function(val) {
             pushHistory();
             forceRepaint();
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -6486,6 +6506,109 @@ async function packAndGo() {
     }
 }
 
+window.handlePublisherFileLoad = (evt) => {
+    try {
+        let rawData = JSON.parse(evt.target.result);
+        
+        // Legacy support for older array-based saves
+        if (Array.isArray(rawData)) {
+            rawData = { title: "Untitled Publication", pages: rawData };
+        }
+        
+        const loadDocumentData = (data) => {
+            // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
+            if (data.isTemplate) {
+                document.getElementById('doc-title').innerText = "Untitled Publication";
+            } else {
+                document.getElementById('doc-title').innerText = data.title;
+            }
+            
+            state.pages = data.pages;
+            state.hasMasterPage = data.hasMasterPage || false;
+            state.rulerOriginX = data.rulerOriginX || 0;
+            state.rulerOriginY = data.rulerOriginY || 0;
+            state.margins = data.margins || {top: 48, right: 48, bottom: 48, left: 48};
+            
+            // Read Spreads state (or infer for legacy saves)
+            if (data.isSpreadMode !== undefined) {
+                state.isSpreadMode = data.isSpreadMode;
+            } else if (data.pages && data.pages.length > 0) {
+                const w = parseInt(data.pages[0].width) || 0;
+                state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
+            } else {
+                state.isSpreadMode = false;
+            }
+            
+            const btn = document.getElementById('spread-mode-btn');
+            if (btn) btn.classList.toggle('active', state.isSpreadMode);
+
+            if (data.colorModel === 'CMYK') {
+                document.getElementById('paper').classList.add('cmyk-mode');
+            } else {
+                document.getElementById('paper').classList.remove('cmyk-mode');
+            }
+            if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
+            state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
+            state.history = [];
+            state.historyIndex = -1;
+            state.currentPageIndex = 0;
+            renderPage(state.pages[0]);
+            setTimeout(() => {
+                if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
+                if (typeof pushHistory === 'function') pushHistory(); 
+            }, 500);
+        };
+
+        if (rawData.encrypted) {
+            const promptForPassword = () => {
+                const html = `
+                    <div style="padding: 10px; display: flex; align-items: flex-start; gap: 20px;">
+                        <i class="fas fa-unlock-keyhole" style="font-size: 48px; color: var(--pub-color, #007670); margin-top: 5px;"></i>
+                        <div style="flex: 1;">
+                            <p style="margin-bottom:15px; font-size:14px; color:#444;">This document is protected. Please enter the password to open it:</p>
+                            <input type="password" id="doc-decrypt-input" style="width:100%; padding:8px; border:2px solid var(--pub-color, #007670); border-radius:8px; margin-bottom:15px; outline: none; transition: border-color 0.2s;" placeholder="Password">
+                        </div>
+                `;
+                if (typeof DialogSystem !== 'undefined') {
+                    DialogSystem.show('Protected Document', html, async () => {
+                        const pw = document.getElementById('doc-decrypt-input').value;
+                        try {
+                            DialogSystem.alert('Decrypting...', 'Decrypting document with AES-GCM...');
+                            const decryptedData = await window.decryptDocumentData(rawData, pw);
+                            DialogSystem.close();
+                            state.documentPassword = pw;
+                            window.updateProtectionIndicator();
+                            loadDocumentData(decryptedData);
+                        } catch(err) {
+                            const errorHtml = `
+                                <div style="display: flex; align-items: flex-start; gap: 20px; padding: 10px;">
+                                    <i class="fas fa-times" style="font-size: 48px; color: #d9534f; margin-top: 5px;"></i>
+                                    <div style="flex: 1; display: flex; align-items: center; min-height: 48px;">
+                                        <p style="margin: 0; font-size: 15px; color: #333;">The password was Incorrect.</p>
+                                    </div>
+                                </div>
+                            `;
+                            DialogSystem.show('Decryption Failed', errorHtml, () => {
+                                setTimeout(promptForPassword, 10);
+                            });
+                            const confirmBtn = document.getElementById('custom-dialog-confirm');
+                            if (confirmBtn) confirmBtn.innerText = 'Retry';
+                        }
+                    });
+                }
+            };
+            promptForPassword();
+        } else {
+            state.documentPassword = null;
+            window.updateProtectionIndicator();
+            loadDocumentData(rawData);
+        }
+
+    } catch(err) { 
+        if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error opening file: " + err); 
+    }
+};
+
 function openDocument() { document.getElementById('file-open').click(); }
 
 // --- STANDARD FILE OPEN MENU ---
@@ -6512,55 +6635,7 @@ document.getElementById('file-open').addEventListener('change', (e) => {
     // 3. Handle OpenPublisher Native Files (.json or .opub)
     if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
         const reader = new FileReader();
-        reader.onload = (evt) => {
-            try {
-                const data = JSON.parse(evt.target.result);
-                
-                // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
-                if (data.isTemplate) {
-                    document.getElementById('doc-title').innerText = "Untitled Publication";
-                } else {
-                    document.getElementById('doc-title').innerText = data.title;
-                }
-                
-                state.pages = data.pages;
-                state.hasMasterPage = data.hasMasterPage || false;
-                state.rulerOriginX = data.rulerOriginX || 0;
-                state.rulerOriginY = data.rulerOriginY || 0;
-                state.margins = data.margins || {top: 48, right: 48, bottom: 48, left: 48};
-                
-                // Read Spreads state (or infer for legacy saves)
-                if (data.isSpreadMode !== undefined) {
-                    state.isSpreadMode = data.isSpreadMode;
-                } else if (data.pages && data.pages.length > 0) {
-                    const w = parseInt(data.pages[0].width) || 0;
-                    state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
-                } else {
-                    state.isSpreadMode = false;
-                }
-                
-                const btn = document.getElementById('spread-mode-btn');
-                if (btn) btn.classList.toggle('active', state.isSpreadMode);
-
-                if (data.colorModel === 'CMYK') {
-                    document.getElementById('paper').classList.add('cmyk-mode');
-                } else {
-                    document.getElementById('paper').classList.remove('cmyk-mode');
-                }
-                if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
-                state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
-                state.history = [];
-                state.historyIndex = -1;
-                state.currentPageIndex = 0;
-                renderPage(state.pages[0]);
-                setTimeout(() => {
-                    if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
-                    if (typeof pushHistory === 'function') pushHistory(); 
-                }, 500);
-            } catch(err) { 
-                if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error opening file: " + err); 
-            }
-        };
+        reader.onload = window.handlePublisherFileLoad;
         reader.readAsText(file);
         e.target.value = ''; 
     }
@@ -7418,6 +7493,11 @@ window.toggleSnapOption = function(option, btn) {
                 }
             }, 10);
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -9750,6 +9830,11 @@ window.switchTab = function(t) {
             toolbar._wrapper.style.display = 'flex';
             setTimeout(() => toolbar.dispatchEvent(new Event('scroll')), 50);
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -10148,6 +10233,11 @@ window.ContextRibbonActions = {
                 pushHistory();
             });
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -10241,6 +10331,11 @@ window.ContextRibbonSystem = {
         if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
             window.switchTab(window.lastStandardTab || 'home');
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -10409,6 +10504,11 @@ window.handleMouseDown = function(e) {
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
             if(!isEditingText) e.preventDefault();
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -12463,38 +12563,7 @@ window.initWordArt = function() {
             // --- D. HANDLE OPENPUBLISHER NATIVE FILES (.json, .opub) ---
             else if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
                 const reader = new FileReader();
-                reader.onload = (evt) => {
-                    try {
-                        const data = JSON.parse(evt.target.result);
-                        document.getElementById('doc-title').innerText = data.title;
-                        state.pages = data.pages; 
-                        
-                        // Read Spreads state (or infer for legacy saves)
-                        if (data.isSpreadMode !== undefined) {
-                            state.isSpreadMode = data.isSpreadMode;
-                        } else if (data.pages && data.pages.length > 0) {
-                            const w = parseInt(data.pages[0].width) || 0;
-                            state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
-                        } else {
-                            state.isSpreadMode = false;
-                        }
-                        
-                        const btn = document.getElementById('spread-mode-btn');
-                        if (btn) btn.classList.toggle('active', state.isSpreadMode);
-                        if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
-                        state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
-                        state.history = [];
-                        state.historyIndex = -1;
-                        state.currentPageIndex = 0;
-                        renderPage(state.pages[0]);
-                        setTimeout(() => {
-                            if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
-                            if (typeof pushHistory === 'function') pushHistory();
-                        }, 500);
-                    } catch(err) {
-                        if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error opening file: " + err);
-                    }
-                };
+                reader.onload = window.handlePublisherFileLoad;
                 reader.readAsText(file);
             }
             
@@ -16862,6 +16931,11 @@ window.handleMouseDown = function(e) {
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
             if(!isEditingText) e.preventDefault();
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -22600,7 +22674,167 @@ window.toggleCrop = function() {
    ========================================================================= */
 (function upgradeSaveSystem() {
     
-    // Overwrite the original save function
+window.updateProtectionIndicator = function() {
+    const indicator = document.getElementById('protected-indicator');
+    if (indicator) {
+        indicator.style.display = state.documentPassword ? 'flex' : 'none';
+    }
+};
+
+window.showProtectDocumentModal = function() {
+    const isProtected = !!state.documentPassword;
+    const html = `
+        <div style="padding: 10px; display: flex; align-items: flex-start; gap: 20px;">
+            <i class="fas fa-key" style="font-size: 48px; color: var(--pub-color, #007670); margin-top: 10px;"></i>
+            <div style="flex-grow: 1;">
+                <p style="margin-bottom: 15px; font-size: 14px; color: #444;">
+                    ${isProtected 
+                        ? 'This document is currently <strong>protected</strong>. Enter a new password to change it, or clear the boxes to remove protection.' 
+                        : 'Enter a password to encrypt this document. The file will be locked with AES-GCM encryption upon saving.'}
+                </p>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:14px; font-weight:400; color:#333; margin-bottom:5px;">Document Password</label>
+                    <input type="password" id="doc-protect-pw" placeholder="Enter password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--pub-color, #007670); border-radius: 8px; outline: none; transition: border-color 0.2s;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:14px; font-weight:400; color:#333; margin-bottom:5px;">Confirm Password</label>
+                    <input type="password" id="doc-protect-pw-confirm" placeholder="Confirm password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--pub-color, #007670); border-radius: 8px; outline: none; transition: border-color 0.2s;">
+                    <div id="doc-protect-error" style="display: none; color: #d9534f; font-size: 12px; margin-top: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Passwords do not match!</div>
+                </div>
+                <p style="font-size: 11px; color: #d9534f; margin-bottom: 0;"><strong>Warning:</strong> If you lose this password, your document cannot be recovered.</p>
+            </div>
+        </div>
+    `;
+
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Protect Document', html, () => {
+            const pw = document.getElementById('doc-protect-pw').value.trim();
+            if (pw === '') {
+                state.documentPassword = null;
+                window.updateProtectionIndicator();
+                DialogSystem.alert('Protection Removed', 'Document protection has been disabled. The file will be saved as plain text on your next save.');
+            } else {
+                state.documentPassword = pw;
+                window.updateProtectionIndicator();
+                DialogSystem.alert('Protection Enabled', 'Password has been set! The document will be fully encrypted on your next save.');
+            }
+        });
+
+        // Intercept confirm click to validate passwords match
+        const confirmBtn = document.getElementById('custom-dialog-confirm');
+        if (confirmBtn) {
+            const originalOnclick = confirmBtn.onclick;
+            confirmBtn.onclick = (e) => {
+                const pw = document.getElementById('doc-protect-pw').value.trim();
+                const cpw = document.getElementById('doc-protect-pw-confirm').value.trim();
+                if (pw !== cpw) {
+                    document.getElementById('doc-protect-error').style.display = 'block';
+                    document.getElementById('doc-protect-pw-confirm').style.borderColor = '#d9534f';
+                    return; // Stop execution, dialog stays open
+                }
+                document.getElementById('doc-protect-error').style.display = 'none';
+                if (originalOnclick) originalOnclick(e);
+            };
+            
+            // Hide error when typing
+            document.getElementById('doc-protect-pw-confirm').oninput = function() {
+                this.style.borderColor = 'var(--pub-color, #007670)';
+                document.getElementById('doc-protect-error').style.display = 'none';
+            };
+            document.getElementById('doc-protect-pw').oninput = function() {
+                document.getElementById('doc-protect-pw-confirm').style.borderColor = 'var(--pub-color, #007670)';
+                document.getElementById('doc-protect-error').style.display = 'none';
+            };
+        }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
+    }
+};
+
+// --- CRYPTO HELPERS ---
+async function deriveKeyForDocument(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        { name: "PBKDF2" },
+        false,
+        ["deriveBits", "deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function bufferToBase64Async(buffer) {
+    return new Promise((resolve, reject) => {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            resolve(dataUrl.substring(dataUrl.indexOf(',') + 1));
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function base64ToBufferAsync(base64) {
+    const res = await fetch(`data:application/octet-stream;base64,${base64}`);
+    return await res.arrayBuffer();
+}
+
+window.encryptDocumentData = async function(docData, password) {
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKeyForDocument(password, salt);
+    
+    const enc = new TextEncoder();
+    const encodedData = enc.encode(JSON.stringify(docData));
+    
+    const encryptedContent = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encodedData
+    );
+    
+    return {
+        encrypted: true,
+        salt: await bufferToBase64Async(salt),
+        iv: await bufferToBase64Async(iv),
+        data: await bufferToBase64Async(encryptedContent)
+    };
+};
+
+window.decryptDocumentData = async function(encryptedObj, password) {
+    const salt = await base64ToBufferAsync(encryptedObj.salt);
+    const iv = await base64ToBufferAsync(encryptedObj.iv);
+    const encryptedContent = await base64ToBufferAsync(encryptedObj.data);
+    
+    const key = await deriveKeyForDocument(password, salt);
+    
+    const decryptedContent = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: new Uint8Array(iv) },
+        key,
+        encryptedContent
+    );
+    
+    const dec = new TextDecoder();
+    return JSON.parse(dec.decode(decryptedContent));
+};
+
     window.saveDocument = async function(isTemplate = false) {
         
         // 1. Serialize the current page before saving
@@ -22619,8 +22853,19 @@ window.toggleCrop = function() {
             rulerOriginY: state.rulerOriginY || 0,
             margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48}
         };
+        let savePayload = docData;
+        if (state.documentPassword) {
+            try {
+                if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Encrypting...', 'Encrypting document with AES-GCM 256...');
+                savePayload = await window.encryptDocumentData(docData, state.documentPassword);
+                if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+            } catch (err) {
+                if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Encryption Error', 'Failed to encrypt document: ' + err.message);
+                return;
+            }
+        }
         
-        const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify(savePayload)], {type: 'application/json'});
 
         // 2. Try to use the modern File System API (Chrome/Edge/Opera)
         if (window.showSaveFilePicker) {
@@ -26824,6 +27069,11 @@ window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
                 cImg.style.opacity = opacity !== '1' ? opacity : '1';
             }
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -26911,6 +27161,11 @@ window.shareCurrentPageEmail = async function() {
             DialogSystem.close();
             setTimeout(() => DialogSystem.alert('Error', 'Failed to generate email: ' + err), 300);
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
 
@@ -27000,5 +27255,10 @@ window.exportAsImage = async function(dpi) {
             DialogSystem.close();
             setTimeout(() => DialogSystem.alert('Error', 'Failed to generate image: ' + err), 300);
         }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
     }
 };
