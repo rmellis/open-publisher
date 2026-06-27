@@ -663,6 +663,7 @@ function serializeCurrentPage() {
 
         if (isTrueImage) {
             data.imgSrc = img.src;
+            data.altText = img.alt || '';
             const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
             data.imgStyle = {
                 width: img.style.width,
@@ -806,7 +807,8 @@ function renderPage(pageData) {
             if (s.clipPath && s.clipPath !== 'none') {
                 styleStr += ` clip-path:${s.clipPath}; -webkit-clip-path:${s.clipPath};`;
             }
-            inner = `<img src="${data.imgSrc}" style="${styleStr}">`;
+            const altAttr = data.altText ? ` alt="${data.altText.replace(/"/g, '&quot;')}"` : ' alt=""';
+            inner = `<img src="${data.imgSrc}" style="${styleStr}"${altAttr}>`;
         } else if (data.clipPath) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
         } else {
@@ -6301,6 +6303,7 @@ async function exportAsHTML(opts = {}) {
                             }
                         }
                         img.src = src;
+                        img.alt = data.altText || '';
                         Object.assign(img.style, data.imgStyle || { width:'100%', height:'100%' });
                         contentDiv.appendChild(img);
                     } else if (data.clipPath) {
@@ -8489,6 +8492,7 @@ function printFullDocument(isBooklet = false) {
             if (el.imgSrc) {
                  let img = document.createElement('img');
                  img.src = el.imgSrc;
+                 if (el.altText) img.alt = el.altText;
                  // Apply the exact styles (like opacity) from the state
                  if (el.imgStyle) {
                      Object.assign(img.style, el.imgStyle);
@@ -8956,6 +8960,9 @@ const ContextMenuSystem = {
                     html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
                     html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
                     html += this.buildDivider();
+                    html += this.buildFlyoutItem('Format Picture', 'fa-paint-brush', `
+                        ${this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()')}
+                    `);
                     html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
                     html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
                 }
@@ -9165,6 +9172,36 @@ const ContextMenuSystem = {
 // --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
 window.ContextMenuActions = {
     
+    setAltText: function() {
+        if (!state.selectedEl) return;
+        const img = state.selectedEl.querySelector('img');
+        if (!img) return;
+        const currentAlt = img.alt || '';
+        const html = `
+            <div class="input-group" style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px;">Description for screen readers:</label>
+                <input type="text" id="op-alt-text-input" value="${currentAlt.replace(/"/g, '&quot;')}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" autocomplete="off">
+            </div>
+            <p style="font-size:12px; color:#666; margin:0;">Alt text helps users who use screen readers understand the content of images.</p>
+        `;
+        
+        DialogSystem.show('Alt Text', html, () => {
+            const input = document.getElementById('op-alt-text-input');
+            if (input) {
+                img.alt = input.value.trim();
+                pushHistory();
+            }
+        });
+        
+        setTimeout(() => {
+            const input = document.getElementById('op-alt-text-input');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 50);
+    },
+
     alignTextVertical: function(align) {
         if (!state.selectedEl) return;
         const editable = state.selectedEl.querySelector('[contenteditable="true"]');

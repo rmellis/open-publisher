@@ -1604,7 +1604,7 @@ svg .shape-path, svg .shape-path * {
                     font-family: 'Segoe UI', sans-serif;
                     font-size: 13px;
                     min-width: 220px;
-                    z-index: 10000;
+                    z-index: 999999;
                     display: none;
                     user-select: none;
                 }
