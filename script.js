@@ -30,7 +30,8 @@ let state = {
     lastRange: null, 
     isProgrammaticUpdate: false,
     snap: { grid: false, guides: true, objects: true },
-    currentScheme: 'Classic'
+    currentScheme: 'Classic',
+    documentProperties: { author: '', company: '', subject: '', keywords: '' }
 };
 
 const colorSchemes = {
@@ -6528,6 +6529,7 @@ window.handlePublisherFileLoad = (evt) => {
             state.rulerOriginX = data.rulerOriginX || 0;
             state.rulerOriginY = data.rulerOriginY || 0;
             state.margins = data.margins || {top: 48, right: 48, bottom: 48, left: 48};
+            state.documentProperties = data.documentProperties || { author: '', company: '', subject: '', keywords: '' };
             
             // Read Spreads state (or infer for legacy saves)
             if (data.isSpreadMode !== undefined) {
@@ -22865,7 +22867,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             isSpreadMode: state.isSpreadMode || false,
             rulerOriginX: state.rulerOriginX || 0,
             rulerOriginY: state.rulerOriginY || 0,
-            margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48}
+            margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
+            documentProperties: state.documentProperties || { author: '', company: '', subject: '', keywords: '' }
         };
         let savePayload = docData;
         if (state.documentPassword) {
@@ -26529,7 +26532,7 @@ window.showInfoModal = function() {
     const isCMYK = document.getElementById('paper').classList.contains('cmyk-mode');
     
     const html = `
-    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px;">
+    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px; max-width: 650px; margin: 0 auto;">
         <!-- Commercial Print Settings -->
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
             <div style="background: #f1f5f9; color: var(--pub-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
@@ -26542,11 +26545,11 @@ window.showInfoModal = function() {
                 </p>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="colorModel" value="RGB" ${!isCMYK ? 'checked' : ''} onchange="toggleColorModel('RGB')"> 
+                        <input type="radio" name="colorModel" value="RGB" ${!isCMYK ? 'checked' : ''} onchange="toggleColorModel('RGB')" style="accent-color: var(--pub-color);"> 
                         RGB (Digital Display)
                     </label>
                     <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="colorModel" value="CMYK" ${isCMYK ? 'checked' : ''} onchange="toggleColorModel('CMYK')"> 
+                        <input type="radio" name="colorModel" value="CMYK" ${isCMYK ? 'checked' : ''} onchange="toggleColorModel('CMYK')" style="accent-color: var(--pub-color);"> 
                         CMYK (Commercial Print)
                     </label>
                 </div>
@@ -26567,6 +26570,21 @@ window.showInfoModal = function() {
                     <i class="fas fa-search" style="margin-right: 5px;"></i> Run Design Checker
                 </button>
                 <div id="design-checker-results" style="margin-top: 15px; display: none;"></div>
+            </div>
+        </div>
+        <!-- Inspect Document -->
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
+            <div style="background: #ccfbf1; color: var(--pub-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                <i class="fas fa-search-plus"></i>
+            </div>
+            <div style="flex-grow: 1;">
+                <h3 style="margin: 0 0 5px 0; font-size: 16px; color: #1e293b;">Inspect Document</h3>
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b; line-height: 1.4;">
+                    Check the document for hidden properties or personal information before sharing it with others. The inspector will find and help you remove document metadata, off-canvas elements, and empty text boxes.
+                </p>
+                <button onclick="showDocumentInspectorModal()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                    Inspect Document
+                </button>
             </div>
         </div>
     </div>
@@ -27275,4 +27293,176 @@ window.exportAsImage = async function(dpi) {
             if (input) input.focus();
         }, 100);
     }
+};
+
+// --- Document Properties ---
+window.showDocumentPropertiesModal = function() {
+    const props = state.documentProperties || { author: '', company: '', subject: '', keywords: '' };
+    const html = `
+    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin: 0 auto;">
+        <p style="margin: 0; font-size: 13px; color: #64748b;">Edit the properties of this document. This metadata is saved within the file.</p>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 600; color: #1e293b;">Author</label>
+            <input type="text" id="prop-author" value="${props.author}" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 13px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 600; color: #1e293b;">Company</label>
+            <input type="text" id="prop-company" value="${props.company}" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 13px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 600; color: #1e293b;">Subject</label>
+            <input type="text" id="prop-subject" value="${props.subject}" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 13px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 600; color: #1e293b;">Keywords</label>
+            <input type="text" id="prop-keywords" value="${props.keywords}" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 13px;">
+        </div>
+    </div>
+    `;
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Document Properties', html, () => {
+            state.documentProperties = {
+                author: document.getElementById('prop-author').value,
+                company: document.getElementById('prop-company').value,
+                subject: document.getElementById('prop-subject').value,
+                keywords: document.getElementById('prop-keywords').value
+            };
+        }, false);
+    }
+};
+
+// --- Document Inspector ---
+window.showDocumentInspectorModal = function() {
+    const html = `
+    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 15px; max-width: 550px; margin: 0 auto;">
+        <p style="margin: 0; font-size: 13px; color: #64748b;">The Document Inspector searches your document for hidden data, personal information, and properties. Click 'Inspect' to scan the document.</p>
+        
+        <div id="inspector-results" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+            <!-- Results will populate here -->
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button id="btn-run-inspector" onclick="runDocumentInspector()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                Inspect
+            </button>
+        </div>
+    </div>
+    `;
+
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.show('Document Inspector', html, null, true);
+    }
+};
+
+window.runDocumentInspector = function() {
+    const resultsContainer = document.getElementById('inspector-results');
+    if (!resultsContainer) return;
+    
+    // 1. Check Document Properties
+    const props = state.documentProperties || {};
+    let hasProps = (props.author || props.company || props.subject || props.keywords);
+
+    // 2. Check Off-Canvas Elements and Empty Text Boxes
+    // We must serialize the current page to ensure state is up-to-date, then scan state.pages.
+    state.pages[state.currentPageIndex] = serializeCurrentPage();
+
+    let offCanvasCount = 0;
+    let emptyTextCount = 0;
+
+    for (let p of state.pages) {
+        if (!p || !p.elements) continue;
+        for (let el of p.elements) {
+            // Check Empty Text
+            if (el.type === 'box' && !el.isImage && !el.isImageFallback) {
+                const textContent = el.innerHTML.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, '').trim();
+                if (textContent === '') {
+                    emptyTextCount++;
+                }
+            }
+
+            // Check Off-Canvas
+            const left = parseFloat(el.left) || 0;
+            const top = parseFloat(el.top) || 0;
+            const width = parseFloat(el.width) || 0;
+            const height = parseFloat(el.height) || 0;
+            const pWidth = parseFloat(p.width) || 794;
+            const pHeight = parseFloat(p.height) || 1123;
+            
+            // If the element's bounding box is completely outside [0, pWidth] and [0, pHeight]
+            if (left + width < 0 || left > pWidth || top + height < 0 || top > pHeight) {
+                offCanvasCount++;
+            }
+        }
+    }
+
+    // Build Results UI
+    const buildResultItem = (title, count, icon, onRemove) => {
+        let statusHtml = count > 0 ? 
+            '<span style="color: #db2777; font-weight: 600; font-size: 13px;">Found</span>' :
+            '<span style="color: #16a34a; font-weight: 600; font-size: 13px;">Clean</span>';
+        
+        let removeBtn = count > 0 ? 
+            '<button onclick="' + onRemove + '" style="background: #e2e8f0; color: #1e293b; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Remove All</button>' : 
+            '';
+
+        return `
+        <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="${icon}" style="color: #64748b; font-size: 16px; width: 20px; text-align: center;"></i>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${title}</span>
+                    ${count > 0 && title !== 'Document Properties' ? `<span style="font-size: 11px; color: #64748b;">${count} items found</span>` : ''}
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                ${statusHtml}
+                ${removeBtn}
+            </div>
+        </div>
+        `;
+    };
+
+    resultsContainer.innerHTML = 
+        buildResultItem('Document Properties', hasProps ? 1 : 0, 'fas fa-list-alt', 'removeInspectorProperties()') +
+        buildResultItem('Off-Canvas Elements', offCanvasCount, 'fas fa-border-none', 'removeInspectorOffCanvas()') +
+        buildResultItem('Empty Text Boxes', emptyTextCount, 'fas fa-comment-slash', 'removeInspectorEmptyText()');
+};
+
+window.removeInspectorProperties = function() {
+    state.documentProperties = { author: '', company: '', subject: '', keywords: '' };
+    runDocumentInspector(); // Re-scan
+};
+
+window.removeInspectorOffCanvas = function() {
+    for (let i = 0; i < state.pages.length; i++) {
+        let p = state.pages[i];
+        if (!p || !p.elements) continue;
+        const pWidth = parseFloat(p.width) || 794;
+        const pHeight = parseFloat(p.height) || 1123;
+        
+        p.elements = p.elements.filter(el => {
+            const left = parseFloat(el.left) || 0;
+            const top = parseFloat(el.top) || 0;
+            const width = parseFloat(el.width) || 0;
+            const height = parseFloat(el.height) || 0;
+            const isOffCanvas = (left + width < 0 || left > pWidth || top + height < 0 || top > pHeight);
+            return !isOffCanvas;
+        });
+    }
+    loadPage(state.currentPageIndex); // Refresh DOM
+    runDocumentInspector(); // Re-scan
+};
+
+window.removeInspectorEmptyText = function() {
+    for (let i = 0; i < state.pages.length; i++) {
+        let p = state.pages[i];
+        if (!p || !p.elements) continue;
+        p.elements = p.elements.filter(el => {
+            if (el.type !== 'box' || el.isImage || el.isImageFallback) return true;
+            const textContent = el.innerHTML.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, '').trim();
+            return textContent !== '';
+        });
+    }
+    loadPage(state.currentPageIndex); // Refresh DOM
+    runDocumentInspector(); // Re-scan
 };
