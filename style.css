@@ -1453,6 +1453,7 @@ body::-webkit-scrollbar-thumb:hover,
 /* 1. THE SIDEBARS (Supports current image sidebar and future ones) */
 #op-image-sidebar, .sidebar-panel {
     display: flex !important; 
+    flex-direction: column !important;
     visibility: hidden;
     transform: translateX(110%);
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
@@ -1711,11 +1712,11 @@ svg .shape-path, svg .shape-path * {
             transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         }
 
-        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar {
+        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar {
             position: fixed;
             right: 0px; 
             top: 205px; 
-            bottom: 20px; 
+            bottom: 22px; 
             width: 290px;
             
             /* 💎 SUBTLE ACRYLIC GLASS */
@@ -1735,8 +1736,8 @@ svg .shape-path, svg .shape-path * {
             flex-direction: column;
             scrollbar-width: none;
         }
-        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar { display: none; }
-        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible { transform: translateX(0); }
+        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar { display: none; }
+        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible { transform: translateX(0); }
         
         #op-sidebar-expander {
             position: fixed;
@@ -1861,8 +1862,8 @@ svg .shape-path, svg .shape-path * {
             transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         }
 
-        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar {
-            position: fixed; right: 0px; top: 205px; bottom: 20px; width: 290px;
+        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar {
+            position: fixed; right: 0px; top: 205px; bottom: 22px; width: 290px;
             background: rgba(245, 245, 245, 0.7); backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-left: 1px solid rgba(0, 0, 0, 0.1); box-shadow: -5px 0 25px rgba(0,0,0,0.1);
@@ -1871,8 +1872,8 @@ svg .shape-path, svg .shape-path * {
             transform: translateX(calc(100% + 50px)); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: none;
         }
-        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar { display: none; }
-        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible { transform: translateX(0); }
+        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar { display: none; }
+        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible { transform: translateX(0); }
         
         #op-sidebar-expander {
             position: fixed; right: 0px; top: 50%; width: 30px; height: 50px;
