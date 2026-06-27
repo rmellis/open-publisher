@@ -27879,3 +27879,32 @@ window.AccessibilityScanner = {
         }
     }
 };
+
+// --- ANTI AD-OVERLAY (INTERSECTION OBSERVER V2) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Only run if we are inside an iframe
+    if (window.self === window.top) return;
+
+    try {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // If the element is intersecting the viewport but is NOT visible (e.g. occluded by a parent iframe's overlay ad)
+                if (entry.isIntersecting && !entry.isVisible) {
+                    if (!window.hasShownOverlayWarning) {
+                        window.hasShownOverlayWarning = true;
+                        DialogSystem.show('Security Warning', '<div style="text-align:center; padding: 20px;"><i class="fas fa-shield-alt fa-3x" style="color:#d32f2f; margin-bottom:15px;"></i><br><h3 style="margin-top:0;">Suspicious Activity Detected</h3><p>It appears this website is overlaying unauthorized content (like ads) on top of Open Publisher.</p><p>Open Publisher is a 100% free tool. Please be careful as the surrounding site may be trying to mislead you.</p></div>', null, true);
+                    }
+                }
+            });
+        }, { 
+            trackVisibility: true, 
+            delay: 100 
+        });
+        
+        // We observe the body. If the scammer places an ad anywhere over the body, it triggers.
+        observer.observe(document.body);
+    } catch (e) {
+        // The user's browser does not support trackVisibility (e.g. Firefox/Safari).
+        // Fail silently to avoid breaking legitimate usage.
+    }
+});
