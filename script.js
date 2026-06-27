@@ -731,9 +731,23 @@ function renderPage(pageData) {
     } else {
         paper.classList.remove('is-spread');
     }
+    let renderHeader = pageData.header;
+    let renderFooter = pageData.footer;
+    let isHeaderEditable = true;
+
+    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
+        renderHeader = state.pages[0].header;
+        renderFooter = state.pages[0].footer;
+        isHeaderEditable = false;
+    }
     
-    paper.querySelector('.page-header').innerHTML = pageData.header;
-    paper.querySelector('.page-footer').innerHTML = pageData.footer;
+    const headerEl = paper.querySelector('.page-header');
+    const footerEl = paper.querySelector('.page-footer');
+    
+    headerEl.innerHTML = renderHeader;
+    footerEl.innerHTML = renderFooter;
+    headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
+    footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
     
     const borderEl = paper.querySelector('.page-border-container');
     borderEl.setAttribute('data-style', pageData.borderStyle);
@@ -4276,6 +4290,66 @@ function deselect() {
 // Double Click Edit
 document.addEventListener('dblclick', (e) => {
     const el = e.target.closest('.pub-element');
+
+    // --- Master Page Quick Toggle (Headers/Footers) ---
+    if (!el && e.target.closest('#paper')) {
+        const paper = document.getElementById('paper');
+        if (paper) {
+            const rect = paper.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const relativeY = e.clientY - rect.top;
+                const unscaledY = relativeY / (state.zoom || 1);
+                const paperHeight = parseFloat(paper.style.height) || 1123;
+                
+                // If clicked within top 100px or bottom 100px
+                if (unscaledY <= 100 || unscaledY >= paperHeight - 100) {
+                    let didAction = false;
+                    
+                    if (!state.hasMasterPage) {
+                        if (typeof addMasterPage === 'function') addMasterPage();
+                        didAction = true;
+                    } else if (state.currentPageIndex !== 0) {
+                        if (typeof switchPage === 'function') switchPage(0);
+                        didAction = true;
+                    }
+                    
+                    // Ensure headers are visible
+                    if (!state.headersVisible && typeof toggleHeaderFooter === 'function') {
+                        toggleHeaderFooter(true);
+                        didAction = true;
+                    }
+                    
+                    // If we were already on the master page and headers were visible,
+                    // do not interfere so native double-click text selection works.
+                    if (!didAction) return;
+                    
+                    // Focus the clicked area
+                    setTimeout(() => {
+                        const currentPaper = document.getElementById('paper');
+                        if (!currentPaper) return;
+                        const targetClass = unscaledY <= 100 ? '.page-header' : '.page-footer';
+                        const elToFocus = currentPaper.querySelector(targetClass);
+                        if (elToFocus) {
+                            elToFocus.focus();
+                            // Place cursor at end
+                            if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
+                                const range = document.createRange();
+                                range.selectNodeContents(elToFocus);
+                                range.collapse(false);
+                                const sel = window.getSelection();
+                                sel.removeAllRanges();
+                                sel.addRange(range);
+                            }
+                        }
+                    }, 50);
+                    
+                    return; // Prevent other double click handlers
+                }
+            }
+        }
+    }
+    // ------------------------------------------------
+
     if(el) {
         const betaWa = el.querySelector('.beta-wa-img');
         if(betaWa) {
@@ -6179,8 +6253,15 @@ async function exportAsHTML(opts = {}) {
             pageWrapper.style.boxSizing = 'border-box';
             
             let elementsToRender = page.elements || [];
-            if (state.hasMasterPage && i > 0 && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
-                elementsToRender = state.pages[0].elements.concat(elementsToRender);
+            let renderHeader = page.header || '';
+            let renderFooter = page.footer || '';
+
+            if (state.hasMasterPage && i > 0 && state.pages[0] && !page.ignoreMasterPage) {
+                if (state.pages[0].elements) {
+                    elementsToRender = state.pages[0].elements.concat(elementsToRender);
+                }
+                renderHeader = state.pages[0].header || '';
+                renderFooter = state.pages[0].footer || '';
             }
             
             if (elementsToRender.length > 0) {
@@ -6236,6 +6317,10 @@ async function exportAsHTML(opts = {}) {
                     elDiv.appendChild(contentDiv);
                     pageWrapper.appendChild(elDiv);
                 }
+            }
+            if (state.headersVisible) {
+                if (renderHeader) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-header visible" style="pointer-events:none; z-index:0; position:absolute; top:0; left:0; width:100%; font-family:inherit;">${renderHeader}</div>`);
+                if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0; position:absolute; bottom:0; left:0; width:100%; font-family:inherit;">${renderFooter}</div>`);
             }
             
             printSpooler.appendChild(pageWrapper);
@@ -12374,6 +12459,9 @@ window.initWordArt = function() {
             if (editable && !e.target.closest('.resize-handle') && !e.target.closest('.rotate-handle')) {
                 // Focus the box immediately
                 editable.focus();
+
+                // If this is a double or triple click, let the browser handle text selection natively
+                if (e.detail > 1) return;
 
                 // MAGIC TRICK: Find the exact letter under the mouse pointer
                 let range = null;
@@ -23453,8 +23541,15 @@ window.addEventListener('beforeprint', () => {
                 if (themeHtml) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
 
                 let elementsToRender = page.elements || [];
-                if (state.hasMasterPage && i > 0 && pagesToPrint === state.pages && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
-                    elementsToRender = state.pages[0].elements.concat(elementsToRender);
+                let renderHeader = page.header || '';
+                let renderFooter = page.footer || '';
+
+                if (state.hasMasterPage && i > 0 && pagesToPrint === state.pages && state.pages[0] && !page.ignoreMasterPage) {
+                    if (state.pages[0].elements) {
+                        elementsToRender = state.pages[0].elements.concat(elementsToRender);
+                    }
+                    renderHeader = state.pages[0].header || '';
+                    renderFooter = state.pages[0].footer || '';
                 }
 
                 for (let el of elementsToRender) {
@@ -23672,6 +23767,12 @@ window.addEventListener('beforeprint', () => {
                 }
 
                 if (borderHtml) pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
+                
+                if (state.headersVisible) {
+                    if (renderHeader) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-header visible" style="pointer-events:none; z-index:0;">${renderHeader}</div>`);
+                    if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
+                }
+
                 stagingArea.appendChild(pageWrapper);
 
                 // --- TAB PRINT RESCUE MODULE ---
