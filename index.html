@@ -46,7 +46,7 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.13.6">
+    <link rel="stylesheet" href="style.css?v=4.13.7">
 	<script src="clipart-data.js?v=4.12.1"></script>
 	<script type="application/ld+json">
 {
@@ -116,6 +116,9 @@
     <div id="splash-console" style="position: absolute; bottom: 5%; left: 5.5%; right: 5.5%; height: 21%; background: transparent; color: #ffffff; font-family: monospace; font-size: 11px; overflow-y: auto; white-space: nowrap; text-align: left; padding: 5px; box-sizing: border-box; line-height: 1.2; cursor: text;" onmousedown="event.stopPropagation()">
         <div>> System Initializing...</div>
     </div>
+    <div style="position: absolute; bottom: -12px; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; pointer-events: none;">
+        <div id="splash-progress-bar" style="width: 0%; height: 100%; background: #1a8f83; border-radius: 3px; transition: width 0.1s linear; box-shadow: 0 0 5px rgba(26, 143, 131, 0.5);"></div>
+    </div>
 </div>
 <script>
 (function(){
@@ -168,50 +171,133 @@
         "Core Typography Engine loaded.",
         "System Fonts parsed.",
         "Google Fonts Integration loaded.",
-        "Advanced SVG Ads Library initialized.",
-        "Ruler Highlight Script initialized.",
+        "Advanced SVG Graphics Library initialized.",
         "Keyboard Nudge Script initialized.",
-        "Context Tools Script initialized.",
-        "Scratch Area Fading Script initialized.",
-        "Smart Text Interaction Script initialized.",
-        "Anti-Lag Script initialized.",
         "Universal Paste Fix initialized.",
-        "Advanced Vector Shapes Library initialized.",
         "Vector Outlines pre-rendered.",
-        "Smart Formatting Router & Ribbon Fix initialized.",
-        "Enhanced Table Ribbons Script initialized.",
-        "Smart Image Script initialized.",
-        "Aspect Ratio Lock Script initialized.",
-        "Writer's Suite Script initialized.",
-        "Infinite Panning Hand Script initialized.",
-        "Table Templates Script initialized.",
         "Definitive Crop Anchor Fix initialized.",
-        "Background Defender Module initialized.",
-        "Glass Vault Minimap initialized.",
-        "Border Defender V5 initialized.",
+        "UI Layout Repaints finalized.",
+        "Publisher Import Engine active.",
+        "Word Document Import initialized.",
+        "Native Drag & Drop routing active.",
+        ".opub Format Parsing Engine active.",
+        "Interactive 3D View (Topology Inspector) ready.",
+        "Hardware-Accelerated Minimap loaded.",
+        "Border Defender 'Shape DNA' Protocol active.",
+        "The Multi-Select & Cluster Clone Upgrade loaded.",
+        "Live Color Engine active.",
+        "Print Spooler Overhaul complete.",
+        "Smart Drag & Drop modules ready.",
         "Theme Studio initialized.",
         "Border Eraser V2.3 initialized.",
-        "Text Print Rescue Module initialized.",
-        "Print Spooler Iframe initialized.",
-        "Theme Generator injected.",
-        "PDF Export Spooler warmed up.",
-        "Analytics Telemetry loaded.",
-        "Beta WordArt Handlers registered.",
-        "Legacy WordArt Handlers registered.",
+        "Integrated Drawing & Annotation Tools loaded.",
+        "Vision-Aware Clipart Loading active.",
+        "Dynamic Gallery Shuffling & Canvas Fallbacks active.",
+        "3,000+ New Clipart Assets cached.",
+        "Beta WordArt Engine initialized.",
+        "WordArt Mega Expansion (200 Styles) loaded.",
+        "Contextual WordArt Toolbar active.",
+        "Print Engine Rasterization ready.",
+        "Fluid Alignment Guides active.",
+        "Smart Spell Checking initialized.",
+        "Picture Compression Tool loaded.",
+        "Flex-Shape Update active.",
+        "Rich Fills & Pattern Engine loaded.",
+        "The 3D Engine initialized.",
+        "Excel Integration Modules active.",
+        "Pack & Go Packaging Engine ready.",
+        "Native High-Res PDF Export active.",
+        "Double-Page Spreads & Booklet Printing active.",
+        "Template Saving & Protection Engine loaded.",
+        "Small Caps & Advanced Typography loaded.",
+        "Exact Line Spacing Control active.",
+        "Tabs Dialog Box & Leaders initialized.",
+        "Insert Symbol Modal ready.",
+        "Table Formatting & Cell Merging active.",
+        "Targeted Table Cells & Thicker Borders active.",
+        "Cross-Browser Table Cell Resizing initialized.",
+        "Table Distribute Rows and Columns active.",
+        "Business Information Feature loaded.",
+        "Convert Table to Text Feature active.",
+        "Image Resize Engine & Legacy Document Support active.",
+        "Custom Shape Crop Stabilization ready.",
+        "Tetris Easter Egg Integration (Shh!).",
+        "Selection Pane Integration ready.",
+        "Shadow Options & Picture Glow Effects loaded.",
+        "Batch Picture Swap active.",
+        "Selective Master Page Controls initialized.",
+        "Custom Page Margins & Ruler Origins active.",
+        "Multi-Page View Architecture loaded.",
+        "The Scratch Area workspace mounted.",
+        "Export as XPS Engine active.",
+        "Share via Email module loaded.",
+        "Document Password Protection & Security active.",
+        "Document Inspector & Properties active.",
+        "Master Page Quick Toggle active.",
+        "Accessibility Scanner loaded.",
+        "Occlusion Tracking Security Grid active.",
+        "Custom Context Menu System initialized.",
+        "Title Bar Context Menu & Clipboard Fixes applied.",
+        "Advanced HTML Export Options & Offline Fallbacks ready.",
+        "Engine Decoupling & CSS Optimization complete.",
+        "Page Parts Expansion modules loaded.",
+        "The Page Design & Dynamic Formatting active.",
+        "Transparency Update active.",
+        "The Center-Scale Update loaded.",
+        "Clear Formatting & Text Box Shortcuts bound.",
+        "Zoom Slider & Shrink Text on Overflow ready.",
+        "Grow Box to Fit mechanics active.",
+        "New Keyboard Shortcuts for Faster Workflows bound.",
+        "Smart Localization & Dynamic UI Syncing active.",
+        "Floating Toolbar Perfection achieved.",
+        "A Smoother Editing Experience initialized.",
+        "Marketing Module Update applied.",
+        "Auto-Rotation Normalization Engine ready.",
+        "Render Synchronization & Asset Filler active.",
+        "Serialization Persistence & Heuristic Defenses active.",
+        "Seamless-Print Engine update mounted.",
+        "Ctrl+S Web Shortcut Patch active.",
+        "Infinite Panning Hand Tool loaded.",
+        "The Performance & Anti-Lag Update active.",
+        "Vector Border Engine Rewrite active.",
+        "The SVG Advertisement Overhaul applied.",
+        "The Vector Shapes Engine loaded.",
+        "Writer's Suite initialized.",
+        "The Aspect Ratio Update active.",
+        "Professional Table Tools & Precision Layout active.",
+        "100 Styled Table Templates loaded.",
+        "Ruler Highlights & Boundary Clamping active.",
+        "The \"Smart Slide\" Update active.",
+        "Asset Lazy-Loading modules active.",
+        "The Native Selection & Group Rotation Engine loaded.",
+        "Undo/Redo History Optimization ready.",
+        "Ghost Hook Universal Paste Architecture active.",
+        "Dynamic Format Indicator active.",
+        "50+ Professional Templates parsed.",
+        "Unified Draggable UI & DOM Safe Zone active.",
         "Global Event Listeners attached.",
         "Undo/Redo State Manager bound.",
         "Workspace State synced.",
-        "LocalStorage Auto-Saves checked.",
-        "UI Layout Repaints finalized."
+        "LocalStorage Auto-Saves checked."
     ];
     var bootIndex = 0;
-    var bootInterval = setInterval(function() {
+    function nextBootStep() {
         window._allowSplashLogs = true;
         if (bootIndex < bootMessages.length) {
             console.log("✅ " + bootMessages[bootIndex]);
             bootIndex++;
+            var pBar = document.getElementById('splash-progress-bar');
+            if (pBar) {
+                pBar.style.width = ((bootIndex / bootMessages.length) * 100) + '%';
+            }
+            
+            // Base speed of 30ms, with an 8% chance to "hang" for a realistic 150-300ms
+            var delay = 30;
+            if (Math.random() < 0.08) {
+                delay += Math.floor(Math.random() * 150) + 150;
+            }
+            setTimeout(nextBootStep, delay);
         } else {
-            clearInterval(bootInterval);
             console.log("✅ Open Publisher successfully initialized.");
             var countdown = 4;
             var countdownInterval = setInterval(function() {
@@ -241,7 +327,8 @@
             document.addEventListener('keydown', abortHandler);
         }
         window._allowSplashLogs = false;
-    }, 150);
+    }
+    nextBootStep();
 })();
 </script>
 <input type="file" id="img-upload" style="display:none" accept="image/*">
@@ -884,11 +971,11 @@
 </div>
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
-    <link rel="stylesheet" href="style.css?v=4.13.6">
+    <link rel="stylesheet" href="style.css?v=4.13.7">
     <script src="clipart-data.js?v=4.12.1"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>
-    <script src="script.js?v=4.13.6"></script>
+    <script src="script.js?v=4.13.7"></script>
     <script src="tetris.js?v=4.12.0"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
