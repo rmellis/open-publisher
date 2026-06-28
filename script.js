@@ -6732,6 +6732,89 @@ document.getElementById('file-open').addEventListener('change', (e) => {
     }
 });
 
+// --- INSERT FILE (TEXT) MENU ---
+document.getElementById('insert-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if (!state.selectedEl) {
+        if(typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Insert File', 'Please select a text box first to insert the file contents into.');
+        } else {
+            alert('Please select a text box first to insert the file contents into.');
+        }
+        e.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        try {
+            const data = JSON.parse(evt.target.result);
+            let combinedText = '';
+            if (data.pages && Array.isArray(data.pages)) {
+                data.pages.forEach(page => {
+                    if (page.elements && Array.isArray(page.elements)) {
+                        page.elements.forEach(el => {
+                            // Strictly only process generic boxes (which text boxes are)
+                            if (el.type !== 'box' && el.type !== 'text' && el.type !== undefined) return;
+                            if (el.isImage || el.isImageFallback) return;
+                            if (!el.innerHTML) return;
+
+                            const temp = document.createElement('div');
+                            temp.innerHTML = el.innerHTML;
+                            
+                            // Text boxes are characterized by having a contenteditable region
+                            const editableNode = temp.querySelector('[contenteditable="true"]');
+                            if (!editableNode) return; // If it's not editable, it's not a text box (e.g. a grouped shape)
+
+                            // WordArt sometimes sneaks in if it was editable, filter it out
+                            if (temp.querySelector('.wa-text') || temp.querySelector('svg')) return;
+
+                            // Scrape ONLY the pure text/html content, leaving behind the layout wrappers
+                            let cleanHTML = editableNode.innerHTML.trim();
+                            if (cleanHTML && cleanHTML !== 'Click to edit text' && cleanHTML !== '<br>') {
+                                // Add a paragraph break between distinct text boxes
+                                combinedText += cleanHTML + '<br><br>';
+                            }
+                        });
+                    }
+                });
+            }
+            
+            if (combinedText) {
+                const contentNode = state.selectedEl.querySelector('.element-content');
+                // The target element's editable area is inside element-content > div
+                const targetEditableNode = contentNode ? (contentNode.querySelector('[contenteditable="true"]') || contentNode) : null;
+                
+                if (targetEditableNode) {
+                    targetEditableNode.innerHTML += combinedText;
+                    if(typeof saveState === 'function') saveState();
+                    if(typeof pushHistory === 'function') pushHistory();
+                    if(typeof DialogSystem !== 'undefined') {
+                        DialogSystem.show('Insert File', 'Text successfully imported from the document and poured into your selected box.');
+                    }
+                } else {
+                    if(typeof DialogSystem !== 'undefined') {
+                        DialogSystem.show('Insert File', 'Could not insert text into the selected element.');
+                    }
+                }
+            } else {
+                if(typeof DialogSystem !== 'undefined') {
+                    DialogSystem.show('Insert File', 'No text found in the selected document to import.');
+                }
+            }
+        } catch(err) {
+            console.error(err);
+            if(typeof DialogSystem !== 'undefined') {
+                DialogSystem.show('Error', 'Failed to read or parse the file. Ensure it is a valid OpenPublisher document.');
+            }
+        }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+});
+
 window.exportNativePDF = function() {
     if(typeof DialogSystem !== 'undefined') {
         const msg = `
