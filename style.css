@@ -2743,11 +2743,11 @@ svg .shape-path, svg .shape-path * {
         .ts-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: linear-gradient(to right, #d1e8dd, var(--pub-color, #007670)); outline: none; }
         .ts-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--pub-color, #007670); border: 2px solid #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.3); cursor: pointer; }
 
-        /* Remove Theme Button (Native Ribbon Style) */
-        #ts-clear-theme-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; color: #333; border: 1px solid transparent; height: 73px; min-width: 60px; padding: 0 10px; border-radius: 4px; cursor: pointer; transition: all 0.1s ease; font-size: 11px; text-align: center; box-sizing: border-box; }
-        #ts-clear-theme-btn i { font-size: 24px; color: var(--pub-color, #007670); margin-bottom: 6px; }
-        #ts-clear-theme-btn:hover { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
-        #ts-clear-theme-btn:active { background: rgba(0, 0, 0, 0.1); }
+        /* Remove Theme & Ignore Theme Buttons (Native Ribbon Style) */
+        #ts-clear-theme-btn, #no-bg-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; color: #333; border: 1px solid transparent; height: 73px; min-width: 60px; padding: 0 10px; border-radius: 4px; cursor: pointer; transition: all 0.1s ease; font-size: 11px; text-align: center; box-sizing: border-box; }
+        #ts-clear-theme-btn i, #no-bg-btn i { font-size: 24px; color: var(--pub-color, #007670); margin-bottom: 6px; }
+        #ts-clear-theme-btn:hover, #no-bg-btn:hover { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
+        #ts-clear-theme-btn:active, #no-bg-btn:active { background: rgba(0, 0, 0, 0.1); }
 
 /* Extracted Block 24 */
 /* 1. Stop the main wrapper from chopping off the handles */

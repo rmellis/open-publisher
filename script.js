@@ -619,6 +619,7 @@ function serializeCurrentPage() {
         id: existingPage.id || Date.now(),
         thumb: existingPage.thumb, // <--- PRESERVE THUMBNAIL
         ignoreMasterPage: existingPage.ignoreMasterPage || false,
+        ignoreBackground: existingPage.ignoreBackground || false,
         width: paper.style.width || '794px',
         height: paper.style.height || '1123px',
         background: paper.style.background || 'white',
@@ -709,8 +710,11 @@ function renderPage(pageData) {
     
     paper.style.width = pageData.width;
     paper.style.height = pageData.height;
-    paper.style.background = pageData.background;
-
+    if (pageData.ignoreBackground) {
+        paper.style.background = '#ffffff';
+    } else {
+        paper.style.background = pageData.background;
+    }
     if (typeof window.setPageFormatIcon === 'function') {
         let w = parseFloat(pageData.width);
         let h = parseFloat(pageData.height || '1123');
@@ -1243,6 +1247,27 @@ function setupZoomControls() {
 // --- THEMES & STYLES ---
 function initThemes() {
     const container = document.getElementById('theme-group');
+    
+window.clearPageBackground = function() {
+    document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
+    
+    // Flag this specific page to ignore the master theme
+    if (state.pages[state.currentPageIndex]) {
+        state.pages[state.currentPageIndex].ignoreBackground = true;
+        state.pages[state.currentPageIndex].background = '#ffffff';
+    }
+    
+    // Manually destroy the theme wrapper on this page right now
+    const paper = document.getElementById('paper');
+    if (paper) {
+        paper.style.background = '#ffffff';
+        const theme = paper.querySelector('[data-is-theme="true"]');
+        if (theme) theme.remove();
+    }
+    
+    if (typeof pushHistory === 'function') pushHistory();
+};
+
     const colors = [
         '#ffffff', '#fdf2f0', '#e8f6f3', '#fef9e7', '#f4ecf7', '#eaf2f8',
         '#ebf5fb', '#e8daef', '#d4e6f1', '#d1f2eb', '#fcf3cf', '#fadbd8',
@@ -1269,16 +1294,25 @@ function initThemes() {
         swatch.style.background = c;
         swatch.style.display = 'inline-block';
         swatch.style.margin = '2px';
-        swatch.style.border = '1px solid #999';
+        swatch.style.border = '1px solid #ccc';
         swatch.style.cursor = 'pointer';
         swatch.style.verticalAlign = 'middle';
         swatch.style.borderRadius = '4px';
         swatch.title = "Apply Background";
         swatch.className = 'theme-swatch-item';
         swatch.onclick = () => { 
-            document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #999');
+            document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
             swatch.style.border = '3px solid #007670';
-            paper.style.background = c; 
+            
+            // Turn OFF ignoreBackground if they manually select a color
+            if (state.pages[state.currentPageIndex]) {
+                state.pages[state.currentPageIndex].ignoreBackground = false;
+                state.pages[state.currentPageIndex].background = c;
+            }
+            
+            const paper = document.getElementById('paper');
+            if (paper) paper.style.background = c; 
+            
             pushHistory(); 
         };
         container.appendChild(swatch);
@@ -8562,6 +8596,11 @@ function printFullDocument(isBooklet = false) {
              elementsToRender = state.pages[0].elements.concat(elementsToRender);
         }
         
+        // Strip out the master theme wrapper if this page requested a blank background
+        if (page.ignoreBackground) {
+            elementsToRender = elementsToRender.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
+        }
+        
         elementsToRender.forEach(el => {
             let elDiv = document.createElement('div');
             elDiv.style.position = 'absolute';
@@ -8629,6 +8668,11 @@ function printBooklet() {
                     spreadElements = state.pages[0].elements.concat(spreadElements);
                 }
                 
+                // Strip out the master theme wrapper if this page requested a blank background
+                if (spread.ignoreBackground) {
+                    spreadElements = spreadElements.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
+                }
+                
                 spreadElements.forEach(el => {
                     let elLeft = parseFloat(el.left);
                     if (elLeft < singleW) {
@@ -8647,6 +8691,9 @@ function printBooklet() {
                 for (let i = 1; i < singlePages.length; i++) {
                     if (!singlePages[i].ignoreMasterPage) {
                         singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                    }
+                    if (singlePages[i].ignoreBackground) {
+                        singlePages[i].elements = singlePages[i].elements.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
                     }
                 }
             }
@@ -22435,6 +22482,11 @@ window.toggleCrop = function() {
                 <span style="line-height: 1.2;">Remove<br>Theme</span>
             </div>
             
+            <div id="no-bg-btn" onclick="clearPageBackground()" title="Override Master Theme (Blank Page)">
+                <i class="fas fa-ban"></i>
+                <span style="line-height: 1.2;">Ignore<br>Theme</span>
+            </div>
+            
             <div class="ts-divider"></div>
             ${swatchesHTML}
             <div class="ts-divider"></div>
@@ -22622,6 +22674,12 @@ window.toggleCrop = function() {
         if (!paper) return;
 
         let theme = document.querySelector('[data-is-theme="true"]');
+
+        // ✨ FEATURE: Ignore Background Override
+        if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
+            if (theme) theme.remove();
+            return;
+        }
 
         // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
         if (!theme && paper.getAttribute('data-theme-saved') === 'true') {
@@ -23308,7 +23366,14 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 scaler.className = 'op-print-scaler';
                 scaler.style.background = page.background || '#ffffff';
 
-                page.elements.forEach(el => {
+                let elementsToRender = page.elements || [];
+                
+                // Final safety check: if this page has ignoreBackground=true, forcefully strip any residual theme wrappers
+                if (page.ignoreBackground) {
+                    elementsToRender = elementsToRender.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
+                }
+                
+                elementsToRender.forEach(el => {
                     let elDiv = document.createElement('div');
                     elDiv.style.position = 'absolute';
                     elDiv.style.left = el.left;
@@ -23628,12 +23693,25 @@ window.addEventListener('beforeprint', () => {
             let themeHtml = ''; let borderHtml = '';
             
             if (livePaper) {
-                const liveTheme = livePaper.querySelector('[data-is-theme="true"]');
-                if (liveTheme) {
-                    let rawHtml = liveTheme.outerHTML;
-                    rawHtml = rawHtml.replace(/inset:\s*0[^;]*;/gi, 'top:0; left:0; bottom:0; right:0; width:100%; height:100%;');
-                    rawHtml = rawHtml.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
-                    themeHtml = rawHtml;
+                const isSaved = livePaper.getAttribute('data-theme-saved');
+                if (isSaved === 'true') {
+                    const tType = livePaper.getAttribute('data-theme-type') || 'color';
+                    const c1 = livePaper.getAttribute('data-theme-c1') || '#ffffff';
+                    const c2 = livePaper.getAttribute('data-theme-c2') || '';
+                    const url = livePaper.getAttribute('data-theme-url') || '';
+                    
+                    let bgCss = `background: ${c1};`;
+                    if (tType === 'gradient' && c2) bgCss = `background: linear-gradient(135deg, ${c1}, ${c2});`;
+                    
+                    let htmlStr = `<div class="op-theme-container" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; pointer-events:none; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; z-index:-10;">`;
+                    htmlStr += `<div class="op-theme-bg" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; ${bgCss}"></div>`;
+                    
+                    if (tType === 'texture' && url) {
+                        const safeUrl = url.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
+                        htmlStr += `<div class="op-theme-tex" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; background-repeat:repeat; opacity:1; background-image:url('${safeUrl}');"></div>`;
+                    }
+                    htmlStr += `</div>`;
+                    themeHtml = htmlStr;
                 }
                 const liveBorder = livePaper.querySelector('[data-is-border="true"], #native-blueprint-border');
                 if (liveBorder) borderHtml = liveBorder.outerHTML;
@@ -23665,7 +23743,7 @@ window.addEventListener('beforeprint', () => {
                 pageWrapper.style.overflow = 'hidden';
                 pageWrapper.style.background = page.background || '#ffffff';
 
-                if (themeHtml) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
+                if (themeHtml && !page.ignoreBackground) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
 
                 let elementsToRender = page.elements || [];
                 let renderHeader = page.header || '';
@@ -23677,6 +23755,11 @@ window.addEventListener('beforeprint', () => {
                     }
                     renderHeader = state.pages[0].header || '';
                     renderFooter = state.pages[0].footer || '';
+                }
+                
+                // Final safety check: if this page has ignoreBackground=true, forcefully strip any residual theme wrappers
+                if (page.ignoreBackground) {
+                    elementsToRender = elementsToRender.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
                 }
 
                 for (let el of elementsToRender) {
