@@ -1148,6 +1148,7 @@ function updateSidebar() {
                 ${sizeText}
             </div>
             <small>${labelText}</small>
+            ${p.note ? `<div style="font-size: 10px; color: var(--pub-color); text-align: center; word-break: break-word; line-height: 1.1; margin-top: 2px; font-weight: bold;">${p.note.replace(/</g, '&lt;')}</div>` : ''}
         `;
         
         const thumbContainer = div.querySelector('.page-thumb');
@@ -26606,6 +26607,33 @@ function contextDuplicatePage(fromPasteboard = false) {
         if(typeof updateThumbnails === 'function') updateThumbnails();
         pushHistory(); 
     }, 50);
+}
+
+function contextAddNote() {
+    const index = (state.contextMenuTargetIndex === undefined) ? state.currentPageIndex : state.contextMenuTargetIndex;
+    const page = state.pages[index];
+    if (!page) return;
+    
+    const menu = document.getElementById('minimap-context-menu');
+    if (menu) menu.style.display = 'none';
+    
+    const existingNote = page.note || "";
+    DialogSystem.show('Add Page Note', `
+        <div style="margin-bottom: 10px; font-size: 14px; color: #555;">Add a short identifier or note to display under this page's thumbnail in the Navigation Pane. Leave blank to remove.</div>
+        <input type="text" id="page-note-input" value="${existingNote.replace(/"/g, '&quot;')}" style="width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;" placeholder="e.g. Back Cover">
+    `, () => {
+        const input = document.getElementById('page-note-input');
+        if (input) {
+            const val = input.value.trim();
+            if (val) {
+                state.pages[index].note = val;
+            } else {
+                delete state.pages[index].note;
+            }
+            updateSidebar();
+            if (typeof pushHistory === 'function') pushHistory();
+        }
+    });
 }
 
 function contextMoveUp() {
