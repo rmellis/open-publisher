@@ -46,8 +46,8 @@
 	<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "037731b622494f81a5522ea631351f85"}'></script><!-- Cloudflare Web Analytics -->
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 	
-    <link rel="stylesheet" href="style.css?v=4.13.12">
-	<script src="clipart-data.js?v=4.13.12"></script>
+    <link rel="stylesheet" href="style.css?v=4.13.13">
+	<script src="clipart-data.js?v=4.13.13"></script>
 	<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -931,28 +931,28 @@
 
 <div class="modal-overlay" id="clipart-modal" onclick="closeModal(this)">
     <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">Emojis <span style="float:right;cursor:pointer" onclick="document.getElementById('clipart-modal').style.display='none'">&times;</span></div>
+        <div class="modal-header"><span>Emojis</span> <span class="custom-dialog-close" style="position: absolute; top: 8px; right: 8px; z-index: 10;" onclick="document.getElementById('clipart-modal').style.display='none'"><i class="fas fa-times"></i></span></div>
         <div class="gallery-grid" id="clipart-grid"></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="wordart-modal" onclick="closeModal(this)">
     <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">WordArt Gallery <span style="float:right;cursor:pointer" onclick="document.getElementById('wordart-modal').style.display='none'">&times;</span></div>
+        <div class="modal-header"><span>WordArt Gallery</span> <span class="custom-dialog-close" style="position: absolute; top: 8px; right: 8px; z-index: 10;" onclick="document.getElementById('wordart-modal').style.display='none'"><i class="fas fa-times"></i></span></div>
         <div class="gallery-grid" id="wordart-grid" style="grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 10px; background: #fafafa;"></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="ad-modal" onclick="closeModal(this)">
     <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">Advertisement Templates <span style="float:right;cursor:pointer" onclick="document.getElementById('ad-modal').style.display='none'">&times;</span></div>
+        <div class="modal-header"><span>Advertisement Templates</span> <span class="custom-dialog-close" style="position: absolute; top: 8px; right: 8px; z-index: 10;" onclick="document.getElementById('ad-modal').style.display='none'"><i class="fas fa-times"></i></span></div>
         <div class="gallery-grid" id="ad-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="template-modal" onclick="closeModal(this)">
     <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">Publication Templates <span style="float:right;cursor:pointer" onclick="document.getElementById('template-modal').style.display='none'">&times;</span></div>
+        <div class="modal-header"><span>Publication Templates</span> <span class="custom-dialog-close" style="position: absolute; top: 8px; right: 8px; z-index: 10;" onclick="document.getElementById('template-modal').style.display='none'"><i class="fas fa-times"></i></span></div>
         <div class="template-cats" id="template-cats"></div>
         <div class="gallery-grid" id="template-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
     </div>
@@ -979,12 +979,12 @@
 </div>
 
 <div id="font-preloader" style="position:fixed; top:-9999px; left:-9999px; visibility:hidden; pointer-events:none;"></div>
-    <link rel="stylesheet" href="style.css?v=4.13.12">
-    <script src="clipart-data.js?v=4.13.12"></script>
+    <link rel="stylesheet" href="style.css?v=4.13.13">
+    <script src="clipart-data.js?v=4.13.13"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>
-    <script src="script.js?v=4.13.12"></script>
-    <script src="tetris.js?v=4.13.12"></script>
+    <script src="script.js?v=4.13.13"></script>
+    <script src="tetris.js?v=4.13.13"></script>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>
@@ -1001,7 +1001,7 @@
 <div class="op-sidebar-header">
             <span class="op-sidebar-title">Table Layout</span>
             <div class="op-sidebar-top-btns">
-                <button class="op-header-btn" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
             </div>
         </div>
         
@@ -1056,7 +1056,7 @@
             <span class="op-sidebar-title">Format Picture</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="filter-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
 
@@ -1118,7 +1118,7 @@
             <span class="op-sidebar-title">Format WordArt</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="wa-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
         
@@ -1201,7 +1201,7 @@
             <span class="op-sidebar-title">Format Picture</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="filter-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
         <div class="op-sidebar-section">
@@ -1259,7 +1259,7 @@
             <span class="op-sidebar-title">Format WordArt</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="wa-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
         

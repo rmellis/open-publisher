@@ -10112,7 +10112,7 @@ window.switchTab = function(t) {
     panel.innerHTML = `<div class="op-sidebar-header">
             <span class="op-sidebar-title">Table Layout</span>
             <div class="op-sidebar-top-btns">
-                <button class="op-header-btn" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" onclick="document.getElementById('op-table-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
             </div>
         </div>
         
@@ -11014,7 +11014,7 @@ window.initWordArt = function() {
             <span class="op-sidebar-title">Format Picture</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="filter-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
 
@@ -11335,7 +11335,7 @@ window.initWordArt = function() {
             <span class="op-sidebar-title">Format WordArt</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="wa-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
         
@@ -11655,7 +11655,7 @@ window.initWordArt = function() {
             <span class="op-sidebar-title">Format Picture</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="filter-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="filter-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="filter-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
 
@@ -11913,7 +11913,7 @@ window.initWordArt = function() {
             <span class="op-sidebar-title">Format WordArt</span>
             <div class="op-sidebar-top-btns">
                 <button class="op-header-btn" id="wa-reset-btn" style="margin-right:8px" title="Reset All"><i class="fas fa-undo"></i></button>
-                <button class="op-header-btn" id="wa-close-btn"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" id="wa-close-btn"><i class="fas fa-times"></i></button>
             </div>
         </div>
         
@@ -25273,20 +25273,7 @@ window.addEventListener('beforeprint', () => {
                     margin-bottom: 12px;
                     pointer-events: none; /* Let drag pass through */
                 }
-                .wa-close-btn {
-                    position: absolute;
-                    top: 10px;
-                    right: 15px;
-                    color: rgba(255, 255, 255, 0.7);
-                    font-size: 16px;
-                    font-family: sans-serif;
-                    cursor: pointer;
-                    transition: color 0.2s;
-                    z-index: 10;
-                }
-                .wa-close-btn:hover {
-                    color: white;
-                }
+                /* Replaced .wa-close-btn with global .custom-dialog-close */
                 
                 /* The Giant White Input Box */
                 .wa-modal-input {
@@ -25389,7 +25376,7 @@ window.addEventListener('beforeprint', () => {
             </style>
             
             <div class="wa-modal-header" id="wa-modal-header">
-                <div class="wa-close-btn" id="wa-close-x" title="Close">✖</div>
+                <div class="custom-dialog-close" id="wa-close-x" title="Close" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
                 <div class="wa-modal-title">Create WordArt</div>
                 <input type="text" id="beta-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="">
             </div>
@@ -25711,7 +25698,7 @@ window.showWebClipartModal = function() {
                     <input type="text" id="clipart-search-input" placeholder="Search for clipart (e.g., 'tree', 'computer', 'apple')..." style="width: 100%; padding: 10px 15px 10px 40px; border-radius: 20px; border: 1px solid #ddd; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.95); user-select: text; -webkit-user-select: text; font-family: 'Segoe UI', sans-serif;">
                 </div>
             </div>
-            <div class="wa-close-btn" id="clipart-close-x"><i class="fas fa-times"></i></div>
+            <div class="custom-dialog-close" id="clipart-close-x" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
         </div>
         <div class="clipart-grid-container" id="clipart-grid-container" style="height: 50vh;">
             <!-- Grid goes here -->
@@ -27088,7 +27075,7 @@ window.toggleSelectionPane = function() {
             <div class="op-sidebar-header">
                 <span class="op-sidebar-title">Selection Pane</span>
                 <div class="op-sidebar-top-btns">
-                    <button class="op-header-btn" onclick="document.getElementById('op-selection-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                    <button class="custom-dialog-close" onclick="document.getElementById('op-selection-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
                 </div>
             </div>
             <div class="op-sidebar-section" style="padding-bottom: 5px;">
@@ -27225,7 +27212,7 @@ window.setShadowPaneVisibility = function(visible) {
             <div class="op-sidebar-header">
                 <span class="op-sidebar-title">Shadow / Glow Options</span>
                 <div class="op-sidebar-top-btns">
-                    <button class="op-header-btn" onclick="document.getElementById('op-shadow-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                    <button class="custom-dialog-close" onclick="document.getElementById('op-shadow-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
                 </div>
             </div>
             <div class="op-sidebar-section">
@@ -27815,7 +27802,7 @@ window.removeInspectorEmptyText = function() {
     panel.innerHTML = `<div class="op-sidebar-header">
             <span class="op-sidebar-title">Accessibility Checker</span>
             <div class="op-sidebar-top-btns">
-                <button class="op-header-btn" onclick="document.getElementById('op-a11y-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" onclick="document.getElementById('op-a11y-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
             </div>
         </div>
         <div id="a11y-results-container" style="padding: 15px; overflow-y:auto; height:calc(100% - 50px);"></div>
@@ -28113,7 +28100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.innerHTML = `<div class="op-sidebar-header">
             <span class="op-sidebar-title">Graphics Manager</span>
             <div class="op-sidebar-top-btns">
-                <button class="op-header-btn" onclick="document.getElementById('op-graphics-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                <button class="custom-dialog-close" onclick="document.getElementById('op-graphics-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
             </div>
         </div>
         <div id="graphics-manager-results" style="padding: 15px; overflow-y:auto; height:calc(100% - 50px); background:#f9f9f9;"></div>
