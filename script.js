@@ -28169,6 +28169,70 @@ window.GraphicsManager = {
         return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
     },
 
+    updateLinkedImage: function(pageIndex, elementIndex) {
+        if (!state.pages[pageIndex] || !state.pages[pageIndex].elements[elementIndex]) return;
+        const elData = state.pages[pageIndex].elements[elementIndex];
+        
+        const isEmbedded = elData.imgSrc && elData.imgSrc.startsWith('data:');
+        
+        if (!isEmbedded) {
+            let url = elData.imgSrc;
+            const qIdx = url.indexOf('?');
+            if (qIdx !== -1) {
+                // Strip old timestamp but keep other query params if needed? 
+                // It's safer to just strip everything and append our own for cache busting
+                url = url.substring(0, qIdx);
+            }
+            
+            const newUrl = url + '?t=' + Date.now();
+            elData.imgSrc = newUrl;
+            
+            if (state.currentPageIndex === pageIndex) {
+                const paper = document.getElementById('paper');
+                if (paper) {
+                    const els = paper.querySelectorAll('.element');
+                    if (els[elementIndex]) {
+                        const img = els[elementIndex].querySelector('img');
+                        if (img) img.src = newUrl;
+                    }
+                }
+            }
+            
+            if (typeof pushHistory === 'function') pushHistory();
+            this.scanImages();
+            return;
+        }
+
+        // It's a Data URI (Embedded), we must prompt the user to select the updated file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const newUrl = evt.target.result;
+                    elData.imgSrc = newUrl;
+                    
+                    if (state.currentPageIndex === pageIndex) {
+                        const paper = document.getElementById('paper');
+                        if (paper) {
+                            const els = paper.querySelectorAll('.element');
+                            if (els[elementIndex]) {
+                                const img = els[elementIndex].querySelector('img');
+                                if (img) img.src = newUrl;
+                            }
+                        }
+                    }
+                    if (typeof pushHistory === 'function') pushHistory();
+                    this.scanImages();
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        };
+        input.click();
+    },
+
     renderList: function(imagesList) {
         const container = document.getElementById('graphics-manager-results');
         if (!container) return;
@@ -28232,11 +28296,14 @@ window.GraphicsManager = {
                 `<span style="background:#e8f5e9; color:#2e7d32; padding:2px 6px; border-radius:10px; font-size:10px; font-weight:bold;"><i class="fas fa-file-archive"></i> Embedded</span>` : 
                 `<span style="background:#e3f2fd; color:#1565c0; padding:2px 6px; border-radius:10px; font-size:10px; font-weight:bold;"><i class="fas fa-link"></i> Linked</span>`;
 
+            const updateBtnHtml = `<div style="margin-top:8px;"><button onclick="event.stopPropagation(); window.GraphicsManager.updateLinkedImage(${item.pageIndex}, ${item.elementIndex})" style="background:var(--pub-color); color:#fff; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Update Image</button></div>`;
+
             details.innerHTML = `
                 <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">Page ${item.pageIndex + 1}</div>
                 <div style="margin-bottom:4px;">${typeBadge}</div>
                 <div id="res-${idx}" style="color:#666;"><i class="fas fa-spinner fa-spin"></i> Resizing...</div>
                 <div id="size-${idx}" style="color:#666;"><i class="fas fa-spinner fa-spin"></i> Calculating...</div>
+                ${updateBtnHtml}
             `;
 
             card.appendChild(thumbContainer);
