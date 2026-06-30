@@ -4340,46 +4340,47 @@ document.addEventListener('dblclick', (e) => {
                 
                 // If clicked within top 100px or bottom 100px
                 if (unscaledY <= 100 || unscaledY >= paperHeight - 100) {
-                    let didAction = false;
-                    
-                    if (!state.hasMasterPage) {
-                        if (typeof addMasterPage === 'function') addMasterPage();
-                        didAction = true;
-                    } else if (state.currentPageIndex !== 0) {
-                        if (typeof switchPage === 'function') switchPage(0);
-                        didAction = true;
-                    }
-                    
-                    // Ensure headers are visible
-                    if (!state.headersVisible && typeof toggleHeaderFooter === 'function') {
-                        toggleHeaderFooter(true);
-                        didAction = true;
-                    }
-                    
-                    // If we were already on the master page and headers were visible,
-                    // do not interfere so native double-click text selection works.
-                    if (!didAction) return;
-                    
-                    // Focus the clicked area
-                    setTimeout(() => {
-                        const currentPaper = document.getElementById('paper');
-                        if (!currentPaper) return;
-                        const targetClass = unscaledY <= 100 ? '.page-header' : '.page-footer';
-                        const elToFocus = currentPaper.querySelector(targetClass);
-                        if (elToFocus) {
-                            elToFocus.focus();
-                            // Place cursor at end
-                            if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
-                                const range = document.createRange();
-                                range.selectNodeContents(elToFocus);
-                                range.collapse(false);
-                                const sel = window.getSelection();
-                                sel.removeAllRanges();
-                                sel.addRange(range);
-                            }
+                    // Check if an action is required to edit headers
+                    if (!state.hasMasterPage || state.currentPageIndex !== 0 || !state.headersVisible) {
+                        if (typeof DialogSystem !== 'undefined') {
+                            DialogSystem.show(
+                                'Edit Header/Footer', 
+                                '<p>You double-clicked the header/footer area. Would you like to jump to the Master Page to edit the template for all pages?</p>', 
+                                () => {
+                                    if (!state.hasMasterPage) {
+                                        if (typeof addMasterPage === 'function') addMasterPage();
+                                    } else if (state.currentPageIndex !== 0) {
+                                        if (typeof switchPage === 'function') switchPage(0);
+                                    }
+                                    
+                                    if (!state.headersVisible && typeof toggleHeaderFooter === 'function') {
+                                        toggleHeaderFooter(true);
+                                    }
+                                    
+                                    setTimeout(() => {
+                                        const currentPaper = document.getElementById('paper');
+                                        if (!currentPaper) return;
+                                        const targetClass = unscaledY <= 100 ? '.page-header' : '.page-footer';
+                                        const elToFocus = currentPaper.querySelector(targetClass);
+                                        if (elToFocus) {
+                                            elToFocus.focus();
+                                            // Place cursor at end
+                                            if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
+                                                const range = document.createRange();
+                                                range.selectNodeContents(elToFocus);
+                                                range.collapse(false);
+                                                const sel = window.getSelection();
+                                                sel.removeAllRanges();
+                                                sel.addRange(range);
+                                            }
+                                        }
+                                    }, 50);
+                                }
+                            );
                         }
-                    }, 50);
-                    
+                    }
+                    // If we were already on the master page and headers were visible,
+                    // do not interfere so native double-click text selection works natively.
                     return; // Prevent other double click handlers
                 }
             }
