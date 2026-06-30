@@ -4886,7 +4886,13 @@ function toggleSpellCheck() {
     const status = state.spellCheck ? "ON" : "OFF";
     DialogSystem.alert('Spell Check', "Spell check toggled " + status);
 }
-function openThesaurus() { window.open('https://www.thesaurus.com/', '_blank'); }
+function openThesaurus() { 
+    if (window.ThesaurusTool) {
+        window.ThesaurusTool.toggleSidebar();
+    } else {
+        window.open('https://www.thesaurus.com/', '_blank'); 
+    }
+}
 
 function applyImgFilter(filter) {
     if(state.selectedEl) {
@@ -28299,5 +28305,132 @@ window.GraphicsManager = {
                 }
             }
         }, 300);
+    }
+};
+
+// --- THESAURUS TOOL ---
+(function installThesaurusSidebar() {
+    document.getElementById('op-thesaurus-sidebar')?.remove();
+
+    const panel = document.createElement('div');
+    panel.id = 'op-thesaurus-sidebar';
+    panel.className = 'sidebar-panel op-sidebar';
+    panel.innerHTML = `<div class="op-sidebar-header">
+            <span class="op-sidebar-title">Thesaurus</span>
+            <div class="op-sidebar-top-btns">
+                <button class="custom-dialog-close" onclick="document.getElementById('op-thesaurus-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div style="padding: 15px; display: flex; gap: 8px;">
+            <input type="text" id="thesaurus-search-input" placeholder="Search a word..." style="flex:1; padding:8px; border:1px solid #ddd; border-radius:4px;">
+            <button onclick="window.ThesaurusTool.search()" class="btn-primary" style="padding:8px 12px;"><i class="fas fa-search"></i></button>
+        </div>
+        <div id="thesaurus-results" style="padding: 0 15px 15px 15px; overflow-y:auto; height:calc(100% - 100px); background:#f9f9f9;">
+            <p style="color:#666; font-size:13px; text-align:center; margin-top:20px;">Search for a word to find synonyms.</p>
+        </div>
+    `;
+    let workspace = document.querySelector('.workspace');
+    if (workspace) workspace.appendChild(panel);
+    else document.body.appendChild(panel);
+
+    // Setup enter key listener
+    setTimeout(() => {
+        document.getElementById('thesaurus-search-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                window.ThesaurusTool.search();
+            }
+        });
+    }, 500);
+})();
+
+window.ThesaurusTool = {
+    toggleSidebar: function() {
+        const sidebar = document.getElementById('op-thesaurus-sidebar');
+        if (sidebar) {
+            if (sidebar.classList.contains('visible')) {
+                sidebar.classList.remove('visible');
+            } else {
+                document.getElementById('op-table-sidebar')?.classList.remove('visible');
+                document.getElementById('op-image-sidebar')?.classList.remove('visible');
+                document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
+                document.getElementById('op-a11y-sidebar')?.classList.remove('visible');
+                document.getElementById('op-graphics-sidebar')?.classList.remove('visible');
+                sidebar.classList.add('visible');
+                
+                // Pre-fill with selected text if it's a single word
+                let selection = window.getSelection().toString().trim();
+                if (selection && !selection.includes(' ')) {
+                    document.getElementById('thesaurus-search-input').value = selection;
+                    this.search();
+                } else {
+                    document.getElementById('thesaurus-search-input').focus();
+                }
+            }
+        }
+    },
+    
+    search: function() {
+        const input = document.getElementById('thesaurus-search-input');
+        const word = input.value.trim();
+        const resultsContainer = document.getElementById('thesaurus-results');
+        
+        if (!word) return;
+        
+        resultsContainer.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-circle-notch fa-spin"></i> Searching...</div>';
+        
+        fetch('https://api.datamuse.com/words?rel_syn=' + encodeURIComponent(word))
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    let html = `<div style="font-size:12px; color:#666; margin-bottom:10px;">Synonyms for <strong>${word}</strong>:</div><div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+                    data.forEach(item => {
+                        html += `<button onclick="window.ThesaurusTool.replaceWord('${item.word.replace(/'/g, "\\'")}')" style="background:#fff; border:1px solid #005a55; border-radius:15px; padding:5px 12px; color:#005a55; cursor:pointer; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='#005a55'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#005a55';" title="Click to replace selected text">${item.word}</button>`;
+                    });
+                    html += `</div>`;
+                    resultsContainer.innerHTML = html;
+                } else {
+                    resultsContainer.innerHTML = `<div style="color:#666; font-size:13px; text-align:center; margin-top:20px;">No synonyms found for "${word}".</div>`;
+                }
+            })
+            .catch(err => {
+                resultsContainer.innerHTML = `<div style="color:#e74c3c; font-size:13px; text-align:center; margin-top:20px;">Failed to load thesaurus data.</div>`;
+            });
+    },
+
+    replaceWord: function(newWord) {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+            const range = sel.getRangeAt(0);
+            
+            // Check if selection is within our editable workspace
+            let isEditable = false;
+            let node = range.commonAncestorContainer;
+            while(node && node !== document.body) {
+                if(node.isContentEditable || (node.classList && (node.classList.contains('editable-text') || node.classList.contains('op-table-cell') || node.classList.contains('wa-text-container')))) {
+                    isEditable = true;
+                    break;
+                }
+                node = node.parentNode;
+            }
+
+            if (isEditable) {
+                // Determine original capitalization (basic)
+                const originalText = sel.toString();
+                if (originalText.length > 0) {
+                    const firstChar = originalText.charAt(0);
+                    if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
+                        // Title case
+                        newWord = newWord.charAt(0).toUpperCase() + newWord.slice(1);
+                    }
+                }
+                document.execCommand('insertText', false, newWord);
+                return;
+            }
+        }
+        
+        // Fallback: Copy to clipboard if no valid selection is active
+        navigator.clipboard.writeText(newWord).then(() => {
+            DialogSystem.alert('Copied', `"${newWord}" copied to clipboard! (Highlight a word in your text to auto-replace it)`);
+        }).catch(() => {});
     }
 };
