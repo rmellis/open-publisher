@@ -2880,11 +2880,49 @@ function createWrapper(htmlContent) {
 }
 
 function addTextBox() { 
-    const el = createWrapper('<div style="padding:10px; height:100%; word-wrap:break-word;" contenteditable="true">Click to edit text</div>'); 
+    const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
+    const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
+    
+    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;${hyphenStyle}" contenteditable="true">Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
     applySingleElementScheme(el, state.currentScheme);
     return el;
 }
+
+window.showOptionsModal = function() {
+    const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
+    
+    const html = `
+    <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; height: 350px;">
+        <div style="width: 150px; border-right: 1px solid #ddd; padding: 15px 0;">
+            <div style="padding: 10px 15px; font-weight: bold; background: #f0f0f0; border-left: 3px solid var(--pub-color); cursor: pointer;">Advanced</div>
+        </div>
+        <div style="flex-grow: 1; padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 25px;">Advanced Settings</h3>
+            
+            <div style="margin-top: 20px;">
+                <strong style="display: block; margin-bottom: 8px;">Text Formatting</strong>
+                <label style="display: flex; align-items: center; margin-top: 10px; cursor: pointer;">
+                    <input type="checkbox" id="opt-autohyphenate" ${autoHyphenate ? 'checked' : ''} style="margin-right: 10px;">
+                    Automatically hyphenate in new text boxes
+                </label>
+                <p style="font-size: 11px; color: #666; margin-left: 23px; margin-top: 4px;">Applies to any newly created text box or newsletter block.</p>
+            </div>
+            
+            <div style="position: absolute; bottom: 20px; right: 20px; text-align: right;">
+                <button onclick="saveGlobalOptions()" style="background: var(--pub-color); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    `;
+    DialogSystem.show('Options', html, { width: '550px' });
+};
+
+window.saveGlobalOptions = function() {
+    const autoHyphenate = document.getElementById('opt-autohyphenate').checked;
+    localStorage.setItem('opub_autoHyphenate', autoHyphenate ? 'true' : 'false');
+    DialogSystem.close();
+};
 
 window.showPagePartsModal = function() {
     const html = `
