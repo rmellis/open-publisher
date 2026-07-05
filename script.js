@@ -4495,6 +4495,44 @@ function handleKeyUp(e) {
 }
 
 function selectElement(el) {
+    if (window.isLinkingTextBox) {
+        window.isLinkingTextBox = false;
+        document.body.style.cursor = 'default';
+        const paper = document.getElementById('paper');
+        if (paper) paper.style.cursor = 'default';
+        document.body.classList.remove('linking-mode');
+
+        const isTextBox = el.querySelector('.text-content') !== null || el.querySelector('div[contenteditable]') !== null;
+        if (!isTextBox) {
+            if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Invalid Selection', 'Please select a text box to link to.');
+            return;
+        }
+
+        const textContent = el.querySelector('.text-content') || el.querySelector('div[contenteditable]');
+        if (textContent && textContent.innerText.trim() !== '' && textContent.innerText.trim() !== 'Click to edit text') {
+            if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Link Text Box', 'You need to select an empty text box to pour the text into.');
+            return;
+        }
+
+        if (window.linkingSourceBox && window.linkingSourceBox !== el) {
+            if (!el.id) el.id = 'txt-' + Date.now();
+            window.linkingSourceBox.setAttribute('data-next-box', el.id);
+            el.setAttribute('data-prev-box', window.linkingSourceBox.id);
+
+            // Flow text visually
+            if (typeof flowTextBoxes === 'function') {
+                let headBox = window.linkingSourceBox;
+                while(headBox.getAttribute('data-prev-box')) {
+                    const prev = document.getElementById(headBox.getAttribute('data-prev-box'));
+                    if (prev) headBox = prev;
+                    else break;
+                }
+                flowTextBoxes(headBox);
+            }
+        }
+        return;
+    }
+
     if(state.selectedEl && state.selectedEl !== el) deselect();
     state.selectedEl = el;
     el.classList.add('selected');
@@ -10530,7 +10568,16 @@ window.ContextRibbonActions = {
             window.deselect(); groupEl.remove(); pushHistory();
         }
     },
-    linkBoxMock: function() { if(typeof DialogSystem !== 'undefined') DialogSystem.alert('Link Text Box', 'Click on an empty text box to pour overflowing text into it.'); },
+    linkTextBox: function() {
+        if(!state.selectedEl) return;
+        window.isLinkingTextBox = true;
+        window.linkingSourceBox = state.selectedEl;
+        document.body.classList.add('linking-mode');
+        const chainCursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>') 12 12, crosshair`;
+        document.body.style.cursor = chainCursor;
+        const paper = document.getElementById('paper');
+        if (paper) paper.style.cursor = chainCursor;
+    },
     setColumns: function() {
         if(!state.selectedEl) return;
         const content = state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
@@ -10726,7 +10773,7 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkBoxMock()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--pub-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--pub-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--pub-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkTextBox()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--pub-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--pub-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--pub-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--pub-color)"></i> Glow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--pub-color)"></i> Glow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
@@ -28704,3 +28751,185 @@ window.ThesaurusTool = {
         }).catch(() => {});
     }
 };
+
+window.flowTextBoxes = function(headBox) {
+    if (!headBox) return;
+    
+    // 1. Gather ALL text in the chain
+    let fullTextStr = '';
+    let current = headBox;
+    let boxes = [];
+    while(current) {
+        const content = current.querySelector('.text-content') || current.querySelector('div[contenteditable]');
+        if (content) {
+            let text = content.innerText;
+            if (fullTextStr.length > 0 && !/\s$/.test(fullTextStr) && !/^\s/.test(text)) {
+                fullTextStr += ' ';
+            }
+            fullTextStr += text;
+            boxes.push({box: current, content: content});
+        }
+        const nextId = current.getAttribute('data-next-box');
+        current = nextId ? document.getElementById(nextId) : null;
+    }
+
+    if (boxes.length < 2) return;
+
+    // 2. Remember caret position globally across the chain
+    const sel = window.getSelection();
+    let globalCaretOffset = -1;
+    if (sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        let offsetAccumulator = 0;
+        for (let i = 0; i < boxes.length; i++) {
+            if (boxes[i].content.contains(range.commonAncestorContainer)) {
+                const preCaretRange = range.cloneRange();
+                preCaretRange.selectNodeContents(boxes[i].content);
+                preCaretRange.setEnd(range.endContainer, range.endOffset);
+                globalCaretOffset = offsetAccumulator + preCaretRange.toString().length;
+                break;
+            }
+            let textLen = boxes[i].content.innerText.length;
+            if (i > 0 && !/\s$/.test(boxes[i-1].content.innerText) && !/^\s/.test(boxes[i].content.innerText)) {
+                textLen += 1; 
+            }
+            offsetAccumulator += textLen;
+        }
+    }
+
+    // 3. Flow text through the boxes (Binary Search with Off-Screen Clone)
+    const tokens = fullTextStr.split(/(\s+)/);
+    let tokenIndex = 0;
+    let targetCaretBox = null;
+    let localCaretOffset = 0;
+    let charAccumulator = 0;
+
+    const measureContainer = document.createElement('div');
+    measureContainer.style.position = 'absolute';
+    measureContainer.style.visibility = 'hidden';
+    measureContainer.style.pointerEvents = 'none';
+    measureContainer.style.left = '-9999px';
+    measureContainer.style.top = '-9999px';
+    document.body.appendChild(measureContainer);
+
+    for (let i = 0; i < boxes.length; i++) {
+        const boxObj = boxes[i];
+        
+        if (i === boxes.length - 1) {
+            // Last box gets all remaining text
+            const remaining = tokens.slice(tokenIndex).join('');
+            boxObj.content.innerText = remaining;
+            
+            const boxLength = remaining.length;
+            if (globalCaretOffset >= charAccumulator && globalCaretOffset <= charAccumulator + boxLength) {
+                targetCaretBox = boxObj.content;
+                localCaretOffset = globalCaretOffset - charAccumulator;
+            }
+            break;
+        }
+        
+        // Clone for invisible measurement
+        const clone = boxObj.content.cloneNode(false);
+        const computed = window.getComputedStyle(boxObj.content);
+        clone.style.width = computed.width;
+        clone.style.height = computed.height;
+        clone.style.boxSizing = computed.boxSizing;
+        clone.style.padding = computed.padding;
+        clone.style.font = computed.font;
+        clone.style.lineHeight = computed.lineHeight;
+        clone.style.wordWrap = computed.wordWrap;
+        clone.style.whiteSpace = computed.whiteSpace;
+        measureContainer.appendChild(clone);
+
+        const remainingTokens = tokens.slice(tokenIndex);
+        let low = 0;
+        let high = remainingTokens.length;
+        let bestFit = 0;
+
+        clone.innerText = remainingTokens.join('');
+        if (clone.scrollHeight <= clone.clientHeight) {
+            bestFit = remainingTokens.length;
+        } else {
+            while (low <= high) {
+                let mid = Math.floor((low + high) / 2);
+                clone.innerText = remainingTokens.slice(0, mid).join('');
+                if (clone.scrollHeight <= clone.clientHeight) {
+                    bestFit = mid;
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+        }
+        
+        if (bestFit === 0 && remainingTokens.length > 0) bestFit = 1;
+        
+        const fittedTokens = remainingTokens.slice(0, bestFit);
+        const currentText = fittedTokens.join('');
+        boxObj.content.innerText = currentText;
+        
+        const boxLength = currentText.length;
+        if (globalCaretOffset >= charAccumulator && globalCaretOffset <= charAccumulator + boxLength) {
+            targetCaretBox = boxObj.content;
+            localCaretOffset = globalCaretOffset - charAccumulator;
+        }
+        
+        charAccumulator += boxLength;
+        tokenIndex += bestFit;
+        measureContainer.innerHTML = ''; // clear for next loop
+    }
+    
+    document.body.removeChild(measureContainer);
+
+    // 4. Restore caret
+    if (targetCaretBox && globalCaretOffset !== -1) {
+        const walker = document.createTreeWalker(targetCaretBox, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        let currentOffset = 0;
+        let set = false;
+        while ((node = walker.nextNode())) {
+            const len = node.nodeValue.length;
+            if (currentOffset + len >= localCaretOffset) {
+                const newRange = document.createRange();
+                let nodeOffset = localCaretOffset - currentOffset;
+                if (nodeOffset > node.nodeValue.length) nodeOffset = node.nodeValue.length;
+                if (nodeOffset < 0) nodeOffset = 0;
+                
+                newRange.setStart(node, nodeOffset);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                set = true;
+                break;
+            }
+            currentOffset += len;
+        }
+        if (!set && targetCaretBox.childNodes.length > 0) {
+            const newRange = document.createRange();
+            newRange.selectNodeContents(targetCaretBox);
+            newRange.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
+        targetCaretBox.focus();
+    }
+};
+
+window._flowTimeout = null;
+window.addEventListener('input', function(e) {
+    if (e.target && e.target.isContentEditable) {
+        const box = e.target.closest('.pub-element');
+        if (box && (box.getAttribute('data-next-box') || box.getAttribute('data-prev-box'))) {
+            let headBox = box;
+            while(headBox.getAttribute('data-prev-box')) {
+                const prev = document.getElementById(headBox.getAttribute('data-prev-box'));
+                if (prev) headBox = prev;
+                else break;
+            }
+            clearTimeout(window._flowTimeout);
+            window._flowTimeout = setTimeout(() => {
+                flowTextBoxes(headBox);
+            }, 50);
+        }
+    }
+});
