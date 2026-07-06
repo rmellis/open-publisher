@@ -1269,9 +1269,7 @@ td, th {
     padding: 4px 8px;
     border: 1px solid var(--pub-color);
     border-radius: 4px;
-    background: white;
     font-family: inherit;
-    color: #333;
     outline: none;
     cursor: pointer;
 }

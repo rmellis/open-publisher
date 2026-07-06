@@ -10629,7 +10629,97 @@ window.ContextRibbonActions = {
     },
     cropToShape: function() {
         if(state.selectedEl && state.selectedEl.querySelector('img') && typeof DialogSystem !== 'undefined') {
-            DialogSystem.show('Crop to Shape', `<select id="ctx-crop-shape" style="width:100%; padding:8px;"><option value="none">Remove Crop</option><option value="circle(50%)">Circle / Oval</option><option value="polygon(50% 0%, 0% 100%, 100% 100%)">Triangle</option><option value="polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)">Star</option></select>`, () => {
+            DialogSystem.show('Crop to Shape', `
+                <style>
+                    .shape-crop-btn {
+                        width: 100%;
+                        background: white;
+                        border: 1px solid var(--pub-color) !important;
+                        color: var(--pub-color);
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-start;
+                        gap: 10px;
+                        padding: 6px 15px;
+                        border-radius: 20px;
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                    }
+                    .shape-crop-btn:hover {
+                        background: #f0f9f9;
+                    }
+                    .shape-crop-btn .icon {
+                        width: 16px;
+                        height: 16px;
+                        background: var(--pub-color);
+                        flex-shrink: 0;
+                    }
+                </style>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:400px; overflow-y:auto; padding-right:10px;">
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='none'; document.getElementById('custom-dialog-confirm').click();" style="grid-column: 1 / -1; justify-content: center;">
+                        <div style="width:16px; height:16px; border:2px dashed #999; flex-shrink:0;"></div> <span style="color:#666;">Remove Crop</span>
+                    </button>
+                    <hr style="grid-column: 1 / -1; border:0; border-top:1px solid #ccc; width:100%; margin: 5px 0;">
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='circle(50%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:circle(50%);"></div> Circle / Oval
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(50% 0%, 0% 100%, 100% 100%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(50% 0%, 0% 100%, 100% 100%);"></div> Triangle
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);"></div> Diamond
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);"></div> Pentagon
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);"></div> Hexagon
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);"></div> Octagon
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div> Star
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(33% 0%, 66% 0%, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0% 66%, 0% 33%, 33% 33%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(33% 0%, 66% 0%, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0% 66%, 0% 33%, 33% 33%);"></div> Cross
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);"></div> Right Arrow
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);"></div> Left Arrow
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);"></div> Trapezoid
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);"></div> Parallelogram
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%);"></div> Shield
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%);"></div> Speech Bubble
+                    </button>
+                </div>
+                <input type="hidden" id="ctx-crop-shape" value="none">
+            `, () => {
                 const shape = document.getElementById('ctx-crop-shape').value;
                 const img = state.selectedEl.querySelector('img');
                 const clip = shape === 'none' ? 'none' : shape;
