@@ -211,6 +211,7 @@ Need inspiration? Go to **File > Templates**. Browse categories like Resumes, Fl
 | **Ctrl + Y** | Redo |
 | **Ctrl + C** | Copy |
 | **Ctrl + V** | Paste |
+| **Ctrl + Shift + V** | Paste Without Formatting (Plain Text) |
 | **Delete** | Delete selected element(s) |
 | **Ctrl + Wheel** | Zoom In / Out |
 | **Esc** | Deselect all |

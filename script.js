@@ -277,11 +277,26 @@ document.addEventListener('selectionchange', () => {
         }
         // Paste
         if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
-             // Check if not focusing input
-             if (!isTextEditing()) {
-                 e.preventDefault();
-                 pasteEl();
-             }
+            let textEditing = isTextEditing();
+            
+            // If they are not actively editing, but have a text element selected and want to paste text into it
+            if (e.shiftKey && !textEditing && typeof state !== 'undefined' && state.selectedEl) {
+                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                if (innerText) {
+                    innerText.focus();
+                    textEditing = true;
+                }
+            }
+
+            if (e.shiftKey && textEditing) {
+                // Set a flag to intercept the native paste event that will follow
+                window._isShiftPasting = true;
+                setTimeout(() => window._isShiftPasting = false, 100);
+                // Do NOT preventDefault, allow the native paste event to trigger!
+            } else if (!e.shiftKey && !textEditing) {
+                e.preventDefault();
+                pasteEl();
+            }
         }
         
         // Bold (Ctrl+B), Italic (Ctrl+I), Underline (Ctrl+U)
@@ -9453,6 +9468,10 @@ const ContextMenuSystem = {
                 html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
                 html += this.buildDivider();
                 html += this.buildItem('Copy', 'fa-copy', 'copyEl()');
+                html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
+                if (isText) {
+                    html += this.buildItem('Paste Without Formatting', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteWithoutFormatting()');
+                }
                 html += this.buildItem('Delete', 'fa-trash', 'deleteSelected()');
                 html += this.buildDivider();
                 html += this.buildItem('Save as Picture...', 'fa-file-image', 'ContextMenuActions.saveAsPicture()');
@@ -9550,6 +9569,177 @@ const ContextMenuSystem = {
 // --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
 window.ContextMenuActions = {
     
+    pasteNormal: async function() {
+        let targetBox = document.activeElement;
+        
+        // Recover focus if lost due to clicking the context menu
+        if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
+            if (typeof state !== 'undefined' && state.selectedEl) {
+                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                if (innerText) {
+                    targetBox = innerText;
+                    targetBox.focus();
+                    if (state.lastRange) {
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(state.lastRange);
+                    }
+                }
+            }
+        }
+        
+        const isTextEditing = targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA');
+
+        if (!isTextEditing) {
+            // Not editing text? Just paste elements.
+            if (typeof window.pasteEl === 'function') window.pasteEl();
+            return;
+        }
+        
+        try {
+            // We are editing text. Modern browsers require navigator.clipboard.read() for click-triggered paste.
+            if (navigator.clipboard && navigator.clipboard.read) {
+                const clipboardItems = await navigator.clipboard.read();
+                
+                // The browser permission popup might have stolen focus, restore it before executing paste.
+                if (state.lastRange && targetBox) {
+                    targetBox.focus();
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(state.lastRange);
+                }
+                
+                let pasted = false;
+                for (const clipboardItem of clipboardItems) {
+                    if (clipboardItem.types.includes('text/html')) {
+                        const blob = await clipboardItem.getType('text/html');
+                        const html = await blob.text();
+                        const success = document.execCommand('insertHTML', false, html);
+                        if (!success) {
+                            const selection = window.getSelection();
+                            if (selection.rangeCount > 0) {
+                                const range = selection.getRangeAt(0);
+                                range.deleteContents();
+                                const div = document.createElement('div');
+                                div.innerHTML = html;
+                                const frag = document.createDocumentFragment();
+                                let node, lastNode;
+                                while ((node = div.firstChild)) {
+                                    lastNode = frag.appendChild(node);
+                                }
+                                range.insertNode(frag);
+                                if (lastNode) {
+                                    const newRange = range.cloneRange();
+                                    newRange.setStartAfter(lastNode);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                }
+                            }
+                        }
+                        pasted = true;
+                        break;
+                    } else if (clipboardItem.types.some(type => type.startsWith('image/'))) {
+                        const imageType = clipboardItem.types.find(type => type.startsWith('image/'));
+                        const blob = await clipboardItem.getType(imageType);
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            if (typeof window.insertSmartImage === 'function') {
+                                window.insertSmartImage(event.target.result);
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                        pasted = true;
+                        break;
+                    }
+                }
+                if (!pasted) {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        const success = document.execCommand('insertText', false, text);
+                        if (!success) {
+                            const selection = window.getSelection();
+                            if (selection.rangeCount > 0) {
+                                const range = selection.getRangeAt(0);
+                                range.deleteContents();
+                                range.insertNode(document.createTextNode(text));
+                                range.collapse(false);
+                            }
+                        }
+                    }
+                }
+            } else {
+                const success = document.execCommand('paste');
+                if (!success) throw new Error("execCommand paste failed");
+            }
+        } catch (err) {
+            console.warn('Paste normal failed:', err);
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.execCommand('insertText', false, text);
+                } else {
+                    throw new Error("readText empty");
+                }
+            } catch(e2) {
+                DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
+            }
+        }
+    },
+
+    pasteWithoutFormatting: async function() {
+        let targetBox = document.activeElement;
+        if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
+            if (state.selectedEl) {
+                targetBox = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                if (targetBox) {
+                    targetBox.focus();
+                    if (state.lastRange) {
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(state.lastRange);
+                    }
+                }
+            }
+        }
+        
+        if (targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA')) {
+            try {
+                // This triggers the browser dialog box asking for permission to paste and only gets plain text
+                const text = await navigator.clipboard.readText();
+                
+                // The browser permission popup might have stolen focus, restore it before executing paste.
+                if (state.lastRange && targetBox) {
+                    targetBox.focus();
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(state.lastRange);
+                }
+                
+                if (text) {
+                    const success = document.execCommand('insertText', false, text);
+                    if (!success) {
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(text));
+                            range.collapse(false);
+                        }
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.warn('Clipboard readText failed, attempting secondary paste fallback:', err);
+                try {
+                    // Use standard paste, which might paste with formatting if readText fails
+                    document.execCommand('paste');
+                } catch(e) {
+                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
+                }
+            }
+        }
+    },
     setAltText: function() {
         if (!state.selectedEl) return;
         const img = state.selectedEl.querySelector('img');
@@ -10850,7 +11040,7 @@ window.ContextRibbonActions = {
 
 window.ContextRibbonSystem = {
     init: function() {
-        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
+        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--pub-color, #007670);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
         const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><input type="color" class="drawing-color-picker" value="#000000" style="width:25px; height:25px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onchange="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)"><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
         const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--pub-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
@@ -19716,7 +19906,7 @@ window.handleMouseUp = function() {
         const designTab = document.getElementById('ribbon-table-design');
         const layoutTab = document.getElementById('ribbon-table-layout');
         
-        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="pasteEl()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
+        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--pub-color, #007670);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
 
         if (designTab) {
@@ -20133,7 +20323,36 @@ window.handleMouseUp = function() {
     document.addEventListener('paste', function(e) {
         // Don't intercept if user is typing text
         const active = document.activeElement;
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+            if (window._isShiftPasting) {
+                e.preventDefault();
+                const clipboardData = e.clipboardData || window.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+                if (clipboardData) {
+                    const text = clipboardData.getData('text/plain');
+                    if (text) {
+                        const success = document.execCommand('insertText', false, text);
+                        if (!success && active.isContentEditable) {
+                            const selection = window.getSelection();
+                            if (selection.rangeCount > 0) {
+                                const range = selection.getRangeAt(0);
+                                range.deleteContents();
+                                range.insertNode(document.createTextNode(text));
+                                range.collapse(false);
+                            }
+                        } else if (!success) {
+                            // Fallback for INPUT or TEXTAREA
+                            const start = active.selectionStart;
+                            const end = active.selectionEnd;
+                            const val = active.value;
+                            active.value = val.substring(0, start) + text + val.substring(end);
+                            active.selectionStart = active.selectionEnd = start + text.length;
+                        }
+                    }
+                }
+                window._isShiftPasting = false;
+            }
+            return;
+        }
         
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let i = 0; i < items.length; i++) {
