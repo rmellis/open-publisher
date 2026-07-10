@@ -9334,6 +9334,7 @@ const ContextMenuSystem = {
         if(!el && (isPaperOrInside || isMarginGuides)) deselect();
 
         // Build dynamic menu based on target
+        window._contextTargetLink = e.target.closest('a');
         let html = '';
 
         if (isRibbonBlank) {
@@ -9563,6 +9564,9 @@ const ContextMenuSystem = {
                     html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
                     html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
                     html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
+                    if (window._contextTargetLink || (sel && sel.toString().trim().length > 0)) {
+                        html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
+                    }
                     html += this.buildDivider();
                     html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
                 }
@@ -9596,6 +9600,10 @@ const ContextMenuSystem = {
                         html += this.buildItem('Clear Cell Text', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
                     }
                     html += this.buildItem('Convert to Text', 'fa-align-left', 'if(window.ContextRibbonActions) ContextRibbonActions.convertTableToText()');
+                    if (window._contextTargetLink || (window.getSelection() && window.getSelection().toString().trim().length > 0)) {
+                        html += this.buildDivider();
+                        html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
+                    }
                 }
                 // 4. SHAPE CONTEXT MENU
                 else if (isShape) {
@@ -9711,6 +9719,22 @@ const ContextMenuSystem = {
 // --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
 window.ContextMenuActions = {
     
+    removeHyperlink: function() {
+        if (window._contextTargetLink && window._contextTargetLink.parentNode) {
+            const link = window._contextTargetLink;
+            const parent = link.parentNode;
+            while (link.firstChild) {
+                parent.insertBefore(link.firstChild, link);
+            }
+            parent.removeChild(link);
+            window._contextTargetLink = null;
+            if (typeof pushHistory !== 'undefined') pushHistory();
+            return;
+        }
+        document.execCommand('unlink', false, null);
+        if (typeof pushHistory !== 'undefined') pushHistory();
+    },
+
     pasteNormal: async function() {
         let targetBox = document.activeElement;
         
