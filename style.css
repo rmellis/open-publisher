@@ -303,7 +303,7 @@ body {
 .modern-select:hover { border-color: var(--pub-dark); }
 
 .modern-spinner {
-    display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; height: 22px; width: 54px;
+    display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; height: 22px; width: 54px; flex-shrink: 0;
 }
 .modern-spinner input {
     width: 34px; border: none; outline: none; padding-left: 6px; 

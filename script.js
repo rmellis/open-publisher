@@ -113,6 +113,85 @@ const DialogSystem = {
                 confirmBtn.click();
             }
         });
+        
+        this.convertNativeSelects(document.getElementById('custom-dialog-box'));
+    },
+    convertNativeSelects: function(container) {
+        if(!container) return;
+        const selects = container.querySelectorAll('select');
+        selects.forEach(sel => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-dom-select';
+            
+            // Inherit the width from the original select, fallback to 100%
+            const w = sel.style.width || '100%';
+            
+            wrapper.style.cssText = `position:relative; width:${w}; border:1px solid #ccc; border-radius:4px; cursor:pointer; background:#fff; font-family:inherit; font-size:13px; color:#005a55; display:flex; justify-content:space-between; align-items:center; user-select:none; min-height: 26px;`;
+            wrapper.onmouseover = () => wrapper.style.borderColor = '#005a55';
+            wrapper.onmouseout = () => wrapper.style.borderColor = '#ccc';
+            
+            const display = document.createElement('span');
+            display.innerText = sel.options.length && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
+            display.style.pointerEvents = 'none';
+            display.style.overflow = 'hidden';
+            display.style.textOverflow = 'ellipsis';
+            display.style.whiteSpace = 'nowrap';
+            display.style.fontWeight = '500';
+            display.style.paddingLeft = '8px';
+            
+            const arrowBox = document.createElement('div');
+            arrowBox.style.cssText = 'background:#005a55; color:white; width:26px; align-self:stretch; display:flex; align-items:center; justify-content:center; pointer-events:none; flex-shrink:0; border-radius:0 3px 3px 0;';
+            
+            const arrow = document.createElement('i');
+            arrow.className = 'fas fa-chevron-down';
+            arrow.style.cssText = 'font-size:10px; color:#fff; pointer-events:none;';
+            arrowBox.appendChild(arrow);
+            
+            const optionsList = document.createElement('div');
+            optionsList.style.cssText = 'display:none; position:absolute; top:calc(100% + 2px); left:0; right:0; background:#fff; border:1px solid #005a55; border-radius:4px; z-index:9999; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1);';
+            
+            Array.from(sel.options).forEach((opt, idx) => {
+                const optDiv = document.createElement('div');
+                optDiv.innerText = opt.text;
+                // Change dropdown option text color to dark teal green
+                optDiv.style.cssText = 'padding:6px 8px; cursor:pointer; color:#005a55; font-size:13px; font-weight:500; transition:background 0.1s;';
+                if (idx === sel.selectedIndex) optDiv.style.background = 'rgba(0,118,112,0.1)';
+                optDiv.onmouseover = () => optDiv.style.background = 'rgba(0,118,112,0.15)';
+                optDiv.onmouseout = () => optDiv.style.background = idx === sel.selectedIndex ? 'rgba(0,118,112,0.1)' : '#fff';
+                optDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    sel.selectedIndex = idx;
+                    display.innerText = opt.text;
+                    optionsList.style.display = 'none';
+                    Array.from(optionsList.children).forEach(c => c.style.background = '#fff');
+                    optDiv.style.background = 'rgba(0,118,112,0.1)';
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                };
+                optionsList.appendChild(optDiv);
+            });
+            
+            wrapper.onclick = (e) => {
+                e.stopPropagation();
+                const isShowing = optionsList.style.display === 'block';
+                document.querySelectorAll('.custom-dom-select-list').forEach(l => l.style.display = 'none');
+                optionsList.style.display = isShowing ? 'none' : 'block';
+            };
+            
+            optionsList.className = 'custom-dom-select-list';
+            
+            wrapper.appendChild(display);
+            wrapper.appendChild(arrowBox);
+            wrapper.appendChild(optionsList);
+            sel.style.display = 'none';
+            sel.parentNode.insertBefore(wrapper, sel.nextSibling);
+        });
+        
+        if (!window._patchedDialogSelectsClick) {
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.custom-dom-select-list').forEach(l => l.style.display = 'none');
+            });
+            window._patchedDialogSelectsClick = true;
+        }
     },
     alert: function(title, msg) {
         // Quick helper for simple alerts with only an OK button
@@ -10170,7 +10249,7 @@ window.ContextMenuActions = {
             <div class="input-group" style="margin-bottom:10px;"><label>Border Color:</label>
                 <input type="hidden" id="ctx-box-bc" value="#000000"><div style="background-color:#000000; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; display:inline-block; vertical-align:middle;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; this.style.backgroundColor = c; })"></div>
             </div>
-            <div class="input-group"><label>Border Thickness (px):</label><input type="number" id="ctx-box-bt" value="0" min="0" max="20"></div>
+            <div class="input-group"><label>Border Thickness (px):</label><div class="modern-spinner"><input type="text" id="ctx-box-bt" value="0" onchange="this.value = Math.max(0, Math.min(20, parseInt(this.value)||0))"><div class="spin-btns"><div onclick="document.getElementById('ctx-box-bt').value=Math.min(20, parseInt(document.getElementById('ctx-box-bt').value||0)+1)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ctx-box-bt').value=Math.max(0, parseInt(document.getElementById('ctx-box-bt').value||0)-1)"><i class="fas fa-chevron-down"></i></div></div></div></div>
         `;
         DialogSystem.show('Format Text Box', form, () => {
             const bg = document.getElementById('ctx-box-bg').value;
@@ -10997,7 +11076,13 @@ window.ContextRibbonActions = {
             DialogSystem.show('Table Borders', `
                 <div class="input-group">
                     <label>Thickness (px):</label>
-                    <input type="number" id="ctx-tbl-border" value="1" min="0" max="64">
+                    <div class="modern-spinner">
+                        <input type="text" id="ctx-tbl-border" value="1" onchange="this.value = Math.max(0, Math.min(64, parseInt(this.value)||0))">
+                        <div class="spin-btns">
+                            <div onclick="document.getElementById('ctx-tbl-border').value=Math.min(64, parseInt(document.getElementById('ctx-tbl-border').value||0)+1)"><i class="fas fa-chevron-up"></i></div>
+                            <div onclick="document.getElementById('ctx-tbl-border').value=Math.max(0, parseInt(document.getElementById('ctx-tbl-border').value||0)-1)"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="input-group" style="margin-top:10px;">
                     <label>Diagonal Line (Selected Cells):</label>
@@ -16714,7 +16799,13 @@ window.initShapes = function() {
                 </div>
                 <div class="input-group">
                     <label>Border Thickness (px):</label>
-                    <input type="number" id="ctx-box-bt" value="${currentBt}" min="0" max="20">
+                    <div class="modern-spinner">
+                        <input type="text" id="ctx-box-bt" value="${currentBt}" onchange="this.value = Math.max(0, Math.min(20, parseInt(this.value)||0))">
+                        <div class="spin-btns">
+                            <div onclick="document.getElementById('ctx-box-bt').value=Math.min(20, parseInt(document.getElementById('ctx-box-bt').value||0)+1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-up"></i></div>
+                            <div onclick="document.getElementById('ctx-box-bt').value=Math.max(0, parseInt(document.getElementById('ctx-box-bt').value||0)-1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                    </div>
                 </div>
                 <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
                     Tip: Set thickness to 0 to remove the border.
