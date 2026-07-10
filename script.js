@@ -776,6 +776,14 @@ function renderPage(pageData) {
     footerEl.innerHTML = renderFooter;
     headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
     footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
+    if (isHeaderEditable) {
+        headerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+        footerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+        if (state.spellCheck) {
+            headerEl.setAttribute('lang', 'en');
+            footerEl.setAttribute('lang', 'en');
+        }
+    }
     
     const borderEl = paper.querySelector('.page-border-container');
     borderEl.setAttribute('data-style', pageData.borderStyle);
@@ -839,7 +847,14 @@ function renderPage(pageData) {
         } else if (data.clipPath) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
         } else {
-            inner = data.innerHTML;
+            inner = data.innerHTML || '';
+        }
+        
+        // Force Chromium spellcheck on load
+        if (state.spellCheck) {
+            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="true" lang="en"');
+        } else {
+            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="false"');
         }
         
         const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
@@ -2882,8 +2897,15 @@ function createWrapper(htmlContent) {
     el.setAttribute('data-scaleX', "1");
     el.setAttribute('data-scaleY', "1");
     
+    let inner = htmlContent || '';
+    if (state.spellCheck) {
+        inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="true" lang="en"');
+    } else {
+        inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="false"');
+    }
+    
     el.innerHTML = `
-        <div class="element-content">${htmlContent}</div>
+        <div class="element-content">${inner}</div>
         <div class="resize-handle rh-nw" data-dir="nw"></div>
         <div class="resize-handle rh-n" data-dir="n"></div>
         <div class="resize-handle rh-ne" data-dir="ne"></div>
@@ -5169,6 +5191,15 @@ window.applyExactLineSpacing = function(val) {
 function toggleSpellCheck() {
     state.spellCheck = !state.spellCheck;
     document.body.setAttribute('spellcheck', state.spellCheck);
+    
+    document.querySelectorAll('.pub-content [contenteditable="true"]').forEach(el => {
+        if (el.classList.contains('wa-text')) return;
+        el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+        if (state.spellCheck) {
+            el.setAttribute('lang', 'en');
+        }
+    });
+    
     const status = state.spellCheck ? "ON" : "OFF";
     DialogSystem.alert('Spell Check', "Spell check toggled " + status);
 }
