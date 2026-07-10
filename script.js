@@ -22316,9 +22316,22 @@ window.toggleCrop = function() {
                 e.preventDefault(); return;
             }
 
+            const targetNode = e.target.nodeType === 3 ? e.target.parentNode : e.target;
+            const editable = targetNode.closest('[contenteditable="true"]');
+            const targetIsText = !!editable;
             const rect = el.getBoundingClientRect(), edgeSize = 15;
             const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
             const activeEl = document.activeElement, isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
+            
+            if (targetIsText && !nearEdge) {
+                // Clicking directly on the text: force focus for Firefox to allow native selection to start immediately
+                if (editable && document.activeElement !== editable) {
+                    editable.focus();
+                }
+                // Let native selection/cursor placement happen
+                return;
+            }
+
             if (nearEdge || !isEditingText) {
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
