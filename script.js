@@ -5083,7 +5083,37 @@ function execCmd(cmd, val) {
         pushHistory();
         return;
     }
-    document.execCommand(cmd, false, val); 
+    
+    // Crucial fix: The native OS color picker (<input type="color">) steals focus when opened.
+    // If we don't restore the selection before executing the command, it fails because
+    // the text box is no longer the active selection.
+    if (state.lastRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(state.lastRange);
+    }
+    
+    // Enable styleWithCSS to force the browser to use <span style="..."> instead of legacy <font> tags.
+    // Legacy <font> tags notoriously fail to apply when the selection includes <br> tags or spans across complex nodes.
+    try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
+    
+    if (cmd === 'hiliteColor') {
+        // Different browsers use different commands for text background color.
+        document.execCommand('hiliteColor', false, val);
+        document.execCommand('backColor', false, val);
+    } else {
+        document.execCommand(cmd, false, val); 
+    }
+    
+    try { document.execCommand('styleWithCSS', false, false); } catch(e) {}
+    
+    // Ensure focus is explicitly maintained on the target text box so typing can resume
+    if (state.selectedEl) {
+        const textEditBox = state.selectedEl.querySelector('div[contenteditable]');
+        if (textEditBox && document.activeElement !== textEditBox) {
+            textEditBox.focus();
+        }
+    } 
     
     const sel = window.getSelection();
     if(sel.rangeCount > 0) state.lastRange = sel.getRangeAt(0).cloneRange();
@@ -5828,11 +5858,13 @@ function showQRCodeModal() {
         <div style="display:flex; gap:10px; margin-top:10px;">
             <div class="input-group" style="flex:1;">
                 <label>QR Color:</label>
-                <input type="color" id="qr-color" value="#000000" style="width:100%; padding:4px;">
+                <input type="hidden" id="qr-color" value="#000000">
+                <div style="background-color:#000000; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('qr-color').value, (c) => { document.getElementById('qr-color').value = c; this.style.backgroundColor = c; })"></div>
             </div>
             <div class="input-group" style="flex:1;">
                 <label>Background:</label>
-                <input type="color" id="qr-bgcolor" value="#ffffff" style="width:100%; padding:4px;">
+                <input type="hidden" id="qr-bgcolor" value="#ffffff">
+                <div style="background-color:#ffffff; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('qr-bgcolor').value, (c) => { document.getElementById('qr-bgcolor').value = c; this.style.backgroundColor = c; })"></div>
             </div>
         </div>
         <div class="input-group" style="margin-top:10px;">
@@ -9874,7 +9906,8 @@ window.ContextMenuActions = {
                     <div class="ctx-bg-input-container">
                         <div class="ctx-bg-input-group" style="margin-bottom: 0;">
                             <label>Color:</label>
-                            <input type="color" id="ctx-bg-color" value="#ffffff">
+                            <input type="hidden" id="ctx-bg-color" value="#ffffff">
+                            <div style="background-color:#ffffff; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-left:10px;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-bg-color').value, (c) => { document.getElementById('ctx-bg-color').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                     </div>
                 </div>
@@ -9886,11 +9919,13 @@ window.ContextMenuActions = {
                     <div class="ctx-bg-input-container">
                         <div class="ctx-bg-input-group">
                             <label>Color 1:</label>
-                            <input type="color" id="ctx-bg-grad-1" value="#f0f0f0">
+                            <input type="hidden" id="ctx-bg-grad-1" value="#f0f0f0">
+                            <div style="background-color:#f0f0f0; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-left:10px;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-bg-grad-1').value, (c) => { document.getElementById('ctx-bg-grad-1').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                         <div class="ctx-bg-input-group">
                             <label>Color 2:</label>
-                            <input type="color" id="ctx-bg-grad-2" value="#d4d4d4">
+                            <input type="hidden" id="ctx-bg-grad-2" value="#d4d4d4">
+                            <div style="background-color:#d4d4d4; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-left:10px;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-bg-grad-2').value, (c) => { document.getElementById('ctx-bg-grad-2').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                         <div class="ctx-bg-input-group" style="margin-bottom: 0;">
                             <label>Direction:</label>
@@ -10098,8 +10133,12 @@ window.ContextMenuActions = {
     formatTextBox: function() {
         if(!state.selectedEl) return;
         const form = `
-            <div class="input-group" style="margin-bottom:10px;"><label>Fill Color:</label><input type="color" id="ctx-box-bg" value="#ffffff"></div>
-            <div class="input-group" style="margin-bottom:10px;"><label>Border Color:</label><input type="color" id="ctx-box-bc" value="#000000"></div>
+            <div class="input-group" style="margin-bottom:10px;"><label>Fill Color:</label>
+                <input type="hidden" id="ctx-box-bg" value="#ffffff"><div style="background-color:#ffffff; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; display:inline-block; vertical-align:middle;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bg').value, (c) => { document.getElementById('ctx-box-bg').value = c; this.style.backgroundColor = c; })"></div>
+            </div>
+            <div class="input-group" style="margin-bottom:10px;"><label>Border Color:</label>
+                <input type="hidden" id="ctx-box-bc" value="#000000"><div style="background-color:#000000; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; display:inline-block; vertical-align:middle;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; this.style.backgroundColor = c; })"></div>
+            </div>
             <div class="input-group"><label>Border Thickness (px):</label><input type="number" id="ctx-box-bt" value="0" min="0" max="20"></div>
         `;
         DialogSystem.show('Format Text Box', form, () => {
@@ -11042,7 +11081,7 @@ window.ContextRibbonSystem = {
     init: function() {
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--pub-color, #007670);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
-        const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><input type="color" class="drawing-color-picker" value="#000000" style="width:25px; height:25px; border:none; padding:0; cursor:pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onchange="if(typeof updateDrawingColor === 'function') updateDrawingColor(this.value)"><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
+        const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><div class="drawing-color-picker" style="width:25px; height:25px; background-color:#000000; border:none; padding:0; cursor:pointer; border-radius: 6px; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onclick="CustomColorPicker.open(this, this.style.backgroundColor || '#000000', (c) => { this.style.backgroundColor = c; if(typeof updateDrawingColor === 'function') updateDrawingColor(c); })"></div><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
         const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--pub-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
 
         const tabsC = document.querySelector('.ribbon-tabs');
@@ -12900,16 +12939,14 @@ window.initWordArt = function() {
                         
                         <div style="width:1px; height:20px; background:#ccc; margin:0 2px;"></div>
                         
-                        <div class="modern-format-btn" style="position:relative;" title="Text Color">
+                        <div class="modern-format-btn" style="position:relative;" title="Text Color" onclick="CustomColorPicker.open(this, document.getElementById('ctx-text-color-bar-${target.suffix}').style.backgroundColor || '#000000', (c) => { document.getElementById('ctx-text-color-bar-${target.suffix}').style.background=c; execCmd('foreColor', c); })">
                             <i class="fas fa-font" style="margin-top: -2px;"></i>
                             <div style="height:3px; background:black; width:16px; position:absolute; bottom:3px; border-radius: 2px;" id="ctx-text-color-bar-${target.suffix}"></div>
-                            <input type="color" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="execCmd('foreColor', this.value); document.getElementById('ctx-text-color-bar-${target.suffix}').style.background=this.value;">
                         </div>
                         
-                        <div class="modern-format-btn" style="position:relative;" title="Highlight Color">
+                        <div class="modern-format-btn" style="position:relative;" title="Highlight Color" onclick="CustomColorPicker.open(this, document.getElementById('ctx-bg-color-bar-${target.suffix}').style.backgroundColor || '#ffff00', (c) => { document.getElementById('ctx-bg-color-bar-${target.suffix}').style.background=c; execCmd('hiliteColor', c); })">
                             <i class="fas fa-highlighter" style="margin-top: -2px;"></i>
                             <div style="height:3px; background:yellow; width:16px; position:absolute; bottom:3px; border-radius: 2px;" id="ctx-bg-color-bar-${target.suffix}"></div>
-                            <input type="color" value="#ffff00" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="execCmd('hiliteColor', this.value); document.getElementById('ctx-bg-color-bar-${target.suffix}').style.background=this.value;">
                         </div>
                     </div>
                 </div>
@@ -16546,7 +16583,8 @@ window.initShapes = function() {
                     <div class="input-group" style="margin-bottom:10px;">
                         <label>Fill Color:</label>
                         <div>
-                            <input type="color" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}" oninput="this.removeAttribute('data-scheme-index'); window._applyFormatPreview();">
+                            <input type="hidden" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}">
+                            <div style="background-color:${currentBg.startsWith('#') ? currentBg : '#ffffff'}; width:100%; height:30px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bg').value, (c) => { document.getElementById('ctx-box-bg').value = c; document.getElementById('ctx-box-bg').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
                             <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
                                 ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bg').value='${c}'; document.getElementById('ctx-box-bg').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
                             </div>
@@ -16571,8 +16609,11 @@ window.initShapes = function() {
                     <div id="ctx-custom-grad" style="display:block; margin-bottom:10px;">
                         <label style="display:block; font-size:12px; margin-bottom:4px;">Custom Colors:</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="color" id="ctx-box-grad-1" value="${currentGradC1}" title="Start Color">
-                            <input type="color" id="ctx-box-grad-2" value="${currentGradC2}" title="End Color">
+                            <input type="hidden" id="ctx-box-grad-1" value="${currentGradC1}">
+                            <div style="background-color:${currentGradC1}; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-1').value, (c) => { document.getElementById('ctx-box-grad-1').value = c; this.style.backgroundColor = c; })"></div>
+                            
+                            <input type="hidden" id="ctx-box-grad-2" value="${currentGradC2}">
+                            <div style="background-color:${currentGradC2}; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-left:10px;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-2').value, (c) => { document.getElementById('ctx-box-grad-2').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                     </div>
 
@@ -16604,11 +16645,13 @@ window.initShapes = function() {
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                         <div style="display:flex; flex-direction:column; align-items:center;">
                             <label style="font-size:12px;">Pattern</label>
-                            <input type="color" id="ctx-box-pat-fg" value="${currentPatFg}">
+                            <input type="hidden" id="ctx-box-pat-fg" value="${currentPatFg}">
+                            <div style="background-color:${currentPatFg}; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-fg').value, (c) => { document.getElementById('ctx-box-pat-fg').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:center;">
                             <label style="font-size:12px;">Background</label>
-                            <input type="color" id="ctx-box-pat-bg" value="${currentPatBg}">
+                            <input type="hidden" id="ctx-box-pat-bg" value="${currentPatBg}">
+                            <div style="background-color:${currentPatBg}; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-bg').value, (c) => { document.getElementById('ctx-box-pat-bg').value = c; this.style.backgroundColor = c; })"></div>
                         </div>
                     </div>
                     <div class="input-group">
@@ -16631,7 +16674,8 @@ window.initShapes = function() {
                 <div class="input-group" style="margin-bottom:10px;">
                     <label>Border / Stroke Color:</label>
                     <div>
-                        <input type="color" id="ctx-box-bc" value="${currentBc}" oninput="this.removeAttribute('data-scheme-index'); window._applyFormatPreview();">
+                        <input type="hidden" id="ctx-box-bc" value="${currentBc}">
+                        <div style="background-color:${currentBc}; width:100%; height:30px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; document.getElementById('ctx-box-bc').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
                         <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
                             ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bc').value='${c}'; document.getElementById('ctx-box-bc').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
                         </div>
@@ -17082,6 +17126,23 @@ window.initShapes = function() {
                 } else if (document.getElementById('undo-btn')) {
                     document.getElementById('undo-btn').click();
                 }
+            } else {
+                // We are in a text box. Let's see if native undo does anything.
+                // We capture the current state, wait a tick, and if the state hasn't changed, we trigger our custom undo.
+                const contentEl = activeEl.closest('[contenteditable="true"]') || activeEl;
+                const beforeUndoVal = contentEl.value !== undefined ? contentEl.value : contentEl.innerHTML;
+                
+                setTimeout(() => {
+                    const afterUndoVal = contentEl.value !== undefined ? contentEl.value : contentEl.innerHTML;
+                    if (beforeUndoVal === afterUndoVal) {
+                        // Native undo had no effect. Fallback to custom undo.
+                        if (typeof window.undo === 'function') {
+                            window.undo();
+                        } else if (document.getElementById('undo-btn')) {
+                            document.getElementById('undo-btn').click();
+                        }
+                    }
+                }, 10);
             }
         }
     }, true);
@@ -18022,20 +18083,14 @@ window.handleMouseUp = function() {
                 
                 <div class="float-divider"></div>
                 
-                <div class="float-mini-btn float-color-btn" title="Text Color">
+                <div class="float-mini-btn float-color-btn" title="Text Color" onclick="CustomColorPicker.open(this, document.getElementById('float-text-color-bar').style.backgroundColor || '#004d40', (c) => { document.getElementById('float-text-color-bar').style.background=c; execCmd('foreColor', c); })">
                     <strong style="font-family: Arial, sans-serif;">A</strong>
                     <div class="float-color-bar" id="float-text-color-bar" style="background: #004d40;"></div>
-                    <input type="color" value="#004d40" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
-                           onclick="execCmd('foreColor', this.value)" 
-                           oninput="execCmd('foreColor', this.value); document.getElementById('float-text-color-bar').style.background=this.value;">
                 </div>
 
-                <div class="float-mini-btn float-color-btn" title="Highlight Color">
+                <div class="float-mini-btn float-color-btn" title="Highlight Color" onclick="CustomColorPicker.open(this, document.getElementById('float-bg-color-bar').style.backgroundColor || '#ffff00', (c) => { document.getElementById('float-bg-color-bar').style.background=c; execCmd('hiliteColor', c); })">
                     <i class="fas fa-marker" style="transform: rotate(-15deg); font-size: 13px;"></i>
                     <div class="float-color-bar" id="float-bg-color-bar" style="background: #ffff00;"></div>
-                    <input type="color" value="#ffff00" style="position:absolute; inset:0; opacity:0; cursor:pointer;" 
-                           onclick="execCmd('hiliteColor', this.value)" 
-                           oninput="execCmd('hiliteColor', this.value); document.getElementById('float-bg-color-bar').style.background=this.value;">
                 </div>
 
                 <div class="float-divider"></div>
@@ -19920,10 +19975,9 @@ window.handleMouseUp = function() {
                 </div>
                 <div class="group">
                     <div style="display:flex; flex-direction:column; padding: 2px; align-items:center; justify-content:center; gap:5px; height:100%;">
-                        <div class="mini-btn ctx-btn-strict ctx-color-strict" style="width:40px; height:35px;" title="Cell Fill Color">
+                        <div class="mini-btn ctx-btn-strict ctx-color-strict" style="width:40px; height:35px;" title="Cell Fill Color" onclick="CustomColorPicker.open(this, document.getElementById('ctx-cell-fill-bar').style.backgroundColor || '#ffffff', (color) => { document.getElementById('ctx-cell-fill-bar').style.background=color; ContextRibbonActions.cellFill(color); })">
                             <i class="fas fa-fill-drip" style="font-size:18px; color:var(--pub-color); margin-top:-2px;"></i>
                             <div style="height:5px; background:#ffffff; width:30px; position:absolute; bottom:2px; border:1px solid #ccc;" id="ctx-cell-fill-bar"></div>
-                            <input type="color" value="#ffffff" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="ContextRibbonActions.cellFill(this.value); document.getElementById('ctx-cell-fill-bar').style.background=this.value;">
                         </div>
                     </div>
                     <div class="group-label">Shading</div>
@@ -19943,7 +19997,7 @@ window.handleMouseUp = function() {
                         </div>
                         <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
                             <i class="fas fa-palette" style="color:#666; width:14px; text-align:center;"></i>
-                            <input type="color" class="modern-color-picker" value="#000000" style="width: 54px; height: 22px;" onchange="ContextRibbonActions.tableBorderColor(this.value)"> 
+                            <div class="modern-color-picker" style="background-color: #000000; width: 54px; height: 22px; cursor: pointer; border: 1px solid #ccc;" onclick="CustomColorPicker.open(this, this.style.backgroundColor || '#000000', (color) => { this.style.backgroundColor = color; ContextRibbonActions.tableBorderColor(color); })"></div> 
                             Color
                         </div>
                     </div>
@@ -20616,9 +20670,9 @@ function initBasicBorders() {
             
             <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:10px; color:#333;">Color</label>
             ${swatchesHTML}
-            <div id="custom-color-wrapper" style="position:relative; width:100%; height:32px; margin-bottom:20px; border-radius:6px; border:1px solid #cbd5e1; background-color:#000000; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+            <div id="custom-color-wrapper" style="position:relative; width:100%; height:32px; margin-bottom:20px; border-radius:6px; border:1px solid #cbd5e1; background-color:#000000; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2); cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('border-color').value, (c) => { document.getElementById('border-color').value = c; document.getElementById('border-color').dispatchEvent(new Event('input', {bubbles:true})); })">
                 <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#ffffff; text-shadow:0px 1px 3px rgba(0,0,0,0.8); pointer-events:none;">Custom Color</div>
-                <input type="color" id="border-color" value="#000000" style="position:absolute; inset:-10px; width:150%; height:150%; opacity:0; cursor:pointer;">
+                <input type="hidden" id="border-color" value="#000000">
             </div>
             <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:8px; color:#333;">Style (100)</label>
             <div id="border-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;"></div>
@@ -27782,7 +27836,8 @@ window.setShadowPaneVisibility = function(visible) {
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label">Shadow Color</div>
-                <input type="color" id="shadow-color-input" value="#000000" onchange="window.updateShadowFromSliders()" style="width: 100%; height: 30px; border: 1px solid #ccc; cursor: pointer;">
+                <input type="hidden" id="shadow-color-input" value="#000000">
+                <div style="width: 100%; height: 30px; border: 1px solid #ccc; cursor: pointer; background-color:#000000; border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('shadow-color-input').value, (c) => { document.getElementById('shadow-color-input').value = c; this.style.backgroundColor = c; window.updateShadowFromSliders(); })"></div>
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Transparency</span> <span style="font-weight:bold;"><span id="shadow-alpha-val">60</span>%</span></div>
@@ -29241,4 +29296,381 @@ window.addEventListener('input', function(e) {
             }, 50);
         }
     }
+});
+
+// ==========================================
+// Custom Color Picker System
+// ==========================================
+window.CustomColorPicker = class CustomColorPicker {
+    static init() {
+        this.el = document.getElementById('custom-color-picker');
+        this.themeGrid = document.getElementById('ccp-theme-colors');
+        this.standardGrid = document.getElementById('ccp-standard-colors');
+        this.recentGrid = document.getElementById('ccp-recent-colors');
+        this.hexInput = document.getElementById('custom-color-hex');
+        this.rgbInputs = {
+            r: document.getElementById('custom-color-r'),
+            g: document.getElementById('custom-color-g'),
+            b: document.getElementById('custom-color-b')
+        };
+        this.previewSwatch = document.getElementById('ccp-preview-swatch');
+        this.eyedropperBtn = document.getElementById('ccp-eyedropper');
+        
+        // Tab elements
+        this.tabs = document.querySelectorAll('.ccp-tab');
+        this.tabContents = document.querySelectorAll('.ccp-tab-content');
+        
+        // Canvas elements
+        this.svCanvas = document.getElementById('ccp-sv-canvas');
+        this.hueCanvas = document.getElementById('ccp-hue-canvas');
+        this.svCursor = document.getElementById('ccp-sv-cursor');
+        this.hueCursor = document.getElementById('ccp-hue-cursor');
+        
+        if (!this.el) return;
+        
+        // Colors arrays
+        this.themeColors = [
+            '#ffffff', '#000000', '#f4f5f7', '#007670', '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e',
+            '#f2f2f2', '#333333', '#e0e3e8', '#00a89d', '#f1948a', '#85c1e9', '#82e0aa', '#f7dc6f', '#c39bd3', '#85929e',
+            '#cccccc', '#222222', '#b0b5be', '#004a46', '#b03a2e', '#21618c', '#1e8449', '#b7950b', '#6c3483', '#212f3c'
+        ];
+        this.standardColors = [
+            '#ff0000', '#ff5733', '#ffc300', '#daf7a6', '#28b463', '#1abc9c', '#3498db', '#2980b9', '#8e44ad', '#839192',
+            '#c0392b', '#d35400', '#f39c12', '#aed6f1', '#2ecc71', '#16a085', '#2e86c1', '#2471a3', '#9b59b6', '#7f8c8d',
+            '#922b21', '#ba4a00', '#d68910', '#5dade2', '#27ae60', '#117864', '#2874a6', '#1f618d', '#76448a', '#707b7c',
+            '#7b241c', '#a04000', '#b9770e', '#3498db', '#229954', '#0e6655', '#21618c', '#1a5276', '#633974', '#616a6b',
+            '#641e16', '#873600', '#9c640c', '#2e86c1', '#1d8348', '#0b5345', '#1b4f72', '#154360', '#512e5f', '#515a5a'
+        ];
+        this.recentColors = ['#007670', '#ffffff', '#000000', '#e74c3c', '#3498db', '#f1c40f'];
+        
+        this.renderSwatches(this.themeGrid, this.themeColors);
+        this.renderSwatches(this.standardGrid, this.standardColors);
+        this.renderSwatches(this.recentGrid, this.recentColors);
+        
+        // Hide eyedropper if not supported
+        if (!window.EyeDropper && this.eyedropperBtn) {
+            this.eyedropperBtn.style.display = 'none';
+        }
+        
+        // State
+        this.isOpen = false;
+        this.callback = null;
+        this.anchor = null;
+        this.currentColor = '#000000';
+        this.hsv = { h: 0, s: 0, v: 0 };
+        
+        this.bindEvents();
+        this.initCanvases();
+    }
+    
+    static bindEvents() {
+        // Hex input
+        this.hexInput.addEventListener('change', (e) => this.setFromHex(e.target.value, true));
+        this.hexInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.setFromHex(e.target.value, true);
+                this.selectColor(this.currentColor);
+            }
+        });
+
+        // RGB inputs
+        const updateFromRgb = () => {
+            let r = parseInt(this.rgbInputs.r.value) || 0;
+            let g = parseInt(this.rgbInputs.g.value) || 0;
+            let b = parseInt(this.rgbInputs.b.value) || 0;
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+            const hex = '#' + [r, g, b].map(x => {
+                const h = x.toString(16);
+                return h.length === 1 ? '0' + h : h;
+            }).join('');
+            this.setFromHex(hex, true);
+        };
+        ['r', 'g', 'b'].forEach(ch => {
+            if (this.rgbInputs[ch]) {
+                this.rgbInputs[ch].addEventListener('change', updateFromRgb);
+                this.rgbInputs[ch].addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        updateFromRgb();
+                        this.selectColor(this.currentColor);
+                    }
+                });
+            }
+        });
+        
+        // Eyedropper API
+        if (this.eyedropperBtn) {
+            this.eyedropperBtn.addEventListener('click', async () => {
+                if (window.EyeDropper) {
+                    const eyeDropper = new EyeDropper();
+                    try {
+                        const result = await eyeDropper.open();
+                        this.setFromHex(result.sRGBHex, true);
+                        this.selectColor(result.sRGBHex);
+                    } catch (e) {
+                        // user canceled
+                    }
+                }
+            });
+        }
+        
+        // Tabs
+        this.tabs.forEach(tab => {
+            tab.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.tabs.forEach(t => t.classList.remove('active'));
+                this.tabContents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('ccp-tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Dragging state
+        let isDraggingSV = false;
+        let isDraggingHue = false;
+        
+        const updateSV = (e) => {
+            if (!isDraggingSV) return;
+            const rect = this.svCanvas.getBoundingClientRect();
+            let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+            let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+            this.hsv.s = x / rect.width;
+            this.hsv.v = 1 - (y / rect.height);
+            this.updateFromHSV();
+        };
+        
+        const updateHue = (e) => {
+            if (!isDraggingHue) return;
+            const rect = this.hueCanvas.getBoundingClientRect();
+            let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+            this.hsv.h = 360 - ((y / rect.height) * 360);
+            if (this.hsv.h === 360) this.hsv.h = 0;
+            this.updateFromHSV();
+        };
+        
+        this.svCanvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDraggingSV = true;
+            updateSV(e);
+        });
+        this.hueCanvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDraggingHue = true;
+            updateHue(e);
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingSV) updateSV(e);
+            if (isDraggingHue) updateHue(e);
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDraggingSV = false;
+            isDraggingHue = false;
+        });
+        
+        // Click outside to close
+        document.addEventListener('mousedown', (e) => {
+            if (this.isOpen && !this.el.contains(e.target) && this.anchor && !this.anchor.contains(e.target)) {
+                this.close();
+            }
+        });
+    }
+    
+    static initCanvases() {
+        // Draw Hue Canvas (static)
+        const ctx = this.hueCanvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, this.hueCanvas.height);
+        gradient.addColorStop(0, '#ff0000');
+        gradient.addColorStop(1/6, '#ff00ff');
+        gradient.addColorStop(2/6, '#0000ff');
+        gradient.addColorStop(3/6, '#00ffff');
+        gradient.addColorStop(4/6, '#00ff00');
+        gradient.addColorStop(5/6, '#ffff00');
+        gradient.addColorStop(1, '#ff0000');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.hueCanvas.width, this.hueCanvas.height);
+    }
+    
+    static renderSVCanvas() {
+        const ctx = this.svCanvas.getContext('2d');
+        const w = this.svCanvas.width;
+        const h = this.svCanvas.height;
+        
+        // Base hue color
+        ctx.fillStyle = `hsl(${this.hsv.h}, 100%, 50%)`;
+        ctx.fillRect(0, 0, w, h);
+        
+        // White gradient
+        const whiteGrad = ctx.createLinearGradient(0, 0, w, 0);
+        whiteGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = whiteGrad;
+        ctx.fillRect(0, 0, w, h);
+        
+        // Black gradient
+        const blackGrad = ctx.createLinearGradient(0, 0, 0, h);
+        blackGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = blackGrad;
+        ctx.fillRect(0, 0, w, h);
+    }
+    
+    static updateFromHSV() {
+        this.renderSVCanvas();
+        this.currentColor = this.hsvToHex(this.hsv.h, this.hsv.s, this.hsv.v);
+        this.hexInput.value = this.currentColor;
+        this.updateRgbInputs(this.currentColor);
+        this.previewSwatch.style.backgroundColor = this.currentColor;
+        this.updateCursors();
+        
+        if (this.callback) this.callback(this.currentColor);
+    }
+    
+    static setFromHex(hex, updateCursors = true) {
+        if (!/^#[0-9A-Fa-f]{6}$/i.test(hex)) return;
+        this.currentColor = hex.toLowerCase();
+        this.previewSwatch.style.backgroundColor = this.currentColor;
+        this.hexInput.value = this.currentColor;
+        this.updateRgbInputs(this.currentColor);
+        
+        if (updateCursors) {
+            this.hsv = this.hexToHsv(this.currentColor);
+            this.renderSVCanvas();
+            this.updateCursors();
+        }
+    }
+
+    static updateRgbInputs(hex) {
+        if (!this.rgbInputs || !this.rgbInputs.r) return;
+        this.rgbInputs.r.value = parseInt(hex.substring(1,3), 16);
+        this.rgbInputs.g.value = parseInt(hex.substring(3,5), 16);
+        this.rgbInputs.b.value = parseInt(hex.substring(5,7), 16);
+    }
+    
+    static updateCursors() {
+        const svX = this.hsv.s * this.svCanvas.width;
+        const svY = (1 - this.hsv.v) * this.svCanvas.height;
+        this.svCursor.style.left = svX + 'px';
+        this.svCursor.style.top = svY + 'px';
+        
+        const hueY = (1 - (this.hsv.h / 360)) * this.hueCanvas.height;
+        this.hueCursor.style.top = hueY + 'px';
+    }
+    
+    static hsvToHex(h, s, v) {
+        let r, g, b;
+        let i = Math.floor(h / 60);
+        let f = h / 60 - i;
+        let p = v * (1 - s);
+        let q = v * (1 - f * s);
+        let t = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+        const toHex = x => {
+            const hex = Math.round(x * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    
+    static hexToHsv(hex) {
+        let r = parseInt(hex.substring(1,3), 16) / 255;
+        let g = parseInt(hex.substring(3,5), 16) / 255;
+        let b = parseInt(hex.substring(5,7), 16) / 255;
+        let max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, v = max;
+        let d = max - min;
+        s = max === 0 ? 0 : d / max;
+        if (max === min) {
+            h = 0;
+        } else {
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h: h * 360, s: s, v: v };
+    }
+    
+    static renderSwatches(container, colors) {
+        container.innerHTML = '';
+        colors.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch';
+            swatch.style.backgroundColor = color;
+            swatch.title = color;
+            swatch.onmousedown = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.setFromHex(color);
+                this.selectColor(color);
+            };
+            container.appendChild(swatch);
+        });
+    }
+    
+    static open(anchorElement, initialColor, callback) {
+        this.anchor = anchorElement;
+        this.callback = callback;
+        
+        let validInitial = initialColor && /^#[0-9A-Fa-f]{6}$/i.test(initialColor) ? initialColor : '#000000';
+        this.setFromHex(validInitial, true);
+        
+        this.el.style.display = 'block';
+        this.isOpen = true;
+        
+        const rect = anchorElement.getBoundingClientRect();
+        let top = rect.bottom + window.scrollY + 5;
+        let left = rect.left + window.scrollX;
+        
+        if (left + this.el.offsetWidth > window.innerWidth) {
+            left = window.innerWidth - this.el.offsetWidth - 10;
+        }
+        if (top + this.el.offsetHeight > window.innerHeight) {
+            top = rect.top + window.scrollY - this.el.offsetHeight - 5;
+        }
+        
+        this.el.style.top = top + 'px';
+        this.el.style.left = left + 'px';
+    }
+    
+    static close() {
+        this.el.style.display = 'none';
+        this.isOpen = false;
+        this.anchor = null;
+        this.callback = null;
+    }
+    
+    static selectColor(color) {
+        // Update recent colors array
+        const lowercaseColor = color.toLowerCase();
+        const index = this.recentColors.indexOf(lowercaseColor);
+        if (index > -1) {
+            this.recentColors.splice(index, 1);
+        }
+        this.recentColors.unshift(lowercaseColor);
+        if (this.recentColors.length > 10) {
+            this.recentColors.pop();
+        }
+        this.renderSwatches(this.recentGrid, this.recentColors);
+
+        if (this.callback) {
+            this.callback(color);
+        }
+        this.close();
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    CustomColorPicker.init();
 });
