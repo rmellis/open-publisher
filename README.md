@@ -443,6 +443,14 @@ Open Publisher's native format is `.opub`:
 |---|---|
 | `T` (on canvas) | Insert new text box |
 | `Ctrl + Z` | Undo |
+| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo |
+| `Ctrl + C` | Copy |
+| `Ctrl + X` | Cut |
+| `Ctrl + V` | Paste |
+| `Ctrl + Shift + V` | Paste without styles |
+| `Ctrl + A` | Select all |
+| `Ctrl + S` | Save |
+| `Delete` / `Backspace` | Delete selected element |
 | `F9` | Toggle zoom to/from 100% |
 | `Ctrl + Shift + L` | Whole Page View |
 | `Ctrl + Shift + O` | Toggle element boundaries |
