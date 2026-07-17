@@ -1022,8 +1022,19 @@ function addNewPage() {
     let defaultH = '1123px';
     try {
         const locale = navigator.language || navigator.userLanguage || '';
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
         const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
-        if (letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX')) {
+        
+        let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
+        
+        // Timezone override: UK users often have en-US browsers. Timezone gives physical location.
+        if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
+            if (tz !== 'Asia/Manila') {
+                isLetter = false;
+            }
+        }
+        
+        if (isLetter) {
             defaultW = '816px'; // US Letter
             defaultH = '1056px';
         }
@@ -1070,8 +1081,18 @@ function addMasterPage() {
     let defaultH = '1123px';
     try {
         const locale = navigator.language || navigator.userLanguage || '';
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
         const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
-        if (letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX')) {
+        
+        let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
+        
+        if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
+            if (tz !== 'Asia/Manila') {
+                isLetter = false;
+            }
+        }
+        
+        if (isLetter) {
             defaultW = '816px'; 
             defaultH = '1056px';
         }
