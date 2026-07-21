@@ -589,6 +589,7 @@
         <div class="group">
             <div class="tool-btn" onclick="initBasicBorders(); toggleBorderMenu(this); event.stopPropagation();"><i class="fas fa-border-style"></i>Borders</div>
             <div class="tool-btn" onclick="toggleHeaderFooter()"><i class="fas fa-columns"></i>H/F Toggle</div>
+            <div class="tool-btn" onclick="toggleGuidesMenu(this); event.stopPropagation();"><i class="fas fa-ruler-combined"></i>Guides <i class="fas fa-caret-down"></i></div>
             <div class="group-label">Layout</div>
         </div>
         <div class="group" style="position: relative; display: flex; align-items: center; padding-bottom: 15px; min-width: 420px; border-right: 1px solid #ccc; margin-right: 10px;">
@@ -824,6 +825,13 @@
         </div>
         Zero (0")
     </div>
+</div>
+
+<div class="dropdown-menu" id="guides-dropdown" style="width: 220px;">
+    <div class="dropdown-item" onclick="toggleGrid(); document.getElementById('guides-dropdown').style.display='none';"><i class="fas fa-border-all" style="margin-right: 8px; width: 14px; text-align: center;"></i> Toggle Grid</div>
+    <div class="dropdown-item" onclick="toggleBaselines(); document.getElementById('guides-dropdown').style.display='none';"><i class="fas fa-bars" style="margin-right: 8px; width: 14px; text-align: center;"></i> Toggle Baselines</div>
+    <div style="border-top:1px solid rgba(41, 104, 105, 0.2); margin: 2px 0;"></div>
+    <div class="dropdown-item" onclick="showGuidesModal(); document.getElementById('guides-dropdown').style.display='none';"><i class="fas fa-sliders-h" style="margin-right: 8px; width: 14px; text-align: center;"></i> Grid and Baseline Guides...</div>
 </div>
 
 <div class="dropdown-menu" id="recolor-dropdown">

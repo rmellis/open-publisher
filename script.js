@@ -6320,6 +6320,90 @@ function toggleMarginsMenu(btn) {
     }
 }
 
+function toggleGuidesMenu(btn) {
+    const m = document.getElementById('guides-dropdown');
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
+}
+
+function showGuidesModal() {
+    const paper = document.getElementById('paper');
+    const cs = getComputedStyle(paper);
+    
+    let baseSpacing = cs.getPropertyValue('--baseline-spacing').trim().replace('px', '');
+    let baseColor = cs.getPropertyValue('--baseline-color').trim();
+    let gridSpacing = cs.getPropertyValue('--grid-spacing').trim().replace('px', '');
+    let gridColor = cs.getPropertyValue('--grid-color').trim();
+
+    if (!baseSpacing) baseSpacing = '25';
+    if (!baseColor) baseColor = '#add8e6';
+    if (!gridSpacing) gridSpacing = '20';
+    if (!gridColor) gridColor = '#e0e0e0';
+
+    const formHTML = `
+        <div style="padding: 10px 0;">
+            <div style="font-weight: bold; margin-bottom: 10px; color: var(--pub-color); border-bottom: 1px solid #ccc; padding-bottom: 5px;">Baseline Guides</div>
+            <div class="input-group" style="margin-bottom:10px;">
+                <label>Spacing (px):</label>
+                <div class="modern-spinner">
+                    <input type="text" id="baseline-spacing-input" value="${parseInt(baseSpacing)}" onchange="this.value = Math.max(1, parseInt(this.value)||1)">
+                    <div class="spin-btns">
+                        <div onclick="document.getElementById('baseline-spacing-input').value=Math.max(1, parseInt(document.getElementById('baseline-spacing-input').value||1)+1)"><i class="fas fa-chevron-up"></i></div>
+                        <div onclick="document.getElementById('baseline-spacing-input').value=Math.max(1, parseInt(document.getElementById('baseline-spacing-input').value||1)-1)"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group" style="margin-bottom:15px;">
+                <label>Color:</label>
+                <div style="width: 54px;">
+                    <input type="hidden" id="baseline-color-val" value="${baseColor}">
+                    <div id="baseline-color-input" class="color-swatch-trigger" style="background-color: ${baseColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--pub-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('baseline-color-val').value, (c) => { document.getElementById('baseline-color-val').value = c; this.style.backgroundColor = c; })"></div>
+                </div>
+            </div>
+            
+            <div style="font-weight: bold; margin-bottom: 10px; color: var(--pub-color); border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">Grid Guides</div>
+            <div class="input-group" style="margin-bottom:10px;">
+                <label>Spacing (px):</label>
+                <div class="modern-spinner">
+                    <input type="text" id="grid-spacing-input" value="${parseInt(gridSpacing)}" onchange="this.value = Math.max(1, parseInt(this.value)||1)">
+                    <div class="spin-btns">
+                        <div onclick="document.getElementById('grid-spacing-input').value=Math.max(1, parseInt(document.getElementById('grid-spacing-input').value||1)+1)"><i class="fas fa-chevron-up"></i></div>
+                        <div onclick="document.getElementById('grid-spacing-input').value=Math.max(1, parseInt(document.getElementById('grid-spacing-input').value||1)-1)"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group" style="margin-bottom:15px;">
+                <label>Color:</label>
+                <div style="width: 54px;">
+                    <input type="hidden" id="grid-color-val" value="${gridColor}">
+                    <div id="grid-color-input" class="color-swatch-trigger" style="background-color: ${gridColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--pub-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('grid-color-val').value, (c) => { document.getElementById('grid-color-val').value = c; this.style.backgroundColor = c; })"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show('Grid and Baseline Guides', formHTML, applyGuidesSettings, false, 'OK');
+}
+
+function applyGuidesSettings() {
+    const paper = document.getElementById('paper');
+    const baseSpacing = document.getElementById('baseline-spacing-input').value;
+    const baseColor = document.getElementById('baseline-color-val').value;
+    const gridSpacing = document.getElementById('grid-spacing-input').value;
+    const gridColor = document.getElementById('grid-color-val').value;
+
+    paper.style.setProperty('--baseline-spacing', baseSpacing + 'px');
+    paper.style.setProperty('--baseline-color', baseColor);
+    paper.style.setProperty('--grid-spacing', gridSpacing + 'px');
+    paper.style.setProperty('--grid-color', gridColor);
+}
+
+
 function showCustomMarginsModal() {
     const cm = state.margins || {top: 48, right: 48, bottom: 48, left: 48};
     const formHtml = `
