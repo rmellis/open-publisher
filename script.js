@@ -1,3 +1,4 @@
+// OpenPublisher - A free desktop publishing tool
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -9868,93 +9869,67 @@ window.ContextMenuActions = {
         }
         
         try {
-            // We are editing text. Modern browsers require navigator.clipboard.read() for click-triggered paste.
-            if (navigator.clipboard && navigator.clipboard.read) {
-                const clipboardItems = await navigator.clipboard.read();
-                
-                // The browser permission popup might have stolen focus, restore it before executing paste.
-                if (state.lastRange && targetBox) {
-                    targetBox.focus();
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(state.lastRange);
-                }
-                
-                let pasted = false;
-                for (const clipboardItem of clipboardItems) {
-                    if (clipboardItem.types.includes('text/html')) {
-                        const blob = await clipboardItem.getType('text/html');
-                        const html = await blob.text();
-                        const success = document.execCommand('insertHTML', false, html);
-                        if (!success) {
-                            const selection = window.getSelection();
-                            if (selection.rangeCount > 0) {
-                                const range = selection.getRangeAt(0);
-                                range.deleteContents();
-                                const div = document.createElement('div');
-                                div.innerHTML = html;
-                                const frag = document.createDocumentFragment();
-                                let node, lastNode;
-                                while ((node = div.firstChild)) {
-                                    lastNode = frag.appendChild(node);
-                                }
-                                range.insertNode(frag);
-                                if (lastNode) {
-                                    const newRange = range.cloneRange();
-                                    newRange.setStartAfter(lastNode);
-                                    newRange.collapse(true);
-                                    selection.removeAllRanges();
-                                    selection.addRange(newRange);
-                                }
-                            }
+            // Restore focus
+            if (state.lastRange && targetBox) {
+                targetBox.focus();
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(state.lastRange);
+            }
+            
+            // Check internal element clipboard
+            if (state.copiedElements && state.copiedElements.length > 0) {
+                 targetBox.blur();
+                 if (typeof window.pasteEl === 'function') window.pasteEl();
+                 return;
+            }
+
+            // Check internal text clipboard (avoids browser permission prompts entirely!)
+            if (typeof state.copiedHtml === 'string' && state.copiedHtml.length > 0) {
+                const success = document.execCommand('insertHTML', false, state.copiedHtml);
+                if (!success) {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        range.deleteContents();
+                        const div = document.createElement('div');
+                        div.innerHTML = state.copiedHtml;
+                        const frag = document.createDocumentFragment();
+                        let node, lastNode;
+                        while ((node = div.firstChild)) {
+                            lastNode = frag.appendChild(node);
                         }
-                        pasted = true;
-                        break;
-                    } else if (clipboardItem.types.some(type => type.startsWith('image/'))) {
-                        const imageType = clipboardItem.types.find(type => type.startsWith('image/'));
-                        const blob = await clipboardItem.getType(imageType);
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            if (typeof window.insertSmartImage === 'function') {
-                                window.insertSmartImage(event.target.result);
-                            }
-                        };
-                        reader.readAsDataURL(blob);
-                        pasted = true;
-                        break;
+                        range.insertNode(frag);
+                        if (lastNode) {
+                            const newRange = range.cloneRange();
+                            newRange.setStartAfter(lastNode);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                        }
                     }
                 }
-                if (!pasted) {
-                    const text = await navigator.clipboard.readText();
-                    if (text) {
-                        const success = document.execCommand('insertText', false, text);
-                        if (!success) {
-                            const selection = window.getSelection();
-                            if (selection.rangeCount > 0) {
-                                const range = selection.getRangeAt(0);
-                                range.deleteContents();
-                                range.insertNode(document.createTextNode(text));
-                                range.collapse(false);
-                            }
-                        }
+            } else if (typeof state.copiedText === 'string' && state.copiedText.length > 0) {
+                const success = document.execCommand('insertText', false, state.copiedText);
+                if (!success) {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        range.deleteContents();
+                        range.insertNode(document.createTextNode(state.copiedText));
+                        range.collapse(false);
                     }
                 }
             } else {
-                const success = document.execCommand('paste');
-                if (!success) throw new Error("execCommand paste failed");
+                // Emtpy internal buffer (e.g., trying to paste from outside the app via the ribbon)
+                if (typeof DialogSystem !== 'undefined') {
+                    DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
+                } else {
+                    alert('Please use Ctrl+V or Cmd+V to paste text from other applications.');
+                }
             }
         } catch (err) {
             console.warn('Paste normal failed:', err);
-            try {
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                    document.execCommand('insertText', false, text);
-                } else {
-                    throw new Error("readText empty");
-                }
-            } catch(e2) {
-                DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
-            }
         }
     },
 
@@ -9976,10 +9951,7 @@ window.ContextMenuActions = {
         
         if (targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA')) {
             try {
-                // This triggers the browser dialog box asking for permission to paste and only gets plain text
-                const text = await navigator.clipboard.readText();
-                
-                // The browser permission popup might have stolen focus, restore it before executing paste.
+                // Restore focus
                 if (state.lastRange && targetBox) {
                     targetBox.focus();
                     const sel = window.getSelection();
@@ -9987,27 +9959,25 @@ window.ContextMenuActions = {
                     sel.addRange(state.lastRange);
                 }
                 
-                if (text) {
-                    const success = document.execCommand('insertText', false, text);
+                // Check internal text clipboard (avoids browser permission prompts entirely!)
+                if (typeof state.copiedText === 'string' && state.copiedText.length > 0) {
+                    const success = document.execCommand('insertText', false, state.copiedText);
                     if (!success) {
                         const selection = window.getSelection();
                         if (selection.rangeCount > 0) {
                             const range = selection.getRangeAt(0);
                             range.deleteContents();
-                            range.insertNode(document.createTextNode(text));
+                            range.insertNode(document.createTextNode(state.copiedText));
                             range.collapse(false);
                         }
                     }
                     return;
+                } else {
+                    // Empty internal buffer (e.g., trying to paste from outside the app via the ribbon)
+                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
                 }
             } catch (err) {
-                console.warn('Clipboard readText failed, attempting secondary paste fallback:', err);
-                try {
-                    // Use standard paste, which might paste with formatting if readText fails
-                    document.execCommand('paste');
-                } catch(e) {
-                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
-                }
+                console.warn('Paste without formatting failed:', err);
             }
         }
     },
@@ -17670,13 +17640,57 @@ window.initShapes = function() {
         const sel = window.getSelection();
         const hasTextSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed;
 
-        if (isTextEditing && hasTextSelection) {
-            document.execCommand(isCut ? 'cut' : 'copy');
-            if (isCut && typeof pushHistory !== 'undefined') pushHistory();
+        if (isTextEditing) {
+            if (hasTextSelection) {
+                const textToCopy = sel.toString();
+                state.copiedText = textToCopy;
+                
+                try {
+                    const range = sel.getRangeAt(0);
+                    const div = document.createElement('div');
+                    div.appendChild(range.cloneContents());
+                    let wrapperHtml = div.innerHTML;
+                    
+                    let node = range.commonAncestorContainer;
+                    if (node && node.nodeType === 3) node = node.parentNode;
+                    
+                    while (node && node !== document.body && node.getAttribute && node.getAttribute('contenteditable') !== 'true' && !node.classList.contains('text-content')) {
+                        const clone = node.cloneNode(false);
+                        clone.innerHTML = wrapperHtml;
+                        wrapperHtml = clone.outerHTML;
+                        node = node.parentNode;
+                    }
+                    
+                    state.copiedHtml = wrapperHtml;
+                } catch (err) {
+                    state.copiedHtml = null;
+                    console.warn("Failed to capture HTML copy in copyEl", err);
+                }
+                
+                state.copiedElements = [];
+                
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(textToCopy).catch(e => {
+                            document.execCommand(isCut ? 'cut' : 'copy');
+                        });
+                    } else {
+                        document.execCommand(isCut ? 'cut' : 'copy');
+                    }
+                } catch(e) {
+                    document.execCommand(isCut ? 'cut' : 'copy');
+                }
+                
+                if (isCut) {
+                    sel.deleteFromDocument();
+                    if (typeof pushHistory !== 'undefined') pushHistory();
+                }
+            }
             return;
         }
 
         state.copiedElements = []; // New array to hold all copied items
+        state.copiedText = ""; // Clear text clipboard
 
         if (state.multiSelected && state.multiSelected.length > 0) {
             // Copy all selected items
@@ -17818,6 +17832,43 @@ window.initShapes = function() {
             }
         }
     }, true); // 'true' runs this in the Capture Phase, beating the old code to the punch!
+
+    // --- 3. NATIVE COPY SYNC ---
+    document.addEventListener('copy', function(e) {
+        const active = document.activeElement;
+        if (active && (active.isContentEditable || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+                if (typeof state !== 'undefined') {
+                    state.copiedText = sel.toString();
+                    
+                    try {
+                        const range = sel.getRangeAt(0);
+                        const div = document.createElement('div');
+                        div.appendChild(range.cloneContents());
+                        let wrapperHtml = div.innerHTML;
+                        
+                        let node = range.commonAncestorContainer;
+                        if (node && node.nodeType === 3) node = node.parentNode;
+                        
+                        while (node && node !== document.body && node.getAttribute && node.getAttribute('contenteditable') !== 'true' && !node.classList.contains('text-content')) {
+                            const clone = node.cloneNode(false);
+                            clone.innerHTML = wrapperHtml;
+                            wrapperHtml = clone.outerHTML;
+                            node = node.parentNode;
+                        }
+                        
+                        state.copiedHtml = wrapperHtml;
+                    } catch (err) {
+                        state.copiedHtml = null;
+                        console.warn("Failed to capture HTML copy", err);
+                    }
+                    
+                    state.copiedElements = [];
+                }
+            }
+        }
+    });
 })();
     // --- 4. MULTI-ITEM DELETE OVERRIDE ---
     // Make sure hitting Delete or Backspace clears the whole group safely
