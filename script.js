@@ -17647,8 +17647,35 @@ window.initShapes = function() {
         }
     }, true);
 
-    // --- 2. MULTI-ITEM COPY ---
-    window.copyEl = function() {
+    // --- 2. MULTI-ITEM COPY / CUT ---
+    window.copyEl = function(isCut = false) {
+        // Recover focus if lost due to clicking ribbon
+        let targetBox = document.activeElement;
+        if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
+            if (typeof state !== 'undefined' && state.selectedEl) {
+                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                if (innerText) {
+                    targetBox = innerText;
+                    if (state.lastRange) {
+                        targetBox.focus();
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(state.lastRange);
+                    }
+                }
+            }
+        }
+
+        const isTextEditing = targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA');
+        const sel = window.getSelection();
+        const hasTextSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed;
+
+        if (isTextEditing && hasTextSelection) {
+            document.execCommand(isCut ? 'cut' : 'copy');
+            if (isCut && typeof pushHistory !== 'undefined') pushHistory();
+            return;
+        }
+
         state.copiedElements = []; // New array to hold all copied items
 
         if (state.multiSelected && state.multiSelected.length > 0) {
@@ -17656,9 +17683,22 @@ window.initShapes = function() {
             state.multiSelected.forEach(el => {
                 state.copiedElements.push(el.cloneNode(true));
             });
+            if (isCut) {
+                state.multiSelected.forEach(el => el.remove());
+                state.multiSelected = [];
+                state.selectedEl = null;
+                document.getElementById('selection-box').style.display = 'none';
+                if(typeof pushHistory !== 'undefined') pushHistory();
+            }
         } else if (state.selectedEl) {
             // Copy single selected item
             state.copiedElements.push(state.selectedEl.cloneNode(true));
+            if (isCut) {
+                state.selectedEl.remove();
+                state.selectedEl = null;
+                document.getElementById('selection-box').style.display = 'none';
+                if(typeof pushHistory !== 'undefined') pushHistory();
+            }
         }
 
         // Overwrite OS clipboard with a dummy string to prevent the double-paste bug (Ghost Hook)
@@ -17674,6 +17714,10 @@ window.initShapes = function() {
                 document.body.removeChild(dummy);
             }
         } catch(e) {}
+    };
+
+    window.cutEl = function() {
+        window.copyEl(true);
     };
 
     // --- 3. MULTI-ITEM PASTE ---
