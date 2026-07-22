@@ -31,6 +31,7 @@ let state = {
     lastRange: null, 
     isProgrammaticUpdate: false,
     snap: { grid: false, guides: true, objects: true },
+    isGuidesLocked: false,
     currentScheme: 'Classic',
     documentProperties: { author: '', company: '', subject: '', keywords: '' }
 };
@@ -497,6 +498,13 @@ document.addEventListener('selectionchange', () => {
             return;
         }
         
+        // Lock Guides (Ctrl+Alt+;)
+        if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === ';') {
+            e.preventDefault();
+            toggleLockGuides();
+            return;
+        }
+
         // Only delete if not editing text
         if(e.key === 'Delete' && !isTextEditing()) {
             deleteSelected();
@@ -4230,6 +4238,21 @@ window.exitShapeEditMode = function() {
 
 // --- INTERACTION LOGIC ---
 function handleMouseDown(e) {
+    if (e.target.classList.contains('custom-guide')) {
+        if (state.isGuidesLocked) return;
+        state.dragMode = 'drag-guide';
+        const isH = e.target.classList.contains('h');
+        state.dragData = {
+            guide: e.target,
+            dir: isH ? 'h' : 'v',
+            startX: e.clientX,
+            startY: e.clientY,
+            startPos: parseFloat(e.target.style[isH ? 'top' : 'left'])
+        };
+        e.preventDefault();
+        return;
+    }
+
     if(e.target === paper || e.target.classList.contains('margin-guides')) {
         deselect();
         return;
@@ -4413,6 +4436,20 @@ function handleMouseMove(e) {
             // Centerlines
             if (Math.abs((x + elW/2) - pw/2) <= tolerance) resX = pw/2 - elW/2;
             if (Math.abs((y + elH/2) - ph/2) <= tolerance) resY = ph/2 - elH/2;
+            
+            // Custom Guides
+            document.querySelectorAll('.custom-guide.v').forEach(g => {
+                const gX = parseFloat(g.style.left);
+                if (Math.abs(x - gX) <= tolerance) resX = gX;
+                if (Math.abs((x + elW) - gX) <= tolerance) resX = gX - elW;
+                if (Math.abs((x + elW/2) - gX) <= tolerance) resX = gX - elW/2;
+            });
+            document.querySelectorAll('.custom-guide.h').forEach(g => {
+                const gY = parseFloat(g.style.top);
+                if (Math.abs(y - gY) <= tolerance) resY = gY;
+                if (Math.abs((y + elH) - gY) <= tolerance) resY = gY - elH;
+                if (Math.abs((y + elH/2) - gY) <= tolerance) resY = gY - elH/2;
+            });
         }
         
         // 3. Objects
@@ -4443,6 +4480,18 @@ function handleMouseMove(e) {
             }
         }
         return { x: resX, y: resY };
+    }
+
+    if (state.dragMode === 'drag-guide') {
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        
+        if (state.dragData.dir === 'h') {
+            state.dragData.guide.style.top = (state.dragData.startPos + dy) + 'px';
+        } else {
+            state.dragData.guide.style.left = (state.dragData.startPos + dx) + 'px';
+        }
+        return;
     }
 
     if(state.dragMode === 'drag') {
@@ -4613,6 +4662,23 @@ function handleMouseMove(e) {
 }
 
 function handleMouseUp() {
+    if (state.dragMode === 'drag-guide' && state.dragData.guide) {
+        // If dragged outside the paper area, delete it
+        const paperRect = paper.getBoundingClientRect();
+        const guideRect = state.dragData.guide.getBoundingClientRect();
+        
+        let remove = false;
+        if (state.dragData.dir === 'h') {
+            if (guideRect.top < paperRect.top - 10 || guideRect.top > paperRect.bottom + 10) remove = true;
+        } else {
+            if (guideRect.left < paperRect.left - 10 || guideRect.left > paperRect.right + 10) remove = true;
+        }
+        
+        if (remove) {
+            state.dragData.guide.remove();
+        }
+    }
+
     if(state.dragMode) {
         setTimeout(() => updateThumbnails(), 50);
         pushHistory(); 
@@ -5057,6 +5123,61 @@ function setPageSize(format) {
 
 function toggleGrid() { paper.classList.toggle('theme-grid'); }
 function toggleBaselines() { paper.classList.toggle('theme-baselines'); }
+
+window.toggleLockGuides = function() {
+    state.isGuidesLocked = !state.isGuidesLocked;
+    if (state.isGuidesLocked) {
+        document.body.classList.add('guides-locked');
+    } else {
+        document.body.classList.remove('guides-locked');
+    }
+};
+
+window.clearAllGuides = function() {
+    if (state.isGuidesLocked) {
+        DialogSystem.show('Guides Locked', 'Guides are currently locked. Please unlock guides before clearing them.', null, true);
+        return;
+    }
+    const guides = document.querySelectorAll('.custom-guide');
+    if (guides.length === 0) return;
+    
+    // Check if we should prompt
+    DialogSystem.show('Clear All Guides', 'Are you sure you want to remove all custom guides from the canvas?', function() {
+        guides.forEach(g => g.remove());
+        pushHistory();
+    }, false, 'Clear');
+};
+
+window.createNewGuide = function(dir, e) {
+    if (state.isGuidesLocked) return;
+    
+    const paperRect = paper.getBoundingClientRect();
+    const zoom = state.zoom || 1.0;
+    
+    const guide = document.createElement('div');
+    guide.className = `custom-guide ${dir}`;
+    
+    if (dir === 'h') {
+        const y = (e.clientY - paperRect.top) / zoom;
+        guide.style.top = y + 'px';
+    } else {
+        const x = (e.clientX - paperRect.left) / zoom;
+        guide.style.left = x + 'px';
+    }
+    
+    paper.appendChild(guide);
+    
+    // Immediately start dragging it
+    state.dragMode = 'drag-guide';
+    state.dragData = {
+        guide: guide,
+        dir: dir,
+        startX: e.clientX,
+        startY: e.clientY,
+        startPos: parseFloat(guide.style[dir === 'h' ? 'top' : 'left'])
+    };
+    e.preventDefault();
+};
 function toggleScratchArea() {
     const isHidden = document.body.classList.toggle('hide-scratch-area');
     const btn = document.getElementById('scratch-area-toggle-btn');
@@ -6323,6 +6444,13 @@ function toggleMarginsMenu(btn) {
 
 function toggleGuidesMenu(btn) {
     const m = document.getElementById('guides-dropdown');
+    
+    // Update Lock Guides checkmark
+    const lockBtn = document.getElementById('lock-guides-btn');
+    if (lockBtn) {
+        lockBtn.innerHTML = (state.isGuidesLocked ? '<i class="fas fa-check" style="margin-right: 8px; width: 14px; text-align: center; color: var(--pub-color);"></i> ' : '<i class="fas fa-lock" style="margin-right: 8px; width: 14px; text-align: center;"></i> ') + 'Lock Guides';
+    }
+
     const isBlock = m.style.display === 'block';
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     if (!isBlock) {
@@ -7531,6 +7659,17 @@ window.initRulers = function() {
         window.tabDialog.open();
     });
 
+    // Custom Guide Creation from Rulers
+    h.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.indent-marker') || e.target.closest('.ruler-c')) return;
+        createNewGuide('h', e);
+    });
+    
+    v.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.ruler-c')) return;
+        createNewGuide('v', e);
+    });
+
     window.initIndentMarkersLogic();
     if (window.initRulerOriginLogic) window.initRulerOriginLogic();
 
@@ -8126,6 +8265,20 @@ window.applySnapping = function(x, y, elW, elH, el, e) {
         if (Math.abs(y - margin) <= tol) { resY = margin; snappedToGuideY = true; sgX.style.top = margin+'px'; }
         else if (Math.abs((y + elH) - (ph - margin)) <= tol) { resY = (ph - margin) - elH; snappedToGuideY = true; sgX.style.top = (ph-margin)+'px'; }
         else if (Math.abs((y + elH/2) - ph/2) <= tol) { resY = ph/2 - elH/2; snappedToGuideY = true; sgX.style.top = (ph/2)+'px'; }
+        
+        // Custom Guides
+        document.querySelectorAll('.custom-guide.v').forEach(g => {
+            const gX = parseFloat(g.style.left);
+            if (Math.abs(x - gX) <= tol) { resX = gX; snappedToGuideX = true; sgY.style.left = gX+'px'; }
+            else if (Math.abs((x + elW) - gX) <= tol) { resX = gX - elW; snappedToGuideX = true; sgY.style.left = gX+'px'; }
+            else if (Math.abs((x + elW/2) - gX) <= tol) { resX = gX - elW/2; snappedToGuideX = true; sgY.style.left = gX+'px'; }
+        });
+        document.querySelectorAll('.custom-guide.h').forEach(g => {
+            const gY = parseFloat(g.style.top);
+            if (Math.abs(y - gY) <= tol) { resY = gY; snappedToGuideY = true; sgX.style.top = gY+'px'; }
+            else if (Math.abs((y + elH) - gY) <= tol) { resY = gY - elH; snappedToGuideY = true; sgX.style.top = gY+'px'; }
+            else if (Math.abs((y + elH/2) - gY) <= tol) { resY = gY - elH/2; snappedToGuideY = true; sgX.style.top = gY+'px'; }
+        });
     }
     
     if (state.snap.objects && el) {
@@ -8867,6 +9020,19 @@ function handleMouseMove(e) {
                 if (Math.abs((y + elH) - (ph - margin)) <= tolerance) resY = (ph - margin) - elH;
                 if (Math.abs((x + elW/2) - pw/2) <= tolerance) resX = pw/2 - elW/2;
                 if (Math.abs((y + elH/2) - ph/2) <= tolerance) resY = ph/2 - elH/2;
+                
+                document.querySelectorAll('.custom-guide.v').forEach(g => {
+                    const gX = parseFloat(g.style.left);
+                    if (Math.abs(x - gX) <= tolerance) resX = gX;
+                    if (Math.abs((x + elW) - gX) <= tolerance) resX = gX - elW;
+                    if (Math.abs((x + elW/2) - gX) <= tolerance) resX = gX - elW/2;
+                });
+                document.querySelectorAll('.custom-guide.h').forEach(g => {
+                    const gY = parseFloat(g.style.top);
+                    if (Math.abs(y - gY) <= tolerance) resY = gY;
+                    if (Math.abs((y + elH) - gY) <= tolerance) resY = gY - elH;
+                    if (Math.abs((y + elH/2) - gY) <= tolerance) resY = gY - elH/2;
+                });
             }
             if (state.snap.objects && el) {
                 const siblings = Array.from(document.querySelectorAll('#paper > .pub-element')).filter(n => n !== el && !state.multiSelected?.includes(n));
@@ -30033,3 +30199,64 @@ window.CustomColorPicker = class CustomColorPicker {
 document.addEventListener('DOMContentLoaded', () => {
     CustomColorPicker.init();
 });
+
+/* --- CUSTOM GUIDE DRAG OVERRIDES (APPENDED FIX) --- */
+window.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('custom-guide')) {
+        if (state.isGuidesLocked) return;
+        state.dragMode = 'drag-guide';
+        const isH = e.target.classList.contains('h');
+        state.dragData = {
+            guide: e.target,
+            dir: isH ? 'h' : 'v',
+            startX: e.clientX,
+            startY: e.clientY,
+            startPos: parseFloat(e.target.style[isH ? 'top' : 'left'])
+        };
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }
+}, true);
+
+window.addEventListener('mousemove', function(e) {
+    if (state.dragMode === 'drag-guide') {
+        const zoom = state.zoom || 1.0;
+        const dx = (e.clientX - state.dragData.startX) / zoom;
+        const dy = (e.clientY - state.dragData.startY) / zoom;
+        if (state.dragData.dir === 'h') {
+            state.dragData.guide.style.top = (state.dragData.startPos + dy) + 'px';
+        } else {
+            state.dragData.guide.style.left = (state.dragData.startPos + dx) + 'px';
+        }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }
+}, true);
+
+window.addEventListener('mouseup', function(e) {
+    if (state.dragMode === 'drag-guide' && state.dragData.guide) {
+        const paperRect = paper.getBoundingClientRect();
+        const guideRect = state.dragData.guide.getBoundingClientRect();
+        let remove = false;
+        
+        // If they drop it significantly outside the bounds of the canvas, we delete it
+        if (state.dragData.dir === 'h') {
+            if (guideRect.top < paperRect.top - 20 || guideRect.top > paperRect.bottom + 20) remove = true;
+            // If they just clicked and didn't move it far enough onto the page, snap it to the edge instead of deleting
+            if (remove && guideRect.top < paperRect.top - 20 && Math.abs(state.dragData.startY - e.clientY) < 10) {
+                remove = false;
+                state.dragData.guide.style.top = '0px';
+            }
+        } else {
+            if (guideRect.left < paperRect.left - 20 || guideRect.left > paperRect.right + 20) remove = true;
+            if (remove && guideRect.left < paperRect.left - 20 && Math.abs(state.dragData.startX - e.clientX) < 10) {
+                remove = false;
+                state.dragData.guide.style.left = '0px';
+            }
+        }
+        
+        if (remove) state.dragData.guide.remove();
+        state.dragMode = null;
+        e.stopImmediatePropagation();
+    }
+}, true);

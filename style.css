@@ -617,6 +617,38 @@ body {
     width: 0;
     border-left: 1px dashed #555;
 }
+
+/* Custom Guides */
+.custom-guide {
+    position: absolute;
+    background: #009688;
+    z-index: 9999; /* Always above everything to ensure they remain clickable and draggable */
+    pointer-events: auto;
+}
+.custom-guide.h {
+    left: 0; right: 0;
+    height: 2px;
+    cursor: ns-resize;
+}
+.custom-guide.v {
+    top: 0; bottom: 0;
+    width: 2px;
+    cursor: ew-resize;
+}
+/* Hitbox area for easier dragging */
+.custom-guide::after {
+    content: '';
+    position: absolute;
+}
+.custom-guide.h::after {
+    top: -4px; bottom: -4px; left: 0; right: 0;
+}
+.custom-guide.v::after {
+    left: -4px; right: -4px; top: 0; bottom: 0;
+}
+.guides-locked .custom-guide {
+    pointer-events: none !important;
+}
 .ruler-h { background: var(--ruler-bg); border-bottom: 1px solid #bbb; position: relative; overflow: hidden; }
 .ruler-v { background: var(--ruler-bg); border-right: 1px solid #bbb; position: relative; overflow: hidden; }
 .tick { position: absolute; background: #999; pointer-events: none; }
