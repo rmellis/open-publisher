@@ -128,8 +128,8 @@ const DialogSystem = {
             // Inherit the width from the original select, fallback to 100%
             const w = sel.style.width || '100%';
             
-            wrapper.style.cssText = `position:relative; width:${w}; border:1px solid #ccc; border-radius:4px; cursor:pointer; background:#fff; font-family:inherit; font-size:13px; color:#005a55; display:flex; justify-content:space-between; align-items:center; user-select:none; min-height: 26px;`;
-            wrapper.onmouseover = () => wrapper.style.borderColor = '#005a55';
+            wrapper.style.cssText = `position:relative; width:${w}; border:1px solid #ccc; border-radius:4px; cursor:pointer; background:#fff; font-family:inherit; font-size:13px; color:var(--ui-theme-dark); display:flex; justify-content:space-between; align-items:center; user-select:none; min-height: 26px;`;
+            wrapper.onmouseover = () => wrapper.style.borderColor = 'var(--ui-theme-dark)';
             wrapper.onmouseout = () => wrapper.style.borderColor = '#ccc';
             
             const display = document.createElement('span');
@@ -142,7 +142,7 @@ const DialogSystem = {
             display.style.paddingLeft = '8px';
             
             const arrowBox = document.createElement('div');
-            arrowBox.style.cssText = 'background:#005a55; color:white; width:26px; align-self:stretch; display:flex; align-items:center; justify-content:center; pointer-events:none; flex-shrink:0; border-radius:0 3px 3px 0;';
+            arrowBox.style.cssText = 'background:var(--ui-theme-dark); color:white; width:26px; align-self:stretch; display:flex; align-items:center; justify-content:center; pointer-events:none; flex-shrink:0; border-radius:0 3px 3px 0;';
             
             const arrow = document.createElement('i');
             arrow.className = 'fas fa-chevron-down';
@@ -150,13 +150,13 @@ const DialogSystem = {
             arrowBox.appendChild(arrow);
             
             const optionsList = document.createElement('div');
-            optionsList.style.cssText = 'display:none; position:absolute; top:calc(100% + 2px); left:0; right:0; background:#fff; border:1px solid #005a55; border-radius:4px; z-index:9999; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1);';
+            optionsList.style.cssText = 'display:none; position:absolute; top:calc(100% + 2px); left:0; right:0; background:#fff; border:1px solid var(--ui-theme-dark); border-radius:4px; z-index:9999; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1);';
             
             Array.from(sel.options).forEach((opt, idx) => {
                 const optDiv = document.createElement('div');
                 optDiv.innerText = opt.text;
                 // Change dropdown option text color to dark teal green
-                optDiv.style.cssText = 'padding:6px 8px; cursor:pointer; color:#005a55; font-size:13px; font-weight:500; transition:background 0.1s;';
+                optDiv.style.cssText = 'padding:6px 8px; cursor:pointer; color:var(--ui-theme-dark); font-size:13px; font-weight:500; transition:background 0.1s;';
                 if (idx === sel.selectedIndex) optDiv.style.background = 'rgba(0,118,112,0.1)';
                 optDiv.onmouseover = () => optDiv.style.background = 'rgba(0,118,112,0.15)';
                 optDiv.onmouseout = () => optDiv.style.background = idx === sel.selectedIndex ? 'rgba(0,118,112,0.1)' : '#fff';
@@ -1299,12 +1299,12 @@ function updateSidebar() {
                 ${sizeText}
             </div>
             <small>${labelText}</small>
-            ${p.note ? `<div style="font-size: 10px; color: var(--pub-color); text-align: center; word-break: break-word; line-height: 1.1; margin-top: 2px; font-weight: bold;">${p.note.replace(/</g, '&lt;')}</div>` : ''}
+            ${p.note ? `<div style="font-size: 10px; color: var(--ui-theme-color); text-align: center; word-break: break-word; line-height: 1.1; margin-top: 2px; font-weight: bold;">${p.note.replace(/</g, '&lt;')}</div>` : ''}
         `;
         
         const thumbContainer = div.querySelector('.page-thumb');
         if (p._needsRender) {
-            thumbContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--pub-color); font-size: 24px;"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+            thumbContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--ui-theme-color); font-size: 24px;"><i class="fas fa-circle-notch fa-spin"></i></div>`;
         } else {
             const thumbNode = renderThumbnailHTML(p, i);
             thumbContainer.appendChild(thumbNode);
@@ -1449,7 +1449,7 @@ window.clearPageBackground = function() {
         swatch.className = 'theme-swatch-item';
         swatch.onclick = () => { 
             document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
-            swatch.style.border = '3px solid #007670';
+            swatch.style.border = '3px solid var(--ui-theme-color)';
             
             // Turn OFF ignoreBackground if they manually select a color
             if (state.pages[state.currentPageIndex]) {
@@ -1486,7 +1486,7 @@ function initColorSchemes() {
         swatchContainer.style.borderRadius = '6px';
         swatchContainer.style.transition = '0.2s';
         if (state.currentScheme === schemeName) {
-            swatchContainer.style.border = '2px solid #007670';
+            swatchContainer.style.border = '2px solid var(--ui-theme-color)';
             swatchContainer.style.background = 'rgba(0, 118, 112, 0.1)';
         }
         swatchContainer.title = schemeName;
@@ -1527,7 +1527,7 @@ function applyColorScheme(schemeName) {
     // UI Feedback
     document.querySelectorAll('.scheme-swatch-container').forEach(c => {
         if (c.getAttribute('data-scheme-id') === schemeName) {
-            c.style.border = '2px solid #007670';
+            c.style.border = '2px solid var(--ui-theme-color)';
             c.style.background = 'rgba(0, 118, 112, 0.1)';
         } else {
             c.style.border = '2px solid transparent';
@@ -1675,9 +1675,9 @@ function initShapes() {
     basicShapes.forEach((s) => {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
-        item.innerHTML = `<div class="shape-preview-basic" style="width:25px; height:25px; background:#007670; clip-path:${s.c}"></div>`;
+        item.innerHTML = `<div class="shape-preview-basic" style="width:25px; height:25px; background:var(--ui-theme-color); clip-path:${s.c}"></div>`;
         item.onclick = () => {
-            const currentBgCol = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : '#007670';
+            const currentBgCol = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : 'var(--ui-theme-color)';
             const el = addShapeElement(s.c, currentBgCol);
             el.setAttribute('data-scheme-fill', '3'); // Accent 1
             if (typeof applySingleElementScheme === 'function') applySingleElementScheme(el, state.currentScheme);
@@ -1731,8 +1731,8 @@ function initShapes() {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
         let previewSvg = s.svg;
-        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="#005a55"`)
-                               .replace(/fill="black"/g, `fill="#007670"`);
+        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="var(--ui-theme-dark)"`)
+                               .replace(/fill="black"/g, `fill="var(--ui-theme-color)"`);
         item.innerHTML = `<svg class="shape-preview-outline" viewBox="0 0 100 100" style="width:25px; height:25px;">${previewSvg}</svg>`;
         item.onclick = () => {
             const el = createWrapper(`<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">${s.svg}</svg>`);
@@ -1769,7 +1769,7 @@ function initShapes() {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
         let previewSvg = s.svg;
-        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="#005a55"`);
+        previewSvg = previewSvg.replace(/stroke="black"/g, `stroke="var(--ui-theme-dark)"`);
         item.innerHTML = `<svg class="shape-preview-outline" viewBox="0 0 100 100" style="width:25px; height:25px;">${previewSvg}</svg>`;
         item.onclick = () => {
             const el = createWrapper(`<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">${s.svg}</svg>`);
@@ -2419,7 +2419,7 @@ function initTemplates() {
                     // Back Cover
                     {html:"<h3 style='text-align:center; color:#333; font-family:Helvetica;'>Contact Us</h3><p style='text-align:center; font-size:12px; color:#555;'>123 Main St, City<br>www.example.com<br>555-1234</p>", t:800, l:276, w:240, h:160},
                     // Inside Flap
-                    {html:"<h3 style='color:#007670; font-family:Helvetica; border-bottom:2px solid #007670;'>Our Services</h3><ul style='font-size:12px; font-family:Arial; color:#444; padding-left:20px;'><li>Space Planning</li><li>Color Consultation</li><li>Furniture Selection</li></ul>", t:200, l:12, w:240, h:200}
+                    {html:"<h3 style='color:var(--ui-theme-color); font-family:Helvetica; border-bottom:2px solid var(--ui-theme-color);'>Our Services</h3><ul style='font-size:12px; font-family:Arial; color:#444; padding-left:20px;'><li>Space Planning</li><li>Color Consultation</li><li>Furniture Selection</li></ul>", t:200, l:12, w:240, h:200}
                 ]
             },
             {
@@ -2875,6 +2875,203 @@ function initTemplates() {
     if(catsDiv.firstChild) loadCat(Object.keys(tmplData)[0]);
 }
 
+const UI_THEMES = {
+    'Publisher / Classic (Teal)': { primary: '#007670', dark: '#005a55', hue: '0deg', grayscale: '0%' },
+    'OneDrive / Ocean (Blue)': { primary: '#0078d4', dark: '#005a9e', hue: '40deg', grayscale: '0%' },
+    'Sunset (Orange)': { primary: '#ff6600', dark: '#cc5200', hue: '180deg', grayscale: '0%' },
+    'Midnight Dark': { primary: '#2b2b2b', dark: '#1f1f1f', hue: '0deg', grayscale: '100%' },
+    'Forest Green': { primary: '#2e7d32', dark: '#1b5e20', hue: '-45deg', grayscale: '0%' },
+    'Word (Blue)': { primary: '#2b579a', dark: '#1e3f70', hue: '40deg', grayscale: '0%' },
+    'Excel (Green)': { primary: '#217346', dark: '#175031', hue: '-35deg', grayscale: '0%' },
+    'PowerPoint (Orange)': { primary: '#b7472a', dark: '#8f3721', hue: '195deg', grayscale: '0%' },
+    'Outlook (Light Blue)': { primary: '#0072c6', dark: '#005494', hue: '30deg', grayscale: '0%' },
+    'Outlook Classic (Orange)': { primary: '#e87722', dark: '#b35917', hue: '190deg', grayscale: '0%' },
+    'OneNote (Purple)': { primary: '#7719aa', dark: '#521075', hue: '100deg', grayscale: '0%' },
+    'Teams (Purple)': { primary: '#6264a7', dark: '#464775', hue: '65deg', grayscale: '0%' },
+    'Access (Maroon)': { primary: '#a4373a', dark: '#7a292b', hue: '180deg', grayscale: '0%' },
+    'SharePoint (Cyan)': { primary: '#038387', dark: '#025f61', hue: '5deg', grayscale: '0%' },
+    'Visio / To Do (Navy Blue)': { primary: '#3955a3', dark: '#26396e', hue: '55deg', grayscale: '0%' },
+    'Project (Dark Green)': { primary: '#31752f', dark: '#214f20', hue: '-60deg', grayscale: '0%' },
+    'Forms / Sway (Teal)': { primary: '#008272', dark: '#005f53', hue: '5deg', grayscale: '0%' },
+    'Planner (Green)': { primary: '#137859', dark: '#0d5740', hue: '-15deg', grayscale: '0%' },
+    'Stream (Pink)': { primary: '#c5093b', dark: '#8f0529', hue: '170deg', grayscale: '0%' },
+    'Loop (Purple-Blue)': { primary: '#5c40d1', dark: '#422c9c', hue: '75deg', grayscale: '0%' },
+    'Twitch (Pink)': { primary: '#9146ff', dark: '#772ce8', hue: '90deg', grayscale: '0%' },
+    'YouTube (Red)': { primary: '#ff0000', dark: '#cc0000', hue: '175deg', grayscale: '0%' },
+    'Spotify (Green)': { primary: '#1db954', dark: '#1aa34a', hue: '-45deg', grayscale: '0%' },
+    'Discord (Blurple)': { primary: '#5865f2', dark: '#4752c4', hue: '50deg', grayscale: '0%' },
+    'Slack (Aubergine)': { primary: '#4a154b', dark: '#350d36', hue: '120deg', grayscale: '0%' },
+    'Reddit (Orange)': { primary: '#FF4500', dark: '#CC3700', hue: '180deg', grayscale: '0%' },
+    'LinkedIn (Blue)': { primary: '#0077b5', dark: '#005885', hue: '40deg', grayscale: '0%' },
+    'Netflix (Red)': { primary: '#E50914', dark: '#B20710', hue: '170deg', grayscale: '0%' },
+    'Dropbox (Blue)': { primary: '#0061FF', dark: '#0047BA', hue: '50deg', grayscale: '0%' },
+    'GitHub (Dark)': { primary: '#24292e', dark: '#1b1f23', hue: '0deg', grayscale: '100%' },
+    'WhatsApp (Green)': { primary: '#25D366', dark: '#1da851', hue: '-30deg', grayscale: '0%' },
+    'Notion (Minimalist Black)': { primary: '#191919', dark: '#000000', hue: '0deg', grayscale: '100%' },
+    'Stripe (Blurple)': { primary: '#635BFF', dark: '#4B45C6', hue: '60deg', grayscale: '0%' },
+    'Canva (Cyan)': { primary: '#00C4CC', dark: '#00999E', hue: '10deg', grayscale: '0%' },
+    'AWS (Orange)': { primary: '#FF9900', dark: '#CC7A00', hue: '190deg', grayscale: '0%' },
+    'Jira (Blue)': { primary: '#0052CC', dark: '#003E99', hue: '45deg', grayscale: '0%' },
+    'Asana (Coral)': { primary: '#FC636B', dark: '#D6454F', hue: '160deg', grayscale: '0%' },
+    'HubSpot (Coral/Orange)': { primary: '#FF7A59', dark: '#C95D42', hue: '180deg', grayscale: '0%' },
+    'Salesforce (Cloud Blue)': { primary: '#00A1E0', dark: '#00729E', hue: '40deg', grayscale: '0%' },
+    'Trello (Board Blue)': { primary: '#0079BF', dark: '#005A8F', hue: '45deg', grayscale: '0%' },
+    'Twilio (Red)': { primary: '#F22F46', dark: '#B32031', hue: '170deg', grayscale: '0%' },
+    'Vimeo (Light Blue)': { primary: '#1AB7EA', dark: '#108BB3', hue: '35deg', grayscale: '0%' },
+    'Steam (Dark Blue/Grey)': { primary: '#171A21', dark: '#0C0E12', hue: '0deg', grayscale: '100%' },
+    'Android (Green)': { primary: '#3DDC84', dark: '#28A760', hue: '-45deg', grayscale: '0%' },
+    'Apple Music (Pink)': { primary: '#FA243C', dark: '#C41A2D', hue: '160deg', grayscale: '0%' },
+    'Behance (Blue)': { primary: '#1769FF', dark: '#1251C4', hue: '40deg', grayscale: '0%' },
+    'Dribbble (Pink)': { primary: '#EA4C89', dark: '#B53969', hue: '150deg', grayscale: '0%' },
+    'Evernote (Green)': { primary: '#00A82D', dark: '#007A20', hue: '-20deg', grayscale: '0%' },
+    'Facebook (Blue)': { primary: '#1877F2', dark: '#115CBF', hue: '40deg', grayscale: '0%' },
+    'Figma (Dark)': { primary: '#2C2D33', dark: '#1E1F24', hue: '0deg', grayscale: '100%' },
+    'Firefox (Orange)': { primary: '#FF7139', dark: '#CC562A', hue: '185deg', grayscale: '0%' },
+    'Flickr (Pink)': { primary: '#FF0084', dark: '#CC0069', hue: '150deg', grayscale: '0%' },
+    'Foursquare (Pink)': { primary: '#F94877', dark: '#C2385C', hue: '150deg', grayscale: '0%' },
+    'GitLab (Orange)': { primary: '#FC6D26', dark: '#C9551E', hue: '185deg', grayscale: '0%' },
+    'Google (Blue)': { primary: '#4285F4', dark: '#3063B8', hue: '45deg', grayscale: '0%' },
+    'Hulu (Green)': { primary: '#1CE783', dark: '#15AD62', hue: '-50deg', grayscale: '0%' },
+    'IBM (Blue)': { primary: '#0530AD', dark: '#04227A', hue: '50deg', grayscale: '0%' },
+    'Intel (Blue)': { primary: '#0071C5', dark: '#005494', hue: '40deg', grayscale: '0%' },
+    'Intercom (Blue)': { primary: '#286EF1', dark: '#1E52B5', hue: '40deg', grayscale: '0%' },
+    'Kickstarter (Green)': { primary: '#05CE78', dark: '#049E5C', hue: '-40deg', grayscale: '0%' },
+    'Last.fm (Red)': { primary: '#D51007', dark: '#A30C05', hue: '170deg', grayscale: '0%' },
+    'Lyft (Pink)': { primary: '#FF00BF', dark: '#CC0098', hue: '130deg', grayscale: '0%' },
+    'Medium (Green)': { primary: '#02B875', dark: '#018A58', hue: '-20deg', grayscale: '0%' },
+    'Messenger (Blue)': { primary: '#0084FF', dark: '#0064C2', hue: '35deg', grayscale: '0%' },
+    'Oracle (Red)': { primary: '#F80000', dark: '#BD0000', hue: '170deg', grayscale: '0%' },
+    'Patreon (Coral)': { primary: '#FF424D', dark: '#C7323A', hue: '170deg', grayscale: '0%' },
+    'PayPal (Blue)': { primary: '#00457C', dark: '#00335C', hue: '40deg', grayscale: '0%' },
+    'Pinterest (Red)': { primary: '#E60023', dark: '#B0001B', hue: '170deg', grayscale: '0%' },
+    'Quora (Red)': { primary: '#B92B27', dark: '#8C201D', hue: '175deg', grayscale: '0%' },
+    'Shopify (Green)': { primary: '#96BF48', dark: '#739437', hue: '-60deg', grayscale: '0%' },
+    'Snapchat (Gold)': { primary: '#FFCC00', dark: '#CCA300', hue: '210deg', grayscale: '0%' },
+    'SoundCloud (Orange)': { primary: '#FF5500', dark: '#CC4400', hue: '180deg', grayscale: '0%' },
+    'Square (Gray)': { primary: '#3E4348', dark: '#2E3236', hue: '0deg', grayscale: '100%' },
+    'Strava (Orange)': { primary: '#FC4C02', dark: '#C23A01', hue: '180deg', grayscale: '0%' },
+    'Tesla (Red)': { primary: '#E31937', dark: '#AB1329', hue: '170deg', grayscale: '0%' },
+    'TikTok (Magenta)': { primary: '#FE0050', dark: '#C2003D', hue: '160deg', grayscale: '0%' },
+    'Tumblr (Dark Blue)': { primary: '#35465C', dark: '#253140', hue: '30deg', grayscale: '0%' },
+    'Venmo (Blue)': { primary: '#008CFF', dark: '#006BCC', hue: '35deg', grayscale: '0%' },
+    'Visa (Blue)': { primary: '#1A1F71', dark: '#12154F', hue: '50deg', grayscale: '0%' },
+    'Windows 11 (Blue)': { primary: '#0078D4', dark: '#005A9E', hue: '35deg', grayscale: '0%' },
+    'Xbox (Green)': { primary: '#107C10', dark: '#0C590C', hue: '-15deg', grayscale: '0%' },
+    'Yahoo (Purple)': { primary: '#410093', dark: '#30006E', hue: '80deg', grayscale: '0%' },
+    'Yelp (Red)': { primary: '#D32323', dark: '#9E1A1A', hue: '170deg', grayscale: '0%' },
+    'Zillow (Blue)': { primary: '#006AFF', dark: '#0050C2', hue: '40deg', grayscale: '0%' },
+    'Airbnb (Coral)': { primary: '#FF5A5F', dark: '#CC484C', hue: '170deg', grayscale: '0%' },
+    'AMD (Red)': { primary: '#ED1C24', dark: '#BD161D', hue: '170deg', grayscale: '0%' },
+    'Blogger (Orange)': { primary: '#F57D00', dark: '#C46400', hue: '185deg', grayscale: '0%' },
+    'Buzzfeed (Red)': { primary: '#EE3322', dark: '#BE291B', hue: '175deg', grayscale: '0%' },
+    'Cisco (Blue)': { primary: '#049FD9', dark: '#037FA6', hue: '35deg', grayscale: '0%' },
+    'Dell (Blue)': { primary: '#0076CE', dark: '#005EA3', hue: '40deg', grayscale: '0%' },
+    'Dominos (Blue)': { primary: '#006491', dark: '#004F73', hue: '40deg', grayscale: '0%' },
+    'Duolingo (Green)': { primary: '#58CC02', dark: '#46A302', hue: '-45deg', grayscale: '0%' },
+    'Etsy (Orange)': { primary: '#F1641E', dark: '#C25018', hue: '185deg', grayscale: '0%' },
+    'Fitbit (Teal)': { primary: '#00B0B9', dark: '#008C94', hue: '10deg', grayscale: '0%' },
+    'Garmin (Blue)': { primary: '#007CC3', dark: '#00639C', hue: '40deg', grayscale: '0%' },
+    'HP (Blue)': { primary: '#0096D6', dark: '#0078AB', hue: '35deg', grayscale: '0%' },
+    'IKEA (Blue)': { primary: '#0051BA', dark: '#004194', hue: '50deg', grayscale: '0%' },
+    'MacOS (Aqua)': { primary: '#007AFF', dark: '#0062CC', hue: '45deg', grayscale: '0%' },
+    'Nintendo (Red)': { primary: '#E60012', dark: '#B8000E', hue: '170deg', grayscale: '0%' },
+    'Nokia (Blue)': { primary: '#124191', dark: '#0E3473', hue: '50deg', grayscale: '0%' },
+    'PlayStation (Blue)': { primary: '#003791', dark: '#002C73', hue: '55deg', grayscale: '0%' },
+    'Samsung (Blue)': { primary: '#1428A0', dark: '#102080', hue: '55deg', grayscale: '0%' },
+    'Twitter (Blue)': { primary: '#1DA1F2', dark: '#1781C2', hue: '40deg', grayscale: '0%' },
+    'Ubuntu (Orange)': { primary: '#E95420', dark: '#BA431A', hue: '185deg', grayscale: '0%' },
+    'Zoom (Blue)': { primary: '#2D8CFF', dark: '#2470CC', hue: '45deg', grayscale: '0%' }
+};
+
+window.applyTheme = function(themeName) {
+    // Legacy theme mapping
+    if (themeName === 'Classic Teal' || themeName === 'Publisher (Teal)') themeName = 'Publisher / Classic (Teal)';
+    if (themeName === 'Ocean Blue' || themeName === 'OneDrive (Blue)') themeName = 'OneDrive / Ocean (Blue)';
+    if (themeName === 'Sunset Orange') themeName = 'Sunset (Orange)';
+    if (themeName === 'Visio (Navy)' || themeName === 'To Do (Blue)') themeName = 'Visio / To Do (Navy Blue)';
+    if (themeName === 'Forms (Teal)' || themeName === 'Sway (Teal)') themeName = 'Forms / Sway (Teal)';
+    if (themeName === 'Twitch (Purple)') themeName = 'Twitch (Pink)';
+    if (themeName === 'Forms (Teal)' || themeName === 'Sway (Teal)') themeName = 'Forms / Sway (Teal)';
+
+    if (!UI_THEMES[themeName]) return;
+    const theme = UI_THEMES[themeName];
+    document.documentElement.style.setProperty('--ui-theme-color', theme.primary);
+    document.documentElement.style.setProperty('--ui-theme-dark', theme.dark);
+    document.documentElement.style.setProperty('--ui-theme-hue-shift', theme.hue);
+    document.documentElement.style.setProperty('--ui-theme-grayscale', theme.grayscale);
+    localStorage.setItem('opub_ui_theme', themeName);
+    
+    // Update theme selectors if they exist
+    const lbl = document.getElementById('ribbon-theme-label');
+    if (lbl) lbl.innerText = themeName;
+    
+    const optTheme = document.getElementById('opt-theme');
+    if (optTheme) optTheme.innerText = themeName;
+    
+    // Re-render dropdown to update selected state UI
+    if (typeof window.renderThemeDropdown === 'function') {
+        window.renderThemeDropdown(themeName);
+    }
+};
+
+window.renderThemeDropdown = function(activeTheme) {
+    const themeDropdown = document.getElementById('ribbon-theme-dropdown');
+    if (!themeDropdown) return;
+    
+    themeDropdown.innerHTML = Object.keys(UI_THEMES).map(t => {
+        const isSelected = t === activeTheme;
+        const circleStyle = isSelected 
+            ? `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; box-shadow: 0 0 0 1px white, 0 0 0 2px ${UI_THEMES[t].dark}; margin-right: 10px; flex-shrink: 0;`
+            : `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; margin-right: 10px; flex-shrink: 0;`;
+        
+        const bgStyle = isSelected ? 'background: #e6f0fa;' : '';
+        const checkIcon = isSelected ? '<span style="color: #0078d4; font-size: 14px; margin-left: 10px; font-weight: bold;">&#10003;</span>' : '';
+
+        return `
+            <div class="dropdown-item" onclick="window.selectTheme('${t}')" style="${bgStyle}">
+                <div style="${circleStyle}"></div>
+                <span style="flex-grow: 1; color: #333;">${t}</span>
+                ${checkIcon}
+            </div>
+        `;
+    }).join('');
+};
+
+// Apply saved theme on load
+document.addEventListener('DOMContentLoaded', () => {
+
+    const savedTheme = localStorage.getItem('opub_ui_theme');
+    // Map legacy saved theme to new group name
+    let activeTheme = savedTheme;
+    if (activeTheme === 'Classic Teal' || activeTheme === 'Publisher (Teal)') activeTheme = 'Publisher / Classic (Teal)';
+    if (activeTheme === 'Ocean Blue' || activeTheme === 'OneDrive (Blue)') activeTheme = 'OneDrive / Ocean (Blue)';
+    if (activeTheme === 'Sunset Orange') activeTheme = 'Sunset (Orange)';
+    if (activeTheme === 'Visio (Navy)' || activeTheme === 'To Do (Blue)') activeTheme = 'Visio / To Do (Navy Blue)';
+    if (activeTheme === 'Forms (Teal)' || activeTheme === 'Sway (Teal)') activeTheme = 'Forms / Sway (Teal)';
+
+    if (activeTheme && UI_THEMES[activeTheme]) {
+        window.applyTheme(activeTheme);
+    } else {
+        window.applyTheme('Publisher / Classic (Teal)');
+    }
+});
+
+window.toggleThemeDropdown = function(btn) {
+    const m = document.getElementById('ribbon-theme-dropdown');
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    if (!isBlock) {
+        const r = btn.getBoundingClientRect();
+        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        m.style.display = 'block';
+    }
+};
+
+window.selectTheme = function(themeName) {
+    window.applyTheme(themeName);
+    document.getElementById('ribbon-theme-dropdown').style.display = 'none';
+};
+
 function loadTemplate(t) {
     DialogSystem.show('Load Template', '<p>Load this template? This will replace your ENTIRE document and start fresh.</p>', () => {
         state.pages = []; // Wipe document
@@ -3054,7 +3251,7 @@ window.switchOptionsTab = function(activeId) {
     const activeTab = document.getElementById('opt-tab-' + activeId);
     if (activeTab) {
         activeTab.style.background = '#f0f0f0';
-        activeTab.style.borderLeftColor = 'var(--pub-color)';
+        activeTab.style.borderLeftColor = 'var(--ui-theme-color)';
         activeTab.style.fontWeight = 'bold';
     }
     const activeContent = document.getElementById('opt-content-' + activeId);
@@ -3079,7 +3276,7 @@ window.showOptionsModal = function() {
             <div id="opt-tab-${id}" class="opt-tab" onclick="switchOptionsTab('${id}')" 
                  onmouseover="if(this.style.background !== 'rgb(240, 240, 240)' && this.style.background !== '#f0f0f0') this.style.background='#f9f9f9'" 
                  onmouseout="if(this.style.fontWeight !== 'bold') this.style.background='transparent'"
-                 style="padding: 10px 15px; cursor: pointer; border-left: 3px solid ${isActive ? 'var(--pub-color)' : 'transparent'}; 
+                 style="padding: 10px 15px; cursor: pointer; border-left: 3px solid ${isActive ? 'var(--ui-theme-color)' : 'transparent'}; 
                  color: #444; background: ${isActive ? '#f0f0f0' : 'transparent'}; font-weight: ${isActive ? 'bold' : 'normal'}; transition: background 0.2s;">
                 ${tab}
             </div>
@@ -3096,8 +3293,15 @@ window.showOptionsModal = function() {
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                 <strong style="display: block; margin-bottom: 8px;">Personalize your copy of Publisher</strong>
                 <div style="margin-top: 10px; display: flex; align-items: center;">
-                    <span style="margin-right: 15px;">User name:</span>
+                    <span style="margin-right: 15px; width: 100px;">User name:</span>
                     <input type="text" id="opt-username" value="${username}" style="padding: 5px; border: 1px solid #ccc; border-radius: 3px; width: 200px;">
+                </div>
+                <div style="margin-top: 15px; display: flex; align-items: center;">
+                    <span style="margin-right: 15px; width: 100px;">UI Theme:</span>
+                    <div class="modern-select" onclick="toggleThemeDropdown(this); event.stopPropagation();" style="width: 200px; height: 26px;">
+                        <span id="opt-theme">${localStorage.getItem('opub_ui_theme') || 'Publisher / Classic (Teal)'}</span>
+                        <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
+                    </div>
                 </div>
             `;
         } else if (tab === 'Proofing') {
@@ -3238,7 +3442,7 @@ window.showPagePartsModal = function() {
     const html = `
     <style>
     .pp-card { cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 8px; text-align: center; background: #ffffff; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-    .pp-card:hover { transform: translateY(-2px); border-color: var(--pub-color); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .pp-card:hover { transform: translateY(-2px); border-color: var(--ui-theme-color); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
     .pp-card-title { display: block; color: #1e293b; font-size: 12px; font-weight: 600; margin-bottom: 2px; }
     .pp-card-desc { font-size: 10px; color: #64748b; line-height: 1.2; display: block; }
     .pp-preview-container { height: 45px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
@@ -3247,7 +3451,7 @@ window.showPagePartsModal = function() {
     .pp-scroll::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 10px; }
     </style>
     <div style="padding: 0px; font-family: 'Inter', system-ui, sans-serif;">
-        <div style="background: linear-gradient(135deg, var(--pub-color), var(--pub-dark)); border-radius: 0 0 12px 12px; padding: 15px; color: white; text-align: center; margin: -20px -20px 15px -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div style="background: linear-gradient(135deg, var(--ui-theme-color), var(--ui-theme-dark)); border-radius: 0 0 12px 12px; padding: 15px; color: white; text-align: center; margin: -20px -20px 15px -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
             <h2 style="margin: 0 0 2px 0; font-size: 18px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Page Parts Library</h2>
             <p style="margin: 0; font-size: 12px; opacity: 0.9;">Click to drop pre-designed structural elements into your publication.</p>
         </div>
@@ -3257,7 +3461,7 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('sidebar')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.65); transform-origin: center;">
-                        <div style="width: 40px; height: 90px; background:var(--pub-color); border-radius:4px; opacity:0.8;"></div>
+                        <div style="width: 40px; height: 90px; background:var(--ui-theme-color); border-radius:4px; opacity:0.8;"></div>
                     </div>
                 </div>
                 <span class="pp-card-title">Sidebar</span>
@@ -3268,8 +3472,8 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('pullquote')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="width: 80px; height: 40px; border-top:3px solid var(--pub-color); border-bottom:3px solid var(--pub-color); display:flex; align-items:center; justify-content:center;">
-                            <span style="font-family:'Playfair Display',serif; font-style:italic; color:var(--pub-color); font-size:12px;">"Quote"</span>
+                        <div style="width: 80px; height: 40px; border-top:3px solid var(--ui-theme-color); border-bottom:3px solid var(--ui-theme-color); display:flex; align-items:center; justify-content:center;">
+                            <span style="font-family:'Playfair Display',serif; font-style:italic; color:var(--ui-theme-color); font-size:12px;">"Quote"</span>
                         </div>
                     </div>
                 </div>
@@ -3281,8 +3485,8 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('heading')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="width: 90px; height: 30px; border-bottom:3px solid var(--pub-color); text-align:left; display:flex; flex-direction:column; justify-content:flex-end; gap:4px;">
-                            <div style="width:70%; height:8px; background:var(--pub-dark);"></div>
+                        <div style="width: 90px; height: 30px; border-bottom:3px solid var(--ui-theme-color); text-align:left; display:flex; flex-direction:column; justify-content:flex-end; gap:4px;">
+                            <div style="width:70%; height:8px; background:var(--ui-theme-dark);"></div>
                             <div style="width:40%; height:4px; background:#999; margin-bottom:4px;"></div>
                         </div>
                     </div>
@@ -3295,7 +3499,7 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('callout')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="width: 80px; height: 50px; border-left:4px solid var(--pub-color); background:#f0f0f0;"></div>
+                        <div style="width: 80px; height: 50px; border-left:4px solid var(--ui-theme-color); background:#f0f0f0;"></div>
                     </div>
                 </div>
                 <span class="pp-card-title">Info Callout</span>
@@ -3320,7 +3524,7 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-                            <div style="width:20px; height:20px; border-radius:50%; background:var(--pub-color);"></div>
+                            <div style="width:20px; height:20px; border-radius:50%; background:var(--ui-theme-color);"></div>
                             <div style="width:50px; height:4px; background:#999;"></div>
                         </div>
                     </div>
@@ -3335,7 +3539,7 @@ window.showPagePartsModal = function() {
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
                             <div style="width:50px; height:4px; background:#999;"></div>
-                            <div style="width:20px; height:20px; border-radius:50%; background:var(--pub-color);"></div>
+                            <div style="width:20px; height:20px; border-radius:50%; background:var(--ui-theme-color);"></div>
                         </div>
                     </div>
                 </div>
@@ -3347,8 +3551,8 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('tear-off')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="width: 80px; height: 40px; border:2px dashed var(--pub-color); display:flex; align-items:center; justify-content:center;">
-                            <div style="width:40%; height:4px; background:var(--pub-dark);"></div>
+                        <div style="width: 80px; height: 40px; border:2px dashed var(--ui-theme-color); display:flex; align-items:center; justify-content:center;">
+                            <div style="width:40%; height:4px; background:var(--ui-theme-dark);"></div>
                         </div>
                     </div>
                 </div>
@@ -3363,7 +3567,7 @@ window.showPagePartsModal = function() {
                         <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
                             <div style="width:30px; height:30px; border-radius:50%; background:#e0e0e0;"></div>
                             <div style="width:40px;">
-                                <div style="height:4px; background:var(--pub-dark); margin-bottom:4px;"></div>
+                                <div style="height:4px; background:var(--ui-theme-dark); margin-bottom:4px;"></div>
                                 <div style="height:3px; background:#999;"></div>
                             </div>
                         </div>
@@ -3393,9 +3597,9 @@ window.showPagePartsModal = function() {
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;">
                             <div style="display:flex; align-items:flex-end; gap:5px; width:80px;">
-                                <div style="width:30px; height:4px; background:var(--pub-dark);"></div>
+                                <div style="width:30px; height:4px; background:var(--ui-theme-dark);"></div>
                                 <div style="flex-grow:1; border-bottom:2px dotted #ccc;"></div>
-                                <div style="width:15px; height:4px; background:var(--pub-color);"></div>
+                                <div style="width:15px; height:4px; background:var(--ui-theme-color);"></div>
                             </div>
                             <div style="width:80px; height:3px; background:#ccc; opacity:0.5;"></div>
                         </div>
@@ -3437,12 +3641,12 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="width:30px; height:30px; border:2px solid var(--pub-color); border-radius:4px; display:flex; flex-direction:column; overflow:hidden;">
-                                <div style="height:10px; background:var(--pub-color);"></div>
+                            <div style="width:30px; height:30px; border:2px solid var(--ui-theme-color); border-radius:4px; display:flex; flex-direction:column; overflow:hidden;">
+                                <div style="height:10px; background:var(--ui-theme-color);"></div>
                                 <div style="flex-grow:1; background:#fff;"></div>
                             </div>
                             <div style="display:flex; flex-direction:column; gap:3px;">
-                                <div style="width:40px; height:4px; background:var(--pub-dark);"></div>
+                                <div style="width:40px; height:4px; background:var(--ui-theme-dark);"></div>
                                 <div style="width:60px; height:3px; background:#ccc;"></div>
                             </div>
                         </div>
@@ -3457,8 +3661,8 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                            <div style="font-size:24px; font-weight:bold; color:var(--pub-color); line-height:1;">99%</div>
-                            <div style="width:20px; height:2px; background:var(--pub-dark);"></div>
+                            <div style="font-size:24px; font-weight:bold; color:var(--ui-theme-color); line-height:1;">99%</div>
+                            <div style="width:20px; height:2px; background:var(--ui-theme-dark);"></div>
                             <div style="width:40px; height:3px; background:#ccc;"></div>
                         </div>
                     </div>
@@ -3473,7 +3677,7 @@ window.showPagePartsModal = function() {
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; flex-direction:column; align-items:center; gap:4px; width:80px;">
                             <div style="display:flex; align-items:flex-end; width:100%; gap:4px;">
-                                <span style="font-size:12px; font-weight:bold; color:var(--pub-dark);">X</span>
+                                <span style="font-size:12px; font-weight:bold; color:var(--ui-theme-dark);">X</span>
                                 <div style="flex-grow:1; border-bottom:1px solid #333; margin-bottom:2px;"></div>
                             </div>
                             <div style="width:60px; height:3px; background:#ccc;"></div>
@@ -3512,8 +3716,8 @@ window.showPagePartsModal = function() {
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; flex-direction:column; gap:6px;">
                             <div style="display:flex; align-items:flex-start; gap:4px;">
-                                <span style="font-weight:bold; color:var(--pub-color); font-size:12px;">Q</span>
-                                <div style="width:50px; height:3px; background:var(--pub-dark); margin-top:4px;"></div>
+                                <span style="font-weight:bold; color:var(--ui-theme-color); font-size:12px;">Q</span>
+                                <div style="width:50px; height:3px; background:var(--ui-theme-dark); margin-top:4px;"></div>
                             </div>
                             <div style="display:flex; align-items:flex-start; gap:4px;">
                                 <span style="font-weight:bold; color:#888; font-size:12px;">A</span>
@@ -3530,8 +3734,8 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('takeaway')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="width:70px; height:40px; background:#f5f5f5; border-left:4px solid var(--pub-color); border-radius:4px; padding:6px; box-sizing:border-box;">
-                            <div style="width:30px; height:3px; background:var(--pub-color); margin-bottom:6px;"></div>
+                        <div style="width:70px; height:40px; background:#f5f5f5; border-left:4px solid var(--ui-theme-color); border-radius:4px; padding:6px; box-sizing:border-box;">
+                            <div style="width:30px; height:3px; background:var(--ui-theme-color); margin-bottom:6px;"></div>
                             <div style="width:50px; height:3px; background:#999; margin-bottom:4px;"></div>
                             <div style="width:40px; height:3px; background:#999;"></div>
                         </div>
@@ -3588,7 +3792,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'heading') {
         w = 500; h = 100;
         htmlContent = `<div style="padding:10px; height:100%; box-sizing:border-box; border-bottom: 4px solid var(--pub-color);" contenteditable="true">
-            <h1 style="margin:0; font-size:36px; color:var(--pub-dark); font-family: inherit; font-weight:bold;">Main Heading Title</h1>
+            <h1 style="margin:0; font-size:36px; color:var(--ui-theme-dark); font-family: inherit; font-weight:bold;">Main Heading Title</h1>
             <p style="margin:5px 0 0 0; font-size:16px; color:#555; font-family:inherit; font-style:italic;">A brief subtitle goes here to provide context for the section below.</p>
         </div>`;
     } else if (type === 'callout') {
@@ -3609,7 +3813,7 @@ window.insertPagePart = function(type) {
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:flex-start; gap: 15px;">
             <div style="width:40px; height:40px; background:var(--pub-color); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; flex-shrink:0;">1</div>
             <div style="padding-top:2px;" contenteditable="true">
-                <h3 style="margin:0 0 5px 0; color:var(--pub-dark); font-family:inherit; font-size:18px;">Step One</h3>
+                <h3 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:18px;">Step One</h3>
                 <p style="margin:0; font-size:14px; color:#444; font-family:inherit; line-height:1.5;">Describe the first step of your process here. Keep it concise and clear.</p>
             </div>
         </div>`;
@@ -3617,7 +3821,7 @@ window.insertPagePart = function(type) {
         w = 300; h = 120;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:flex-start; gap: 15px; text-align:right;">
             <div style="padding-top:2px;" contenteditable="true">
-                <h3 style="margin:0 0 5px 0; color:var(--pub-dark); font-family:inherit; font-size:18px;">Step Two</h3>
+                <h3 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:18px;">Step Two</h3>
                 <p style="margin:0; font-size:14px; color:#444; font-family:inherit; line-height:1.5;">Describe the next step of your process here. Keep it concise and clear.</p>
             </div>
             <div style="width:40px; height:40px; background:var(--pub-color); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; flex-shrink:0;">2</div>
@@ -3625,7 +3829,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'tear-off') {
         w = 300; h = 150;
         htmlContent = `<div style="height:100%; box-sizing:border-box; border: 3px dashed var(--pub-color); padding: 20px; text-align:center; background:#fff;" contenteditable="true">
-            <h2 style="margin:0 0 10px 0; color:var(--pub-dark); font-family:inherit; text-transform:uppercase; font-weight:bold; font-size:24px;">20% OFF</h2>
+            <h2 style="margin:0 0 10px 0; color:var(--ui-theme-dark); font-family:inherit; text-transform:uppercase; font-weight:bold; font-size:24px;">20% OFF</h2>
             <p style="margin:0; font-size:14px; color:#555; font-family:inherit; line-height:1.4;">Present this coupon at checkout to receive your discount. Valid until the end of the month.</p>
         </div>`;
     } else if (type === 'bio') {
@@ -3633,7 +3837,7 @@ window.insertPagePart = function(type) {
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:center; gap: 20px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; padding: 15px 0;">
             <div style="width:70px; height:70px; background:#e0e0e0; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#999; font-size:24px; font-family:inherit;">User</div>
             <div contenteditable="true">
-                <h3 style="margin:0 0 5px 0; color:var(--pub-dark); font-family:inherit; font-size:18px;">Author Name</h3>
+                <h3 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:18px;">Author Name</h3>
                 <p style="margin:0; font-size:13px; color:#555; font-family:inherit; line-height:1.4;">Author bio goes here. A short description of the writer's background and expertise.</p>
             </div>
         </div>`;
@@ -3647,7 +3851,7 @@ window.insertPagePart = function(type) {
         w = 350; h = 60;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center;" contenteditable="true">
             <div style="display:flex; align-items:center; gap: 10px; margin-bottom:5px;">
-                <h3 style="margin:0; font-size:18px; color:var(--pub-dark); font-family:inherit; white-space:nowrap;">Menu Item Name</h3>
+                <h3 style="margin:0; font-size:18px; color:var(--ui-theme-dark); font-family:inherit; white-space:nowrap;">Menu Item Name</h3>
                 <div style="flex-grow:1; height:0; border-top:3px dotted #ccc; margin-top:10px;"></div>
                 <strong style="font-size:18px; color:var(--pub-color); font-family:inherit; white-space:nowrap;">$12</strong>
             </div>
@@ -3663,7 +3867,7 @@ window.insertPagePart = function(type) {
         w = 300; h = 100;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;" contenteditable="true">
             <div style="color:#FFD700; font-size:24px; letter-spacing:2px; margin-bottom:5px; pointer-events:none; user-select:none;">★★★★★</div>
-            <h4 style="margin:0 0 5px 0; color:var(--pub-dark); font-family:inherit; font-size:16px; font-style:italic;">"Absolutely fantastic service!"</h4>
+            <h4 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:16px; font-style:italic;">"Absolutely fantastic service!"</h4>
             <span style="font-size:12px; color:#666; font-family:inherit; text-transform:uppercase;">- Jane Doe, Customer</span>
         </div>`;
     } else if (type === 'event-date') {
@@ -3671,10 +3875,10 @@ window.insertPagePart = function(type) {
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:center; gap:20px; padding:15px; border:1px solid #eee; background:#fff;">
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; border:2px solid var(--pub-color); border-radius:8px; width:70px; height:70px; flex-shrink:0; overflow:hidden;">
                 <div style="background:var(--pub-color); color:white; width:100%; text-align:center; font-size:12px; font-weight:bold; padding:4px 0; text-transform:uppercase;">OCT</div>
-                <div style="font-size:28px; font-weight:bold; color:var(--pub-dark); margin-top:2px;">24</div>
+                <div style="font-size:28px; font-weight:bold; color:var(--ui-theme-dark); margin-top:2px;">24</div>
             </div>
             <div contenteditable="true">
-                <h3 style="margin:0 0 5px 0; color:var(--pub-dark); font-family:inherit; font-size:18px;">Annual Gala Dinner</h3>
+                <h3 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:18px;">Annual Gala Dinner</h3>
                 <p style="margin:0; font-size:13px; color:#555; font-family:inherit;">Join us at 7:00 PM for an evening of celebration and networking.</p>
             </div>
         </div>`;
@@ -3682,14 +3886,14 @@ window.insertPagePart = function(type) {
         w = 200; h = 150;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:10px;" contenteditable="true">
             <div style="font-size:48px; font-weight:bold; color:var(--pub-color); font-family:inherit; line-height:1;">99<span style="font-size:24px;">%</span></div>
-            <div style="width:40px; height:3px; background:var(--pub-dark); margin:10px auto;"></div>
+            <div style="width:40px; height:3px; background:var(--ui-theme-dark); margin:10px auto;"></div>
             <p style="margin:0; font-size:14px; color:#444; font-family:inherit;">Customer satisfaction rate over the last year.</p>
         </div>`;
     } else if (type === 'signature') {
         w = 300; h = 80;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:10px;">
             <div style="display:flex; align-items:flex-end;">
-                <span style="font-size:16px; font-family:inherit; color:var(--pub-dark); margin-right:5px; font-weight:bold;">X</span>
+                <span style="font-size:16px; font-family:inherit; color:var(--ui-theme-dark); margin-right:5px; font-weight:bold;">X</span>
                 <div style="flex-grow:1; border-bottom:2px solid #333; height:0; margin-bottom:4px;"></div>
             </div>
             <div style="text-align:center; font-size:12px; color:#666; font-family:inherit; margin-top:5px; text-transform:uppercase; letter-spacing:1px;" contenteditable="true">Authorized Signature</div>
@@ -3717,7 +3921,7 @@ window.insertPagePart = function(type) {
         htmlContent = `<div style="height:100%; box-sizing:border-box; font-family:inherit; padding:10px;" contenteditable="true">
             <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
                 <strong style="color:var(--pub-color); font-size:18px;">Q.</strong>
-                <strong style="font-size:16px; color:var(--pub-dark); padding-top:2px;">What is the most frequently asked question?</strong>
+                <strong style="font-size:16px; color:var(--ui-theme-dark); padding-top:2px;">What is the most frequently asked question?</strong>
             </div>
             <div style="display:flex; align-items:flex-start; gap:10px;">
                 <strong style="color:#888; font-size:18px;">A.</strong>
@@ -3943,10 +4147,10 @@ function insertBusinessBulk(type) {
     
     if (type === 'letterhead') {
         html = `
-        <div style="width:100%; height:100%; border-bottom: 2px solid #007670; font-family: sans-serif; padding-bottom: 10px; box-sizing: border-box; min-height: 100px;">
+        <div style="width:100%; height:100%; border-bottom: 2px solid var(--ui-theme-color); font-family: sans-serif; padding-bottom: 10px; box-sizing: border-box; min-height: 100px;">
             <div style="width: 100%;">
                 <div style="float: left; max-width: 50%;">
-                    ${info.logo ? `<img src="${info.logo}" style="max-height:80px; max-width:150px; object-fit:contain; position:static !important; width:auto !important; height:auto !important; display:inline-block !important;">` : `<h1 style="color:#007670; margin:0; padding:0; font-size: 24px;">${info.organization || info.name}</h1>`}
+                    ${info.logo ? `<img src="${info.logo}" style="max-height:80px; max-width:150px; object-fit:contain; position:static !important; width:auto !important; height:auto !important; display:inline-block !important;">` : `<h1 style="color:var(--ui-theme-color); margin:0; padding:0; font-size: 24px;">${info.organization || info.name}</h1>`}
                 </div>
                 <div style="float: right; text-align:right; font-size:12px; color:#555; line-height: 1.4; max-width:50%;">
                     ${info.organization && info.logo ? `<strong style="font-size:14px; color:#000;">${info.organization}</strong><br>` : ''}
@@ -3973,7 +4177,7 @@ function insertBusinessBulk(type) {
         <div style="width:100%; height:100%; border: 1px solid #e1e1e1; padding: 20px; box-sizing: border-box; background: #fff; border-radius: 4px; font-family: sans-serif; min-height: 180px;">
             <div style="width: 100%;">
                 <div style="float: left; max-width: 60%;">
-                    <h2 style="margin:0; color:#007670; font-size:18px; line-height:1.2;">${info.name || 'Name'}</h2>
+                    <h2 style="margin:0; color:var(--ui-theme-color); font-size:18px; line-height:1.2;">${info.name || 'Name'}</h2>
                     ${info.title ? `<span style="color:#666; font-size:12px;">${info.title}</span>` : ''}
                 </div>
                 <div style="float: right; max-width: 35%; text-align:right;">
@@ -3985,7 +4189,7 @@ function insertBusinessBulk(type) {
                 ${info.organization ? `<strong style="font-size:14px; color:#000;">${info.organization}</strong><br>` : ''}
                 ${info.address ? `<span style="font-size:10px; color:#555;">${info.address.replace(/\n/g, ', ')}</span><br>` : ''}
                 ${info.contact ? `<span style="font-size:10px; color:#555;">${info.contact.replace(/\n/g, ' | ')}</span>` : ''}
-                ${info.tagline ? `<div style="margin-top:5px; font-style:italic; font-size:10px; color:#007670;">${info.tagline}</div>` : ''}
+                ${info.tagline ? `<div style="margin-top:5px; font-style:italic; font-size:10px; color:var(--ui-theme-color);">${info.tagline}</div>` : ''}
             </div>
         </div>
         `;
@@ -5859,40 +6063,40 @@ function showCouponModal() {
     const html = `
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; width: 450px;">
             <div class="template-option" onclick="insertCoupon('standard')" style="${optionStyle}">
-                <i class="fas fa-ticket-alt" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Standard Coupon
+                <i class="fas fa-ticket-alt" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Standard Coupon
             </div>
             <div class="template-option" onclick="insertCoupon('tearaway')" style="${optionStyle}">
-                <i class="fas fa-list" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Tear-away Tabs
+                <i class="fas fa-list" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Tear-away Tabs
             </div>
             <div class="template-option" onclick="insertCoupon('bogo')" style="${optionStyle}">
-                <i class="fas fa-tags" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Buy 1 Get 1 Free
+                <i class="fas fa-tags" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Buy 1 Get 1 Free
             </div>
             <div class="template-option" onclick="insertCoupon('voucher')" style="${optionStyle}">
-                <i class="fas fa-gift" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Gift Voucher
+                <i class="fas fa-gift" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Gift Voucher
             </div>
             <div class="template-option" onclick="insertCoupon('flash')" style="${optionStyle}">
-                <i class="fas fa-bolt" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Flash Sale
+                <i class="fas fa-bolt" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Flash Sale
             </div>
             <div class="template-option" onclick="insertCoupon('loyalty')" style="${optionStyle}">
-                <i class="fas fa-star" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Loyalty Card
+                <i class="fas fa-star" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Loyalty Card
             </div>
             <div class="template-option" onclick="insertCoupon('vip')" style="${optionStyle}">
-                <i class="fas fa-crown" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>VIP Pass
+                <i class="fas fa-crown" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>VIP Pass
             </div>
             <div class="template-option" onclick="insertCoupon('drink')" style="${optionStyle}">
-                <i class="fas fa-coffee" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Free Drink
+                <i class="fas fa-coffee" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Free Drink
             </div>
             <div class="template-option" onclick="insertCoupon('promo')" style="${optionStyle}">
-                <i class="fas fa-hashtag" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Promo Code
+                <i class="fas fa-hashtag" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Promo Code
             </div>
             <div class="template-option" onclick="insertCoupon('ticket')" style="${optionStyle}">
-                <i class="fas fa-ticket-alt" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Event Ticket
+                <i class="fas fa-ticket-alt" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Event Ticket
             </div>
             <div class="template-option" onclick="insertCoupon('credit')" style="${optionStyle}">
-                <i class="fas fa-wallet" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Store Credit
+                <i class="fas fa-wallet" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Store Credit
             </div>
             <div class="template-option" onclick="insertCoupon('raffle')" style="${optionStyle}">
-                <i class="fas fa-receipt" style="font-size:32px; color:#005a55; margin-bottom:10px;"></i><br>Raffle Ticket
+                <i class="fas fa-receipt" style="font-size:32px; color:var(--ui-theme-dark); margin-bottom:10px;"></i><br>Raffle Ticket
             </div>
         </div>
     `;
@@ -5996,14 +6200,14 @@ function insertCoupon(type) {
         }
     } else if (type === 'loyalty') {
         const couponHTML = `
-        <div style="border: 2px solid #005a55; border-radius: 10px; padding: 15px; width: 100%; height: 100%; box-sizing: border-box; background: #e0f2f1; text-align: center; font-family: Arial, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;" contenteditable="true">
+        <div style="border: 2px solid var(--ui-theme-dark); border-radius: 10px; padding: 15px; width: 100%; height: 100%; box-sizing: border-box; background: #e0f2f1; text-align: center; font-family: Arial, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;" contenteditable="true">
             <div style="color: #004d40; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Loyalty Card</div>
             <div style="display: flex; justify-content: space-around; margin: 15px 0;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #005a55; background: #fff;"></div>
-                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #005a55; background: #fff;"></div>
-                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #005a55; background: #fff;"></div>
-                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #005a55; background: #fff;"></div>
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: #005a55; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">FREE</div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed var(--ui-theme-dark); background: #fff;"></div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed var(--ui-theme-dark); background: #fff;"></div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed var(--ui-theme-dark); background: #fff;"></div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; border: 2px dashed var(--ui-theme-dark); background: #fff;"></div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--ui-theme-dark); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">FREE</div>
             </div>
             <div style="font-size: 12px; color: #004d40;">Buy 4 coffees, get the 5th FREE!</div>
         </div>`;
@@ -6218,17 +6422,17 @@ window.tabDialog = {
                     <div style="flex: 1;">
                         <fieldset style="margin-bottom: 10px; border: 1px solid #ccc; padding: 5px 10px;">
                             <legend style="padding: 0 5px; color: #555;">Alignment</legend>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="left" style="accent-color: var(--pub-color);" checked> Left</label>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="center" style="accent-color: var(--pub-color);"> Center</label>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="right" style="accent-color: var(--pub-color);"> Right</label>
-                            <label style="display: block;"><input type="radio" name="tab-align" value="decimal" style="accent-color: var(--pub-color);"> Decimal</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="left" style="accent-color: var(--ui-theme-color);" checked> Left</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="center" style="accent-color: var(--ui-theme-color);"> Center</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-align" value="right" style="accent-color: var(--ui-theme-color);"> Right</label>
+                            <label style="display: block;"><input type="radio" name="tab-align" value="decimal" style="accent-color: var(--ui-theme-color);"> Decimal</label>
                         </fieldset>
                         <fieldset style="border: 1px solid #ccc; padding: 5px 10px;">
                             <legend style="padding: 0 5px; color: #555;">Leader</legend>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="none" style="accent-color: var(--pub-color);" checked> 1 None</label>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dotted" style="accent-color: var(--pub-color);"> 2 .......</label>
-                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dashed" style="accent-color: var(--pub-color);"> 3 -------</label>
-                            <label style="display: block;"><input type="radio" name="tab-leader" value="solid" style="accent-color: var(--pub-color);"> 4 _______</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="none" style="accent-color: var(--ui-theme-color);" checked> 1 None</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dotted" style="accent-color: var(--ui-theme-color);"> 2 .......</label>
+                            <label style="display: block; margin-bottom: 4px;"><input type="radio" name="tab-leader" value="dashed" style="accent-color: var(--ui-theme-color);"> 3 -------</label>
+                            <label style="display: block;"><input type="radio" name="tab-leader" value="solid" style="accent-color: var(--ui-theme-color);"> 4 _______</label>
                         </fieldset>
                     </div>
                 </div>
@@ -6448,7 +6652,7 @@ function toggleGuidesMenu(btn) {
     // Update Lock Guides checkmark
     const lockBtn = document.getElementById('lock-guides-btn');
     if (lockBtn) {
-        lockBtn.innerHTML = (state.isGuidesLocked ? '<i class="fas fa-check" style="margin-right: 8px; width: 14px; text-align: center; color: var(--pub-color);"></i> ' : '<i class="fas fa-lock" style="margin-right: 8px; width: 14px; text-align: center;"></i> ') + 'Lock Guides';
+        lockBtn.innerHTML = (state.isGuidesLocked ? '<i class="fas fa-check" style="margin-right: 8px; width: 14px; text-align: center; color: var(--ui-theme-color);"></i> ' : '<i class="fas fa-lock" style="margin-right: 8px; width: 14px; text-align: center;"></i> ') + 'Lock Guides';
     }
 
     const isBlock = m.style.display === 'block';
@@ -6476,7 +6680,7 @@ function showGuidesModal() {
 
     const formHTML = `
         <div style="padding: 10px 0;">
-            <div style="font-weight: bold; margin-bottom: 10px; color: var(--pub-color); border-bottom: 1px solid #ccc; padding-bottom: 5px;">Baseline Guides</div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: var(--ui-theme-color); border-bottom: 1px solid #ccc; padding-bottom: 5px;">Baseline Guides</div>
             <div class="input-group" style="margin-bottom:10px;">
                 <label>Spacing (px):</label>
                 <div class="modern-spinner">
@@ -6491,11 +6695,11 @@ function showGuidesModal() {
                 <label>Color:</label>
                 <div style="width: 54px;">
                     <input type="hidden" id="baseline-color-val" value="${baseColor}">
-                    <div id="baseline-color-input" class="color-swatch-trigger" style="background-color: ${baseColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--pub-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('baseline-color-val').value, (c) => { document.getElementById('baseline-color-val').value = c; this.style.backgroundColor = c; })"></div>
+                    <div id="baseline-color-input" class="color-swatch-trigger" style="background-color: ${baseColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--ui-theme-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('baseline-color-val').value, (c) => { document.getElementById('baseline-color-val').value = c; this.style.backgroundColor = c; })"></div>
                 </div>
             </div>
             
-            <div style="font-weight: bold; margin-bottom: 10px; color: var(--pub-color); border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">Grid Guides</div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: var(--ui-theme-color); border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">Grid Guides</div>
             <div class="input-group" style="margin-bottom:10px;">
                 <label>Spacing (px):</label>
                 <div class="modern-spinner">
@@ -6510,7 +6714,7 @@ function showGuidesModal() {
                 <label>Color:</label>
                 <div style="width: 54px;">
                     <input type="hidden" id="grid-color-val" value="${gridColor}">
-                    <div id="grid-color-input" class="color-swatch-trigger" style="background-color: ${gridColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--pub-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('grid-color-val').value, (c) => { document.getElementById('grid-color-val').value = c; this.style.backgroundColor = c; })"></div>
+                    <div id="grid-color-input" class="color-swatch-trigger" style="background-color: ${gridColor}; cursor:pointer; width:100%; height:30px; border:1px solid var(--ui-theme-color); border-radius:4px;" onclick="CustomColorPicker.open(this, document.getElementById('grid-color-val').value, (c) => { document.getElementById('grid-color-val').value = c; this.style.backgroundColor = c; })"></div>
                 </div>
             </div>
         </div>
@@ -6707,7 +6911,7 @@ function showExportHTMLModal() {
                 min-width: 20px;
                 width: 20px;
                 height: 20px;
-                border: 2px solid var(--pub-color);
+                border: 2px solid var(--ui-theme-color);
                 border-radius: 4px;
                 outline: none;
                 cursor: pointer;
@@ -6717,7 +6921,7 @@ function showExportHTMLModal() {
                 transition: all 0.2s;
             }
             .html-export-row input[type="checkbox"]:checked {
-                background-color: var(--pub-color);
+                background-color: var(--ui-theme-color);
             }
             .html-export-row input[type="checkbox"]:checked::after {
                 content: '';
@@ -6733,7 +6937,7 @@ function showExportHTMLModal() {
             .html-export-title {
                 font-size: 16px;
                 font-weight: bold;
-                color: var(--pub-color);
+                color: var(--ui-theme-color);
                 margin-bottom: 6px;
                 margin-top: 15px;
                 display: flex;
@@ -6794,7 +6998,7 @@ function showExportHTMLModal() {
             
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; position: sticky; bottom: 0; background: white; padding: 15px 20px 20px 20px; margin-left: -20px; margin-right: -20px; border-top: 1px solid #eee; z-index: 10;">
                 <button class="op-btn op-btn-cancel" onclick="DialogSystem.close()">Cancel</button>
-                <button class="op-btn" style="background: var(--pub-color); color: white;" onclick="
+                <button class="op-btn" style="background: var(--ui-theme-color); color: white;" onclick="
                     const opts = {
                         seamless: document.getElementById('html-opt-seamless').checked,
                         email: document.getElementById('html-opt-email').checked,
@@ -6837,7 +7041,7 @@ async function exportAsHTML(opts = {}) {
         <div style="text-align:center; padding: 10px;">
             <p id="html-export-status" style="margin-bottom:15px; font-weight:bold;">Preparing HTML Export...</p>
             <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
-                <div id="html-export-progress" style="width:0%; height:100%; background:var(--pub-color); transition: width 0.3s;"></div>
+                <div id="html-export-progress" style="width:0%; height:100%; background:var(--ui-theme-color); transition: width 0.3s;"></div>
             </div>
         </div>
     `;
@@ -7176,7 +7380,7 @@ async function packAndGo() {
         <div style="text-align:center; padding: 10px;">
             <p id="pack-status" style="margin-bottom:15px; font-weight:bold;">Analyzing Document Assets...</p>
             <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
-                <div id="pack-progress" style="width:0%; height:100%; background:var(--pub-color); transition: width 0.3s;"></div>
+                <div id="pack-progress" style="width:0%; height:100%; background:var(--ui-theme-color); transition: width 0.3s;"></div>
             </div>
         </div>
     `;
@@ -7326,10 +7530,10 @@ window.handlePublisherFileLoad = (evt) => {
             const promptForPassword = () => {
                 const html = `
                     <div style="padding: 10px; display: flex; align-items: flex-start; gap: 20px;">
-                        <i class="fas fa-unlock-keyhole" style="font-size: 48px; color: var(--pub-color, #007670); margin-top: 5px;"></i>
+                        <i class="fas fa-unlock-keyhole" style="font-size: 48px; color: var(--ui-theme-color); margin-top: 5px;"></i>
                         <div style="flex: 1;">
                             <p style="margin-bottom:15px; font-size:14px; color:#444;">This document is protected. Please enter the password to open it:</p>
-                            <input type="password" id="doc-decrypt-input" style="width:100%; padding:8px; border:2px solid var(--pub-color, #007670); border-radius:8px; margin-bottom:15px; outline: none; transition: border-color 0.2s;" placeholder="Password">
+                            <input type="password" id="doc-decrypt-input" style="width:100%; padding:8px; border:2px solid var(--ui-theme-color); border-radius:8px; margin-bottom:15px; outline: none; transition: border-color 0.2s;" placeholder="Password">
                         </div>
                 `;
                 if (typeof DialogSystem !== 'undefined') {
@@ -9625,7 +9829,7 @@ const ContextMenuSystem = {
             if (isDocTitle) {
                 html += this.buildDivider();
                 
-                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--pub-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
+                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--ui-theme-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
                 
                 html += this.buildItem('Copy', 'fa-copy', clipboardMsg);
                 html += this.buildItem('Paste', 'fa-paste', clipboardMsg);
@@ -9650,7 +9854,7 @@ const ContextMenuSystem = {
             
             html += this.buildDivider();
             
-            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--pub-color); -webkit-text-stroke: 1px var(--pub-color);"></i>';
+            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--ui-theme-color); -webkit-text-stroke: 1px var(--ui-theme-color);"></i>';
             const checkGrid = 'Snap to Grid' + (state.snap.grid ? checkIcon : '');
             const checkGuides = 'Snap to Guides' + (state.snap.guides ? checkIcon : '');
             const checkObjects = 'Snap to Objects' + (state.snap.objects ? checkIcon : '');
@@ -9725,7 +9929,7 @@ const ContextMenuSystem = {
                 html += this.buildItem('Paste in Place', 'fa-clipboard-check', `pasteEl(true)`, canPaste);
                 html += this.buildDivider();
                 
-                const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--pub-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;
+                const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ui-theme-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;
                 const waBetaPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/PEtJfoR.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
                 const clipartPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
 
@@ -10089,7 +10293,7 @@ window.ContextMenuActions = {
             } else {
                 // Emtpy internal buffer (e.g., trying to paste from outside the app via the ribbon)
                 if (typeof DialogSystem !== 'undefined') {
-                    DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
+                    DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
                 } else {
                     alert('Please use Ctrl+V or Cmd+V to paste text from other applications.');
                 }
@@ -10140,7 +10344,7 @@ window.ContextMenuActions = {
                     return;
                 } else {
                     // Empty internal buffer (e.g., trying to paste from outside the app via the ribbon)
-                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
+                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
                 }
             } catch (err) {
                 console.warn('Paste without formatting failed:', err);
@@ -10262,21 +10466,21 @@ window.ContextMenuActions = {
     formatBackground: function() {
         const form = `
             <style>
-                #custom-dialog-header { background-color: #006052 !important; color: white !important; font-size: 18px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; border-bottom: none !important; }
+                #custom-dialog-header { background-color: var(--ui-theme-dark) !important; color: white !important; font-size: 18px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; border-bottom: none !important; }
                 #custom-dialog-close { color: white !important; opacity: 0.8; }
-                .ctx-bg-label { display:flex; align-items:center; cursor:pointer; font-weight:bold; color: #006052; font-size: 15px; }
-                .ctx-bg-input-container { margin-top:10px; margin-left: 24px; margin-bottom: 15px; padding-left: 12px; border-left: 2px solid rgba(0,96,82,0.15); }
+                .ctx-bg-label { display:flex; align-items:center; cursor:pointer; font-weight:bold; color: var(--ui-theme-dark); font-size: 15px; }
+                .ctx-bg-input-container { margin-top:10px; margin-left: 24px; margin-bottom: 15px; padding-left: 12px; border-left: 2px solid color-mix(in srgb, var(--ui-theme-dark) 20%, transparent); }
                 .ctx-bg-input-group { display: flex; align-items: center; margin-bottom: 10px; }
                 .ctx-bg-input-group label { width: 75px; color: #444; font-size: 13px; font-weight: 600; }
                 .ctx-bg-input-group input[type="color"] { width: 50px; height: 30px; border: 1px solid #ccc; border-radius: 4px; padding: 0; cursor: pointer; }
                 .ctx-bg-input-group select { flex: 1; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; outline: none; }
-                .ctx-bg-input-group select:focus { border-color: #006052; }
-                .ctx-bg-info { background: rgba(0,96,82,0.04); border: 1px solid rgba(0,96,82,0.15); border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 12px; color: #006052; text-align: center; line-height: 1.4; }
+                .ctx-bg-input-group select:focus { border-color: var(--ui-theme-dark); }
+                .ctx-bg-info { background: color-mix(in srgb, var(--ui-theme-dark) 4%, transparent); border: 1px solid color-mix(in srgb, var(--ui-theme-dark) 15%, transparent); border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 12px; color: var(--ui-theme-dark); text-align: center; line-height: 1.4; }
             </style>
             <div style="padding: 5px;">
                 <div style="margin-bottom: 15px;">
                     <label class="ctx-bg-label">
-                        <input type="radio" name="bg-type" value="solid" checked style="margin-right:8px; accent-color: #006052;"> Solid Color
+                        <input type="radio" name="bg-type" value="solid" checked style="margin-right:8px; accent-color: var(--ui-theme-dark);"> Solid Color
                     </label>
                     <div class="ctx-bg-input-container">
                         <div class="ctx-bg-input-group" style="margin-bottom: 0;">
@@ -10289,7 +10493,7 @@ window.ContextMenuActions = {
                 
                 <div style="margin-bottom: 5px;">
                     <label class="ctx-bg-label">
-                        <input type="radio" name="bg-type" value="gradient" style="margin-right:8px; accent-color: #006052;"> Gradient
+                        <input type="radio" name="bg-type" value="gradient" style="margin-right:8px; accent-color: var(--ui-theme-dark);"> Gradient
                     </label>
                     <div class="ctx-bg-input-container">
                         <div class="ctx-bg-input-group">
@@ -10502,7 +10706,7 @@ window.ContextMenuActions = {
         const firstChar = extractFirstChar(content);
         if (!firstChar) return;
 
-        content.insertAdjacentHTML('afterbegin', `<span class="drop-cap" style="float:left; font-size:3.5em; line-height:0.8; padding-right:8px; padding-top:4px; font-weight:bold; color:var(--pub-color);">${firstChar}</span>`);
+        content.insertAdjacentHTML('afterbegin', `<span class="drop-cap" style="float:left; font-size:3.5em; line-height:0.8; padding-right:8px; padding-top:4px; font-weight:bold; color:var(--ui-theme-color);">${firstChar}</span>`);
         pushHistory();
     },
     formatTextBox: function() {
@@ -10969,9 +11173,9 @@ window.switchTab = function(t) {
         
         <div class="op-sidebar-section">
             <span class="op-section-label">Rows & Columns</span>
-            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Above</div>
-            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Below</div>
-            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="color:var(--pub-color)"></i> Insert Left/Right</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()"><i class="fas fa-plus-circle" style="color:var(--ui-theme-color)"></i> Insert Above</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()"><i class="fas fa-plus-circle" style="color:var(--ui-theme-color)"></i> Insert Below</div>
+            <div class="op-sidebar-btn" onclick="if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()"><i class="fas fa-plus-circle" style="color:var(--ui-theme-color)"></i> Insert Left/Right</div>
         </div>
 
         <div class="op-sidebar-section">
@@ -11238,8 +11442,8 @@ window.ContextRibbonActions = {
                     .shape-crop-btn {
                         width: 100%;
                         background: white;
-                        border: 1px solid var(--pub-color) !important;
-                        color: var(--pub-color);
+                        border: 1px solid var(--ui-theme-color) !important;
+                        color: var(--ui-theme-color);
                         display: flex;
                         align-items: center;
                         justify-content: flex-start;
@@ -11256,7 +11460,7 @@ window.ContextRibbonActions = {
                     .shape-crop-btn .icon {
                         width: 16px;
                         height: 16px;
-                        background: var(--pub-color);
+                        background: var(--ui-theme-color);
                         flex-shrink: 0;
                     }
                 </style>
@@ -11335,7 +11539,7 @@ window.ContextRibbonActions = {
     },
     insertTableRow: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { const row = state.selectedEl.querySelector('table').insertRow(); for(let i=0; i<state.selectedEl.querySelector('table').rows[0].cells.length; i++) { const cell = row.insertCell(); cell.style.cssText = "border-right:1px solid #000; border-bottom:1px solid #000; height:20px; outline:none;"; cell.setAttribute('contenteditable', 'true'); } pushHistory(); } },
     insertTableCol: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { for(let i=0; i<state.selectedEl.querySelector('table').rows.length; i++) { const cell = state.selectedEl.querySelector('table').rows[i].insertCell(); cell.style.cssText = "border-right:1px solid #000; border-bottom:1px solid #000; min-width:20px; outline:none;"; cell.setAttribute('contenteditable', 'true'); } pushHistory(); } },
-    tableStyle: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { const t = state.selectedEl.querySelector('table'); for(let i=0; i<t.rows.length; i++) { t.rows[i].style.background = (i % 2 === 0) ? '#f2f2f2' : '#ffffff'; if(i===0) { t.rows[i].style.background = 'var(--pub-color)'; t.rows[i].style.color='white'; t.rows[i].style.fontWeight='bold'; } } pushHistory(); } },
+    tableStyle: function() { if(state.selectedEl && state.selectedEl.querySelector('table')) { const t = state.selectedEl.querySelector('table'); for(let i=0; i<t.rows.length; i++) { t.rows[i].style.background = (i % 2 === 0) ? '#f2f2f2' : '#ffffff'; if(i===0) { t.rows[i].style.background = 'var(--ui-theme-color)'; t.rows[i].style.color='white'; t.rows[i].style.fontWeight='bold'; } } pushHistory(); } },
     tableBorders: function() {
         if(state.selectedEl && state.selectedEl.querySelector('table') && typeof DialogSystem !== 'undefined') {
             DialogSystem.show('Table Borders', `
@@ -11460,10 +11664,10 @@ window.ContextRibbonActions = {
 
 window.ContextRibbonSystem = {
     init: function() {
-        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
-        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--pub-color, #007670);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
-        const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--pub-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--pub-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--pub-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><div class="drawing-color-picker" style="width:25px; height:25px; background-color:#000000; border:none; padding:0; cursor:pointer; border-radius: 6px; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onclick="CustomColorPicker.open(this, this.style.backgroundColor || '#000000', (c) => { this.style.backgroundColor = c; if(typeof updateDrawingColor === 'function') updateDrawingColor(c); })"></div><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:#007670; font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
-        const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--pub-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
+        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--ui-theme-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--ui-theme-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
+        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--ui-theme-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--ui-theme-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--ui-theme-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--ui-theme-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--ui-theme-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--ui-theme-color);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
+        const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--ui-theme-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--ui-theme-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--ui-theme-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--ui-theme-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><div class="drawing-color-picker" style="width:25px; height:25px; background-color:#000000; border:none; padding:0; cursor:pointer; border-radius: 6px; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onclick="CustomColorPicker.open(this, this.style.backgroundColor || '#000000', (c) => { this.style.backgroundColor = c; if(typeof updateDrawingColor === 'function') updateDrawingColor(c); })"></div><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:var(--ui-theme-color); font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
+        const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--ui-theme-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
 
         const tabsC = document.querySelector('.ribbon-tabs');
         if (tabsC && !document.getElementById('tab-format-text')) {
@@ -11473,11 +11677,11 @@ window.ContextRibbonSystem = {
         const ribC = document.querySelector('.ribbon-container');
         if (ribC && !document.getElementById('ribbon-format-text')) {
             ribC.insertAdjacentHTML('beforeend', `
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkTextBox()"><i class="fas fa-link" style="color:var(--pub-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--pub-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--pub-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--pub-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--pub-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--pub-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--pub-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--pub-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--pub-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--pub-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--pub-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--pub-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--pub-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--pub-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--pub-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--pub-color)"></i> Glow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--pub-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--pub-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--pub-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--pub-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--pub-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--pub-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--pub-color)"></i> Glow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--pub-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--pub-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--pub-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkTextBox()"><i class="fas fa-link" style="color:var(--ui-theme-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--ui-theme-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--ui-theme-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--ui-theme-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--ui-theme-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--ui-theme-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--ui-theme-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--ui-theme-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--ui-theme-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--ui-theme-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--ui-theme-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--ui-theme-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--ui-theme-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--ui-theme-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--ui-theme-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--ui-theme-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--ui-theme-color)"></i> Glow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--ui-theme-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--ui-theme-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--ui-theme-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--ui-theme-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--ui-theme-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--ui-theme-color)"></i> Glow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--ui-theme-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--ui-theme-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--ui-theme-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--ui-theme-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
             initRibbonResponsiveness();
         }
@@ -13368,10 +13572,10 @@ window.initWordArt = function() {
             optionsGroup.innerHTML = `
                 <div style="display:flex; flex-direction:column; gap:6px; padding: 2px 6px; justify-content: center; height: 100%;">
                     <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:#333;">
-                        <input type="checkbox" id="ribbon-toggle-float-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--pub-color, #217346);"> Show Float Toolbar
+                        <input type="checkbox" id="ribbon-toggle-float-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--ui-theme-color);"> Show Float Toolbar
                     </label>
                     <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:#333;">
-                        <input type="checkbox" id="ribbon-toggle-margins-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--pub-color, #217346);"> Show Page Margins
+                        <input type="checkbox" id="ribbon-toggle-margins-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--ui-theme-color);"> Show Page Margins
                     </label>
                 </div>
                 <div class="group-label">View</div>
@@ -14554,7 +14758,7 @@ if (!window._thumbObserverRunning) {
                 .about-header { margin-bottom: 15px; }
                 
                 /* Increased Title & Logo Size */
-                .about-title { font-size: 30px; font-weight: 700; color: #007670; display: flex; align-items: center; justify-content: center; gap: 10px; }
+                .about-title { font-size: 30px; font-weight: 700; color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; gap: 10px; }
                 .about-title i { font-size: 36px; }
                 
                 .about-subtitle { font-size: 13px; color: #64748b; font-weight: 500; margin-top: 4px; }
@@ -14909,7 +15113,7 @@ if (!window._thumbObserverRunning) {
                 item.clone.style.transform = `translateZ(${zOffset}px)`;
                 item.clone.style.boxShadow = '-8px 12px 18px rgba(0,0,0,0.15)';
                 item.clone.style.backgroundColor = '#ffffff'; 
-                item.clone.style.border = '1px solid #007670';
+                item.clone.style.border = '1px solid var(--ui-theme-color)';
                 item.clone.style.transformStyle = 'flat';
                 item.clone.style.textShadow = '0px 0px 1px rgba(0,0,0,0.2)';
                 item.clone.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -16735,14 +16939,14 @@ window.initShapes = function() {
             item.title = shape.name;
             item.style.cssText = "aspect-ratio: 1; border: 1px solid transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: all 0.1s;";
             
-            item.innerHTML = `<svg class="shape-preview-vector" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="#007670" stroke="#005a55" stroke-width="2">${shape.markup}</g></svg>`;
+            item.innerHTML = `<svg class="shape-preview-vector" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="var(--ui-theme-color)" stroke="var(--ui-theme-dark)" stroke-width="2">${shape.markup}</g></svg>`;
             
             item.onmouseover = () => { item.style.background = '#e0f2fe'; item.style.borderColor = '#7dd3fc'; };
             item.onmouseout = () => { item.style.background = 'transparent'; item.style.borderColor = 'transparent'; };
             
             item.onclick = () => {
-                const insFill = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : '#007670';
-                const insStroke = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][0] : '#005a55';
+                const insFill = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : 'var(--ui-theme-color)';
+                const insStroke = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][0] : 'var(--ui-theme-dark)';
                 const svgString = `<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0;"><g class="shape-path" vector-effect="non-scaling-stroke" fill="${insFill}" stroke="${insStroke}" stroke-width="2">${shape.markup}</g></svg>`;
                 
                 if (typeof createWrapper === 'function') {
@@ -19243,7 +19447,7 @@ window.handleMouseUp = function() {
         position: absolute;
         width: 18px;
         height: 18px;
-        background: var(--pub-color, #007670);
+        background: var(--ui-theme-color);
         color: white;
         border-radius: 3px;
         display: none;
@@ -20108,7 +20312,7 @@ window.handleMouseUp = function() {
                     table.rows[r].cells[c].style.borderRight = '1px solid #ccc';
                     table.rows[r].cells[c].style.borderBottom = '1px solid #ccc';
                     if (r === 0) {
-                        table.rows[r].cells[c].style.backgroundColor = 'var(--pub-color)';
+                        table.rows[r].cells[c].style.backgroundColor = 'var(--ui-theme-color)';
                         table.rows[r].cells[c].style.color = '#fff';
                         table.rows[r].cells[c].style.fontWeight = 'bold';
                     } else if (r % 2 === 1) {
@@ -20141,19 +20345,19 @@ window.handleMouseUp = function() {
                     if (r === 0) {
                         table.rows[r].cells[c].style.backgroundColor = '#f5f7f9';
                         table.rows[r].cells[c].style.fontWeight = 'bold';
-                        table.rows[r].cells[c].style.color = 'var(--pub-dark)';
+                        table.rows[r].cells[c].style.color = 'var(--ui-theme-dark)';
                     }
                 }
             }
         } else if (type === 'accent') {
-            table.style.border = '1px solid var(--pub-color)';
+            table.style.border = '1px solid var(--ui-theme-color)';
             table.style.borderRadius = '4px';
             for(let r=0; r<table.rows.length; r++) {
                 for(let c=0; c<table.rows[r].cells.length; c++) {
-                    table.rows[r].cells[c].style.borderRight = '1px solid var(--pub-color)';
-                    table.rows[r].cells[c].style.borderBottom = '1px solid var(--pub-color)';
+                    table.rows[r].cells[c].style.borderRight = '1px solid var(--ui-theme-color)';
+                    table.rows[r].cells[c].style.borderBottom = '1px solid var(--ui-theme-color)';
                     if (c === 0) {
-                        table.rows[r].cells[c].style.backgroundColor = 'var(--pub-color)';
+                        table.rows[r].cells[c].style.backgroundColor = 'var(--ui-theme-color)';
                         table.rows[r].cells[c].style.color = '#fff';
                         table.rows[r].cells[c].style.fontWeight = 'bold';
                     }
@@ -20178,13 +20382,13 @@ window.handleMouseUp = function() {
                 }
             }
         } else if (type === 'bordered') {
-            table.style.border = '3px solid var(--pub-color)';
+            table.style.border = '3px solid var(--ui-theme-color)';
             table.style.borderRadius = '12px';
             for(let r=0; r<table.rows.length; r++) {
                 for(let c=0; c<table.rows[r].cells.length; c++) {
-                    table.rows[r].cells[c].style.borderRight = '1px dashed var(--pub-color)';
-                    table.rows[r].cells[c].style.borderBottom = '1px dashed var(--pub-color)';
-                    table.rows[r].cells[c].style.color = 'var(--pub-dark)';
+                    table.rows[r].cells[c].style.borderRight = '1px dashed var(--ui-theme-color)';
+                    table.rows[r].cells[c].style.borderBottom = '1px dashed var(--ui-theme-color)';
+                    table.rows[r].cells[c].style.color = 'var(--ui-theme-dark)';
                     if (r === 0) {
                         table.rows[r].cells[c].style.backgroundColor = 'rgba(0, 118, 112, 0.1)';
                         table.rows[r].cells[c].style.fontWeight = 'bold';
@@ -20215,9 +20419,9 @@ window.handleMouseUp = function() {
                     table.rows[r].cells[c].style.borderRight = 'none';
                     table.rows[r].cells[c].style.borderBottom = '1px solid #eee';
                     if (r === 0) {
-                        table.rows[r].cells[c].style.borderBottom = '3px solid var(--pub-color)';
+                        table.rows[r].cells[c].style.borderBottom = '3px solid var(--ui-theme-color)';
                         table.rows[r].cells[c].style.fontWeight = 'bold';
-                        table.rows[r].cells[c].style.color = 'var(--pub-dark)';
+                        table.rows[r].cells[c].style.color = 'var(--ui-theme-dark)';
                     }
                 }
             }
@@ -20473,8 +20677,8 @@ window.handleMouseUp = function() {
         const designTab = document.getElementById('ribbon-table-design');
         const layoutTab = document.getElementById('ribbon-table-layout');
         
-        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--pub-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--pub-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
-        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--pub-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--pub-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--pub-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--pub-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--pub-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--pub-color, #007670);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
+        const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--ui-theme-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--ui-theme-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
+        const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--ui-theme-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--ui-theme-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--ui-theme-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--ui-theme-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--ui-theme-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--ui-theme-color);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
 
         if (designTab) {
             clearInterval(checkRibbons);
@@ -20482,13 +20686,13 @@ window.handleMouseUp = function() {
             // --- REBUILD: Table Design ---
             designTab.innerHTML = `${clipGroup}
                 <div class="group">
-                    <div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-paint-roller" style="color:var(--pub-color)"></i>Zebra</div>
+                    <div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-paint-roller" style="color:var(--ui-theme-color)"></i>Zebra</div>
                     <div class="group-label">Styles</div>
                 </div>
                 <div class="group">
                     <div style="display:flex; flex-direction:column; padding: 2px; align-items:center; justify-content:center; gap:5px; height:100%;">
                         <div class="mini-btn ctx-btn-strict ctx-color-strict" style="width:40px; height:35px;" title="Cell Fill Color" onclick="CustomColorPicker.open(this, document.getElementById('ctx-cell-fill-bar').style.backgroundColor || '#ffffff', (color) => { document.getElementById('ctx-cell-fill-bar').style.background=color; ContextRibbonActions.cellFill(color); })">
-                            <i class="fas fa-fill-drip" style="font-size:18px; color:var(--pub-color); margin-top:-2px;"></i>
+                            <i class="fas fa-fill-drip" style="font-size:18px; color:var(--ui-theme-color); margin-top:-2px;"></i>
                             <div style="height:5px; background:#ffffff; width:30px; position:absolute; bottom:2px; border:1px solid #ccc;" id="ctx-cell-fill-bar"></div>
                         </div>
                     </div>
@@ -20517,7 +20721,7 @@ window.handleMouseUp = function() {
                 </div>
                 <div class="group">
                     <div style="display:flex; flex-direction:column; padding: 2px; justify-content:center; align-items:center; height:100%;">
-                        <span style="font-size:10px; color:var(--pub-dark); margin-bottom:4px; font-weight:bold;">Cell margins</span>
+                        <span style="font-size:10px; color:var(--ui-theme-dark); margin-bottom:4px; font-weight:bold;">Cell margins</span>
                         <div class="modern-select" id="ctx-margin-btn" style="position: relative; width: 85px;" onclick="
                             const m = document.getElementById('ctx-margin-dropdown');
                             if(m.style.display === 'block') {
@@ -20535,7 +20739,7 @@ window.handleMouseUp = function() {
                             <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                         </div>
                     </div>
-                    <div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--pub-color)"></i> Line<br>Spacing</div>
+                    <div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--ui-theme-color)"></i> Line<br>Spacing</div>
                     <div class="group-label">Spacing</div>
                 </div>
                 ${arrGroup}
@@ -20543,7 +20747,7 @@ window.handleMouseUp = function() {
                     <div style="display:grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 2px 4px; height:100%; align-content: center;">
                         <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('modern')" title="Modern Teal Header">
                             <div style="width:24px; height:18px; border-radius:4px; border:1px solid #aaa; overflow:hidden; display:flex; flex-direction:column;">
-                                <div style="flex:1; background:var(--pub-color); display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:var(--ui-theme-color); display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
                                 <div style="flex:1; background:#f9f9f9; border-top:1px solid #aaa; display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
                                 <div style="flex:1; background:#fff; border-top:1px solid #aaa; display:flex;"><div style="flex:1;border-right:1px solid #aaa;"></div><div style="flex:1;"></div></div>
                             </div>
@@ -20563,11 +20767,11 @@ window.handleMouseUp = function() {
                             </div>
                         </div>
                         <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('accent')" title="Teal Accent Column">
-                            <div style="width:24px; height:18px; border-radius:3px; border:1px solid var(--pub-color); overflow:hidden; display:flex;">
-                                <div style="width:30%; background:var(--pub-color); border-right:1px solid var(--pub-color);"></div>
+                            <div style="width:24px; height:18px; border-radius:3px; border:1px solid var(--ui-theme-color); overflow:hidden; display:flex;">
+                                <div style="width:30%; background:var(--ui-theme-color); border-right:1px solid var(--ui-theme-color);"></div>
                                 <div style="flex:1; background:#fff; display:flex; flex-direction:column;">
-                                    <div style="flex:1; border-bottom:1px solid var(--pub-color);"></div>
-                                    <div style="flex:1; border-bottom:1px solid var(--pub-color);"></div>
+                                    <div style="flex:1; border-bottom:1px solid var(--ui-theme-color);"></div>
+                                    <div style="flex:1; border-bottom:1px solid var(--ui-theme-color);"></div>
                                     <div style="flex:1;"></div>
                                 </div>
                             </div>
@@ -20580,10 +20784,10 @@ window.handleMouseUp = function() {
                             </div>
                         </div>
                         <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('bordered')" title="Teal Grid Outline">
-                            <div style="width:24px; height:18px; border-radius:4px; border:2px solid var(--pub-color); overflow:hidden; display:flex; flex-direction:column;">
-                                <div style="flex:1; background:rgba(0,118,112,0.1); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
-                                <div style="flex:1; background:#fff; border-top:1px dashed var(--pub-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
-                                <div style="flex:1; background:#fff; border-top:1px dashed var(--pub-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--pub-color);"></div><div style="flex:1;"></div></div>
+                            <div style="width:24px; height:18px; border-radius:4px; border:2px solid var(--ui-theme-color); overflow:hidden; display:flex; flex-direction:column;">
+                                <div style="flex:1; background:rgba(0,118,112,0.1); display:flex;"><div style="flex:1;border-right:1px dashed var(--ui-theme-color);"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px dashed var(--ui-theme-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--ui-theme-color);"></div><div style="flex:1;"></div></div>
+                                <div style="flex:1; background:#fff; border-top:1px dashed var(--ui-theme-color); display:flex;"><div style="flex:1;border-right:1px dashed var(--ui-theme-color);"></div><div style="flex:1;"></div></div>
                             </div>
                         </div>
                         <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('elegant')" title="Elegant Gold/Cream">
@@ -20595,7 +20799,7 @@ window.handleMouseUp = function() {
                         </div>
                         <div class="template-btn" onclick="ContextRibbonActions.applyTemplate('highlight')" title="Teal Highlight">
                             <div style="width:24px; height:18px; border-radius:0px; border:none; border-top:1px solid #ccc; display:flex; flex-direction:column;">
-                                <div style="flex:1; background:#fff; border-bottom:2px solid var(--pub-color);"></div>
+                                <div style="flex:1; background:#fff; border-bottom:2px solid var(--ui-theme-color);"></div>
                                 <div style="flex:1; background:#fff; border-bottom:1px solid #eee;"></div>
                                 <div style="flex:1; background:#fff;"></div>
                             </div>
@@ -20715,7 +20919,7 @@ window.handleMouseUp = function() {
                     </div>
                     <style>
                         .template-btn { cursor:pointer; padding:3px; border:1px solid transparent; border-radius:4px; transition:all 0.1s; display: flex; align-items: center; justify-content: center; background:#fff; }
-                        .template-btn:hover { background:rgba(0,118,112,0.1); border-color:var(--pub-color); transform:scale(1.1); box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+                        .template-btn:hover { background:rgba(0,118,112,0.1); border-color:var(--ui-theme-color); transform:scale(1.1); box-shadow:0 2px 5px rgba(0,0,0,0.1); }
                     </style>
                     <div class="group-label">Templates</div>
                 </div>`;
@@ -20727,12 +20931,12 @@ window.handleMouseUp = function() {
                 drop.style.width = '95px';
                 drop.innerHTML = `
                     <style>
-                        #ctx-margin-dropdown { border-radius: 6px; overflow: hidden; border: 1px solid var(--pub-color); box-shadow: 0 4px 12px rgba(0, 118, 112, 0.15); padding: 2px; }
+                        #ctx-margin-dropdown { border-radius: 6px; overflow: hidden; border: 1px solid var(--ui-theme-color); box-shadow: 0 4px 12px rgba(0, 118, 112, 0.15); padding: 2px; }
                         .margin-item { padding: 6px 8px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px; border-radius: 4px; transition: all 0.1s; margin-bottom: 2px; }
                         .margin-item:last-child { margin-bottom: 0; }
-                        .margin-item:hover { background: rgba(0, 118, 112, 0.1); color: var(--pub-dark); }
+                        .margin-item:hover { background: rgba(0, 118, 112, 0.1); color: var(--ui-theme-dark); }
                         .margin-item i { color: #666; width: 12px; text-align: center; }
-                        .margin-item:hover i { color: var(--pub-dark); }
+                        .margin-item:hover i { color: var(--ui-theme-dark); }
                     </style>
                     <div class="margin-item" onclick="document.getElementById('ctx-margin-label').innerText='Tight'; ContextRibbonActions.cellPadding('2px'); this.parentElement.style.display='none';"><i class="fas fa-compress"></i> Tight</div>
                     <div class="margin-item" onclick="document.getElementById('ctx-margin-label').innerText='Normal'; ContextRibbonActions.cellPadding('6px'); this.parentElement.style.display='none';"><i class="fas fa-grip-lines"></i> Normal</div>
@@ -20760,7 +20964,7 @@ window.handleMouseUp = function() {
         
         const spinner = document.createElement('div');
         spinner.innerHTML = `
-            <div style="text-align: center; color: #007670; font-family: 'Segoe UI', Arial, sans-serif; background: rgba(255,255,255,0.9); padding: 20px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="text-align: center; color: var(--ui-theme-color); font-family: 'Segoe UI', Arial, sans-serif; background: rgba(255,255,255,0.9); padding: 20px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <i class="fas fa-spinner fa-spin" style="font-size: 50px; margin-bottom: 15px;"></i>
                 <div style="font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Importing Image...</div>
                 <div style="font-size: 14px; opacity: 0.7; margin-top: 5px;">Please wait</div>
@@ -21172,13 +21376,13 @@ function initBasicBorders() {
     });
     swatchesHTML += `</div>`;
 
-    dropdown.innerHTML = `<div id="border-menu-scroll-container" style="padding:15px; width:100%; box-sizing:border-box; background:white; border-radius:8px; border:2px solid var(--pub-color, #007670); max-height:450px; overflow-y:auto; overflow-x:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+    dropdown.innerHTML = `<div id="border-menu-scroll-container" style="padding:15px; width:100%; box-sizing:border-box; background:white; border-radius:8px; border:2px solid var(--ui-theme-color); max-height:450px; overflow-y:auto; overflow-x:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                 <label style="font-size:12px; font-weight:bold; color:#333;">Thickness</label>
                 <span id="border-weight-label" style="font-size:12px; color:#666;">10px</span>
             </div>
             
-            <input type="range" id="border-weight" min="1" max="50" value="10" style="width:100%; margin-bottom:15px; cursor:pointer; accent-color: var(--pub-color, #007670);">
+            <input type="range" id="border-weight" min="1" max="50" value="10" style="width:100%; margin-bottom:15px; cursor:pointer; accent-color: var(--ui-theme-color);">
             
             <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:10px; color:#333;">Color</label>
             ${swatchesHTML}
@@ -21837,19 +22041,19 @@ function initBasicBorders() {
         analysisGroup.className = 'group';
         
         // 11 Buttons in a clean horizontal flow
-        analysisGroup.innerHTML = `<div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readability')"><i class="fas fa-glasses" style="color:var(--pub-color)"></i>Grade</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('tone')"><i class="fas fa-theater-masks" style="color:var(--pub-color)"></i>Tone</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('concise')"><i class="fas fa-compress-alt" style="color:var(--pub-color)"></i>Concise</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('passive')"><i class="fas fa-search-location" style="color:var(--pub-color)"></i>Passive</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('repetition')"><i class="fas fa-clone" style="color:var(--pub-color)"></i>Echoes</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('stats')"><i class="fas fa-calculator" style="color:var(--pub-color)"></i>Stats</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readTime')"><i class="fas fa-clock" style="color:var(--pub-color)"></i>Time</div>
+        analysisGroup.innerHTML = `<div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readability')"><i class="fas fa-glasses" style="color:var(--ui-theme-color)"></i>Grade</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('tone')"><i class="fas fa-theater-masks" style="color:var(--ui-theme-color)"></i>Tone</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('concise')"><i class="fas fa-compress-alt" style="color:var(--ui-theme-color)"></i>Concise</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('passive')"><i class="fas fa-search-location" style="color:var(--ui-theme-color)"></i>Passive</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('repetition')"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i>Echoes</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('stats')"><i class="fas fa-calculator" style="color:var(--ui-theme-color)"></i>Stats</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('readTime')"><i class="fas fa-clock" style="color:var(--ui-theme-color)"></i>Time</div>
             
             <!-- NEW 4 FEATURES -->
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('sentiment')"><i class="fas fa-smile-beam" style="color:var(--pub-color)"></i>Sentiment</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('seo')"><i class="fas fa-search" style="color:var(--pub-color)"></i>Keywords</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('jargon')"><i class="fas fa-graduation-cap" style="color:var(--pub-color)"></i>Jargon</div>
-            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('cadence')"><i class="fas fa-wave-square" style="color:var(--pub-color)"></i>Cadence</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('sentiment')"><i class="fas fa-smile-beam" style="color:var(--ui-theme-color)"></i>Sentiment</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('seo')"><i class="fas fa-search" style="color:var(--ui-theme-color)"></i>Keywords</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('jargon')"><i class="fas fa-graduation-cap" style="color:var(--ui-theme-color)"></i>Jargon</div>
+            <div class="tool-btn" style="min-width:55px;" onclick="window.WritersSuite.analyzeText('cadence')"><i class="fas fa-wave-square" style="color:var(--ui-theme-color)"></i>Cadence</div>
             
             <div class="group-label">Analysis Suite</div>`;
         
@@ -22393,7 +22597,7 @@ window.toggleCrop = function() {
             background: white; border: 1px solid #ddd; border-radius: 6px; padding: 12px;
             cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 10px;
         }
-        .tt-card:hover { border-color: var(--pub-color, #007670); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .tt-card:hover { border-color: var(--ui-theme-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
         .tt-name { font-size: 13px; font-weight: bold; color: #444; text-align: center; margin-top: auto; }
         
         /* Mini Preview Tables (CSS-only for UI thumbnails) */
@@ -22405,18 +22609,18 @@ window.toggleCrop = function() {
         .pub-table-minimal td { border-bottom: 1px solid #eee; padding: 6px; }
         .pub-table-grid th { background: #e1dfdd; border: 1px solid #999; padding: 6px; font-weight: bold; color: #333; text-align: left;}
         .pub-table-grid td { border: 1px solid #999; padding: 6px; }
-        .pub-table-schedule { border-left: 4px solid var(--pub-color, #007670); }
+        .pub-table-schedule { border-left: 4px solid var(--ui-theme-color); }
         .pub-table-schedule th { background: #faf9f8; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; color: #333; }
         .pub-table-schedule td { padding: 8px; border-bottom: 1px solid #eee; }
-        .pub-table-schedule tr td:first-child { font-weight: bold; color: var(--pub-color, #007670); width: 30%; }
+        .pub-table-schedule tr td:first-child { font-weight: bold; color: var(--ui-theme-color); width: 30%; }
         .pub-table-invoice th { border-bottom: 2px solid #333; padding: 8px; text-align: left; background:#faf9f8; }
         .pub-table-invoice td { border-bottom: 1px solid #eee; padding: 8px; }
         .pub-table-invoice .amount { text-align: right; }
         .pub-table-invoice .total-row td { border-top: 2px solid #333; border-bottom: 3px double #333; background:#fff; }
         .pub-table-pricing th { background: #f8f9fa; padding: 15px; text-align: center; border: 1px solid #ddd; font-size: 18px; }
         .pub-table-pricing td { padding: 10px; text-align: center; border: 1px solid #ddd; }
-        .pub-table-pricing .highlight { background: var(--pub-color, #007670); color: white; border-color: var(--pub-color, #007670); }
-        .pub-table-pricing .highlight-cell { border-left: 2px solid var(--pub-color, #007670); border-right: 2px solid var(--pub-color, #007670); }
+        .pub-table-pricing .highlight { background: var(--ui-theme-color); color: white; border-color: var(--ui-theme-color); }
+        .pub-table-pricing .highlight-cell { border-left: 2px solid var(--ui-theme-color); border-right: 2px solid var(--ui-theme-color); }
         .pub-table-matrix th { border-bottom: 2px solid #ddd; padding: 10px; }
         .pub-table-matrix td { border-bottom: 1px solid #eee; padding: 10px; }
         .pub-table-roster th { background: #e0e0e0; border: 1px solid #999; padding: 6px; text-align: left; }
@@ -22444,7 +22648,7 @@ window.toggleCrop = function() {
         },
         {
             name: 'Schedule / Agenda',
-            previewHTML: `<table class="mini-table" style="border:none; border-left:3px solid var(--pub-color, #007670);"><tr><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Time</th><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Event</th></tr><tr><td style="border:none; border-bottom:1px solid #eee; font-weight:bold; color:var(--pub-color, #007670);">09:00</td><td style="border:none; border-bottom:1px solid #eee;">Data</td></tr></table>`,
+            previewHTML: `<table class="mini-table" style="border:none; border-left:3px solid var(--ui-theme-color);"><tr><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Time</th><th style="border:none; border-bottom:2px solid #ddd; background:#faf9f8;">Event</th></tr><tr><td style="border:none; border-bottom:1px solid #eee; font-weight:bold; color:var(--ui-theme-color);">09:00</td><td style="border:none; border-bottom:1px solid #eee;">Data</td></tr></table>`,
             insertHTML: `<table class="pub-table-schedule" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th>Time</th><th>Event</th><th>Location</th></tr><tr><td>09:00 AM</td><td>Opening Keynote</td><td>Main Hall</td></tr><tr><td>10:30 AM</td><td>Strategy Session</td><td>Room B</td></tr></table>`
         },
         {
@@ -22454,7 +22658,7 @@ window.toggleCrop = function() {
         },
         {
             name: 'Pricing Tiers',
-            previewHTML: `<table class="mini-table" style="text-align:center;"><tr><th style="border:1px solid #ccc;">Basic</th><th style="background:#007670; color:#fff;">Pro</th><th style="border:1px solid #ccc;">Max</th></tr><tr><td style="border:1px solid #ccc;">$9</td><td style="border:2px solid #007670;">$19</td><td style="border:1px solid #ccc;">$29</td></tr></table>`,
+            previewHTML: `<table class="mini-table" style="text-align:center;"><tr><th style="border:1px solid #ccc;">Basic</th><th style="background:var(--ui-theme-color); color:#fff;">Pro</th><th style="border:1px solid #ccc;">Max</th></tr><tr><td style="border:1px solid #ccc;">$9</td><td style="border:2px solid var(--ui-theme-color);">$19</td><td style="border:1px solid #ccc;">$29</td></tr></table>`,
             insertHTML: `<table class="pub-table-pricing" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; text-align:center;" contenteditable="true"><tr><th>Basic<br><span style="font-size:24px;">$9</span></th><th class="highlight">Pro<br><span style="font-size:24px;">$19</span></th><th>Enterprise<br><span style="font-size:24px;">$49</span></th></tr><tr><td>Feature A</td><td class="highlight-cell">Feature A</td><td>Feature A</td></tr><tr><td>Feature B</td><td class="highlight-cell">Feature B</td><td>Feature B</td></tr></table>`
         },
         {
@@ -22486,7 +22690,7 @@ window.toggleCrop = function() {
 
     // 3. Define 30 Color Themes
     const colorThemes = [
-        { id: 'zebra', name: 'Open Publisher', thBg: 'var(--pub-color, #007670)', thColor: '#fff', bColor: '#ccc', thBColor: 'var(--pub-dark, #005a55)', altBg: '#f3f2f1' },
+        { id: 'zebra', name: 'Open Publisher', thBg: 'var(--ui-theme-color)', thColor: '#fff', bColor: '#ccc', thBColor: 'var(--ui-theme-dark)', altBg: '#f3f2f1' },
         { id: 'blue', name: 'Corporate Blue', thBg: '#2a5699', thColor: '#fff', bColor: '#c4d4e8', thBColor: '#1e3f70', altBg: '#f0f4fa' },
         { id: 'dark', name: 'Dark Elegant', thBg: '#2c3e50', thColor: '#fff', bColor: '#bdc3c7', thBColor: '#1a252f', altBg: '#f8f9fa' },
         { id: 'crimson', name: 'Crimson Red', thBg: '#c62828', thColor: '#fff', bColor: '#ffcdd2', thBColor: '#b71c1c', altBg: '#ffebee' },
@@ -22622,8 +22826,8 @@ window.toggleCrop = function() {
             const buttonHTML = `
                 <div class="tool-btn" onclick="openTableTemplatesModal()" title="Styled Table Templates">
                     <div style="position:relative; display:flex; justify-content:center; align-items:center; width:26px; height:22px;">
-                        <i class="fas fa-table" style="font-size: 24px; color: var(--pub-dark, #005a55); margin:0;"></i>
-                        <i class="fas fa-pen" style="font-size: 11px; position:absolute; bottom: -5px; right: -6px; color: var(--pub-dark, #005a55); text-shadow: 1px 1px 0px var(--ribbon-bg, #f3f2f1), -1px -1px 0px var(--ribbon-bg, #f3f2f1), 1px -1px 0px var(--ribbon-bg, #f3f2f1), -1px 1px 0px var(--ribbon-bg, #f3f2f1); margin:0;"></i>
+                        <i class="fas fa-table" style="font-size: 24px; color: var(--ui-theme-dark); margin:0;"></i>
+                        <i class="fas fa-pen" style="font-size: 11px; position:absolute; bottom: -5px; right: -6px; color: var(--ui-theme-dark); text-shadow: 1px 1px 0px var(--ribbon-bg, #f3f2f1), -1px -1px 0px var(--ribbon-bg, #f3f2f1), 1px -1px 0px var(--ribbon-bg, #f3f2f1), -1px 1px 0px var(--ribbon-bg, #f3f2f1); margin:0;"></i>
                     </div>
                     <span style="line-height:1.1; text-align:center;">Styled<br>Templates</span>
                 </div>
@@ -24022,7 +24226,7 @@ window.toggleCrop = function() {
         // 2. Build internal elements
         eraserBtn.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; height: 32px; width: 32px; margin-bottom: 2px;">
-                <i class="fas fa-border-none" style="font-size: 22px !important; color: var(--pub-color, #007670) !important; display: block !important;"></i>
+                <i class="fas fa-border-none" style="font-size: 22px !important; color: var(--ui-theme-color) !important; display: block !important;"></i>
             </div>
             <span style="font-size: 11px !important; font-family: 'Segoe UI', sans-serif !important; text-align: center !important; line-height: 1.2 !important; color: #333 !important; display: block !important; white-space: nowrap;">Remove<br>Border</span>
         `;
@@ -24118,7 +24322,7 @@ window.showProtectDocumentModal = function() {
     const isProtected = !!state.documentPassword;
     const html = `
         <div style="padding: 10px; display: flex; align-items: flex-start; gap: 20px;">
-            <i class="fas fa-key" style="font-size: 48px; color: var(--pub-color, #007670); margin-top: 10px;"></i>
+            <i class="fas fa-key" style="font-size: 48px; color: var(--ui-theme-color); margin-top: 10px;"></i>
             <div style="flex-grow: 1;">
                 <p style="margin-bottom: 15px; font-size: 14px; color: #444;">
                     ${isProtected 
@@ -24127,11 +24331,11 @@ window.showProtectDocumentModal = function() {
                 </p>
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; font-size:14px; font-weight:400; color:#333; margin-bottom:5px;">Document Password</label>
-                    <input type="password" id="doc-protect-pw" placeholder="Enter password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--pub-color, #007670); border-radius: 8px; outline: none; transition: border-color 0.2s;">
+                    <input type="password" id="doc-protect-pw" placeholder="Enter password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--ui-theme-color); border-radius: 8px; outline: none; transition: border-color 0.2s;">
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; font-size:14px; font-weight:400; color:#333; margin-bottom:5px;">Confirm Password</label>
-                    <input type="password" id="doc-protect-pw-confirm" placeholder="Confirm password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--pub-color, #007670); border-radius: 8px; outline: none; transition: border-color 0.2s;">
+                    <input type="password" id="doc-protect-pw-confirm" placeholder="Confirm password..." value="${isProtected ? state.documentPassword : ''}" style="width: 100%; padding: 8px; border: 2px solid var(--ui-theme-color); border-radius: 8px; outline: none; transition: border-color 0.2s;">
                     <div id="doc-protect-error" style="display: none; color: #d9534f; font-size: 12px; margin-top: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Passwords do not match!</div>
                 </div>
                 <p style="font-size: 11px; color: #d9534f; margin-bottom: 0;"><strong>Warning:</strong> If you lose this password, your document cannot be recovered.</p>
@@ -24171,11 +24375,11 @@ window.showProtectDocumentModal = function() {
             
             // Hide error when typing
             document.getElementById('doc-protect-pw-confirm').oninput = function() {
-                this.style.borderColor = 'var(--pub-color, #007670)';
+                this.style.borderColor = 'var(--ui-theme-color)';
                 document.getElementById('doc-protect-error').style.display = 'none';
             };
             document.getElementById('doc-protect-pw').oninput = function() {
-                document.getElementById('doc-protect-pw-confirm').style.borderColor = 'var(--pub-color, #007670)';
+                document.getElementById('doc-protect-pw-confirm').style.borderColor = 'var(--ui-theme-color)';
                 document.getElementById('doc-protect-error').style.display = 'none';
             };
         }
@@ -26398,7 +26602,7 @@ window.addEventListener('beforeprint', () => {
                 
                 /* The Green Header Banner */
                 .wa-modal-header {
-                    background: var(--pub-dark, #005a55);
+                    background: var(--ui-theme-dark);
                     padding: 15px 25px;
                     text-align: center;
                     border-top-left-radius: 8px;
@@ -26470,7 +26674,7 @@ window.addEventListener('beforeprint', () => {
                     transform: translateY(-2px);
                 }
                 .beta-wa-card.selected {
-                    border-color: var(--pub-color, #007670);
+                    border-color: var(--ui-theme-color);
                     background: #f0fdf4; 
                     box-shadow: 0 4px 8px rgba(0, 118, 112, 0.15);
                 }
@@ -26496,15 +26700,15 @@ window.addEventListener('beforeprint', () => {
                     transition: all 0.2s;
                 }
                 .wa-btn-ok {
-                    background: var(--pub-dark, #005a55);
+                    background: var(--ui-theme-dark);
                     color: white;
                 }
                 .wa-btn-ok:hover {
-                    background: var(--pub-color, #007670);
+                    background: var(--ui-theme-color);
                 }
                 .wa-btn-cancel {
                     background: white;
-                    color: var(--pub-dark, #005a55);
+                    color: var(--ui-theme-dark);
                     border: 2px solid #cbd5e1;
                 }
                 .wa-btn-cancel:hover {
@@ -26764,7 +26968,7 @@ window.showWebClipartModal = function() {
             .custom-dialog-body { padding: 0 !important; background: #f3f4f6 !important; border-radius: 8px; overflow: hidden; }
             
             .wa-modal-header {
-                background: var(--pub-dark, #005a55);
+                background: var(--ui-theme-dark);
                 padding: 16px 25px;
                 display: flex;
                 align-items: center;
@@ -26825,11 +27029,11 @@ window.showWebClipartModal = function() {
             
             .clipart-card:hover {
                 transform: scale(1.05);
-                border-color: #007670;
+                border-color: var(--ui-theme-color);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
             .clipart-card.selected {
-                border-color: #007670;
+                border-color: var(--ui-theme-color);
                 background-color: rgba(0, 118, 112, 0.1);
                 box-shadow: 0 4px 12px rgba(0, 118, 112, 0.2);
             }
@@ -26968,7 +27172,7 @@ window.showWebClipartModal = function() {
                 if (entry.isIntersecting) {
                     if (!card.loaded && !card.queued) {
                         card.queued = true;
-                        card.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: #007670; font-size: 24px; opacity: 0.5;"></i>';
+                        card.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: var(--ui-theme-color); font-size: 24px; opacity: 0.5;"></i>';
                         loadQueue.push(card);
                         processQueue();
                     }
@@ -27129,7 +27333,7 @@ setTimeout(() => {
             placeholderBtn.onclick = addPicturePlaceholder;
             
             placeholderBtn.innerHTML = `
-                <i class="far fa-image" style="border: 1px dashed #005a55; padding: 2px;"></i>
+                <i class="far fa-image" style="border: 1px dashed var(--ui-theme-dark); padding: 2px;"></i>
                 <span>Placeholder</span>
             `;
             
@@ -27164,7 +27368,7 @@ window.compressSelectedPicture = function() {
                     <div class="custom-dialog-close" onclick="this.closest('.custom-dialog-overlay').remove()">×</div>
                 </div>
                 <div class="custom-dialog-body" style="text-align: center; padding: 25px 30px 15px 30px;">
-                    <div style="font-size: 40px; margin-top: 5px; margin-bottom: 5px; line-height: 1; color: var(--pub-color);">
+                    <div style="font-size: 40px; margin-top: 5px; margin-bottom: 5px; line-height: 1; color: var(--ui-theme-color);">
                         <i class="fas fa-info-circle"></i>
                     </div>
                     <div style="font-size: 14px; color: #333; line-height: 1.5; padding: 0 10px;">
@@ -27173,7 +27377,7 @@ window.compressSelectedPicture = function() {
                     </div>
                 </div>
                 <div class="custom-dialog-footer" style="justify-content: center; padding-bottom: 20px;">
-                    <button style="background: var(--pub-color); color: #fff; padding: 8px 24px;" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
+                    <button style="background: var(--ui-theme-color); color: #fff; padding: 8px 24px;" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
                 </div>
             </div>
         `;
@@ -27216,7 +27420,7 @@ window.compressSelectedPicture = function() {
                     <div class="custom-dialog-close" onclick="this.closest('.custom-dialog-overlay').remove()">×</div>
                 </div>
                 <div class="custom-dialog-body" style="text-align: center; padding: 20px;">
-                    <div style="font-size: 40px; margin-bottom: 15px; line-height: 1; color: var(--pub-color);">
+                    <div style="font-size: 40px; margin-bottom: 15px; line-height: 1; color: var(--ui-theme-color);">
                         <i class="fas fa-compress-arrows-alt"></i>
                     </div>
                     <div style="font-size: 14px; color: #333; line-height: 1.4;">
@@ -27225,7 +27429,7 @@ window.compressSelectedPicture = function() {
                     </div>
                 </div>
                 <div class="custom-dialog-footer" style="justify-content: center; padding-bottom: 20px;">
-                    <button style="background: var(--pub-color); color: #fff; padding: 8px 24px;" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
+                    <button style="background: var(--ui-theme-color); color: #fff; padding: 8px 24px;" onclick="this.closest('.custom-dialog-overlay').remove()">OK</button>
                 </div>
             </div>
         `;
@@ -27275,11 +27479,11 @@ window.compressSelectedPicture = function() {
                 <div class="custom-dialog-close" onclick="this.closest('.custom-dialog-overlay').remove()">×</div>
             </div>
             <div class="custom-dialog-body" style="text-align: center; padding: 30px;">
-                <div style="font-size: 24px; color: var(--pub-color); margin-bottom: 15px;">
+                <div style="font-size: 24px; color: var(--ui-theme-color); margin-bottom: 15px;">
                     <i class="fas fa-compress-arrows-alt fa-spin"></i>
                 </div>
                 <div style="width: 100%; height: 24px; background: #eee; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #ccc; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                    <div id="compress-progress" style="width: 0%; height: 100%; background: var(--pub-color); transition: width 0.1s linear;"></div>
+                    <div id="compress-progress" style="width: 0%; height: 100%; background: var(--ui-theme-color); transition: width 0.1s linear;"></div>
                     <div id="compress-size-display" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000; letter-spacing: 0.5px;">${originalSizeKB.toLocaleString()} KB</div>
                 </div>
                 <div id="compress-status" style="margin-top: 10px; font-size: 12px; color: #666;">Analyzing image...</div>
@@ -27438,7 +27642,7 @@ window.compressSelectedPicture = function() {
         document.querySelectorAll('.drawing-tool-btn').forEach(btn => {
             if (btn.dataset.tool === tool) {
                 btn.style.backgroundColor = '#e0f2f1';
-                btn.style.borderColor = '#007670';
+                btn.style.borderColor = 'var(--ui-theme-color)';
                 btn.style.borderRadius = '4px';
             } else {
                 btn.style.backgroundColor = '';
@@ -27470,7 +27674,7 @@ window.compressSelectedPicture = function() {
         const percent = ((size - 1) / 49) * 100;
         document.querySelectorAll('.drawing-size-slider').forEach(slider => {
             slider.value = size;
-            slider.style.background = `linear-gradient(to right, #005a55 ${percent}%, #f3f2f1 ${percent}%)`;
+            slider.style.background = `linear-gradient(to right, var(--ui-theme-dark) ${percent}%, #f3f2f1 ${percent}%)`;
         });
     };
 
@@ -28004,7 +28208,7 @@ window.showInfoModal = function() {
     <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px; max-width: 650px; margin: 0 auto;">
         <!-- Commercial Print Settings -->
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
-            <div style="background: #f1f5f9; color: var(--pub-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            <div style="background: #f1f5f9; color: var(--ui-theme-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
                 <i class="fas fa-palette"></i>
             </div>
             <div style="flex-grow: 1;">
@@ -28014,11 +28218,11 @@ window.showInfoModal = function() {
                 </p>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="colorModel" value="RGB" ${!isCMYK ? 'checked' : ''} onchange="toggleColorModel('RGB')" style="accent-color: var(--pub-color);"> 
+                        <input type="radio" name="colorModel" value="RGB" ${!isCMYK ? 'checked' : ''} onchange="toggleColorModel('RGB')" style="accent-color: var(--ui-theme-color);"> 
                         RGB (Digital Display)
                     </label>
                     <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="colorModel" value="CMYK" ${isCMYK ? 'checked' : ''} onchange="toggleColorModel('CMYK')" style="accent-color: var(--pub-color);"> 
+                        <input type="radio" name="colorModel" value="CMYK" ${isCMYK ? 'checked' : ''} onchange="toggleColorModel('CMYK')" style="accent-color: var(--ui-theme-color);"> 
                         CMYK (Commercial Print)
                     </label>
                 </div>
@@ -28035,7 +28239,7 @@ window.showInfoModal = function() {
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b; line-height: 1.4;">
                     Run a diagnostic scan on your document to find potential issues before printing or exporting. This will automatically catch text overflow, low-resolution images, or objects that have been accidentally dragged off the page canvas.
                 </p>
-                <button onclick="runDesignChecker()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                <button onclick="runDesignChecker()" style="background: var(--ui-theme-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
                     <i class="fas fa-search" style="margin-right: 5px;"></i> Run Design Checker
                 </button>
                 <div id="design-checker-results" style="margin-top: 15px; display: none;"></div>
@@ -28043,7 +28247,7 @@ window.showInfoModal = function() {
         </div>
         <!-- Inspect Document -->
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; gap: 15px; align-items: flex-start;">
-            <div style="background: #ccfbf1; color: var(--pub-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            <div style="background: #ccfbf1; color: var(--ui-theme-color); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
                 <i class="fas fa-search-plus"></i>
             </div>
             <div style="flex-grow: 1;">
@@ -28051,7 +28255,7 @@ window.showInfoModal = function() {
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b; line-height: 1.4;">
                     Check the document for hidden properties or personal information before sharing it with others. The inspector will find and help you remove document metadata, off-canvas elements, and empty text boxes.
                 </p>
-                <button onclick="showDocumentInspectorModal()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                <button onclick="showDocumentInspectorModal()" style="background: var(--ui-theme-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
                     Inspect Document
                 </button>
             </div>
@@ -28306,7 +28510,7 @@ window.refreshSelectionPane = function() {
 
         const row = document.createElement('div');
         row.className = 'selection-pane-item' + (isSelected ? ' active' : '');
-        row.style.cssText = `display:flex; align-items:center; padding: 6px 10px; margin-bottom: 4px; background: ${isSelected ? 'rgba(0,118,112,0.1)' : '#f8fafc'}; border: 1px solid ${isSelected ? 'var(--pub-color)' : '#e2e8f0'}; border-radius: 4px; cursor: pointer; transition: 0.2s;`;
+        row.style.cssText = `display:flex; align-items:center; padding: 6px 10px; margin-bottom: 4px; background: ${isSelected ? 'rgba(0,118,112,0.1)' : '#f8fafc'}; border: 1px solid ${isSelected ? 'var(--ui-theme-color)' : '#e2e8f0'}; border-radius: 4px; cursor: pointer; transition: 0.2s;`;
         
         row.onclick = (e) => {
             if (e.target.closest('.selection-eye') || e.target.tagName === 'INPUT') return;
@@ -28317,7 +28521,7 @@ window.refreshSelectionPane = function() {
 
         const eye = document.createElement('div');
         eye.className = 'selection-eye';
-        eye.style.cssText = `padding: 4px; margin-right: 8px; cursor: pointer; color: ${isHidden ? '#94a3b8' : 'var(--pub-color)'}; font-size: 14px; width: 20px; text-align: center;`;
+        eye.style.cssText = `padding: 4px; margin-right: 8px; cursor: pointer; color: ${isHidden ? '#94a3b8' : 'var(--ui-theme-color)'}; font-size: 14px; width: 20px; text-align: center;`;
         eye.innerHTML = `<i class="fas ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
         eye.onclick = (e) => {
             e.stopPropagation();
@@ -28366,19 +28570,19 @@ window.setShadowPaneVisibility = function(visible) {
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Transparency</span> <span style="font-weight:bold;"><span id="shadow-alpha-val">60</span>%</span></div>
-                <input type="range" id="shadow-alpha-slider" min="0" max="100" value="60" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-alpha-val').innerText=this.value; window.updateShadowFromSliders()">
+                <input type="range" id="shadow-alpha-slider" min="0" max="100" value="60" style="width:100%; accent-color: var(--ui-theme-color);" oninput="document.getElementById('shadow-alpha-val').innerText=this.value; window.updateShadowFromSliders()">
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Blur Radius</span> <span style="font-weight:bold;"><span id="shadow-blur-val">10</span>px</span></div>
-                <input type="range" id="shadow-blur-slider" min="0" max="100" value="10" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-blur-val').innerText=this.value; window.updateShadowFromSliders()">
+                <input type="range" id="shadow-blur-slider" min="0" max="100" value="10" style="width:100%; accent-color: var(--ui-theme-color);" oninput="document.getElementById('shadow-blur-val').innerText=this.value; window.updateShadowFromSliders()">
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>X Offset</span> <span style="font-weight:bold;"><span id="shadow-x-val">5</span>px</span></div>
-                <input type="range" id="shadow-x-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-x-val').innerText=this.value; window.updateShadowFromSliders()">
+                <input type="range" id="shadow-x-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--ui-theme-color);" oninput="document.getElementById('shadow-x-val').innerText=this.value; window.updateShadowFromSliders()">
             </div>
             <div class="op-sidebar-section">
                 <div class="op-sidebar-label" style="display:flex; justify-content:space-between;"><span>Y Offset</span> <span style="font-weight:bold;"><span id="shadow-y-val">5</span>px</span></div>
-                <input type="range" id="shadow-y-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--pub-color);" oninput="document.getElementById('shadow-y-val').innerText=this.value; window.updateShadowFromSliders()">
+                <input type="range" id="shadow-y-slider" min="-100" max="100" value="5" style="width:100%; accent-color: var(--ui-theme-color);" oninput="document.getElementById('shadow-y-val').innerText=this.value; window.updateShadowFromSliders()">
             </div>
         `;
         document.body.appendChild(panel);
@@ -28619,7 +28823,7 @@ window.shareCurrentPageEmail = async function() {
             <div style="text-align:center; padding: 10px;">
                 <p style="margin-bottom:15px; font-weight:bold;">Generating email attachment...</p>
                 <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
-                    <div style="width:50%; height:100%; background:var(--pub-color); transition: width 0.3s; animation: indeterminate 1.5s infinite linear;"></div>
+                    <div style="width:50%; height:100%; background:var(--ui-theme-color); transition: width 0.3s; animation: indeterminate 1.5s infinite linear;"></div>
                 </div>
                 <style>@keyframes indeterminate { 0% { width: 0%; margin-left: 0%; } 50% { width: 50%; margin-left: 25%; } 100% { width: 0%; margin-left: 100%; } }</style>
             </div>
@@ -28682,15 +28886,15 @@ window.showExportImageModal = function() {
             
             <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:20px;">
                 <div>
-                    <div style="font-weight:bold; color:var(--pub-dark); margin-bottom:4px;">Export Resolution</div>
+                    <div style="font-weight:bold; color:var(--ui-theme-dark); margin-bottom:4px;">Export Resolution</div>
                     <div id="img-res-display" style="font-size:13px; color:#555;">Web (96 dpi)</div>
                 </div>
-                <button class="op-btn" style="padding:6px 12px; font-size:13px; background:white; color:var(--pub-color); border:1px solid var(--pub-color);" onclick="window.toggleImageResolution(this)">Change</button>
+                <button class="op-btn" style="padding:6px 12px; font-size:13px; background:white; color:var(--ui-theme-color); border:1px solid var(--ui-theme-color);" onclick="window.toggleImageResolution(this)">Change</button>
             </div>
             
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
                 <button class="op-btn op-btn-cancel" onclick="DialogSystem.close()">Cancel</button>
-                <button class="op-btn" style="background: var(--pub-color); color: white;" onclick="
+                <button class="op-btn" style="background: var(--ui-theme-color); color: white;" onclick="
                     DialogSystem.close();
                     if(typeof exportAsImage === 'function') exportAsImage(window.exportImageResolutionSetting);
                 ">
@@ -28812,7 +29016,7 @@ window.showDocumentInspectorModal = function() {
         </div>
 
         <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-            <button id="btn-run-inspector" onclick="runDocumentInspector()" style="background: var(--pub-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+            <button id="btn-run-inspector" onclick="runDocumentInspector()" style="background: var(--ui-theme-color); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
                 Inspect
             </button>
         </div>
@@ -29143,7 +29347,7 @@ window.AccessibilityScanner = {
                         <span style="color:#888; font-size:10px; background:#e0e0e0; padding:2px 6px; border-radius:10px;">Page ${issue.pageIndex + 1}</span>
                     </div>
                     <div style="margin-bottom:10px; color:#555; line-height:1.4;">${issue.desc}</div>
-                    <button onclick="window.AccessibilityScanner.fixIssue(${issue.id})" style="background:var(--pub-color); color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600; width:100%; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1"><i class="fas fa-wrench" style="margin-right:5px;"></i>Fix Issue</button>
+                    <button onclick="window.AccessibilityScanner.fixIssue(${issue.id})" style="background:var(--ui-theme-color); color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600; width:100%; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1"><i class="fas fa-wrench" style="margin-right:5px;"></i>Fix Issue</button>
                 </div>
             `;
         });
@@ -29187,13 +29391,13 @@ window.AccessibilityScanner = {
                 }
             }
         } else if (issue.type === 'headingJump') {
-            DialogSystem.show('Heading Structure', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--pub-color);"></i><div style="line-height:1.4; font-size:14px;">Please manually adjust the heading levels using the Formatting Ribbon (e.g. change H3 to H2) to ensure a logical reading order.</div></div>', null, true);
+            DialogSystem.show('Heading Structure', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="line-height:1.4; font-size:14px;">Please manually adjust the heading levels using the Formatting Ribbon (e.g. change H3 to H2) to ensure a logical reading order.</div></div>', null, true);
         } else if (issue.type === 'missingH1') {
-            DialogSystem.show('Auto-Fix Missing Title', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-magic fa-2x" style="color:var(--pub-color);"></i><div style="line-height:1.4; font-size:14px;">This page is missing an H1 title. Would you like to automatically insert a new Page Title for screen readers?</div></div>', () => {
+            DialogSystem.show('Auto-Fix Missing Title', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-magic fa-2x" style="color:var(--ui-theme-color);"></i><div style="line-height:1.4; font-size:14px;">This page is missing an H1 title. Would you like to automatically insert a new Page Title for screen readers?</div></div>', () => {
                 let tb = addTextBox();
                 let content = tb.querySelector('.element-content > div');
                 if (content) {
-                    content.innerHTML = '<h1 style="margin:0; font-family:var(--pub-font, Arial); color:var(--pub-dark);">Page Title</h1>';
+                    content.innerHTML = '<h1 style="margin:0; font-family:var(--pub-font, Arial); color:var(--ui-theme-dark);">Page Title</h1>';
                 }
                 tb.style.width = '400px';
                 tb.style.height = '60px';
@@ -29380,7 +29584,7 @@ window.GraphicsManager = {
             return;
         }
 
-        container.innerHTML = `<div style="font-size:12px; color:#666; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span>Total Graphics: <strong>${imagesList.length}</strong></span><button onclick="window.GraphicsManager.scanImages()" style="background:none; border:none; color:var(--pub-color); cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>`;
+        container.innerHTML = `<div style="font-size:12px; color:#666; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span>Total Graphics: <strong>${imagesList.length}</strong></span><button onclick="window.GraphicsManager.scanImages()" style="background:none; border:none; color:var(--ui-theme-color); cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>`;
 
         const listDiv = document.createElement('div');
         listDiv.className = 'graphics-manager-list';
@@ -29434,7 +29638,7 @@ window.GraphicsManager = {
                 `<span style="background:#e8f5e9; color:#2e7d32; padding:2px 6px; border-radius:10px; font-size:10px; font-weight:bold;"><i class="fas fa-file-archive"></i> Embedded</span>` : 
                 `<span style="background:#e3f2fd; color:#1565c0; padding:2px 6px; border-radius:10px; font-size:10px; font-weight:bold;"><i class="fas fa-link"></i> Linked</span>`;
 
-            const updateBtnHtml = `<div style="margin-top:8px;"><button onclick="event.stopPropagation(); window.GraphicsManager.updateLinkedImage(${item.pageIndex}, ${item.elementIndex})" style="background:var(--pub-color); color:#fff; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Update Image</button></div>`;
+            const updateBtnHtml = `<div style="margin-top:8px;"><button onclick="event.stopPropagation(); window.GraphicsManager.updateLinkedImage(${item.pageIndex}, ${item.elementIndex})" style="background:var(--ui-theme-color); color:#fff; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Update Image</button></div>`;
 
             details.innerHTML = `
                 <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">Page ${item.pageIndex + 1}</div>
@@ -29590,7 +29794,7 @@ window.ThesaurusTool = {
                 if (data && data.length > 0) {
                     let html = `<div style="font-size:12px; color:#666; margin-bottom:10px;">Synonyms for <strong>${word}</strong>:</div><div style="display:flex; flex-wrap:wrap; gap:8px;">`;
                     data.forEach(item => {
-                        html += `<button onclick="window.ThesaurusTool.replaceWord('${item.word.replace(/'/g, "\\'")}')" style="background:#fff; border:1px solid #005a55; border-radius:15px; padding:5px 12px; color:#005a55; cursor:pointer; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='#005a55'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#005a55';" title="Click to replace selected text">${item.word}</button>`;
+                        html += `<button onclick="window.ThesaurusTool.replaceWord('${item.word.replace(/'/g, "\\'")}')" style="background:#fff; border:1px solid var(--ui-theme-dark); border-radius:15px; padding:5px 12px; color:var(--ui-theme-dark); cursor:pointer; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='var(--ui-theme-dark)'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='var(--ui-theme-dark)';" title="Click to replace selected text">${item.word}</button>`;
                     });
                     html += `</div>`;
                     resultsContainer.innerHTML = html;
@@ -29855,7 +30059,7 @@ window.CustomColorPicker = class CustomColorPicker {
         
         // Colors arrays
         this.themeColors = [
-            '#ffffff', '#000000', '#f4f5f7', '#007670', '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e',
+            '#ffffff', '#000000', '#f4f5f7', 'var(--ui-theme-color)', '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e',
             '#f2f2f2', '#333333', '#e0e3e8', '#00a89d', '#f1948a', '#85c1e9', '#82e0aa', '#f7dc6f', '#c39bd3', '#85929e',
             '#cccccc', '#222222', '#b0b5be', '#004a46', '#b03a2e', '#21618c', '#1e8449', '#b7950b', '#6c3483', '#212f3c'
         ];
@@ -29866,7 +30070,7 @@ window.CustomColorPicker = class CustomColorPicker {
             '#7b241c', '#a04000', '#b9770e', '#3498db', '#229954', '#0e6655', '#21618c', '#1a5276', '#633974', '#616a6b',
             '#641e16', '#873600', '#9c640c', '#2e86c1', '#1d8348', '#0b5345', '#1b4f72', '#154360', '#512e5f', '#515a5a'
         ];
-        this.recentColors = ['#007670', '#ffffff', '#000000', '#e74c3c', '#3498db', '#f1c40f'];
+        this.recentColors = ['var(--ui-theme-color)', '#ffffff', '#000000', '#e74c3c', '#3498db', '#f1c40f'];
         
         this.renderSwatches(this.themeGrid, this.themeColors);
         this.renderSwatches(this.standardGrid, this.standardColors);
@@ -30260,3 +30464,5 @@ window.addEventListener('mouseup', function(e) {
         e.stopImmediatePropagation();
     }
 }, true);
+
+
