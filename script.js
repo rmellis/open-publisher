@@ -1509,10 +1509,10 @@ function initColorSchemes() {
         
         const label = document.createElement('div');
         label.innerText = schemeName;
+        label.className = 'ribbon-mini-label';
         label.style.fontSize = '9px';
         label.style.textAlign = 'center';
         label.style.marginTop = '2px';
-        label.style.color = '#333';
         
         swatchContainer.appendChild(bar);
         swatchContainer.appendChild(label);
@@ -2983,6 +2983,37 @@ const UI_THEMES = {
     'Zoom (Blue)': { primary: '#2D8CFF', dark: '#2470CC', hue: '45deg', grayscale: '0%' }
 };
 
+window.toggleDarkMode = function(forceState) {
+    const isDark = forceState !== undefined ? forceState : !document.body.classList.contains('dark-mode');
+    if (isDark) {
+        document.documentElement.classList.add('dark-mode');
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-switch').style.background = 'var(--ui-theme-color)';
+        document.getElementById('dark-mode-knob').style.left = '13px';
+        document.getElementById('dark-mode-icon').className = 'fas fa-moon';
+        localStorage.setItem('openPublisherDarkMode', 'true');
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+        document.body.classList.remove('dark-mode');
+        document.getElementById('dark-mode-switch').style.background = '#ccc';
+        document.getElementById('dark-mode-knob').style.left = '1px';
+        document.getElementById('dark-mode-icon').className = 'far fa-moon';
+        localStorage.setItem('openPublisherDarkMode', 'false');
+    }
+    
+    // Force rulers to immediately redraw with the new CSS theme colors
+    if (typeof window.syncRulers === 'function') {
+        setTimeout(window.syncRulers, 10);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedDarkMode = localStorage.getItem('openPublisherDarkMode');
+    if (savedDarkMode === 'true') {
+        setTimeout(() => window.toggleDarkMode(true), 100);
+    }
+});
+
 window.applyTheme = function(themeName) {
     // Legacy theme mapping
     if (themeName === 'Classic Teal' || themeName === 'Publisher (Teal)') themeName = 'Publisher / Classic (Teal)';
@@ -2999,6 +3030,31 @@ window.applyTheme = function(themeName) {
     document.documentElement.style.setProperty('--ui-theme-dark', theme.dark);
     document.documentElement.style.setProperty('--ui-theme-hue-shift', theme.hue);
     document.documentElement.style.setProperty('--ui-theme-grayscale', theme.grayscale);
+
+    const hex = theme.primary.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    
+    // W3C recommended threshold for switching text color is 128. We use 130 to catch moderately bright colors.
+    if (yiq >= 130) {
+        document.documentElement.classList.add('bright-theme');
+        document.documentElement.classList.remove('dark-ui-theme');
+        document.body.classList.add('bright-theme');
+        document.body.classList.remove('dark-ui-theme');
+    } else if (yiq < 60) {
+        document.documentElement.classList.remove('bright-theme');
+        document.documentElement.classList.add('dark-ui-theme');
+        document.body.classList.remove('bright-theme');
+        document.body.classList.add('dark-ui-theme');
+    } else {
+        document.documentElement.classList.remove('bright-theme');
+        document.documentElement.classList.remove('dark-ui-theme');
+        document.body.classList.remove('bright-theme');
+        document.body.classList.remove('dark-ui-theme');
+    }
+
     localStorage.setItem('opub_ui_theme', themeName);
     
     // Update theme selectors if they exist
@@ -3030,7 +3086,7 @@ window.renderThemeDropdown = function(activeTheme) {
         return `
             <div class="dropdown-item" onclick="window.selectTheme('${t}')" style="${bgStyle}">
                 <div style="${circleStyle}"></div>
-                <span style="flex-grow: 1; color: #333;">${t}</span>
+                <span style="flex-grow: 1; color: var(--ui-text);">${t}</span>
                 ${checkIcon}
             </div>
         `;
@@ -7909,20 +7965,26 @@ window.syncRulers = function() {
     hCtx.scale(dpr, dpr);
     vCtx.scale(dpr, dpr);
 
-    // Clear canvases and paint the darker grey background (Matches the canvas backdrop)
-    hCtx.fillStyle = '#eeeeee'; 
+    const isDark = document.body.classList.contains('dark-mode');
+    const bgStyle = isDark ? '#333333' : '#eeeeee';
+    const fgStyle = isDark ? '#a0a0a0' : '#555555';
+    const borderStyle = isDark ? '#555555' : '#9ca3af';
+
+    // Clear canvases and paint the background
+    hCtx.fillStyle = bgStyle; 
     hCtx.fillRect(0, 0, hRect.width, hRect.height);
-    vCtx.fillStyle = '#eeeeee'; 
+    vCtx.fillStyle = bgStyle; 
+    vCtx.fillRect(0, 0, vRect.width, vRect.height);
 
     // Typography & Line Styles
-    hCtx.fillStyle = '#555';
+    hCtx.fillStyle = fgStyle;
     hCtx.font = '10px "Segoe UI", Roboto, sans-serif';
-    hCtx.strokeStyle = '#9ca3af';
+    hCtx.strokeStyle = borderStyle;
     hCtx.lineWidth = 1;
 
-    vCtx.fillStyle = '#555';
+    vCtx.fillStyle = fgStyle;
     vCtx.font = '10px "Segoe UI", Roboto, sans-serif';
-    vCtx.strokeStyle = '#9ca3af';
+    vCtx.strokeStyle = borderStyle;
     vCtx.lineWidth = 1;
 
     // Optical Level of Detail (LOD) - Smart spacing based on zoom
@@ -11667,7 +11729,38 @@ window.ContextRibbonSystem = {
         const clipGroup = `<div class="group"><div class="tool-btn" onclick="copyEl()"><i class="fas fa-copy" style="color:var(--ui-theme-color)"></i> Copy</div><div class="tool-btn" onclick="ContextMenuActions.pasteNormal()"><i class="fas fa-paste" style="color:var(--ui-theme-color)"></i> Paste</div><div class="group-label">Clipboard</div></div>`;
         const arrGroup = `<div class="group"><div class="tool-btn" onclick="bringFront()"><i class="fas fa-arrow-up" style="color:var(--ui-theme-color)"></i> Front</div><div class="tool-btn" onclick="sendBack()"><i class="fas fa-arrow-down" style="color:var(--ui-theme-color)"></i> Back</div><div class="tool-btn" onclick="ContextRibbonActions.alignCenter()"><i class="fas fa-align-center" style="color:var(--ui-theme-color)"></i> Align</div><div class="tool-btn" onclick="ContextRibbonActions.toggleGroup()"><i class="fas fa-object-group" style="color:var(--ui-theme-color)"></i> Group</div><div class="tool-btn" onclick="toggleRotateMenu(this); event.stopPropagation();"><i class="fas fa-sync-alt" style="color:var(--ui-theme-color)"></i> Rotate <i class="fas fa-caret-down"></i></div><div class="tool-btn" onclick="deleteSelected()" style="color:#c00;"><i class="fas fa-trash-alt" style="color:var(--ui-theme-color);"></i> Delete</div><div class="group-label">Arrange</div></div>`;
         const drawGroup = `<div class="group drawing-tools-group"><div class="tool-btn drawing-tool-btn" data-tool="pencil" onclick="if(typeof startDrawing==='function') startDrawing('pencil')"><i class="fas fa-pencil-alt" style="color:var(--ui-theme-color)"></i> Pencil</div><div class="tool-btn drawing-tool-btn" data-tool="brush" onclick="if(typeof startDrawing==='function') startDrawing('brush')"><i class="fas fa-paint-brush" style="color:var(--ui-theme-color)"></i> Brush</div><div class="tool-btn drawing-tool-btn" data-tool="spray" onclick="if(typeof startDrawing==='function') startDrawing('spray')"><i class="fas fa-spray-can" style="color:var(--ui-theme-color)"></i> Spray</div><div class="tool-btn drawing-tool-btn" data-tool="eraser" onclick="if(typeof startDrawing==='function') startDrawing('eraser')"><i class="fas fa-eraser" style="color:var(--ui-theme-color)"></i> Eraser</div><div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; margin: 0 5px;"><div class="drawing-color-picker" style="width:25px; height:25px; background-color:#000000; border:none; padding:0; cursor:pointer; border-radius: 6px; box-shadow: 0 0 2px rgba(0,0,0,0.3); outline: none;" title="Drawing Color" onclick="CustomColorPicker.open(this, this.style.backgroundColor || '#000000', (c) => { this.style.backgroundColor = c; if(typeof updateDrawingColor === 'function') updateDrawingColor(c); })"></div><div class="tool-btn finish-drawing-btn" onclick="if(typeof finishDrawing==='function') finishDrawing()" style="color:var(--ui-theme-color); font-weight:bold; display:none; padding: 2px 5px; min-width:unset;"><i class="fas fa-check-circle"></i> Done</div></div><div class="group-label">Drawing</div></div>`;
-        const sizeGroup = `<div class="group"><div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;"><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">W:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; justify-content:space-between;"><label style="margin-right:4px;">H:</label><div class="modern-spinner" style="width:54px;"><input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)"><div class="spin-btns"><div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div></div></div><span style="margin-left:4px;">px</span></div><div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);"><input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--ui-theme-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();"><span style="user-select:none;">Lock aspect ratio</span></div></div><div class="group-label">Size</div></div>`;
+        const sizeGroup = `
+            <div class="group">
+                <div style="display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 4px; font-size:11px; height:100%;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <label class="ribbon-mini-label" style="margin-right:4px;">W:</label>
+                        <div class="modern-spinner" style="width:54px;">
+                            <input type="text" id="ribbon-el-w" onchange="ContextRibbonActions.updateElementSize('w', this.value)">
+                            <div class="spin-btns">
+                                <div onclick="document.getElementById('ribbon-el-w').value=parseInt(document.getElementById('ribbon-el-w').value||0)+1; ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-up"></i></div>
+                                <div onclick="document.getElementById('ribbon-el-w').value=Math.max(1,parseInt(document.getElementById('ribbon-el-w').value||0)-1); ContextRibbonActions.updateElementSize('w', document.getElementById('ribbon-el-w').value)"><i class="fas fa-chevron-down"></i></div>
+                            </div>
+                        </div>
+                        <span class="ribbon-mini-label" style="margin-left:4px;">px</span>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <label class="ribbon-mini-label" style="margin-right:4px;">H:</label>
+                        <div class="modern-spinner" style="width:54px;">
+                            <input type="text" id="ribbon-el-h" onchange="ContextRibbonActions.updateElementSize('h', this.value)">
+                            <div class="spin-btns">
+                                <div onclick="document.getElementById('ribbon-el-h').value=parseInt(document.getElementById('ribbon-el-h').value||0)+1; ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-up"></i></div>
+                                <div onclick="document.getElementById('ribbon-el-h').value=Math.max(1,parseInt(document.getElementById('ribbon-el-h').value||0)-1); ContextRibbonActions.updateElementSize('h', document.getElementById('ribbon-el-h').value)"><i class="fas fa-chevron-down"></i></div>
+                            </div>
+                        </div>
+                        <span class="ribbon-mini-label" style="margin-left:4px;">px</span>
+                    </div>
+                    <div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);">
+                        <input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--ui-theme-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();">
+                        <span class="ribbon-mini-label" style="user-select:none;">Lock aspect ratio</span>
+                    </div>
+                </div>
+                <div class="group-label">Size</div>
+            </div>`;
 
         const tabsC = document.querySelector('.ribbon-tabs');
         if (tabsC && !document.getElementById('tab-format-text')) {
@@ -17635,8 +17728,8 @@ window.initShapes = function() {
 
     const makeIcon = (label, vw, w, fs, y) => `
         <svg width="${w}" height="35" viewBox="0 0 ${vw} 28" style="display:block;">
-            <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L ${vw-4} 2 C ${vw-2.9} 2 ${vw-2} 2.9 ${vw-2} 4 L ${vw-2} 28" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-            <text x="${vw/2}" y="${y}" font-family="Arial, sans-serif" font-size="${fs}" font-weight="bold" fill="#cbd5e1" text-anchor="middle">${label}</text>
+            <path d="M 2 28 L 2 4 C 2 2.9 2.9 2 4 2 L ${vw-4} 2 C ${vw-2.9} 2 ${vw-2} 2.9 ${vw-2} 4 L ${vw-2} 28" fill="none" stroke="currentColor" stroke-width="0.8"/>
+            <text x="${vw/2}" y="${y}" font-family="Arial, sans-serif" font-size="${fs}" font-weight="bold" fill="currentColor" text-anchor="middle">${label}</text>
         </svg>
     `;
 
@@ -17652,8 +17745,8 @@ window.initShapes = function() {
         else if (f === 'businesscard') {
             svg = `
             <svg width="40" height="35" viewBox="0 0 36 28" style="display:block;">
-                <path d="M 2 20 L 2 4 C 2 2.9 2.9 2 4 2 L 32 2 C 33.1 2 34 2.9 34 4 L 34 20 C 34 21.1 33.1 22 32 22 L 4 22 C 2.9 22 2 21.1 2 20 Z" fill="none" stroke="#cbd5e1" stroke-width="0.8"/>
-                <text x="18" y="14" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#cbd5e1" text-anchor="middle">CARD</text>
+                <path d="M 2 20 L 2 4 C 2 2.9 2.9 2 4 2 L 32 2 C 33.1 2 34 2.9 34 4 L 34 20 C 34 21.1 33.1 22 32 22 L 4 22 C 2.9 22 2 21.1 2 20 Z" fill="none" stroke="currentColor" stroke-width="0.8"/>
+                <text x="18" y="14" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="currentColor" text-anchor="middle">CARD</text>
             </svg>`;
         }
         else svg = makeIcon('CUSTOM', 34, 42, 5.5, 17);
@@ -24226,9 +24319,9 @@ window.toggleCrop = function() {
         // 2. Build internal elements
         eraserBtn.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; height: 32px; width: 32px; margin-bottom: 2px;">
-                <i class="fas fa-border-none" style="font-size: 22px !important; color: var(--ui-theme-color) !important; display: block !important;"></i>
+                <i class="fas fa-border-none" style="font-size: 22px !important; display: block !important;"></i>
             </div>
-            <span style="font-size: 11px !important; font-family: 'Segoe UI', sans-serif !important; text-align: center !important; line-height: 1.2 !important; color: #333 !important; display: block !important; white-space: nowrap;">Remove<br>Border</span>
+            <span style="font-size: 11px !important; font-family: 'Segoe UI', sans-serif !important; text-align: center !important; line-height: 1.2 !important; display: block !important; white-space: nowrap;">Remove<br>Border</span>
         `;
 
         // 3. Re-bind native hover states
