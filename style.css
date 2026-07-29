@@ -106,9 +106,13 @@ body.dark-mode .ribbon-pan-arrow i,
 body.dark-mode .qr-icon,
 body.dark-mode .theme-settings-label,
 body.dark-mode #dark-mode-icon,
-body.dark-mode .danger-text,
 body.dark-mode .shape-preview-vector {
     filter: brightness(1.5) saturate(1.2);
+}
+
+body.dark-mode .danger-text,
+body.dark-mode .tool-btn[onclick*="deleteSelected"] {
+    color: #f87171 !important;
 }
 
 body.dark-mode #dark-mode-switch {
@@ -128,6 +132,167 @@ body.dark-mode .drawing-color-picker {
 
 body.dark-mode .page-thumb {
     border: 1px solid #777;
+}
+
+/* Custom Dialog Dark Mode Overrides */
+body.dark-mode .custom-dialog {
+    background: var(--ui-panel-bg);
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+}
+body.dark-mode .custom-dialog-close {
+    background: rgba(255, 255, 255, 0.15);
+}
+body.dark-mode .custom-dialog-close:hover {
+    background: rgba(235, 87, 87, 0.9);
+}
+body.dark-mode .custom-dialog input[type="text"],
+body.dark-mode .custom-dialog input[type="number"],
+body.dark-mode .custom-dialog textarea,
+body.dark-mode .custom-dialog select {
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    border-color: var(--ui-border);
+}
+body.dark-mode .custom-dialog .btn-secondary {
+    background: color-mix(in srgb, var(--ui-text) 10%, transparent);
+    color: var(--ui-text);
+    border-color: var(--ui-border);
+}
+body.dark-mode .custom-dialog .btn-secondary:hover {
+    background: color-mix(in srgb, var(--ui-text) 20%, transparent);
+}
+
+/* Inline Style Overrides for Dark Mode Modals (JS dynamically styled elements) */
+body.dark-mode .custom-dialog [style*="color: #1e293b"],
+body.dark-mode .custom-dialog [style*="color: #334155"],
+body.dark-mode .custom-dialog [style*="color:#555"],
+body.dark-mode .custom-dialog [style*="color: #444"],
+body.dark-mode .custom-dialog [style*="color: #333"],
+body.dark-mode .custom-dialog [style*="color:#333"] {
+    color: var(--ui-text) !important;
+}
+body.dark-mode .custom-dialog [style*="color: #64748b"] {
+    color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important;
+}
+body.dark-mode .custom-dialog [style*="background: #f8fafc"],
+body.dark-mode .custom-dialog [style*="background: #f1f5f9"] {
+    background: var(--ui-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .custom-dialog [style*="background: #fdf2f8"] {
+    background: color-mix(in srgb, #db2777 15%, var(--ui-bg)) !important;
+}
+body.dark-mode .custom-dialog [style*="background: #ecfeff"] {
+    background: color-mix(in srgb, #0891b2 15%, var(--ui-bg)) !important;
+}
+body.dark-mode .custom-dialog [style*="background: #f0f0f0"],
+body.dark-mode .custom-dialog [style*="background: rgb(240, 240, 240)"] {
+    background: var(--ui-panel-bg) !important;
+}
+body.dark-mode .custom-dialog .opt-tab {
+    color: var(--ui-text) !important;
+}
+body.dark-mode .custom-dialog [style*="background: #f9f9f9"],
+body.dark-mode .custom-dialog [style*="background: rgb(249, 249, 249)"] {
+    background: color-mix(in srgb, var(--ui-panel-bg) 60%, transparent) !important;
+}
+body.dark-mode .custom-dialog [style*="border: 1px solid #e2e8f0"],
+body.dark-mode .custom-dialog [style*="border: 1px solid #cbd5e1"],
+body.dark-mode .custom-dialog [style*="border-right: 1px solid #ddd"],
+body.dark-mode .custom-dialog [style*="border-top: 1px solid #eee"] {
+    border-color: var(--ui-border) !important;
+}
+
+/* Modal Inline Style Overrides */
+body.dark-mode #clipart-grid > div:not(.gallery-item) {
+    background: var(--ui-bg) !important;
+    border-bottom: 1px solid var(--ui-border) !important;
+}
+body.dark-mode #wordart-grid,
+body.dark-mode #dialog-wordart-grid,
+body.dark-mode #beta-wa-grid,
+body.dark-mode #ad-grid {
+    background: transparent !important;
+}
+body.dark-mode #wordart-grid .gallery-item,
+body.dark-mode #dialog-wordart-grid .gallery-item,
+body.dark-mode #beta-wa-grid .gallery-item,
+body.dark-mode #ad-grid .gallery-item {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+    border-radius: 4px;
+}
+
+/* Beta WordArt Modal Overrides */
+body.dark-mode .custom-dialog-body:has(#beta-wa-grid-container) {
+    background: var(--ui-panel-bg) !important;
+    gap: 0 !important;
+}
+body.dark-mode .wa-modal-grid-container,
+body.dark-mode .wa-modal-footer {
+    background: var(--ui-panel-bg) !important;
+}
+body.dark-mode .wa-modal-footer {
+    border-top: 1px solid var(--ui-border) !important;
+}
+body.dark-mode .beta-wa-card {
+    background: transparent !important;
+    border-color: transparent !important;
+}
+body.dark-mode .beta-wa-card.selected {
+    border-color: var(--ui-theme-color) !important;
+    background: color-mix(in srgb, var(--ui-theme-color) 15%, transparent) !important;
+    box-shadow: 0 4px 8px color-mix(in srgb, var(--ui-theme-color) 15%, transparent) !important;
+}
+body.dark-mode .wa-btn-cancel {
+    background: transparent !important;
+    color: var(--ui-text) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .wa-btn-cancel:hover {
+    background: var(--ui-hover-bg) !important;
+    border-color: #888 !important;
+}
+body.dark-mode .wa-modal-input {
+    background: color-mix(in srgb, #000 30%, transparent) !important;
+    color: #ffffff !important;
+}
+body.dark-mode .wa-modal-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* About Dialog Overrides */
+body.dark-mode .custom-dialog .about-container { color: var(--ui-text) !important; }
+body.dark-mode .custom-dialog .about-subtitle { color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important; }
+body.dark-mode .custom-dialog .ywa-card { background: var(--ui-bg) !important; border-color: var(--ui-border) !important; }
+body.dark-mode .custom-dialog .ywa-card:hover { background: color-mix(in srgb, var(--ui-bg) 80%, white) !important; border-color: color-mix(in srgb, var(--ui-border) 80%, white) !important; }
+body.dark-mode .custom-dialog .ywa-title { color: var(--ui-text) !important; }
+body.dark-mode .custom-dialog .ywa-desc { color: color-mix(in srgb, var(--ui-text) 80%, transparent) !important; }
+body.dark-mode .custom-dialog .about-footer-link { color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important; }
+body.dark-mode .custom-dialog .about-footer-link:hover { color: var(--ui-text) !important; }
+
+/* Page Parts Library Overrides */
+body.dark-mode .custom-dialog .pp-card { background: var(--ui-panel-bg) !important; border-color: var(--ui-border) !important; }
+body.dark-mode .custom-dialog .pp-card:hover { border-color: var(--ui-theme-color) !important; background: color-mix(in srgb, var(--ui-panel-bg) 60%, transparent) !important; }
+body.dark-mode .custom-dialog .pp-card-title { color: var(--ui-text) !important; }
+body.dark-mode .custom-dialog .pp-card-desc { color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important; }
+
+/* Template Category Overrides */
+body.dark-mode #template-cats {
+    border-bottom: 2px solid var(--ui-border) !important;
+}
+body.dark-mode #template-cats::before {
+    color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important;
+}
+body.dark-mode #template-cats .cat-btn {
+    color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important;
+}
+body.dark-mode #template-cats .cat-btn i {
+    color: color-mix(in srgb, var(--ui-text) 50%, transparent) !important;
+}
+body.dark-mode #template-cats .cat-btn.active {
+    color: var(--ui-theme-color) !important;
 }
 
 * { box-sizing: border-box; user-select: none; -webkit-user-drag: none; }
@@ -229,6 +394,16 @@ body {
 }
 
 body.bright-theme .title-bar { color: #111; }
+body.bright-theme .title-bar .undo-redo-btn { color: #111; }
+body.bright-theme .title-bar .undo-redo-btn.disabled { color: rgba(17,17,17,0.3); }
+body.bright-theme .title-bar .doc-name { color: #111; border-color: rgba(17,17,17,0.3); }
+body.bright-theme .title-bar .tool-btn { color: #111; }
+body.bright-theme .title-bar .tool-btn i { color: #111; }
+
+body.bright-theme .custom-dialog-header { color: #111; }
+body.bright-theme .custom-dialog-header .custom-dialog-close { color: #111; }
+body.bright-theme .btn-primary { color: #111 !important; }
+body.bright-theme .custom-dialog button[style*="color: white"] { color: #111 !important; }
 body.bright-theme .tab { color: #111; }
 body.bright-theme .tab.active { color: var(--ui-text); }
 body.bright-theme .tab.active:hover { background: var(--ui-panel-bg); }
@@ -380,6 +555,7 @@ body.dark-mode .tab.active {
     50% { transform: scale(1.3); color: var(--ui-theme-color); }
 }
 .ribbon-pan-arrow i {
+    color: var(--ui-text);
     animation: arrow-throb 2s ease-in-out 1;
     transition: transform 0.2s;
 }
@@ -1126,6 +1302,7 @@ td, th {
     position: absolute; background: var(--ui-panel-bg); border: 1px solid var(--ui-border); color: var(--ui-text);
     box-shadow: 2px 2px 10px var(--ui-shadow); display: none; z-index: 999999;
     padding: 5px; max-height: 400px; overflow-y: auto; width: 320px;
+    border-radius: 6px;
 }
 #shape-dropdown {
     border-radius: 6px;
@@ -1147,19 +1324,19 @@ td, th {
 .dropdown-menu .dropdown-category-header:first-child {
     border-top: none;
 }
-#snap-dropdown, #color-blind-dropdown, #business-info-dropdown, #rotate-dropdown, #margins-dropdown, #size-dropdown, #ribbon-theme-dropdown, #guides-dropdown {
+#snap-dropdown, #color-blind-dropdown, #business-info-dropdown, #rotate-dropdown, #margins-dropdown, #size-dropdown, #ribbon-theme-dropdown, #guides-dropdown, #table-dropdown {
     border-radius: 6px; border: 1px solid var(--ui-theme-color); overflow: hidden; padding: 2px;
     box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-theme-color) 15%, transparent); font-size: 13px;
 }
 #rotate-dropdown { width: 160px; }
-#snap-dropdown .dropdown-item, #color-blind-dropdown .dropdown-item, #business-info-dropdown .dropdown-item, #rotate-dropdown .dropdown-item, #margins-dropdown .dropdown-item, #size-dropdown .dropdown-item, #ribbon-theme-dropdown .dropdown-item, #guides-dropdown .dropdown-item {
+#snap-dropdown .dropdown-item, #color-blind-dropdown .dropdown-item, #business-info-dropdown .dropdown-item, #rotate-dropdown .dropdown-item, #margins-dropdown .dropdown-item, #size-dropdown .dropdown-item, #ribbon-theme-dropdown .dropdown-item, #guides-dropdown .dropdown-item, #table-dropdown .dropdown-item {
     border-radius: 4px; border: 1px solid transparent; height: 26px; margin-bottom: 2px;
     justify-content: flex-start !important; padding: 0 10px; box-sizing: border-box; width: 100%;
 }
-#snap-dropdown .dropdown-item:last-child, #color-blind-dropdown .dropdown-item:last-child, #business-info-dropdown .dropdown-item:last-child, #rotate-dropdown .dropdown-item:last-child, #margins-dropdown .dropdown-item:last-child, #size-dropdown .dropdown-item:last-child, #ribbon-theme-dropdown .dropdown-item:last-child, #guides-dropdown .dropdown-item:last-child {
+#snap-dropdown .dropdown-item:last-child, #color-blind-dropdown .dropdown-item:last-child, #business-info-dropdown .dropdown-item:last-child, #rotate-dropdown .dropdown-item:last-child, #margins-dropdown .dropdown-item:last-child, #size-dropdown .dropdown-item:last-child, #ribbon-theme-dropdown .dropdown-item:last-child, #guides-dropdown .dropdown-item:last-child, #table-dropdown .dropdown-item:last-child {
     margin-bottom: 0;
 }
-#snap-dropdown .dropdown-item:hover, #color-blind-dropdown .dropdown-item:hover, #business-info-dropdown .dropdown-item:hover, #rotate-dropdown .dropdown-item:hover, #margins-dropdown .dropdown-item:hover, #size-dropdown .dropdown-item:hover, #ribbon-theme-dropdown .dropdown-item:hover, #guides-dropdown .dropdown-item:hover {
+#snap-dropdown .dropdown-item:hover, #color-blind-dropdown .dropdown-item:hover, #business-info-dropdown .dropdown-item:hover, #rotate-dropdown .dropdown-item:hover, #margins-dropdown .dropdown-item:hover, #size-dropdown .dropdown-item:hover, #ribbon-theme-dropdown .dropdown-item:hover, #guides-dropdown .dropdown-item:hover, #table-dropdown .dropdown-item:hover {
     background: color-mix(in srgb, var(--ui-theme-color) 10%, transparent) !important; 
     border-color: transparent !important;
     color: var(--ui-theme-color) !important;
@@ -3484,3 +3661,285 @@ body.linking-mode, body.linking-mode * {
     border: none !important;
 }
 .dropdown-menu::-webkit-scrollbar-button { display: none !important; }
+
+/* Borders Dropdown Menu in Dark Mode */
+body.dark-mode #border-menu-scroll-container {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode #border-menu-scroll-container label,
+body.dark-mode #border-grid > div span {
+    color: var(--ui-text) !important;
+}
+body.dark-mode #border-weight-label {
+    color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important;
+}
+body.dark-mode #custom-color-wrapper {
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode #border-grid > div {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode #border-grid > div:hover {
+    background: var(--ui-hover-bg) !important;
+}
+body.dark-mode #border-grid > div > div > div {
+    /* For the "None" style preview box */
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode #border-grid svg * {
+    stroke: var(--ui-text) !important;
+}
+
+/* Coupon Dialog Overrides */
+body.dark-mode .custom-dialog .template-option {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .custom-dialog .template-option:hover {
+    background: var(--ui-hover-bg) !important;
+}
+
+/* Custom DOM Select (Modal Dialog Dropdowns) */
+body.dark-mode .custom-dom-select {
+    background: var(--ui-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .custom-dom-select:hover {
+    border-color: var(--ui-theme-color) !important;
+}
+body.dark-mode .custom-dom-select > span {
+    color: var(--ui-text) !important;
+}
+body.dark-mode .custom-dom-select > div:last-child {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .custom-dom-select > div:last-child > div {
+    color: var(--ui-text) !important;
+    background: transparent !important;
+}
+body.dark-mode .custom-dom-select > div:last-child > div:hover {
+    background: var(--ui-hover-bg) !important;
+}
+
+/* Styled Tables Modal */
+body.dark-mode .tt-grid {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .tt-card {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .tt-card:hover {
+    background: var(--ui-hover-bg) !important;
+}
+body.dark-mode .tt-name {
+    color: var(--ui-text) !important;
+}
+body.dark-mode .tt-grid > div:not(.tt-card) {
+    color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important;
+}
+body.dark-mode .mini-table {
+    background: white !important;
+    color: black !important;
+    box-shadow: 0 0 0 4px white; /* Add a tiny white margin around the preview */
+    border-radius: 2px;
+}
+
+/* Insert Symbol Modal Overrides */
+body.dark-mode .symbol-cell {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .symbol-cat-tab {
+    background: transparent !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .symbol-cat-tab:hover {
+    background: var(--ui-hover-bg) !important;
+    border-color: var(--ui-theme-color) !important;
+}
+body.dark-mode .symbol-cat-tab.active {
+    background: var(--ui-theme-color) !important;
+    color: #fff !important;
+    border-color: var(--ui-theme-dark) !important;
+}
+body.dark-mode .custom-dialog div:has(> #symbol-preview-char) {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode #symbol-preview-name {
+    color: var(--ui-text) !important;
+}
+body.dark-mode #symbol-preview-code,
+body.dark-mode .custom-dialog div:has(> #symbol-preview-name) + div {
+    color: color-mix(in srgb, var(--ui-text) 60%, transparent) !important;
+}
+
+/* Selected Drawing Tool Override */
+body.dark-mode .drawing-tool-btn[style*="background-color"] {
+    background-color: color-mix(in srgb, var(--ui-theme-color) 20%, transparent) !important;
+}
+
+/* Custom Color Picker Dark Mode */
+body.dark-mode .custom-color-picker {
+    background: var(--ui-panel-bg);
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+}
+body.dark-mode .color-picker-header,
+body.dark-mode .color-hex-input-wrapper label,
+body.dark-mode .color-rgb-input-wrapper label,
+body.dark-mode .ccp-eyedropper {
+    color: color-mix(in srgb, var(--ui-text) 80%, transparent);
+}
+body.dark-mode .color-hex-input-wrapper,
+body.dark-mode .color-rgb-input-wrapper {
+    border-color: var(--ui-border);
+}
+body.dark-mode .color-hex-input-wrapper input[type="text"],
+body.dark-mode .color-rgb-input-wrapper input[type="number"] {
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    border-color: var(--ui-border);
+}
+body.dark-mode .color-hex-input-wrapper input[type="text"]:focus,
+body.dark-mode .color-rgb-input-wrapper input[type="number"]:focus {
+    border-color: var(--ui-theme-color);
+}
+body.dark-mode .ccp-eyedropper:hover {
+    background: var(--ui-hover-bg);
+    color: var(--ui-theme-color);
+}
+body.dark-mode .ccp-tabs {
+    background: var(--ui-bg);
+}
+body.dark-mode .ccp-tab {
+    color: color-mix(in srgb, var(--ui-text) 60%, transparent);
+}
+body.dark-mode .ccp-tab.active {
+    background: var(--ui-panel-bg);
+    color: var(--ui-theme-color);
+}
+body.dark-mode .color-swatch {
+    border-color: var(--ui-border) !important;
+    box-shadow: none !important;
+}
+body.dark-mode .color-swatch:hover {
+    border-color: var(--ui-text) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .ccp-preview-swatch,
+body.dark-mode #ccp-sv-canvas,
+body.dark-mode #ccp-hue-canvas {
+    border-color: var(--ui-border) !important;
+}
+
+/* Analysis Modals Dark Mode */
+body.dark-mode .analysis-card {
+    background: transparent !important;
+    border-color: var(--ui-border);
+}
+body.dark-mode .analysis-title {
+    color: var(--ui-text) !important;
+}
+body.dark-mode .analysis-desc {
+    color: color-mix(in srgb, var(--ui-text) 80%, transparent);
+}
+body.dark-mode .suggestion-list {
+    color: color-mix(in srgb, var(--ui-text) 90%, transparent) !important;
+}
+body.dark-mode .suggestion-list b {
+    color: #f87171 !important;
+}
+body.dark-mode .suggestion-list span {
+    color: #4ade80 !important;
+}
+body.dark-mode .word-tag {
+    background: color-mix(in srgb, var(--ui-text) 10%, transparent) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .word-tag.warning {
+    background: color-mix(in srgb, #ef4444 20%, transparent) !important;
+    color: #fca5a5 !important;
+}
+
+/* Remap inline colors for Dark Mode legibility */
+body.dark-mode .analysis-card[style*="#15803d"] { border-left-color: #4ade80 !important; }
+body.dark-mode .analysis-desc[style*="#15803d"], body.dark-mode .analysis-value[style*="#15803d"] { color: #4ade80 !important; }
+
+body.dark-mode .analysis-card[style*="#d97706"] { border-left-color: #fbbf24 !important; }
+body.dark-mode .analysis-desc[style*="#d97706"], body.dark-mode .analysis-value[style*="#d97706"] { color: #fbbf24 !important; }
+
+body.dark-mode .analysis-card[style*="#b91c1c"] { border-left-color: #f87171 !important; }
+body.dark-mode .analysis-desc[style*="#b91c1c"], body.dark-mode .analysis-value[style*="#b91c1c"] { color: #f87171 !important; }
+
+/* Custom Context Menus Dark Mode */
+body.dark-mode .pub-context-menu,
+body.dark-mode .pub-flyout-menu,
+body.dark-mode #minimap-context-menu,
+body.dark-mode #minimap-context-menu .cm-submenu {
+    background: var(--ui-panel-bg);
+    box-shadow: 0 8px 24px var(--ui-shadow);
+}
+body.dark-mode .pub-context-item,
+body.dark-mode #minimap-context-menu .cm-item {
+    color: var(--ui-text);
+}
+body.dark-mode .pub-context-item:hover,
+body.dark-mode #minimap-context-menu .cm-item:hover {
+    background: var(--ui-hover-bg);
+}
+body.dark-mode .pub-context-divider,
+body.dark-mode #minimap-context-menu .cm-separator {
+    background: var(--ui-border);
+}
+body.dark-mode .pub-context-item.disabled {
+    color: color-mix(in srgb, var(--ui-text) 30%, transparent);
+}
+body.dark-mode .pub-context-item.disabled i {
+    color: color-mix(in srgb, var(--ui-text) 30%, transparent);
+}
+body.dark-mode .pub-context-item.disabled:hover {
+    background: transparent;
+}
+body.dark-mode .pub-context-item.has-flyout > i.fa-caret-right {
+    color: color-mix(in srgb, var(--ui-text) 50%, transparent);
+}
+body.dark-mode #minimap-context-menu .cm-item span[style*="var(--ui-danger)"],
+body.dark-mode #minimap-context-menu .cm-item i[style*="var(--ui-danger)"],
+body.dark-mode .pub-context-item[style*="color:#f44336"],
+body.dark-mode .pub-context-item i[style*="color:#f44336"] {
+    color: #f87171 !important;
+}
+
+/* Clipart Gallery Dark Mode */
+body.dark-mode .custom-dialog-body:has(#clipart-grid-container) {
+    background: var(--ui-panel-bg) !important;
+    gap: 0 !important;
+}
+body.dark-mode .clipart-grid-container {
+    background: var(--ui-panel-bg) !important;
+}
+body.dark-mode .clipart-card.selected {
+    background-color: color-mix(in srgb, var(--ui-theme-color) 20%, transparent) !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-theme-color) 30%, transparent) !important;
+}
+body.dark-mode #clipart-search-input {
+    background: rgba(0, 0, 0, 0.25) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}
+body.dark-mode #clipart-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+body.dark-mode #clipart-search-wrapper i {
+    color: rgba(255, 255, 255, 0.8) !important;
+}

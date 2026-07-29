@@ -4054,8 +4054,8 @@ function initTablePicker() {
             const cell = document.createElement('div');
             cell.style.width = '18px';
             cell.style.height = '18px';
-            cell.style.border = '1px solid #ccc';
-            cell.style.backgroundColor = '#fff';
+            cell.style.border = '1px solid var(--ui-border)';
+            cell.style.backgroundColor = 'var(--ui-bg)';
             cell.style.cursor = 'pointer';
             cell.dataset.r = r;
             cell.dataset.c = c;
@@ -4066,11 +4066,11 @@ function initTablePicker() {
                     const cr = parseInt(child.dataset.r);
                     const cc = parseInt(child.dataset.c);
                     if(cr <= r && cc <= c) {
-                        child.style.backgroundColor = '#cce8ff';
-                        child.style.borderColor = '#0078d4';
+                        child.style.backgroundColor = 'color-mix(in srgb, var(--ui-theme-color) 30%, transparent)';
+                        child.style.borderColor = 'var(--ui-theme-color)';
                     } else {
-                        child.style.backgroundColor = '#fff';
-                        child.style.borderColor = '#ccc';
+                        child.style.backgroundColor = 'var(--ui-bg)';
+                        child.style.borderColor = 'var(--ui-border)';
                     }
                 });
             };
@@ -4087,14 +4087,23 @@ function initTablePicker() {
 
 function toggleBusinessInfoMenu(btn, e) {
     const m = document.getElementById('business-info-dropdown');
+    const isBlock = m.style.display === 'block';
     document.querySelectorAll('.dropdown-menu').forEach(d => { if(d!==m) d.style.display = 'none'; });
-    if (btn) {
-        const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
-    } else if (e) {
-        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+    if (!isBlock) {
+        m.style.display = 'block';
+        if (btn) {
+            const r = btn.getBoundingClientRect();
+            if (r.left + m.offsetWidth > window.innerWidth) m.style.left = (r.right - m.offsetWidth) + 'px';
+            else m.style.left = r.left + 'px';
+            m.style.top = (r.bottom+5) + 'px';
+        } else if (e) {
+            if (e.clientX + m.offsetWidth > window.innerWidth) m.style.left = (window.innerWidth - m.offsetWidth - 10) + 'px';
+            else m.style.left = e.clientX + 'px';
+            m.style.top = e.clientY + 'px';
+        }
+    } else {
+        m.style.display = 'none';
     }
-    m.style.display = (m.style.display === 'block' ? 'none' : 'block');
 }
 
 function getBusinessInfo() {
@@ -4268,13 +4277,23 @@ function insertBusinessBulk(type) {
 
 function toggleTableMenu(btn, e) {
     const m = document.getElementById('table-dropdown');
-    if (btn) {
-        const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
-    } else if (e) {
-        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+    const isBlock = m.style.display === 'block';
+    document.querySelectorAll('.dropdown-menu').forEach(d => { if(d!==m) d.style.display = 'none'; });
+    if (!isBlock) {
+        m.style.display = 'block';
+        if (btn) {
+            const r = btn.getBoundingClientRect();
+            if (r.left + m.offsetWidth > window.innerWidth) m.style.left = (r.right - m.offsetWidth) + 'px';
+            else m.style.left = r.left + 'px';
+            m.style.top = (r.bottom+5) + 'px';
+        } else if (e) {
+            if (e.clientX + m.offsetWidth > window.innerWidth) m.style.left = (window.innerWidth - m.offsetWidth - 10) + 'px';
+            else m.style.left = e.clientX + 'px';
+            m.style.top = e.clientY + 'px';
+        }
+    } else {
+        m.style.display = 'none';
     }
-    m.style.display = (m.style.display === 'block' ? 'none' : 'block');
 }
 
 function promptCustomTable() {
