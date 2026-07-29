@@ -10958,11 +10958,10 @@ window.ContextMenuActions = {
                 </svg>
             `;
             
-            const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
-            const url = URL.createObjectURL(svgBlob);
+            const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
             
             const img = new Image();
-            img.crossOrigin = "Anonymous";
+            // Removed img.crossOrigin = "Anonymous" because it taints Blob URIs
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = svgW * 2;
@@ -10970,7 +10969,7 @@ window.ContextMenuActions = {
                 const ctx = canvas.getContext('2d');
                 ctx.scale(2, 2);
                 ctx.drawImage(img, 0, 0);
-                URL.revokeObjectURL(url);
+                // URL revocation not needed for Data URIs
                 
                 try {
                     // Extract pixel data from the raw, padded 3D canvas
@@ -11070,9 +11069,9 @@ window.ContextMenuActions = {
                     serializeCurrentPage();
                     DialogSystem.close();
                 } catch(e) {
-                    console.error(e);
+                    console.error("Canvas crop error:", e);
                     DialogSystem.close();
-                    DialogSystem.alert('Error', 'Canvas cropping failed.');
+                    DialogSystem.alert('Error', 'Canvas cropping failed: ' + (e.name || 'Error') + ' - ' + (e.message || e));
                 }
             };
             img.onerror = () => {
@@ -17008,15 +17007,7 @@ window.initShapes = function() {
     // --- RENDER THE UI ---
     Object.keys(shapeLibrary).forEach(category => {
         const header = document.createElement('div');
-        header.style.padding = "6px 10px";
-        header.style.background = "#f1f5f9";
-        header.style.borderTop = "1px solid #e2e8f0";
-        header.style.borderBottom = "1px solid #e2e8f0";
-        header.style.fontWeight = "bold";
-        header.style.fontSize = "11px";
-        header.style.color = "#475569";
-        header.style.textTransform = "uppercase";
-        header.style.letterSpacing = "0.5px";
+        header.className = "dropdown-category-header";
         dropdown.appendChild(header);
         header.innerText = category;
 
@@ -17030,12 +17021,9 @@ window.initShapes = function() {
         shapeLibrary[category].forEach(shape => {
             const item = document.createElement('div');
             item.title = shape.name;
-            item.style.cssText = "aspect-ratio: 1; border: 1px solid transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: all 0.1s;";
+            item.className = "shape-dropdown-item";
             
             item.innerHTML = `<svg class="shape-preview-vector" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;"><g fill="var(--ui-theme-color)" stroke="var(--ui-theme-dark)" stroke-width="2">${shape.markup}</g></svg>`;
-            
-            item.onmouseover = () => { item.style.background = '#e0f2fe'; item.style.borderColor = '#7dd3fc'; };
-            item.onmouseout = () => { item.style.background = 'transparent'; item.style.borderColor = 'transparent'; };
             
             item.onclick = () => {
                 const insFill = (colorSchemes && colorSchemes[state.currentScheme]) ? colorSchemes[state.currentScheme][3] : 'var(--ui-theme-color)';
