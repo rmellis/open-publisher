@@ -404,6 +404,7 @@ body.bright-theme .custom-dialog-header { color: #111; }
 body.bright-theme .custom-dialog-header .custom-dialog-close { color: #111; }
 body.bright-theme .btn-primary { color: #111 !important; }
 body.bright-theme .custom-dialog button[style*="color: white"] { color: #111 !important; }
+body.bright-theme .page-add-btn { color: #111 !important; }
 body.bright-theme .tab { color: #111; }
 body.bright-theme .tab.active { color: var(--ui-text); }
 body.bright-theme .tab.active:hover { background: var(--ui-panel-bg); }

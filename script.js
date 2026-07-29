@@ -10061,6 +10061,13 @@ const ContextMenuSystem = {
                         ${this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()')}
                     `);
                     html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
+                    html += this.buildFlyoutItem('Rounded Corners', 'fa-border-style', `
+                        ${this.buildItem('None', 'fa-square', "state.selectedEl.querySelector('img').style.clipPath='none'; state.selectedEl.querySelector('img').style.webkitClipPath='none'; pushHistory();")}
+                        ${this.buildItem('8px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 8px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 8px)'; pushHistory();")}
+                        ${this.buildItem('16px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 16px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 16px)'; pushHistory();")}
+                        ${this.buildItem('24px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 24px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 24px)'; pushHistory();")}
+                        ${this.buildItem('32px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 32px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 32px)'; pushHistory();")}
+                    `);
                     html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
                 }
                 // 3. TEXT BOX CONTEXT MENU
@@ -11525,7 +11532,7 @@ window.ContextRibbonActions = {
                 <style>
                     .shape-crop-btn {
                         width: 100%;
-                        background: white;
+                        background: var(--ui-panel-bg, white);
                         border: 1px solid var(--ui-theme-color) !important;
                         color: var(--ui-theme-color);
                         display: flex;
@@ -11539,7 +11546,7 @@ window.ContextRibbonActions = {
                         transition: all 0.2s;
                     }
                     .shape-crop-btn:hover {
-                        background: #f0f9f9;
+                        background: color-mix(in srgb, var(--ui-theme-color) 10%, transparent);
                     }
                     .shape-crop-btn .icon {
                         width: 16px;
@@ -11548,12 +11555,28 @@ window.ContextRibbonActions = {
                         flex-shrink: 0;
                     }
                 </style>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:400px; overflow-y:auto; padding-right:10px;">
-                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='none'; document.getElementById('custom-dialog-confirm').click();" style="grid-column: 1 / -1; justify-content: center;">
-                        <div style="width:16px; height:16px; border:2px dashed #999; flex-shrink:0;"></div> <span style="color:#666;">Remove Crop</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:600px; overflow-y:auto; padding-right:10px;">
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='none'; document.getElementById('custom-dialog-confirm').click();" style="grid-column: 1 / -1; justify-content: center; color: var(--ui-text) !important; border-color: var(--ui-border) !important;">
+                        <div style="width:16px; height:16px; border:2px dashed var(--ui-text-muted); flex-shrink:0;"></div> <span style="color: var(--ui-text);">Remove Crop</span>
                     </button>
-                    <hr style="grid-column: 1 / -1; border:0; border-top:1px solid #ccc; width:100%; margin: 5px 0;">
+                    <hr style="grid-column: 1 / -1; border:0; border-top:1px solid var(--ui-border); width:100%; margin: 5px 0;">
                     
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='inset(0 round 8px)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:inset(0 round 2px);"></div> Rounded 8px
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='inset(0 round 16px)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:inset(0 round 4px);"></div> Rounded 16px
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='inset(0 round 24px)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:inset(0 round 6px);"></div> Rounded 24px
+                    </button>
+                    
+                    <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='inset(0 round 32px)'; document.getElementById('custom-dialog-confirm').click();">
+                        <div class="icon" style="clip-path:inset(0 round 8px);"></div> Rounded 32px
+                    </button>
+
                     <button class="shape-crop-btn" onclick="document.getElementById('ctx-crop-shape').value='circle(50%)'; document.getElementById('custom-dialog-confirm').click();">
                         <div class="icon" style="clip-path:circle(50%);"></div> Circle / Oval
                     </button>
@@ -25114,19 +25137,21 @@ window.addEventListener('beforeprint', () => {
             DialogSystem.show('Preparing Print Job...', `
                 <div style="text-align:center; padding: 20px 10px; font-family: 'Comfortaa', 'Afacad Flux', sans-serif;">
                     <div style="margin-bottom: 20px; display: flex; justify-content: center;">
-                        <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/ZtZYk3e.png" style="width: 80px; height: auto;" alt="Print Icon" />
+                        <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/ZtZYk3e.png" class="print-anim-icon" style="width: 80px; height: auto;" alt="Print Icon" />
                     </div>
-                    <p id="pdf-print-status" style="margin-bottom:20px; font-size:18px; color: #000; font-weight: 400;">
+                    <p id="pdf-print-status" style="margin-bottom:20px; font-size:18px; color: var(--ui-text, #000); font-weight: 400;">
                         Assembling Publication...
                     </p>
-                    <div style="width: 100%; height: 20px; border: 2px solid #006052; border-radius: 20px; padding: 2px; background: transparent; overflow: hidden; box-sizing: border-box;">
-                        <div id="pdf-print-progress" style="width: 0%; height: 100%; background: #006052; border-radius: 20px; transition: width 0.3s ease;"></div>
+                    <div style="width: 100%; height: 20px; border: 2px solid var(--ui-theme-dark); border-radius: 20px; padding: 2px; background: transparent; overflow: hidden; box-sizing: border-box;">
+                        <div id="pdf-print-progress" style="width: 0%; height: 100%; background: var(--ui-theme-color); border-radius: 20px; transition: width 0.3s ease;"></div>
                     </div>
                 </div>
                 <style>
-                    #custom-dialog-header { background-color: #006052 !important; color: white !important; font-size: 20px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; }
+                    #custom-dialog-header { background-color: var(--ui-theme-dark) !important; color: white !important; font-size: 20px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; }
                     #custom-dialog-close { color: white !important; opacity: 0.8; }
                     #custom-dialog-confirm { display: none !important; }
+                    .print-anim-icon { mix-blend-mode: multiply; }
+                    body.dark-mode .print-anim-icon { filter: invert(1) grayscale(1) contrast(100); mix-blend-mode: screen; }
                 </style>
             `, null, true);
         }
