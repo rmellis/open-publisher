@@ -6897,9 +6897,11 @@ function toggleSnapMenu(btn) {
     const isBlock = m.style.display === 'block';
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     if (!isBlock) {
-        const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
         m.style.display = 'block';
+        const r = btn.getBoundingClientRect();
+        if (r.left + m.offsetWidth > window.innerWidth) m.style.left = (r.right - m.offsetWidth) + 'px';
+        else m.style.left = r.left + 'px';
+        m.style.top = (r.bottom+5) + 'px';
     }
 }
 function toggleColorBlindMenu(btn) {
@@ -6907,9 +6909,11 @@ function toggleColorBlindMenu(btn) {
     const isBlock = m.style.display === 'block';
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     if (!isBlock) {
-        const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
         m.style.display = 'block';
+        const r = btn.getBoundingClientRect();
+        if (r.left + m.offsetWidth > window.innerWidth) m.style.left = (r.right - m.offsetWidth) + 'px';
+        else m.style.left = r.left + 'px';
+        m.style.top = (r.bottom+5) + 'px';
     }
 }
 
@@ -13663,10 +13667,10 @@ window.initWordArt = function() {
             optionsGroup.className = 'group';
             optionsGroup.innerHTML = `
                 <div style="display:flex; flex-direction:column; gap:6px; padding: 2px 6px; justify-content: center; height: 100%;">
-                    <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:#333;">
+                    <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:var(--ui-text);">
                         <input type="checkbox" id="ribbon-toggle-float-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--ui-theme-color);"> Show Float Toolbar
                     </label>
-                    <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:#333;">
+                    <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; color:var(--ui-text);">
                         <input type="checkbox" id="ribbon-toggle-margins-${target.suffix}" checked style="margin:0; cursor:pointer; accent-color: var(--ui-theme-color);"> Show Page Margins
                     </label>
                 </div>

@@ -696,15 +696,30 @@ body.dark-mode .tab.active {
 
 #master-page-btn {
     flex: 0 0 46px;
-    background: color-mix(in srgb, var(--ui-theme-color) 40%, white);
-    color: var(--ui-theme-dark);
+    background: transparent;
+    color: var(--ui-theme-color);
+    border: 1.5px solid var(--ui-theme-color);
     font-size: 10px;
     flex-direction: column;
     gap: 0px;
-    padding: 4px;
+    padding: 2.5px;
 }
 #master-page-btn:hover { 
-    background: #75a8a4; 
+    background: var(--ui-theme-color); 
+    color: white;
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+    #master-page-btn {
+        background: color-mix(in srgb, var(--ui-theme-color) 40%, white);
+        color: var(--ui-theme-dark);
+        border: none;
+        padding: 4px;
+    }
+    #master-page-btn:hover { 
+        background: color-mix(in srgb, var(--ui-theme-color) 60%, white);
+        color: var(--ui-theme-dark);
+    }
 }
 
 .master-page-element, .master-page-element * {
@@ -1949,6 +1964,7 @@ svg .shape-path, svg .shape-path * {
 /* Extracted Block 3 */
 .contextual-tab { display: none; font-weight: bold; margin-left: 5px; border-top: 3px solid transparent; color: white !important; opacity: 0.9; }
                 .contextual-tab.active { background: #fff !important; border-bottom: 2px solid #fff; color: #333 !important; opacity: 1; }
+                body.dark-mode .contextual-tab.active { background: var(--ribbon-bg) !important; border-bottom: 2px solid var(--ribbon-bg); color: var(--ui-text) !important; }
                 .tab-text, .tab-pic, .tab-shape, .tab-table, .tab-wordart { border-top-color: var(--ui-theme-color); }
                 .tab-text.active, .tab-pic.active, .tab-shape.active, .tab-table.active, .tab-wordart.active { color: var(--ui-theme-color) !important; }
                 .contextual-toolbar { display: none; }
@@ -2771,6 +2787,68 @@ svg .shape-path, svg .shape-path * {
             transition: background 0.1s;
         }
         .float-size-item:hover { background: color-mix(in srgb, var(--ui-theme-dark) 10%, transparent); }
+        /* --- DARK MODE OVERRIDES FOR FLOAT TOOLBAR --- */
+        body.dark-mode #float-toolbar {
+            background: color-mix(in srgb, var(--ui-panel-bg) 85%, transparent);
+            border: 1px solid var(--ui-border);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+        }
+        body.dark-mode .float-drag-grip {
+            background: color-mix(in srgb, var(--ui-panel-bg) 50%, transparent);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.2);
+            border: 1px solid var(--ui-border);
+        }
+        body.dark-mode .float-drag-grip:hover { background: color-mix(in srgb, var(--ui-panel-bg) 90%, transparent); }
+        
+        body.dark-mode .float-input-group {
+            background: color-mix(in srgb, var(--ui-bg) 70%, transparent) !important;
+            border: 1px solid var(--ui-border);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        body.dark-mode .float-font-btn {
+            color: var(--ui-text) !important;
+        }
+        
+        body.dark-mode .float-size-select,
+        body.dark-mode .float-mini-btn {
+            filter: brightness(1.5) saturate(1.2);
+        }
+        
+        body.dark-mode .float-divider {
+            background: var(--ui-border);
+        }
+        body.dark-mode .drop-arrow {
+            background: var(--ui-hover-bg);
+            color: var(--ui-text);
+        }
+        body.dark-mode .arrange-arrow {
+            background: var(--ui-bg);
+            color: var(--ui-text);
+        }
+        
+        body.dark-mode .custom-dropdown {
+            background: var(--ui-panel-bg) !important;
+            border: 1px solid var(--ui-border) !important;
+        }
+        
+        body.dark-mode .float-size-item, body.dark-mode .font-item {
+            color: var(--ui-text) !important;
+        }
+        body.dark-mode .float-size-item:hover, body.dark-mode .font-item:hover {
+            background: var(--ui-hover-bg) !important;
+        }
+        
+        body.dark-mode.dark-ui-theme .float-font-btn,
+        body.dark-mode.dark-ui-theme .float-mini-btn,
+        body.dark-mode.dark-ui-theme .float-size-select {
+            color: #e0e0e0 !important;
+            filter: none;
+        }
+        body.dark-mode.dark-ui-theme .float-mini-btn:hover .arrange-arrow { background: #333; }
+        
+        body.dark-mode .float-mini-btn:hover, body.dark-mode .float-font-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        body.dark-mode .float-mini-btn:active, body.dark-mode .float-font-btn:active { background: rgba(255, 255, 255, 0.2); }
 
 /* Extracted Block 16 */
 .op-group * {
