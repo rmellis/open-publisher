@@ -3968,3 +3968,19 @@ body.dark-mode .op-header-btn { color: var(--ui-text-muted); }
 body.dark-mode .op-header-btn:hover { color: var(--ui-text); }
 body.dark-mode .op-sidebar-slider::-webkit-slider-thumb { border-color: var(--ui-panel-bg); }
 body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-panel-bg); }
+
+/* ==========================================================================
+   SELECTION OVERLAY (Z-INDEX FIX)
+   ========================================================================== */
+.selected-overlay {
+    z-index: 999999 !important;
+}
+.pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape) .resize-handle,
+.pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape) .rotate-handle,
+.pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape) .rotate-stick {
+    display: none !important;
+}
+.pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape).selected { outline: none !important; }
+.pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape).selected::after { display: none !important; }
+
+.selected-overlay .resize-handle, .selected-overlay .rotate-handle, .selected-overlay .rotate-stick { display: block !important; pointer-events: auto; }

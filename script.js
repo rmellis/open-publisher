@@ -30606,4 +30606,105 @@ window.addEventListener('mouseup', function(e) {
     }
 }, true);
 
+/* =========================================================================
+   Z-INDEX OVERLAY PATCH (Global Handles Fix)
+   ========================================================================= */
+(function installZIndexOverlayPatch() {
+    window._selectionObserver = null;
+    
+    window.updateSelectionObserver = function() {
+        if (window._selectionObserver) window._selectionObserver.disconnect();
+        
+        let els = [];
+        if (state.selectedEl) els.push(state.selectedEl);
+        if (state.multiSelected && state.multiSelected.length > 0) els = state.multiSelected;
 
+        if (els.length > 0) {
+            window._selectionObserver = new MutationObserver(() => window.renderSelectionOverlays());
+            els.forEach(el => {
+                window._selectionObserver.observe(el, { attributes: true, attributeFilter: ['style', 'class', 'data-scaleX', 'data-scaleY'] });
+            });
+            window.renderSelectionOverlays();
+        } else {
+            const container = document.getElementById('selection-overlay-container');
+            if (container) container.innerHTML = '';
+        }
+    };
+
+    window.renderSelectionOverlays = function() {
+        const paper = document.getElementById('paper');
+        if(!paper) return;
+        let container = document.getElementById('selection-overlay-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'selection-overlay-container';
+            container.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999;';
+            paper.appendChild(container);
+        }
+        container.innerHTML = '';
+
+        let els = [];
+        if (state.multiSelected && state.multiSelected.length > 0) {
+            els = state.multiSelected;
+        } else if (state.selectedEl) {
+            els.push(state.selectedEl);
+        }
+
+        els.forEach(el => {
+            const overlay = document.createElement('div');
+            overlay.className = 'selected-overlay'; 
+            overlay.style.cssText = `
+                position: absolute;
+                left: ${el.style.left}; top: ${el.style.top};
+                width: ${el.style.width}; height: ${el.style.height};
+                transform: ${el.style.transform};
+                pointer-events: none;
+                z-index: 999999;
+            `;
+            
+            const box = document.createElement('div');
+            box.style.cssText = 'position: absolute; inset: -1px; border: 1px dashed var(--selection); pointer-events: none;';
+            overlay.appendChild(box);
+
+            if (els.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+                const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+                dirs.forEach(dir => {
+                    const h = document.createElement('div');
+                    h.className = `resize-handle rh-${dir}`;
+                    h.dataset.dir = dir;
+                    h.style.pointerEvents = 'auto'; 
+                    h.style.display = 'block';
+                    overlay.appendChild(h);
+                });
+                const rStick = document.createElement('div');
+                rStick.className = 'rotate-stick';
+                rStick.style.display = 'block';
+                
+                const rHandle = document.createElement('div');
+                rHandle.className = 'rotate-handle';
+                rHandle.style.pointerEvents = 'auto'; 
+                rHandle.style.display = 'block';
+                
+                overlay.appendChild(rStick);
+                overlay.appendChild(rHandle);
+            }
+
+            container.appendChild(overlay);
+        });
+    };
+
+    // Polling fallback to catch selection changes across the app
+    setTimeout(() => {
+        let lastSelected = null;
+        let lastMultiCount = 0;
+        setInterval(() => {
+            const currentMultiCount = state.multiSelected ? state.multiSelected.length : 0;
+            if (state.selectedEl !== lastSelected || currentMultiCount !== lastMultiCount) {
+                lastSelected = state.selectedEl;
+                lastMultiCount = currentMultiCount;
+                window.updateSelectionObserver();
+            }
+        }, 100);
+    }, 1500);
+
+})();
