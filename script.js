@@ -28639,7 +28639,7 @@ window.refreshSelectionPane = function() {
 
         const row = document.createElement('div');
         row.className = 'selection-pane-item' + (isSelected ? ' active' : '');
-        row.style.cssText = `display:flex; align-items:center; padding: 6px 10px; margin-bottom: 4px; background: ${isSelected ? 'rgba(0,118,112,0.1)' : '#f8fafc'}; border: 1px solid ${isSelected ? 'var(--ui-theme-color)' : '#e2e8f0'}; border-radius: 4px; cursor: pointer; transition: 0.2s;`;
+        row.style.cssText = `display:flex; align-items:center; padding: 6px 10px; margin-bottom: 4px; background: ${isSelected ? 'color-mix(in srgb, var(--ui-theme-color) 10%, transparent)' : 'var(--ui-panel-bg, #f8fafc)'}; border: 1px solid ${isSelected ? 'var(--ui-theme-color)' : 'var(--ui-border, #e2e8f0)'}; color: var(--ui-text); border-radius: 4px; cursor: pointer; transition: 0.2s;`;
         
         row.onclick = (e) => {
             if (e.target.closest('.selection-eye') || e.target.tagName === 'INPUT') return;
@@ -28664,7 +28664,7 @@ window.refreshSelectionPane = function() {
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.value = name;
-        nameInput.style.cssText = 'flex: 1; border: none; background: transparent; font-size: 13px; color: #334155; outline: none; padding: 2px 5px; min-width: 0;';
+        nameInput.style.cssText = 'flex: 1; border: none; background: transparent; font-size: 13px; color: var(--ui-text, #334155); outline: none; padding: 2px 5px; min-width: 0;';
         nameInput.onchange = (e) => {
             el.setAttribute('data-element-name', e.target.value);
             if (typeof pushHistory === 'function') pushHistory();
@@ -29011,19 +29011,19 @@ window.showExportImageModal = function() {
 
     const html = `
         <div style="padding: 10px 20px 0 20px;">
-            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">Export the current page as a JPEG image.</p>
+            <p style="margin-bottom: 15px; font-size: 14px; color: var(--ui-text, #555);">Export the current page as a JPEG image.</p>
             
-            <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; background:var(--ui-panel-bg, #f8f9fa); padding:15px; border-radius:8px; border:1px solid var(--ui-border, #e0e0e0); margin-bottom:20px;">
                 <div>
                     <div style="font-weight:bold; color:var(--ui-theme-dark); margin-bottom:4px;">Export Resolution</div>
-                    <div id="img-res-display" style="font-size:13px; color:#555;">Web (96 dpi)</div>
+                    <div id="img-res-display" style="font-size:13px; color:var(--ui-text-muted, #555);">Web (96 dpi)</div>
                 </div>
-                <button class="op-btn" style="padding:6px 12px; font-size:13px; background:white; color:var(--ui-theme-color); border:1px solid var(--ui-theme-color);" onclick="window.toggleImageResolution(this)">Change</button>
+                <button class="op-btn" style="padding:6px 12px; font-size:13px; background:transparent; color:var(--ui-theme-color); border:1px solid var(--ui-theme-color); border-radius:4px; cursor:pointer;" onclick="window.toggleImageResolution(this)">Change</button>
             </div>
             
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
-                <button class="op-btn op-btn-cancel" onclick="DialogSystem.close()">Cancel</button>
-                <button class="op-btn" style="background: var(--ui-theme-color); color: white;" onclick="
+                <button class="op-btn op-btn-cancel" style="padding:8px 16px; font-size:14px; font-weight:bold; border-radius:4px; cursor:pointer; background:transparent; color:var(--ui-text); border:1px solid var(--ui-border);" onclick="DialogSystem.close()">Cancel</button>
+                <button class="op-btn" style="padding:8px 16px; font-size:14px; font-weight:bold; border-radius:4px; cursor:pointer; background: var(--ui-theme-color); color: var(--ui-theme-text, white); border:none;" onclick="
                     DialogSystem.close();
                     if(typeof exportAsImage === 'function') exportAsImage(window.exportImageResolutionSetting);
                 ">
@@ -29581,7 +29581,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="custom-dialog-close" onclick="document.getElementById('op-graphics-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
             </div>
         </div>
-        <div id="graphics-manager-results" style="padding: 15px; overflow-y:auto; height:calc(100% - 50px); background:#f9f9f9;"></div>
+        <div id="graphics-manager-results" style="padding: 15px; overflow-y:auto; height:calc(100% - 50px); background:transparent;"></div>
     `;
     let workspace = document.querySelector('.workspace');
     if (workspace) workspace.appendChild(panel);
@@ -29709,11 +29709,11 @@ window.GraphicsManager = {
         if (!container) return;
 
         if (imagesList.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:30px; color:#666;"><i class="fas fa-image fa-3x" style="color:#ddd; margin-bottom:15px;"></i><br>No graphics found in this document.</div>';
+            container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--ui-text-muted, #666);"><i class="fas fa-image fa-3x" style="color:var(--ui-border, #ddd); margin-bottom:15px;"></i><br>No graphics found in this document.</div>';
             return;
         }
 
-        container.innerHTML = `<div style="font-size:12px; color:#666; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span>Total Graphics: <strong>${imagesList.length}</strong></span><button onclick="window.GraphicsManager.scanImages()" style="background:none; border:none; color:var(--ui-theme-color); cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>`;
+        container.innerHTML = `<div style="font-size:12px; color:var(--ui-text-muted, #666); margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span>Total Graphics: <strong style="color:var(--ui-text)">${imagesList.length}</strong></span><button onclick="window.GraphicsManager.scanImages()" style="background:none; border:none; color:var(--ui-theme-color); cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>`;
 
         const listDiv = document.createElement('div');
         listDiv.className = 'graphics-manager-list';
@@ -29724,11 +29724,12 @@ window.GraphicsManager = {
         imagesList.forEach((item, idx) => {
             const card = document.createElement('div');
             card.className = 'graphics-card';
-            card.style.background = '#fff';
-            card.style.border = '1px solid #ddd';
+            card.style.background = 'var(--ui-panel-bg, #fff)';
+            card.style.border = '1px solid var(--ui-border, #ddd)';
             card.style.borderRadius = '6px';
             card.style.padding = '10px';
             card.style.display = 'flex';
+            card.style.color = 'var(--ui-text)';
             card.style.gap = '15px';
             card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
             card.style.transition = 'box-shadow 0.2s';
@@ -29742,7 +29743,7 @@ window.GraphicsManager = {
             thumbContainer.style.width = '60px';
             thumbContainer.style.height = '60px';
             thumbContainer.style.flexShrink = '0';
-            thumbContainer.style.backgroundColor = '#eee';
+            thumbContainer.style.backgroundColor = 'var(--ui-hover-bg, #eee)';
             thumbContainer.style.borderRadius = '4px';
             thumbContainer.style.display = 'flex';
             thumbContainer.style.alignItems = 'center';

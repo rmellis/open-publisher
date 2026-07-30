@@ -405,7 +405,9 @@ body.bright-theme .custom-dialog-header .custom-dialog-close { color: #111; }
 body.bright-theme .btn-primary { color: #111 !important; }
 body.bright-theme .custom-dialog button[style*="color: white"] { color: #111 !important; }
 body.bright-theme .page-add-btn { color: #111 !important; }
+body.bright-theme .xray-btn-close { color: #111 !important; }
 body.bright-theme .tab { color: #111; }
+body.bright-theme .contextual-tab { color: #111 !important; }
 body.bright-theme .tab.active { color: var(--ui-text); }
 body.bright-theme .tab.active:hover { background: var(--ui-panel-bg); }
 body.bright-theme .doc-name { border-color: rgba(0,0,0,0.3); background: rgba(0,0,0,0.1); color: #111; }
@@ -3944,3 +3946,25 @@ body.dark-mode #clipart-search-input::placeholder {
 body.dark-mode #clipart-search-wrapper i {
     color: rgba(255, 255, 255, 0.8) !important;
 }
+
+/* Sidebar Dark Mode Overrides */
+body.dark-mode #op-image-sidebar, 
+body.dark-mode #op-selection-sidebar, 
+body.dark-mode #op-shadow-sidebar, 
+body.dark-mode #op-a11y-sidebar, 
+body.dark-mode #op-graphics-sidebar, 
+body.dark-mode #op-wordart-sidebar,
+body.dark-mode #op-thesaurus-sidebar {
+    background: rgba(30, 30, 30, 0.8);
+    border-left-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-mode .op-sidebar-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-mode .op-section-label { color: var(--ui-text-muted); }
+body.dark-mode .op-slider-name { color: var(--ui-text); }
+body.dark-mode .op-header-btn { color: var(--ui-text-muted); }
+body.dark-mode .op-header-btn:hover { color: var(--ui-text); }
+body.dark-mode .op-sidebar-slider::-webkit-slider-thumb { border-color: var(--ui-panel-bg); }
+body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-panel-bg); }
