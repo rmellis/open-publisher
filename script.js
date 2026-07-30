@@ -517,6 +517,7 @@ document.addEventListener('selectionchange', () => {
         if(!e.target.closest('.dropdown-menu') && 
            !e.target.closest('.tool-btn') && 
            !e.target.closest('#float-toolbar') && 
+           !e.target.closest('.custom-color-picker') &&
            !e.target.closest('.font-picker-container')) {
             document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
             document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
@@ -21442,7 +21443,7 @@ function initBasicBorders() {
         
         document.addEventListener('click', (e) => {
             const menu = document.getElementById('border-dropdown');
-            if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) {
+            if (menu && menu.style.display !== 'none' && !menu.contains(e.target) && !e.target.closest('.custom-color-picker')) {
                 setTimeout(() => { menu.style.display = 'none'; }, 10);
             }
         }, true); 
@@ -24689,27 +24690,33 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     console.log("✅ Modern Save System with Title Sync installed.");
 })();
 /* =========================================================================
-   SAVE SHORTCUT OVERRIDE (Ctrl+S / Cmd+S)
-   Prevents the browser from saving the HTML page and routes to app save.
+   KEYBOARD SHORTCUT OVERRIDES (Ctrl+S, Ctrl+O)
+   Prevents the browser defaults and routes to app functions.
    ========================================================================= */
-(function installSaveShortcut() {
+(function installShortcutOverrides() {
     document.addEventListener('keydown', function(e) {
-        // Check if Ctrl (Windows/Linux) or Meta/Cmd (Mac) + S is pressed
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-            
-            // 1. Stop the browser from downloading the raw .html file
+        // SAVE: Ctrl+S / Cmd+S
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && !e.shiftKey) {
             e.preventDefault(); 
-            
-            // 2. Trigger your Open Publisher save function
             if (typeof window.saveDocument === 'function') {
                 window.saveDocument();
             } else {
                 console.error("Open Publisher: saveDocument() is not accessible.");
             }
         }
+        
+        // OPEN: Ctrl+O / Cmd+O
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o' && !e.shiftKey) {
+            e.preventDefault(); 
+            if (typeof window.openDocument === 'function') {
+                window.openDocument();
+            } else {
+                console.error("Open Publisher: openDocument() is not accessible.");
+            }
+        }
     }, true); // Use capture phase to intercept it early
 
-    console.log("✅ Save shortcut (Ctrl+S) override installed successfully.");
+    console.log("✅ Shortcut overrides (Ctrl+S, Ctrl+O) installed successfully.");
 })();
 /* =========================================================================
    Printer Router and page - print sizer
@@ -29465,17 +29472,17 @@ window.AccessibilityScanner = {
             return;
         }
 
-        let html = `<div style="margin-bottom:15px; font-weight:bold; color:#d32f2f;"><i class="fas fa-exclamation-triangle" style="color:#d32f2f;"></i> ${this.issues.length} Issues Found</div>`;
+        let html = `<div style="margin-bottom:15px; font-weight:bold; color:var(--ui-danger, #d32f2f);"><i class="fas fa-exclamation-triangle" style="color:var(--ui-danger, #d32f2f);"></i> ${this.issues.length} Issues Found</div>`;
         
         this.issues.forEach(issue => {
-            let severityColor = issue.severity === 'error' ? '#d32f2f' : '#f57c00';
+            let severityColor = issue.severity === 'error' ? 'var(--ui-danger, #d32f2f)' : '#f57c00';
             html += `
-                <div style="background:#f9f9f9; border-left:4px solid ${severityColor}; padding:10px; margin-bottom:10px; border-radius:0 4px 4px 0; font-size:12px; position:relative;">
+                <div style="background:var(--ribbon-bg, #f9f9f9); border-left:4px solid ${severityColor}; padding:10px; margin-bottom:10px; border-radius:0 4px 4px 0; font-size:12px; position:relative;">
                     <div style="font-weight:bold; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                         <span style="color:${severityColor}"><i class="fas ${issue.icon}" style="margin-right:5px; color:${severityColor}"></i> ${issue.title}</span>
-                        <span style="color:#888; font-size:10px; background:#e0e0e0; padding:2px 6px; border-radius:10px;">Page ${issue.pageIndex + 1}</span>
+                        <span style="color:var(--ui-text-muted, #888); font-size:10px; background:var(--ribbon-border, #e0e0e0); padding:2px 6px; border-radius:10px;">Page ${issue.pageIndex + 1}</span>
                     </div>
-                    <div style="margin-bottom:10px; color:#555; line-height:1.4;">${issue.desc}</div>
+                    <div style="margin-bottom:10px; color:var(--ui-text, #555); line-height:1.4;">${issue.desc}</div>
                     <button onclick="window.AccessibilityScanner.fixIssue(${issue.id})" style="background:var(--ui-theme-color); color:#fff; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600; width:100%; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1"><i class="fas fa-wrench" style="margin-right:5px;"></i>Fix Issue</button>
                 </div>
             `;
@@ -30223,6 +30230,9 @@ window.CustomColorPicker = class CustomColorPicker {
     }
     
     static bindEvents() {
+        // Prevent clicking inside the color picker from bubbling up and closing parent dropdowns
+        this.el.addEventListener('mousedown', (e) => e.stopPropagation());
+
         // Hex input
         this.hexInput.addEventListener('change', (e) => this.setFromHex(e.target.value, true));
         this.hexInput.addEventListener('keydown', (e) => {
@@ -30278,6 +30288,7 @@ window.CustomColorPicker = class CustomColorPicker {
         this.tabs.forEach(tab => {
             tab.addEventListener('mousedown', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 this.tabs.forEach(t => t.classList.remove('active'));
                 this.tabContents.forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');

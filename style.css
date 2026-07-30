@@ -3385,7 +3385,7 @@ body.linking-mode, body.linking-mode * {
 /* ========================================================= */
 .custom-color-picker {
     position: absolute;
-    z-index: 100000;
+    z-index: 9999999;
     background: #f4f5f7;
     border: 2px solid var(--ui-theme-color);
     border-radius: 12px;
