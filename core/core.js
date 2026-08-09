@@ -65,7 +65,8 @@ function pushHistory() {
 
     const snapshot = JSON.parse(JSON.stringify({
         pages: state.pages,
-        idx: state.currentPageIndex
+        idx: state.currentPageIndex,
+        isSpreadMode: state.isSpreadMode
     }));
 
     state.history.push(snapshot);
@@ -91,6 +92,12 @@ function restoreSnapshot(snap) {
     if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
     state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
     state.currentPageIndex = snap.idx;
+    
+    // Restore Spread Mode state (default to false if undefined in older snapshots)
+    state.isSpreadMode = snap.isSpreadMode || false;
+    const btn = document.getElementById('spread-mode-btn');
+    if (btn) btn.classList.toggle('active', state.isSpreadMode);
+    
     renderPage(state.pages[state.currentPageIndex]);
     setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
 }

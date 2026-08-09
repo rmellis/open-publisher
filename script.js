@@ -63,11 +63,13 @@ document.addEventListener('selectionchange', () => {
 
         // Key Shortcuts
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+            if (window.isDrawingModeActive && window.isDrawingModeActive()) return;
             e.preventDefault();
             undo();
             return;
         }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+            if (window.isDrawingModeActive && window.isDrawingModeActive()) return;
             e.preventDefault();
             redo();
             return;
@@ -7810,6 +7812,7 @@ function toggleSpreadMode() {
     
     renderPage(state.pages[state.currentPageIndex]);
     updateSidebar();
+    if (typeof pushHistory === 'function') pushHistory();
 }
 
 /* =========================================================================
@@ -13172,6 +13175,12 @@ if (!window._thumbObserverRunning) {
     
     // 1. Intercept Ctrl+Z globally
     window.addEventListener('keydown', function(e) {
+        if (window.isDrawingModeActive && window.isDrawingModeActive()) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault(); // Stop Firefox native undo, but allow propagation to drawing engine
+            }
+            return;
+        }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
             
             // Are we actively typing?
@@ -13195,23 +13204,6 @@ if (!window._thumbObserverRunning) {
                 } else if (document.getElementById('undo-btn')) {
                     document.getElementById('undo-btn').click();
                 }
-            } else {
-                // We are in a text box. Let's see if native undo does anything.
-                // We capture the current state, wait a tick, and if the state hasn't changed, we trigger our custom undo.
-                const contentEl = activeEl.closest('[contenteditable="true"]') || activeEl;
-                const beforeUndoVal = contentEl.value !== undefined ? contentEl.value : contentEl.innerHTML;
-                
-                setTimeout(() => {
-                    const afterUndoVal = contentEl.value !== undefined ? contentEl.value : contentEl.innerHTML;
-                    if (beforeUndoVal === afterUndoVal) {
-                        // Native undo had no effect. Fallback to custom undo.
-                        if (typeof window.undo === 'function') {
-                            window.undo();
-                        } else if (document.getElementById('undo-btn')) {
-                            document.getElementById('undo-btn').click();
-                        }
-                    }
-                }, 10);
             }
         }
     }, true);
@@ -13816,6 +13808,12 @@ if (!window._thumbObserverRunning) {
 // --- PART 2: Firefox Native Undo Override & History Spam Filter ---
 (function fixFirefoxUndo() {
     window.addEventListener('keydown', function(e) {
+        if (window.isDrawingModeActive && window.isDrawingModeActive()) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault(); // Stop Firefox native undo, but allow propagation to drawing engine
+            }
+            return;
+        }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
             const activeEl = document.activeElement;
             const isTextEditing = activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.closest('[contenteditable="true"]'));
@@ -14486,9 +14484,26 @@ window.handleMouseUp = function() {
         hist.lastState = currentState;
 
     }, true); 
+    
+    // --- 1.5 COMMIT TO GLOBAL HISTORY ON BLUR ---
+    document.addEventListener('focusout', function(e) {
+        const el = e.target;
+        if (!el || (!el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+        
+        const hist = getHist(el);
+        if (hist.undo.length > 0 && !hist.isRestoring) {
+            // We finished editing. Commit the final text block to the app's global history.
+            if (typeof window.pushHistory === 'function') window.pushHistory();
+            
+            // Clear the local character-by-character history so the next Ctrl+Z triggers a global undo
+            hist.undo = [];
+            hist.redo = [];
+        }
+    });
 
     // --- 2. INTERCEPT CTRL+Z AND APPLY EXACT PREVIOUS STATE ---
     document.addEventListener('keydown', function(e) {
+        if (window.isDrawingModeActive && window.isDrawingModeActive()) return;
         const isUndo = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey;
         const isRedo = (e.ctrlKey || e.metaKey) && ((e.key.toLowerCase() === 'y') || (e.key.toLowerCase() === 'z' && e.shiftKey));
         
@@ -21469,6 +21484,8 @@ setTimeout(() => {
     let currentBrushSize = 2;
     let undoStack = [];
 
+    window.isDrawingModeActive = function() { return isDrawingMode; };
+
     window.startDrawing = function(tool) {
         currentTool = tool;
         if (!isDrawingMode) {
@@ -21779,7 +21796,7 @@ setTimeout(() => {
     
     // Global Ctrl+Z listener for Undo Drawing
     document.addEventListener('keydown', function(e) {
-        if (isDrawingMode && (e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (isDrawingMode && (e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
             e.preventDefault();
             if (typeof undoDrawing === 'function') undoDrawing();
         }
