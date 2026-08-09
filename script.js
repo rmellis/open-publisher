@@ -581,13 +581,16 @@ function renderPage(pageData) {
         let h = parseFloat(pageData.height || '1123');
         if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
         
+        let shortEdge = Math.min(w, h);
+        let longEdge = Math.max(w, h);
+        
         let fmt = 'A4';
-        if (w >= 1100) fmt = 'A3';
-        else if (w >= 1000) fmt = 'Tabloid';
-        else if (w >= 810 && h > 1100) fmt = 'Legal';
-        else if (w > 800) fmt = 'Letter';
-        else if (w < 400) fmt = 'BusinessCard';
-        else if (w < 600) fmt = 'A5';
+        if (shortEdge >= 1100) fmt = 'A3';
+        else if (shortEdge >= 1000) fmt = 'Tabloid';
+        else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
+        else if (shortEdge > 800) fmt = 'Letter';
+        else if (shortEdge < 400) fmt = 'BusinessCard';
+        else if (shortEdge < 600) fmt = 'A5';
         
         window.setPageFormatIcon(fmt);
     }
@@ -13156,13 +13159,16 @@ if (!window._thumbObserverRunning) {
             if (typeof state !== 'undefined' && state.isSpreadMode) {
                 w = w / 2;
             }
+            let shortEdge = Math.min(w, h);
+            let longEdge = Math.max(w, h);
+            
             let fmt = 'A4';
-            if (w >= 1100) fmt = 'A3';
-            else if (w >= 1000) fmt = 'Tabloid';
-            else if (w >= 810 && h > 1100) fmt = 'Legal';
-            else if (w > 800) fmt = 'Letter';
-            else if (w < 400) fmt = 'BusinessCard';
-            else if (w < 600) fmt = 'A5';
+            if (shortEdge >= 1100) fmt = 'A3';
+            else if (shortEdge >= 1000) fmt = 'Tabloid';
+            else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
+            else if (shortEdge > 800) fmt = 'Letter';
+            else if (shortEdge < 400) fmt = 'BusinessCard';
+            else if (shortEdge < 600) fmt = 'A5';
             
             window.setPageFormatIcon(fmt);
         };
