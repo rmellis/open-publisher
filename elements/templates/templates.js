@@ -1,5 +1,5 @@
 function initAds() {
-    console.log("ðŸ› ï¸ Advanced SVG Ads Library (Clean UI Edition) initializing...");
+    console.log("🛠️ Advanced SVG Ads Library (Clean UI Edition) initializing...");
     
     const grid = document.getElementById('ad-grid');
     if (!grid) return;

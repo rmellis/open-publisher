@@ -1,4 +1,4 @@
-﻿
+
 
 // --- CUSTOM DRAGGABLE MODAL SYSTEM ---
 
@@ -909,7 +909,7 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-                            <div style="width:16px; height:16px; border-radius:50%; background:#4CAF50; color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px;">âœ“</div>
+                            <div style="width:16px; height:16px; border-radius:50%; background:#4CAF50; color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px;">✓</div>
                             <div style="width:60px; height:4px; background:#999;"></div>
                         </div>
                     </div>
@@ -954,7 +954,7 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('review')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="color:#FFD700; font-size:16px; letter-spacing:1px; margin-bottom:5px; text-align:center;">â˜…â˜…â˜…â˜…â˜…</div>
+                        <div style="color:#FFD700; font-size:16px; letter-spacing:1px; margin-bottom:5px; text-align:center;">★★★★★</div>
                         <div style="width:60px; height:4px; background:#ccc; margin:0 auto 4px auto;"></div>
                         <div style="width:40px; height:3px; background:#eee; margin:0 auto;"></div>
                     </div>
@@ -1077,7 +1077,7 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="width:80px; height:35px; border:1px solid #FF9800; background:#FFF3E0; border-radius:4px; display:flex; align-items:center; padding:4px; gap:6px; box-sizing:border-box;">
-                            <div style="color:#FF9800; font-size:14px; font-weight:bold;">âš </div>
+                            <div style="color:#FF9800; font-size:14px; font-weight:bold;">⚠</div>
                             <div style="display:flex; flex-direction:column; gap:3px;">
                                 <div style="width:20px; height:3px; background:#E65100;"></div>
                                 <div style="width:30px; height:2px; background:#FFB74D;"></div>
@@ -1171,7 +1171,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'checklist') {
         w = 300; h = 60;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:center; gap: 15px;">
-            <div style="width:24px; height:24px; background:#4CAF50; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">âœ“</div>
+            <div style="width:24px; height:24px; background:#4CAF50; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">✓</div>
             <div contenteditable="true" style="font-size:16px; color:#333; font-family:inherit;">Checklist item goes right here</div>
         </div>`;
     } else if (type === 'menu-item') {
@@ -1193,7 +1193,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'review') {
         w = 300; h = 100;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;" contenteditable="true">
-            <div style="color:#FFD700; font-size:24px; letter-spacing:2px; margin-bottom:5px; pointer-events:none; user-select:none;">â˜…â˜…â˜…â˜…â˜…</div>
+            <div style="color:#FFD700; font-size:24px; letter-spacing:2px; margin-bottom:5px; pointer-events:none; user-select:none;">★★★★★</div>
             <h4 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:16px; font-style:italic;">"Absolutely fantastic service!"</h4>
             <span style="font-size:12px; color:#666; font-family:inherit; text-transform:uppercase;">- Jane Doe, Customer</span>
         </div>`;
@@ -1264,7 +1264,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'warning') {
         w = 350; h = 100;
         htmlContent = `<div style="height:100%; box-sizing:border-box; border:1px solid #FF9800; background:#FFF3E0; border-radius:8px; padding:15px; display:flex; align-items:center; gap:15px; font-family:inherit;" contenteditable="true">
-            <div style="color:#FF9800; font-size:24px; font-weight:bold; flex-shrink:0;">âš </div>
+            <div style="color:#FF9800; font-size:24px; font-weight:bold; flex-shrink:0;">⚠</div>
             <div>
                 <h4 style="margin:0 0 4px 0; color:#E65100; font-size:16px;">Warning</h4>
                 <p style="margin:0; font-size:13px; color:#555; line-height:1.4;">Please read carefully before proceeding with the next steps.</p>
@@ -3484,8 +3484,8 @@ window.toggleRotateMenu = function(btn) {
             return d;
         };
 
-        m.appendChild(createItem('fa-redo', 'Rotate Right 90Â°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(90); }));
-        m.appendChild(createItem('fa-undo', 'Rotate Left 90Â°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(-90); }));
+        m.appendChild(createItem('fa-redo', 'Rotate Right 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(90); }));
+        m.appendChild(createItem('fa-undo', 'Rotate Left 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(-90); }));
         m.appendChild(createItem('fa-arrows-alt-v', 'Flip Vertical', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('Y'); }));
         m.appendChild(createItem('fa-arrows-alt-h', 'Flip Horizontal', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('X'); }));
         
@@ -3704,7 +3704,7 @@ window.handlePublisherFileLoad = (evt) => {
         }
         
         const loadDocumentData = (data) => {
-            // âœ¨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
+            // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
             if (data.isTemplate) {
                 document.getElementById('doc-title').innerText = "Untitled Publication";
             } else {
@@ -4297,7 +4297,7 @@ function uploadAndConvertDoc(file) {
                             
                             const items = [];
                             textContent.items.forEach(item => {
-                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, 'â€¢');
+                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, '•');
                                 if (!str) return;
 
                                 const tx = item.transform[4] * ratio;
@@ -4351,7 +4351,7 @@ function uploadAndConvertDoc(file) {
                                     finalColor = `rgb(${Math.round(optR/samples)}, ${Math.round(optG/samples)}, ${Math.round(optB/samples)})`;
                                 }
 
-                                const isFormLine = /^[_.\-|=â˜‘\[\]]+$/.test(str.replace(/\s/g, ''));
+                                const isFormLine = /^[_.\-|=☑\[\]]+$/.test(str.replace(/\s/g, ''));
                                 items.push({ str, tx, ty, width: item.width * ratio, fontSize, isBold: isBoldFont, isItalic: isItalicFont, isFormLine, color: finalColor });
                             });
 
@@ -5537,7 +5537,7 @@ window.handleMouseUp = function() {
                 <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
             </div>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0Â°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
                 <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
             </div>
             <div class="op-slider-row">
@@ -5587,7 +5587,7 @@ window.handleMouseUp = function() {
                 const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
                 s.value = v; 
                 const txt = document.getElementById(`val-${f}`);
-                if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             });
         } else {
             panel.classList.remove('visible');
@@ -5609,7 +5609,7 @@ window.handleMouseUp = function() {
             const f = e.target.dataset.filter, v = e.target.value;
             state.selectedEl.setAttribute(`data-filter-${f}`, v);
             const txt = document.getElementById(`val-${f}`);
-            if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             apply(state.selectedEl);
         });
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
@@ -5622,7 +5622,7 @@ window.handleMouseUp = function() {
             state.selectedEl.removeAttribute(`data-filter-${f}`);
             s.value = d; 
             const txt = document.getElementById(`val-${f}`);
-            if(txt) txt.innerText = d + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
     });
@@ -5736,7 +5736,7 @@ window.handleMouseUp = function() {
     const getUnit = (f) => {
         if (['blur', 'spacing', 'wordSpacing', 'shadowX', 'shadowY'].includes(f)) return 'px';
         if (['opacity', 'saturate'].includes(f)) return '%';
-        if (f === 'hue') return 'Â°';
+        if (f === 'hue') return '°';
         if (f === 'lineHeight') return 'x';
         return ''; 
     };
@@ -5855,7 +5855,7 @@ window.handleMouseUp = function() {
         <div class="op-sidebar-section">
             <span class="op-section-label">Color & Effects</span>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0Â°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
                 <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
             </div>
             <div class="op-slider-row">
@@ -6178,7 +6178,7 @@ window.handleMouseUp = function() {
                 <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
             </div>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0Â°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
                 <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
             </div>
             <div class="op-slider-row">
@@ -6221,7 +6221,7 @@ window.handleMouseUp = function() {
                 const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
                 s.value = v; 
                 const txt = panel.querySelector(`#val-${f}`);
-                if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             });
         } else {
             panel.classList.remove('visible'); expander.classList.remove('visible'); if (vp) vp.style.width = '';
@@ -6241,7 +6241,7 @@ window.handleMouseUp = function() {
             const f = e.target.dataset.filter, v = e.target.value;
             state.selectedEl.setAttribute(`data-filter-${f}`, v);
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
             apply(state.selectedEl);
         });
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
@@ -6254,7 +6254,7 @@ window.handleMouseUp = function() {
             state.selectedEl.removeAttribute(`data-filter-${f}`);
             s.value = d; 
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = d + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
     });
@@ -6297,7 +6297,7 @@ window.handleMouseUp = function() {
     const getUnit = (f) => {
         if (['blur', 'spacing', 'wordSpacing', 'shadowX', 'shadowY'].includes(f)) return 'px';
         if (['opacity', 'saturate'].includes(f)) return '%';
-        if (f === 'hue') return 'Â°';
+        if (f === 'hue') return '°';
         if (f === 'lineHeight') return 'x';
         return ''; 
     };
@@ -6433,7 +6433,7 @@ window.handleMouseUp = function() {
         <div class="op-sidebar-section">
             <span class="op-section-label">Color & Effects</span>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0Â°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
                 <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
             </div>
             <div class="op-slider-row">
@@ -6644,7 +6644,7 @@ window.handleMouseUp = function() {
    FEATURE: Ruler Highlights (Global Overlay + Boundary Clamping)
    ========================================================================= */
 (function installRulerHighlights() {
-    console.log("ðŸ› ï¸ Ruler Highlight Script initializing (Boundary Clamped)...");
+    console.log("🛠️ Ruler Highlight Script initializing (Boundary Clamped)...");
 
     // 1. Inject styling
     const style = document.createElement('style');
@@ -6727,13 +6727,13 @@ window.handleMouseUp = function() {
     }
 
     requestAnimationFrame(trackSelection);
-    console.log("âœ… Ruler Highlight Loop started successfully.");
+    console.log("✅ Ruler Highlight Loop started successfully.");
 })();
 /* =========================================================================
    FEATURE: Keyboard Nudge (Arrow Key Movement with Shift/Ctrl Modifiers)
    ========================================================================= */
 (function installKeyboardNudge() {
-    console.log("ðŸ› ï¸ Keyboard Nudge Script initializing...");
+    console.log("🛠️ Keyboard Nudge Script initializing...");
 
     let isNudging = false;
 
@@ -6793,14 +6793,14 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("âœ… Keyboard Nudge Script started successfully.");
+    console.log("✅ Keyboard Nudge Script started successfully.");
 })();
 /* =========================================================================
    FEATURE: Context Tools - Rich Formatting, Paragraphs & View Options
    (Applies to Text Box & WordArt Ribbons)
    ========================================================================= */
 (function installContextRichFormattingAndOptions() {
-    console.log("ðŸ› ï¸ Context Tools Script initializing...");
+    console.log("🛠️ Context Tools Script initializing...");
 
     const style = document.createElement('style');
     // CSS extracted to style.css
@@ -7012,14 +7012,14 @@ window.handleMouseUp = function() {
             window._patchedUpdateFloatCtx = true;
         }
 
-        console.log("âœ… Context Tools for Text & WordArt added successfully.");
+        console.log("✅ Context Tools for Text & WordArt added successfully.");
     }, 1500); 
 })();
 /* =========================================================================
    FEATURE: Scratch Area Fading (Off-Canvas Transparency)
    ========================================================================= */
 (function installScratchAreaFading() {
-    console.log("ðŸ› ï¸ Scratch Area Fading Script initializing...");
+    console.log("🛠️ Scratch Area Fading Script initializing...");
 
     // 1. Inject the CSS class for the faded effect
     const style = document.createElement('style');
@@ -7079,14 +7079,14 @@ window.handleMouseUp = function() {
             attributeFilter: ['style'] 
         });
 
-        console.log("âœ… Scratch Area Fading added successfully.");
+        console.log("✅ Scratch Area Fading added successfully.");
     }, 1000); // Small delay to ensure paper is rendered
 })();
 /* =========================================================================
    FEATURE: Smart Text Interaction (Final Stable - Text Boxes & Tables)
    ========================================================================= */
 (function installSmartTextInteraction() {
-    console.log("ðŸ› ï¸ Smart Text Interaction Script initializing...");
+    console.log("🛠️ Smart Text Interaction Script initializing...");
 
     let startX = 0;
     let startY = 0;
@@ -7173,18 +7173,18 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("âœ… Smart Text Interaction (Stable) added successfully.");
+    console.log("✅ Smart Text Interaction (Stable) added successfully.");
 })();
 
 /* =========================================================================
    PERFORMANCE ADDON: Smart Thumbnail Debouncer (Anti-Freeze)
    ========================================================================= */
 (function installAntiLag() {
-    console.log("ðŸ› ï¸ Anti-Lag Script initializing...");
+    console.log("🛠️ Anti-Lag Script initializing...");
 
     let thumbnailTimer = null;
 
-    // Lightweight debounce â€” the new generateThumbnail handles its own sequencing
+    // Lightweight debounce — the new generateThumbnail handles its own sequencing
     window.updateThumbnails = function() {
         if (thumbnailTimer) clearTimeout(thumbnailTimer);
         thumbnailTimer = setTimeout(() => {
@@ -7197,7 +7197,7 @@ window.handleMouseUp = function() {
         }, 300); 
     };
 
-    console.log("âœ… Anti-Lag successfully applied.");
+    console.log("✅ Anti-Lag successfully applied.");
 })();
 /* =========================================================================
    DRAG & DROP IMPORT FIX (Images, .pub, .doc, .docx, .json, .opub)
@@ -7614,7 +7614,7 @@ function uploadAndConvertPub(file) {
         // --- 3. EXECUTE CONVERSION ---
         const formData = new FormData();
         
-        // ðŸ› THE FIX: Changed 'docFile' to 'pubFile' so the backend knows it's a Publisher document!
+        // 🐛 THE FIX: Changed 'docFile' to 'pubFile' so the backend knows it's a Publisher document!
         formData.append('pubFile', file); 
 
         const xhr = new XMLHttpRequest();
@@ -7737,7 +7737,7 @@ function uploadAndConvertPub(file) {
                             const items = [];
                             
                             textContent.items.forEach(item => {
-                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, 'â€¢');
+                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, '•');
                                 if (!str) return;
 
                                 const tx = item.transform[4] * ratio;
@@ -7780,7 +7780,7 @@ function uploadAndConvertPub(file) {
                                 let finalColor = 'black';
                                 if (samples > 0) finalColor = `rgb(${Math.round(optR/samples)}, ${Math.round(optG/samples)}, ${Math.round(optB/samples)})`;
 
-                                const isFormLine = /^[_.\-|=â˜‘\[\]]+$/.test(str.replace(/\s/g, ''));
+                                const isFormLine = /^[_.\-|=☑\[\]]+$/.test(str.replace(/\s/g, ''));
                                 items.push({ str, tx, ty, width: item.width * ratio, fontSize, isBold: isBoldFont, isItalic: isItalicFont, isFormLine, color: finalColor });
                             });
 
@@ -8629,7 +8629,7 @@ if (!window._thumbObserverRunning) {
           <body style="margin: 0; padding: 0; overflow: hidden;">
             <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #e50000; color: white; z-index: 2147483647; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: system-ui, -apple-system, sans-serif; padding: 20px; box-sizing: border-box;">
               <h1 style="font-size: clamp(24px, 5vw, 48px); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
-                âš ï¸ Error âš ï¸
+                ⚠️ Error ⚠️
               </h1>
               <p style="font-size: clamp(16px, 3vw, 24px); margin: 0 0 10px 0; line-height: 1.5;">
                 This WebApp can not be displayed here.
@@ -8900,7 +8900,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Georgia, serif; font-size: 24px; color: #d4af37; border-bottom: 1px dashed #555; padding-bottom: 10px; z-index: 5;">STARTERS</div>`, t: 300, l: 100, w: 616, h: 40},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 6;"><b>Truffle Arancini</b> ........................................ $18<br><span style="font-size:12px; color:#888;">Wild mushroom, parmesan, black truffle aioli</span></div>`, t: 360, l: 100, w: 616, h: 80},
                 {html: `<div style="font-family: Georgia, serif; font-size: 24px; color: #d4af37; border-bottom: 1px dashed #555; padding-bottom: 10px; z-index: 7;">MAINS</div>`, t: 460, l: 100, w: 616, h: 40},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 8;"><b>Wagyu Filet Mignon</b> ........................................ $65<br><span style="font-size:12px; color:#888;">Pomme purÃ©e, roasted asparagus, red wine jus</span></div>`, t: 520, l: 100, w: 616, h: 80}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 8;"><b>Wagyu Filet Mignon</b> ........................................ $65<br><span style="font-size:12px; color:#888;">Pomme purée, roasted asparagus, red wine jus</span></div>`, t: 520, l: 100, w: 616, h: 80}
             ]
         },
         {
@@ -8911,7 +8911,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: 'Arial Black', sans-serif; font-size: 80px; color: #fff; letter-spacing: -2px; z-index: 3;">NOVA.TECH</div>`, t: 100, l: 50, w: 716, h: 100},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; color: #80aaff; letter-spacing: 2px; z-index: 4;">ENTERPRISE CLOUD SOLUTIONS</div>`, t: 200, l: 50, w: 716, h: 50},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; color: #111; line-height: 1.2; z-index: 5;">Scaling your infrastructure shouldn't be a nightmare.</div>`, t: 450, l: 50, w: 300, h: 400},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #555; line-height: 1.6; z-index: 6;">Our state-of-the-art serverless platform automatically provisions resources based on real-time traffic spikes, ensuring zero downtime and maximizing cost-efficiency.<br><br><b>â€¢ 99.99% Uptime Guarantee<br>â€¢ Automated Threat Detection<br>â€¢ Instant Scaling</b></div>`, t: 450, l: 400, w: 366, h: 400}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #555; line-height: 1.6; z-index: 6;">Our state-of-the-art serverless platform automatically provisions resources based on real-time traffic spikes, ensuring zero downtime and maximizing cost-efficiency.<br><br><b>• 99.99% Uptime Guarantee<br>• Automated Threat Detection<br>• Instant Scaling</b></div>`, t: 450, l: 400, w: 366, h: 400}
             ]
         }
     ];
@@ -8984,13 +8984,13 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="background: #ffffff; z-index: 1;"></div>`, t: 0, l: 0, w: 816, h: 1056},
                 {html: `<div style="background: #0f172a; z-index: 2;"></div>`, t: 0, l: 0, w: 816, h: 200},
                 {html: `<div style="font-family: 'Arial Black', sans-serif; font-size: 64px; color: #ffffff; letter-spacing: -2px; z-index: 3;">THE WEEKLY ROOT</div>`, t: 50, l: 50, w: 716, h: 80},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; z-index: 4;">Tech â€¢ Design â€¢ Culture | Issue 42</div>`, t: 140, l: 50, w: 716, h: 30},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; z-index: 4;">Tech • Design • Culture | Issue 42</div>`, t: 140, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 36px; font-weight: bold; color: #0f172a; z-index: 5;">The Future of Remote Teams</div>`, t: 250, l: 50, w: 716, h: 50},
                 {html: `<div style="background: #e2e8f0; z-index: 6;"></div>`, t: 320, l: 50, w: 716, h: 2},
                 {html: `<div style="font-family: Georgia, serif; font-size: 16px; color: #334155; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 7;">As companies continue to adapt to hybrid models, the tools we use are evolving faster than ever. This week, we explore the top 5 software suites transforming how distributed teams collaborate across time zones. <br><br>From asynchronous video updates to AI-driven project management, the landscape of work has fundamentally shifted.</div>`, t: 350, l: 50, w: 716, h: 300},
                 {html: `<div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 20px; z-index: 8;"></div>`, t: 700, l: 50, w: 716, h: 200},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #0f172a; z-index: 9;">Upcoming Events</div>`, t: 730, l: 80, w: 656, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #475569; line-height: 1.6; z-index: 10;">â€¢ <b>Webinar:</b> Designing for Accessibility (Nov 12)<br>â€¢ <b>Workshop:</b> Advanced CSS Grid (Nov 15)</div>`, t: 780, l: 80, w: 656, h: 100}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #475569; line-height: 1.6; z-index: 10;">• <b>Webinar:</b> Designing for Accessibility (Nov 12)<br>• <b>Workshop:</b> Advanced CSS Grid (Nov 15)</div>`, t: 780, l: 80, w: 656, h: 100}
             ]
         },
         // 3. Creative Minimalist Resume
@@ -9030,7 +9030,7 @@ if (!window._thumbObserverRunning) {
             els: [
                 {html: `<div style="background: #1c1917; z-index: 1;"></div>`, t: 0, l: 0, w: 816, h: 1056},
                 {html: `<div style="border: 1px solid #a8a29e; z-index: 2;"></div>`, t: 40, l: 40, w: 736, h: 976},
-                {html: `<div style="font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #d6d3d1; text-align: center; letter-spacing: 10px; z-index: 3;">CAFÃ‰ NOIR</div>`, t: 120, l: 50, w: 716, h: 80},
+                {html: `<div style="font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #d6d3d1; text-align: center; letter-spacing: 10px; z-index: 3;">CAFÉ NOIR</div>`, t: 120, l: 50, w: 716, h: 80},
                 {html: `<div style="font-family: Georgia, serif; font-size: 16px; color: #78716c; text-align: center; font-style: italic; z-index: 4;">Locally Roasted. Carefully Crafted.</div>`, t: 210, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: 'Arial', sans-serif; font-size: 24px; color: #d6d3d1; letter-spacing: 3px; border-bottom: 1px solid #57534e; padding-bottom: 5px; z-index: 5;">COFFEE</div>`, t: 320, l: 150, w: 516, h: 40},
                 {html: `<div style="font-family: Courier, monospace; font-size: 18px; color: #a8a29e; line-height: 2.5; z-index: 6;">Espresso ............................ 3.00<br>Americano ........................... 3.50<br>Cappuccino .......................... 4.50<br>Vanilla Latte ....................... 5.00<br>Pour Over ........................... 5.50</div>`, t: 390, l: 150, w: 516, h: 200},
@@ -9051,7 +9051,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #8b949e; line-height: 1.8; z-index: 7;">JavaScript (ES6+)<br>React & Next.js<br>Node.js & Express<br>PostgreSQL<br>AWS & Docker</div>`, t: 340, l: 80, w: 200, h: 150},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #c9d1d9; z-index: 8;">EXPERIENCE</div>`, t: 300, l: 320, w: 416, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #58a6ff; z-index: 9;">Software Engineer II @ CloudBase</div>`, t: 340, l: 320, w: 416, h: 25},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #c9d1d9; line-height: 1.6; z-index: 10;">â€¢ Architected and deployed microservices handling 2M+ requests daily.<br>â€¢ Reduced database query latency by 40% via Redis caching.</div>`, t: 375, l: 320, w: 416, h: 100}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #c9d1d9; line-height: 1.6; z-index: 10;">• Architected and deployed microservices handling 2M+ requests daily.<br>• Reduced database query latency by 40% via Redis caching.</div>`, t: 375, l: 320, w: 416, h: 100}
             ]
         },
         // 7. Gallery Poster
@@ -9254,7 +9254,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 60px; font-weight: bold; color: #ffffff; z-index: 3;">Apex Medical</div>`, t: 80, l: 50, w: 716, h: 80},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; color: #ccfbf1; z-index: 4;">COMPREHENSIVE FAMILY CARE</div>`, t: 160, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #115e59; z-index: 5;">Our Services</div>`, t: 320, l: 50, w: 300, h: 40},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 2; z-index: 6;">â€¢ General Practice<br>â€¢ Pediatrics<br>â€¢ Preventative Care<br>â€¢ Immunizations<br>â€¢ Physical Therapy</div>`, t: 380, l: 50, w: 300, h: 200},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 2; z-index: 6;">• General Practice<br>• Pediatrics<br>• Preventative Care<br>• Immunizations<br>• Physical Therapy</div>`, t: 380, l: 50, w: 300, h: 200},
                 {html: `<div style="background: #f0fdfa; border-left: 4px solid #0d9488; padding: 20px; z-index: 7;"></div>`, t: 320, l: 400, w: 366, h: 250},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #115e59; z-index: 8;">Patient Portal</div>`, t: 350, l: 430, w: 300, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #4b5563; line-height: 1.6; z-index: 9;">Access your medical records, schedule appointments, and message your doctor securely online 24/7.</div>`, t: 400, l: 430, w: 300, h: 100},
@@ -9697,7 +9697,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #cbd5e1; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 6;">Cloud computing is shifting. Developers are moving logic closer to the user to reduce latency and save costs. This week, we look at the top frameworks making edge deployment seamless.<br><br>Also in this issue: new CSS features dropping in modern browsers, and how to optimize your React bundles for 2027.</div>`, t: 290, l: 50, w: 716, h: 250},
                 {html: `<div style="background: #1e293b; border-radius: 8px; padding: 20px; z-index: 7;"></div>`, t: 560, l: 50, w: 716, h: 320},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #38bdf8; z-index: 8;">Top Links</div>`, t: 590, l: 80, w: 656, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #f8fafc; line-height: 2.5; z-index: 9;">ðŸ”— 10 Tips for Better APIs<br>ðŸ”— The State of JavaScript 2026<br>ðŸ”— Understanding WebAssembly<br>ðŸ”— Postgres Scaling Guide</div>`, t: 640, l: 80, w: 656, h: 200},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #f8fafc; line-height: 2.5; z-index: 9;">🔗 10 Tips for Better APIs<br>🔗 The State of JavaScript 2026<br>🔗 Understanding WebAssembly<br>🔗 Postgres Scaling Guide</div>`, t: 640, l: 80, w: 656, h: 200},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #64748b; text-align: center; z-index: 10;">Unsubscribe | View in Browser</div>`, t: 950, l: 50, w: 716, h: 30}
             ]
         },
@@ -9728,7 +9728,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #431407; line-height: 1.8; z-index: 5;">Thank you to everyone who came out to the Valley Spring Festival this weekend. We raised over $5,000 for the local animal shelter and had record attendance at the pie-baking contest.</div>`, t: 230, l: 100, w: 616, h: 100},
                 {html: `<div style="background: #ffedd5; padding: 20px; border-radius: 10px; z-index: 6;"></div>`, t: 360, l: 100, w: 616, h: 250},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ea580c; z-index: 7;">Upcoming Town Events</div>`, t: 390, l: 130, w: 556, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #7c2d12; line-height: 2; z-index: 8;">â€¢ <b>May 10:</b> City Council Meeting (7 PM)<br>â€¢ <b>May 15:</b> Farmer's Market Opens<br>â€¢ <b>May 22:</b> Neighborhood Watch Training</div>`, t: 440, l: 130, w: 556, h: 120}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #7c2d12; line-height: 2; z-index: 8;">• <b>May 10:</b> City Council Meeting (7 PM)<br>• <b>May 15:</b> Farmer's Market Opens<br>• <b>May 22:</b> Neighborhood Watch Training</div>`, t: 440, l: 130, w: 556, h: 120}
             ]
         },
         {
@@ -9798,7 +9798,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="background: #fdf2f8; z-index: 1;"></div>`, t: 0, l: 0, w: 800, h: 800},
                 {html: `<div style="font-family: Georgia, serif; font-size: 150px; color: #fbcfe8; text-align: center; z-index: 2;">"</div>`, t: 100, l: 300, w: 200, h: 150},
                 {html: `<div style="font-family: Georgia, serif; font-size: 40px; color: #831843; text-align: center; line-height: 1.6; font-style: italic; z-index: 3;">Success is not final, failure is not fatal: it is the courage to continue that counts.</div>`, t: 280, l: 100, w: 600, h: 200},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #be185d; text-align: center; z-index: 4;">â€” Winston Churchill</div>`, t: 550, l: 100, w: 600, h: 50}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #be185d; text-align: center; z-index: 4;">— Winston Churchill</div>`, t: 550, l: 100, w: 600, h: 50}
             ]
         },
         {
@@ -9896,7 +9896,7 @@ if (!window._thumbObserverRunning) {
    BUG FIX: Universal Image Paste & Smart Routing
    ========================================================================= */
 (function fixImagePaste() {
-    console.log("ðŸ› ï¸ Universal Paste Fix initializing...");
+    console.log("🛠️ Universal Paste Fix initializing...");
 
     // --- STEP 1: The Ghost Hook (Prevent app from blocking OS clipboard) ---
     window.addEventListener('keydown', function(e) {
@@ -10097,7 +10097,7 @@ if (!window._thumbObserverRunning) {
    (Ensure the previous "Element Selection Shield" is DELETED)
    ========================================================================= */
 (function installV63MasterFix() {
-    console.log("ðŸ› ï¸ V63.0 Master Paste Fix initializing...");
+    console.log("🛠️ V63.0 Master Paste Fix initializing...");
 
     // 1. NEUTRALIZE THE GHOST HOOK DURING INTERNAL PASTES
     // We hijack the browser's native getAsFile API to return null if the app 
@@ -10174,7 +10174,7 @@ if (!window._thumbObserverRunning) {
    Fixes unselectable images and the double-paste ghost bug.
    ========================================================================= */
 (function installV62MasterFix() {
-    console.log("ðŸ› ï¸ V62.0 Master Fix initializing...");
+    console.log("🛠️ V62.0 Master Fix initializing...");
 
     // --- 1. RESTORE IMAGE SELECTION & MOVEMENT ---
     // Overrides the smart image builder to remove the toxic 'pointer-events: none'
@@ -10206,7 +10206,7 @@ if (!window._thumbObserverRunning) {
                 el.setAttribute('data-scaleX', "1");
                 el.setAttribute('data-scaleY', "1");
                 
-                // âœ¨ THE FIX: Removed pointer-events: none; Added draggable="false" âœ¨
+                // ✨ THE FIX: Removed pointer-events: none; Added draggable="false" ✨
                 el.innerHTML = `
                     <div class="element-content">
                         <img src="${imageSrc}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
@@ -10287,7 +10287,7 @@ if (!window._thumbObserverRunning) {
    Restores Ctrl+A and enables copying/pasting multiple elements at once.
    ========================================================================= */
 (function installMultiCopyAndSelectAll() {
-    console.log("ðŸ› ï¸ V64.0 Multi-Copy & Select All Fix initializing...");
+    console.log("🛠️ V64.0 Multi-Copy & Select All Fix initializing...");
 
     // --- 1. CTRL + A (Select All) ---
     window.addEventListener('keydown', function(e) {
@@ -10507,7 +10507,7 @@ if (!window._thumbObserverRunning) {
    Fixes the Ctrl+C and Ctrl+V shortcuts ignoring multi-selected arrays.
    ========================================================================= */
 (function installV65TrueMultiCopy() {
-    console.log("ðŸ› ï¸ V65.0 True Multi-Copy Override initializing...");
+    console.log("🛠️ V65.0 True Multi-Copy Override initializing...");
 
     window.addEventListener('keydown', function(e) {
         const activeEl = document.activeElement;
@@ -11298,7 +11298,7 @@ window.handleMouseUp = function() {
    chunking for keystroke-by-keystroke undo history.
    ========================================================================= */
 ;(function installGranularUndoProtector() {
-    console.log("ðŸ› ï¸ V91.0 Granular Text Undo Protector initializing...");
+    console.log("🛠️ V91.0 Granular Text Undo Protector initializing...");
 
     // WeakMap securely binds the history array directly to the DOM element 
     const TextHistory = new WeakMap();
@@ -11382,7 +11382,7 @@ window.handleMouseUp = function() {
             const el = document.activeElement;
             if (!el || (!el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
             
-            // ðŸ›‘ SHIELD ACTIVATED: Stop the app and the browser entirely
+            // 🛑 SHIELD ACTIVATED: Stop the app and the browser entirely
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -11436,7 +11436,7 @@ window.handleMouseUp = function() {
    the "sticky box" drag bug while preserving triple-click selection.
    ========================================================================= */
 (function installMasterFormattingFix() {
-    console.log("ðŸ› ï¸ V70.0 Master Formatting & Drag-Lock Fix initializing...");
+    console.log("🛠️ V70.0 Master Formatting & Drag-Lock Fix initializing...");
 
     // --- 1. THE FOCUS SHIELD ---
     document.addEventListener('mousedown', function(e) {
@@ -11466,7 +11466,7 @@ window.handleMouseUp = function() {
 
     // --- 3. THE TRIPLE-CLICK & DRAG-LOCK PROTECTOR ---
     document.addEventListener('mouseup', function(e) {
-        // âœ¨ THE FIX: If the app is actively dragging/resizing a box, DO NOT intercept! 
+        // ✨ THE FIX: If the app is actively dragging/resizing a box, DO NOT intercept! 
         // Let the app's native handleMouseUp fire so it releases the element.
         if (typeof state !== 'undefined' && state.dragMode) {
             return; 
@@ -11797,7 +11797,7 @@ window.handleMouseUp = function() {
    FEATURE: Enhanced Table Design & Layout Ribbons (v1.2 - Layout Refactor)
    ========================================================================= */
 (function enhanceTableRibbons() {
-    console.log("ðŸ› ï¸ Enhanced Table Ribbons Script initializing...");
+    console.log("🛠️ Enhanced Table Ribbons Script initializing...");
 
     // --- NEW: Table Multi-Cell Selection State ---
     window._tableSelectionStartCell = null;
@@ -13323,7 +13323,7 @@ window.handleMouseUp = function() {
             }
             
             
-            console.log("âœ… Table Ribbons successfully refactored with new layout groups.");
+            console.log("✅ Table Ribbons successfully refactored with new layout groups.");
         }
     }, 500);
 
@@ -13332,7 +13332,7 @@ window.handleMouseUp = function() {
    FEATURE: Smart Image Insertion & Paste (v2.0 - The Bulletproof Fix)
    ========================================================================= */
 (function installSmartImages() {
-    console.log("ðŸ› ï¸ Smart Image Script initializing...");
+    console.log("🛠️ Smart Image Script initializing...");
 
     // 1. The Bulletproof Image Builder
     window.insertSmartImage = function(imageSrc, fallbackSrc) {
@@ -13406,7 +13406,7 @@ window.handleMouseUp = function() {
                 finalHeight = Math.round(finalHeight * scale);
             }
 
-            // ðŸš¨ THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
+            // 🚨 THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
             const el = document.createElement('div');
             el.className = 'pub-element';
             el.style.left = '50px';
@@ -13515,13 +13515,13 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("âœ… Smart Image Script installed successfully.");
+    console.log("✅ Smart Image Script installed successfully.");
 })();
 /* =========================================================================
    FEATURE: Proportional Resize (Hold Shift to maintain Aspect Ratio)
    ========================================================================= */
 (function installAspectRatioLock() {
-    console.log("ðŸ› ï¸ Aspect Ratio Lock Script initializing...");
+    console.log("🛠️ Aspect Ratio Lock Script initializing...");
 
     // We override the master MouseMove engine to inject our Aspect Ratio math
     window.handleMouseMove = function(e) {
@@ -13606,7 +13606,7 @@ window.handleMouseUp = function() {
             if (d.dir.includes('s')) rawH = d.h + dy; 
             else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
 
-            // --- ðŸš¨ THE NEW ASPECT RATIO LOCK ðŸš¨ ---
+            // --- 🚨 THE NEW ASPECT RATIO LOCK 🚨 ---
             if (e.shiftKey && !state.cropMode) {
                 // Determine scale relative to the starting dimensions (avoiding div by zero)
                 const safeW = d.w || 1;
@@ -14402,7 +14402,7 @@ function initBasicBorders() {
    FEATURE: The Writer's Suite (Review Tools Addon) - THE ULTIMATE EXPANSION
    ========================================================================= */
 (function installWritersSuite() {
-    console.log("ðŸ› ï¸ Writer's Suite Script initializing...");
+    console.log("🛠️ Writer's Suite Script initializing...");
 
     // --- 1. CSS INJECTION ---
     const style = document.createElement('style');
@@ -14537,7 +14537,7 @@ function initBasicBorders() {
             
             let breakdownHtml = '<div style="margin-top: 15px; font-size: 12px; color: #666;"><b>Detected Markers:</b><br>';
             if (maxScore === 0) breakdownHtml += 'No strong emotional or formal markers detected.';
-            else for (const [tone, score] of Object.entries(scores)) { if (score > 0) breakdownHtml += `â€¢ ${tone}: ${score} hits<br>`; }
+            else for (const [tone, score] of Object.entries(scores)) { if (score > 0) breakdownHtml += `• ${tone}: ${score} hits<br>`; }
             breakdownHtml += '</div>';
 
             return `<div class="analysis-card"><div class="analysis-title">Dominant Tone</div><div class="analysis-value">${dominantTone}</div><div class="analysis-desc">Based on keyword frequency and phrasing analysis.</div></div>${breakdownHtml}`;
@@ -14629,8 +14629,8 @@ function initBasicBorders() {
 
             let sentiment = "Neutral";
             let color = "#64748b";
-            if (posCount > negCount + 1) { sentiment = "Positive ðŸ˜Š"; color = "#15803d"; }
-            else if (negCount > posCount + 1) { sentiment = "Negative ðŸ˜ž"; color = "#b91c1c"; }
+            if (posCount > negCount + 1) { sentiment = "Positive 😊"; color = "#15803d"; }
+            else if (negCount > posCount + 1) { sentiment = "Negative 😞"; color = "#b91c1c"; }
 
             return `
                 <div class="analysis-card">
@@ -14748,7 +14748,7 @@ function initBasicBorders() {
         }
     });
 
-    console.log("âœ… Writer's Suite (11 Tools) added successfully.");
+    console.log("✅ Writer's Suite (11 Tools) added successfully.");
 })();
 /* =========================================================================
    Crop mode exit fix, Converts fixed pixels back to percentages upon exiting 
@@ -14758,7 +14758,7 @@ function initBasicBorders() {
    FEATURE: Infinite Panning Hand Tool (Middle-Click & Status Bar Toggle)
    ========================================================================= */
 (function installPanningHand() {
-    console.log("ðŸ› ï¸ Infinite Panning Hand Script initializing...");
+    console.log("🛠️ Infinite Panning Hand Script initializing...");
 
     let isPanning = false;
     let panModeEnabled = false;
@@ -14881,13 +14881,13 @@ function initBasicBorders() {
         }
     });
 
-    console.log("âœ… Infinite Panning Hand Tool added successfully.");
+    console.log("✅ Infinite Panning Hand Tool added successfully.");
 })();
 /* =========================================================================
    FEATURE: Table Templates (v3.6.5 - 100 Templates
    ========================================================================= */
 (function installTableTemplates() {
-    console.log("ðŸ› ï¸ Table Templates Script initializing...");
+    console.log("🛠️ Table Templates Script initializing...");
 
     // 1. Setup Base UI CSS & Structural Table CSS
     const style = document.createElement('style');
@@ -14968,8 +14968,8 @@ function initBasicBorders() {
         },
         {
             name: 'Feature Matrix',
-            previewHTML: `<table class="mini-table"><tr><th style="text-align:left;">Feature</th><th>Free</th><th>Pro</th></tr><tr><td style="border-bottom:1px solid #eee;">Multi-user</td><td style="text-align:center; border-bottom:1px solid #eee;">âœ–</td><td style="text-align:center; border-bottom:1px solid #eee;">âœ”</td></tr></table>`,
-            insertHTML: `<table class="pub-table-matrix" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th style="text-align:left;">Feature</th><th style="text-align:center;">Starter</th><th style="text-align:center;">Professional</th></tr><tr><td>Cloud Sync</td><td style="text-align:center; color:red;">âœ–</td><td style="text-align:center; color:green;">âœ”</td></tr><tr><td>Priority Support</td><td style="text-align:center; color:red;">âœ–</td><td style="text-align:center; color:green;">âœ”</td></tr></table>`
+            previewHTML: `<table class="mini-table"><tr><th style="text-align:left;">Feature</th><th>Free</th><th>Pro</th></tr><tr><td style="border-bottom:1px solid #eee;">Multi-user</td><td style="text-align:center; border-bottom:1px solid #eee;">✖</td><td style="text-align:center; border-bottom:1px solid #eee;">✔</td></tr></table>`,
+            insertHTML: `<table class="pub-table-matrix" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th style="text-align:left;">Feature</th><th style="text-align:center;">Starter</th><th style="text-align:center;">Professional</th></tr><tr><td>Cloud Sync</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr><tr><td>Priority Support</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr></table>`
         },
         {
             name: 'Attendance Roster',
@@ -15116,7 +15116,7 @@ function initBasicBorders() {
    (REPLACEMENT) Includes both MouseDown and MouseMove to fix the NaNpx bug
    ========================================================================= */
 ;(function installDefinitiveCropFix() {
-    console.log("ðŸ› ï¸ V95.0 Definitive Crop Anchor Fix initializing...");
+    console.log("🛠️ V95.0 Definitive Crop Anchor Fix initializing...");
 
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
@@ -15154,7 +15154,7 @@ function initBasicBorders() {
             if(e.target.classList.contains('resize-handle')) {
                 state.dragMode = 'resize';
                 
-                // âœ¨ THE FIX: We MUST capture the image's starting Left & Top here!
+                // ✨ THE FIX: We MUST capture the image's starting Left & Top here!
                 const img = state.selectedEl.querySelector('img');
                 const startImgLeft = img ? (parseFloat(img.style.left) || 0) : 0;
                 const startImgTop = img ? (parseFloat(img.style.top) || 0) : 0;
@@ -15167,8 +15167,8 @@ function initBasicBorders() {
                     t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
-                    imgL: startImgLeft, // âœ¨ Saved to memory
-                    imgT: startImgTop   // âœ¨ Saved to memory
+                    imgL: startImgLeft, // ✨ Saved to memory
+                    imgT: startImgTop   // ✨ Saved to memory
                 };
                 e.preventDefault(); return;
             }
@@ -15449,7 +15449,7 @@ function initBasicBorders() {
             if (state.cropMode) {
                 const img = state.selectedEl.querySelector('img');
                 if (img) {
-                    // âœ¨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
+                    // ✨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
                     if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
                     if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
                 }
@@ -15488,7 +15488,7 @@ function initBasicBorders() {
         }
     };
 
-    console.log("âœ… Definitive Crop Anchor Fix installed.");
+    console.log("✅ Definitive Crop Anchor Fix installed.");
 })();
 })();
 /* =========================================================================
@@ -15498,7 +15498,7 @@ function initBasicBorders() {
    - Stealths the background during mouse drags to prevent Text Box ribbon.
    ========================================================================= */
 ;(function installBackgroundDefender() {
-    console.log("ðŸ›¡ï¸ Background Defender Module initializing...");
+    console.log("🛡️ Background Defender Module initializing...");
 
     // 1. PASSIVE RE-LOCKER (Fixes .opub loading)
     setInterval(() => {
@@ -15564,7 +15564,7 @@ function initBasicBorders() {
    * and a strict click-tracker to preserve state across multiple pages. 
    ========================================================================= */ 
 ;(function installGlassVaultMinimap() { 
-    console.log("âš¡ Glass Vault Minimap initializing..."); 
+    console.log("⚡ Glass Vault Minimap initializing..."); 
 
     const style = document.createElement('style'); 
     // CSS extracted to style.css 
@@ -15587,7 +15587,7 @@ function initBasicBorders() {
     let activeClone = null; 
     let nodeMap = new Map(); 
 
-    // âœ¨ SIDEBAR CLIPPING OBSERVER âœ¨
+    // ✨ SIDEBAR CLIPPING OBSERVER ✨
     // Uses native browser engine to perfectly detect if the sidebar is collapsing and clipping the thumbs
     const clipObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -15599,7 +15599,7 @@ function initBasicBorders() {
         threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
     });
      
-    // âœ¨ PRINT HIBERNATION âœ¨ 
+    // ✨ PRINT HIBERNATION ✨ 
     const prepareForPrint = () => { 
         isPrinting = true; 
         document.querySelectorAll('.page-thumb').forEach(thumb => { 
@@ -15765,7 +15765,7 @@ function initBasicBorders() {
 
         inner.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleFactor})`; 
 
-// âœ¨ THE BULLETPROOF CLOAKING FIX
+// ✨ THE BULLETPROOF CLOAKING FIX
         const sanitizeClone = (node) => { 
             const stripFrameworkHooks = (n) => {
                 if (n.removeAttribute) {
@@ -15817,7 +15817,7 @@ function initBasicBorders() {
         } 
 
         elements.forEach(el => { 
-            // âš ï¸ CRITICAL ROLLBACK: Do NOT skip the border container here or the preview breaks!
+            // ⚠️ CRITICAL ROLLBACK: Do NOT skip the border container here or the preview breaks!
             // Only skip the theme layer.
             if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return; 
 
@@ -15895,7 +15895,7 @@ function initBasicBorders() {
    - Safely ignores imported .doc/.pub files because they are <img> based.
    ========================================================================= */
 ;(function installBorderDefenderV5() {
-    console.log("ðŸ›¡ï¸ Border Defender V5 (Shape DNA) initializing...");
+    console.log("🛡️ Border Defender V5 (Shape DNA) initializing...");
 
     // 1. ABSOLUTE CSS LOCKS & ANTI-FADE
     const style = document.createElement('style');
@@ -15926,7 +15926,7 @@ function initBasicBorders() {
                 const isFullHeight = rect.height >= (paperRect.height * 0.95);
                 
                 if (isFullWidth && isFullHeight) {
-                    // âœ¨ THE SHAPE DNA FILTER âœ¨
+                    // ✨ THE SHAPE DNA FILTER ✨
                     // Based on the native HTML, borders are SVG shapes. Imported documents are not.
                     const isShapeType = el.getAttribute('data-type') === 'shape';
                     const hasSVG = el.querySelector('svg') !== null;
@@ -16016,7 +16016,7 @@ function initBasicBorders() {
     Clean, formatted, and documented for production use.
    ========================================================================= */
 ;(function installPerfectedThemeStudio() {
-    console.log("ðŸ› ï¸ Theme Studio initializing...");
+    console.log("🛠️ Theme Studio initializing...");
 
     // ==========================================
     // 1. CLEANUP & PREPARATION
@@ -16145,7 +16145,7 @@ function initBasicBorders() {
         const c2 = swatch.getAttribute('data-c2') || '';
         const url = swatch.getAttribute('data-url') || '';
 
-        // âœ¨ THE SAVE BACKUP: Anchor the configuration to the root document.
+        // ✨ THE SAVE BACKUP: Anchor the configuration to the root document.
         // The app's serializer will natively save these attributes into the .opub file.
         paper.setAttribute('data-theme-saved', 'true');
         paper.setAttribute('data-theme-type', type);
@@ -16285,15 +16285,15 @@ function initBasicBorders() {
 
         let theme = document.querySelector('[data-is-theme="true"]');
 
-        // âœ¨ FEATURE: Ignore Background Override
+        // ✨ FEATURE: Ignore Background Override
         if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
             if (theme) theme.remove();
             return;
         }
 
-        // âœ¨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
+        // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
         if (!theme && paper.getAttribute('data-theme-saved') === 'true') {
-            console.log("ðŸ› ï¸ Theme Studio: Reconstructing deleted theme wrapper from save file...");
+            console.log("🛠️ Theme Studio: Reconstructing deleted theme wrapper from save file...");
             if (typeof createWrapper === 'function') {
                 theme = createWrapper(`<div class="op-theme-container"></div>`); // temporary shell
                 theme.setAttribute('data-is-theme', 'true');
@@ -16303,9 +16303,9 @@ function initBasicBorders() {
             }
         }
 
-        // âœ¨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
+        // ✨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
         if (theme && !theme.querySelector('.op-theme-bg') && paper.getAttribute('data-theme-saved') === 'true') {
-            console.log("ðŸ› ï¸ Theme Studio: Restoring background visuals from save state...");
+            console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
             
             const type = paper.getAttribute('data-theme-type');
             const c1 = paper.getAttribute('data-theme-c1');
@@ -16440,7 +16440,7 @@ function initBasicBorders() {
    (REPLACEMENT FOR V98.0) Bumps handle size to 20px for better ergonomics.
    ========================================================================= */
 ;(function upgradeCropHandleSize() {
-    console.log("ðŸ› ï¸ V99.0 Unclipped Jumbo Crop Handles (20px) initializing...");
+    console.log("🛠️ V99.0 Unclipped Jumbo Crop Handles (20px) initializing...");
     
     const style = document.createElement('style');
     // CSS extracted to style.css
@@ -16450,7 +16450,7 @@ function initBasicBorders() {
    Border Eraser Module (UI Spacing Fix)
    ========================================================================= */
 ;(function installBorderEraserV2_3() {
-    console.log("ðŸ§¹ Border Eraser V2.3 initializing...");
+    console.log("🧹 Border Eraser V2.3 initializing...");
 
     const injectInterval = setInterval(() => {
         const removeThemeBtn = document.getElementById('ts-clear-theme-btn');
@@ -16501,7 +16501,7 @@ function initBasicBorders() {
 
         // 4. The Purge Logic
         eraserBtn.addEventListener('click', () => {
-            console.log("ðŸ§¹ Executing Border Purge...");
+            console.log("🧹 Executing Border Purge...");
             let purged = false;
             const borders = document.querySelectorAll('#native-blueprint-border, [data-is-border="true"], .page-border-wrapper');
             
@@ -16525,7 +16525,7 @@ function initBasicBorders() {
    Solves the "invisible default text" bug during printing.
    ========================================================================= */
 ;(function installTextPrintRescue() {
-    console.log("ðŸ–¨ï¸ Text Print Rescue Module initializing...");
+    console.log("🖨️ Text Print Rescue Module initializing...");
 
     const forceInlineTextStyles = () => {
         // Find every element inside an interactive container
@@ -16553,7 +16553,7 @@ function initBasicBorders() {
                 }
             }
         });
-        console.log("ðŸ–¨ï¸ Text styles hardcoded for print spooler.");
+        console.log("🖨️ Text styles hardcoded for print spooler.");
     };
 
     // Intercept the browser's print command BEFORE the spooler takes its snapshot
@@ -16784,7 +16784,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 await writable.write(blob);
                 await writable.close();
 
-                // âœ¨ THE FIX: Update the UI with the exact name they typed!
+                // ✨ THE FIX: Update the UI with the exact name they typed!
                 // We strip the ".opub" extension off so it looks clean in the toolbar
                 const newName = fileHandle.name.replace(/\.opub$/i, '');
                 
@@ -16821,7 +16821,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
     };
     
-    console.log("âœ… Modern Save System with Title Sync installed.");
+    console.log("✅ Modern Save System with Title Sync installed.");
 })();
 /* =========================================================================
    KEYBOARD SHORTCUT OVERRIDES (Ctrl+S, Ctrl+O)
@@ -16850,7 +16850,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
     }, true); // Use capture phase to intercept it early
 
-    console.log("âœ… Shortcut overrides (Ctrl+S, Ctrl+O) installed successfully.");
+    console.log("✅ Shortcut overrides (Ctrl+S, Ctrl+O) installed successfully.");
 })();
 /* =========================================================================
    Printer Router and page - print sizer
@@ -16934,7 +16934,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     print-color-adjust: exact !important;
                 }
 
-                /* âœ¨ UNIVERSAL LANDSCAPE (UNTOUCHED) âœ¨ */
+                /* ✨ UNIVERSAL LANDSCAPE (UNTOUCHED) ✨ */
                 ${isLandscape ? `
                 .op-print-scaler {
                     top: 0 !important;
@@ -16943,16 +16943,16 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     transform-origin: top left !important;
                 }
                 ` : `
-                /* âœ¨ FIREFOX PORTRAIT CLASS (HEAVY DROP) âœ¨ */
+                /* ✨ FIREFOX PORTRAIT CLASS (HEAVY DROP) ✨ */
                 #op-print-spooler.op-ff .op-print-scaler {
-                    /* âœ¨ Shoved down to 15px to clear the top crop âœ¨ */
+                    /* ✨ Shoved down to 15px to clear the top crop ✨ */
                     top: 15px !important;
                     left: 1px !important;
                     transform: scale(1.025) !important;
                     transform-origin: center center !important;
                 }
 
-                /* âœ¨ CHROME PORTRAIT CLASS (UNTOUCHED) âœ¨ */
+                /* ✨ CHROME PORTRAIT CLASS (UNTOUCHED) ✨ */
                 #op-print-spooler.op-ch .op-print-scaler {
                     top: -8px !important;
                     left: 1px !important;
@@ -17805,7 +17805,7 @@ window.addEventListener('beforeprint', () => {
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const isPortrait = pW <= pH;
 
-                // âœ¨ AUTO-ROTATION NORMALIZATION âœ¨
+                // ✨ AUTO-ROTATION NORMALIZATION ✨
                 // If this page's orientation doesn't match Page 1's orientation, we rotate it dynamically.
                 // This ensures the legacy Chromium printer receives a document where ALL pages are the exact same shape.
                 let imgStyle = '';
@@ -17856,7 +17856,7 @@ window.addEventListener('beforeprint', () => {
                 <head>
                     <title>Print Document</title>
                     <style>
-                        /* âœ¨ THE UNIFIED MASTER LAYOUT âœ¨ */
+                        /* ✨ THE UNIFIED MASTER LAYOUT ✨ */
                         @page { 
                             size: ${widthInches}in ${heightInches}in !important; 
                             margin: 0 !important; 
@@ -18688,7 +18688,7 @@ setTimeout(() => {
         }
     });
 
-    console.log("âœ… Main script evaluated.");
+    console.log("✅ Main script evaluated.");
 }, 500);
 
 // --- MINIMAP CONTEXT MENU ---
