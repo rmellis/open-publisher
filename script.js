@@ -1697,6 +1697,7 @@ function initAds() {
             if (typeof createWrapper === 'function') {
                 const el = createWrapper(`${svgString}${textString}`);
                 el.setAttribute('data-type', 'shape');
+                if (typeof selectElement === 'function') selectElement(el); // Re-trigger UI now that type is set
                 el.style.width = '150px'; 
                 el.style.height = '150px';
                 
@@ -2806,6 +2807,7 @@ async function insertEmojiFromUrl(url) {
     el.style.width = '100px';
     el.style.height = '100px';
     applyEmojiStretch(el.querySelector('.element-content'));
+    if (typeof selectElement === 'function') selectElement(el); // Re-trigger UI now that type is set
     return el;
 }
 

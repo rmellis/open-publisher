@@ -1,4 +1,4 @@
-﻿const DialogSystem = {
+const DialogSystem = {
     init: function() {
         // Inject the overlay into the body once
         if(!document.getElementById('custom-dialog-overlay')) {
@@ -1761,7 +1761,7 @@ window.ContextRibbonSystem = {
     },
     updateTabs: function(el) {
         this.hideAllTabs(false); if (!el) return;
-        const isImage = el.querySelector('img'), isShape = el.getAttribute('data-type') === 'shape', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
+        const isImage = el.querySelector('img') || el.getAttribute('data-type') === 'emoji', isShape = el.getAttribute('data-type') === 'shape', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
         else if (isTable) { 
