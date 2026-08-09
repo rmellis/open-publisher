@@ -1,4 +1,4 @@
-
+﻿
 
 // --- CUSTOM DRAGGABLE MODAL SYSTEM ---
 
@@ -471,598 +471,6 @@ function updateFloatToolbarValues() {
     }
 }
 
-// --- SERIALIZER & RENDER ---
-function serializeCurrentPage() {
-    // FIXED: Preserve existing thumbnail if present so it doesn't blank out on page switch
-    const existingPage = state.pages[state.currentPageIndex] || {};
-    
-    const p = {
-        id: existingPage.id || Date.now(),
-        thumb: existingPage.thumb, // <--- PRESERVE THUMBNAIL
-        ignoreMasterPage: existingPage.ignoreMasterPage || false,
-        ignoreBackground: existingPage.ignoreBackground || false,
-        width: paper.style.width || '794px',
-        height: paper.style.height || '1123px',
-        background: paper.style.background || 'white',
-        header: paper.querySelector('.page-header').innerHTML,
-        footer: paper.querySelector('.page-footer').innerHTML,
-        borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',
-        elements: []
-    };
-
-    const els = paper.querySelectorAll('.pub-element:not(.master-page-element)');
-    els.forEach(el => {
-        const data = {
-            left: el.style.left,
-            top: el.style.top,
-            width: el.style.width,
-            height: el.style.height,
-            transform: el.style.transform,
-            zIndex: el.style.zIndex,
-            type: el.getAttribute('data-type') || 'box',
-            innerHTML: '', 
-            imgSrc: '', 
-            clipPath: '', 
-            bg: '', 
-            cropMode: el.classList.contains('cropping'),
-            imgStyle: {},
-            scaleX: el.getAttribute('data-scaleX') || "1",
-            scaleY: el.getAttribute('data-scaleY') || "1",
-            shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true',
-            growFit: el.getAttribute('data-grow-fit') === 'true'
-        };
-
-        const content = el.querySelector('.element-content');
-        
-        data.contentCssText = content ? content.style.cssText : '';
-        data.rx3d = content ? content.getAttribute('data-3d-rx') : null;
-        data.ry3d = content ? content.getAttribute('data-3d-ry') : null;
-        data.rz3d = content ? content.getAttribute('data-3d-rz') : null;
-        data.p3d = content ? content.getAttribute('data-3d-p') : null;
-        const img = content ? content.querySelector('img') : null;
-        const shapeDiv = content ? content.querySelector('div') : null;
-        const isTrueImage = img && (data.type === 'image' || data.type === 'emoji' || (content.children.length === 1 && content.children[0].tagName === 'IMG'));
-
-        if (isTrueImage) {
-            data.imgSrc = img.src;
-            data.altText = img.alt || '';
-            const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
-            data.imgStyle = {
-                width: img.style.width,
-                height: img.style.height,
-                top: img.style.top,
-                left: img.style.left,
-                position: img.style.position,
-                filter: img.style.filter,
-                maxWidth: img.style.maxWidth,
-                maxHeight: img.style.maxHeight
-            };
-            if (imgClipPath && imgClipPath !== 'none') {
-                data.imgStyle.clipPath = imgClipPath;
-            }
-            const imgObjectFit = img.style.objectFit;
-            if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
-            data.isImage = true;
-        } else if (shapeDiv && shapeDiv.style.clipPath) {
-            data.clipPath = shapeDiv.style.clipPath;
-            data.bg = shapeDiv.style.background;
-        } else {
-            if (shapeDiv && shapeDiv.style.backgroundImage && shapeDiv.style.backgroundImage.includes('data:image')) {
-                data.bgImage = shapeDiv.style.backgroundImage;
-                const oldBg = shapeDiv.style.backgroundImage;
-                shapeDiv.style.backgroundImage = 'none';
-                data.innerHTML = content ? content.innerHTML : '';
-                shapeDiv.style.backgroundImage = oldBg;
-            } else {
-                data.innerHTML = content ? content.innerHTML : '';
-            }
-            if (data.innerHTML.includes('<img') || data.innerHTML.includes('<IMG')) {
-                data.isImageFallback = true;
-            }
-        }
-
-        p.elements.push(data);
-    });
-    return p;
-}
-
-function renderPage(pageData) {
-    deselect();
-    
-    paper.style.width = pageData.width;
-    paper.style.height = pageData.height;
-    if (pageData.ignoreBackground) {
-        paper.style.background = '#ffffff';
-    } else {
-        paper.style.background = pageData.background;
-    }
-    if (typeof window.setPageFormatIcon === 'function') {
-        let w = parseFloat(pageData.width);
-        let h = parseFloat(pageData.height || '1123');
-        if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
-        
-        let shortEdge = Math.min(w, h);
-        let longEdge = Math.max(w, h);
-        
-        let fmt = 'A4';
-        if (shortEdge >= 1100) fmt = 'A3';
-        else if (shortEdge >= 1000) fmt = 'Tabloid';
-        else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
-        else if (shortEdge > 800) fmt = 'Letter';
-        else if (shortEdge < 400) fmt = 'BusinessCard';
-        else if (shortEdge < 600) fmt = 'A5';
-        
-        window.setPageFormatIcon(fmt);
-    }
-    
-    if (typeof state !== 'undefined' && state.isSpreadMode) {
-        paper.classList.add('is-spread');
-    } else {
-        paper.classList.remove('is-spread');
-    }
-    let renderHeader = pageData.header;
-    let renderFooter = pageData.footer;
-    let isHeaderEditable = true;
-
-    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
-        renderHeader = state.pages[0].header;
-        renderFooter = state.pages[0].footer;
-        isHeaderEditable = false;
-    }
-    
-    const headerEl = paper.querySelector('.page-header');
-    const footerEl = paper.querySelector('.page-footer');
-    
-    headerEl.innerHTML = renderHeader;
-    footerEl.innerHTML = renderFooter;
-    headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
-    footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
-    if (isHeaderEditable) {
-        headerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-        footerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-        if (state.spellCheck) {
-            headerEl.setAttribute('lang', 'en');
-            footerEl.setAttribute('lang', 'en');
-        }
-    }
-    
-    const borderEl = paper.querySelector('.page-border-container');
-    borderEl.setAttribute('data-style', pageData.borderStyle);
-    setPageBorder(pageData.borderStyle, false); 
-
-    const structural = paper.querySelectorAll('.margin-guides, .page-border-container, .page-header, .page-footer');
-    paper.innerHTML = '';
-    structural.forEach(el => paper.appendChild(el));
-
-    const marginGuides = paper.querySelector('.margin-guides');
-    if (marginGuides) {
-        const m = state.margins || {top: 48, right: 48, bottom: 48, left: 48};
-        marginGuides.style.inset = 'auto';
-        marginGuides.style.top = m.top + 'px';
-        marginGuides.style.right = m.right + 'px';
-        marginGuides.style.bottom = m.bottom + 'px';
-        marginGuides.style.left = m.left + 'px';
-    }
-
-    let elementsToRender = [];
-    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
-        elementsToRender = state.pages[0].elements.map(e => Object.assign({}, e, { _isMaster: true }));
-    }
-    elementsToRender = elementsToRender.concat(pageData.elements.map(e => Object.assign({}, e, { _isMaster: false })));
-
-    elementsToRender.forEach(data => {
-        const el = document.createElement('div');
-        el.className = 'pub-element';
-        if (data._isMaster) {
-            el.classList.add('master-page-element');
-            el.style.pointerEvents = 'none';
-        }
-        if (data.innerHTML && data.innerHTML.includes('spread-fold-line')) {
-            el.classList.add('ignore-selection');
-            el.style.pointerEvents = 'none';
-        }
-        el.style.left = data.left;
-        el.style.top = data.top;
-        el.style.width = data.width;
-        el.style.height = data.height;
-        el.style.transform = data.transform || 'none';
-        el.style.zIndex = data.zIndex || 10;
-        if (data.type) el.setAttribute('data-type', data.type);
-        
-        // Restore scale attributes
-        const sX = data.scaleX || "1";
-        const sY = data.scaleY || "1";
-        el.setAttribute('data-scaleX', sX);
-        el.setAttribute('data-scaleY', sY);
-        if (data.shrinkOverflow) el.setAttribute('data-shrink-overflow', 'true');
-
-        let inner = '';
-        if (data.imgSrc) {
-            const s = data.imgStyle || {};
-            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
-            if (s.clipPath && s.clipPath !== 'none') {
-                styleStr += ` clip-path:${s.clipPath}; -webkit-clip-path:${s.clipPath};`;
-            }
-            const altAttr = data.altText ? ` alt="${data.altText.replace(/"/g, '&quot;')}"` : ' alt=""';
-            inner = `<img src="${data.imgSrc}" style="${styleStr}"${altAttr}>`;
-        } else if (data.clipPath) {
-            inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
-        } else {
-            inner = data.innerHTML || '';
-        }
-        
-        // Force Chromium spellcheck on load
-        if (state.spellCheck) {
-            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="true" lang="en"');
-        } else {
-            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="false"');
-        }
-        
-        const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
-        let d3d = '';
-        if (data.rx3d) d3d += ` data-3d-rx="${data.rx3d}"`;
-        if (data.ry3d) d3d += ` data-3d-ry="${data.ry3d}"`;
-        if (data.rz3d) d3d += ` data-3d-rz="${data.rz3d}"`;
-        if (data.p3d) d3d += ` data-3d-p="${data.p3d}"`;
-
-        el.innerHTML = `
-            <div class="element-content" style="${css}"${d3d}>${inner}</div>
-            <div class="resize-handle rh-nw" data-dir="nw"></div>
-            <div class="resize-handle rh-n" data-dir="n"></div>
-            <div class="resize-handle rh-ne" data-dir="ne"></div>
-            <div class="resize-handle rh-e" data-dir="e"></div>
-            <div class="resize-handle rh-se" data-dir="se"></div>
-            <div class="resize-handle rh-s" data-dir="s"></div>
-            <div class="resize-handle rh-sw" data-dir="sw"></div>
-            <div class="resize-handle rh-w" data-dir="w"></div>
-            <div class="rotate-stick"></div>
-            <div class="rotate-handle"></div>
-        `;
-
-        if (data.cropMode) el.classList.add('cropping');
-        if (data.shrinkOverflow) applyShrinkOverflow(el);
-        if (data.growFit) applyGrowFit(el);
-        if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
-        paper.appendChild(el);
-    });
-    
-    toggleHeaderFooter(state.headersVisible);
-    document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
-    updatePageNumbers();
-    updateSidebar();
-    scheduleEmojiMigrate();
-}
-
-// --- HISTORY MANAGEMENT ---
-
-
-// --- PAGE MANAGEMENT ---
-function addNewPage() {
-    if(state.pages.length > 0) {
-        state.pages[state.currentPageIndex] = serializeCurrentPage();
-    }
-
-    // Automatically detect optimal default page size based on user's region
-    let defaultW = '794px'; // A4 default
-    let defaultH = '1123px';
-    try {
-        const locale = navigator.language || navigator.userLanguage || '';
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
-        
-        let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
-        
-        // Timezone override: UK users often have en-US browsers. Timezone gives physical location.
-        if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
-            if (tz !== 'Asia/Manila') {
-                isLetter = false;
-            }
-        }
-        
-        if (isLetter) {
-            defaultW = '816px'; // US Letter
-            defaultH = '1056px';
-        }
-    } catch(e) {}
-
-    let pageW = defaultW;
-    let initialElements = [];
-    if (typeof state !== 'undefined' && state.isSpreadMode) {
-        pageW = (parseInt(defaultW) * 2) + 'px';
-    }
-
-    const newPage = {
-        id: Date.now(),
-        width: pageW, height: defaultH,
-        background: '#ffffff',
-        header: 'Header (Type here)', 
-        footer: 'Footer (Type here)',
-        borderStyle: 'none',
-        elements: initialElements
-    };
-    
-    state.pages.push(newPage);
-    state.currentPageIndex = state.pages.length - 1;
-    renderPage(newPage);
-    updateSidebar();
-    
-    setTimeout(() => {
-        updateThumbnails();
-        pushHistory(); 
-    }, 50);
-}
-
-function addMasterPage() {
-    if (state.hasMasterPage) {
-        switchPage(0);
-        return;
-    }
-
-    if(state.pages.length > 0) {
-        state.pages[state.currentPageIndex] = serializeCurrentPage();
-    }
-
-    let defaultW = '794px'; 
-    let defaultH = '1123px';
-    try {
-        const locale = navigator.language || navigator.userLanguage || '';
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
-        
-        let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
-        
-        if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
-            if (tz !== 'Asia/Manila') {
-                isLetter = false;
-            }
-        }
-        
-        if (isLetter) {
-            defaultW = '816px'; 
-            defaultH = '1056px';
-        }
-    } catch(e) {}
-
-    let pageW = defaultW;
-    if (typeof state !== 'undefined' && state.isSpreadMode) {
-        pageW = (parseInt(defaultW) * 2) + 'px';
-    }
-
-    const newPage = {
-        id: Date.now() + '-master',
-        width: pageW, height: defaultH,
-        background: '#ffffff',
-        header: 'Header (Type here)', 
-        footer: 'Footer (Type here)',
-        borderStyle: 'none',
-        elements: []
-    };
-    
-    state.hasMasterPage = true;
-    state.pages.unshift(newPage);
-    state.currentPageIndex = 0;
-    
-    renderPage(newPage);
-    updateSidebar();
-    
-    setTimeout(() => {
-        updateThumbnails();
-        pushHistory(); 
-    }, 50);
-}
-
-function switchPage(newIndex) {
-    if (newIndex === state.currentPageIndex) return;
-    // Save current page state
-    state.pages[state.currentPageIndex] = serializeCurrentPage();
-    state.currentPageIndex = newIndex;
-    
-    if (state.pages[newIndex]._needsRender) {
-        state.pages[newIndex]._needsRender = false;
-    }
-    
-    renderPage(state.pages[newIndex]);
-    updateSidebar();
-}
-
-function deletePage(index, event) {
-    event.stopPropagation();
-    
-    DialogSystem.show('Delete Page', '<p>Are you sure you want to permanently delete this page?</p>', () => {
-        if (state.hasMasterPage && index === 0) {
-            state.hasMasterPage = false;
-        }
-        state.pages.splice(index, 1);
-        if(state.pages.length === 0) {
-            addNewPage();
-        } else {
-            if(state.currentPageIndex >= state.pages.length) {
-                state.currentPageIndex = state.pages.length - 1;
-            }
-            renderPage(state.pages[state.currentPageIndex]);
-            updateSidebar();
-            pushHistory();
-        }
-    });
-}
-
-function handleNewDocument() {
-    const msg = `<p style="margin-top:0;">Create a new document?</p>
-                 <p style="color:#555;"><strong>OK:</strong> Save to history and start fresh.<br>
-                 <strong>Cancel:</strong> Abort.</p>`;
-                 
-    DialogSystem.show('New Document', msg, () => {
-         state.pages = [];
-         state.history = [];
-         state.historyIndex = -1;
-         addNewPage();
-    });
-}
-
-function renderThumbnailHTML(pageData, pageIndex) {
-    if (!pageData) return document.createElement('div');
-    const pW = parseFloat(pageData.width) || 794;
-    const pH = parseFloat(pageData.height) || 1123;
-    const scale = 100 / pW;
-
-    const outerWrapper = document.createElement('div');
-    outerWrapper.style.cssText = `transform: scale(${scale}); transform-origin: top left; width: ${pW}px; height: ${pH}px; pointer-events: none;`;
-
-    const innerWrapper = document.createElement('div');
-    innerWrapper.style.cssText = `position: relative; width: ${pW}px; height: ${pH}px; background: ${pageData.background || '#ffffff'}; overflow: hidden; transform-origin: top left; pointer-events: none;`;
-
-    if (pageData.elements && pageData.elements.length > 0) {
-        pageData.elements.forEach(data => {
-            const sX = data.scaleX || "1";
-            const sY = data.scaleY || "1";
-            
-            const elBox = document.createElement('div');
-            elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
-            
-            const scaleBox = document.createElement('div');
-            scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
-            if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
-
-            if (data.imgSrc && data.imgSrc !== '') {
-                const imgDiv = document.createElement('div');
-                const s = data.imgStyle || {};
-                
-                // Use a div with background-image instead of an img tag to bypass any weird img rendering bugs
-                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
-                if (s.clipPath && s.clipPath !== 'none') {
-                    thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
-                }
-                imgDiv.style.cssText = thumbImgCss;
-                
-                // Add the image overlay
-                let objFit = s.objectFit || '100% 100%';
-                if (objFit === 'fill') objFit = '100% 100%';
-                if (objFit === 'contain') objFit = 'contain';
-                
-                imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
-                
-                scaleBox.appendChild(imgDiv);
-
-            } else if (data.clipPath) {
-                const clipDiv = document.createElement('div');
-                clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
-                scaleBox.appendChild(clipDiv);
-            } else {
-                scaleBox.innerHTML = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
-                if (data.bgImage) {
-                    const childDiv = scaleBox.querySelector('div');
-                    if (childDiv) childDiv.style.backgroundImage = data.bgImage;
-                }
-                // Update page number spans in thumbnails
-                if (data.type === 'page-number' && typeof pageIndex === 'number') {
-                    const curSpan = scaleBox.querySelector('.pn-current');
-                    const totSpan = scaleBox.querySelector('.pn-total');
-                    if (curSpan) curSpan.textContent = pageIndex + 1;
-                    if (totSpan) totSpan.textContent = state.pages.length;
-                }
-            }
-            
-            elBox.appendChild(scaleBox);
-            innerWrapper.appendChild(elBox);
-        });
-    }
-
-    outerWrapper.appendChild(innerWrapper);
-    return outerWrapper;
-}
-
-function updateSidebar() {
-    const sb = document.getElementById('sidebar');
-    const btns = Array.from(sb.querySelectorAll('.page-add-btn'));
-    sb.innerHTML = '';
-    
-    // Re-inject toggle button if cleared
-    if(!sb.querySelector('.sidebar-collapse-btn')) {
-         const t = document.createElement('div');
-         t.className = 'sidebar-collapse-btn';
-         t.innerHTML = '<i class="fas fa-angle-double-left"></i>';
-         t.onclick = () => toggleSidebar(true);
-         sb.appendChild(t);
-    } else {
-         sb.appendChild(sb.querySelector('.sidebar-collapse-btn'));
-    }
-
-    state.pages.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = `page-thumb-container ${i === state.currentPageIndex ? 'active' : ''}`;
-        div.onclick = () => switchPage(i);
-        div.oncontextmenu = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            showMinimapContextMenu(e, i);
-        };
-        
-        const pW = parseFloat(p.width) || 794;
-        const pH = parseFloat(p.height) || 1123;
-        const thumbHeight = pH * (100 / pW);
-        
-        let labelText = state.isSpreadMode ? `Page ${(i*2)+1} - ${(i*2)+2}` : `Page ${i+1}`;
-        if (state.hasMasterPage && i === 0) {
-            labelText = 'Master Page';
-        }
-        const pW_Inches = (pW / 96).toFixed(1);
-        const pH_Inches = (pH / 96).toFixed(1);
-        let sizeText = `<span style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">${pW_Inches} x ${pH_Inches} in</span>`;
-        
-        div.innerHTML = `
-            <div class="page-del-btn" onclick="deletePage(${i}, event)" title="Delete Page"><i class="fas fa-times"></i></div>
-            <div class="page-thumb" id="thumb-${i}" style="height: ${thumbHeight}px;">
-                ${sizeText}
-            </div>
-            <small>${labelText}</small>
-            ${p.note ? `<div style="font-size: 10px; color: var(--ui-theme-color); text-align: center; word-break: break-word; line-height: 1.1; margin-top: 2px; font-weight: bold;">${p.note.replace(/</g, '&lt;')}</div>` : ''}
-        `;
-        
-        const thumbContainer = div.querySelector('.page-thumb');
-        if (p._needsRender) {
-            thumbContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--ui-theme-color); font-size: 24px;"><i class="fas fa-circle-notch fa-spin"></i></div>`;
-        } else {
-            const thumbNode = renderThumbnailHTML(p, i);
-            thumbContainer.appendChild(thumbNode);
-        }
-
-        sb.appendChild(div);
-    });
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'add-page-btns-wrapper';
-    if (btns.length > 0) wrapper.appendChild(btns[0]);
-    if (btns.length > 1) {
-        if (state.hasMasterPage) {
-            btns[1].innerHTML = '<i class="fas fa-arrow-right"></i> Master';
-        } else {
-            btns[1].innerHTML = '<i class="fas fa-plus"></i> Master';
-        }
-        wrapper.appendChild(btns[1]);
-    }
-    sb.appendChild(wrapper);
-}
-
-function updateThumbnails() {
-    // Keep it fast: just serialize the current page and update its thumbnail HTML directly
-    state.pages[state.currentPageIndex] = serializeCurrentPage();
-    generateThumbnail(state.currentPageIndex);
-}
-
-function generateThumbnail(index) {
-    const pageData = state.pages[index];
-    if (!pageData) return;
-    const thumbEl = document.getElementById(`thumb-${index}`);
-    if (thumbEl) {
-        thumbEl.innerHTML = '';
-        thumbEl.appendChild(renderThumbnailHTML(pageData, index));
-    }
-}
-
-// generateAllThumbnails is essentially a no-op now, because updateSidebar already renders everything synchronously
-function generateAllThumbnails() {
-    updateSidebar();
-}
 
 function toggleHeaderFooter(forceState) {
     if (typeof forceState === 'boolean') {
@@ -1107,1734 +515,7 @@ function setupZoomControls() {
     });
 }
 
-// --- THEMES & STYLES ---
-function initThemes() {
-    const container = document.getElementById('theme-group');
-    
-window.clearPageBackground = function() {
-    document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
-    
-    // Flag this specific page to ignore the master theme
-    if (state.pages[state.currentPageIndex]) {
-        state.pages[state.currentPageIndex].ignoreBackground = true;
-        state.pages[state.currentPageIndex].background = '#ffffff';
-    }
-    
-    // Manually destroy the theme wrapper on this page right now
-    const paper = document.getElementById('paper');
-    if (paper) {
-        paper.style.background = '#ffffff';
-        const theme = paper.querySelector('[data-is-theme="true"]');
-        if (theme) theme.remove();
-    }
-    
-    if (typeof pushHistory === 'function') pushHistory();
-};
 
-    const colors = [
-        '#ffffff', '#fdf2f0', '#e8f6f3', '#fef9e7', '#f4ecf7', '#eaf2f8',
-        '#ebf5fb', '#e8daef', '#d4e6f1', '#d1f2eb', '#fcf3cf', '#fadbd8',
-        '#333333', '#2c3e50', '#5d6d7e', '#800000', '#1a5276', '#117864',
-        'linear-gradient(to bottom right, #fff, #eee)',
-        'repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #fff 10px, #fff 20px)',
-        'linear-gradient(120deg, #f6d365 0%, #fda085 100%)',
-        'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)',
-        'linear-gradient(to top, #30cfd0 0%, #330867 100%)',
-        'radial-gradient(circle, #fff, #ccc)',
-        'linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%)',
-        'linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%)',
-        'linear-gradient(to right, #43e97b 0%, #38f9d7 100%)',
-        'linear-gradient(to right, #fa709a 0%, #fee140 100%)',
-        'linear-gradient(to top, #5f72bd 0%, #9b23ea 100%)',
-        'linear-gradient(to top, #09203f 0%, #537895 100%)',
-        'repeating-radial-gradient(circle, #fff, #fff 10px, #eee 10px, #eee 20px)'
-    ];
-    
-    colors.forEach(c => {
-        const swatch = document.createElement('div');
-        swatch.style.width = '40px';
-        swatch.style.height = '40px';
-        swatch.style.background = c;
-        swatch.style.display = 'inline-block';
-        swatch.style.margin = '2px';
-        swatch.style.border = '1px solid #ccc';
-        swatch.style.cursor = 'pointer';
-        swatch.style.verticalAlign = 'middle';
-        swatch.style.borderRadius = '4px';
-        swatch.title = "Apply Background";
-        swatch.className = 'theme-swatch-item';
-        swatch.onclick = () => { 
-            document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
-            swatch.style.border = '3px solid var(--ui-theme-color)';
-            
-            // Turn OFF ignoreBackground if they manually select a color
-            if (state.pages[state.currentPageIndex]) {
-                state.pages[state.currentPageIndex].ignoreBackground = false;
-                state.pages[state.currentPageIndex].background = c;
-            }
-            
-            const paper = document.getElementById('paper');
-            if (paper) paper.style.background = c; 
-            
-            pushHistory(); 
-        };
-        container.appendChild(swatch);
-    });
-}
-
-// --- COLOR SCHEMES ENGINE ---
-function initColorSchemes() {
-    const container = document.getElementById('scheme-group');
-    if (!container) return;
-    
-    Object.keys(colorSchemes).forEach(schemeName => {
-        const colors = colorSchemes[schemeName];
-        
-        const swatchContainer = document.createElement('div');
-        swatchContainer.className = 'scheme-swatch-container';
-        swatchContainer.setAttribute('data-scheme-id', schemeName);
-        swatchContainer.style.display = 'inline-block';
-        swatchContainer.style.margin = '2px 6px';
-        swatchContainer.style.cursor = 'pointer';
-        swatchContainer.style.verticalAlign = 'top';
-        swatchContainer.style.padding = '4px';
-        swatchContainer.style.border = '2px solid transparent';
-        swatchContainer.style.borderRadius = '6px';
-        swatchContainer.style.transition = '0.2s';
-        if (state.currentScheme === schemeName) {
-            swatchContainer.style.border = '2px solid var(--ui-theme-color)';
-            swatchContainer.style.background = 'rgba(0, 118, 112, 0.1)';
-        }
-        swatchContainer.title = schemeName;
-        swatchContainer.onclick = () => applyColorScheme(schemeName);
-        
-        const bar = document.createElement('div');
-        bar.style.display = 'flex';
-        bar.style.width = '60px';
-        bar.style.height = '24px';
-        bar.style.border = '1px solid #999';
-        bar.style.borderRadius = '4px';
-        bar.style.overflow = 'hidden';
-        
-        colors.forEach(c => {
-            const block = document.createElement('div');
-            block.style.flex = '1';
-            block.style.background = c;
-            bar.appendChild(block);
-        });
-        
-        const label = document.createElement('div');
-        label.innerText = schemeName;
-        label.className = 'ribbon-mini-label';
-        label.style.fontSize = '9px';
-        label.style.textAlign = 'center';
-        label.style.marginTop = '2px';
-        
-        swatchContainer.appendChild(bar);
-        swatchContainer.appendChild(label);
-        container.appendChild(swatchContainer);
-    });
-}
-
-function applyColorScheme(schemeName) {
-    if (!colorSchemes[schemeName]) return;
-    state.currentScheme = schemeName;
-    
-    // UI Feedback
-    document.querySelectorAll('.scheme-swatch-container').forEach(c => {
-        if (c.getAttribute('data-scheme-id') === schemeName) {
-            c.style.border = '2px solid var(--ui-theme-color)';
-            c.style.background = 'rgba(0, 118, 112, 0.1)';
-        } else {
-            c.style.border = '2px solid transparent';
-            c.style.background = 'transparent';
-        }
-    });
-    
-    // Update all elements dynamically
-    document.querySelectorAll('.pub-element').forEach(el => {
-        applySingleElementScheme(el, schemeName);
-    });
-    
-    pushHistory();
-}
-
-function applySingleElementScheme(el, schemeName) {
-    if (!colorSchemes[schemeName]) return;
-    const colors = colorSchemes[schemeName];
-    
-    const isShape = el.getAttribute('data-type') === 'shape';
-    const svgOuter = el.querySelector('svg .shape-path') || el.querySelector('svg g') || el.querySelector('svg');
-    const content = el.querySelector('.element-content');
-    const cssShape = content ? content.querySelector('div[style*="clip-path"]') : null;
-    
-    if (content) {
-        const spans = content.querySelectorAll('span[data-scheme-text]');
-        spans.forEach(span => {
-            const idx = parseInt(span.getAttribute('data-scheme-text'));
-            if (!isNaN(idx) && colors[idx]) span.style.color = colors[idx];
-        });
-        if (content.hasAttribute('data-scheme-text') || el.hasAttribute('data-scheme-text')) {
-            const idx = parseInt(content.getAttribute('data-scheme-text') || el.getAttribute('data-scheme-text'));
-            if (!isNaN(idx) && colors[idx]) content.style.color = colors[idx];
-        }
-    }
-    
-    if (el.hasAttribute('data-scheme-fill')) {
-        const idx = parseInt(el.getAttribute('data-scheme-fill'));
-        if (!isNaN(idx) && colors[idx]) {
-            if (isShape && svgOuter && svgOuter.querySelector) {
-                // If the shape has explicit paths
-                const paths = svgOuter.querySelectorAll('*');
-                if (paths.length) paths.forEach(p => p.setAttribute('fill', colors[idx]));
-                else svgOuter.setAttribute('fill', colors[idx]);
-            } else if (isShape && cssShape) {
-                cssShape.style.background = colors[idx];
-            } else if (content) {
-                content.style.background = colors[idx];
-            }
-        }
-    }
-    
-    if (el.hasAttribute('data-scheme-stroke')) {
-        const idx = parseInt(el.getAttribute('data-scheme-stroke'));
-        if (!isNaN(idx) && colors[idx]) {
-            if (isShape && svgOuter && svgOuter.querySelector) {
-                const paths = svgOuter.querySelectorAll('*');
-                if (paths.length) paths.forEach(p => { if(p.getAttribute('stroke')!=='none') p.setAttribute('stroke', colors[idx]); });
-                else svgOuter.setAttribute('stroke', colors[idx]);
-            } else if (isShape && cssShape) {
-                cssShape.style.border = `2px solid ${colors[idx]}`;
-            } else if (content) {
-                content.style.borderColor = colors[idx];
-                if (!content.style.borderStyle || content.style.borderStyle === 'none') {
-                    content.style.borderStyle = 'solid';
-                    content.style.borderWidth = '1px';
-                }
-            }
-        }
-    }
-}
-
-// --- BORDERS ---
-function setPageBorder(type, doPush = true) {
-    if (!type) type = 'none';
-    const div = document.getElementById('page-border');
-    div.setAttribute('data-style', type);
-    div.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box;'; 
-    div.innerHTML = ''; 
-
-    if(type === 'none') { if(doPush) pushHistory(); return; }
-    
-    if (type.startsWith('fancy-')) {
-        if (type === 'fancy-deco') { 
-            div.style.border = "15px solid #333"; 
-            div.style.outline = "2px dashed #333"; 
-            div.style.outlineOffset = "-20px"; 
-        }
-        else if (type === 'fancy-cert') { 
-            div.style.border = "20px solid #d4af37"; 
-            div.style.borderImage = "linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1"; 
-            const inner = document.createElement('div'); 
-            inner.style.position = 'absolute'; inner.style.inset = '5px'; inner.style.border = '2px solid #b8860b'; 
-            div.appendChild(inner); 
-        }
-        else if (type === 'fancy-double') { 
-            div.style.border = "double 10px #000"; 
-            div.style.outline = "double 4px #000"; 
-            div.style.outlineOffset = "-15px"; 
-        }
-        else if (type === 'fancy-antique') {
-            div.style.border = "10px double #5d4037";
-            const c = document.createElement('div');
-            c.style.cssText = "position:absolute; inset:5px; border: 2px solid #5d4037; border-radius: 10px;";
-            div.appendChild(c);
-        }
-        else if (type === 'fancy-modern') {
-            div.style.border = "20px solid #2c3e50";
-            div.style.borderBottom = "40px solid #2c3e50";
-        }
-        else if (type === 'fancy-floral') {
-            div.style.border = "5px solid green";
-            const tl = document.createElement('div'); tl.innerText = "🌿"; tl.style.cssText = "position:absolute; top:-15px; left:-15px; font-size:40px;";
-            const tr = document.createElement('div'); tr.innerText = "🌿"; tr.style.cssText = "position:absolute; top:-15px; right:-15px; font-size:40px; transform:scaleX(-1);";
-            const bl = document.createElement('div'); bl.innerText = "🌿"; bl.style.cssText = "position:absolute; bottom:-15px; left:-15px; font-size:40px; transform:scaleY(-1);";
-            const br = document.createElement('div'); br.innerText = "🌿"; br.style.cssText = "position:absolute; bottom:-15px; right:-15px; font-size:40px; transform:scale(-1);";
-            div.appendChild(tl); div.appendChild(tr); div.appendChild(bl); div.appendChild(br);
-        }
-    } else {
-        div.style.border = `5px ${type} #333`;
-        div.style.inset = '0px'; 
-    }
-    document.getElementById('border-dropdown').style.display = 'none';
-    if(doPush) pushHistory();
-}
-
-// --- CLIPART SYSTEM (TWEMOJI) ---
-function initClipart() {
-    const grid = document.getElementById('clipart-grid');
-
-    // Massive list of high-quality vector emojis
-    // Grouped by Category with unique, intact sequences
-    const categories = {
-        "People & Fantasy": [
-            // Base Smileys
-            "😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","☺️","😙","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾",
-            // Gestures
-            "👋","🤚","🖐","✋","🖖","👌","🤏","✌️","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪",
-            // People (Base)
-            "👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕",
-            // Professions (ZWJ Sequences)
-            "👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️",
-            // Fantasy & Roles
-            "👰","🤵","👸","🤴","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼"
-        ],
-        "Animals & Nature": [
-            "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🐵","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷","🕸","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐕‍🦺","🐈","🐓","🦃","🦚","🦜","🦢","🦩","🕊","🐇","🦝","🦨","🦡","🦦","🦥","🐁","🐀","🐿","🦔",
-            "🐾","🐉","🐲","🌵","🎄","🌲","🌳","🌴","🌱","🌿","☘️","🍀","🎍","🎋","🍃","🍂","🍁","🍄","🐚","🌾","💐","🌷","🌹","🥀","🌺","🌸","🌼","🌻","🌞","🌝","🌛","🌜","🌚","🌕","🌖","🌗","🌘","🌘","🌑","🌒","🌓","🌔","🌙","🌎","🌍","🌏","🪐","💫","⭐️","🌟","✨","⚡️","☄️","💥","🔥","🌪","🌈","☀️","🌤","⛅️","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","☃️","⛄️","🌬","💨","💧","💦","☔️","☂️","🌊","🌫"
-        ],
-        "Food & Drink": [
-            "🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶","🌽","🥕","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🦴","🌭","🍔","🍟","🍕","🥪","🥙","🧆","🌮","🌯","🥗","🥘","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥠","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🥮","☕️","🍵","🥣","🍼","🥤","🧃","🧉","🥛","🍺","🍻","🍷","🥂","🥃","🍸","🍹","🍾","🥄","🍴","🍽","🥣","🥡","🥢","🧂"
-        ],
-        "Activity & Sports": [
-            "⚽️","🏀","🏈","⚾️","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🥅","⛳️","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛷","⛸","🥌","🎿","⛷","🏂","🪂","🏋️‍♀️","🏋️","🏋️‍♂️","🤼‍♀️","🤼","🤼‍♂️","🤸‍♀️","🤸","🤸‍♂️","⛹️‍♀️","⛹️","⛹️‍♂️","🤺","🤾‍♀️","🤾","🤾‍♂️","🏌️‍♀️","🏌️","🏌️‍♂️","🏇","🧘‍♀️","🧘","🧘‍♂️","🏄‍♀️","🏄","🏄‍♂️","🏊‍♀️","🏊","🏊‍♂️","🤽‍♀️","🤽","🤽‍♂️","🚣‍♀️","🚣","🚣‍♂️","🧗‍♀️","🧗","🧗‍♂️","🚵‍♀️","🚵","🚵‍♂️","🚴‍♀️","🚴","🚴‍♂️","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎫","🎟","🎪","🤹","🤹‍♂️","🤹‍♀️","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🪕","🎻","🎲","♟","🎯","🎳","🎮","🎰","🧩"
-        ],
-        "Travel & Places": [
-            "🚗","🚕","🚙","🚌","🚎","🏎","🚓","🚑","🚒","🚐","🚚","🚛","🚜","🦯","🦽","🦼","🛴","🚲","🛵","🏍","🛺","🚨","🚔","🚍","🚘","🚖","🚡","🚠","🚟","🚃","🚋","🚞","🚝","🚄","🚅","🚈","🚂","🚆","🚇","🚊","🚉","✈️","🛫","🛬","🛩","💺","🛰","🚀","🛸","🚁","🛶","⛵️","🚤","🛥","🛳","⛴","🚢","⚓️","⛽️","🚧","🚦","🚥","🚏","🗺","🗿","🗽","🗼","🏰","🏯","🏟","🎡","🎢","🎠","⛲️","⛱","🏖","🏝","🏜","🌋","⛰","🏔","🗻","⛺️","🏠","🏡","🏘","🏚","🏗","🏭","🏢","🏬","🏣","🏤","🏥","🏦","🏨","🏪","🏫","🏩","💒","🏛","⛪️","🕌","🕍","🛕","🕋","⛩","🛤","🛣","🗾","🎑","🏞","🌅","🌄","🌠","🎇","🎆","🌇","🌆","🏙","🌃","🌌","🌉","🌁"
-        ],
-        "Objects & Tech": [
-            "⌚️","📱","📲","💻","⌨️","🖥","🖨","🖱","🖲","🕹","🗜","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽","🎞","📞","☎️","📟","📠","📺","📻","🎙","🎚","🎛","🧭","⏱","⏲","⏰","🕰","⌛️","⏳","📡","🔋","🔌","💡","🔦","🕯","🪔","🧯","🛢","💸","💵","💴","💶","💷","💰","💳","💎","⚖️","🧰","🔧","🔨","⚒","🛠","⛏","🪓","🔩","⚙️","🧱","⛓","🧲","🔫","💣","🧨","🔪","🗡","⚔️","🛡","🚬","⚰️","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳","🩹","🩺","💊","💉","🩸","🧬","🦠","🧫","🧪","🌡","🧹","🧺","🧻","🚽","🚰","🚿","🛁","🛀","🧼","🪒","🧽","🧴","🛎","🔑","🗝","🚪","🪑","🛋","🛏","🛌","🧸","🖼","🛍","🛒","🎁","🎈","🎏","🎀","🎊","🎉","🎎","🏮","🎐","🧧","✉️","📩","📨","📧","💌","📥","📤","📦","🏷","📪","📫","📬","📭","📮","📯","📜","📃","📄","📑","🧾","📊","📈","📉","🗒","🗓","📆","📅","🗑","📇","🗃","🗳","🗄","📋","📁","📂","🗂","🗞","📰","📓","📔","📒","📕","📗","📘","📙","📚","📖","🔖","🧷","🔗","📎","🖇","📐","📏","🧮","📌","📍","✂️","🖊","🖋","✒️","🖌","🖍","📝","✏️","🔍","🔎","🔏","🔐","🔒","🔓"
-        ],
-        "Symbols": [
-            "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚️","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕️","🛑","⛔️","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗️","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯️","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿️","🅿️","🈳","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚼","🚻","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸","⏯","⏹","⏺","⏭","⏮","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","♾","💲","💱","™️","©️","®️","👁‍🗨","🔚","🔙","🔛","🔝","🔜","〰️","➰","➿","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫️","⚪️","🟤","🔺","🔻","🔸","🔹","🔶","🔷","🔳","🔲","▪️","▫️","◾️","◽️","◼️","◻️","🟥","🟧","🟨","🟩","🟦","🟪","⬛️","⬜️","🔈","🔇","🔉","🔊","🔔","🔕","📣","📢","💬","💭","🗯","♠️","♣️","♥️","♦️","🃏","🎴","🀄️","🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","🕜","🕝","🕞","🕟","🕠","🕡","🕢","🕣","🕤","🕥","🕦","🕧"
-        ],
-        "Flags": [
-            "🏳️","🏴","🏁","🚩","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇦🇫","🇦🇽","🇦🇱","🇩🇿","🇦🇸","🇦🇩","🇦🇴","🇦🇮","🇦🇶","🇦🇬","🇦🇷","🇦🇲","🇦🇼","🇦🇺","🇦🇹","🇦🇿","🇧🇸","🇧🇭","🇧🇩","🇧🇧","🇧🇾","🇧🇪","🇧🇿","🇧🇯","🇧🇲","🇧🇹","🇧🇴","🇧🇦","🇧🇼","🇧🇷","🇮🇴","🇻🇬","🇧🇳","🇧🇬","🇧🇫","🇧🇮","🇰🇭","🇨🇲","🇨🇦","🇮🇨","🇨🇻","🇧bq","🇰🇾","🇨🇫","🇹🇩","🇨🇱","🇨🇳","🇨🇽","🇨🇨","🇨🇴","🇰🇲","🇨🇬","🇨🇩","🇨🇰","🇨🇷","🇨🇮","🇭🇷","🇨🇺","🇨🇼","🇨🇾","🇨🇿","🇩🇰","🇩🇯","🇩🇲","🇩🇴","🇪🇨","🇪🇬","🇸🇻","🇬🇶","🇪🇷","🇪🇪","🇪🇹","🇪🇺","🇫🇰","🇫🇴","🇫🇯","🇫🇮","🇫🇷","🇬🇫","🇵🇫","🇹🇫","🇬🇦","🇬🇲","🇬🇪","🇩🇪","🇬🇭","🇬🇮","🇬🇷","🇬🇱","🇬🇩","🇬🇵","🇬🇺","🇬🇹","🇬🇬","🇬🇳","🇬🇼","🇬🇾","🇭🇹","🇭🇳","🇭🇰","🇭🇺","🇮🇸","🇮🇳","🇮🇩","🇮🇷","🇮🇶","🇮🇪","🇮🇲","🇮🇱","🇮🇹","🇯🇲","🇯🇵","🎌","🇯🇪","🇯🇴","🇰🇿","🇰🇪","🇰🇮","🇽🇰","🇰🇼","🇰🇬","🇱🇦","🇱🇻","🇱🇧","🇱🇸","🇱🇷","🇱🇾","🇱🇮","🇱🇹","🇱🇺","🇲🇴","🇲🇰","🇲🇬","🇲🇼","🇲🇾","🇲🇻","🇲🇱","🇲🇹","🇲🇭","🇲🇶","🇲🇷","🇲🇺","YT","🇲🇽","🇫🇲","🇲🇩","🇲🇨","🇲🇳","🇲🇪","🇲🇸","🇲🇦","🇲🇿","🇲🇲","🇳🇦","🇳🇷","🇳🇵","🇳🇱","🇳🇨","🇳🇿","🇳🇮","🇳🇪","🇳🇬","🇳🇺","🇳🇫","🇰🇵","🇲🇵","🇳🇴","🇴🇲","🇵🇰","🇵🇼","🇵🇸","🇵🇦","🇵🇬","🇵🇾","🇵🇪","🇵🇭","🇵🇳","🇵🇱","🇵🇹","🇵🇷","🇶🇦","🇷🇪","🇷🇴","🇷🇺","🇷🇼","🇼🇸","🇸🇲","🇸🇦","🇸🇳","🇷🇸","🇸🇨","🇸🇱","🇸🇬","🇸🇽","🇸🇰","🇸🇮","🇬🇸","🇸🇧","🇸🇴","🇿🇦","🇰🇷","🇸🇸","🇪🇸","🇱🇰","🇧🇱","🇸🇭","🇰🇳","🇱🇨","🇵🇲","🇻🇨","🇸🇩","🇸🇷","🇸🇿","🇸🇪","🇨🇭","🇸🇾","🇹🇼","🇹🇯","🇹🇿","🇹🇭","🇹🇱","🇹🇬","🇹🇰","🇹🇴","🇹🇹","🇹🇳","🇹🇷","🇹🇲","🇹🇨","🇹🇻","🇺🇬","🇺🇦","🇦🇪","🇬🇧","🏴󠁧󠁢󠁥󠁮󠁧󠁿","🏴󠁧󠁢󠁳󠁣󠁴󠁿","🏴󠁧󠁢󠁷󠁬󠁳󠁿","🇺🇸","🇺🇾","🇺🇿","🇻🇺","🇻🇦","🇻🇪","🇻🇳","🇼🇫","🇪🇭","🇾🇪","🇿🇲","🇿🇼"
-        ]
-    };
-
-    const hexHelper = (str) => {
-        // Correctly handles ZWJ sequences like 👨‍✈️ by processing codepoints not chars
-        return Array.from(str).map(c => c.codePointAt(0).toString(16)).join('-');
-    };
-
-    Object.keys(categories).forEach(cat => {
-        // Add header
-        const header = document.createElement('div');
-        header.style.gridColumn = "1 / -1";
-        header.style.padding = "5px";
-        header.style.background = "#eee";
-        header.style.fontWeight = "bold";
-        header.style.fontSize = "12px";
-        header.style.marginTop = "10px";
-        header.innerText = cat;
-        grid.appendChild(header);
-
-        categories[cat].forEach(char => {
-            const hex = hexHelper(char);
-            const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${hex}.svg`;
-
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.title = "Insert Clipart";
-            
-            const img = document.createElement('img');
-            img.src = url;
-            img.style.width = "100%";
-            img.style.height = "100%";
-            img.loading = "lazy";
-            
-            // Add simple error handler to hide broken ones
-            img.onerror = () => { div.style.display = 'none'; };
-
-            div.appendChild(img);
-            div.onclick = () => {
-                 document.getElementById('clipart-modal').style.display = 'none';
-                 insertEmojiFromUrl(url);
-            };
-            grid.appendChild(div);
-        });
-    });
-}
-
-function initWordArt() {
-    const grid = document.getElementById('wordart-grid');
-    for(let i=1; i<=60; i++) {
-        const item = document.createElement('div');
-        item.className = 'gallery-item';
-        item.style.height = '40px'; 
-        item.innerHTML = `<div class="wa-text wa-style-${i}" style="font-size:24px;">Aa</div>`;
-        item.onclick = () => {
-            const el = createWrapper(`<div class="wa-wrapper"><div class="wa-text wa-style-${i}">Word Art</div></div>`);
-            document.getElementById('wordart-modal').style.display = 'none';
-            setTimeout(() => syncWordArt(el), 10); // NEW: Instantly format it!
-        };
-        grid.appendChild(item);
-    }
-}
-
-function initAds() {
-    console.log("🛠️ Advanced SVG Ads Library (Clean UI Edition) initializing...");
-    
-    const grid = document.getElementById('ad-grid');
-    if (!grid) return;
-    
-    // Reset and format the grid container
-    grid.innerHTML = '';
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(4, 1fr)";
-    grid.style.gap = "10px";
-    grid.style.padding = "10px";
-
-    // --- MATHEMATICAL GENERATORS FOR ADS ---
-    const star = (pts, ir) => {
-        let points = [];
-        for(let i=0; i<pts*2; i++) {
-            let r = i%2===0 ? 45 : ir;
-            let a = (i * Math.PI / pts) - Math.PI/2;
-            points.push(`${(50 + r*Math.cos(a)).toFixed(1)},${(50 + r*Math.sin(a)).toFixed(1)}`);
-        }
-        return `<polygon points="${points.join(' ')}" />`;
-    };
-
-    const poly = (sides) => {
-        let points = [];
-        for(let i=0; i<sides; i++) {
-            let a = (i * 2 * Math.PI / sides) - Math.PI/2;
-            points.push(`${(50 + 45*Math.cos(a)).toFixed(1)},${(50 + 45*Math.sin(a)).toFixed(1)}`);
-        }
-        return `<polygon points="${points.join(' ')}" />`;
-    };
-
-    // Robust Shapes that actually fit text well
-    const circle = `<circle cx="50" cy="50" r="45" />`;
-    const doubleCircle = `<circle cx="50" cy="50" r="45" /><circle cx="50" cy="50" r="38" fill="none" stroke-width="2" stroke-dasharray="4 4" />`;
-    const softRect = `<rect x="5" y="15" width="90" height="70" rx="10" ry="10" />`;
-    const pill = `<rect x="5" y="20" width="90" height="60" rx="30" ry="30" />`;
-    const straightRibbon = `<polygon points="5,25 95,25 85,50 95,75 5,75 15,50" />`;
-    const solidBadge = `<polygon points="25,5 75,5 95,50 75,95 25,95 5,50" />`;
-    const snippedRect = `<polygon points="15,5 85,5 95,15 95,85 85,95 15,95 5,85 5,15" />`;
-    const ticket = `<path d="M5,20 H95 V40 A10,10 0 0,0 95,60 V80 H5 V60 A10,10 0 0,0 5,40 Z" />`;
-
-    // --- THE MASSIVE 96-TEMPLATE ADVERTISEMENT LIBRARY ---
-    const ads = [
-        // Row 1: High Impact Sales
-        { t: 'SALE', bg: '#e11d48', tc: 'white', stroke: '#9f1239', markup: star(24, 38) },
-        { t: 'NEW!', bg: '#0ea5e9', tc: 'white', stroke: '#0369a1', markup: star(12, 32) },
-        { t: '50%<br>OFF', bg: '#f59e0b', tc: '#ffffff', stroke: '#b45309', markup: doubleCircle },
-        { t: 'HOT<br>DEAL', bg: '#ef4444', tc: 'white', stroke: '#b91c1c', markup: star(16, 36) },
-        
-        // Row 2: Value & Promos
-        { t: 'WOW!', bg: '#ec4899', tc: 'white', stroke: '#be185d', markup: star(20, 35) },
-        { t: 'TOP<br>RATED', bg: '#f59e0b', tc: 'white', stroke: '#b45309', markup: solidBadge },
-        { t: 'MEGA<br>SALE', bg: '#8b5cf6', tc: 'white', stroke: '#6d28d9', markup: star(32, 42) },
-        { t: 'SUPER<br>BUY', bg: '#10b981', tc: 'white', stroke: '#047857', markup: star(10, 36) },
-        
-        // Row 3: Ribbons & Banners
-        { t: 'SPECIAL', bg: '#eab308', tc: '#713f12', stroke: '#a16207', markup: straightRibbon },
-        { t: 'WINNER', bg: '#3b82f6', tc: 'white', stroke: '#2e1065', markup: pill },
-        { t: 'PROMO', bg: '#f43f5e', tc: 'white', stroke: '#9d174d', markup: softRect },
-        { t: 'AWARD', bg: '#d97706', tc: 'white', stroke: '#78350f', markup: poly(8) },
-        
-        // Row 4: Shields & Plaques
-        { t: 'VALUE', bg: '#14b8a6', tc: 'white', stroke: '#0f766e', markup: snippedRect },
-        { t: 'BEST<br>SELLER', bg: '#8b5cf6', tc: 'white', stroke: '#6d28d9', markup: solidBadge },
-        { t: 'PREMIUM', bg: '#1e293b', tc: '#f8fafc', stroke: '#0f172a', markup: poly(6) },
-        { t: 'TRUSTED', bg: '#059669', tc: 'white', stroke: '#064e3b', markup: circle },
-        
-        // Row 5: Modern Deals
-        { t: 'OFFICIAL', bg: '#2563eb', tc: 'white', stroke: '#1e3a8a', markup: snippedRect },
-        { t: 'BOGO', bg: '#10b981', tc: 'white', stroke: '#047857', markup: pill },
-        { t: 'LIMITED', bg: '#1e293b', tc: '#f8fafc', stroke: '#0f172a', markup: softRect },
-        { t: 'FREE', bg: '#14b8a6', tc: 'white', stroke: '#0f766e', markup: star(8, 38) },
-        
-        // Row 6: Clearance & Urgency
-        { t: 'CLEARANCE', bg: '#f97316', tc: 'white', stroke: '#c2410c', markup: straightRibbon },
-        { t: '2 FOR 1', bg: '#dc2626', tc: 'white', stroke: '#7f1d1d', markup: circle },
-        { t: 'VIP', bg: '#fcd34d', tc: '#78350f', stroke: '#b45309', markup: doubleCircle },
-        { t: 'MEMBER', bg: '#334155', tc: '#fbbf24', stroke: '#0f172a', markup: poly(8) },
-        
-        // Row 7: Pricing specific
-        { t: '75% OFF', bg: '#c026d3', tc: 'white', stroke: '#701a75', markup: star(24, 38) },
-        { t: 'ONLY $5', bg: '#ea580c', tc: 'white', stroke: '#7c2d12', markup: ticket },
-        { t: 'FRESH', bg: '#84cc16', tc: 'white', stroke: '#3f6212', markup: softRect },
-        { t: 'HUGE<br>SAVINGS', bg: '#eab308', tc: '#713f12', stroke: '#a16207', markup: star(16, 36) },
-
-        // Row 8: Action Words
-        { t: 'DON\'T<br>MISS OUT', bg: '#e11d48', tc: 'white', stroke: '#881337', markup: circle },
-        { t: 'BUY NOW', bg: '#2563eb', tc: 'white', stroke: '#1e3a8a', markup: pill },
-        { t: 'DEAL OF<br>THE DAY', bg: '#059669', tc: 'white', stroke: '#064e3b', markup: snippedRect },
-        { t: 'HURRY!', bg: '#d946ef', tc: 'white', stroke: '#701a75', markup: star(12, 35) },
-        
-        // Row 9: Trust Signals
-        { t: 'COUPON', bg: '#64748b', tc: 'white', stroke: '#334155', markup: ticket },
-        { t: 'GIFT', bg: '#f43f5e', tc: 'white', stroke: '#be123c', markup: solidBadge },
-        { t: '100%<br>GUARANTEE', bg: '#10b981', tc: 'white', stroke: '#047857', markup: poly(8) },
-        { t: 'BONUS', bg: '#6366f1', tc: 'white', stroke: '#3730a3', markup: star(24, 40) },
-
-        // Row 10: Extra Variety
-        { t: 'FLASH<br>SALE', bg: '#fbbf24', tc: '#b45309', stroke: '#d97706', markup: star(16, 30) },
-        { t: 'LAST<br>CHANCE', bg: '#dc2626', tc: 'white', stroke: '#991b1b', markup: circle },
-        { t: 'EXCLUSIVE', bg: '#111827', tc: '#38bdf8', stroke: '#38bdf8', markup: straightRibbon },
-        { t: 'DISCOUNT', bg: '#4ade80', tc: '#064e3b', stroke: '#047857', markup: softRect },
-
-        // Row 11: Vibrant 
-        { t: 'EPIC', bg: '#f472b6', tc: 'white', stroke: '#be185d', markup: star(8, 38) },
-        { t: 'LATEST', bg: '#22d3ee', tc: '#0c4a6e', stroke: '#0891b2', markup: pill },
-        { t: 'TRENDING', bg: '#a78bfa', tc: 'white', stroke: '#5b21b6', markup: doubleCircle },
-        { t: 'POPULAR', bg: '#fb923c', tc: 'white', stroke: '#c2410c', markup: poly(6) },
-
-        // Row 12: Final Additions
-        { t: 'BARGAIN', bg: '#34d399', tc: '#022c22', stroke: '#047857', markup: solidBadge },
-        { t: 'REDUCED', bg: '#f87171', tc: 'white', stroke: '#991b1b', markup: ticket },
-        { t: 'FEATURED', bg: '#818cf8', tc: 'white', stroke: '#3730a3', markup: snippedRect },
-        { t: 'LOCAL', bg: '#a3e635', tc: '#3f6212', stroke: '#4d7c0f', markup: star(12, 38) },
-
-        // Row 13: Urgency
-        { t: 'ENDS<br>SOON', bg: '#ef4444', tc: 'white', stroke: '#991b1b', markup: pill },
-        { t: 'LAST<br>DAY', bg: '#f97316', tc: 'white', stroke: '#c2410c', markup: star(12, 35) },
-        { t: '24H<br>ONLY', bg: '#000000', tc: '#fcd34d', stroke: '#fcd34d', markup: doubleCircle },
-        { t: 'GOING<br>FAST', bg: '#facc15', tc: '#713f12', stroke: '#ca8a04', markup: snippedRect },
-        
-        // Row 14: Stock & Inventory
-        { t: 'SOLD<br>OUT', bg: '#64748b', tc: 'white', stroke: '#334155', markup: doubleCircle },
-        { t: 'IN<br>STOCK', bg: '#10b981', tc: 'white', stroke: '#047857', markup: softRect },
-        { t: 'LOW<br>STOCK', bg: '#f59e0b', tc: 'white', stroke: '#b45309', markup: poly(8) },
-        { t: 'RESTOCK', bg: '#3b82f6', tc: 'white', stroke: '#1d4ed8', markup: pill },
-
-        // Row 15: Events & Media
-        { t: 'LIVE', bg: '#ef4444', tc: 'white', stroke: '#b91c1c', markup: circle },
-        { t: 'PREMIERE', bg: '#8b5cf6', tc: 'white', stroke: '#5b21b6', markup: star(16, 35) },
-        { t: 'WEBINAR', bg: '#0ea5e9', tc: 'white', stroke: '#0369a1', markup: ticket },
-        { t: 'EVENT', bg: '#14b8a6', tc: 'white', stroke: '#0f766e', markup: straightRibbon },
-
-        // Row 16: E-Commerce / Shipping
-        { t: 'FREE<br>SHIP', bg: '#10b981', tc: 'white', stroke: '#047857', markup: ticket },
-        { t: 'FAST<br>DELIVERY', bg: '#3b82f6', tc: 'white', stroke: '#1d4ed8', markup: softRect },
-        { t: 'NEXT<br>DAY', bg: '#f97316', tc: 'white', stroke: '#c2410c', markup: poly(6) },
-        { t: '2-DAY<br>SHIP', bg: '#6366f1', tc: 'white', stroke: '#4338ca', markup: doubleCircle },
-
-        // Row 17: SaaS / Pricing Tiers
-        { t: 'BASIC', bg: '#94a3b8', tc: 'white', stroke: '#475569', markup: solidBadge },
-        { t: 'PRO', bg: '#3b82f6', tc: 'white', stroke: '#1e3a8a', markup: solidBadge },
-        { t: 'ENTERPRISE', bg: '#0f172a', tc: 'white', stroke: '#f1f5f9', markup: solidBadge },
-        { t: 'GOLD', bg: '#eab308', tc: 'white', stroke: '#a16207', markup: solidBadge },
-
-        // Row 18: Seasonal Deals
-        { t: 'SUMMER<br>SALE', bg: '#f59e0b', tc: 'white', stroke: '#b45309', markup: star(16, 36) },
-        { t: 'WINTER<br>DEAL', bg: '#06b6d4', tc: 'white', stroke: '#0891b2', markup: star(12, 35) },
-        { t: 'SPRING<br>OFFER', bg: '#84cc16', tc: 'white', stroke: '#4d7c0f', markup: circle },
-        { t: 'FALL<br>FEST', bg: '#ea580c', tc: 'white', stroke: '#9a3412', markup: poly(8) },
-
-        // Row 19: Discount Percentages
-        { t: '10% OFF', bg: '#ec4899', tc: 'white', stroke: '#be185d', markup: circle },
-        { t: '20% OFF', bg: '#d946ef', tc: 'white', stroke: '#86198f', markup: doubleCircle },
-        { t: '30% OFF', bg: '#8b5cf6', tc: 'white', stroke: '#5b21b6', markup: star(24, 38) },
-        { t: '40% OFF', bg: '#6366f1', tc: 'white', stroke: '#4338ca', markup: pill },
-
-        // Row 20: More Discount Percentages
-        { t: '60% OFF', bg: '#3b82f6', tc: 'white', stroke: '#1d4ed8', markup: poly(8) },
-        { t: '70% OFF', bg: '#0ea5e9', tc: 'white', stroke: '#0369a1', markup: snippedRect },
-        { t: '80% OFF', bg: '#14b8a6', tc: 'white', stroke: '#0f766e', markup: softRect },
-        { t: '90% OFF', bg: '#10b981', tc: 'white', stroke: '#047857', markup: star(32, 42) },
-
-        // Row 21: Powerful Appeals
-        { t: 'SAVE<br>BIG', bg: '#f43f5e', tc: 'white', stroke: '#be123c', markup: star(10, 36) },
-        { t: 'HUGE<br>DROP', bg: '#ef4444', tc: 'white', stroke: '#991b1b', markup: straightRibbon },
-        { t: 'MUST<br>HAVE', bg: '#facc15', tc: '#713f12', stroke: '#ca8a04', markup: circle },
-        { t: 'EPIC<br>DEAL', bg: '#a855f7', tc: 'white', stroke: '#7e22ce', markup: softRect },
-
-        // Row 22: Trust & Security
-        { t: 'VERIFIED', bg: '#3b82f6', tc: 'white', stroke: '#1e40af', markup: poly(6) },
-        { t: 'SECURE', bg: '#10b981', tc: 'white', stroke: '#065f46', markup: solidBadge },
-        { t: 'PROTECTED', bg: '#475569', tc: 'white', stroke: '#1e293b', markup: softRect },
-        { t: 'CERTIFIED', bg: '#eab308', tc: 'white', stroke: '#854d0e', markup: doubleCircle },
-
-        // Row 23: Hype & Popularity
-        { t: 'VIRAL', bg: '#f472b6', tc: 'white', stroke: '#db2777', markup: star(12, 32) },
-        { t: 'ON FIRE', bg: '#ef4444', tc: 'white', stroke: '#b91c1c', markup: circle },
-        { t: 'TOP PICK', bg: '#fcd34d', tc: '#92400e', stroke: '#b45309', markup: star(5, 20) },
-        { t: 'CHOICE', bg: '#6366f1', tc: 'white', stroke: '#4338ca', markup: pill },
-
-        // Row 24: Extra Sales Offers
-        { t: '1/2 PRICE', bg: '#e11d48', tc: 'white', stroke: '#9f1239', markup: circle },
-        { t: 'BUY 2<br>GET 1', bg: '#2563eb', tc: 'white', stroke: '#1d4ed8', markup: softRect },
-        { t: 'BUNDLE', bg: '#9333ea', tc: 'white', stroke: '#6b21a8', markup: poly(8) },
-        { t: 'EXTRA 10%', bg: '#f43f5e', tc: 'white', stroke: '#be123c', markup: star(16, 35) }
-    ];
-
-    // --- RENDER THE AD UI ---
-    ads.forEach(ad => {
-        const div = document.createElement('div');
-        div.className = 'gallery-item';
-        div.style.cssText = "background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100px; cursor: pointer; transition: all 0.2s ease;";
-        
-        const parsedMarkup = ad.markup.replace('stroke="currentColor"', `stroke="${ad.tc}"`);
-
-        // Thumbnail Preview
-        div.innerHTML = `
-            <svg viewBox="0 0 100 100" style="position: absolute; width: 85%; height: 85%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                <g class="shape-path" fill="${ad.bg}" stroke="${ad.stroke}" stroke-width="2">${parsedMarkup}</g>
-            </svg>
-            <div style="position: absolute; z-index: 2; color: ${ad.tc}; font-family: 'Impact', sans-serif; font-size: 11px; text-align: center; line-height: 1.1; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); pointer-events: none;">${ad.t}</div>
-        `;
-        
-        div.onmouseover = () => { div.style.borderColor = '#94a3b8'; div.style.transform = 'scale(1.03)'; };
-        div.onmouseout = () => { div.style.borderColor = '#e2e8f0'; div.style.transform = 'scale(1)'; };
-
-        // Insertion Logic
-        div.onclick = () => {
-            const svgString = `<svg viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0; z-index:1;"><g class="shape-path" fill="${ad.bg}" stroke="${ad.stroke}" stroke-width="2">${parsedMarkup}</g></svg>`;
-            
-            const textString = `
-                <div class="wa-wrapper" style="position:absolute; inset:0; z-index:2; pointer-events:none;">
-                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; transform:scale(0.5); pointer-events:auto;">
-                        <div class="wa-text wa-style-none" style="color:${ad.tc}; font-family:'Impact', sans-serif; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); line-height: 1.1;">${ad.t}</div>
-                    </div>
-                </div>
-            `;
-            
-            if (typeof createWrapper === 'function') {
-                const el = createWrapper(`${svgString}${textString}`);
-                el.setAttribute('data-type', 'shape');
-                if (typeof selectElement === 'function') selectElement(el); // Re-trigger UI now that type is set
-                el.style.width = '150px'; 
-                el.style.height = '150px';
-                
-                // --- THE FIX: Custom Double Click Editor Layout ---
-                el.ondblclick = (e) => {
-                    e.stopPropagation();
-                    const textNode = el.querySelector('.wa-text');
-                    if (textNode) {
-                        const currentText = textNode.innerHTML.replace(/<br\s*[\/]?>/gi, '\n');
-                        
-                        // We override the global .input-group styling by using an isolated flex column 
-                        // and box-sizing to ensure it perfectly stacks and stretches to 100% width.
-                        const form = `
-                            <div style="display: flex; flex-direction: column; width: 100%; box-sizing: border-box;">
-                                <label style="font-weight:bold; margin-bottom:8px; color:#333;">Advertisement Text:</label>
-                                <textarea id="ad-text-edit" style="width:100%; height:100px; padding:10px; font-family:inherit; font-size:14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">${currentText}</textarea>
-                            </div>
-                        `;
-                        
-                        if (typeof DialogSystem !== 'undefined') {
-                            DialogSystem.show('Edit Ad Text', form, () => {
-                                const newText = document.getElementById('ad-text-edit').value.replace(/\n/g, '<br>');
-                                textNode.innerHTML = newText;
-                                if (typeof syncWordArt === 'function') syncWordArt(el);
-                                if (typeof pushHistory === 'function') pushHistory();
-                            });
-                        }
-                    }
-                };
-                
-                if (typeof syncWordArt === 'function') syncWordArt(el);
-            }
-            
-            document.getElementById('ad-modal').style.display = 'none';
-            if (typeof pushHistory === 'function') pushHistory();
-        };
-        
-        grid.appendChild(div);
-    });
-
-    console.log(`✅ Loaded ${ads.length} Clean-Editing SVG Ads successfully.`);
-}
-
-function initTemplates() {
-    const tmplData = {
-        "Resumes": [
-            {
-                n: "Modern Minimal", bg: "#fff",
-                els: [
-                    {html:"<div style='background:#2c3e50; width:100%; height:100%;'></div>", t:0, l:0, w:250, h:1123},
-                    {html:"<div style='border-radius:50%; background:#ccc; width:100%; height:100%; overflow:hidden; border:5px solid white;'><img src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' style='width:100%; height:100%; object-fit:cover;'></div>", t:50, l:50, w:150, h:150},
-                    {html:"<h2 style='color:white; font-family:Montserrat; font-weight:700; text-align:center;'>JOHN<br>DOE</h2>", t:220, l:25, w:200, h:120},
-                    {html:"<div style='color:#ccc; font-family:Lato; text-align:center; font-size:14px;'>GRAPHIC DESIGNER</div>", t:340, l:25, w:200, h:50},
-                    {html:"<h3 style='color:white; border-bottom:1px solid #555; font-family:Montserrat; padding-bottom:5px;'>CONTACT</h3>", t:400, l:25, w:200, h:60},
-                    {html:"<div style='color:#ccc; font-size:12px; line-height:1.5;'><i class='fas fa-phone'></i> +1 234 567 890<br><i class='fas fa-envelope'></i> hello@johndoe.com<br><i class='fas fa-map-marker-alt'></i> New York, NY</div>", t:470, l:25, w:200, h:120},
-                    {html:"<h3 style='color:white; border-bottom:1px solid #555; font-family:Montserrat; padding-bottom:5px; margin-top:20px;'>SKILLS</h3>", t:600, l:25, w:200, h:60},
-                    {html:"<div style='color:#ccc; font-size:12px;'>• Photoshop<br>• Illustrator<br>• InDesign<br>• HTML/CSS</div>", t:670, l:25, w:200, h:120},
-                    
-                    {html:"<h1 style='color:#333; font-family:Montserrat; font-weight:700; border-bottom:2px solid #2c3e50; padding-bottom:10px;'>EXPERIENCE</h1>", t:50, l:300, w:450, h:80},
-                    {html:"<h3 style='color:#2c3e50; font-family:Montserrat; margin:0;'>Senior Designer</h3><div style='color:#777; font-size:12px;'>Creative Agency / 2020 - Present</div><p style='font-size:13px; color:#555;'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>", t:140, l:300, w:450, h:140},
-                    {html:"<h3 style='color:#2c3e50; font-family:Montserrat; margin:0;'>Junior Designer</h3><div style='color:#777; font-size:12px;'>StartUp Inc / 2018 - 2020</div><p style='font-size:13px; color:#555;'>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>", t:300, l:300, w:450, h:140},
-                    {html:"<h1 style='color:#333; font-family:Montserrat; font-weight:700; border-bottom:2px solid #2c3e50; padding-bottom:10px;'>EDUCATION</h1>", t:460, l:300, w:450, h:80},
-                    {html:"<h3 style='color:#2c3e50; font-family:Montserrat; margin:0;'>Bachelor of Arts</h3><div style='color:#777; font-size:12px;'>University of Design / 2014 - 2018</div>", t:550, l:300, w:450, h:100}
-                ]
-            },
-            {
-                n: "Corporate Blue", bg: "#f0f8ff",
-                els: [
-                    {html:"<div style='border-top:20px solid #0056b3; width:100%; height:100%;'></div>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:#0056b3; font-family:Arial; font-size:48px; font-weight:bold; letter-spacing:2px;'>JANE SMITH</h1>", t:50, l:50, w:500, h:80},
-                    {html:"<div style='font-size:18px; color:#555; font-family:Arial; letter-spacing:4px;'>MARKETING MANAGER</div>", t:130, l:50, w:500, h:50},
-                    {html:"<div style='display:flex; justify-content:space-between; border-bottom:1px solid #ccc; padding-bottom:10px; color:#0056b3; font-weight:bold;'><span>PROFILE</span></div>", t:200, l:50, w:694, h:50},
-                    {html:"<p style='font-family:Georgia; color:#444; font-size:14px; line-height:1.6;'>Dedicated professional with 10+ years of experience in strategic marketing and team leadership. Proven track record of increasing revenue and brand awareness.</p>", t:260, l:50, w:694, h:100},
-                    {html:"<div style='display:flex; justify-content:space-between; border-bottom:1px solid #ccc; padding-bottom:10px; color:#0056b3; font-weight:bold; margin-top:20px;'><span>PROFESSIONAL HISTORY</span></div>", t:380, l:50, w:694, h:50},
-                    {html:"<div style='margin-bottom:20px;'><b style='font-size:16px;'>Global Corp</b> <span style='float:right; color:#777;'>2019-Present</span><br><i style='color:#555;'>Head of Marketing</i><ul style='font-size:13px; margin-top:5px; color:#444;'><li>Led a team of 15 specialists.</li><li>Increased sales by 25% YoY.</li></ul></div>", t:440, l:50, w:694, h:140},
-                    {html:"<div style='margin-bottom:20px;'><b style='font-size:16px;'>Tech Solutions</b> <span style='float:right; color:#777;'>2015-2019</span><br><i style='color:#555;'>Marketing Associate</i><ul style='font-size:13px; margin-top:5px; color:#444;'><li>Managed social media campaigns.</li><li>Developed SEO strategies.</li></ul></div>", t:600, l:50, w:694, h:140}
-                ]
-            },
-            {
-                 n: "Creative Splash", bg: "#fff",
-                 els: [
-                     {html:"<div style='background:#ff6b6b; width:100%; height:100%; clip-path:polygon(0 0, 100% 0, 100% 85%, 0 100%);'></div>", t:0, l:0, w:794, h:300},
-                     {html:"<h1 style='color:white; font-family:Poppins; font-weight:900; font-size:60px; line-height:0.9;'>ALEX<br>RIVER</h1>", t:50, l:50, w:400, h:180},
-                     {html:"<div style='background:white; color:#ff6b6b; padding:5px 15px; font-family:Poppins; font-weight:bold; display:inline-block;'>ART DIRECTOR</div>", t:240, l:50, w:200, h:60},
-                     {html:"<div style='column-count:2; column-gap:40px; font-family:Roboto; color:#444; font-size:13px;'><h3 style='color:#ff6b6b;'>About Me</h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.<br><br><h3 style='color:#ff6b6b;'>Education</h3><b>Design School</b><br>2010-2014<br>Bachelor of Arts<br><br><h3 style='color:#ff6b6b;'>Contact</h3>alex@example.com<br>123-456-7890<br><br><h3 style='color:#ff6b6b;'>Experience</h3><b>Studio X</b> - Senior Artist<br>Managed diverse projects for high-end clients.</div>", t:350, l:50, w:694, h:700}
-                 ]
-            },
-            {
-                n: "Executive", bg: "#fafafa",
-                els: [
-                     {html:"<div style='border-left:5px solid #333; height:100%; padding-left:20px;'><h1 style='text-transform:uppercase; letter-spacing:5px; color:#333; margin:0;'>Sarah Connor</h1><h3 style='color:#666; font-weight:300; margin-top:5px;'>Operations Manager</h3></div>", t:50, l:50, w:700, h:120},
-                     {html:"<hr style='border:1px solid #ccc;'>", t:180, l:50, w:700, h:10},
-                     {html:"<h4 style='text-transform:uppercase; color:#333;'>Summary</h4><p style='font-size:13px; color:#555;'>Experienced operations manager looking for new opportunities in logistics.</p>", t:210, l:50, w:700, h:100},
-                     {html:"<h4 style='text-transform:uppercase; color:#333;'>Work Experience</h4><b style='font-size:14px;'>Logistics Co.</b><br><i style='font-size:12px; color:#777;'>2018-2022</i><p style='font-size:13px;'>Streamlined shipping processes.</p>", t:330, l:50, w:700, h:150},
-                     {html:"<div style='background:#333; color:white; padding:20px; text-align:center;'>Contact: 555-999-8888 • sarah@example.com</div>", t:1000, l:50, w:700, h:80}
-                ]
-            },
-            {
-                n: "Simple Lines", bg: "#fff",
-                els: [
-                     {html:"<div style='border-right:2px solid #333; height:100%; width:200px; padding-right:20px; text-align:right;'><h2 style='margin:0;'>JAKE</h2><h2 style='margin:0; color:#777;'>SULLY</h2><br><p>Graphic Designer</p><br><p>contact@email.com</p></div>", t:50, l:0, w:220, h:1000},
-                     {html:"<div style='padding-left:20px;'><h3 style='border-bottom:1px solid #ccc;'>Experience</h3><p><b>Company A</b> - 2020-Present<br>Lead Designer.</p><h3 style='border-bottom:1px solid #ccc;'>Education</h3><p><b>School B</b> - 2016-2020<br>BFA Design.</p></div>", t:50, l:250, w:500, h:1000}
-                ]
-            },
-            {
-                 n: "Dark Mode", bg: "#222",
-                 els: [
-                     {html:"<h1 style='color:white; border-bottom:2px solid #00e5ff; display:inline-block;'>NEO ANDERSON</h1>", t:50, l:50, w:700, h:80},
-                     {html:"<h3 style='color:#ccc;'>Software Engineer</h3>", t:130, l:50, w:700, h:50},
-                     {html:"<div style='color:white; font-family:monospace;'> > Skills: [JS, Python, C++] <br> > Experience: 5 Years <br> > Status: Hired</div>", t:200, l:50, w:700, h:200},
-                     {html:"<div style='border:1px solid #444; padding:20px; color:#aaa;'>Project A: AI Bot<br>Project B: Web App</div>", t:450, l:50, w:700, h:300}
-                 ]
-            }
-        ],
-        "Invitations": [
-            {
-                n: "Floral Wedding", bg: "#fdfbf7",
-                els: [
-                    {html:"<div style='border:2px solid #d4af37; height:100%; width:100%;'></div>", t:20, l:20, w:754, h:1083},
-                    {html:"<div style='font-size:80px; text-align:center;'>🌸 🌿 🌸</div>", t:50, l:200, w:400, h:120},
-                    {html:"<h3 style='text-align:center; font-family:Lato; letter-spacing:3px; color:#777; text-transform:uppercase; font-size:14px;'>Save The Date</h3>", t:200, l:200, w:400, h:50},
-                    {html:"<h1 style='text-align:center; font-family:\"Great Vibes\"; font-size:72px; color:#333; margin:0;'>Sarah & James</h1>", t:260, l:100, w:600, h:150},
-                    {html:"<div style='text-align:center; font-family:\"Playfair Display\"; font-style:italic; font-size:20px; color:#555;'>Are getting married</div>", t:420, l:200, w:400, h:60},
-                    {html:"<div style='text-align:center; font-family:Lato; font-size:18px; font-weight:bold; border-top:1px solid #d4af37; border-bottom:1px solid #d4af37; padding:15px 0; color:#333; width:100%;'>SATURDAY, JUNE 24TH, 2024</div>", t:500, l:150, w:500, h:80},
-                    {html:"<div style='text-align:center; font-family:Lato; font-size:14px; line-height:1.6; color:#555;'>AT TWO O'CLOCK IN THE AFTERNOON<br>THE GRAND GARDEN ESTATE<br>NEW YORK, NY</div>", t:600, l:150, w:500, h:120},
-                    {html:"<div style='font-size:80px; text-align:center; transform:scaleY(-1);'>🌸 🌿 🌸</div>", t:950, l:200, w:400, h:120}
-                ]
-            },
-            {
-                n: "Kids Birthday", bg: "#e0f7fa",
-                els: [
-                    {html:"<div style='background:#fff; border-radius:20px; border:5px dashed #ff4081; width:100%; height:100%;'></div>", t:20, l:20, w:754, h:1083},
-                    {html:"<div style='font-size:100px; text-align:center;'>🎈 🎂 🦄</div>", t:50, l:150, w:500, h:150},
-                    {html:"<h1 style='font-family:\"Bangers\"; color:#ff4081; font-size:60px; text-align:center; text-shadow:3px 3px 0 #fff, 5px 5px 0 #00bcd4;'>YOU'RE INVITED!</h1>", t:220, l:50, w:700, h:120},
-                    {html:"<h2 style='font-family:\"Comic Neue\"; color:#3f51b5; text-align:center; font-weight:bold;'>To Emma's 5th Birthday!</h2>", t:350, l:100, w:600, h:80},
-                    {html:"<div style='background:#ffeb3b; padding:20px; border-radius:15px; font-family:\"Comic Neue\"; font-size:20px; text-align:center; font-weight:bold; color:#d84315; transform:rotate(-2deg);'>Pizza, Games & Cake!</div>", t:450, l:200, w:400, h:120},
-                    {html:"<div style='text-align:center; font-family:Arial; font-size:18px; line-height:2;'>📅 July 15th<br>⏰ 2:00 PM - 5:00 PM<br>📍 123 Fun Street</div>", t:600, l:200, w:400, h:180},
-                    {html:"<div style='font-size:80px; position:absolute; bottom:0; left:0;'>🎁</div>", t:950, l:50, w:100, h:100},
-                    {html:"<div style='font-size:80px; position:absolute; bottom:0; right:0;'>🎉</div>", t:950, l:640, w:100, h:100}
-                ]
-            },
-            {
-                n: "Elegant Gold", bg: "#1a1a1a",
-                els: [
-                    {html:"<div style='border:1px solid #d4af37; width:100%; height:100%;'></div>", t:15, l:15, w:764, h:1093},
-                    {html:"<div style='border:1px solid #d4af37; width:100%; height:100%;'></div>", t:25, l:25, w:744, h:1073},
-                    {html:"<h1 style='font-family:\"Cinzel\"; color:#d4af37; text-align:center; font-size:50px; letter-spacing:5px;'>GALA NIGHT</h1>", t:150, l:100, w:600, h:100},
-                    {html:"<div style='width:100px; height:2px; background:#d4af37; margin:0 auto;'></div>", t:260, l:347, w:100, h:2},
-                    {html:"<p style='color:#ccc; text-align:center; font-family:\"Lato\"; font-weight:300; letter-spacing:2px; font-size:14px;'>YOU ARE CORDIALLY INVITED TO THE</p>", t:300, l:100, w:600, h:60},
-                    {html:"<h2 style='color:white; text-align:center; font-family:\"Playfair Display\"; font-style:italic;'>Annual Charity Ball</h2>", t:380, l:100, w:600, h:80},
-                    {html:"<div style='color:#d4af37; text-align:center; font-family:\"Cinzel\"; border:1px solid #d4af37; padding:15px; width:100%;'>DECEMBER 31ST • 8:00 PM</div>", t:500, l:200, w:400, h:80},
-                    {html:"<p style='color:#999; text-align:center; font-size:12px; margin-top:50px;'>BLACK TIE ATTIRE • RSVP BY DEC 20</p>", t:900, l:200, w:400, h:60}
-                ]
-            },
-            {
-                n: "Baby Shower", bg: "#e6e6fa",
-                els: [
-                     {html:"<div style='border:4px dotted white; border-radius:20px; height:100%; width:100%;'></div>", t:20, l:20, w:754, h:1083},
-                     {html:"<div style='font-size:80px; text-align:center;'>🍼 🧸</div>", t:80, l:250, w:300, h:120},
-                     {html:"<h1 style='font-family:\"Pacifico\"; color:#9370db; text-align:center; font-size:60px;'>It's a Boy!</h1>", t:200, l:100, w:600, h:100},
-                     {html:"<h3 style='font-family:\"Quicksand\"; text-align:center; color:#555;'>Please join us for a Baby Shower honoring</h3>", t:320, l:100, w:600, h:60},
-                     {html:"<h2 style='font-family:\"Dancing Script\"; text-align:center; font-size:48px; color:#483d8b;'>Jessica Brown</h2>", t:380, l:100, w:600, h:100},
-                     {html:"<div style='background:white; padding:20px; border-radius:10px; text-align:center; color:#666;'>Sunday, April 10th @ 2PM<br>123 Bluebell Lane</div>", t:550, l:200, w:400, h:120}
-                ]
-            },
-            {
-                n: "Retirement Party", bg: "#fff",
-                els: [
-                     {html:"<div style='background:#222; height:300px; width:100%; clip-path:polygon(0 0, 100% 0, 100% 80%, 0 100%);'></div>", t:0, l:0, w:794, h:300},
-                     {html:"<h1 style='color:white; font-family:\"Cinzel\"; font-size:60px; text-align:center;'>RETIREMENT</h1>", t:50, l:50, w:700, h:100},
-                     {html:"<h2 style='color:#d4af37; text-align:center; font-family:sans-serif;'>CELEBRATION</h2>", t:150, l:50, w:700, h:60},
-                     {html:"<h1 style='text-align:center; font-family:\"Playfair Display\"; font-size:50px;'>Robert Wilson</h1>", t:350, l:100, w:600, h:100},
-                     {html:"<p style='text-align:center; font-style:italic; font-size:18px;'>Join us to celebrate 40 years of dedication.</p>", t:460, l:100, w:600, h:60},
-                     {html:"<div style='border-top:1px solid #ccc; border-bottom:1px solid #ccc; padding:20px; text-align:center; font-weight:bold;'>Friday, Oct 5th • 6:00 PM • The Country Club</div>", t:600, l:100, w:600, h:80}
-                ]
-            },
-            {
-                n: "Graduation", bg: "#fff",
-                els: [
-                     {html:"<div style='border:2px solid black; padding:10px; height:100%; width:100%;'></div>", t:10, l:10, w:774, h:1103},
-                     {html:"<h1 style='font-family:serif; text-align:center; font-size:60px;'>Class of 2024</h1>", t:100, l:100, w:600, h:100},
-                     {html:"<div style='font-size:100px; text-align:center;'>🎓</div>", t:200, l:300, w:200, h:150},
-                     {html:"<h2 style='text-align:center;'>You Did It!</h2>", t:350, l:200, w:400, h:60},
-                     {html:"<p style='text-align:center; font-size:18px;'>Open House Celebration</p>", t:420, l:200, w:400, h:50}
-                ]
-            }
-        ],
-        "Flyers": [
-            {
-                n:"Lost Dog", bg:"#fff", 
-                els: [
-                    {html:"<h1 style='color:red; text-align:center; font-family:Impact; font-size:80px; margin:0; letter-spacing:5px;'>LOST DOG</h1>", t:50, l:50, w:700, h:120},
-                    {html:"<div style='background:#eee; width:100%; height:100%; display:flex; align-items:center; justify-content:center; border:5px solid #333;'><i class='fas fa-dog' style='font-size:150px; color:#aaa;'></i></div>", t:180, l:100, w:600, h:400},
-                    {html:"<h2 style='text-align:center; font-family:Arial; font-size:40px; background:yellow; padding:10px;'>REWARD $500</h2>", t:620, l:100, w:600, h:100},
-                    {html:"<p style='text-align:center; font-size:24px; font-family:Arial;'>Please help us find 'Buster'. Last seen at the park. Very friendly. Wearing a blue collar.</p>", t:740, l:100, w:600, h:150},
-                    {html:"<div style='border:5px dashed red; padding:20px; text-align:center; font-weight:bold; font-size:40px; font-family:Impact;'>CALL 555-0199</div>", t:920, l:100, w:600, h:120}
-                ]
-            },
-            {
-                n:"Concert Gig", bg:"#111", 
-                els: [
-                    {html:"<h1 style='color:#0ff; text-align:center; font-family:\"Monoton\"; font-size:80px; text-shadow:4px 4px #f0f; margin:0;'>LIVE</h1>", t:100, l:50, w:700, h:120},
-                    {html:"<h2 style='color:white; text-align:center; font-family:\"Rock Salt\"; font-size:40px; transform:rotate(-5deg); text-shadow:2px 2px black;'>THE ROCKERS</h2>", t:240, l:100, w:600, h:100},
-                    {html:"<div style='background:rgba(255,0,255,0.8); color:white; padding:20px; text-align:center; font-family:Impact; font-size:24px; transform:rotate(2deg);'>SATURDAY NIGHT<br>JULY 24TH</div>", t:800, l:450, w:300, h:140},
-                    {html:"<div style='color:#0ff; font-family:Courier; font-weight:bold; text-align:center; font-size:24px;'>DOORS OPEN 8PM • $15 ENTRY</div>", t:1000, l:100, w:600, h:60}
-                ]
-            },
-            {
-                n:"Real Estate", bg:"#fff",
-                els: [
-                    {html:"<div style='background:#003366; width:100%; height:100%; clip-path:polygon(0 0, 100% 0, 100% 80%, 0 100%);'></div>", t:0, l:0, w:794, h:600},
-                    {html:"<img src='https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; border:5px solid white; box-shadow:0 10px 20px rgba(0,0,0,0.3);'>", t:120, l:100, w:600, h:350},
-                    {html:"<h1 style='color:white; font-family:\"Lato\"; font-weight:900; font-size:48px; text-shadow:2px 2px 5px rgba(0,0,0,0.5);'>JUST LISTED</h1>", t:40, l:50, w:400, h:80},
-                    {html:"<h2 style='color:#003366; font-family:\"Playfair Display\"; font-size:36px; margin:0;'>Modern Family Home</h2>", t:620, l:100, w:600, h:60},
-                    {html:"<p style='font-family:Arial; color:#555; font-size:16px;'>3 Bed • 2 Bath • 2 Car Garage</p>", t:680, l:100, w:600, h:40},
-                    {html:"<div style='display:flex; justify-content:space-around;'><img src='https://images.unsplash.com/photo-1484154218962-a1c002085d2f?auto=format&fit=crop&w=200&q=80' style='width:180px; height:120px; object-fit:cover;'><img src='https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=200&q=80' style='width:180px; height:120px; object-fit:cover;'><img src='https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=200&q=80' style='width:180px; height:120px; object-fit:cover;'></div>", t:740, l:50, w:700, h:150},
-                    {html:"<div style='background:#d4af37; color:white; font-weight:bold; font-size:24px; padding:10px 30px;'>$850,000</div>", t:950, l:100, w:200, h:60},
-                    {html:"<div style='text-align:right; font-family:Arial; color:#333;'><b>Call Agent Name</b><br>555-888-999</div>", t:950, l:450, w:250, h:80}
-                ]
-            },
-            {
-                n: "Grand Opening", bg: "#fff",
-                els: [
-                     {html:"<div style='background:#ff4081; width:100%; height:100%;'></div>", t:0, l:0, w:794, h:400},
-                     {html:"<h1 style='color:white; font-size:80px; font-family:\"Bebas Neue\"; text-align:center;'>GRAND<br>OPENING</h1>", t:50, l:50, w:700, h:250},
-                     {html:"<div style='width:600px; height:400px; background:#eee; margin:0 auto; border:10px solid white; overflow:hidden;'><img src='https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80' style='width:100%; height:100%; object-fit:cover;'></div>", t:350, l:100, w:600, h:400},
-                     {html:"<h2 style='text-align:center; color:#333;'>WE ARE NOW OPEN!</h2>", t:780, l:100, w:600, h:60},
-                     {html:"<p style='text-align:center; font-size:20px; color:#555;'>Come visit our new store and get 20% off everything!</p>", t:850, l:100, w:600, h:80},
-                     {html:"<div style='background:#333; color:white; padding:10px; text-align:center; font-weight:bold;'>123 Main Street • Open 9am-9pm</div>", t:1000, l:100, w:600, h:60}
-                ]
-            },
-            {
-                n: "Garage Sale", bg: "#ffeb3b",
-                els: [
-                     {html:"<div style='border:10px solid black; width:100%; height:100%;'></div>", t:20, l:20, w:754, h:1083},
-                     {html:"<h1 style='font-family:Impact; font-size:100px; text-align:center; line-height:0.9;'>GARAGE<br>SALE</h1>", t:80, l:50, w:700, h:200},
-                     {html:"<div style='background:red; color:white; font-size:30px; font-weight:bold; padding:20px; text-align:center; transform:rotate(-5deg);'>EVERYTHING MUST GO!</div>", t:300, l:100, w:600, h:100},
-                     {html:"<ul style='font-size:30px; font-family:sans-serif;'><li>Furniture</li><li>Clothes</li><li>Tools</li><li>Toys</li></ul>", t:450, l:250, w:300, h:250},
-                     {html:"<h2 style='text-align:center; font-size:40px;'>THIS SATURDAY!</h2>", t:750, l:100, w:600, h:60},
-                     {html:"<div style='text-align:center; font-size:24px;'>7AM - 1PM • 45 Maple Avenue</div>", t:820, l:100, w:600, h:80}
-                ]
-            },
-            {
-                n: "Car Wash", bg: "#0288d1",
-                els: [
-                     {html:"<div style='border:5px dashed white; width:100%; height:100%; border-radius:20px;'></div>", t:20, l:20, w:754, h:1083},
-                     {html:"<h1 style='color:white; text-align:center; font-family:\"Luckiest Guy\", cursive; font-size:80px; text-shadow:4px 4px 0 #005b9f;'>CAR WASH</h1>", t:50, l:50, w:700, h:120},
-                     {html:"<div style='font-size:150px; text-align:center;'>🚗 💦</div>", t:200, l:200, w:400, h:200},
-                     {html:"<div style='background:yellow; color:red; font-weight:bold; font-size:40px; text-align:center; transform:rotate(5deg); padding:10px; border:3px solid red;'>ONLY $10</div>", t:450, l:450, w:250, h:100},
-                     {html:"<h2 style='color:white; text-align:center;'>Support the High School Band</h2>", t:600, l:100, w:600, h:60},
-                     {html:"<p style='color:white; text-align:center; font-size:24px;'>Saturday Morning<br>School Parking Lot</p>", t:680, l:100, w:600, h:100}
-                ]
-            }
-        ],
-        "Magazines": [
-            {
-                n:"Fashion Cover", bg:"#fff",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:white; font-family:\"Didot\", serif; font-size:120px; text-align:center; letter-spacing:-5px; line-height:1; mix-blend-mode:overlay;'>VOGUE</h1>", t:20, l:0, w:794, h:160},
-                    {html:"<div style='color:white; font-family:\"Lato\"; font-weight:bold; font-size:32px; text-shadow:2px 2px 5px rgba(0,0,0,0.5);'>SUMMER<br>STYLES</div>", t:300, l:50, w:300, h:120},
-                    {html:"<div style='color:#ffff00; font-family:\"Lato\"; font-weight:bold; font-size:24px; text-shadow:1px 1px 2px rgba(0,0,0,0.8);'>100+<br>LOOKS</div>", t:450, l:50, w:200, h:100},
-                    {html:"<div style='color:white; font-family:\"Lato\"; text-align:right; font-size:28px; text-shadow:2px 2px 5px rgba(0,0,0,0.5);'>THE<br>ICONS<br>ISSUE</div>", t:800, l:500, w:250, h:180},
-                    {html:"<div style='background:white; height:40px; width:150px; display:flex; align-items:center; justify-content:center; font-family:monospace; letter-spacing:3px;'>BARCODE</div>", t:1050, l:50, w:150, h:50}
-                ]
-            },
-            {
-                n:"Tech Monthly", bg:"#000",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.8;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:white; font-family:\"Orbitron\"; font-size:90px; text-align:center; letter-spacing:10px; border-top:2px solid #00ff00; border-bottom:2px solid #00ff00;'>WIRED</h1>", t:30, l:50, w:700, h:140},
-                    {html:"<div style='color:#00ff00; font-family:\"Roboto Mono\"; font-size:30px; background:black; display:inline-block; padding:5px;'>FUTURE OF AI</div>", t:250, l:50, w:350, h:60},
-                    {html:"<p style='color:white; font-family:Arial; font-size:18px; text-shadow:1px 1px 2px black;'>Are robots taking over?<br>Exclusive interview inside.</p>", t:320, l:50, w:300, h:100},
-                    {html:"<div style='color:cyan; font-family:\"Roboto Mono\"; font-size:30px; text-align:right;'>CYBER<br>SECURITY</div>", t:700, l:500, w:250, h:100}
-                ]
-            },
-            {
-                n:"Foodie", bg:"#fff",
-                els: [
-                     {html:"<img src='https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:0, l:0, w:794, h:1123},
-                     {html:"<h1 style='color:#fff; font-family:\"Lobster\"; font-size:100px; text-align:center; text-shadow:2px 2px 10px rgba(0,0,0,0.5);'>Delicious</h1>", t:20, l:50, w:700, h:150},
-                     {html:"<div style='background:rgba(255,255,255,0.9); padding:20px; border-radius:50%; width:150px; height:150px; display:flex; align-items:center; justify-content:center; text-align:center; color:#e65100; font-weight:bold; transform:rotate(-10deg); box-shadow:0 5px 15px rgba(0,0,0,0.2);'>BEST<br>RECIPES<br>2024</div>", t:200, l:50, w:150, h:150},
-                     {html:"<h2 style='color:white; text-shadow:2px 2px 4px black; text-align:center;'>Comfort Food Classics</h2>", t:900, l:100, w:600, h:60},
-                     {html:"<div style='color:white; text-align:center; font-size:24px; font-weight:bold; text-shadow:1px 1px 2px black;'>Quick & Easy Dinners • Dessert Special</div>", t:970, l:50, w:700, h:60}
-                ]
-            },
-            {
-                n:"Nature", bg:"#2e7d32",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.8;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:white; font-family:serif; text-align:center; font-size:100px;'>WILD</h1>", t:50, l:50, w:700, h:120},
-                    {html:"<h3 style='color:white; text-align:center; letter-spacing:10px;'>PHOTOGRAPHY</h3>", t:160, l:50, w:700, h:60},
-                    {html:"<div style='position:absolute; bottom:50px; right:50px; color:white; text-align:right;'><h2>ISSUE 24</h2><p>The Great Outdoors</p></div>", t:900, l:400, w:350, h:150}
-                ]
-            }
-        ],
-        "Brochures": [
-            {
-                n:"Tri-Fold Layout", bg:"#fff", 
-                els: [
-                    {html:"<div style='border-right:1px dashed #ccc; height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Inside Flap</div>", t:0, l:0, w:264, h:1123},
-                    {html:"<div style='border-right:1px dashed #ccc; height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Back Cover</div>", t:0, l:264, w:264, h:1123},
-                    {html:"<div style='height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Front Cover</div>", t:0, l:528, w:264, h:1123},
-                    // Front Cover
-                    {html:"<img src='https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:100, l:540, w:240, h:300},
-                    {html:"<h1 style='color:#333; font-family:Helvetica; font-weight:bold; font-size:32px; text-align:center;'>MODERN<br>LIVING</h1>", t:420, l:540, w:240, h:120},
-                    {html:"<p style='text-align:center; color:#777; font-family:Arial; font-size:14px;'>Interior Design Solutions</p>", t:550, l:540, w:240, h:50},
-                    // Back Cover
-                    {html:"<h3 style='text-align:center; color:#333; font-family:Helvetica;'>Contact Us</h3><p style='text-align:center; font-size:12px; color:#555;'>123 Main St, City<br>www.example.com<br>555-1234</p>", t:800, l:276, w:240, h:160},
-                    // Inside Flap
-                    {html:"<h3 style='color:var(--ui-theme-color); font-family:Helvetica; border-bottom:2px solid var(--ui-theme-color);'>Our Services</h3><ul style='font-size:12px; font-family:Arial; color:#444; padding-left:20px;'><li>Space Planning</li><li>Color Consultation</li><li>Furniture Selection</li></ul>", t:200, l:12, w:240, h:200}
-                ]
-            },
-            {
-                n:"Travel Brochure", bg:"#e0f2f1",
-                els: [
-                    {html:"<div style='border-right:1px dashed #999; height:100%; width:100%;'></div>", t:0, l:0, w:264, h:1123},
-                    {html:"<div style='border-right:1px dashed #999; height:100%; width:100%;'></div>", t:0, l:264, w:264, h:1123},
-                    // Cover
-                    {html:"<img src='https://images.unsplash.com/photo-1502003153089-649eb051d819?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; clip-path:polygon(0 0, 100% 0, 100% 85%, 0 100%);'>", t:0, l:528, w:266, h:500},
-                    {html:"<h1 style='color:#00695c; font-family:\"Pacifico\"; font-size:40px; text-align:center;'>Visit<br>Paradise</h1>", t:520, l:540, w:240, h:140},
-                    {html:"<div style='background:#00695c; color:white; padding:10px; text-align:center; font-family:Arial; border-radius:5px;'>Book Now 50% Off</div>", t:700, l:560, w:200, h:60},
-                    // Middle
-                    {html:"<img src='https://images.unsplash.com/photo-1537551080512-fb7dd14fbf90?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border-radius:10px;'>", t:100, l:280, w:230, h:160},
-                    {html:"<h4 style='color:#00695c; font-family:Arial;'>Luxury Hotels</h4><p style='font-size:11px; font-family:Arial;'>Experience world class comfort.</p>", t:270, l:280, w:230, h:100}
-                ]
-            },
-            {
-                n:"Bi-Fold Medical", bg:"#fff",
-                els: [
-                    {html:"<div style='border-right:1px solid #ccc; height:100%; width:100%;'></div>", t:0, l:396, w:2, h:1123},
-                    {html:"<div style='background:#2196f3; height:100%; width:40px; position:absolute; right:0;'></div>", t:0, l:754, w:40, h:1123},
-                    {html:"<img src='https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80' style='width:100%; height:300px; object-fit:cover;'>", t:100, l:420, w:330, h:300},
-                    {html:"<h1 style='color:#1565c0; font-family:sans-serif;'>HEALTH FIRST<br>CLINIC</h1>", t:420, l:420, w:300, h:120},
-                    {html:"<p style='color:#555;'>Caring for you and your family.</p>", t:550, l:420, w:300, h:50},
-                    {html:"<h3 style='color:#1565c0;'>Services</h3><ul><li>Checkups</li><li>Dental</li><li>Cardiology</li></ul>", t:100, l:50, w:300, h:200}
-                ]
-            },
-            {
-                n: "Corporate", bg: "#e8eaf6",
-                els: [
-                    {html:"<div style='border-right:1px solid #ccc; height:100%; width:100%;'></div>", t:0, l:264, w:2, h:1123},
-                    {html:"<div style='border-right:1px solid #ccc; height:100%; width:100%;'></div>", t:0, l:528, w:2, h:1123},
-                    {html:"<div style='background:#3f51b5; height:200px; width:100%; position:absolute; top:0;'></div>", t:0, l:0, w:794, h:200},
-                    {html:"<h2 style='color:white; position:absolute; top:50px; left:550px;'>Annual Report</h2>", t:0, l:0, w:794, h:200},
-                    {html:"<div style='position:absolute; bottom:50px; left:550px;'><h3 style='color:#3f51b5;'>Contact</h3><p>info@company.com</p></div>", t:0, l:0, w:794, h:1123}
-                ]
-            }
-        ],
-        "Certificates": [
-            {
-                n:"Classic Award", bg:"#fffaf0", 
-                els: [
-                    {html:"<div style='border:20px solid #d4af37; height:100%; width:100%;'></div>", t:0, l:0, w:794, h:1123},
-                    {html:"<div style='border:2px solid #d4af37; height:calc(100% - 10px); width:calc(100% - 10px); position:absolute; top:5px; left:5px;'></div>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='font-family:\"Cinzel\", serif; font-size:60px; text-align:center; color:#b8860b; margin-bottom:0;'>Certificate</h1>", t:150, l:100, w:600, h:100},
-                    {html:"<h3 style='font-family:sans-serif; text-align:center; font-size:18px; letter-spacing:5px; margin-top:0;'>OF APPRECIATION</h3>", t:230, l:200, w:400, h:50},
-                    {html:"<p style='text-align:center; font-style:italic; font-family:\"Playfair Display\"; font-size:20px;'>This is proudly presented to</p>", t:320, l:200, w:400, h:50},
-                    {html:"<h2 style='text-align:center; font-family:\"Great Vibes\"; font-size:80px; color:#333; margin:0;'>Recipient Name</h2>", t:380, l:100, w:600, h:140},
-                    {html:"<div style='width:400px; height:1px; background:#b8860b; margin:0 auto;'></div>", t:500, l:200, w:400, h:2},
-                    {html:"<p style='text-align:center; font-family:\"Lato\"; color:#555;'>For outstanding performance and lasting contribution to the team.</p>", t:540, l:150, w:500, h:80},
-                    {html:"<div style='border-top:1px solid black; width:200px; text-align:center; padding-top:5px; font-family:Arial;'>Date</div>", t:850, l:100, w:200, h:60},
-                    {html:"<div style='border-top:1px solid black; width:200px; text-align:center; padding-top:5px; font-family:Arial;'>Signature</div>", t:850, l:500, w:200, h:60},
-                    {html:"<div style='width:120px; height:120px; border-radius:50%; background:linear-gradient(45deg, #ffd700, #b8860b); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-family:\"Cinzel\"; border:4px double white; box-shadow:0 5px 10px rgba(0,0,0,0.3);'>GOLD<br>SEAL</div>", t:750, l:340, w:120, h:120}
-                ]
-            },
-            {
-                n:"Diploma", bg:"#fff",
-                els: [
-                    {html:"<div style='background:url(https://www.transparenttextures.com/patterns/cream-paper.png); width:100%; height:100%; opacity:0.5;'></div>", t:0, l:0, w:794, h:1123},
-                     {html:"<div style='border:10px double #333; height:100%; width:100%; box-sizing:border-box;'></div>", t:20, l:20, w:754, h:1083},
-                     {html:"<div style='font-size:100px; text-align:center; color:#333;'>🏛️</div>", t:80, l:350, w:100, h:120},
-                     {html:"<h1 style='font-family:\"Old Standard TT\"; font-size:48px; text-align:center; text-transform:uppercase;'>University of Excellence</h1>", t:200, l:50, w:700, h:100},
-                     {html:"<p style='text-align:center; font-family:\"Old Standard TT\"; font-size:18px;'>Upon the recommendation of the faculty, hereby confers upon</p>", t:320, l:100, w:600, h:80},
-                     {html:"<h2 style='text-align:center; font-family:\"Pinyon Script\", cursive; font-size:50px; font-style:italic; border-bottom:1px solid #ccc;'>Student Name</h2>", t:400, l:100, w:600, h:100},
-                     {html:"<p style='text-align:center; font-family:\"Old Standard TT\"; font-size:18px;'>the degree of</p>", t:520, l:200, w:400, h:50},
-                     {html:"<h2 style='text-align:center; font-family:\"Old Standard TT\"; font-size:32px; font-weight:bold;'>Bachelor of Arts</h2>", t:570, l:100, w:600, h:80}
-                ]
-            },
-            {
-                n:"Gift Certificate", bg:"#f3e5f5",
-                els: [
-                     {html:"<div style='border:2px dashed #9c27b0; height:100%; width:100%;'></div>", t:10, l:10, w:774, h:300},
-                     {html:"<h1 style='color:#9c27b0; font-family:serif; font-style:italic;'>Gift Certificate</h1>", t:50, l:50, w:400, h:60},
-                     {html:"<div style='font-size:40px; font-weight:bold; color:#333;'>$50.00</div>", t:50, l:600, w:150, h:60},
-                     {html:"<div style='border-bottom:1px solid #333; margin-top:20px;'>To:</div><br><div style='border-bottom:1px solid #333; margin-top:20px;'>From:</div>", t:120, l:50, w:600, h:120},
-                     {html:"<div style='background:#9c27b0; color:white; padding:5px; text-align:center;'>Valid at all store locations</div>", t:250, l:50, w:300, h:40}
-                ]
-            },
-            {
-                n:"Employee of Month", bg:"#e3f2fd",
-                els: [
-                    {html:"<div style='border:10px solid #1976d2; height:100%; width:100%;'></div>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='text-align:center; color:#0d47a1; font-family:Arial; font-weight:900;'>EMPLOYEE<br>OF THE MONTH</h1>", t:100, l:100, w:600, h:150},
-                    {html:"<div style='width:200px; height:200px; background:#ddd; border:5px solid #1976d2; margin:0 auto;'></div>", t:300, l:300, w:200, h:200},
-                    {html:"<h2 style='text-align:center; color:#1976d2; border-bottom:2px solid #1976d2;'>JOHN SMITH</h2>", t:550, l:200, w:400, h:60},
-                    {html:"<p style='text-align:center;'>In recognition of your hard work and dedication.</p>", t:650, l:200, w:400, h:80}
-                ]
-            }
-        ],
-        "Menus": [
-            {
-                n:"Chalkboard Menu", bg:"#333",
-                els: [
-                    {html:"<div style='border:5px solid #8B4513; width:100%; height:100%;'></div>", t:10, l:10, w:774, h:1103},
-                    {html:"<h1 style='color:white; font-family:\"Patrick Hand\", cursive; text-align:center; font-size:60px; border-bottom:2px dashed #777; padding-bottom:10px;'>THE BURGER JOINT</h1>", t:50, l:50, w:700, h:120},
-                    {html:"<h2 style='color:#ffcc00; font-family:\"Patrick Hand\"; font-size:30px;'>BURGERS</h2>", t:180, l:50, w:300, h:60},
-                    {html:"<div style='color:white; font-family:\"Patrick Hand\"; font-size:20px;'><div style='display:flex; justify-content:space-between;'><span>Classic Beef</span><span>$12</span></div><p style='font-size:14px; color:#aaa; margin-top:0;'>Lettuce, tomato, cheese, secret sauce</p></div>", t:230, l:50, w:300, h:100},
-                    {html:"<div style='color:white; font-family:\"Patrick Hand\"; font-size:20px;'><div style='display:flex; justify-content:space-between;'><span>Bacon Deluxe</span><span>$15</span></div><p style='font-size:14px; color:#aaa; margin-top:0;'>Double bacon, bbq sauce, onion rings</p></div>", t:330, l:50, w:300, h:100},
-                    {html:"<h2 style='color:#ffcc00; font-family:\"Patrick Hand\"; font-size:30px;'>DRINKS</h2>", t:460, l:50, w:300, h:60},
-                    {html:"<div style='color:white; font-family:\"Patrick Hand\"; font-size:20px;'><div style='display:flex; justify-content:space-between;'><span>Craft Beer</span><span>$8</span></div><div style='display:flex; justify-content:space-between;'><span>Milkshakes</span><span>$6</span></div></div>", t:510, l:50, w:300, h:120},
-                    {html:"<img src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border:5px solid white; transform:rotate(5deg);'>", t:200, l:400, w:300, h:300}
-                ]
-            },
-            {
-                n:"Fine Dining", bg:"#fff",
-                els: [
-                    {html:"<div style='border:1px solid #000; height:95%; width:95%; position:absolute; top:2.5%; left:2.5%;'></div>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='font-family:\"Playfair Display\"; text-align:center; letter-spacing:5px; font-size:40px; margin-top:40px;'>LE GOURMET</h1>", t:50, l:200, w:400, h:100},
-                    {html:"<div style='text-align:center; font-style:italic; font-family:serif; color:#777;'>Menu de Saison</div>", t:120, l:300, w:200, h:40},
-                    {html:"<h3 style='text-align:center; font-family:\"Lato\"; letter-spacing:3px; font-size:16px; margin-top:50px;'>APPETIZERS</h3>", t:200, l:200, w:400, h:50},
-                    {html:"<div style='text-align:center; font-family:serif; font-size:18px;'><b>French Onion Soup</b> . . . . $12</div><div style='text-align:center; font-size:12px; color:#555; font-style:italic;'>Gruyere crouton</div>", t:260, l:200, w:400, h:80},
-                    {html:"<div style='text-align:center; font-family:serif; font-size:18px;'><b>Escargot</b> . . . . $16</div><div style='text-align:center; font-size:12px; color:#555; font-style:italic;'>Garlic herb butter</div>", t:340, l:200, w:400, h:80},
-                    {html:"<h3 style='text-align:center; font-family:\"Lato\"; letter-spacing:3px; font-size:16px; margin-top:30px;'>MAIN COURSES</h3>", t:450, l:200, w:400, h:50},
-                    {html:"<div style='text-align:center; font-family:serif; font-size:18px;'><b>Duck Confit</b> . . . . $32</div><div style='text-align:center; font-size:12px; color:#555; font-style:italic;'>Roasted potatoes, orange glaze</div>", t:510, l:200, w:400, h:80},
-                     {html:"<div style='font-size:30px; text-align:center;'>❦</div>", t:700, l:370, w:50, h:60}
-                ]
-            },
-            {
-                n:"Coffee Shop", bg:"#d7ccc8",
-                els: [
-                    {html:"<h1 style='font-family:\"Courier New\"; text-align:center; font-size:50px; color:#3e2723;'>Morning Brew</h1>", t:50, l:100, w:600, h:80},
-                    {html:"<div style='border-top:2px solid #3e2723; width:100%;'></div>", t:120, l:100, w:600, h:10},
-                    {html:"<h2 style='color:#5d4037;'>Espresso</h2><p>Latte ... $4<br>Cappuccino ... $4<br>Mocha ... $5</p>", t:150, l:100, w:300, h:150},
-                    {html:"<h2 style='color:#5d4037;'>Bakery</h2><p>Croissant ... $3<br>Muffin ... $3<br>Bagel ... $2</p>", t:150, l:450, w:300, h:150},
-                    {html:"<img src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border-radius:50%;'>", t:400, l:250, w:300, h:300}
-                ]
-            },
-            {
-                n:"Cocktail Bar", bg:"#263238",
-                els: [
-                    {html:"<div style='border:2px solid #ffcc80; height:100%; width:100%;'></div>", t:20, l:20, w:754, h:1083},
-                    {html:"<h1 style='color:#ffcc80; font-family:\"Righteous\"; text-align:center; font-size:60px; letter-spacing:5px;'>THE LOUNGE</h1>", t:80, l:50, w:700, h:100},
-                    {html:"<h3 style='color:white; text-align:center; border-bottom:1px solid #555;'>SIGNATURE COCKTAILS</h3>", t:200, l:150, w:500, h:50},
-                    {html:"<b style='color:#ffcc80; font-size:20px;'>Old Fashioned</b><span style='float:right; color:white;'>$14</span><br><i style='color:#ccc; font-size:14px;'>Bourbon, bitters, sugar</i>", t:270, l:150, w:500, h:80},
-                    {html:"<b style='color:#ffcc80; font-size:20px;'>Martini</b><span style='float:right; color:white;'>$15</span><br><i style='color:#ccc; font-size:14px;'>Gin, vermouth, olive</i>", t:360, l:150, w:500, h:80},
-                    {html:"<div style='text-align:center; color:#777; margin-top:50px;'>Happy Hour 5-7PM</div>", t:800, l:200, w:400, h:40}
-                ]
-            }
-        ],
-        "Calendars": [
-            {
-                n:"Monthly Planner", bg:"#fff",
-                els: [
-                     {html:"<div style='background:#ff6b6b; height:150px; width:100%; display:flex; align-items:center; justify-content:center; color:white; font-family:sans-serif; font-size:60px; font-weight:bold;'>JANUARY</div>", t:0, l:0, w:794, h:150},
-                     {html:"<table style='width:100%; height:100%; text-align:left; font-family:Arial; border:1px solid #ccc;'><tr style='background:#eee; font-weight:bold; text-align:center;'><td style='height:30px;'>SUN</td><td>MON</td><td>TUE</td><td>WED</td><td>THU</td><td>FRI</td><td>SAT</td></tr><tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr><tr><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td></tr><tr><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td></tr><tr><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td></tr><tr><td>29</td><td>30</td><td>31</td><td></td><td></td><td></td><td></td></tr></table>", t:180, l:20, w:754, h:600},
-                     {html:"<h3 style='font-family:sans-serif; color:#ff6b6b;'>Notes</h3><div style='border-bottom:1px solid #ccc; height:30px;'></div><div style='border-bottom:1px solid #ccc; height:30px;'></div><div style='border-bottom:1px solid #ccc; height:30px;'></div>", t:820, l:20, w:754, h:200}
-                ]
-            },
-            {
-                n:"Weekly Schedule", bg:"#e8f5e9",
-                els: [
-                    {html:"<h1 style='text-align:center; color:#2e7d32;'>Weekly Schedule</h1>", t:30, l:100, w:600, h:60},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Monday</b><br><br><br></div>", t:100, l:50, w:200, h:150},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Tuesday</b><br><br><br></div>", t:100, l:280, w:200, h:150},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Wednesday</b><br><br><br></div>", t:100, l:510, w:200, h:150},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Thursday</b><br><br><br></div>", t:300, l:50, w:200, h:150},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Friday</b><br><br><br></div>", t:300, l:280, w:200, h:150},
-                    {html:"<div style='background:white; border:1px solid #ccc; padding:10px;'><b style='color:#2e7d32;'>Weekend</b><br><br><br></div>", t:300, l:510, w:200, h:150}
-                ]
-            },
-            {
-                n:"Yearly View", bg:"#fff",
-                els: [
-                     {html:"<h1 style='text-align:center;'>2024</h1>", t:20, l:100, w:600, h:80},
-                     // Simulated small months
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>JAN<br>1 2 3...</div>", t:120, l:50, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>FEB<br>1 2 3...</div>", t:120, l:220, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>MAR<br>1 2 3...</div>", t:120, l:390, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>APR<br>1 2 3...</div>", t:120, l:560, w:150, h:120},
-                     // Row 2
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>MAY<br>1 2 3...</div>", t:260, l:50, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>JUN<br>1 2 3...</div>", t:260, l:220, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>JUL<br>1 2 3...</div>", t:260, l:390, w:150, h:120},
-                     {html:"<div style='font-size:10px; border:1px solid #ccc;'>AUG<br>1 2 3...</div>", t:260, l:560, w:150, h:120}
-                ]
-            }
-        ],
-        "Letterheads": [
-            {
-                n: "Modern Geo", bg:"#fff",
-                els: [
-                    {html:"<div style='background:linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); width:100%; height:100%; clip-path:polygon(0 0, 100% 0, 100% 15%, 0 35%);'></div>", t:0, l:0, w:794, h:300},
-                    {html:"<div style='background:linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); width:100%; height:100%; clip-path:polygon(100% 100%, 0 100%, 0 85%, 100% 65%);'></div>", t:900, l:0, w:794, h:223},
-                    {html:"<h1 style='color:white; font-family:sans-serif; margin:0;'>COMPANY NAME</h1>", t:30, l:40, w:400, h:60},
-                    {html:"<div style='color:white; font-family:sans-serif; font-size:12px;'>123 Business Rd, Tech City</div>", t:90, l:40, w:300, h:40},
-                    {html:"<div style='color:white; font-family:sans-serif; font-size:12px; text-align:right;'>www.company.com<br>info@company.com</div>", t:1000, l:500, w:250, h:60},
-                    {html:"<div style='font-family:serif; font-size:12px; color:#333; line-height:2;'>Dear [Name],<br><br>Start typing your letter here...</div>", t:250, l:50, w:694, h:500}
-                ]
-            },
-            {
-                n: "Minimal Black", bg:"#fff",
-                els: [
-                    {html:"<div style='border-bottom:2px solid black;'></div>", t:100, l:50, w:694, h:2},
-                    {html:"<h1 style='font-family:\"Helvetica\"; letter-spacing:2px; font-weight:bold;'>JOHN DOE</h1>", t:50, l:50, w:400, h:50},
-                    {html:"<div style='text-align:right; font-size:12px; color:#555;'>123 Street Name<br>City, State, Zip<br>555-123-4567</div>", t:50, l:450, w:294, h:50},
-                    {html:"<div style='font-family:sans-serif; font-size:12px; color:#333; line-height:1.6;'>To Whom It May Concern,<br><br>Body of the letter goes here...</div>", t:150, l:50, w:694, h:500}
-                ]
-            },
-            {
-                n: "Corporate Red", bg:"#fff",
-                els: [
-                    {html:"<div style='background:#d32f2f; height:100%; width:10px; position:absolute; left:0;'></div>", t:0, l:0, w:10, h:1123},
-                    {html:"<h1 style='color:#d32f2f; font-family:sans-serif;'>Global Solutions</h1>", t:50, l:40, w:400, h:60},
-                    {html:"<p style='color:#777; font-size:12px;'>Innovating for the future.</p>", t:110, l:40, w:300, h:30},
-                    {html:"<div style='text-align:right; color:#d32f2f; font-weight:bold;'>CONFIDENTIAL</div>", t:50, l:500, w:250, h:30}
-                ]
-            },
-            {
-                n: "Legal", bg:"#fff",
-                els: [
-                    {html:"<div style='border-left:1px solid #ccc; height:100%; position:absolute; left:100px;'></div>", t:0, l:0, w:100, h:1123},
-                    {html:"<h1 style='text-align:center; font-family:serif; text-transform:uppercase; font-size:24px; text-decoration:underline;'>Legal Document</h1>", t:50, l:100, w:600, h:50},
-                    {html:"<p style='font-family:serif; line-height:2;'>1. This agreement is made between...</p>", t:150, l:120, w:600, h:500}
-                ]
-            }
-        ],
-        "Newsletters": [
-            {
-                n:"Classic 2-Col", bg:"#fff", 
-                els: [
-                    {html:"<h1 style='border-bottom:3px double black; font-size:40px; text-transform:uppercase; font-family:serif;'>The Daily News</h1>", t:40, l:40, w:714, h:100},
-                    {html:"<h3 style='font-family:sans-serif; background:#eee; padding:5px;'>Top Story: Big Event Happens</h3>", t:150, l:40, w:340, h:50},
-                    {html:"<p style='font-size:12px; text-align:justify;'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>", t:210, l:40, w:340, h:200},
-                    {html:"<img src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100px; object-fit:cover;'>", t:150, l:414, w:340, h:100},
-                    {html:"<h3 style='font-family:sans-serif;'>Community Updates</h3><p style='font-size:12px;'>Upcoming events at the town hall.</p>", t:260, l:414, w:340, h:100}
-                ]
-            },
-            {
-                 n:"School Update", bg:"#fff3e0",
-                 els: [
-                     {html:"<div style='background:#ff9800; padding:10px;'><h1 style='color:white; text-align:center;'>SCHOOL NEWS</h1></div>", t:40, l:40, w:714, h:80},
-                     {html:"<h2 style='color:#e65100;'>Principal's Note</h2><p>Welcome back students! We have an exciting year ahead.</p>", t:140, l:40, w:714, h:100},
-                     {html:"<div style='background:white; border:1px solid orange; padding:10px;'><h3 style='margin:0;'>Important Dates</h3><ul><li>Sep 1: First Day</li><li>Oct 31: Halloween Party</li></ul></div>", t:250, l:40, w:300, h:150},
-                     {html:"<img src='https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:250, l:360, w:394, h:150}
-                 ]
-            },
-            {
-                n:"Corporate Brief", bg:"#fff",
-                els: [
-                    {html:"<div style='background:#1a237e; width:100%; height:100%;'></div>", t:0, l:0, w:200, h:1123},
-                    {html:"<h1 style='color:white; font-family:sans-serif; text-align:right; padding-right:20px;'>Q1 REPORT</h1>", t:50, l:0, w:180, h:80},
-                    {html:"<div style='color:white; padding:20px;'><b>Highlights:</b><br><br>• Growth up 10%<br>• New Hire<br>• Office Party</div>", t:150, l:0, w:200, h:200},
-                    {html:"<h1 style='color:#1a237e;'>Executive Summary</h1><p>We are pleased to announce record profits this quarter.</p>", t:50, l:250, w:500, h:150},
-                    {html:"<img src='https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:250, l:250, w:500, h:200}
-                ]
-            },
-            {
-                n:"Tech Digest", bg:"#263238",
-                els: [
-                    {html:"<h1 style='color:#80cbc4; text-align:center;'>TECH DIGEST</h1>", t:50, l:50, w:700, h:80},
-                    {html:"<div style='column-count:3; column-gap:20px; color:#eceff1;'><p>Latest Gadgets</p><p>Software Trends</p><p>Coding Tips</p></div>", t:150, l:50, w:700, h:800}
-                ]
-            }
-        ],
-        "Business Cards": [
-            {
-                n:"Modern (10up)", bg:"#fff", 
-                els: Array.from({length: 5}, (_, i) => [
-                    {html:"<div style='border:1px solid #ddd; width:100%; height:100%; padding:15px; background:#f9f9f9;'><b style='font-size:16px; color:#333;'>John Doe</b><br><span style='font-size:11px; color:#777; text-transform:uppercase;'>Creative Director</span><br><br><span style='font-size:11px;'>555-1234 • john@design.com</span><div style='width:30px; height:30px; background:#333; position:absolute; right:15px; top:15px; border-radius:50%;'></div></div>", t:50 + (i*210), l:50, w:320, h:180},
-                    {html:"<div style='border:1px solid #ddd; width:100%; height:100%; padding:15px; background:#f9f9f9;'><b style='font-size:16px; color:#333;'>John Doe</b><br><span style='font-size:11px; color:#777; text-transform:uppercase;'>Creative Director</span><br><br><span style='font-size:11px;'>555-1234 • john@design.com</span><div style='width:30px; height:30px; background:#333; position:absolute; right:15px; top:15px; border-radius:50%;'></div></div>", t:50 + (i*210), l:400, w:320, h:180}
-                ]).flat()
-            },
-            {
-                n:"Dark (10up)", bg:"#fff", 
-                els: Array.from({length: 5}, (_, i) => [
-                    {html:"<div style='background:#222; color:white; width:100%; height:100%; padding:15px;'><b style='font-size:16px; color:#d4af37;'>JANE SMITH</b><br><span style='font-size:10px;'>CEO & Founder</span><br><div style='border-top:1px solid #444; margin:10px 0;'></div><span style='font-size:10px;'>jsmith@corp.com</span></div>", t:50 + (i*210), l:50, w:320, h:180},
-                    {html:"<div style='background:#222; color:white; width:100%; height:100%; padding:15px;'><b style='font-size:16px; color:#d4af37;'>JANE SMITH</b><br><span style='font-size:10px;'>CEO & Founder</span><br><div style='border-top:1px solid #444; margin:10px 0;'></div><span style='font-size:10px;'>jsmith@corp.com</span></div>", t:50 + (i*210), l:400, w:320, h:180}
-                ]).flat()
-            },
-            {
-                n:"Photo (10up)", bg:"#fff", 
-                els: Array.from({length: 5}, (_, i) => [
-                    {html:"<div style='border:1px solid #ccc; width:100%; height:100%; overflow:hidden;'><div style='width:40%; height:100%; background:url(https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80); background-size:cover; float:left;'></div><div style='float:left; width:60%; padding:10px;'><b style='font-size:14px;'>Alex Lee</b><br><span style='font-size:10px;'>Photographer</span><br><br><span style='font-size:10px;'>555-SNAP</span></div></div>", t:50 + (i*210), l:50, w:320, h:180},
-                    {html:"<div style='border:1px solid #ccc; width:100%; height:100%; overflow:hidden;'><div style='width:40%; height:100%; background:url(https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80); background-size:cover; float:left;'></div><div style='float:left; width:60%; padding:10px;'><b style='font-size:14px;'>Alex Lee</b><br><span style='font-size:10px;'>Photographer</span><br><br><span style='font-size:10px;'>555-SNAP</span></div></div>", t:50 + (i*210), l:400, w:320, h:180}
-                ]).flat()
-            },
-            {
-                n:"Bold (10up)", bg:"#fff",
-                 els: Array.from({length: 5}, (_, i) => [
-                    {html:"<div style='background:#ffeb3b; width:100%; height:100%; padding:15px; display:flex; align-items:center; justify-content:center; flex-direction:column;'><b style='font-size:20px; font-weight:900;'>HELLO.</b><span style='font-size:12px;'>I am a developer</span></div>", t:50 + (i*210), l:50, w:320, h:180},
-                    {html:"<div style='background:#ffeb3b; width:100%; height:100%; padding:15px; display:flex; align-items:center; justify-content:center; flex-direction:column;'><b style='font-size:20px; font-weight:900;'>HELLO.</b><span style='font-size:12px;'>I am a developer</span></div>", t:50 + (i*210), l:400, w:320, h:180}
-                ]).flat()
-            }
-        ],
-        "Posters": [
-            {
-                n:"Motivational", bg:"#000",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.6;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:white; font-family:\"Oswald\"; font-size:120px; text-align:center; text-transform:uppercase; border:10px solid white; padding:20px;'>Dream<br>Big</h1>", t:200, l:100, w:600, h:400},
-                    {html:"<p style='color:white; text-align:center; font-size:24px; font-style:italic;'>\"The only way to do great work is to love what you do.\"</p>", t:650, l:100, w:600, h:100}
-                ]
-            },
-            {
-                n:"Movie Poster", bg:"#1a237e",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; mix-blend-mode:overlay;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:#fff; font-family:\"Cinzel\"; font-size:80px; text-align:center; text-shadow:0 0 10px cyan;'>THE GALAXY</h1>", t:50, l:50, w:700, h:120},
-                    {html:"<h3 style='color:#ccc; text-align:center; letter-spacing:10px;'>COMING SOON</h3>", t:160, l:100, w:600, h:60},
-                    {html:"<div style='position:absolute; bottom:50px; width:100%; text-align:center; color:#aaa; font-size:12px;'>STARRING ACTOR NAME • DIRECTED BY DIRECTOR NAME</div>", t:1000, l:0, w:794, h:50}
-                ]
-            },
-            {
-                n:"Yoga Class", bg:"#e0f7fa",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1544367563-12123d8965cd?auto=format&fit=crop&w=800&q=80' style='width:100%; height:500px; object-fit:cover; border-radius:0 0 300px 300px;'>", t:0, l:0, w:794, h:500},
-                    {html:"<h1 style='text-align:center; color:#006064; font-family:sans-serif; font-weight:300; font-size:60px;'>Morning Yoga</h1>", t:550, l:100, w:600, h:100},
-                    {html:"<p style='text-align:center; font-size:20px; color:#555;'>Find your balance.</p>", t:650, l:200, w:400, h:50},
-                    {html:"<div style='background:#00bcd4; color:white; padding:15px; text-align:center; border-radius:50px; font-size:24px;'>First Class Free</div>", t:750, l:250, w:300, h:80}
-                ]
-            },
-            {
-                n:"Missing Person", bg:"#fff",
-                els: [
-                    {html:"<h1 style='background:red; color:white; text-align:center; font-size:80px; font-weight:bold;'>MISSING</h1>", t:50, l:50, w:700, h:120},
-                    {html:"<div style='background:#ccc; width:100%; height:100%; display:flex; align-items:center; justify-content:center;'>PHOTO</div>", t:200, l:200, w:400, h:400},
-                    {html:"<h2 style='text-align:center;'>JANE DOE</h2>", t:620, l:200, w:400, h:60},
-                    {html:"<p style='text-align:center; font-size:20px;'>Last seen wearing a blue jacket.</p>", t:680, l:100, w:600, h:80},
-                    {html:"<h1 style='text-align:center;'>CALL 911</h1>", t:800, l:200, w:400, h:100}
-                ]
-            },
-            {
-                n: "Art Exhibition", bg: "#212121",
-                els: [
-                     {html:"<h1 style='color:white; font-family:sans-serif; text-align:right; font-size:80px; margin-right:50px;'>MODERN<br>ART</h1>", t:50, l:200, w:500, h:200},
-                     {html:"<div style='background:white; width:400px; height:400px; transform:rotate(10deg); margin:0 auto; border:10px solid #333;'></div>", t:300, l:200, w:400, h:400},
-                     {html:"<p style='color:#777; text-align:center; margin-top:50px;'>Gallery Open Night</p>", t:800, l:200, w:400, h:50}
-                ]
-            }
-        ],
-        "Social Media": [
-            {
-                n:"Instagram Quote", bg:"#fff",
-                els: [
-                    {html:"<div style='width:100%; height:100%; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);'></div>", t:0, l:0, w:794, h:794},
-                    {html:"<div style='background:white; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:40px;'><h1 style='font-family:\"Playfair Display\"; text-align:center; font-style:italic;'>\"Creativity is intelligence having fun.\"</h1></div>", t:100, l:100, w:600, h:600},
-                    {html:"<p style='text-align:center; color:white; font-weight:bold;'>@yourhandle</p>", t:720, l:200, w:400, h:50}
-                ]
-            },
-            {
-                n:"YouTube Thumb", bg:"#fff",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'>", t:0, l:0, w:794, h:446},
-                    {html:"<h1 style='color:white; font-family:Impact; font-size:100px; -webkit-text-stroke:3px black; text-shadow:5px 5px 0 black;'>EPIC VLOG!</h1>", t:50, l:50, w:700, h:150},
-                    {html:"<div style='background:red; color:white; font-weight:bold; font-size:40px; padding:10px; display:inline-block; transform:rotate(-5deg);'>MUST WATCH</div>", t:250, l:50, w:300, h:80},
-                    {html:"<img src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80' style='border:5px solid white; border-radius:50%; width:100%; height:100%; object-fit:cover;'>", t:250, l:600, w:150, h:150}
-                ]
-            },
-            {
-                n:"Sale Story", bg:"#000",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.6;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<h1 style='color:white; font-family:sans-serif; font-size:150px; text-align:center; margin:0;'>SALE</h1>", t:100, l:50, w:700, h:200},
-                    {html:"<h2 style='color:#ff00ff; text-align:center; font-size:60px;'>50% OFF</h2>", t:300, l:100, w:600, h:100},
-                    {html:"<div style='border:2px solid white; color:white; padding:15px; text-align:center; border-radius:30px; margin-top:200px;'>SWIPE UP TO SHOP</div>", t:900, l:200, w:400, h:80}
-                ]
-            },
-            {
-                n:"Event Post", bg:"#3f51b5",
-                els: [
-                    {html:"<div style='background:white; width:100%; height:100%; clip-path:polygon(0 0, 100% 0, 100% 85%, 0 100%);'></div>", t:20, l:20, w:754, h:600},
-                    {html:"<h1 style='color:#3f51b5; font-size:60px; text-align:center;'>WEBINAR</h1>", t:100, l:50, w:700, h:100},
-                    {html:"<h3 style='color:#333; text-align:center;'>Learn Design in 30 Days</h3>", t:220, l:100, w:600, h:60},
-                    {html:"<div style='text-align:center; color:white; font-size:24px;'>LINK IN BIO</div>", t:700, l:200, w:400, h:50}
-                ]
-            },
-            {
-                n: "Pinterest Pin", bg: "#f8bbd0",
-                els: [
-                    {html:"<img src='https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.8;'>", t:0, l:0, w:794, h:1123},
-                    {html:"<div style='background:white; opacity:0.9; padding:20px; text-align:center;'><h1 style='margin:0;'>10 Style Tips</h1><p>Look great for less.</p></div>", t:400, l:100, w:600, h:200}
-                ]
-            }
-        ]
-    };
-    
-    const catsDiv = document.getElementById('template-cats');
-    const gridDiv = document.getElementById('template-grid');
-    
-    // Icon mapping for Font Awesome
-    const icons = {
-        "Resumes": "fa-user-tie",
-        "Invitations": "fa-envelope-open-text",
-        "Flyers": "fa-paper-plane",
-        "Magazines": "fa-book-open",
-        "Brochures": "fa-columns",
-        "Certificates": "fa-certificate",
-        "Menus": "fa-utensils",
-        "Calendars": "fa-calendar-alt",
-        "Letterheads": "fa-file-signature",
-        "Newsletters": "fa-newspaper",
-        "Business Cards": "fa-id-card",
-        "Posters": "fa-image",
-        "Social Media": "fa-share-alt"
-    };
-
-    Object.keys(tmplData).forEach(cat => {
-        const btn = document.createElement('div');
-        btn.className = 'cat-btn';
-        
-        // Add Icon if exists
-        const iconClass = icons[cat] || "fa-file-alt";
-        btn.innerHTML = `<i class="fas ${iconClass}"></i> ${cat}`;
-        
-        btn.onclick = (e) => loadCat(cat, e);
-        catsDiv.appendChild(btn);
-    });
-
-    function loadCat(cat, e) {
-        gridDiv.innerHTML = '';
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        
-        // Handle active state
-        if(e && e.currentTarget) e.currentTarget.classList.add('active');
-        else if(!e && catsDiv.firstChild) catsDiv.firstChild.classList.add('active');
-        
-        tmplData[cat].forEach(t => {
-            const div = document.createElement('div');
-            div.className = 'tp-item';
-            
-            // --- PREVIEW LOGIC: Render scaled HTML ---
-            let previewHTML = '';
-            t.els.forEach(el => {
-                // We construct the HTML structure exactly as it will appear
-                previewHTML += `<div style="position:absolute; top:${el.t}px; left:${el.l}px; width:${el.w}px; height:${el.h}px; z-index:1;">${el.html}</div>`;
-            });
-            
-            // Create a scaled container (A4 size scaled down)
-            // A4 is 794x1123. 
-            // To fit into 100px width, scale is approx 0.125
-            const content = `
-                <div style="
-                    width: 794px; 
-                    height: 1123px; 
-                    background: ${t.bg}; 
-                    transform: scale(0.125); 
-                    transform-origin: 0 0; 
-                    overflow: hidden; 
-                    position: absolute; 
-                    top: 0; left: 0;
-                    pointer-events: none;
-                ">
-                    ${previewHTML}
-                </div>
-            `;
-
-            div.innerHTML = `<div class="template-preview">${content}</div><div>${t.n}</div>`;
-            div.onclick = () => loadTemplate(t);
-            gridDiv.appendChild(div);
-        });
-    }
-    // Trigger load of first category
-    if(catsDiv.firstChild) loadCat(Object.keys(tmplData)[0]);
-}
-
-const UI_THEMES = {
-    'Publisher / Classic (Teal)': { primary: '#007670', dark: '#005a55', hue: '0deg', grayscale: '0%' },
-    'OneDrive / Ocean (Blue)': { primary: '#0078d4', dark: '#005a9e', hue: '40deg', grayscale: '0%' },
-    'Sunset (Orange)': { primary: '#ff6600', dark: '#cc5200', hue: '180deg', grayscale: '0%' },
-    'Midnight Dark': { primary: '#2b2b2b', dark: '#1f1f1f', hue: '0deg', grayscale: '100%' },
-    'Forest Green': { primary: '#2e7d32', dark: '#1b5e20', hue: '-45deg', grayscale: '0%' },
-    'Word (Blue)': { primary: '#2b579a', dark: '#1e3f70', hue: '40deg', grayscale: '0%' },
-    'Excel (Green)': { primary: '#217346', dark: '#175031', hue: '-35deg', grayscale: '0%' },
-    'PowerPoint (Orange)': { primary: '#b7472a', dark: '#8f3721', hue: '195deg', grayscale: '0%' },
-    'Outlook (Light Blue)': { primary: '#0072c6', dark: '#005494', hue: '30deg', grayscale: '0%' },
-    'Outlook Classic (Orange)': { primary: '#e87722', dark: '#b35917', hue: '190deg', grayscale: '0%' },
-    'OneNote (Purple)': { primary: '#7719aa', dark: '#521075', hue: '100deg', grayscale: '0%' },
-    'Teams (Purple)': { primary: '#6264a7', dark: '#464775', hue: '65deg', grayscale: '0%' },
-    'Access (Maroon)': { primary: '#a4373a', dark: '#7a292b', hue: '180deg', grayscale: '0%' },
-    'SharePoint (Cyan)': { primary: '#038387', dark: '#025f61', hue: '5deg', grayscale: '0%' },
-    'Visio / To Do (Navy Blue)': { primary: '#3955a3', dark: '#26396e', hue: '55deg', grayscale: '0%' },
-    'Project (Dark Green)': { primary: '#31752f', dark: '#214f20', hue: '-60deg', grayscale: '0%' },
-    'Forms / Sway (Teal)': { primary: '#008272', dark: '#005f53', hue: '5deg', grayscale: '0%' },
-    'Planner (Green)': { primary: '#137859', dark: '#0d5740', hue: '-15deg', grayscale: '0%' },
-    'Stream (Pink)': { primary: '#c5093b', dark: '#8f0529', hue: '170deg', grayscale: '0%' },
-    'Loop (Purple-Blue)': { primary: '#5c40d1', dark: '#422c9c', hue: '75deg', grayscale: '0%' },
-    'Twitch (Pink)': { primary: '#9146ff', dark: '#772ce8', hue: '90deg', grayscale: '0%' },
-    'YouTube (Red)': { primary: '#ff0000', dark: '#cc0000', hue: '175deg', grayscale: '0%' },
-    'Spotify (Green)': { primary: '#1db954', dark: '#1aa34a', hue: '-45deg', grayscale: '0%' },
-    'Discord (Blurple)': { primary: '#5865f2', dark: '#4752c4', hue: '50deg', grayscale: '0%' },
-    'Slack (Aubergine)': { primary: '#4a154b', dark: '#350d36', hue: '120deg', grayscale: '0%' },
-    'Reddit (Orange)': { primary: '#FF4500', dark: '#CC3700', hue: '180deg', grayscale: '0%' },
-    'LinkedIn (Blue)': { primary: '#0077b5', dark: '#005885', hue: '40deg', grayscale: '0%' },
-    'Netflix (Red)': { primary: '#E50914', dark: '#B20710', hue: '170deg', grayscale: '0%' },
-    'Dropbox (Blue)': { primary: '#0061FF', dark: '#0047BA', hue: '50deg', grayscale: '0%' },
-    'GitHub (Dark)': { primary: '#24292e', dark: '#1b1f23', hue: '0deg', grayscale: '100%' },
-    'WhatsApp (Green)': { primary: '#25D366', dark: '#1da851', hue: '-30deg', grayscale: '0%' },
-    'Notion (Minimalist Black)': { primary: '#191919', dark: '#000000', hue: '0deg', grayscale: '100%' },
-    'Stripe (Blurple)': { primary: '#635BFF', dark: '#4B45C6', hue: '60deg', grayscale: '0%' },
-    'Canva (Cyan)': { primary: '#00C4CC', dark: '#00999E', hue: '10deg', grayscale: '0%' },
-    'AWS (Orange)': { primary: '#FF9900', dark: '#CC7A00', hue: '190deg', grayscale: '0%' },
-    'Jira (Blue)': { primary: '#0052CC', dark: '#003E99', hue: '45deg', grayscale: '0%' },
-    'Asana (Coral)': { primary: '#FC636B', dark: '#D6454F', hue: '160deg', grayscale: '0%' },
-    'HubSpot (Coral/Orange)': { primary: '#FF7A59', dark: '#C95D42', hue: '180deg', grayscale: '0%' },
-    'Salesforce (Cloud Blue)': { primary: '#00A1E0', dark: '#00729E', hue: '40deg', grayscale: '0%' },
-    'Trello (Board Blue)': { primary: '#0079BF', dark: '#005A8F', hue: '45deg', grayscale: '0%' },
-    'Twilio (Red)': { primary: '#F22F46', dark: '#B32031', hue: '170deg', grayscale: '0%' },
-    'Vimeo (Light Blue)': { primary: '#1AB7EA', dark: '#108BB3', hue: '35deg', grayscale: '0%' },
-    'Steam (Dark Blue/Grey)': { primary: '#171A21', dark: '#0C0E12', hue: '0deg', grayscale: '100%' },
-    'Android (Green)': { primary: '#3DDC84', dark: '#28A760', hue: '-45deg', grayscale: '0%' },
-    'Apple Music (Pink)': { primary: '#FA243C', dark: '#C41A2D', hue: '160deg', grayscale: '0%' },
-    'Behance (Blue)': { primary: '#1769FF', dark: '#1251C4', hue: '40deg', grayscale: '0%' },
-    'Dribbble (Pink)': { primary: '#EA4C89', dark: '#B53969', hue: '150deg', grayscale: '0%' },
-    'Evernote (Green)': { primary: '#00A82D', dark: '#007A20', hue: '-20deg', grayscale: '0%' },
-    'Facebook (Blue)': { primary: '#1877F2', dark: '#115CBF', hue: '40deg', grayscale: '0%' },
-    'Figma (Dark)': { primary: '#2C2D33', dark: '#1E1F24', hue: '0deg', grayscale: '100%' },
-    'Firefox (Orange)': { primary: '#FF7139', dark: '#CC562A', hue: '185deg', grayscale: '0%' },
-    'Flickr (Pink)': { primary: '#FF0084', dark: '#CC0069', hue: '150deg', grayscale: '0%' },
-    'Foursquare (Pink)': { primary: '#F94877', dark: '#C2385C', hue: '150deg', grayscale: '0%' },
-    'GitLab (Orange)': { primary: '#FC6D26', dark: '#C9551E', hue: '185deg', grayscale: '0%' },
-    'Google (Blue)': { primary: '#4285F4', dark: '#3063B8', hue: '45deg', grayscale: '0%' },
-    'Hulu (Green)': { primary: '#1CE783', dark: '#15AD62', hue: '-50deg', grayscale: '0%' },
-    'IBM (Blue)': { primary: '#0530AD', dark: '#04227A', hue: '50deg', grayscale: '0%' },
-    'Intel (Blue)': { primary: '#0071C5', dark: '#005494', hue: '40deg', grayscale: '0%' },
-    'Intercom (Blue)': { primary: '#286EF1', dark: '#1E52B5', hue: '40deg', grayscale: '0%' },
-    'Kickstarter (Green)': { primary: '#05CE78', dark: '#049E5C', hue: '-40deg', grayscale: '0%' },
-    'Last.fm (Red)': { primary: '#D51007', dark: '#A30C05', hue: '170deg', grayscale: '0%' },
-    'Lyft (Pink)': { primary: '#FF00BF', dark: '#CC0098', hue: '130deg', grayscale: '0%' },
-    'Medium (Green)': { primary: '#02B875', dark: '#018A58', hue: '-20deg', grayscale: '0%' },
-    'Messenger (Blue)': { primary: '#0084FF', dark: '#0064C2', hue: '35deg', grayscale: '0%' },
-    'Oracle (Red)': { primary: '#F80000', dark: '#BD0000', hue: '170deg', grayscale: '0%' },
-    'Patreon (Coral)': { primary: '#FF424D', dark: '#C7323A', hue: '170deg', grayscale: '0%' },
-    'PayPal (Blue)': { primary: '#00457C', dark: '#00335C', hue: '40deg', grayscale: '0%' },
-    'Pinterest (Red)': { primary: '#E60023', dark: '#B0001B', hue: '170deg', grayscale: '0%' },
-    'Quora (Red)': { primary: '#B92B27', dark: '#8C201D', hue: '175deg', grayscale: '0%' },
-    'Shopify (Green)': { primary: '#96BF48', dark: '#739437', hue: '-60deg', grayscale: '0%' },
-    'Snapchat (Gold)': { primary: '#FFCC00', dark: '#CCA300', hue: '210deg', grayscale: '0%' },
-    'SoundCloud (Orange)': { primary: '#FF5500', dark: '#CC4400', hue: '180deg', grayscale: '0%' },
-    'Square (Gray)': { primary: '#3E4348', dark: '#2E3236', hue: '0deg', grayscale: '100%' },
-    'Strava (Orange)': { primary: '#FC4C02', dark: '#C23A01', hue: '180deg', grayscale: '0%' },
-    'Tesla (Red)': { primary: '#E31937', dark: '#AB1329', hue: '170deg', grayscale: '0%' },
-    'TikTok (Magenta)': { primary: '#FE0050', dark: '#C2003D', hue: '160deg', grayscale: '0%' },
-    'Tumblr (Dark Blue)': { primary: '#35465C', dark: '#253140', hue: '30deg', grayscale: '0%' },
-    'Venmo (Blue)': { primary: '#008CFF', dark: '#006BCC', hue: '35deg', grayscale: '0%' },
-    'Visa (Blue)': { primary: '#1A1F71', dark: '#12154F', hue: '50deg', grayscale: '0%' },
-    'Windows 11 (Blue)': { primary: '#0078D4', dark: '#005A9E', hue: '35deg', grayscale: '0%' },
-    'Xbox (Green)': { primary: '#107C10', dark: '#0C590C', hue: '-15deg', grayscale: '0%' },
-    'Yahoo (Purple)': { primary: '#410093', dark: '#30006E', hue: '80deg', grayscale: '0%' },
-    'Yelp (Red)': { primary: '#D32323', dark: '#9E1A1A', hue: '170deg', grayscale: '0%' },
-    'Zillow (Blue)': { primary: '#006AFF', dark: '#0050C2', hue: '40deg', grayscale: '0%' },
-    'Airbnb (Coral)': { primary: '#FF5A5F', dark: '#CC484C', hue: '170deg', grayscale: '0%' },
-    'AMD (Red)': { primary: '#ED1C24', dark: '#BD161D', hue: '170deg', grayscale: '0%' },
-    'Blogger (Orange)': { primary: '#F57D00', dark: '#C46400', hue: '185deg', grayscale: '0%' },
-    'Buzzfeed (Red)': { primary: '#EE3322', dark: '#BE291B', hue: '175deg', grayscale: '0%' },
-    'Cisco (Blue)': { primary: '#049FD9', dark: '#037FA6', hue: '35deg', grayscale: '0%' },
-    'Dell (Blue)': { primary: '#0076CE', dark: '#005EA3', hue: '40deg', grayscale: '0%' },
-    'Dominos (Blue)': { primary: '#006491', dark: '#004F73', hue: '40deg', grayscale: '0%' },
-    'Duolingo (Green)': { primary: '#58CC02', dark: '#46A302', hue: '-45deg', grayscale: '0%' },
-    'Etsy (Orange)': { primary: '#F1641E', dark: '#C25018', hue: '185deg', grayscale: '0%' },
-    'Fitbit (Teal)': { primary: '#00B0B9', dark: '#008C94', hue: '10deg', grayscale: '0%' },
-    'Garmin (Blue)': { primary: '#007CC3', dark: '#00639C', hue: '40deg', grayscale: '0%' },
-    'HP (Blue)': { primary: '#0096D6', dark: '#0078AB', hue: '35deg', grayscale: '0%' },
-    'IKEA (Blue)': { primary: '#0051BA', dark: '#004194', hue: '50deg', grayscale: '0%' },
-    'MacOS (Aqua)': { primary: '#007AFF', dark: '#0062CC', hue: '45deg', grayscale: '0%' },
-    'Nintendo (Red)': { primary: '#E60012', dark: '#B8000E', hue: '170deg', grayscale: '0%' },
-    'Nokia (Blue)': { primary: '#124191', dark: '#0E3473', hue: '50deg', grayscale: '0%' },
-    'PlayStation (Blue)': { primary: '#003791', dark: '#002C73', hue: '55deg', grayscale: '0%' },
-    'Samsung (Blue)': { primary: '#1428A0', dark: '#102080', hue: '55deg', grayscale: '0%' },
-    'Twitter (Blue)': { primary: '#1DA1F2', dark: '#1781C2', hue: '40deg', grayscale: '0%' },
-    'Ubuntu (Orange)': { primary: '#E95420', dark: '#BA431A', hue: '185deg', grayscale: '0%' },
-    'Zoom (Blue)': { primary: '#2D8CFF', dark: '#2470CC', hue: '45deg', grayscale: '0%' }
-};
-
-window.toggleDarkMode = function(forceState) {
-    const isDark = forceState !== undefined ? forceState : !document.body.classList.contains('dark-mode');
-    if (isDark) {
-        document.documentElement.classList.add('dark-mode');
-        document.body.classList.add('dark-mode');
-        document.getElementById('dark-mode-switch').style.background = 'var(--ui-theme-color)';
-        document.getElementById('dark-mode-knob').style.left = '13px';
-        document.getElementById('dark-mode-icon').className = 'fas fa-moon';
-        localStorage.setItem('openPublisherDarkMode', 'true');
-    } else {
-        document.documentElement.classList.remove('dark-mode');
-        document.body.classList.remove('dark-mode');
-        document.getElementById('dark-mode-switch').style.background = '#ccc';
-        document.getElementById('dark-mode-knob').style.left = '1px';
-        document.getElementById('dark-mode-icon').className = 'far fa-moon';
-        localStorage.setItem('openPublisherDarkMode', 'false');
-    }
-    
-    // Force rulers to immediately redraw with the new CSS theme colors
-    if (typeof window.syncRulers === 'function') {
-        setTimeout(window.syncRulers, 10);
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const savedDarkMode = localStorage.getItem('openPublisherDarkMode');
-    if (savedDarkMode === 'true') {
-        setTimeout(() => window.toggleDarkMode(true), 100);
-    }
-});
-
-window.applyTheme = function(themeName) {
-    // Legacy theme mapping
-    if (themeName === 'Classic Teal' || themeName === 'Publisher (Teal)') themeName = 'Publisher / Classic (Teal)';
-    if (themeName === 'Ocean Blue' || themeName === 'OneDrive (Blue)') themeName = 'OneDrive / Ocean (Blue)';
-    if (themeName === 'Sunset Orange') themeName = 'Sunset (Orange)';
-    if (themeName === 'Visio (Navy)' || themeName === 'To Do (Blue)') themeName = 'Visio / To Do (Navy Blue)';
-    if (themeName === 'Forms (Teal)' || themeName === 'Sway (Teal)') themeName = 'Forms / Sway (Teal)';
-    if (themeName === 'Twitch (Purple)') themeName = 'Twitch (Pink)';
-    if (themeName === 'Forms (Teal)' || themeName === 'Sway (Teal)') themeName = 'Forms / Sway (Teal)';
-
-    if (!UI_THEMES[themeName]) return;
-    const theme = UI_THEMES[themeName];
-    document.documentElement.style.setProperty('--ui-theme-color', theme.primary);
-    document.documentElement.style.setProperty('--ui-theme-dark', theme.dark);
-    document.documentElement.style.setProperty('--ui-theme-hue-shift', theme.hue);
-    document.documentElement.style.setProperty('--ui-theme-grayscale', theme.grayscale);
-
-    const hex = theme.primary.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    
-    // W3C recommended threshold for switching text color is 128. We use 130 to catch moderately bright colors.
-    if (yiq >= 130) {
-        document.documentElement.classList.add('bright-theme');
-        document.documentElement.classList.remove('dark-ui-theme');
-        document.body.classList.add('bright-theme');
-        document.body.classList.remove('dark-ui-theme');
-    } else if (yiq < 60) {
-        document.documentElement.classList.remove('bright-theme');
-        document.documentElement.classList.add('dark-ui-theme');
-        document.body.classList.remove('bright-theme');
-        document.body.classList.add('dark-ui-theme');
-    } else {
-        document.documentElement.classList.remove('bright-theme');
-        document.documentElement.classList.remove('dark-ui-theme');
-        document.body.classList.remove('bright-theme');
-        document.body.classList.remove('dark-ui-theme');
-    }
-
-    localStorage.setItem('opub_ui_theme', themeName);
-    
-    // Update theme selectors if they exist
-    const lbl = document.getElementById('ribbon-theme-label');
-    if (lbl) lbl.innerText = themeName;
-    
-    const optTheme = document.getElementById('opt-theme');
-    if (optTheme) optTheme.innerText = themeName;
-    
-    // Re-render dropdown to update selected state UI
-    if (typeof window.renderThemeDropdown === 'function') {
-        window.renderThemeDropdown(themeName);
-    }
-};
-
-window.renderThemeDropdown = function(activeTheme) {
-    const themeDropdown = document.getElementById('ribbon-theme-dropdown');
-    if (!themeDropdown) return;
-    
-    themeDropdown.innerHTML = Object.keys(UI_THEMES).map(t => {
-        const isSelected = t === activeTheme;
-        const circleStyle = isSelected 
-            ? `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; box-shadow: 0 0 0 1px white, 0 0 0 2px ${UI_THEMES[t].dark}; margin-right: 10px; flex-shrink: 0;`
-            : `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; margin-right: 10px; flex-shrink: 0;`;
-        
-        const bgStyle = isSelected ? 'background: #e6f0fa;' : '';
-        const checkIcon = isSelected ? '<span style="color: #0078d4; font-size: 14px; margin-left: 10px; font-weight: bold;">&#10003;</span>' : '';
-
-        return `
-            <div class="dropdown-item" onclick="window.selectTheme('${t}')" style="${bgStyle}">
-                <div style="${circleStyle}"></div>
-                <span style="flex-grow: 1; color: var(--ui-text);">${t}</span>
-                ${checkIcon}
-            </div>
-        `;
-    }).join('');
-};
-
-// Apply saved theme on load
-document.addEventListener('DOMContentLoaded', () => {
-
-    const savedTheme = localStorage.getItem('opub_ui_theme');
-    // Map legacy saved theme to new group name
-    let activeTheme = savedTheme;
-    if (activeTheme === 'Classic Teal' || activeTheme === 'Publisher (Teal)') activeTheme = 'Publisher / Classic (Teal)';
-    if (activeTheme === 'Ocean Blue' || activeTheme === 'OneDrive (Blue)') activeTheme = 'OneDrive / Ocean (Blue)';
-    if (activeTheme === 'Sunset Orange') activeTheme = 'Sunset (Orange)';
-    if (activeTheme === 'Visio (Navy)' || activeTheme === 'To Do (Blue)') activeTheme = 'Visio / To Do (Navy Blue)';
-    if (activeTheme === 'Forms (Teal)' || activeTheme === 'Sway (Teal)') activeTheme = 'Forms / Sway (Teal)';
-
-    if (activeTheme && UI_THEMES[activeTheme]) {
-        window.applyTheme(activeTheme);
-    } else {
-        window.applyTheme('Publisher / Classic (Teal)');
-    }
-});
-
-window.toggleThemeDropdown = function(btn) {
-    const m = document.getElementById('ribbon-theme-dropdown');
-    const isBlock = m.style.display === 'block';
-    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
-    if (!isBlock) {
-        const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
-        m.style.display = 'block';
-    }
-};
-
-window.selectTheme = function(themeName) {
-    window.applyTheme(themeName);
-    document.getElementById('ribbon-theme-dropdown').style.display = 'none';
-};
-
-function loadTemplate(t) {
-    DialogSystem.show('Load Template', '<p>Load this template? This will replace your ENTIRE document and start fresh.</p>', () => {
-        state.pages = []; // Wipe document
-        state.history = [];
-        state.historyIndex = -1;
-        
-        const newElements = t.els.map(el => {
-            return {
-                left: el.l + 'px', top: el.t + 'px',
-                width: el.w + 'px', height: el.h + 'px',
-                innerHTML: el.html,
-                transform: 'none', zIndex: 10,
-                scaleX: "1", scaleY: "1"
-            };
-        });
-        
-        const p = {
-           id: Date.now(),
-           width: '794px', height: '1123px',
-           background: t.bg || '#ffffff',
-           header: 'Header', footer: 'Footer', borderStyle: 'none',
-           elements: newElements
-        };
-        
-        state.pages.push(p);
-        state.currentPageIndex = 0;
-        
-        renderPage(state.pages[0]);
-        updateSidebar();
-        document.getElementById('template-modal').style.display = 'none';
-        pushHistory();
-    });
-}
-
-// --- ELEMENTS & MANIPULATION ---
-function prepareTwemojiSvgMarkup(svgText) {
-    if (!svgText || !svgText.includes('<svg')) return svgText;
-    let svg = svgText.trim();
-    svg = svg.replace(/\bpreserveAspectRatio\s*=\s*["'][^"']*["']/gi, '');
-    svg = svg.replace(/\bwidth\s*=\s*["'][^"']*["']/gi, '');
-    svg = svg.replace(/\bheight\s*=\s*["'][^"']*["']/gi, '');
-    const stretchStyle = 'width:100%;height:100%;display:block;position:absolute;top:0;left:0;overflow:visible;';
-    if (/<svg[^>]*style\s*=/i.test(svg)) {
-        svg = svg.replace(/<svg([^>]*?)style\s*=\s*["']([^"']*)["']/i, `<svg$1preserveAspectRatio="none" style="${stretchStyle}$2"`);
-    } else {
-        svg = svg.replace(/<svg/i, `<svg preserveAspectRatio="none" style="${stretchStyle}"`);
-    }
-    return svg;
-}
-
-function applyEmojiStretch(root) {
-    if (!root) return;
-    root.querySelectorAll('svg').forEach(svg => {
-        svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.width = '100%';
-        svg.style.height = '100%';
-        svg.style.display = 'block';
-        svg.style.position = 'absolute';
-        svg.style.top = '0';
-        svg.style.left = '0';
-        svg.style.overflow = 'visible';
-    });
-    root.querySelectorAll('img').forEach(img => {
-        const fit = img.style.objectFit;
-        if (fit && fit !== 'fill' && fit !== 'stretch') return;
-        img.style.objectFit = 'fill';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.position = 'absolute';
-        img.style.top = '0';
-        img.style.left = '0';
-        img.style.maxWidth = 'none';
-        img.style.maxHeight = 'none';
-    });
-}
-
-async function insertEmojiFromUrl(url) {
-    let markup;
-    try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Emoji fetch failed');
-        markup = prepareTwemojiSvgMarkup(await res.text());
-    } catch (e) {
-        markup = `<img src="${url}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;">`;
-    }
-    const el = createWrapper(markup);
-    el.setAttribute('data-type', 'emoji');
-    el.style.width = '100px';
-    el.style.height = '100px';
-    applyEmojiStretch(el.querySelector('.element-content'));
-    if (typeof selectElement === 'function') selectElement(el); // Re-trigger UI now that type is set
-    return el;
-}
-
-let emojiMigrateTimer = null;
-function scheduleEmojiMigrate() {
-    clearTimeout(emojiMigrateTimer);
-    emojiMigrateTimer = setTimeout(async () => {
-        const imgs = Array.from(document.querySelectorAll('.pub-element img[src*="twemoji"]'));
-        let migrated = false;
-        for (const img of imgs) {
-            const content = img.closest('.element-content');
-            const el = img.closest('.pub-element');
-            if (!content || !el) continue;
-            try {
-                const res = await fetch(img.src);
-                if (!res.ok) continue;
-                content.innerHTML = prepareTwemojiSvgMarkup(await res.text());
-                el.setAttribute('data-type', 'emoji');
-                applyEmojiStretch(content);
-                migrated = true;
-            } catch (e) { /* keep img fallback */ }
-        }
-        if (migrated && typeof state !== 'undefined' && typeof serializeCurrentPage === 'function') {
-            state.pages[state.currentPageIndex] = serializeCurrentPage();
-        }
-    }, 80);
-}
 
 function createWrapper(htmlContent) {
     const el = document.createElement('div');
@@ -3228,7 +909,7 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-                            <div style="width:16px; height:16px; border-radius:50%; background:#4CAF50; color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px;">✓</div>
+                            <div style="width:16px; height:16px; border-radius:50%; background:#4CAF50; color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px;">âœ“</div>
                             <div style="width:60px; height:4px; background:#999;"></div>
                         </div>
                     </div>
@@ -3273,7 +954,7 @@ window.showPagePartsModal = function() {
             <div class="pp-card" onclick="insertPagePart('review')">
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
-                        <div style="color:#FFD700; font-size:16px; letter-spacing:1px; margin-bottom:5px; text-align:center;">★★★★★</div>
+                        <div style="color:#FFD700; font-size:16px; letter-spacing:1px; margin-bottom:5px; text-align:center;">â˜…â˜…â˜…â˜…â˜…</div>
                         <div style="width:60px; height:4px; background:#ccc; margin:0 auto 4px auto;"></div>
                         <div style="width:40px; height:3px; background:#eee; margin:0 auto;"></div>
                     </div>
@@ -3396,7 +1077,7 @@ window.showPagePartsModal = function() {
                 <div class="pp-preview-container">
                     <div style="transform: scale(0.7); transform-origin: center;">
                         <div style="width:80px; height:35px; border:1px solid #FF9800; background:#FFF3E0; border-radius:4px; display:flex; align-items:center; padding:4px; gap:6px; box-sizing:border-box;">
-                            <div style="color:#FF9800; font-size:14px; font-weight:bold;">⚠</div>
+                            <div style="color:#FF9800; font-size:14px; font-weight:bold;">âš </div>
                             <div style="display:flex; flex-direction:column; gap:3px;">
                                 <div style="width:20px; height:3px; background:#E65100;"></div>
                                 <div style="width:30px; height:2px; background:#FFB74D;"></div>
@@ -3490,7 +1171,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'checklist') {
         w = 300; h = 60;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; align-items:center; gap: 15px;">
-            <div style="width:24px; height:24px; background:#4CAF50; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">✓</div>
+            <div style="width:24px; height:24px; background:#4CAF50; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">âœ“</div>
             <div contenteditable="true" style="font-size:16px; color:#333; font-family:inherit;">Checklist item goes right here</div>
         </div>`;
     } else if (type === 'menu-item') {
@@ -3512,7 +1193,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'review') {
         w = 300; h = 100;
         htmlContent = `<div style="height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;" contenteditable="true">
-            <div style="color:#FFD700; font-size:24px; letter-spacing:2px; margin-bottom:5px; pointer-events:none; user-select:none;">★★★★★</div>
+            <div style="color:#FFD700; font-size:24px; letter-spacing:2px; margin-bottom:5px; pointer-events:none; user-select:none;">â˜…â˜…â˜…â˜…â˜…</div>
             <h4 style="margin:0 0 5px 0; color:var(--ui-theme-dark); font-family:inherit; font-size:16px; font-style:italic;">"Absolutely fantastic service!"</h4>
             <span style="font-size:12px; color:#666; font-family:inherit; text-transform:uppercase;">- Jane Doe, Customer</span>
         </div>`;
@@ -3583,7 +1264,7 @@ window.insertPagePart = function(type) {
     } else if (type === 'warning') {
         w = 350; h = 100;
         htmlContent = `<div style="height:100%; box-sizing:border-box; border:1px solid #FF9800; background:#FFF3E0; border-radius:8px; padding:15px; display:flex; align-items:center; gap:15px; font-family:inherit;" contenteditable="true">
-            <div style="color:#FF9800; font-size:24px; font-weight:bold; flex-shrink:0;">⚠</div>
+            <div style="color:#FF9800; font-size:24px; font-weight:bold; flex-shrink:0;">âš </div>
             <div>
                 <h4 style="margin:0 0 4px 0; color:#E65100; font-size:16px;">Warning</h4>
                 <p style="margin:0; font-size:13px; color:#555; line-height:1.4;">Please read carefully before proceeding with the next steps.</p>
@@ -5056,379 +2737,8 @@ function rotateSelectedImage() {
 
 
 
-function showClipartModal() { document.getElementById('clipart-modal').style.display = 'flex'; }
 
-function showAdModal() { document.getElementById('ad-modal').style.display = 'flex'; }
 
-// --- INSERT SYMBOL MODAL ---
-window._symbolRecentlyUsed = JSON.parse(localStorage.getItem('op-recent-symbols') || '[]');
-
-const SYMBOL_CATEGORIES = {
-    'Common': [
-        { char: '©', name: 'Copyright' },
-        { char: '®', name: 'Registered' },
-        { char: '™', name: 'Trademark' },
-        { char: '°', name: 'Degree' },
-        { char: '§', name: 'Section' },
-        { char: '¶', name: 'Pilcrow' },
-        { char: '†', name: 'Dagger' },
-        { char: '‡', name: 'Double Dagger' },
-        { char: '…', name: 'Ellipsis' },
-        { char: '•', name: 'Bullet' },
-        { char: '◦', name: 'White Bullet' },
-        { char: '‣', name: 'Triangle Bullet' },
-        { char: '⁃', name: 'Hyphen Bullet' },
-        { char: '№', name: 'Numero' },
-        { char: '℃', name: 'Celsius' },
-        { char: '℉', name: 'Fahrenheit' },
-        { char: '‰', name: 'Per Mille' },
-        { char: '∞', name: 'Infinity' },
-        { char: '✓', name: 'Check Mark' },
-        { char: '✗', name: 'Ballot X' },
-    ],
-    'Dashes & Quotes': [
-        { char: '–', name: 'En Dash' },
-        { char: '—', name: 'Em Dash' },
-        { char: '―', name: 'Horizontal Bar' },
-        { char: '\u00AD', name: 'Soft Hyphen' },
-        { char: '‐', name: 'Hyphen' },
-        { char: '\u2009', name: 'Thin Space' },
-        { char: '\u2003', name: 'Em Space' },
-        { char: '\u2002', name: 'En Space' },
-        { char: '\u00A0', name: 'Non-Breaking Space' },
-        { char: '\u200B', name: 'Zero-Width Space' },
-        { char: '\u2018', name: 'Left Single Quote' },
-        { char: '\u2019', name: 'Right Single Quote' },
-        { char: '\u201C', name: 'Left Double Quote' },
-        { char: '\u201D', name: 'Right Double Quote' },
-        { char: '«', name: 'Left Guillemet' },
-        { char: '»', name: 'Right Guillemet' },
-        { char: '‹', name: 'Left Single Guillemet' },
-        { char: '›', name: 'Right Single Guillemet' },
-    ],
-    'Currency': [
-        { char: '£', name: 'Pound' },
-        { char: '€', name: 'Euro' },
-        { char: '¥', name: 'Yen' },
-        { char: '¢', name: 'Cent' },
-        { char: '₹', name: 'Indian Rupee' },
-        { char: '₩', name: 'Won' },
-        { char: '₿', name: 'Bitcoin' },
-        { char: '₽', name: 'Ruble' },
-        { char: '₺', name: 'Turkish Lira' },
-        { char: '₱', name: 'Peso' },
-        { char: '₫', name: 'Dong' },
-        { char: '₴', name: 'Hryvnia' },
-        { char: '₸', name: 'Tenge' },
-        { char: '฿', name: 'Baht' },
-        { char: '₵', name: 'Cedi' },
-        { char: '₦', name: 'Naira' },
-    ],
-    'Math & Science': [
-        { char: '±', name: 'Plus-Minus' },
-        { char: '×', name: 'Multiply' },
-        { char: '÷', name: 'Divide' },
-        { char: '≠', name: 'Not Equal' },
-        { char: '≈', name: 'Approx Equal' },
-        { char: '≤', name: 'Less or Equal' },
-        { char: '≥', name: 'Greater or Equal' },
-        { char: '∑', name: 'Summation' },
-        { char: '∏', name: 'Product' },
-        { char: '√', name: 'Square Root' },
-        { char: '∫', name: 'Integral' },
-        { char: 'π', name: 'Pi' },
-        { char: 'Ω', name: 'Omega' },
-        { char: 'Δ', name: 'Delta' },
-        { char: 'µ', name: 'Micro' },
-        { char: '∂', name: 'Partial Diff' },
-        { char: '∅', name: 'Empty Set' },
-        { char: '∈', name: 'Element Of' },
-        { char: '∉', name: 'Not Element Of' },
-        { char: '∩', name: 'Intersection' },
-        { char: '∪', name: 'Union' },
-        { char: '⊂', name: 'Subset' },
-        { char: '⊃', name: 'Superset' },
-        { char: '∀', name: 'For All' },
-        { char: '∃', name: 'There Exists' },
-        { char: '∇', name: 'Nabla' },
-        { char: '∴', name: 'Therefore' },
-        { char: '∵', name: 'Because' },
-        { char: '¹', name: 'Superscript 1' },
-        { char: '²', name: 'Superscript 2' },
-        { char: '³', name: 'Superscript 3' },
-        { char: '¼', name: 'One Quarter' },
-        { char: '½', name: 'One Half' },
-        { char: '¾', name: 'Three Quarters' },
-    ],
-    'Arrows': [
-        { char: '←', name: 'Left Arrow' },
-        { char: '→', name: 'Right Arrow' },
-        { char: '↑', name: 'Up Arrow' },
-        { char: '↓', name: 'Down Arrow' },
-        { char: '↔', name: 'Left-Right Arrow' },
-        { char: '↕', name: 'Up-Down Arrow' },
-        { char: '⇐', name: 'Double Left Arrow' },
-        { char: '⇒', name: 'Double Right Arrow' },
-        { char: '⇑', name: 'Double Up Arrow' },
-        { char: '⇓', name: 'Double Down Arrow' },
-        { char: '⇔', name: 'Double Left-Right' },
-        { char: '↗', name: 'NE Arrow' },
-        { char: '↘', name: 'SE Arrow' },
-        { char: '↙', name: 'SW Arrow' },
-        { char: '↖', name: 'NW Arrow' },
-        { char: '↩', name: 'Return Arrow' },
-        { char: '↪', name: 'Curve Right Arrow' },
-        { char: '⟵', name: 'Long Left Arrow' },
-        { char: '⟶', name: 'Long Right Arrow' },
-        { char: '▶', name: 'Play' },
-    ],
-    'Shapes & Stars': [
-        { char: '■', name: 'Black Square' },
-        { char: '□', name: 'White Square' },
-        { char: '▪', name: 'Small Black Square' },
-        { char: '▫', name: 'Small White Square' },
-        { char: '▲', name: 'Black Triangle Up' },
-        { char: '△', name: 'White Triangle Up' },
-        { char: '▼', name: 'Black Triangle Down' },
-        { char: '▽', name: 'White Triangle Down' },
-        { char: '◆', name: 'Black Diamond' },
-        { char: '◇', name: 'White Diamond' },
-        { char: '●', name: 'Black Circle' },
-        { char: '○', name: 'White Circle' },
-        { char: '◉', name: 'Fisheye' },
-        { char: '◎', name: 'Bullseye' },
-        { char: '★', name: 'Black Star' },
-        { char: '☆', name: 'White Star' },
-        { char: '✦', name: 'Four-Point Star' },
-        { char: '✶', name: 'Six-Point Star' },
-        { char: '♠', name: 'Spade' },
-        { char: '♣', name: 'Club' },
-        { char: '♥', name: 'Heart' },
-        { char: '♦', name: 'Diamond Suit' },
-        { char: '♩', name: 'Quarter Note' },
-        { char: '♪', name: 'Eighth Note' },
-        { char: '♫', name: 'Beamed Notes' },
-        { char: '☀', name: 'Sun' },
-        { char: '☁', name: 'Cloud' },
-        { char: '☂', name: 'Umbrella' },
-        { char: '☎', name: 'Telephone' },
-        { char: '✉', name: 'Envelope' },
-        { char: '✂', name: 'Scissors' },
-        { char: '✎', name: 'Pencil' },
-        { char: '✌', name: 'Peace Sign' },
-        { char: '☮', name: 'Peace Symbol' },
-    ],
-    'Accented Letters': [
-        { char: 'À', name: 'A Grave' }, { char: 'Á', name: 'A Acute' },
-        { char: 'Â', name: 'A Circumflex' }, { char: 'Ã', name: 'A Tilde' },
-        { char: 'Ä', name: 'A Umlaut' }, { char: 'Å', name: 'A Ring' },
-        { char: 'Æ', name: 'AE' }, { char: 'Ç', name: 'C Cedilla' },
-        { char: 'È', name: 'E Grave' }, { char: 'É', name: 'E Acute' },
-        { char: 'Ê', name: 'E Circumflex' }, { char: 'Ë', name: 'E Umlaut' },
-        { char: 'Ì', name: 'I Grave' }, { char: 'Í', name: 'I Acute' },
-        { char: 'Î', name: 'I Circumflex' }, { char: 'Ï', name: 'I Umlaut' },
-        { char: 'Ð', name: 'Eth' }, { char: 'Ñ', name: 'N Tilde' },
-        { char: 'Ò', name: 'O Grave' }, { char: 'Ó', name: 'O Acute' },
-        { char: 'Ô', name: 'O Circumflex' }, { char: 'Õ', name: 'O Tilde' },
-        { char: 'Ö', name: 'O Umlaut' }, { char: 'Ø', name: 'O Slash' },
-        { char: 'Ù', name: 'U Grave' }, { char: 'Ú', name: 'U Acute' },
-        { char: 'Û', name: 'U Circumflex' }, { char: 'Ü', name: 'U Umlaut' },
-        { char: 'Ý', name: 'Y Acute' }, { char: 'Þ', name: 'Thorn' },
-        { char: 'ß', name: 'Sharp S' }, { char: 'à', name: 'a Grave' },
-        { char: 'á', name: 'a Acute' }, { char: 'â', name: 'a Circumflex' },
-        { char: 'ã', name: 'a Tilde' }, { char: 'ä', name: 'a Umlaut' },
-        { char: 'å', name: 'a Ring' }, { char: 'æ', name: 'ae' },
-        { char: 'ç', name: 'c Cedilla' }, { char: 'è', name: 'e Grave' },
-        { char: 'é', name: 'e Acute' }, { char: 'ê', name: 'e Circumflex' },
-        { char: 'ë', name: 'e Umlaut' }, { char: 'ì', name: 'i Grave' },
-        { char: 'í', name: 'i Acute' }, { char: 'î', name: 'i Circumflex' },
-        { char: 'ï', name: 'i Umlaut' }, { char: 'ñ', name: 'n Tilde' },
-        { char: 'ò', name: 'o Grave' }, { char: 'ó', name: 'o Acute' },
-        { char: 'ô', name: 'o Circumflex' }, { char: 'õ', name: 'o Tilde' },
-        { char: 'ö', name: 'o Umlaut' }, { char: 'ø', name: 'o Slash' },
-        { char: 'ù', name: 'u Grave' }, { char: 'ú', name: 'u Acute' },
-        { char: 'û', name: 'u Circumflex' }, { char: 'ü', name: 'u Umlaut' },
-        { char: 'ý', name: 'y Acute' }, { char: 'ÿ', name: 'y Umlaut' },
-    ],
-};
-
-function insertSymbolChar(char) {
-    // Save to recently used
-    const recent = window._symbolRecentlyUsed;
-    const idx = recent.indexOf(char);
-    if (idx > -1) recent.splice(idx, 1);
-    recent.unshift(char);
-    if (recent.length > 20) recent.length = 20;
-    localStorage.setItem('op-recent-symbols', JSON.stringify(recent));
-    
-    // Restore the cursor position and insert
-    if (state.lastRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(state.lastRange);
-    }
-    document.execCommand('insertText', false, char);
-    
-    // Save new cursor position
-    const sel2 = window.getSelection();
-    if (sel2.rangeCount > 0) state.lastRange = sel2.getRangeAt(0).cloneRange();
-    
-    pushHistory();
-    
-    // Update the preview in the dialog
-    const preview = document.getElementById('symbol-preview-char');
-    const previewName = document.getElementById('symbol-preview-name');
-    const previewCode = document.getElementById('symbol-preview-code');
-    if (preview) preview.textContent = char;
-    if (previewName) {
-        // Find the name
-        let foundName = '';
-        for (const cat in SYMBOL_CATEGORIES) {
-            const found = SYMBOL_CATEGORIES[cat].find(s => s.char === char);
-            if (found) { foundName = found.name; break; }
-        }
-        previewName.textContent = foundName || 'Custom';
-    }
-    if (previewCode) previewCode.textContent = 'U+' + char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-    
-    // Update recently used row in modal
-    _renderRecentSymbols();
-}
-
-function _renderRecentSymbols() {
-    const container = document.getElementById('symbol-recent-grid');
-    if (!container) return;
-    const recent = window._symbolRecentlyUsed;
-    if (recent.length === 0) {
-        container.innerHTML = '<span style="color:#999; font-size:12px; grid-column: 1/-1;">No recently used symbols yet.</span>';
-        return;
-    }
-    container.innerHTML = recent.map(ch => {
-        const vis = (ch === '\u00AD' || ch === '\u200B' || ch === '\u00A0' || ch === '\u2009' || ch === '\u2002' || ch === '\u2003') ? '⌷' : ch;
-        return `<div class="symbol-cell" onclick="insertSymbolChar('${ch.replace(/'/g, "\\'")}')" title="U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}">${vis}</div>`;
-    }).join('');
-}
-
-function showSymbolModal() {
-    // Save cursor before opening modal
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) state.lastRange = sel.getRangeAt(0).cloneRange();
-
-    const categoryTabs = Object.keys(SYMBOL_CATEGORIES).map((cat, i) =>
-        `<div class="symbol-cat-tab${i === 0 ? ' active' : ''}" onclick="switchSymbolCategory('${cat}', this)">${cat}</div>`
-    ).join('');
-
-    const firstCat = Object.keys(SYMBOL_CATEGORIES)[0];
-    const firstGrid = SYMBOL_CATEGORIES[firstCat].map(s => {
-        const vis = (s.char === '\u00AD' || s.char === '\u200B' || s.char === '\u00A0' || s.char === '\u2009' || s.char === '\u2002' || s.char === '\u2003') ? '⌷' : s.char;
-        return `<div class="symbol-cell" onclick="insertSymbolChar('${s.char.replace(/'/g, "\\'")}')" title="${s.name}\nU+${s.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}"
-            onmouseenter="symbolHover('${s.char.replace(/'/g, "\\'")}', '${s.name}')">${vis}</div>`;
-    }).join('');
-
-    const html = `
-        <div style="width:520px; display:flex; flex-direction:column; gap:10px;">
-            <div style="display:flex; gap:8px; align-items:center;">
-                <i class="fas fa-search" style="color:#999;"></i>
-                <input type="text" id="symbol-search-input" placeholder="Search symbols... (e.g. copyright, arrow, euro)"
-                    style="flex:1; padding:7px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; outline:none;"
-                    oninput="filterSymbols(this.value)">
-            </div>
-            <div id="symbol-category-tabs" style="display:flex; flex-wrap:wrap; gap:4px;">
-                ${categoryTabs}
-            </div>
-            <div id="symbol-recent-section" style="display:${window._symbolRecentlyUsed.length > 0 ? 'block' : 'none'};">
-                <div style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; margin-bottom:4px;">Recently Used</div>
-                <div id="symbol-recent-grid" class="symbol-grid" style="margin-bottom:6px;"></div>
-            </div>
-            <div id="symbol-grid-container" class="symbol-grid" style="max-height:240px; overflow-y:auto;">
-                ${firstGrid}
-            </div>
-            <div style="display:flex; align-items:center; gap:12px; padding:8px 12px; background:#f5f5f5; border-radius:6px; border:1px solid #e8e8e8;">
-                <span id="symbol-preview-char" style="font-size:36px; line-height:1; width:44px; text-align:center;">©</span>
-                <div style="flex:1;">
-                    <div id="symbol-preview-name" style="font-weight:600; font-size:13px; color:#333;">Copyright</div>
-                    <div id="symbol-preview-code" style="font-size:11px; color:#888; font-family:monospace;">U+00A9</div>
-                </div>
-                <div style="font-size:11px; color:#999;">Click any symbol to insert it at the cursor position.</div>
-            </div>
-        </div>
-    `;
-
-    DialogSystem.show('Insert Symbol', html, null, true);
-    
-    // Render recently used
-    _renderRecentSymbols();
-    if (window._symbolRecentlyUsed.length > 0) {
-        document.getElementById('symbol-recent-section').style.display = 'block';
-    }
-}
-
-function switchSymbolCategory(catName, tabEl) {
-    // Update active tab
-    document.querySelectorAll('.symbol-cat-tab').forEach(t => t.classList.remove('active'));
-    if (tabEl) tabEl.classList.add('active');
-
-    const symbols = SYMBOL_CATEGORIES[catName];
-    if (!symbols) return;
-
-    const grid = document.getElementById('symbol-grid-container');
-    grid.innerHTML = symbols.map(s => {
-        const vis = (s.char === '\u00AD' || s.char === '\u200B' || s.char === '\u00A0' || s.char === '\u2009' || s.char === '\u2002' || s.char === '\u2003') ? '⌷' : s.char;
-        return `<div class="symbol-cell" onclick="insertSymbolChar('${s.char.replace(/'/g, "\\'")}')" title="${s.name}\nU+${s.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}"
-            onmouseenter="symbolHover('${s.char.replace(/'/g, "\\'")}', '${s.name}')">${vis}</div>`;
-    }).join('');
-    
-    // Clear search
-    const search = document.getElementById('symbol-search-input');
-    if (search) search.value = '';
-}
-
-function filterSymbols(query) {
-    const q = query.toLowerCase().trim();
-    const grid = document.getElementById('symbol-grid-container');
-    
-    // Remove active from category tabs
-    document.querySelectorAll('.symbol-cat-tab').forEach(t => t.classList.remove('active'));
-    
-    if (!q) {
-        // Show first category
-        const firstCat = Object.keys(SYMBOL_CATEGORIES)[0];
-        const firstTab = document.querySelector('.symbol-cat-tab');
-        if (firstTab) firstTab.classList.add('active');
-        switchSymbolCategory(firstCat, firstTab);
-        return;
-    }
-
-    // Search across all categories
-    const results = [];
-    for (const cat in SYMBOL_CATEGORIES) {
-        SYMBOL_CATEGORIES[cat].forEach(s => {
-            if (s.name.toLowerCase().includes(q) || s.char === q || 
-                ('U+' + s.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')).toLowerCase().includes(q)) {
-                results.push(s);
-            }
-        });
-    }
-
-    if (results.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999; padding:20px; font-size:13px;"><i class="fas fa-search" style="margin-right:6px;"></i>No symbols found matching "' + query.replace(/</g, '&lt;') + '"</div>';
-    } else {
-        grid.innerHTML = results.map(s => {
-            const vis = (s.char === '\u00AD' || s.char === '\u200B' || s.char === '\u00A0' || s.char === '\u2009' || s.char === '\u2002' || s.char === '\u2003') ? '⌷' : s.char;
-            return `<div class="symbol-cell" onclick="insertSymbolChar('${s.char.replace(/'/g, "\\'")}')" title="${s.name}\nU+${s.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}"
-                onmouseenter="symbolHover('${s.char.replace(/'/g, "\\'")}', '${s.name}')">${vis}</div>`;
-        }).join('');
-    }
-}
-
-function symbolHover(char, name) {
-    const preview = document.getElementById('symbol-preview-char');
-    const previewName = document.getElementById('symbol-preview-name');
-    const previewCode = document.getElementById('symbol-preview-code');
-    if (preview) preview.textContent = (char === '\u00AD' || char === '\u200B' || char === '\u00A0' || char === '\u2009' || char === '\u2002' || char === '\u2003') ? '⌷' : char;
-    if (previewName) previewName.textContent = name;
-    if (previewCode) previewCode.textContent = 'U+' + char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-}
 
 function showCouponModal() {
     const optionStyle = "padding:20px 10px; border:1px solid #ccc; border-radius:4px; cursor:pointer; text-align:center; background:#f9f9f9; box-sizing:border-box;";
@@ -5764,7 +3074,6 @@ function showQRCodeModal() {
         img.src = url;
     });
 }
-function showTemplateModal() { document.getElementById('template-modal').style.display = 'flex'; }
 function closeModal(el) { el.style.display = 'none'; }
 
 // --- TABS DIALOG ---
@@ -6175,8 +3484,8 @@ window.toggleRotateMenu = function(btn) {
             return d;
         };
 
-        m.appendChild(createItem('fa-redo', 'Rotate Right 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(90); }));
-        m.appendChild(createItem('fa-undo', 'Rotate Left 90°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(-90); }));
+        m.appendChild(createItem('fa-redo', 'Rotate Right 90Â°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(90); }));
+        m.appendChild(createItem('fa-undo', 'Rotate Left 90Â°', () => { if(window.ContextRibbonActions) ContextRibbonActions.rotateRelative(-90); }));
         m.appendChild(createItem('fa-arrows-alt-v', 'Flip Vertical', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('Y'); }));
         m.appendChild(createItem('fa-arrows-alt-h', 'Flip Horizontal', () => { if(window.ContextRibbonActions) ContextRibbonActions.flipScale('X'); }));
         
@@ -6395,7 +3704,7 @@ window.handlePublisherFileLoad = (evt) => {
         }
         
         const loadDocumentData = (data) => {
-            // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
+            // âœ¨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
             if (data.isTemplate) {
                 document.getElementById('doc-title').innerText = "Untitled Publication";
             } else {
@@ -6988,7 +4297,7 @@ function uploadAndConvertDoc(file) {
                             
                             const items = [];
                             textContent.items.forEach(item => {
-                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, '•');
+                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, 'â€¢');
                                 if (!str) return;
 
                                 const tx = item.transform[4] * ratio;
@@ -7042,7 +4351,7 @@ function uploadAndConvertDoc(file) {
                                     finalColor = `rgb(${Math.round(optR/samples)}, ${Math.round(optG/samples)}, ${Math.round(optB/samples)})`;
                                 }
 
-                                const isFormLine = /^[_.\-|=☑\[\]]+$/.test(str.replace(/\s/g, ''));
+                                const isFormLine = /^[_.\-|=â˜‘\[\]]+$/.test(str.replace(/\s/g, ''));
                                 items.push({ str, tx, ty, width: item.width * ratio, fontSize, isBold: isBoldFont, isItalic: isItalicFont, isFormLine, color: finalColor });
                             });
 
@@ -7821,452 +5130,6 @@ function toggleSpreadMode() {
 }
 
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM)
-========================================================================= */
-
-const ContextMenuSystem = {
-    init: function() {
-        // 1. Inject Windows 11 / Publisher Green Theme CSS for the menu
-        // Extracted full style block
-
-        // 2. Create the DOM element
-        this.menuEl = document.createElement('div');
-        this.menuEl.className = 'pub-context-menu';
-        document.body.appendChild(this.menuEl);
-
-        // 3. Attach Global Event Listeners
-        document.addEventListener('contextmenu', (e) => this.handleRightClick(e));
-        document.addEventListener('click', () => this.hide());
-        // Hide on scroll or zoom
-        window.addEventListener('wheel', () => this.hide()); 
-    },
-
-    handleRightClick: function(e) {
-        // Evaluate the exact target
-        const isPaperOrInside = e.target.closest('#paper') !== null;
-        const isWorkspace = e.target.closest('#viewport') !== null;
-        const isMarginGuides = e.target.classList.contains('margin-guides');
-        
-        const isSidebarBlank = e.target.closest('#sidebar') && !e.target.closest('.page-thumb-container');
-        const isRuler = e.target.closest('.ruler-h') || e.target.closest('.ruler-v') || e.target.closest('.ruler-c');
-        
-        const isRibbonBlank = e.target.closest('.ribbon-container') && !e.target.closest('.tool-btn, .modern-select, .group-label, .ribbon-tabs, input, select');
-        
-        const isTitleBar = e.target.closest('.title-bar') !== null || e.target.closest('.ribbon-tabs') !== null;
-        const isDocTitle = e.target.closest('#doc-title') !== null;
-        
-        const isZoomBar = e.target.closest('#zoom-slider-container') !== null;
-        
-        // Let default browser menu happen ONLY on text inputs and selects
-        const targetInput = e.target.closest('input');
-        if ((targetInput && targetInput.type !== 'range' && targetInput.type !== 'color') || e.target.closest('textarea') || e.target.closest('select')) {
-            return;
-        }
-
-        e.preventDefault();
-        this.hide();
-
-        const el = e.target.closest('.pub-element');
-        
-        // If right-clicking an element, select it first
-        if(el && state.selectedEl !== el) selectElement(el);
-        if(!el && (isPaperOrInside || isMarginGuides)) deselect();
-
-        // Build dynamic menu based on target
-        window._contextTargetLink = e.target.closest('a');
-        let html = '';
-
-        if (isRibbonBlank) {
-            html += this.buildItem('Toggle Fullscreen', 'fa-expand', 'if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } else { document.exitFullscreen(); }');
-            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
-            html += this.buildItem('Save Project', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
-            html += this.buildDivider();
-            html += this.buildItem('Show / Hide Rulers', 'fa-ruler-combined', 'if(window.toggleRulers) window.toggleRulers()');
-            html += this.buildItem('Toggle Grid Background', 'fa-border-all', 'if(window.toggleGrid) window.toggleGrid()');
-            html += this.buildDivider();
-            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
-        }
-        else if (isTitleBar) {
-            html += this.buildItem('Rename Publication', 'fa-pen', 'document.getElementById("doc-title").focus(); window.getSelection().selectAllChildren(document.getElementById("doc-title"));');
-            
-            if (isDocTitle) {
-                html += this.buildDivider();
-                
-                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--ui-theme-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
-                
-                html += this.buildItem('Copy', 'fa-copy', clipboardMsg);
-                html += this.buildItem('Paste', 'fa-paste', clipboardMsg);
-            }
-            
-            html += this.buildDivider();
-            html += this.buildItem('Page Setup', 'fa-file-invoice', 'if(typeof changeSize === "function") changeSize()');
-            html += this.buildItem('Format Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
-            html += this.buildDivider();
-            html += this.buildItem('Save Publication', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
-            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
-            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
-            html += this.buildDivider();
-            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
-            html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
-        }
-        else if (isRuler) {
-            html += this.buildItem('Hide Rulers', 'fa-eye-slash', 'if(window.toggleRulers) window.toggleRulers()');
-            html += this.buildItem('Toggle Margins', 'fa-vector-square', 'if(window.toggleMargins) window.toggleMargins()');
-            html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
-            html += this.buildItem('Change Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
-            
-            html += this.buildDivider();
-            
-            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--ui-theme-color); -webkit-text-stroke: 1px var(--ui-theme-color);"></i>';
-            const checkGrid = 'Snap to Grid' + (state.snap.grid ? checkIcon : '');
-            const checkGuides = 'Snap to Guides' + (state.snap.guides ? checkIcon : '');
-            const checkObjects = 'Snap to Objects' + (state.snap.objects ? checkIcon : '');
-
-            html += this.buildItem(checkGrid, 'fa-border-all', "if(window.toggleSnapOption) window.toggleSnapOption('grid')");
-            html += this.buildItem(checkGuides, 'fa-ruler-combined', "if(window.toggleSnapOption) window.toggleSnapOption('guides')");
-            html += this.buildItem(checkObjects, 'fa-shapes', "if(window.toggleSnapOption) window.toggleSnapOption('objects')");
-        }
-        else if (isSidebarBlank) {
-            html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
-            html += this.buildItem('Duplicate Current Page', 'fa-copy', 'if(window.contextDuplicatePage) window.contextDuplicatePage()');
-            html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
-            
-            html += this.buildDivider();
-            
-            html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
-            html += this.buildItem('Collapse Sidebar', 'fa-compress-arrows-alt', "if(window.toggleSidebar) window.toggleSidebar(true)");
-            
-            html += this.buildDivider();
-            
-            html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
-            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
-            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
-        }
-        else if (!el && isWorkspace && !isPaperOrInside && !isMarginGuides) {
-            // --- PASTEBOARD MENU ---
-            const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
-            
-            html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
-            html += this.buildItem('Select All', 'fa-object-group', 'if(window.selectAllElements) window.selectAllElements()');
-            html += this.buildDivider();
-            html += this.buildItem('Toggle Rulers', 'fa-ruler-combined', 'if(window.toggleRulers) window.toggleRulers()');
-            html += this.buildItem('Toggle Boundaries', 'fa-border-all', "document.getElementById('paper').classList.toggle('show-boundaries')");
-            html += this.buildItem('Toggle Focus Mode', 'fa-moon', 'if(window.WritersSuite && window.WritersSuite.toggleFocusMode) window.WritersSuite.toggleFocusMode()');
-            html += this.buildItem('3D Topology View', 'fa-cube', 'if(window.toggle3DView) window.toggle3DView()');
-            html += this.buildDivider();
-            
-            html += this.buildFlyoutItem('Snapping...', 'fa-magnet', `
-                ${this.buildItem('Snap to Grid', 'fa-th', "if(window.toggleSnapOption) window.toggleSnapOption('grid')")}
-                ${this.buildItem('Snap to Objects', 'fa-object-align-left', "if(window.toggleSnapOption) window.toggleSnapOption('objects')")}
-            `);
-            
-            html += this.buildDivider();
-            html += this.buildItem('Page Orientation', 'fa-sync-alt', 'if(window.toggleOrientation) window.toggleOrientation()');
-            html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
-            html += this.buildItem('Run Design Checker', 'fa-stethoscope', 'if(window.showInfoModal) { window.showInfoModal(); setTimeout(window.runDesignChecker, 300); }');
-        }
-        else if (isZoomBar) {
-            // --- ZOOM BAR MENU ---
-            for (let i = 60; i <= 200; i += 10) {
-                const icon = i < 100 ? 'fa-search-minus' : (i > 100 ? 'fa-search-plus' : 'fa-search');
-                html += this.buildItem(i + '%', icon, `setZoom(${(i / 100).toFixed(2)})`);
-            }
-        }
-        else if (!isPaperOrInside && !isWorkspace && !el) {
-            // --- GENERIC FALLBACK MENU ---
-            html += this.buildItem('Toggle Fullscreen', 'fa-expand', 'if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } else { document.exitFullscreen(); }');
-            html += this.buildDivider();
-            html += this.buildItem('Save Publication', 'fa-save', 'if(window.saveDocument) window.saveDocument()');
-            html += this.buildItem('Export to PDF', 'fa-file-pdf', 'if(window.exportNativePDF) window.exportNativePDF()');
-            html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
-            html += this.buildDivider();
-            html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
-            html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
-        }
-        else {
-            if (!el) {
-                // --- PAPER MENU ---
-                const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
-                
-                html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
-                html += this.buildItem('Paste in Place', 'fa-clipboard-check', `pasteEl(true)`, canPaste);
-                html += this.buildDivider();
-                
-                const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ui-theme-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;
-                const waBetaPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/PEtJfoR.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
-                const clipartPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none;">`;
-
-                html += this.buildFlyoutItem('Insert...', 'fa-plus-circle', `
-                    ${this.buildItem('Text Box', 'fa-font', 'addTextBox()')}
-                    ${this.buildItem('Picture Placeholder', 'fa-image', 'addPicturePlaceholder()')}
-                    ${this.buildItem('WordArt Old', 'fa-text-width', 'showWordArtModal()')}
-                    ${this.buildItemRaw('WordArt New', waBetaPng, 'if(window.showBetaWordArtModal) window.showBetaWordArtModal()')}
-                    ${this.buildItemRaw('Clipart', clipartPng, 'if(window.showWebClipartModal) window.showWebClipartModal()')}
-                    ${this.buildItem('Shapes', 'fa-shapes', 'toggleShapeMenu(this)')}
-                    ${this.buildItem('Page Parts', 'fa-puzzle-piece', 'if(window.showPagePartsModal) window.showPagePartsModal()')}
-                    ${this.buildDivider()}
-                    ${this.buildItem('Coupons', 'fa-ticket-alt', 'showCouponModal()')}
-                    ${this.buildItem('Ads', 'fa-ad', 'showAdModal()')}
-                    ${this.buildItemRaw('QR Code', qrcodeSvg, 'showQRCodeModal()')}
-                    ${this.buildItem('Table', 'fa-table', 'toggleTableMenu(this)')}
-                    ${this.buildItem('Styled Tables', 'fa-border-all', 'if(window.openTableTemplatesModal) window.openTableTemplatesModal()')}
-                    ${this.buildItem('Symbol', 'fa-copyright', 'if(window.showSymbolModal) window.showSymbolModal()')}
-                    ${this.buildItem('Emojis', 'fa-icons', 'showClipartModal()')}
-                `);
-                
-                html += this.buildDivider();
-                html += this.buildItem('Insert Blank Page', 'fa-file-medical', 'addNewPage()');
-                html += this.buildItem('Duplicate Page', 'fa-copy', 'if(window.contextDuplicatePage) window.contextDuplicatePage(true)');
-                html += this.buildItem('Delete Current Page', 'fa-trash-alt', `deletePage(${state.currentPageIndex}, event)`);
-                html += this.buildDivider();
-                html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
-                html += this.buildItem('Format Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
-            } else {
-                // --- ELEMENT MENUS ---
-                const isImage = el.querySelector('img');
-                const isShape = el.getAttribute('data-type') === 'shape';
-                const isWordArt = el.querySelector('.wa-text');
-                const isTable = el.querySelector('table');
-                const isText = !isImage && !isShape && !isWordArt && !isTable;
-
-                // 2. PICTURE CONTEXT MENU
-                if (isImage) {
-                    html += this.buildItem('Change Picture...', 'fa-exchange-alt', 'ContextMenuActions.changePicture()');
-                    html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
-                    html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
-                    html += this.buildDivider();
-                    html += this.buildFlyoutItem('Format Picture', 'fa-paint-brush', `
-                        ${this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()')}
-                    `);
-                    html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
-                    html += this.buildFlyoutItem('Rounded Corners', 'fa-border-style', `
-                        ${this.buildItem('None', 'fa-square', "state.selectedEl.querySelector('img').style.clipPath='none'; state.selectedEl.querySelector('img').style.webkitClipPath='none'; pushHistory();")}
-                        ${this.buildItem('8px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 8px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 8px)'; pushHistory();")}
-                        ${this.buildItem('16px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 16px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 16px)'; pushHistory();")}
-                        ${this.buildItem('24px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 24px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 24px)'; pushHistory();")}
-                        ${this.buildItem('32px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 32px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 32px)'; pushHistory();")}
-                    `);
-                    html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
-                }
-                // 3. TEXT BOX CONTEXT MENU
-                else if (isText || isWordArt) {
-                    let clickedWord = "";
-                    let clickedWordRange = null;
-
-                    const extractWordFromRange = (r, offset) => {
-                        if (r && r.startContainer.nodeType === 3) {
-                            const text = r.startContainer.textContent;
-                            let start = offset, end = offset;
-                            while (start > 0 && /[A-Za-z0-9_']/.test(text[start - 1])) start--;
-                            while (end < text.length && /[A-Za-z0-9_']/.test(text[end])) end++;
-                            const w = text.substring(start, end).trim();
-                            if (w) {
-                                const newRange = document.createRange();
-                                newRange.setStart(r.startContainer, start);
-                                newRange.setEnd(r.startContainer, end);
-                                return { word: w, range: newRange };
-                            }
-                        }
-                        return null;
-                    };
-
-                    const sel = window.getSelection();
-                    
-                    if (sel && sel.toString().trim() && sel.rangeCount > 0) {
-                        const selText = sel.toString().trim();
-                        if (selText.split(/\s+/).length === 1) { 
-                            clickedWord = selText;
-                            clickedWordRange = sel.getRangeAt(0);
-                        }
-                    }
-
-                    if (!clickedWord && document.caretRangeFromPoint) {
-                        const r = document.caretRangeFromPoint(e.clientX, e.clientY);
-                        if (r) {
-                            const res = extractWordFromRange(r, r.startOffset);
-                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                        }
-                    } 
-                    else if (!clickedWord && document.caretPositionFromPoint) {
-                        const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-                        if (pos) {
-                            const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
-                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                        }
-                    }
-
-                    if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
-                        const r = sel.getRangeAt(0);
-                        const res = extractWordFromRange(r, r.startOffset);
-                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                    }
-                    
-                    if (clickedWord && clickedWordRange) {
-                        window._currentSpellCheckWord = clickedWord;
-                        window._currentSpellCheckRange = clickedWordRange;
-                        html += '<div id="spell-check-results"></div>';
-                    }
-
-                    html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
-                    html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
-                    html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
-                    if (window._contextTargetLink || (sel && sel.toString().trim().length > 0)) {
-                        html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
-                    }
-                    html += this.buildDivider();
-                    html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
-                }
-                // 3.5. TABLE CONTEXT MENU
-                else if (isTable) {
-                    html += this.buildItem('Insert Row Above', 'fa-arrow-up', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()');
-                    html += this.buildItem('Insert Row Below', 'fa-arrow-down', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()');
-                    html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
-                    html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
-                    html += this.buildDivider();
-                    
-                    const targetCell = e.target.closest('td, th');
-                    const isMerged = targetCell && (parseInt(targetCell.getAttribute('colspan')) > 1 || parseInt(targetCell.getAttribute('rowspan')) > 1);
-
-                    if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
-                        html += this.buildItem('Merge Cells', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeSelectedCells()');
-                    } else if (isMerged) {
-                        html += this.buildItem('Split Cells (revert)', 'fa-object-ungroup', 'if(window.ContextRibbonActions) ContextRibbonActions.splitSelectedCell()');
-                    } else {
-                        html += this.buildItem('Merge Cell Right', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeRight()');
-                        html += this.buildItem('Merge Cell Down', 'fa-object-group', 'if(window.ContextRibbonActions) ContextRibbonActions.mergeDown()');
-                    }
-                    
-                    html += this.buildDivider();
-                    html += this.buildItem('Delete Row', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteRow()');
-                    html += this.buildItem('Delete Column', 'fa-minus-circle', 'if(window.ContextRibbonActions) ContextRibbonActions.deleteCol()');
-                    html += this.buildDivider();
-                    if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
-                        html += this.buildItem('Clear Cell Text (' + window._tableSelectedCells.length + ' cells)', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
-                    } else if (targetCell) {
-                        html += this.buildItem('Clear Cell Text', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
-                    }
-                    html += this.buildItem('Convert to Text', 'fa-align-left', 'if(window.ContextRibbonActions) ContextRibbonActions.convertTableToText()');
-                    if (window._contextTargetLink || (window.getSelection() && window.getSelection().toString().trim().length > 0)) {
-                        html += this.buildDivider();
-                        html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
-                    }
-                }
-                // 4. SHAPE CONTEXT MENU
-                else if (isShape) {
-                    html += this.buildItem('Edit Points', 'fa-draw-polygon', 'if(window.toggleShapeEditPoints) window.toggleShapeEditPoints()');
-                    html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
-                    html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
-                }
-
-                // 5. UNIVERSAL OBJECT FUNCTIONS
-                html += this.buildDivider();
-                html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
-                html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
-                html += this.buildDivider();
-                html += this.buildItem('Copy', 'fa-copy', 'copyEl()');
-                html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
-                if (isText) {
-                    html += this.buildItem('Paste Without Formatting', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteWithoutFormatting()');
-                }
-                html += this.buildItem('Delete', 'fa-trash', 'deleteSelected()');
-                html += this.buildDivider();
-                html += this.buildItem('Save as Picture...', 'fa-file-image', 'ContextMenuActions.saveAsPicture()');
-                html += this.buildItem('Flatten to Image (Fix 3D)', 'fa-compress', 'ContextMenuActions.flattenToImage()');
-                html += this.buildItem('Add to Building Blocks', 'fa-puzzle-piece', 'ContextMenuActions.addBuildingBlock()');
-            }
-        }
-
-        this.menuEl.innerHTML = html;
-        this.menuEl.style.display = 'block';
-
-        // Spell Check Async Fetch
-        if (window._currentSpellCheckWord) {
-            const spellDiv = document.getElementById('spell-check-results');
-            if (spellDiv) {
-                spellDiv.innerHTML = `<div class="pub-context-item" style="color:#777; font-style:italic; font-size:12px; pointer-events:none;"><i class="fas fa-spinner fa-spin"></i> Checking spelling...</div><div class="pub-context-divider"></div>`;
-                
-                fetch(`https://api.languagetool.org/v2/check`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `language=en-US&text=${encodeURIComponent(window._currentSpellCheckWord)}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    const spellDiv2 = document.getElementById('spell-check-results');
-                    if (!spellDiv2) return;
-                    if (data.matches && data.matches.length > 0) {
-                        const match = data.matches[0];
-                        if (match.replacements && match.replacements.length > 0) {
-                            let newHtml = '';
-                            const limit = Math.min(3, match.replacements.length);
-                            for(let i=0; i<limit; i++) {
-                                const suggestion = match.replacements[i].value.replace(/'/g, "\\'");
-                                newHtml += this.buildItem(`<b>${suggestion}</b>`, 'fa-magic', `ContextMenuActions.applySpelling('${suggestion}')`);
-                            }
-                            newHtml += this.buildDivider();
-                            spellDiv2.innerHTML = newHtml;
-                            return;
-                        }
-                    }
-                    // No matches
-                    spellDiv2.innerHTML = `<div class="pub-context-item" style="color:#777; font-size:12px; pointer-events:none;"><i class="fas fa-check"></i> No spelling suggestions</div><div class="pub-context-divider"></div>`;
-                }).catch(e => {
-                    const spellDiv2 = document.getElementById('spell-check-results');
-                    if (spellDiv2) spellDiv2.innerHTML = `<div class="pub-context-item" style="color:#e74c3c; font-size:12px; pointer-events:none;"><i class="fas fa-exclamation-triangle"></i> Spellcheck failed</div><div class="pub-context-divider"></div>`;
-                    console.error("Spellcheck error:", e);
-                });
-            }
-            window._currentSpellCheckWord = "";
-        }
-
-        // Keep menu on screen (Clamp to viewport)
-        const rect = this.menuEl.getBoundingClientRect();
-        let x = e.clientX;
-        let y = e.clientY;
-        if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - 5;
-        if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 5;
-
-        this.menuEl.style.left = x + 'px';
-        this.menuEl.style.top = y + 'px';
-    },
-
-    buildItem: function(label, icon, action, disabledClass = '') {
-        // If disabled, don't pass the action
-        const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
-        return `<div class="pub-context-item ${disabledClass}" onmousedown="event.preventDefault();" ${clickAction}><i class="fas fa-fw ${icon}"></i> ${label}</div>`;
-    },
-
-    buildItemRaw: function(label, rawIconHtml, action, disabledClass = '') {
-        const clickAction = disabledClass ? '' : `onclick="event.stopPropagation(); ${action}; ContextMenuSystem.hide();"`;
-        return `<div class="pub-context-item ${disabledClass}" onmousedown="event.preventDefault();" ${clickAction}><i class="fas fa-fw" style="display:inline-flex; align-items:center; justify-content:center; font-style:normal;">${rawIconHtml}</i> ${label}</div>`;
-    },
-    
-    buildFlyoutItem: function(label, icon, childrenHtml) {
-        return `
-            <div class="pub-context-item has-flyout">
-                <i class="fas fa-fw ${icon}"></i> ${label}
-                <i class="fas fa-caret-right"></i>
-                <div class="pub-flyout-menu">
-                    ${childrenHtml}
-                </div>
-            </div>
-        `;
-    },
-    
-    buildDivider: function() {
-        return `<div class="pub-context-divider"></div>`;
-    },
-
-    hide: function() {
-        if(this.menuEl) this.menuEl.style.display = 'none';
-    }
-};
-
-// --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
-
-// Initialize the menu system on load
-setTimeout(() => ContextMenuSystem.init(), 500);
-/* =========================================================================
    THE MASTER ADDON: RIBBONS, MARQUEE, GROUPING, CROP-SCALE & WORDART
 ========================================================================= */
 
@@ -8674,7 +5537,7 @@ window.handleMouseUp = function() {
                 <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
             </div>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0Â°</span></div>
                 <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
             </div>
             <div class="op-slider-row">
@@ -8724,7 +5587,7 @@ window.handleMouseUp = function() {
                 const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
                 s.value = v; 
                 const txt = document.getElementById(`val-${f}`);
-                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+                if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
             });
         } else {
             panel.classList.remove('visible');
@@ -8746,7 +5609,7 @@ window.handleMouseUp = function() {
             const f = e.target.dataset.filter, v = e.target.value;
             state.selectedEl.setAttribute(`data-filter-${f}`, v);
             const txt = document.getElementById(`val-${f}`);
-            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
             apply(state.selectedEl);
         });
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
@@ -8759,7 +5622,7 @@ window.handleMouseUp = function() {
             state.selectedEl.removeAttribute(`data-filter-${f}`);
             s.value = d; 
             const txt = document.getElementById(`val-${f}`);
-            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = d + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
     });
@@ -8873,7 +5736,7 @@ window.handleMouseUp = function() {
     const getUnit = (f) => {
         if (['blur', 'spacing', 'wordSpacing', 'shadowX', 'shadowY'].includes(f)) return 'px';
         if (['opacity', 'saturate'].includes(f)) return '%';
-        if (f === 'hue') return '°';
+        if (f === 'hue') return 'Â°';
         if (f === 'lineHeight') return 'x';
         return ''; 
     };
@@ -8992,7 +5855,7 @@ window.handleMouseUp = function() {
         <div class="op-sidebar-section">
             <span class="op-section-label">Color & Effects</span>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0Â°</span></div>
                 <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
             </div>
             <div class="op-slider-row">
@@ -9315,7 +6178,7 @@ window.handleMouseUp = function() {
                 <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
             </div>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0Â°</span></div>
                 <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
             </div>
             <div class="op-slider-row">
@@ -9358,7 +6221,7 @@ window.handleMouseUp = function() {
                 const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
                 s.value = v; 
                 const txt = panel.querySelector(`#val-${f}`);
-                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+                if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
             });
         } else {
             panel.classList.remove('visible'); expander.classList.remove('visible'); if (vp) vp.style.width = '';
@@ -9378,7 +6241,7 @@ window.handleMouseUp = function() {
             const f = e.target.dataset.filter, v = e.target.value;
             state.selectedEl.setAttribute(`data-filter-${f}`, v);
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = v + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
             apply(state.selectedEl);
         });
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
@@ -9391,7 +6254,7 @@ window.handleMouseUp = function() {
             state.selectedEl.removeAttribute(`data-filter-${f}`);
             s.value = d; 
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = d + (f==='hue-rotate'?'Â°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
     });
@@ -9434,7 +6297,7 @@ window.handleMouseUp = function() {
     const getUnit = (f) => {
         if (['blur', 'spacing', 'wordSpacing', 'shadowX', 'shadowY'].includes(f)) return 'px';
         if (['opacity', 'saturate'].includes(f)) return '%';
-        if (f === 'hue') return '°';
+        if (f === 'hue') return 'Â°';
         if (f === 'lineHeight') return 'x';
         return ''; 
     };
@@ -9570,7 +6433,7 @@ window.handleMouseUp = function() {
         <div class="op-sidebar-section">
             <span class="op-section-label">Color & Effects</span>
             <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0°</span></div>
+                <div class="op-slider-meta"><span class="op-slider-name">Hue Shift</span><span class="op-slider-num" id="val-wa-hue">0Â°</span></div>
                 <input type="range" class="wa-sidebar-input" data-waf="hue" min="-180" max="180" value="0" step="1">
             </div>
             <div class="op-slider-row">
@@ -9781,7 +6644,7 @@ window.handleMouseUp = function() {
    FEATURE: Ruler Highlights (Global Overlay + Boundary Clamping)
    ========================================================================= */
 (function installRulerHighlights() {
-    console.log("🛠️ Ruler Highlight Script initializing (Boundary Clamped)...");
+    console.log("ðŸ› ï¸ Ruler Highlight Script initializing (Boundary Clamped)...");
 
     // 1. Inject styling
     const style = document.createElement('style');
@@ -9864,13 +6727,13 @@ window.handleMouseUp = function() {
     }
 
     requestAnimationFrame(trackSelection);
-    console.log("✅ Ruler Highlight Loop started successfully.");
+    console.log("âœ… Ruler Highlight Loop started successfully.");
 })();
 /* =========================================================================
    FEATURE: Keyboard Nudge (Arrow Key Movement with Shift/Ctrl Modifiers)
    ========================================================================= */
 (function installKeyboardNudge() {
-    console.log("🛠️ Keyboard Nudge Script initializing...");
+    console.log("ðŸ› ï¸ Keyboard Nudge Script initializing...");
 
     let isNudging = false;
 
@@ -9930,14 +6793,14 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("✅ Keyboard Nudge Script started successfully.");
+    console.log("âœ… Keyboard Nudge Script started successfully.");
 })();
 /* =========================================================================
    FEATURE: Context Tools - Rich Formatting, Paragraphs & View Options
    (Applies to Text Box & WordArt Ribbons)
    ========================================================================= */
 (function installContextRichFormattingAndOptions() {
-    console.log("🛠️ Context Tools Script initializing...");
+    console.log("ðŸ› ï¸ Context Tools Script initializing...");
 
     const style = document.createElement('style');
     // CSS extracted to style.css
@@ -10149,14 +7012,14 @@ window.handleMouseUp = function() {
             window._patchedUpdateFloatCtx = true;
         }
 
-        console.log("✅ Context Tools for Text & WordArt added successfully.");
+        console.log("âœ… Context Tools for Text & WordArt added successfully.");
     }, 1500); 
 })();
 /* =========================================================================
    FEATURE: Scratch Area Fading (Off-Canvas Transparency)
    ========================================================================= */
 (function installScratchAreaFading() {
-    console.log("🛠️ Scratch Area Fading Script initializing...");
+    console.log("ðŸ› ï¸ Scratch Area Fading Script initializing...");
 
     // 1. Inject the CSS class for the faded effect
     const style = document.createElement('style');
@@ -10216,14 +7079,14 @@ window.handleMouseUp = function() {
             attributeFilter: ['style'] 
         });
 
-        console.log("✅ Scratch Area Fading added successfully.");
+        console.log("âœ… Scratch Area Fading added successfully.");
     }, 1000); // Small delay to ensure paper is rendered
 })();
 /* =========================================================================
    FEATURE: Smart Text Interaction (Final Stable - Text Boxes & Tables)
    ========================================================================= */
 (function installSmartTextInteraction() {
-    console.log("🛠️ Smart Text Interaction Script initializing...");
+    console.log("ðŸ› ï¸ Smart Text Interaction Script initializing...");
 
     let startX = 0;
     let startY = 0;
@@ -10310,18 +7173,18 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("✅ Smart Text Interaction (Stable) added successfully.");
+    console.log("âœ… Smart Text Interaction (Stable) added successfully.");
 })();
 
 /* =========================================================================
    PERFORMANCE ADDON: Smart Thumbnail Debouncer (Anti-Freeze)
    ========================================================================= */
 (function installAntiLag() {
-    console.log("🛠️ Anti-Lag Script initializing...");
+    console.log("ðŸ› ï¸ Anti-Lag Script initializing...");
 
     let thumbnailTimer = null;
 
-    // Lightweight debounce — the new generateThumbnail handles its own sequencing
+    // Lightweight debounce â€” the new generateThumbnail handles its own sequencing
     window.updateThumbnails = function() {
         if (thumbnailTimer) clearTimeout(thumbnailTimer);
         thumbnailTimer = setTimeout(() => {
@@ -10334,7 +7197,7 @@ window.handleMouseUp = function() {
         }, 300); 
     };
 
-    console.log("✅ Anti-Lag successfully applied.");
+    console.log("âœ… Anti-Lag successfully applied.");
 })();
 /* =========================================================================
    DRAG & DROP IMPORT FIX (Images, .pub, .doc, .docx, .json, .opub)
@@ -10751,7 +7614,7 @@ function uploadAndConvertPub(file) {
         // --- 3. EXECUTE CONVERSION ---
         const formData = new FormData();
         
-        // 🐛 THE FIX: Changed 'docFile' to 'pubFile' so the backend knows it's a Publisher document!
+        // ðŸ› THE FIX: Changed 'docFile' to 'pubFile' so the backend knows it's a Publisher document!
         formData.append('pubFile', file); 
 
         const xhr = new XMLHttpRequest();
@@ -10874,7 +7737,7 @@ function uploadAndConvertPub(file) {
                             const items = [];
                             
                             textContent.items.forEach(item => {
-                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, '•');
+                                const str = item.str.trim().replace(/[\uE000-\uF8FF]/g, 'â€¢');
                                 if (!str) return;
 
                                 const tx = item.transform[4] * ratio;
@@ -10917,7 +7780,7 @@ function uploadAndConvertPub(file) {
                                 let finalColor = 'black';
                                 if (samples > 0) finalColor = `rgb(${Math.round(optR/samples)}, ${Math.round(optG/samples)}, ${Math.round(optB/samples)})`;
 
-                                const isFormLine = /^[_.\-|=☑\[\]]+$/.test(str.replace(/\s/g, ''));
+                                const isFormLine = /^[_.\-|=â˜‘\[\]]+$/.test(str.replace(/\s/g, ''));
                                 items.push({ str, tx, ty, width: item.width * ratio, fontSize, isBold: isBoldFont, isItalic: isItalicFont, isFormLine, color: finalColor });
                             });
 
@@ -11766,7 +8629,7 @@ if (!window._thumbObserverRunning) {
           <body style="margin: 0; padding: 0; overflow: hidden;">
             <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #e50000; color: white; z-index: 2147483647; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: system-ui, -apple-system, sans-serif; padding: 20px; box-sizing: border-box;">
               <h1 style="font-size: clamp(24px, 5vw, 48px); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
-                ⚠️ Error ⚠️
+                âš ï¸ Error âš ï¸
               </h1>
               <p style="font-size: clamp(16px, 3vw, 24px); margin: 0 0 10px 0; line-height: 1.5;">
                 This WebApp can not be displayed here.
@@ -12037,7 +8900,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Georgia, serif; font-size: 24px; color: #d4af37; border-bottom: 1px dashed #555; padding-bottom: 10px; z-index: 5;">STARTERS</div>`, t: 300, l: 100, w: 616, h: 40},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 6;"><b>Truffle Arancini</b> ........................................ $18<br><span style="font-size:12px; color:#888;">Wild mushroom, parmesan, black truffle aioli</span></div>`, t: 360, l: 100, w: 616, h: 80},
                 {html: `<div style="font-family: Georgia, serif; font-size: 24px; color: #d4af37; border-bottom: 1px dashed #555; padding-bottom: 10px; z-index: 7;">MAINS</div>`, t: 460, l: 100, w: 616, h: 40},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 8;"><b>Wagyu Filet Mignon</b> ........................................ $65<br><span style="font-size:12px; color:#888;">Pomme purée, roasted asparagus, red wine jus</span></div>`, t: 520, l: 100, w: 616, h: 80}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #ccc; line-height: 1.8; z-index: 8;"><b>Wagyu Filet Mignon</b> ........................................ $65<br><span style="font-size:12px; color:#888;">Pomme purÃ©e, roasted asparagus, red wine jus</span></div>`, t: 520, l: 100, w: 616, h: 80}
             ]
         },
         {
@@ -12048,7 +8911,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: 'Arial Black', sans-serif; font-size: 80px; color: #fff; letter-spacing: -2px; z-index: 3;">NOVA.TECH</div>`, t: 100, l: 50, w: 716, h: 100},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; color: #80aaff; letter-spacing: 2px; z-index: 4;">ENTERPRISE CLOUD SOLUTIONS</div>`, t: 200, l: 50, w: 716, h: 50},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; color: #111; line-height: 1.2; z-index: 5;">Scaling your infrastructure shouldn't be a nightmare.</div>`, t: 450, l: 50, w: 300, h: 400},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #555; line-height: 1.6; z-index: 6;">Our state-of-the-art serverless platform automatically provisions resources based on real-time traffic spikes, ensuring zero downtime and maximizing cost-efficiency.<br><br><b>• 99.99% Uptime Guarantee<br>• Automated Threat Detection<br>• Instant Scaling</b></div>`, t: 450, l: 400, w: 366, h: 400}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #555; line-height: 1.6; z-index: 6;">Our state-of-the-art serverless platform automatically provisions resources based on real-time traffic spikes, ensuring zero downtime and maximizing cost-efficiency.<br><br><b>â€¢ 99.99% Uptime Guarantee<br>â€¢ Automated Threat Detection<br>â€¢ Instant Scaling</b></div>`, t: 450, l: 400, w: 366, h: 400}
             ]
         }
     ];
@@ -12121,13 +8984,13 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="background: #ffffff; z-index: 1;"></div>`, t: 0, l: 0, w: 816, h: 1056},
                 {html: `<div style="background: #0f172a; z-index: 2;"></div>`, t: 0, l: 0, w: 816, h: 200},
                 {html: `<div style="font-family: 'Arial Black', sans-serif; font-size: 64px; color: #ffffff; letter-spacing: -2px; z-index: 3;">THE WEEKLY ROOT</div>`, t: 50, l: 50, w: 716, h: 80},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; z-index: 4;">Tech • Design • Culture | Issue 42</div>`, t: 140, l: 50, w: 716, h: 30},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; z-index: 4;">Tech â€¢ Design â€¢ Culture | Issue 42</div>`, t: 140, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 36px; font-weight: bold; color: #0f172a; z-index: 5;">The Future of Remote Teams</div>`, t: 250, l: 50, w: 716, h: 50},
                 {html: `<div style="background: #e2e8f0; z-index: 6;"></div>`, t: 320, l: 50, w: 716, h: 2},
                 {html: `<div style="font-family: Georgia, serif; font-size: 16px; color: #334155; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 7;">As companies continue to adapt to hybrid models, the tools we use are evolving faster than ever. This week, we explore the top 5 software suites transforming how distributed teams collaborate across time zones. <br><br>From asynchronous video updates to AI-driven project management, the landscape of work has fundamentally shifted.</div>`, t: 350, l: 50, w: 716, h: 300},
                 {html: `<div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 20px; z-index: 8;"></div>`, t: 700, l: 50, w: 716, h: 200},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #0f172a; z-index: 9;">Upcoming Events</div>`, t: 730, l: 80, w: 656, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #475569; line-height: 1.6; z-index: 10;">• <b>Webinar:</b> Designing for Accessibility (Nov 12)<br>• <b>Workshop:</b> Advanced CSS Grid (Nov 15)</div>`, t: 780, l: 80, w: 656, h: 100}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #475569; line-height: 1.6; z-index: 10;">â€¢ <b>Webinar:</b> Designing for Accessibility (Nov 12)<br>â€¢ <b>Workshop:</b> Advanced CSS Grid (Nov 15)</div>`, t: 780, l: 80, w: 656, h: 100}
             ]
         },
         // 3. Creative Minimalist Resume
@@ -12167,7 +9030,7 @@ if (!window._thumbObserverRunning) {
             els: [
                 {html: `<div style="background: #1c1917; z-index: 1;"></div>`, t: 0, l: 0, w: 816, h: 1056},
                 {html: `<div style="border: 1px solid #a8a29e; z-index: 2;"></div>`, t: 40, l: 40, w: 736, h: 976},
-                {html: `<div style="font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #d6d3d1; text-align: center; letter-spacing: 10px; z-index: 3;">CAFÉ NOIR</div>`, t: 120, l: 50, w: 716, h: 80},
+                {html: `<div style="font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #d6d3d1; text-align: center; letter-spacing: 10px; z-index: 3;">CAFÃ‰ NOIR</div>`, t: 120, l: 50, w: 716, h: 80},
                 {html: `<div style="font-family: Georgia, serif; font-size: 16px; color: #78716c; text-align: center; font-style: italic; z-index: 4;">Locally Roasted. Carefully Crafted.</div>`, t: 210, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: 'Arial', sans-serif; font-size: 24px; color: #d6d3d1; letter-spacing: 3px; border-bottom: 1px solid #57534e; padding-bottom: 5px; z-index: 5;">COFFEE</div>`, t: 320, l: 150, w: 516, h: 40},
                 {html: `<div style="font-family: Courier, monospace; font-size: 18px; color: #a8a29e; line-height: 2.5; z-index: 6;">Espresso ............................ 3.00<br>Americano ........................... 3.50<br>Cappuccino .......................... 4.50<br>Vanilla Latte ....................... 5.00<br>Pour Over ........................... 5.50</div>`, t: 390, l: 150, w: 516, h: 200},
@@ -12188,7 +9051,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #8b949e; line-height: 1.8; z-index: 7;">JavaScript (ES6+)<br>React & Next.js<br>Node.js & Express<br>PostgreSQL<br>AWS & Docker</div>`, t: 340, l: 80, w: 200, h: 150},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #c9d1d9; z-index: 8;">EXPERIENCE</div>`, t: 300, l: 320, w: 416, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #58a6ff; z-index: 9;">Software Engineer II @ CloudBase</div>`, t: 340, l: 320, w: 416, h: 25},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #c9d1d9; line-height: 1.6; z-index: 10;">• Architected and deployed microservices handling 2M+ requests daily.<br>• Reduced database query latency by 40% via Redis caching.</div>`, t: 375, l: 320, w: 416, h: 100}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #c9d1d9; line-height: 1.6; z-index: 10;">â€¢ Architected and deployed microservices handling 2M+ requests daily.<br>â€¢ Reduced database query latency by 40% via Redis caching.</div>`, t: 375, l: 320, w: 416, h: 100}
             ]
         },
         // 7. Gallery Poster
@@ -12391,7 +9254,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 60px; font-weight: bold; color: #ffffff; z-index: 3;">Apex Medical</div>`, t: 80, l: 50, w: 716, h: 80},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; color: #ccfbf1; z-index: 4;">COMPREHENSIVE FAMILY CARE</div>`, t: 160, l: 50, w: 716, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #115e59; z-index: 5;">Our Services</div>`, t: 320, l: 50, w: 300, h: 40},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 2; z-index: 6;">• General Practice<br>• Pediatrics<br>• Preventative Care<br>• Immunizations<br>• Physical Therapy</div>`, t: 380, l: 50, w: 300, h: 200},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 2; z-index: 6;">â€¢ General Practice<br>â€¢ Pediatrics<br>â€¢ Preventative Care<br>â€¢ Immunizations<br>â€¢ Physical Therapy</div>`, t: 380, l: 50, w: 300, h: 200},
                 {html: `<div style="background: #f0fdfa; border-left: 4px solid #0d9488; padding: 20px; z-index: 7;"></div>`, t: 320, l: 400, w: 366, h: 250},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #115e59; z-index: 8;">Patient Portal</div>`, t: 350, l: 430, w: 300, h: 30},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #4b5563; line-height: 1.6; z-index: 9;">Access your medical records, schedule appointments, and message your doctor securely online 24/7.</div>`, t: 400, l: 430, w: 300, h: 100},
@@ -12834,7 +9697,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #cbd5e1; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 6;">Cloud computing is shifting. Developers are moving logic closer to the user to reduce latency and save costs. This week, we look at the top frameworks making edge deployment seamless.<br><br>Also in this issue: new CSS features dropping in modern browsers, and how to optimize your React bundles for 2027.</div>`, t: 290, l: 50, w: 716, h: 250},
                 {html: `<div style="background: #1e293b; border-radius: 8px; padding: 20px; z-index: 7;"></div>`, t: 560, l: 50, w: 716, h: 320},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #38bdf8; z-index: 8;">Top Links</div>`, t: 590, l: 80, w: 656, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #f8fafc; line-height: 2.5; z-index: 9;">🔗 10 Tips for Better APIs<br>🔗 The State of JavaScript 2026<br>🔗 Understanding WebAssembly<br>🔗 Postgres Scaling Guide</div>`, t: 640, l: 80, w: 656, h: 200},
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #f8fafc; line-height: 2.5; z-index: 9;">ðŸ”— 10 Tips for Better APIs<br>ðŸ”— The State of JavaScript 2026<br>ðŸ”— Understanding WebAssembly<br>ðŸ”— Postgres Scaling Guide</div>`, t: 640, l: 80, w: 656, h: 200},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #64748b; text-align: center; z-index: 10;">Unsubscribe | View in Browser</div>`, t: 950, l: 50, w: 716, h: 30}
             ]
         },
@@ -12865,7 +9728,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #431407; line-height: 1.8; z-index: 5;">Thank you to everyone who came out to the Valley Spring Festival this weekend. We raised over $5,000 for the local animal shelter and had record attendance at the pie-baking contest.</div>`, t: 230, l: 100, w: 616, h: 100},
                 {html: `<div style="background: #ffedd5; padding: 20px; border-radius: 10px; z-index: 6;"></div>`, t: 360, l: 100, w: 616, h: 250},
                 {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ea580c; z-index: 7;">Upcoming Town Events</div>`, t: 390, l: 130, w: 556, h: 30},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #7c2d12; line-height: 2; z-index: 8;">• <b>May 10:</b> City Council Meeting (7 PM)<br>• <b>May 15:</b> Farmer's Market Opens<br>• <b>May 22:</b> Neighborhood Watch Training</div>`, t: 440, l: 130, w: 556, h: 120}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #7c2d12; line-height: 2; z-index: 8;">â€¢ <b>May 10:</b> City Council Meeting (7 PM)<br>â€¢ <b>May 15:</b> Farmer's Market Opens<br>â€¢ <b>May 22:</b> Neighborhood Watch Training</div>`, t: 440, l: 130, w: 556, h: 120}
             ]
         },
         {
@@ -12935,7 +9798,7 @@ if (!window._thumbObserverRunning) {
                 {html: `<div style="background: #fdf2f8; z-index: 1;"></div>`, t: 0, l: 0, w: 800, h: 800},
                 {html: `<div style="font-family: Georgia, serif; font-size: 150px; color: #fbcfe8; text-align: center; z-index: 2;">"</div>`, t: 100, l: 300, w: 200, h: 150},
                 {html: `<div style="font-family: Georgia, serif; font-size: 40px; color: #831843; text-align: center; line-height: 1.6; font-style: italic; z-index: 3;">Success is not final, failure is not fatal: it is the courage to continue that counts.</div>`, t: 280, l: 100, w: 600, h: 200},
-                {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #be185d; text-align: center; z-index: 4;">— Winston Churchill</div>`, t: 550, l: 100, w: 600, h: 50}
+                {html: `<div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #be185d; text-align: center; z-index: 4;">â€” Winston Churchill</div>`, t: 550, l: 100, w: 600, h: 50}
             ]
         },
         {
@@ -13033,7 +9896,7 @@ if (!window._thumbObserverRunning) {
    BUG FIX: Universal Image Paste & Smart Routing
    ========================================================================= */
 (function fixImagePaste() {
-    console.log("🛠️ Universal Paste Fix initializing...");
+    console.log("ðŸ› ï¸ Universal Paste Fix initializing...");
 
     // --- STEP 1: The Ghost Hook (Prevent app from blocking OS clipboard) ---
     window.addEventListener('keydown', function(e) {
@@ -13234,7 +10097,7 @@ if (!window._thumbObserverRunning) {
    (Ensure the previous "Element Selection Shield" is DELETED)
    ========================================================================= */
 (function installV63MasterFix() {
-    console.log("🛠️ V63.0 Master Paste Fix initializing...");
+    console.log("ðŸ› ï¸ V63.0 Master Paste Fix initializing...");
 
     // 1. NEUTRALIZE THE GHOST HOOK DURING INTERNAL PASTES
     // We hijack the browser's native getAsFile API to return null if the app 
@@ -13311,7 +10174,7 @@ if (!window._thumbObserverRunning) {
    Fixes unselectable images and the double-paste ghost bug.
    ========================================================================= */
 (function installV62MasterFix() {
-    console.log("🛠️ V62.0 Master Fix initializing...");
+    console.log("ðŸ› ï¸ V62.0 Master Fix initializing...");
 
     // --- 1. RESTORE IMAGE SELECTION & MOVEMENT ---
     // Overrides the smart image builder to remove the toxic 'pointer-events: none'
@@ -13343,7 +10206,7 @@ if (!window._thumbObserverRunning) {
                 el.setAttribute('data-scaleX', "1");
                 el.setAttribute('data-scaleY', "1");
                 
-                // ✨ THE FIX: Removed pointer-events: none; Added draggable="false" ✨
+                // âœ¨ THE FIX: Removed pointer-events: none; Added draggable="false" âœ¨
                 el.innerHTML = `
                     <div class="element-content">
                         <img src="${imageSrc}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
@@ -13424,7 +10287,7 @@ if (!window._thumbObserverRunning) {
    Restores Ctrl+A and enables copying/pasting multiple elements at once.
    ========================================================================= */
 (function installMultiCopyAndSelectAll() {
-    console.log("🛠️ V64.0 Multi-Copy & Select All Fix initializing...");
+    console.log("ðŸ› ï¸ V64.0 Multi-Copy & Select All Fix initializing...");
 
     // --- 1. CTRL + A (Select All) ---
     window.addEventListener('keydown', function(e) {
@@ -13644,7 +10507,7 @@ if (!window._thumbObserverRunning) {
    Fixes the Ctrl+C and Ctrl+V shortcuts ignoring multi-selected arrays.
    ========================================================================= */
 (function installV65TrueMultiCopy() {
-    console.log("🛠️ V65.0 True Multi-Copy Override initializing...");
+    console.log("ðŸ› ï¸ V65.0 True Multi-Copy Override initializing...");
 
     window.addEventListener('keydown', function(e) {
         const activeEl = document.activeElement;
@@ -14435,7 +11298,7 @@ window.handleMouseUp = function() {
    chunking for keystroke-by-keystroke undo history.
    ========================================================================= */
 ;(function installGranularUndoProtector() {
-    console.log("🛠️ V91.0 Granular Text Undo Protector initializing...");
+    console.log("ðŸ› ï¸ V91.0 Granular Text Undo Protector initializing...");
 
     // WeakMap securely binds the history array directly to the DOM element 
     const TextHistory = new WeakMap();
@@ -14519,7 +11382,7 @@ window.handleMouseUp = function() {
             const el = document.activeElement;
             if (!el || (!el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
             
-            // 🛑 SHIELD ACTIVATED: Stop the app and the browser entirely
+            // ðŸ›‘ SHIELD ACTIVATED: Stop the app and the browser entirely
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -14573,7 +11436,7 @@ window.handleMouseUp = function() {
    the "sticky box" drag bug while preserving triple-click selection.
    ========================================================================= */
 (function installMasterFormattingFix() {
-    console.log("🛠️ V70.0 Master Formatting & Drag-Lock Fix initializing...");
+    console.log("ðŸ› ï¸ V70.0 Master Formatting & Drag-Lock Fix initializing...");
 
     // --- 1. THE FOCUS SHIELD ---
     document.addEventListener('mousedown', function(e) {
@@ -14603,7 +11466,7 @@ window.handleMouseUp = function() {
 
     // --- 3. THE TRIPLE-CLICK & DRAG-LOCK PROTECTOR ---
     document.addEventListener('mouseup', function(e) {
-        // ✨ THE FIX: If the app is actively dragging/resizing a box, DO NOT intercept! 
+        // âœ¨ THE FIX: If the app is actively dragging/resizing a box, DO NOT intercept! 
         // Let the app's native handleMouseUp fire so it releases the element.
         if (typeof state !== 'undefined' && state.dragMode) {
             return; 
@@ -14934,7 +11797,7 @@ window.handleMouseUp = function() {
    FEATURE: Enhanced Table Design & Layout Ribbons (v1.2 - Layout Refactor)
    ========================================================================= */
 (function enhanceTableRibbons() {
-    console.log("🛠️ Enhanced Table Ribbons Script initializing...");
+    console.log("ðŸ› ï¸ Enhanced Table Ribbons Script initializing...");
 
     // --- NEW: Table Multi-Cell Selection State ---
     window._tableSelectionStartCell = null;
@@ -16460,7 +13323,7 @@ window.handleMouseUp = function() {
             }
             
             
-            console.log("✅ Table Ribbons successfully refactored with new layout groups.");
+            console.log("âœ… Table Ribbons successfully refactored with new layout groups.");
         }
     }, 500);
 
@@ -16469,7 +13332,7 @@ window.handleMouseUp = function() {
    FEATURE: Smart Image Insertion & Paste (v2.0 - The Bulletproof Fix)
    ========================================================================= */
 (function installSmartImages() {
-    console.log("🛠️ Smart Image Script initializing...");
+    console.log("ðŸ› ï¸ Smart Image Script initializing...");
 
     // 1. The Bulletproof Image Builder
     window.insertSmartImage = function(imageSrc, fallbackSrc) {
@@ -16543,7 +13406,7 @@ window.handleMouseUp = function() {
                 finalHeight = Math.round(finalHeight * scale);
             }
 
-            // 🚨 THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
+            // ðŸš¨ THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
             const el = document.createElement('div');
             el.className = 'pub-element';
             el.style.left = '50px';
@@ -16652,13 +13515,13 @@ window.handleMouseUp = function() {
         }
     });
 
-    console.log("✅ Smart Image Script installed successfully.");
+    console.log("âœ… Smart Image Script installed successfully.");
 })();
 /* =========================================================================
    FEATURE: Proportional Resize (Hold Shift to maintain Aspect Ratio)
    ========================================================================= */
 (function installAspectRatioLock() {
-    console.log("🛠️ Aspect Ratio Lock Script initializing...");
+    console.log("ðŸ› ï¸ Aspect Ratio Lock Script initializing...");
 
     // We override the master MouseMove engine to inject our Aspect Ratio math
     window.handleMouseMove = function(e) {
@@ -16743,7 +13606,7 @@ window.handleMouseUp = function() {
             if (d.dir.includes('s')) rawH = d.h + dy; 
             else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
 
-            // --- 🚨 THE NEW ASPECT RATIO LOCK 🚨 ---
+            // --- ðŸš¨ THE NEW ASPECT RATIO LOCK ðŸš¨ ---
             if (e.shiftKey && !state.cropMode) {
                 // Determine scale relative to the starting dimensions (avoiding div by zero)
                 const safeW = d.w || 1;
@@ -17539,7 +14402,7 @@ function initBasicBorders() {
    FEATURE: The Writer's Suite (Review Tools Addon) - THE ULTIMATE EXPANSION
    ========================================================================= */
 (function installWritersSuite() {
-    console.log("🛠️ Writer's Suite Script initializing...");
+    console.log("ðŸ› ï¸ Writer's Suite Script initializing...");
 
     // --- 1. CSS INJECTION ---
     const style = document.createElement('style');
@@ -17674,7 +14537,7 @@ function initBasicBorders() {
             
             let breakdownHtml = '<div style="margin-top: 15px; font-size: 12px; color: #666;"><b>Detected Markers:</b><br>';
             if (maxScore === 0) breakdownHtml += 'No strong emotional or formal markers detected.';
-            else for (const [tone, score] of Object.entries(scores)) { if (score > 0) breakdownHtml += `• ${tone}: ${score} hits<br>`; }
+            else for (const [tone, score] of Object.entries(scores)) { if (score > 0) breakdownHtml += `â€¢ ${tone}: ${score} hits<br>`; }
             breakdownHtml += '</div>';
 
             return `<div class="analysis-card"><div class="analysis-title">Dominant Tone</div><div class="analysis-value">${dominantTone}</div><div class="analysis-desc">Based on keyword frequency and phrasing analysis.</div></div>${breakdownHtml}`;
@@ -17766,8 +14629,8 @@ function initBasicBorders() {
 
             let sentiment = "Neutral";
             let color = "#64748b";
-            if (posCount > negCount + 1) { sentiment = "Positive 😊"; color = "#15803d"; }
-            else if (negCount > posCount + 1) { sentiment = "Negative 😞"; color = "#b91c1c"; }
+            if (posCount > negCount + 1) { sentiment = "Positive ðŸ˜Š"; color = "#15803d"; }
+            else if (negCount > posCount + 1) { sentiment = "Negative ðŸ˜ž"; color = "#b91c1c"; }
 
             return `
                 <div class="analysis-card">
@@ -17885,7 +14748,7 @@ function initBasicBorders() {
         }
     });
 
-    console.log("✅ Writer's Suite (11 Tools) added successfully.");
+    console.log("âœ… Writer's Suite (11 Tools) added successfully.");
 })();
 /* =========================================================================
    Crop mode exit fix, Converts fixed pixels back to percentages upon exiting 
@@ -17895,7 +14758,7 @@ function initBasicBorders() {
    FEATURE: Infinite Panning Hand Tool (Middle-Click & Status Bar Toggle)
    ========================================================================= */
 (function installPanningHand() {
-    console.log("🛠️ Infinite Panning Hand Script initializing...");
+    console.log("ðŸ› ï¸ Infinite Panning Hand Script initializing...");
 
     let isPanning = false;
     let panModeEnabled = false;
@@ -18018,13 +14881,13 @@ function initBasicBorders() {
         }
     });
 
-    console.log("✅ Infinite Panning Hand Tool added successfully.");
+    console.log("âœ… Infinite Panning Hand Tool added successfully.");
 })();
 /* =========================================================================
    FEATURE: Table Templates (v3.6.5 - 100 Templates
    ========================================================================= */
 (function installTableTemplates() {
-    console.log("🛠️ Table Templates Script initializing...");
+    console.log("ðŸ› ï¸ Table Templates Script initializing...");
 
     // 1. Setup Base UI CSS & Structural Table CSS
     const style = document.createElement('style');
@@ -18105,8 +14968,8 @@ function initBasicBorders() {
         },
         {
             name: 'Feature Matrix',
-            previewHTML: `<table class="mini-table"><tr><th style="text-align:left;">Feature</th><th>Free</th><th>Pro</th></tr><tr><td style="border-bottom:1px solid #eee;">Multi-user</td><td style="text-align:center; border-bottom:1px solid #eee;">✖</td><td style="text-align:center; border-bottom:1px solid #eee;">✔</td></tr></table>`,
-            insertHTML: `<table class="pub-table-matrix" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th style="text-align:left;">Feature</th><th style="text-align:center;">Starter</th><th style="text-align:center;">Professional</th></tr><tr><td>Cloud Sync</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr><tr><td>Priority Support</td><td style="text-align:center; color:red;">✖</td><td style="text-align:center; color:green;">✔</td></tr></table>`
+            previewHTML: `<table class="mini-table"><tr><th style="text-align:left;">Feature</th><th>Free</th><th>Pro</th></tr><tr><td style="border-bottom:1px solid #eee;">Multi-user</td><td style="text-align:center; border-bottom:1px solid #eee;">âœ–</td><td style="text-align:center; border-bottom:1px solid #eee;">âœ”</td></tr></table>`,
+            insertHTML: `<table class="pub-table-matrix" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;" contenteditable="true"><tr><th style="text-align:left;">Feature</th><th style="text-align:center;">Starter</th><th style="text-align:center;">Professional</th></tr><tr><td>Cloud Sync</td><td style="text-align:center; color:red;">âœ–</td><td style="text-align:center; color:green;">âœ”</td></tr><tr><td>Priority Support</td><td style="text-align:center; color:red;">âœ–</td><td style="text-align:center; color:green;">âœ”</td></tr></table>`
         },
         {
             name: 'Attendance Roster',
@@ -18253,7 +15116,7 @@ function initBasicBorders() {
    (REPLACEMENT) Includes both MouseDown and MouseMove to fix the NaNpx bug
    ========================================================================= */
 ;(function installDefinitiveCropFix() {
-    console.log("🛠️ V95.0 Definitive Crop Anchor Fix initializing...");
+    console.log("ðŸ› ï¸ V95.0 Definitive Crop Anchor Fix initializing...");
 
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
@@ -18291,7 +15154,7 @@ function initBasicBorders() {
             if(e.target.classList.contains('resize-handle')) {
                 state.dragMode = 'resize';
                 
-                // ✨ THE FIX: We MUST capture the image's starting Left & Top here!
+                // âœ¨ THE FIX: We MUST capture the image's starting Left & Top here!
                 const img = state.selectedEl.querySelector('img');
                 const startImgLeft = img ? (parseFloat(img.style.left) || 0) : 0;
                 const startImgTop = img ? (parseFloat(img.style.top) || 0) : 0;
@@ -18304,8 +15167,8 @@ function initBasicBorders() {
                     t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
-                    imgL: startImgLeft, // ✨ Saved to memory
-                    imgT: startImgTop   // ✨ Saved to memory
+                    imgL: startImgLeft, // âœ¨ Saved to memory
+                    imgT: startImgTop   // âœ¨ Saved to memory
                 };
                 e.preventDefault(); return;
             }
@@ -18586,7 +15449,7 @@ function initBasicBorders() {
             if (state.cropMode) {
                 const img = state.selectedEl.querySelector('img');
                 if (img) {
-                    // ✨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
+                    // âœ¨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
                     if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
                     if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
                 }
@@ -18625,7 +15488,7 @@ function initBasicBorders() {
         }
     };
 
-    console.log("✅ Definitive Crop Anchor Fix installed.");
+    console.log("âœ… Definitive Crop Anchor Fix installed.");
 })();
 })();
 /* =========================================================================
@@ -18635,7 +15498,7 @@ function initBasicBorders() {
    - Stealths the background during mouse drags to prevent Text Box ribbon.
    ========================================================================= */
 ;(function installBackgroundDefender() {
-    console.log("🛡️ Background Defender Module initializing...");
+    console.log("ðŸ›¡ï¸ Background Defender Module initializing...");
 
     // 1. PASSIVE RE-LOCKER (Fixes .opub loading)
     setInterval(() => {
@@ -18701,7 +15564,7 @@ function initBasicBorders() {
    * and a strict click-tracker to preserve state across multiple pages. 
    ========================================================================= */ 
 ;(function installGlassVaultMinimap() { 
-    console.log("⚡ Glass Vault Minimap initializing..."); 
+    console.log("âš¡ Glass Vault Minimap initializing..."); 
 
     const style = document.createElement('style'); 
     // CSS extracted to style.css 
@@ -18724,7 +15587,7 @@ function initBasicBorders() {
     let activeClone = null; 
     let nodeMap = new Map(); 
 
-    // ✨ SIDEBAR CLIPPING OBSERVER ✨
+    // âœ¨ SIDEBAR CLIPPING OBSERVER âœ¨
     // Uses native browser engine to perfectly detect if the sidebar is collapsing and clipping the thumbs
     const clipObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -18736,7 +15599,7 @@ function initBasicBorders() {
         threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
     });
      
-    // ✨ PRINT HIBERNATION ✨ 
+    // âœ¨ PRINT HIBERNATION âœ¨ 
     const prepareForPrint = () => { 
         isPrinting = true; 
         document.querySelectorAll('.page-thumb').forEach(thumb => { 
@@ -18902,7 +15765,7 @@ function initBasicBorders() {
 
         inner.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleFactor})`; 
 
-// ✨ THE BULLETPROOF CLOAKING FIX
+// âœ¨ THE BULLETPROOF CLOAKING FIX
         const sanitizeClone = (node) => { 
             const stripFrameworkHooks = (n) => {
                 if (n.removeAttribute) {
@@ -18954,7 +15817,7 @@ function initBasicBorders() {
         } 
 
         elements.forEach(el => { 
-            // ⚠️ CRITICAL ROLLBACK: Do NOT skip the border container here or the preview breaks!
+            // âš ï¸ CRITICAL ROLLBACK: Do NOT skip the border container here or the preview breaks!
             // Only skip the theme layer.
             if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return; 
 
@@ -19032,7 +15895,7 @@ function initBasicBorders() {
    - Safely ignores imported .doc/.pub files because they are <img> based.
    ========================================================================= */
 ;(function installBorderDefenderV5() {
-    console.log("🛡️ Border Defender V5 (Shape DNA) initializing...");
+    console.log("ðŸ›¡ï¸ Border Defender V5 (Shape DNA) initializing...");
 
     // 1. ABSOLUTE CSS LOCKS & ANTI-FADE
     const style = document.createElement('style');
@@ -19063,7 +15926,7 @@ function initBasicBorders() {
                 const isFullHeight = rect.height >= (paperRect.height * 0.95);
                 
                 if (isFullWidth && isFullHeight) {
-                    // ✨ THE SHAPE DNA FILTER ✨
+                    // âœ¨ THE SHAPE DNA FILTER âœ¨
                     // Based on the native HTML, borders are SVG shapes. Imported documents are not.
                     const isShapeType = el.getAttribute('data-type') === 'shape';
                     const hasSVG = el.querySelector('svg') !== null;
@@ -19153,7 +16016,7 @@ function initBasicBorders() {
     Clean, formatted, and documented for production use.
    ========================================================================= */
 ;(function installPerfectedThemeStudio() {
-    console.log("🛠️ Theme Studio initializing...");
+    console.log("ðŸ› ï¸ Theme Studio initializing...");
 
     // ==========================================
     // 1. CLEANUP & PREPARATION
@@ -19282,7 +16145,7 @@ function initBasicBorders() {
         const c2 = swatch.getAttribute('data-c2') || '';
         const url = swatch.getAttribute('data-url') || '';
 
-        // ✨ THE SAVE BACKUP: Anchor the configuration to the root document.
+        // âœ¨ THE SAVE BACKUP: Anchor the configuration to the root document.
         // The app's serializer will natively save these attributes into the .opub file.
         paper.setAttribute('data-theme-saved', 'true');
         paper.setAttribute('data-theme-type', type);
@@ -19422,15 +16285,15 @@ function initBasicBorders() {
 
         let theme = document.querySelector('[data-is-theme="true"]');
 
-        // ✨ FEATURE: Ignore Background Override
+        // âœ¨ FEATURE: Ignore Background Override
         if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
             if (theme) theme.remove();
             return;
         }
 
-        // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
+        // âœ¨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
         if (!theme && paper.getAttribute('data-theme-saved') === 'true') {
-            console.log("🛠️ Theme Studio: Reconstructing deleted theme wrapper from save file...");
+            console.log("ðŸ› ï¸ Theme Studio: Reconstructing deleted theme wrapper from save file...");
             if (typeof createWrapper === 'function') {
                 theme = createWrapper(`<div class="op-theme-container"></div>`); // temporary shell
                 theme.setAttribute('data-is-theme', 'true');
@@ -19440,9 +16303,9 @@ function initBasicBorders() {
             }
         }
 
-        // ✨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
+        // âœ¨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
         if (theme && !theme.querySelector('.op-theme-bg') && paper.getAttribute('data-theme-saved') === 'true') {
-            console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
+            console.log("ðŸ› ï¸ Theme Studio: Restoring background visuals from save state...");
             
             const type = paper.getAttribute('data-theme-type');
             const c1 = paper.getAttribute('data-theme-c1');
@@ -19577,7 +16440,7 @@ function initBasicBorders() {
    (REPLACEMENT FOR V98.0) Bumps handle size to 20px for better ergonomics.
    ========================================================================= */
 ;(function upgradeCropHandleSize() {
-    console.log("🛠️ V99.0 Unclipped Jumbo Crop Handles (20px) initializing...");
+    console.log("ðŸ› ï¸ V99.0 Unclipped Jumbo Crop Handles (20px) initializing...");
     
     const style = document.createElement('style');
     // CSS extracted to style.css
@@ -19587,7 +16450,7 @@ function initBasicBorders() {
    Border Eraser Module (UI Spacing Fix)
    ========================================================================= */
 ;(function installBorderEraserV2_3() {
-    console.log("🧹 Border Eraser V2.3 initializing...");
+    console.log("ðŸ§¹ Border Eraser V2.3 initializing...");
 
     const injectInterval = setInterval(() => {
         const removeThemeBtn = document.getElementById('ts-clear-theme-btn');
@@ -19638,7 +16501,7 @@ function initBasicBorders() {
 
         // 4. The Purge Logic
         eraserBtn.addEventListener('click', () => {
-            console.log("🧹 Executing Border Purge...");
+            console.log("ðŸ§¹ Executing Border Purge...");
             let purged = false;
             const borders = document.querySelectorAll('#native-blueprint-border, [data-is-border="true"], .page-border-wrapper');
             
@@ -19662,7 +16525,7 @@ function initBasicBorders() {
    Solves the "invisible default text" bug during printing.
    ========================================================================= */
 ;(function installTextPrintRescue() {
-    console.log("🖨️ Text Print Rescue Module initializing...");
+    console.log("ðŸ–¨ï¸ Text Print Rescue Module initializing...");
 
     const forceInlineTextStyles = () => {
         // Find every element inside an interactive container
@@ -19690,7 +16553,7 @@ function initBasicBorders() {
                 }
             }
         });
-        console.log("🖨️ Text styles hardcoded for print spooler.");
+        console.log("ðŸ–¨ï¸ Text styles hardcoded for print spooler.");
     };
 
     // Intercept the browser's print command BEFORE the spooler takes its snapshot
@@ -19921,7 +16784,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 await writable.write(blob);
                 await writable.close();
 
-                // ✨ THE FIX: Update the UI with the exact name they typed!
+                // âœ¨ THE FIX: Update the UI with the exact name they typed!
                 // We strip the ".opub" extension off so it looks clean in the toolbar
                 const newName = fileHandle.name.replace(/\.opub$/i, '');
                 
@@ -19958,7 +16821,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
     };
     
-    console.log("✅ Modern Save System with Title Sync installed.");
+    console.log("âœ… Modern Save System with Title Sync installed.");
 })();
 /* =========================================================================
    KEYBOARD SHORTCUT OVERRIDES (Ctrl+S, Ctrl+O)
@@ -19987,7 +16850,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
     }, true); // Use capture phase to intercept it early
 
-    console.log("✅ Shortcut overrides (Ctrl+S, Ctrl+O) installed successfully.");
+    console.log("âœ… Shortcut overrides (Ctrl+S, Ctrl+O) installed successfully.");
 })();
 /* =========================================================================
    Printer Router and page - print sizer
@@ -20071,7 +16934,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     print-color-adjust: exact !important;
                 }
 
-                /* ✨ UNIVERSAL LANDSCAPE (UNTOUCHED) ✨ */
+                /* âœ¨ UNIVERSAL LANDSCAPE (UNTOUCHED) âœ¨ */
                 ${isLandscape ? `
                 .op-print-scaler {
                     top: 0 !important;
@@ -20080,16 +16943,16 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     transform-origin: top left !important;
                 }
                 ` : `
-                /* ✨ FIREFOX PORTRAIT CLASS (HEAVY DROP) ✨ */
+                /* âœ¨ FIREFOX PORTRAIT CLASS (HEAVY DROP) âœ¨ */
                 #op-print-spooler.op-ff .op-print-scaler {
-                    /* ✨ Shoved down to 15px to clear the top crop ✨ */
+                    /* âœ¨ Shoved down to 15px to clear the top crop âœ¨ */
                     top: 15px !important;
                     left: 1px !important;
                     transform: scale(1.025) !important;
                     transform-origin: center center !important;
                 }
 
-                /* ✨ CHROME PORTRAIT CLASS (UNTOUCHED) ✨ */
+                /* âœ¨ CHROME PORTRAIT CLASS (UNTOUCHED) âœ¨ */
                 #op-print-spooler.op-ch .op-print-scaler {
                     top: -8px !important;
                     left: 1px !important;
@@ -20942,7 +17805,7 @@ window.addEventListener('beforeprint', () => {
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const isPortrait = pW <= pH;
 
-                // ✨ AUTO-ROTATION NORMALIZATION ✨
+                // âœ¨ AUTO-ROTATION NORMALIZATION âœ¨
                 // If this page's orientation doesn't match Page 1's orientation, we rotate it dynamically.
                 // This ensures the legacy Chromium printer receives a document where ALL pages are the exact same shape.
                 let imgStyle = '';
@@ -20993,7 +17856,7 @@ window.addEventListener('beforeprint', () => {
                 <head>
                     <title>Print Document</title>
                     <style>
-                        /* ✨ THE UNIFIED MASTER LAYOUT ✨ */
+                        /* âœ¨ THE UNIFIED MASTER LAYOUT âœ¨ */
                         @page { 
                             size: ${widthInches}in ${heightInches}in !important; 
                             margin: 0 !important; 
@@ -21825,7 +18688,7 @@ setTimeout(() => {
         }
     });
 
-    console.log("✅ Main script evaluated.");
+    console.log("âœ… Main script evaluated.");
 }, 500);
 
 // --- MINIMAP CONTEXT MENU ---
@@ -24391,3 +21254,8 @@ window.addEventListener('mouseup', function(e) {
     }, 1500);
 
 })();
+
+
+
+
+

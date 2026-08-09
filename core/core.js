@@ -1,4 +1,4 @@
-// OpenPublisher - A free desktop publishing tool
+﻿// OpenPublisher - A free desktop publishing tool
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -56,48 +56,3 @@ const colorSchemes = {
 
 const paper = document.getElementById('paper');
 const floatToolbar = document.getElementById('float-toolbar');
-function pushHistory() {
-    state.pages[state.currentPageIndex] = serializeCurrentPage();
-
-    if (state.historyIndex < state.history.length - 1) {
-        state.history = state.history.slice(0, state.historyIndex + 1);
-    }
-
-    const snapshot = JSON.parse(JSON.stringify({
-        pages: state.pages,
-        idx: state.currentPageIndex,
-        isSpreadMode: state.isSpreadMode
-    }));
-
-    state.history.push(snapshot);
-    state.historyIndex++;
-}
-
-function undo() {
-    if (state.historyIndex > 0) {
-        state.historyIndex--;
-        restoreSnapshot(state.history[state.historyIndex]);
-    }
-}
-
-function redo() {
-    if (state.historyIndex < state.history.length - 1) {
-        state.historyIndex++;
-        restoreSnapshot(state.history[state.historyIndex]);
-    }
-}
-
-function restoreSnapshot(snap) {
-    state.pages = JSON.parse(JSON.stringify(snap.pages));
-    if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
-    state.pages.forEach(p => window._orientedPagesRegistry.add(p.id));
-    state.currentPageIndex = snap.idx;
-    
-    // Restore Spread Mode state (default to false if undefined in older snapshots)
-    state.isSpreadMode = snap.isSpreadMode || false;
-    const btn = document.getElementById('spread-mode-btn');
-    if (btn) btn.classList.toggle('active', state.isSpreadMode);
-    
-    renderPage(state.pages[state.currentPageIndex]);
-    setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
-}
