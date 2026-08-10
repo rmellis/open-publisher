@@ -296,25 +296,47 @@
             const tempImg = new Image();
             let loadSrc = src;
             if (!loadSrc.startsWith('data:')) {
-                if (useCORS) tempImg.crossOrigin = 'Anonymous';
-                loadSrc += (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
+                const isSameOrigin = loadSrc.startsWith('/') || loadSrc.startsWith('./') || loadSrc.startsWith(window.location.origin);
+                if (useCORS && !isSameOrigin) tempImg.crossOrigin = 'Anonymous';
+                if (!isSameOrigin) {
+                    loadSrc += (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
+                }
             }
             tempImg.onload = () => {
                 const scale = 2;
-                const c = document.createElement('canvas');
-                c.width = displayW * scale;
-                c.height = displayH * scale;
-                const ctx = c.getContext('2d');
                 
                 let finalFilter = filter;
+                let padX = 0, padY = 0, padW = 0, padH = 0;
+                
                 if (finalFilter && finalFilter.includes('blur')) {
-                    const scaleFactor = c.width / displayW;
-                    finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scaleFactor}px)`);
+                    finalFilter = finalFilter.replace(/blur\(([\d.]+)px\)/g, (match, p1) => `blur(${parseFloat(p1) * scale}px)`);
+                }
+                
+                if (finalFilter && finalFilter.includes('drop-shadow')) {
+                    const match = finalFilter.match(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px/);
+                    if (match) {
+                        const sx = parseFloat(match[1]) * scale;
+                        const sy = parseFloat(match[2]) * scale;
+                        const blur = parseFloat(match[3]) * scale;
+                        const spread = blur * 2;
+                        padX = Math.max(0, sx < 0 ? Math.abs(sx) + spread : spread);
+                        padY = Math.max(0, sy < 0 ? Math.abs(sy) + spread : spread);
+                        padW = Math.abs(sx) + spread * 2;
+                        padH = Math.abs(sy) + spread * 2;
+                        
+                        finalFilter = finalFilter.replace(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px/g, 
+                            (m, p1, p2, p3) => `${parseFloat(p1)*scale}px ${parseFloat(p2)*scale}px ${parseFloat(p3)*scale}px`);
+                    }
                 }
 
+                const c = document.createElement('canvas');
+                c.width = (displayW * scale) + padW;
+                c.height = (displayH * scale) + padH;
+                const ctx = c.getContext('2d');
+
                 const rasterCanvas = document.createElement('canvas');
-                rasterCanvas.width = c.width;
-                rasterCanvas.height = c.height;
+                rasterCanvas.width = displayW * scale;
+                rasterCanvas.height = displayH * scale;
                 const rasterCtx = rasterCanvas.getContext('2d');
                 
                 if (isDefaultFillImageLayout(imgStyle)) {
@@ -332,11 +354,11 @@
                 if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
                 ctx.globalAlpha = parseFloat(opacity);
                 
-                ctx.drawImage(rasterCanvas, 0, 0, c.width, c.height);
+                ctx.drawImage(rasterCanvas, padX, padY, displayW * scale, displayH * scale);
                 ctx.restore();
                 
                 try {
-                    resolve(c.toDataURL('image/png'));
+                    resolve({ src: c.toDataURL('image/png'), padX, padY, padW, padH });
                 } catch (e) {
                     reject(e);
                 }
@@ -616,6 +638,22 @@
                                     currentFilter = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || currentFilter);
                                     currentOpacity = (comp.opacity && comp.opacity !== '1') ? comp.opacity : (activeImg.style.opacity || currentOpacity);
                                 }
+                                
+                                const activeContent = activeEl.querySelector('.element-content');
+                                if (activeContent) {
+                                    const cComp = window.getComputedStyle(activeContent);
+                                    if (cComp.filter && cComp.filter !== 'none') {
+                                        currentFilter = (currentFilter + ' ' + cComp.filter).trim();
+                                    } else if (activeContent.style.filter && activeContent.style.filter !== 'none') {
+                                        currentFilter = (currentFilter + ' ' + activeContent.style.filter).trim();
+                                    }
+                                }
+                            }
+                            
+                            // Prevent html2canvas from double-processing this element!
+                            hueFilter = '';
+                            if (elDiv.hasAttribute('data-target-filter')) {
+                                elDiv.removeAttribute('data-target-filter');
                             }
                         }
 
@@ -625,13 +663,26 @@
 
                         if (needsBake) {
                             try {
-                                const bakedSrc = await bakeImageForPrint(finalSrc, displayW, displayH, {
+                                const baked = await bakeImageForPrint(finalSrc, displayW, displayH, {
                                     filter: currentFilter,
                                     opacity: currentOpacity,
                                     clipPath: shapeClipPath,
                                     imgStyle: savedImgStyle
                                 });
+                                const bakedSrc = typeof baked === 'string' ? baked : baked.src;
                                 await loadImageStrict(img, bakedSrc);
+                                
+                                if (baked && baked.padW) {
+                                    img.style.width = `calc(100% + ${baked.padW/2}px)`;
+                                    img.style.height = `calc(100% + ${baked.padH/2}px)`;
+                                    img.style.marginLeft = `-${baked.padX/2}px`;
+                                    img.style.marginTop = `-${baked.padY/2}px`;
+                                    img.style.maxWidth = 'none';
+                                    img.style.maxHeight = 'none';
+                                    cropDiv.style.overflow = 'visible'; // ALLOW SHADOW TO BE SEEN
+                                    cropDiv.style.contain = 'none'; // ALLOW SHADOW TO BE SEEN
+                                }
+                                
                                 img.style.filter = 'none';
                                 img.style.WebkitFilter = 'none';
                                 img.style.opacity = '1';
@@ -639,7 +690,11 @@
                                 cropDiv.style.webkitClipPath = 'none';
                             } catch(e) {
                                 await loadImageStrict(img, finalSrc);
-                                img.style.filter = currentFilter;
+                                let safeFilter = currentFilter || '';
+                                if (safeFilter.includes('drop-shadow')) {
+                                    safeFilter = safeFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                                }
+                                img.style.filter = safeFilter || 'none';
                                 img.style.opacity = currentOpacity;
                                 if (shapeClipPath) {
                                     cropDiv.style.clipPath = shapeClipPath;
