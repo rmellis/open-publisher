@@ -905,6 +905,11 @@
                         clone.style.transform = 'none';
                         clone.style.margin = '0';
                         
+                        clone.style.filter = 'none';
+                        clone.querySelectorAll('*').forEach(n => {
+                            if (n.style) n.style.filter = 'none';
+                        });
+                        
                         const tempBox = document.createElement('div');
                         tempBox.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:${w}px; height:${h}px;`;
                         tempBox.appendChild(clone);

@@ -526,7 +526,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     // Helper to sync visibility based on selection and user preference
     const refreshVisibility = (el) => {
-        if (el && el.querySelector('img')) {
+        if (el && (el.querySelector('img') || el.getAttribute('data-type') === 'emoji')) {
             const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
             const titleEl = panel.querySelector('.op-sidebar-title');
             if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
@@ -555,7 +555,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     };
 
     const apply = (el) => {
-        const img = el.querySelector('img'); if(!img) return;
+        const img = el.querySelector('img') || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null); if(!img) return;
         const get = (f, d) => el.getAttribute(`data-filter-${f}`) || d;
         img.style.filter = `brightness(${get('brightness',100)}%) contrast(${get('contrast',100)}%) saturate(${get('saturate',100)}%) hue-rotate(${get('hue-rotate',0)}deg) blur(${get('blur',0)}px) sepia(${get('sepia',0)}%) grayscale(${get('grayscale',0)}%) invert(${get('invert',0)}%)`;
         img.style.opacity = 1 - (get('transparency',0) / 100);

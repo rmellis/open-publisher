@@ -50,7 +50,7 @@ function toggleCrop() {
 
 function applyImgFilter(filter) {
     if(state.selectedEl) {
-        const img = state.selectedEl.querySelector('img');
+        const img = state.selectedEl.querySelector('img') || (state.selectedEl.getAttribute('data-type') === 'emoji' ? state.selectedEl.querySelector('svg') : null);
         if(img) {
             img.style.filter = filter;
             updateThumbnails();
