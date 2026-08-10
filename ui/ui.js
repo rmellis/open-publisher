@@ -1826,3 +1826,33 @@ window.ContextRibbonSystem = {
     }
 };
 
+
+
+// ==========================================
+// ACCESSIBILITY HIGHLIGHTER
+// ==========================================
+
+window.highlightIssueElement = function(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+    
+    if (typeof selectElement === 'function') {
+        selectElement(el, new Event('click'));
+    }
+    
+    el.style.transition = 'box-shadow 0.2s, transform 0.2s';
+    el.style.boxShadow = '0 0 0 4px #ef4444';
+    el.style.transform = 'scale(1.02)';
+    el.style.zIndex = '9999';
+    
+    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    
+    setTimeout(() => {
+        el.style.boxShadow = '';
+        el.style.transform = '';
+        el.style.zIndex = '';
+        setTimeout(() => { el.style.transition = ''; }, 200);
+    }, 1500);
+};

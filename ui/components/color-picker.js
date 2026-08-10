@@ -371,3 +371,14 @@ window.CustomColorPicker = class CustomColorPicker {
         this.close();
     }
 };
+
+
+window.toggleColorModel = function(model) {
+    const paper = document.getElementById('paper');
+    if (model === 'CMYK') {
+        paper.classList.add('cmyk-mode');
+    } else {
+        paper.classList.remove('cmyk-mode');
+    }
+};
+

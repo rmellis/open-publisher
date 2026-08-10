@@ -952,3 +952,97 @@ window.initShapes = function() {
     
     console.log("✅ Smart Formatting Router & Ribbon Fix loaded successfully.");
 })();
+
+
+// --- MIGRATED SHAPE EDIT POINTS LOGIC ---
+window.toggleShapeEditPoints = function(el) {
+    el = el || state.selectedEl;
+    if(!el) return;
+    if(state.shapeEditMode) {
+        window.exitShapeEditMode();
+        return;
+    }
+    
+    // Check if it's a shape
+    const dataType = el.getAttribute('data-type');
+    let type = null;
+    let contentDiv = el.querySelector('.element-content > div:not(.shape-text)') || el.querySelector('.element-content');
+    let svgPolygon = el.querySelector('svg polygon');
+    let points = [];
+    
+    if(dataType === 'shape' && contentDiv && contentDiv.style.clipPath && contentDiv.style.clipPath.includes('polygon')) {
+        type = 'clip-path';
+        // Parse clip-path polygon(x% y%, x% y%, ...)
+        const match = contentDiv.style.clipPath.match(/polygon\(([^)]+)\)/);
+        if(match) {
+            const pts = match[1].split(',').map(s => s.trim());
+            pts.forEach(p => {
+                const parts = p.split(' ');
+                if(parts.length >= 2) {
+                    points.push({
+                        x: parseFloat(parts[0]),
+                        y: parseFloat(parts[1])
+                    });
+                }
+            });
+        }
+    } else if(dataType === 'shape' && contentDiv && (!contentDiv.style.clipPath || contentDiv.style.clipPath.includes('inset'))) {
+        type = 'clip-path';
+        contentDiv.style.clipPath = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
+        points = [
+            {x: 0, y: 0},
+            {x: 100, y: 0},
+            {x: 100, y: 100},
+            {x: 0, y: 100}
+        ];
+    } else if(svgPolygon) {
+        type = 'svg-polygon';
+        // Parse points="x,y x,y"
+        const ptsAttr = svgPolygon.getAttribute('points');
+        if(ptsAttr) {
+            const pts = ptsAttr.trim().split(/[\s,]+/);
+            for(let i=0; i<pts.length; i+=2) {
+                if(i+1 < pts.length) {
+                    points.push({
+                        x: parseFloat(pts[i]),
+                        y: parseFloat(pts[i+1])
+                    });
+                }
+            }
+        }
+    } else {
+        return; // Not a supported shape
+    }
+    
+    if(points.length === 0) return;
+    
+    state.shapeEditMode = true;
+    el.classList.add('editing-shape');
+    document.getElementById('status-msg').innerText = "Shape Edit Mode: Drag points to modify shape.";
+    
+    window._shapeEditContext = { el, type, points, contentDiv, svgPolygon };
+    window.renderShapeEditHandles();
+}
+
+window.renderShapeEditHandles = function() {
+    if(!state.shapeEditMode || !window._shapeEditContext) return;
+    const { el, points, type } = window._shapeEditContext;
+    
+    // Remove existing handles
+    el.querySelectorAll('.shape-edit-handle').forEach(h => h.remove());
+    
+    points.forEach((pt, index) => {
+        const handle = document.createElement('div');
+        handle.className = 'shape-edit-handle';
+        handle.dataset.index = index;
+        
+        if(type === 'clip-path') {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        } else if(type === 'svg-polygon') {
+            handle.style.left = pt.x + '%';
+            handle.style.top = pt.y + '%';
+        }
+        el.appendChild(handle);
+    });
+}

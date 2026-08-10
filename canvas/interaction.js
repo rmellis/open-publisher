@@ -534,3 +534,153 @@ function forceRepaint() {
         }
     }
 }
+// Double Click Edit
+document.addEventListener('dblclick', (e) => {
+    const el = e.target.closest('.pub-element');
+
+    // --- Master Page Quick Toggle (Headers/Footers) ---
+    if (!el && e.target.closest('#paper')) {
+        const paper = document.getElementById('paper');
+        if (paper) {
+            const rect = paper.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const relativeY = e.clientY - rect.top;
+                const unscaledY = relativeY / (state.zoom || 1);
+                const paperHeight = parseFloat(paper.style.height) || 1123;
+                
+                // If clicked within top 100px or bottom 100px
+                if (unscaledY <= 100 || unscaledY >= paperHeight - 100) {
+                    // Check if an action is required to edit headers
+                    if (!state.hasMasterPage || state.currentPageIndex !== 0 || !state.headersVisible) {
+                        if (typeof DialogSystem !== 'undefined') {
+                            DialogSystem.show(
+                                'Edit Header/Footer', 
+                                '<p>You double-clicked the header/footer area. Would you like to jump to the Master Page to edit the template for all pages?</p>', 
+                                () => {
+                                    if (!state.hasMasterPage) {
+                                        if (typeof addMasterPage === 'function') addMasterPage();
+                                    } else if (state.currentPageIndex !== 0) {
+                                        if (typeof switchPage === 'function') switchPage(0);
+                                    }
+                                    
+                                    if (!state.headersVisible && typeof toggleHeaderFooter === 'function') {
+                                        toggleHeaderFooter(true);
+                                    }
+                                    
+                                    setTimeout(() => {
+                                        const currentPaper = document.getElementById('paper');
+                                        if (!currentPaper) return;
+                                        const targetClass = unscaledY <= 100 ? '.page-header' : '.page-footer';
+                                        const elToFocus = currentPaper.querySelector(targetClass);
+                                        if (elToFocus) {
+                                            elToFocus.focus();
+                                            // Place cursor at end
+                                            if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
+                                                const range = document.createRange();
+                                                range.selectNodeContents(elToFocus);
+                                                range.collapse(false);
+                                                const sel = window.getSelection();
+                                                sel.removeAllRanges();
+                                                sel.addRange(range);
+                                            }
+                                        }
+                                    }, 50);
+                                }
+                            );
+                        }
+                    }
+                    // If we were already on the master page and headers were visible,
+                    // do not interfere so native double-click text selection works natively.
+                    return; // Prevent other double click handlers
+                }
+            }
+        }
+    }
+    // ------------------------------------------------
+
+    if(el) {
+        const betaWa = el.querySelector('.beta-wa-img');
+        if(betaWa) {
+            if (typeof window.showBetaWordArtModal === 'function') {
+                window.showBetaWordArtModal(el);
+            }
+            return;
+        }
+
+        const wa = el.querySelector('.wa-text');
+        if(wa) {
+            wa.classList.add('editing');
+            wa.setAttribute('contenteditable', 'true');
+            wa.style.transform = 'none'; // NEW: Snap back to natural size for typing
+            wa.focus();
+            return;
+        }
+
+        const isShape = el.getAttribute('data-type') === 'shape';
+        
+        // UN-FLATTEN 3D IMAGES
+        if (el.hasAttribute('data-original-state')) {
+            try {
+                const s = JSON.parse(decodeURIComponent(el.getAttribute('data-original-state')));
+                
+                // BACKUP THE PNG STATE FOR CANCEL
+                const pngContentHTML = el.querySelector('.element-content').outerHTML;
+                const pngWidth = el.style.width;
+                const pngHeight = el.style.height;
+                const pngLeft = el.style.left;
+                const pngTop = el.style.top;
+                const pngType = el.getAttribute('data-type');
+                const pngOriginalState = el.getAttribute('data-original-state');
+                
+                const content = el.querySelector('.element-content');
+                if (content) {
+                    content.outerHTML = s.html;
+                }
+                el.style.width = s.w;
+                el.style.height = s.h;
+                el.style.left = s.l;
+                el.style.top = s.t;
+                el.setAttribute('data-type', s.type);
+                el.removeAttribute('data-original-state');
+                
+                selectElement(el);
+                
+                if (typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
+                    ContextMenuActions.formatTextBox();
+                    
+                    // Attach our own cancel hook wrapper to restore the PNG instantly!
+                    if (window._dialogCancelHook) {
+                        const originalHook = window._dialogCancelHook;
+                        window._dialogCancelHook = () => {
+                            originalHook(); 
+                            const curContent = el.querySelector('.element-content');
+                            if(curContent) curContent.outerHTML = pngContentHTML;
+                            el.style.width = pngWidth;
+                            el.style.height = pngHeight;
+                            el.style.left = pngLeft;
+                            el.style.top = pngTop;
+                            el.setAttribute('data-type', pngType);
+                            el.setAttribute('data-original-state', pngOriginalState);
+                            selectElement(el);
+                        };
+                    }
+                }
+                return;
+            } catch(err) {
+                console.error("Failed to unflatten state", err);
+            }
+        }
+        
+        if (isShape && typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
+            ContextMenuActions.formatTextBox();
+            return;
+        }
+        
+        const content = el.querySelector('.element-content div, .element-content table');
+        if(content) { 
+            content.setAttribute('contenteditable', 'true');
+            content.focus();
+        }
+    }
+});
+

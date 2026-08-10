@@ -160,3 +160,25 @@ window.flowTextBoxes = function(headBox) {
         targetCaretBox.focus();
     }
 };
+
+
+// --- MIGRATED TEXT FLOW LISTENER ---
+window._flowTimeout = null;
+window.addEventListener('input', function(e) {
+    if (e.target && e.target.isContentEditable) {
+        const box = e.target.closest('.pub-element');
+        if (box && (box.getAttribute('data-next-box') || box.getAttribute('data-prev-box'))) {
+            let headBox = box;
+            while(headBox.getAttribute('data-prev-box')) {
+                const prev = document.getElementById(headBox.getAttribute('data-prev-box'));
+                if (prev) headBox = prev;
+                else break;
+            }
+            clearTimeout(window._flowTimeout);
+            window._flowTimeout = setTimeout(() => {
+                flowTextBoxes(headBox);
+            }, 50);
+        }
+    }
+});
+

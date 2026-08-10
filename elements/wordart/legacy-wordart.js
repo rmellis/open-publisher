@@ -98,3 +98,33 @@ window.initWordArt = function() {
     if (window.ContextRibbonActions) {
         window.ContextRibbonActions.openWordArtModal = window.showWordArtModal;
     }
+
+
+// --- MIGRATED WA TOOLBAR DRAG ---
+let waToolbarDrag = { active: false, startX: 0, startY: 0, initLeft: 0, initTop: 0 };
+function startDragWaToolbar(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const tb = document.getElementById('wa-float-toolbar');
+    waToolbarDrag.active = true;
+    waToolbarDrag.startX = e.clientX;
+    waToolbarDrag.startY = e.clientY;
+    waToolbarDrag.initLeft = parseInt(tb.style.left || 0, 10);
+    waToolbarDrag.initTop = parseInt(tb.style.top || 0, 10);
+    
+    document.addEventListener('mousemove', doDragWaToolbar);
+    document.addEventListener('mouseup', stopDragWaToolbar);
+}
+function doDragWaToolbar(e) {
+    if(!waToolbarDrag.active) return;
+    const dx = e.clientX - waToolbarDrag.startX;
+    const dy = e.clientY - waToolbarDrag.startY;
+    const tb = document.getElementById('wa-float-toolbar');
+    tb.style.left = (waToolbarDrag.initLeft + dx) + 'px';
+    tb.style.top = (waToolbarDrag.initTop + dy) + 'px';
+}
+function stopDragWaToolbar() {
+    waToolbarDrag.active = false;
+    document.removeEventListener('mousemove', doDragWaToolbar);
+    document.removeEventListener('mouseup', stopDragWaToolbar);
+}

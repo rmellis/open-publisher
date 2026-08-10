@@ -499,3 +499,50 @@ window.exportXPS = function() {
         if (typeof printFullDocument === 'function') printFullDocument();
     }
 };
+
+
+// --- MIGRATED IMAGE EXPORT LOGIC ---
+window.exportImageResolutionSetting = 96;
+window.exportAsImage = async function(dpi) {
+    if (typeof DialogSystem !== 'undefined') {
+        DialogSystem.alert('Exporting...', 'Generating image of current page...');
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('custom-dialog-confirm');
+            if (confirmBtn && confirmBtn.parentElement) {
+                confirmBtn.parentElement.style.display = 'none';
+            }
+        }, 10);
+    }
+
+    try {
+        if(typeof deselect === 'function') deselect();
+        await new Promise(r => setTimeout(r, 100));
+
+        const paper = document.getElementById('paper');
+        if (!paper) throw new Error("Could not find current page.");
+
+        const scale = dpi === 300 ? 3.125 : 1;
+
+        const canvas = await window.capturePageAsCanvasWithFilters(paper, scale);
+        
+        const docTitle = (document.getElementById('doc-title').innerText || 'Publication').replace(/[^a-zA-Z0-9 -]/g, '');
+        
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg', 0.95);
+        a.download = `${docTitle}_Page_${state.currentPageIndex + 1}.jpg`;
+        a.click();
+
+        if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+
+    } catch(err) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.close();
+            setTimeout(() => DialogSystem.alert('Error', 'Failed to generate image: ' + err), 300);
+        }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
+    }
+}

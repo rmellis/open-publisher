@@ -3302,3 +3302,319 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     if (workspace) workspace.appendChild(panel);
     else document.body.appendChild(panel);
 })();
+
+// ==========================================
+// CORE ENGINE PERFORMANCE PATCHES
+// ==========================================
+
+// 2. Hijack the heavy history serializer (FIXED: Debounce & Spam Filter)
+const originalPushHistory = pushHistory;
+let historyTimer;
+let lastSavedHistoryState = "";
+
+pushHistory = function() {
+    // 1. Clear the timer so dragging doesn't trigger 100 saves
+    clearTimeout(historyTimer);
+    
+    // 2. Wait 250ms after the user finishes dragging/typing to save
+    historyTimer = setTimeout(() => {
+        
+        // 3. SPAM FILTER: Only save if the canvas HTML actually changed!
+        const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+        
+        if (currentState !== lastSavedHistoryState) {
+            originalPushHistory();
+            lastSavedHistoryState = currentState;
+        }
+    }, 250); 
+};
+
+// 3. Hijack the synchronous layout thrashing from typing
+const originalForceRepaint = forceRepaint;
+forceRepaint = function() {
+    // Same trick. Let the UI update the text, then fix the focus a split-second later.
+    setTimeout(() => {
+        originalForceRepaint();
+    }, 10);
+};
+
+
+// ==========================================
+// PRINT ENGINE CROP MASK FIX
+// ==========================================
+
+const cropStyle = document.createElement('style');
+cropStyle.innerHTML = `
+    @media print {
+        .print-crop-mask {
+            overflow: hidden !important;
+            clip-path: inset(0) !important;
+            -webkit-clip-path: inset(0) !important;
+            contain: paint !important;
+        }
+    }
+`;
+document.head.appendChild(cropStyle);
+
+window.addEventListener('beforeprint', () => {
+    const spooler = document.getElementById('op-print-spooler');
+    if (spooler) {
+        spooler.querySelectorAll('img').forEach(img => {
+            if (img.parentElement) img.parentElement.classList.add('print-crop-mask');
+        });
+    }
+});
+
+
+// ==========================================
+// AUTO-ROTATION MIXED ORIENTATION FIX
+// ==========================================
+
+// 1. Global registry to remember which pages we've already auto-fixed.
+// This ensures we NEVER fight the user if they manually click the Orient button later!
+window._orientedPagesRegistry = window._orientedPagesRegistry || new Set();
+
+// --- MAIN CANVAS ENGINE ---
+setInterval(() => {
+    if (!state.pages || state.pages.length === 0) return;
+
+    const currentPage = state.pages[state.currentPageIndex];
+    if (!currentPage || !currentPage.id) return;
+    
+    // 2. If we haven't checked this specific page yet, check it!
+    if (!window._orientedPagesRegistry.has(currentPage.id)) {
+        window._orientedPagesRegistry.add(currentPage.id); // Lock it permanently for this session
+        
+        const bgEl = currentPage.elements.find(e => e.imgSrc && e.imgSrc.startsWith('data:image'));
+        
+        if (bgEl) {
+            const img = new Image();
+            img.onload = function() {
+                let needsFix = false;
+                
+                if (img.width > img.height) { 
+                    if (currentPage.width !== "1123px") {
+                        currentPage.width = "1123px";
+                        currentPage.height = "794px";
+                        needsFix = true;
+                    }
+                } else { 
+                    if (currentPage.width !== "794px") {
+                        currentPage.width = "794px";
+                        currentPage.height = "1123px";
+                        needsFix = true;
+                    }
+                }
+
+                if (needsFix) {
+                    const paperEl = document.getElementById('paper');
+                    if (paperEl) {
+                        paperEl.style.width = currentPage.width;
+                        paperEl.style.height = currentPage.height;
+                    }
+                    if (typeof window.renderPage === 'function') window.renderPage(currentPage);
+                    if (typeof window.updateThumbnails === 'function') window.updateThumbnails(); 
+                }
+            };
+            img.src = bgEl.imgSrc;
+        }
+    }
+    // NOTE: The aggressive 50ms "Safety Catch" that was fighting your button has been removed!
+}, 100);
+
+
+
+// ==========================================
+// THUMBNAIL ASPECT RATIO FIX
+// ==========================================
+
+// --- THUMBNAIL ENGINE (MutationObserver) ---
+// Added a safety check to ensure it only boots up once, preventing double-bouncing!
+if (!window._thumbObserverRunning) {
+    const thumbObserver = new MutationObserver(() => {
+        if (!state.pages || state.pages.length === 0) return;
+        
+        const thumbs = document.querySelectorAll('.page-thumb, .thumbnail, .thumb, .sidebar-thumb, .thumb-item');
+        
+        thumbs.forEach((thumbNode, index) => {
+            const pageData = state.pages[index];
+            if (!pageData) return;
+
+            const pW = parseFloat(pageData.width) || 794;
+            const pH = parseFloat(pageData.height) || 1123;
+            const expectedRatio = `${pW} / ${pH}`;
+
+            if (thumbNode.style.aspectRatio !== expectedRatio) {
+                thumbNode.style.aspectRatio = expectedRatio;
+                thumbNode.style.height = "auto";
+            }
+
+            const innerElements = thumbNode.querySelectorAll('canvas, img');
+            innerElements.forEach(el => {
+                if (el.style.objectFit !== "contain") {
+                    el.style.width = "100%";
+                    el.style.height = "100%";
+                    el.style.objectFit = "contain";
+                }
+            });
+        });
+    });
+
+    thumbObserver.observe(document.body, { childList: true, subtree: true });
+    window._thumbObserverRunning = true; // Lock the observer
+}
+
+// 1. Global registry to remember which pages we've already auto-fixed.
+// This ensures we NEVER fight the user if they manually click the Orient button later!
+window._orientedPagesRegistry = window._orientedPagesRegistry || new Set();
+
+// --- MAIN CANVAS ENGINE ---
+setInterval(() => {
+    if (!state.pages || state.pages.length === 0) return;
+
+    const currentPage = state.pages[state.currentPageIndex];
+    if (!currentPage || !currentPage.id) return;
+    
+    // 2. If we haven't checked this specific page yet, check it!
+    if (!window._orientedPagesRegistry.has(currentPage.id)) {
+        window._orientedPagesRegistry.add(currentPage.id); // Lock it permanently for this session
+        
+        const bgEl = currentPage.elements.find(e => e.imgSrc && e.imgSrc.startsWith('data:image'));
+        
+        if (bgEl) {
+            const img = new Image();
+            img.onload = function() {
+                let needsFix = false;
+                
+                if (img.width > img.height) { 
+                    if (currentPage.width !== "1123px") {
+                        currentPage.width = "1123px";
+                        currentPage.height = "794px";
+                        needsFix = true;
+                    }
+                } else { 
+                    if (currentPage.width !== "794px") {
+                        currentPage.width = "794px";
+                        currentPage.height = "1123px";
+                        needsFix = true;
+                    }
+                }
+
+                if (needsFix) {
+                    const paperEl = document.getElementById('paper');
+                    if (paperEl) {
+                        paperEl.style.width = currentPage.width;
+                        paperEl.style.height = currentPage.height;
+                    }
+                    if (typeof window.renderPage === 'function') window.renderPage(currentPage);
+                    if (typeof window.updateThumbnails === 'function') window.updateThumbnails(); 
+                }
+            };
+            img.src = bgEl.imgSrc;
+        }
+    }
+    // NOTE: The aggressive 50ms "Safety Catch" that was fighting your button has been removed!
+}, 100);
+
+// --- THUMBNAIL ENGINE (MutationObserver) ---
+// Added a safety check to ensure it only boots up once, preventing double-bouncing!
+if (!window._thumbObserverRunning) {
+    const thumbObserver = new MutationObserver(() => {
+        if (!state.pages || state.pages.length === 0) return;
+        
+        const thumbs = document.querySelectorAll('.page-thumb, .thumbnail, .thumb, .sidebar-thumb, .thumb-item');
+        
+        thumbs.forEach((thumbNode, index) => {
+            const pageData = state.pages[index];
+            if (!pageData) return;
+
+            const pW = parseFloat(pageData.width) || 794;
+            const pH = parseFloat(pageData.height) || 1123;
+            const expectedRatio = `${pW} / ${pH}`;
+
+            if (thumbNode.style.aspectRatio !== expectedRatio) {
+                thumbNode.style.aspectRatio = expectedRatio;
+                thumbNode.style.height = "auto";
+            }
+
+            const innerElements = thumbNode.querySelectorAll('canvas, img');
+            innerElements.forEach(el => {
+                if (el.style.objectFit !== "contain") {
+                    el.style.width = "100%";
+                    el.style.height = "100%";
+                    el.style.objectFit = "contain";
+                }
+            });
+        });
+    });
+
+    thumbObserver.observe(document.body, { childList: true, subtree: true });
+    window._thumbObserverRunning = true; // Lock the observer
+}
+
+// ==========================================
+// ANTI-IFRAME HIJACK SECURITY PATCH
+// ==========================================
+
+if (window.top !== window.self) {
+    if (document.referrer && document.referrer.includes("typespectrum.com")) {
+      try {
+        // Try to hijack the entire browser tab and redirect to your site
+        window.top.location.href = "https://ywa.app";
+      } catch (e) {
+        // If the browser blocks the hijack, absolutely nuke the iframe content
+        document.documentElement.innerHTML = `
+          <head>
+            <title>ERROR</title>
+          </head>
+          <body style="margin: 0; padding: 0; overflow: hidden;">
+            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #e50000; color: white; z-index: 2147483647; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: system-ui, -apple-system, sans-serif; padding: 20px; box-sizing: border-box;">
+              <h1 style="font-size: clamp(24px, 5vw, 48px); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">
+                ⚠️ Error ⚠️
+              </h1>
+              <p style="font-size: clamp(16px, 3vw, 24px); margin: 0 0 10px 0; line-height: 1.5;">
+                This WebApp can not be displayed here.
+              </p>
+              <p style="font-size: clamp(14px, 2.5vw, 20px); margin: 0; line-height: 1.5;">
+                Possible Scam site detected</strong>.<br>
+                For security, Please visit ywa.app to use it.
+              </p>
+            </div>
+          </body>
+        `;
+      }
+    }
+  }
+
+// ==========================================
+// ANTI AD-OVERLAY SECURITY PATCH
+// ==========================================
+
+// --- ANTI AD-OVERLAY (INTERSECTION OBSERVER V2) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Only run if we are inside an iframe
+    if (window.self === window.top) return;
+
+    try {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // If the element is intersecting the viewport but is NOT visible (e.g. occluded by a parent iframe's overlay ad)
+                if (entry.isIntersecting && !entry.isVisible) {
+                    if (!window.hasShownOverlayWarning) {
+                        window.hasShownOverlayWarning = true;
+                        DialogSystem.show('Security Warning', '<div style="text-align:center; padding: 20px;"><i class="fas fa-shield-alt fa-3x" style="color:#d32f2f; margin-bottom:15px;"></i><br><h3 style="margin-top:0;">Suspicious Activity Detected</h3><p>It appears this website is overlaying unauthorized content (like ads) on top of Open Publisher.</p><p>Open Publisher is a 100% free tool. Please be careful as the surrounding site may be trying to mislead you.</p></div>', null, true);
+                    }
+                }
+            });
+        }, { 
+            trackVisibility: true, 
+            delay: 100 
+        });
+        
+        // We observe the body. If the scammer places an ad anywhere over the body, it triggers.
+        observer.observe(document.body);
+    } catch (e) {
+        // The user's browser does not support trackVisibility (e.g. Firefox/Safari).
+        // Fail silently to avoid breaking legitimate usage.
+    }
+});
