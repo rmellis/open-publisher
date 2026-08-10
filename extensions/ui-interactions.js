@@ -189,8 +189,8 @@
                         <div class="modern-spinner">
                             <input type="text" id="ctx-font-size-${target.suffix}" value="16" onchange="setTrueFontSize(this.value + 'px')">
                             <div class="spin-btns">
-                                <div onclick="document.getElementById('ctx-font-size-${target.suffix}').value=parseInt(document.getElementById('ctx-font-size-${target.suffix}').value)+1; setTrueFontSize(document.getElementById('ctx-font-size-${target.suffix}').value + 'px')"><i class="fas fa-chevron-up"></i></div>
-                                <div onclick="document.getElementById('ctx-font-size-${target.suffix}').value=Math.max(1,parseInt(document.getElementById('ctx-font-size-${target.suffix}').value)-1); setTrueFontSize(document.getElementById('ctx-font-size-${target.suffix}').value + 'px')"><i class="fas fa-chevron-down"></i></div>
+                                <div onmousedown="holdSpinFontSize('ctx-font-size-${target.suffix}', 1)" onmouseup="stopSpinFontSize()" onmouseleave="stopSpinFontSize()"><i class="fas fa-chevron-up"></i></div>
+                                <div onmousedown="holdSpinFontSize('ctx-font-size-${target.suffix}', -1)" onmouseup="stopSpinFontSize()" onmouseleave="stopSpinFontSize()"><i class="fas fa-chevron-down"></i></div>
                             </div>
                         </div>
                         

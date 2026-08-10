@@ -450,8 +450,8 @@
                     <div class="modern-spinner">
                         <input type="text" id="font-size" value="12" onchange="setTrueFontSize(this.value + 'px')">
                         <div class="spin-btns">
-                            <div onclick="document.getElementById('font-size').value=parseInt(document.getElementById('font-size').value)+1; setTrueFontSize(document.getElementById('font-size').value + 'px')"><i class="fas fa-chevron-up"></i></div>
-                            <div onclick="document.getElementById('font-size').value=Math.max(1,parseInt(document.getElementById('font-size').value)-1); setTrueFontSize(document.getElementById('font-size').value + 'px')"><i class="fas fa-chevron-down"></i></div>
+                            <div onmousedown="holdSpinFontSize('font-size', 1)" onmouseup="stopSpinFontSize()" onmouseleave="stopSpinFontSize()"><i class="fas fa-chevron-up"></i></div>
+                            <div onmousedown="holdSpinFontSize('font-size', -1)" onmouseup="stopSpinFontSize()" onmouseleave="stopSpinFontSize()"><i class="fas fa-chevron-down"></i></div>
                         </div>
                     </div>
                     
@@ -1069,9 +1069,9 @@
     <script src="extensions/print-engine.js?v=4.16.12"></script>
     <script src="extensions/smart-images.js?v=4.16.11"></script>
     <script src="extensions/accessibility.js?v=4.16.11"></script>
-    <script src="extensions/system-patches.js?v=4.16.12"></script>
+    <script src="extensions/system-patches.js?v=4.16.13"></script>
     <script src="extensions/clipart-expansions.js?v=4.16.11"></script>
-    <script src="extensions/ui-interactions.js?v=4.16.11"></script>
+    <script src="extensions/ui-interactions.js?v=4.16.13"></script>
     <script src="extensions/legacy-fixes.js?v=4.16.12"></script>
     <script src="egg/tetris.js?v=4.16.11"></script>
     <script src="tools/proofing/word-count.js"></script>

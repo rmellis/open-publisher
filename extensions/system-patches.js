@@ -3618,3 +3618,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fail silently to avoid breaking legitimate usage.
     }
 });
+// CONTINUOUS FONT SIZE SCALING
+window._fontSizeSpinTimer = null;
+window._fontSizeSpinTimeout = null;
+window.holdSpinFontSize = function(inputId, amount) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const update = () => {
+        const current = parseInt(input.value) || 12;
+        const next = Math.max(1, current + amount);
+        input.value = next;
+        if(typeof setTrueFontSize === 'function') setTrueFontSize(next + 'px');
+    };
+    update();
+    window._fontSizeSpinTimeout = setTimeout(() => {
+        window._fontSizeSpinTimer = setInterval(update, 75);
+    }, 400);
+};
+window.stopSpinFontSize = function() {
+    clearTimeout(window._fontSizeSpinTimeout);
+    clearInterval(window._fontSizeSpinTimer);
+};
