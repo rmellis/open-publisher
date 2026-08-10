@@ -287,7 +287,7 @@ function initTemplates() {
         "Social Media": "fa-share-alt"
     };
 
-    fetch('elements/templates/template-index.json')
+    fetch('elements/templates/template-index.json?v=4.16.17')
         .then(res => res.json())
         .then(indexData => {
             Object.keys(indexData).forEach(cat => {
@@ -314,6 +314,47 @@ function initTemplates() {
             }
         });
 
+    // Maps pixel dimensions to a human-readable page size label.
+    // Checks paper sizes first, then p-scale video resolutions, then falls back to raw dimensions.
+    function getPageSizeLabel(w, h) {
+        const tol = 5;
+        const near = (a, b) => Math.abs(a - b) <= tol;
+
+        // --- Paper sizes (portrait orientation, px at 96dpi) ---
+        const paper = [
+            { label: 'A4',      w: 794,  h: 1123 },
+            { label: 'Letter',  w: 816,  h: 1056 },
+            { label: 'A5',      w: 559,  h: 794  },
+            { label: 'A3',      w: 1123, h: 1587 },
+            { label: 'Legal',   w: 816,  h: 1344 },
+            { label: 'A6',      w: 397,  h: 559  },
+            { label: 'Tabloid', w: 1056, h: 1632 },
+        ];
+        for (const s of paper) {
+            if (near(w, s.w) && near(h, s.h)) return s.label;
+            if (near(w, s.h) && near(h, s.w)) return s.label + ' ↔';
+        }
+
+        // --- Square ---
+        if (near(w, h)) return 'Square';
+
+        // --- P-scale video/screen resolutions (landscape native) ---
+        const pScales = [
+            { label: '480p',  sw: 854,  sh: 480  },
+            { label: '720p',  sw: 1280, sh: 720  },
+            { label: '1080p', sw: 1920, sh: 1080 },
+            { label: '1440p', sw: 2560, sh: 1440 },
+            { label: '4K',    sw: 3840, sh: 2160 },
+        ];
+        for (const p of pScales) {
+            if (near(w, p.sw) && near(h, p.sh)) return p.label;
+            if (near(w, p.sh) && near(h, p.sw)) return p.label + ' ↕';
+        }
+
+        // --- Fallback: raw resolution ---
+        return `${w}\u00d7${h}`;
+    }
+
     function loadCat(cat, indexData, e) {
         gridDiv.innerHTML = '';
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -330,7 +371,7 @@ function initTemplates() {
             gridDiv.appendChild(div);
             
             // Fetch the template file
-            fetch(`elements/templates/files/${t.file}`)
+            fetch(`elements/templates/files/${t.file}?v=4.16.17`)
                 .then(res => res.json())
                 .then(opubData => {
                     const page = opubData.pages[0];
@@ -343,6 +384,7 @@ function initTemplates() {
                     const w = parseInt(page.width) || 794;
                     const h = parseInt(page.height) || 1123;
                     const scale = 100 / w; // scale to fit 100px width thumbnail
+                    const sizeLabel = getPageSizeLabel(w, h);
                     
                     const content = `
                         <div style="
@@ -359,7 +401,8 @@ function initTemplates() {
                             ${previewHTML}
                         </div>
                     `;
-                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}</div><div style="margin-top:10px;">${t.name}</div>`;
+                    const sizeBadge = `<div style="position:absolute; bottom:5px; right:5px; z-index:999; background:rgba(13,158,143,0.72); color:#fff; font-size:10px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:3px 8px; border-radius:20px; pointer-events:none; letter-spacing:0.5px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.2); backdrop-filter:blur(3px);">${sizeLabel}</div>`;
+                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}${sizeBadge}</div><div style="margin-top:10px;">${t.name}</div>`;
                     div.onclick = () => loadTemplate(opubData);
                 })
                 .catch(err => {
