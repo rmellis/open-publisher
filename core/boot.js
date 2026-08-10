@@ -15,6 +15,7 @@ window.onload = function() {
     initTemplates();
     initTablePicker();
     initFontPickers(); 
+    if(window.CustomColorPicker) window.CustomColorPicker.init();
     setupZoomControls();
     
     // Set Default Zoom to 60%

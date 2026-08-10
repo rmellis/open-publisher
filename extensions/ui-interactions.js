@@ -160,7 +160,10 @@
     // CSS extracted to style.css
     document.head.appendChild(style);
 
-    setTimeout(() => {
+    const checkInterval = setInterval(() => {
+        if (!document.getElementById('ribbon-format-text')) return;
+        clearInterval(checkInterval);
+        
         // We will loop through both ribbons to inject the same tools
         const targets = [
             { id: 'ribbon-format-text', suffix: 'text' },
@@ -367,7 +370,7 @@
         }
 
         console.log("✅ Context Tools for Text & WordArt added successfully.");
-    }, 1500); 
+    }, 100); 
 })();
 
 
