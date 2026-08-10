@@ -1,0 +1,107 @@
+{
+  "title": "Tri-Fold Layout",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "264.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='border-right:1px dashed #ccc; height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Inside Flap</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "264.0px",
+          "top": "0.0px",
+          "width": "264.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='border-right:1px dashed #ccc; height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Back Cover</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "528.0px",
+          "top": "0.0px",
+          "width": "264.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='height:100%; width:100%; display:flex; justify-content:center; padding-top:20px; color:#999; font-size:10px;'>Front Cover</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "100.0px",
+          "width": "240.0px",
+          "height": "300.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "420.0px",
+          "width": "240.0px",
+          "height": "120.0px",
+          "innerHTML": "<h1 style='color:#333; font-family:Helvetica; font-weight:bold; font-size:32px; text-align:center;'>MODERN<br>LIVING</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "550.0px",
+          "width": "240.0px",
+          "height": "50.0px",
+          "innerHTML": "<p style='text-align:center; color:#777; font-family:Arial; font-size:14px;'>Interior Design Solutions</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "276.0px",
+          "top": "800.0px",
+          "width": "240.0px",
+          "height": "160.0px",
+          "innerHTML": "<h3 style='text-align:center; color:#333; font-family:Helvetica;'>Contact Us</h3><p style='text-align:center; font-size:12px; color:#555;'>123 Main St, City<br>www.example.com<br>555-1234</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "12.0px",
+          "top": "200.0px",
+          "width": "240.0px",
+          "height": "200.0px",
+          "innerHTML": "<h3 style='color:var(--ui-theme-color); font-family:Helvetica; border-bottom:2px solid var(--ui-theme-color);'>Our Services</h3><ul style='font-size:12px; font-family:Arial; color:#444; padding-left:20px;'><li>Space Planning</li><li>Color Consultation</li><li>Furniture Selection</li></ul>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "title": "Creative Agency",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fafafa",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fafafa; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "150.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"background: #facc15; border-radius: 0 0 100px 0; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "180.0px",
+          "top": "50.0px",
+          "width": "400.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 40px; color: #111; z-index: 3;\">STUDIO.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "180.0px",
+          "top": "150.0px",
+          "width": "300.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #111; z-index: 4;\">DATE: </div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "180.0px",
+          "top": "250.0px",
+          "width": "556.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.8; z-index: 5;\">Hello there,<br><br>Start your creative brief, pitch, or welcome letter here. Use this layout to show off your brand's modern, energetic personality.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "666.0px",
+          "top": "906.0px",
+          "width": "150.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"background: #111; border-radius: 100px 0 0 0; z-index: 6;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "180.0px",
+          "top": "950.0px",
+          "width": "300.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color: #777; z-index: 7;\">HELLO@STUDIO.COM<br>+1 800 123 4567<br>12 ARTS DISTRICT, LA</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

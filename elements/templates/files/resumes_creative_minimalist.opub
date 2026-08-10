@@ -1,0 +1,140 @@
+{
+  "title": "Creative Minimalist",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f4f4f5",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f4f4f5; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "250.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #18181b; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "100.0px",
+          "width": "466.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 48px; font-weight: 900; color: #18181b; letter-spacing: -1px; z-index: 3;\">MORGAN<br>HAYES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "240.0px",
+          "width": "466.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 18px; color: #10b981; font-weight: bold; letter-spacing: 2px; z-index: 4;\">UX / UI DESIGNER</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "100.0px",
+          "width": "170.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #a1a1aa; line-height: 2; z-index: 5;\">morgan.hayes@email.com<br>portfolio.design</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "300.0px",
+          "width": "170.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #fafafa; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; z-index: 6;\">SKILLS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "360.0px",
+          "width": "170.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 13px; color: #d4d4d8; line-height: 2; z-index: 7;\">Figma<br>Prototyping<br>User Research</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "320.0px",
+          "width": "466.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #18181b; border-bottom: 2px solid #e4e4e7; padding-bottom: 10px; z-index: 8;\">EXPERIENCE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "390.0px",
+          "width": "466.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #18181b; z-index: 9;\">Senior Product Designer</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "420.0px",
+          "width": "466.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 13px; color: #71717a; font-style: italic; z-index: 10;\">TechFlow Inc. | 2021 - Present</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "455.0px",
+          "width": "466.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 14px; color: #52525b; line-height: 1.6; z-index: 11;\">Lead the redesign of the core SaaS platform, improving user retention by 35%. Mentored a team of 4 junior designers.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

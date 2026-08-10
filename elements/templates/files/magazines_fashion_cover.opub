@@ -1,0 +1,85 @@
+{
+  "title": "Fashion Cover",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "20.0px",
+          "width": "794.0px",
+          "height": "160.0px",
+          "innerHTML": "<h1 style='color:white; font-family:\"Didot\", serif; font-size:120px; text-align:center; letter-spacing:-5px; line-height:1; mix-blend-mode:overlay;'>VOGUE</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "300.0px",
+          "width": "300.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='color:white; font-family:\"Lato\"; font-weight:bold; font-size:32px; '>SUMMER<br>STYLES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "450.0px",
+          "width": "200.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='color:#ffff00; font-family:\"Lato\"; font-weight:bold; font-size:24px; '>100+<br>LOOKS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "500.0px",
+          "top": "800.0px",
+          "width": "250.0px",
+          "height": "180.0px",
+          "innerHTML": "<div style='color:white; font-family:\"Lato\"; text-align:right; font-size:28px; '>THE<br>ICONS<br>ISSUE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "1050.0px",
+          "width": "150.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='background:white; height:40px; width:150px; display:flex; align-items:center; justify-content:center; font-family:monospace; letter-spacing:3px;'>BARCODE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

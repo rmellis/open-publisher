@@ -1,0 +1,85 @@
+{
+  "title": "Car Wash",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#0288d1",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "754.0px",
+          "height": "1083.0px",
+          "innerHTML": "<div style='border:5px dashed white; width:100%; height:100%; border-radius:20px;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "700.0px",
+          "height": "120.0px",
+          "innerHTML": "<h1 style='color:white; text-align:center; font-family:\"Luckiest Guy\", cursive; font-size:80px; '>CAR WASH</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "200.0px",
+          "width": "400.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-size:150px; text-align:center;'>\ud83d\ude97 \ud83d\udca6</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "450.0px",
+          "top": "450.0px",
+          "width": "250.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background:yellow; color:red; font-weight:bold; font-size:40px; text-align:center; transform:rotate(5deg); padding:10px; border:3px solid red;'>ONLY $10</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "600.0px",
+          "width": "600.0px",
+          "height": "60.0px",
+          "innerHTML": "<h2 style='color:white; text-align:center;'>Support the High School Band</h2>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "680.0px",
+          "width": "600.0px",
+          "height": "100.0px",
+          "innerHTML": "<p style='color:white; text-align:center; font-size:24px;'>Saturday Morning<br>School Parking Lot</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "title": "Tech Update",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#0f172a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #0f172a; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "60.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Courier New', monospace; font-size: 60px; font-weight: bold; color: #38bdf8; z-index: 2;\">DEV.WEEKLY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "150.0px",
+          "width": "716.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #38bdf8; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "160.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #94a3b8; text-transform: uppercase; z-index: 4;\">Issue #128 | October 2026 | Read Time: 5 Min</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "230.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; color: #f8fafc; z-index: 5;\">The Rise of Edge Computing</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "290.0px",
+          "width": "716.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #cbd5e1; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 6;\">Cloud computing is shifting. Developers are moving logic closer to the user to reduce latency and save costs. This week, we look at the top frameworks making edge deployment seamless.<br><br>Also in this issue: new CSS features dropping in modern browsers, and how to optimize your React bundles for 2027.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "560.0px",
+          "width": "716.0px",
+          "height": "320.0px",
+          "innerHTML": "<div style=\"background: #1e293b; border-radius: 8px; padding: 20px; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "590.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #38bdf8; z-index: 8;\">Top Links</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "640.0px",
+          "width": "656.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #f8fafc; line-height: 2.5; z-index: 9;\">\ud83d\udd17 10 Tips for Better APIs<br>\ud83d\udd17 The State of JavaScript 2026<br>\ud83d\udd17 Understanding WebAssembly<br>\ud83d\udd17 Postgres Scaling Guide</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "950.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #64748b; text-align: center; z-index: 10;\">Unsubscribe | View in Browser</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "title": "Travel Brochure",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#e0f2f1",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "264.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='border-right:1px dashed #999; height:100%; width:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "264.0px",
+          "top": "0.0px",
+          "width": "264.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='border-right:1px dashed #999; height:100%; width:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "528.0px",
+          "top": "0.0px",
+          "width": "266.0px",
+          "height": "500.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1502003153089-649eb051d819?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; '>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "520.0px",
+          "width": "240.0px",
+          "height": "140.0px",
+          "innerHTML": "<h1 style='color:#00695c; font-family:\"Pacifico\"; font-size:40px; text-align:center;'>Visit<br>Paradise</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "560.0px",
+          "top": "700.0px",
+          "width": "200.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='background:#00695c; color:white; padding:10px; text-align:center; font-family:Arial; border-radius:5px;'>Book Now 50% Off</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "100.0px",
+          "width": "230.0px",
+          "height": "160.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1537551080512-fb7dd14fbf90?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border-radius:10px;'>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "270.0px",
+          "width": "230.0px",
+          "height": "100.0px",
+          "innerHTML": "<h4 style='color:#00695c; font-family:Arial;'>Luxury Hotels</h4><p style='font-size:11px; font-family:Arial;'>Experience world class comfort.</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

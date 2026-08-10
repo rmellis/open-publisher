@@ -1,0 +1,63 @@
+{
+  "title": "Concert Gig",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#111",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "700.0px",
+          "height": "120.0px",
+          "innerHTML": "<h1 style='color:#0ff; text-align:center; font-family:\"Monoton\"; font-size:80px;  margin:0;'>LIVE</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "240.0px",
+          "width": "600.0px",
+          "height": "100.0px",
+          "innerHTML": "<h2 style='color:white; text-align:center; font-family:\"Rock Salt\"; font-size:40px; transform:rotate(-5deg); '>THE ROCKERS</h2>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "450.0px",
+          "top": "800.0px",
+          "width": "300.0px",
+          "height": "140.0px",
+          "innerHTML": "<div style='background:rgba(255,0,255,0.8); color:white; padding:20px; text-align:center; font-family:Impact; font-size:24px; transform:rotate(2deg);'>SATURDAY NIGHT<br>JULY 24TH</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "1000.0px",
+          "width": "600.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='color:#0ff; font-family:Courier; font-weight:bold; text-align:center; font-size:24px;'>DOORS OPEN 8PM \u2022 $15 ENTRY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

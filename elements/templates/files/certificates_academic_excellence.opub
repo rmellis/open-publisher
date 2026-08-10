@@ -1,0 +1,140 @@
+{
+  "title": "Academic Excellence",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "1056px",
+      "height": "816px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1056.0px",
+          "height": "816.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "30.0px",
+          "width": "996.0px",
+          "height": "756.0px",
+          "innerHTML": "<div style=\"border: 15px solid #1e3a8a; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "956.0px",
+          "height": "716.0px",
+          "innerHTML": "<div style=\"border: 2px solid #d4af37; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "856.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 50px; color: #1e3a8a; text-align: center; letter-spacing: 5px; z-index: 4;\">CERTIFICATE OF EXCELLENCE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "280.0px",
+          "width": "856.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #555; text-align: center; font-style: italic; z-index: 5;\">This is proudly presented to</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "350.0px",
+          "width": "656.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 80px; color: #111; text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; z-index: 6;\">Sarah Jenkins</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "500.0px",
+          "width": "656.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #555; text-align: center; line-height: 1.8; z-index: 7;\">In recognition of outstanding academic performance,<br>dedication, and leadership during the 2026 academic year.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "650.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 8;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "656.0px",
+          "top": "650.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 9;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "660.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center; z-index: 10;\">DATE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "656.0px",
+          "top": "660.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center; z-index: 11;\">SIGNATURE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

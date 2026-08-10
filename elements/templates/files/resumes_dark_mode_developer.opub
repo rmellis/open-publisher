@@ -1,0 +1,129 @@
+{
+  "title": "Dark Mode Developer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#0d1117",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #0d1117; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "80.0px",
+          "width": "656.0px",
+          "height": "70.0px",
+          "innerHTML": "<div style=\"font-family: 'Courier New', Courier, monospace; font-size: 60px; font-weight: bold; color: #c9d1d9; z-index: 2;\">JANE DOE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "160.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #58a6ff; z-index: 3;\">FULL-STACK ENGINEER</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "210.0px",
+          "width": "656.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #30363d; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "230.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #8b949e; z-index: 5;\">github.com/janedoe | jane@dev.io | New York, NY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "300.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #c9d1d9; z-index: 6;\">TECH STACK</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "340.0px",
+          "width": "200.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #8b949e; line-height: 1.8; z-index: 7;\">JavaScript (ES6+)<br>React & Next.js<br>Node.js & Express<br>PostgreSQL<br>AWS & Docker</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "300.0px",
+          "width": "416.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #c9d1d9; z-index: 8;\">EXPERIENCE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "340.0px",
+          "width": "416.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #58a6ff; z-index: 9;\">Software Engineer II @ CloudBase</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "375.0px",
+          "width": "416.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #c9d1d9; line-height: 1.6; z-index: 10;\">\u2022 Architected and deployed microservices handling 2M+ requests daily.<br>\u2022 Reduced database query latency by 40% via Redis caching.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

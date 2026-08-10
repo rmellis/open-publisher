@@ -1,0 +1,107 @@
+{
+  "title": "Cocktail Lounge",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#020617",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #020617; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "716.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 70px; font-weight: 900; color: #ffffff; text-align: center; letter-spacing: 15px;  z-index: 2;\">NEON</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 20px; color: #fb7185; text-align: center; letter-spacing: 5px; z-index: 3;\">COCKTAILS & SPIRITS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "358.0px",
+          "top": "260.0px",
+          "width": "100.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #e11d48; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "350.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px; z-index: 5;\">SIGNATURES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "420.0px",
+          "width": "616.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; line-height: 2; z-index: 6;\"><b>MIDNIGHT RIDER</b> ............................... $16<br>Bourbon, Amaro, Bitters, Smoked Orange<br><br><b>VELVET CRUSH</b> .................................. $15<br>Gin, Blackberry, Lemon, Egg White<br><br><b>ELECTRIC DAISY</b> ................................ $14<br>Tequila, Jalapeno, Lime, Agave</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "700.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px; z-index: 7;\">CLASSICS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "770.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; line-height: 2; z-index: 8;\"><b>OLD FASHIONED</b> ............................... $14<br><b>NEGRONI</b> ....................................... $14<br><b>MARTINI</b> ....................................... $15</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

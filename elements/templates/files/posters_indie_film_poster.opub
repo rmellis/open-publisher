@@ -1,0 +1,96 @@
+{
+  "title": "Indie Film Poster",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#111827",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #111827; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "736.0px",
+          "height": "976.0px",
+          "innerHTML": "<div style=\"border: 1px solid #374151; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "150.0px",
+          "width": "716.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style=\"font-family: 'Georgia', serif; font-size: 100px; color: #f9fafb; text-align: center; letter-spacing: 8px; z-index: 3;\">ECLIPSE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "300.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #9ca3af; text-align: center; letter-spacing: 12px; z-index: 4;\">A SHORT FILM BY J. DIRECTOR</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "358.0px",
+          "top": "450.0px",
+          "width": "100.0px",
+          "height": "4.0px",
+          "innerHTML": "<div style=\"background: #3b82f6; z-index: 5;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "550.0px",
+          "width": "416.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #6b7280; text-align: center; line-height: 2; z-index: 6;\">WINNER<br>BEST PICTURE<br>FESTIVAL 2026</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "850.0px",
+          "width": "716.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; color: #f3f4f6; text-align: center; letter-spacing: 4px; z-index: 7;\">IN THEATERS OCTOBER</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

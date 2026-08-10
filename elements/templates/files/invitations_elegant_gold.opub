@@ -1,0 +1,107 @@
+{
+  "title": "Elegant Gold",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#1a1a1a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "15.0px",
+          "top": "15.0px",
+          "width": "764.0px",
+          "height": "1093.0px",
+          "innerHTML": "<div style='border:1px solid #d4af37; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "25.0px",
+          "top": "25.0px",
+          "width": "744.0px",
+          "height": "1073.0px",
+          "innerHTML": "<div style='border:1px solid #d4af37; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "600.0px",
+          "height": "100.0px",
+          "innerHTML": "<h1 style='font-family:\"Cinzel\"; color:#d4af37; text-align:center; font-size:50px; letter-spacing:5px;'>GALA NIGHT</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "347.0px",
+          "top": "260.0px",
+          "width": "100.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='width:100px; height:2px; background:#d4af37; margin:0 auto;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "300.0px",
+          "width": "600.0px",
+          "height": "60.0px",
+          "innerHTML": "<p style='color:#ccc; text-align:center; font-family:\"Lato\"; font-weight:300; letter-spacing:2px; font-size:14px;'>YOU ARE CORDIALLY INVITED TO THE</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "380.0px",
+          "width": "600.0px",
+          "height": "80.0px",
+          "innerHTML": "<h2 style='color:white; text-align:center; font-family:\"Playfair Display\"; font-style:italic;'>Annual Charity Ball</h2>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "500.0px",
+          "width": "400.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='color:#d4af37; text-align:center; font-family:\"Cinzel\"; border:1px solid #d4af37; padding:15px; width:100%;'>DECEMBER 31ST \u2022 8:00 PM</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "900.0px",
+          "width": "400.0px",
+          "height": "60.0px",
+          "innerHTML": "<p style='color:#999; text-align:center; font-size:12px; margin-top:50px;'>BLACK TIE ATTIRE \u2022 RSVP BY DEC 20</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

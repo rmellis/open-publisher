@@ -1,0 +1,85 @@
+{
+  "title": "Health & Fitness",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f1f5f9",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f1f5f9; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "20.0px",
+          "width": "816.0px",
+          "height": "180.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 150px; color: #dc2626; text-align: center; letter-spacing: -8px; z-index: 2;\">PULSE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "716.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style=\"border: 10px solid #1e293b; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "400.0px",
+          "width": "400.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 70px; color: #1e293b; line-height: 0.9; text-transform: uppercase; z-index: 4;\">Build<br>Real<br>Strength</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "840.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #dc2626; z-index: 5;\">THE 30-DAY KETTLEBELL CHALLENGE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "880.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #475569; column-count: 2; z-index: 6;\">Plus: Expert nutrition guides for recovery, the truth about protein supplements, and how sleep impacts muscle growth.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "title": "Product Drop",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "800px",
+      "height": "800px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "800.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "600.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style=\"background: #f1f5f9; border-radius: 400px; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "600.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"font-family: 'Helvetica', sans-serif; font-size: 100px; font-weight: 900; color: #111; text-align: center; letter-spacing: -3px; z-index: 3;\">JUST<br>DROPPED.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "550.0px",
+          "width": "600.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; color: #475569; text-align: center; z-index: 4;\">The Summer Collection is finally here.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "650.0px",
+          "width": "160.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"border-bottom: 2px solid #111; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #111; text-align: center; padding-bottom: 5px; display: inline-block; z-index: 5;\">SHOP NOW</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "title": "Law Firm",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "80.0px",
+          "width": "716.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 40px; color: #1e293b; text-align: center; z-index: 2;\">HARRINGTON & VANCE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "130.0px",
+          "width": "716.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 12px; color: #ca8a04; letter-spacing: 3px; text-align: center; z-index: 3;\">ATTORNEYS AT LAW</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "170.0px",
+          "width": "516.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style=\"background: #1e293b; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "220.0px",
+          "width": "616.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 16px; color: #111; line-height: 2; z-index: 5;\">[Date]<br><br><b>VIA CERTIFIED MAIL</b><br><br>[Recipient Name]<br>[Address]<br><br><b>RE: [Case/Subject Matter]</b><br><br>Dear [Name],<br><br>Begin legal correspondence here.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "920.0px",
+          "width": "516.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style=\"background: #1e293b; z-index: 6;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "940.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 12px; color: #475569; text-align: center; z-index: 7;\">400 Legal Plaza, Suite 200, Justice City, ST 99999<br>Ph: (555) 987-6543 | Fax: (555) 987-6544 | www.harringtonvance.law</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

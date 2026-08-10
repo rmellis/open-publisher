@@ -1,0 +1,85 @@
+{
+  "title": "Bi-Fold Medical",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "396.0px",
+          "top": "0.0px",
+          "width": "2.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='border-right:1px solid #ccc; height:100%; width:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "754.0px",
+          "top": "0.0px",
+          "width": "40.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:#2196f3; height:100%; width:40px; position:absolute; right:0;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "100.0px",
+          "width": "330.0px",
+          "height": "300.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80' style='width:100%; height:300px; object-fit:cover;'>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "420.0px",
+          "width": "300.0px",
+          "height": "120.0px",
+          "innerHTML": "<h1 style='color:#1565c0; font-family:sans-serif;'>HEALTH FIRST<br>CLINIC</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "550.0px",
+          "width": "300.0px",
+          "height": "50.0px",
+          "innerHTML": "<p style='color:#555;'>Caring for you and your family.</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "300.0px",
+          "height": "200.0px",
+          "innerHTML": "<h3 style='color:#1565c0;'>Services</h3><ul><li>Checkups</li><li>Dental</li><li>Cardiology</li></ul>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

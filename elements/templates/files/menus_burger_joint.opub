@@ -1,0 +1,129 @@
+{
+  "title": "Burger Joint",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fee2e2",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fee2e2; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "716.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"background: #ef4444; transform: rotate(-2deg); z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "75.0px",
+          "width": "716.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 70px; color: #ffffff; text-align: center; transform: rotate(-2deg);  z-index: 3;\">SMASH CITY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "280.0px",
+          "width": "300.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 30px; color: #1f2937; background: #fde047; padding: 10px; display: inline-block; transform: rotate(1deg); z-index: 4;\">THE BURGERS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "380.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ef4444; z-index: 5;\">THE CLASSIC SMASH ........... $8</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "410.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; z-index: 6;\">Double patty, American cheese, house sauce, pickles.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "470.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ef4444; z-index: 7;\">SPICY JALAPENO ............. $9</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "500.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; z-index: 8;\">Double patty, pepper jack, crispy jalapenos, spicy mayo.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "600.0px",
+          "width": "250.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 30px; color: #1f2937; background: #fde047; padding: 10px; display: inline-block; transform: rotate(-1deg); z-index: 9;\">THE SIDES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "700.0px",
+          "width": "656.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #1f2937; line-height: 2; z-index: 10;\">FRENCH FRIES ................. $4<br>ONION RINGS .................. $5<br>CHEESE CURDS ................. $6</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

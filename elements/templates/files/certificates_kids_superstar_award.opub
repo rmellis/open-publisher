@@ -1,0 +1,96 @@
+{
+  "title": "Kids Superstar Award",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "1056px",
+      "height": "816px",
+      "background": "#ffedd5",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1056.0px",
+          "height": "816.0px",
+          "innerHTML": "<div style=\"background: #ffedd5; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "30.0px",
+          "width": "996.0px",
+          "height": "756.0px",
+          "innerHTML": "<div style=\"border: 8px dashed #f97316; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "120.0px",
+          "width": "856.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 70px; color: #ea580c; text-align: center;  z-index: 3;\">SUPERSTAR AWARD!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "280.0px",
+          "width": "856.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #431407; text-align: center; z-index: 4;\">THIS GOES TO:</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "250.0px",
+          "top": "350.0px",
+          "width": "556.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 60px; color: #3b82f6; text-align: center; border-bottom: 5px solid #3b82f6; padding-bottom: 10px; z-index: 5;\">CHLOE SMITH</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "500.0px",
+          "width": "756.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #431407; text-align: center; line-height: 1.6; z-index: 6;\">For being an awesome listener, helping others,<br>and bringing a big smile to class every day!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "650.0px",
+          "width": "756.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ea580c; text-align: center; z-index: 7;\">Great Job! - Mr. Davis</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

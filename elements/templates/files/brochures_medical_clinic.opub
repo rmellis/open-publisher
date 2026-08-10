@@ -1,0 +1,129 @@
+{
+  "title": "Medical Clinic",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"background: #0d9488; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "80.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 60px; font-weight: bold; color: #ffffff; z-index: 3;\">Apex Medical</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "160.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; color: #ccfbf1; z-index: 4;\">COMPREHENSIVE FAMILY CARE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "320.0px",
+          "width": "300.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #115e59; z-index: 5;\">Our Services</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "380.0px",
+          "width": "300.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 2; z-index: 6;\">\u2022 General Practice<br>\u2022 Pediatrics<br>\u2022 Preventative Care<br>\u2022 Immunizations<br>\u2022 Physical Therapy</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "320.0px",
+          "width": "366.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"background: #f0fdfa; border-left: 4px solid #0d9488; padding: 20px; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "430.0px",
+          "top": "350.0px",
+          "width": "300.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #115e59; z-index: 8;\">Patient Portal</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "430.0px",
+          "top": "400.0px",
+          "width": "300.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #4b5563; line-height: 1.6; z-index: 9;\">Access your medical records, schedule appointments, and message your doctor securely online 24/7.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "900.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #0d9488; text-align: center; z-index: 10;\">1-800-APEX-MED | apexmedical.org</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

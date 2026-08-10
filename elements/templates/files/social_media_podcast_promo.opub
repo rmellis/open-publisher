@@ -1,0 +1,74 @@
+{
+  "title": "Podcast Promo",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "800px",
+      "height": "800px",
+      "background": "#0f172a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "800.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style=\"background: #0f172a; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "600.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #38bdf8; text-align: center; letter-spacing: 5px; z-index: 2;\">NEW EPISODE OUT NOW</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "700.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 80px; color: #f8fafc; text-align: center; line-height: 1; z-index: 3;\">THE FUTURE<br>OF DESIGN</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "350.0px",
+          "top": "500.0px",
+          "width": "100.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"background: #38bdf8; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 4;\"><div style=\"width: 0; height: 0; border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left: 35px solid white; margin-left: 10px;\"></div></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "650.0px",
+          "width": "600.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #94a3b8; text-align: center; z-index: 5;\">Available on Spotify & Apple Podcasts</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

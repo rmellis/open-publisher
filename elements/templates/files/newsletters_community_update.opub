@@ -1,0 +1,107 @@
+{
+  "title": "Community Update",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fff7ed",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fff7ed; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "60.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Comic Sans MS', sans-serif; font-size: 60px; color: #ea580c; text-align: center; z-index: 2;\">Valley News</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "616.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"border-top: 3px dashed #fdba74; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "180.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #9a3412; z-index: 4;\">Spring Festival Success!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "230.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #431407; line-height: 1.8; z-index: 5;\">Thank you to everyone who came out to the Valley Spring Festival this weekend. We raised over $5,000 for the local animal shelter and had record attendance at the pie-baking contest.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "360.0px",
+          "width": "616.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"background: #ffedd5; padding: 20px; border-radius: 10px; z-index: 6;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "130.0px",
+          "top": "390.0px",
+          "width": "556.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ea580c; z-index: 7;\">Upcoming Town Events</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "130.0px",
+          "top": "440.0px",
+          "width": "556.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #7c2d12; line-height: 2; z-index: 8;\">\u2022 <b>May 10:</b> City Council Meeting (7 PM)<br>\u2022 <b>May 15:</b> Farmer's Market Opens<br>\u2022 <b>May 22:</b> Neighborhood Watch Training</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

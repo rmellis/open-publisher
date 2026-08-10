@@ -1,0 +1,96 @@
+{
+  "title": "Elegant Wedding",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fffdf0",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fffdf0; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "716.0px",
+          "height": "956.0px",
+          "innerHTML": "<div style=\"border: 2px solid #d4af37; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 24px; color: #555; text-align: center; letter-spacing: 4px; z-index: 3;\">TOGETHER WITH THEIR FAMILIES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 72px; color: #d4af37; text-align: center; font-style: italic; z-index: 4;\">Eleanor & James</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "400.0px",
+          "width": "616.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 18px; color: #555; text-align: center; line-height: 2; z-index: 5;\">INVITE YOU TO CELEBRATE THEIR MARRIAGE<br>SATURDAY, THE FOURTEENTH OF AUGUST<br>TWO THOUSAND TWENTY-SIX<br>AT FOUR O'CLOCK IN THE AFTERNOON</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "650.0px",
+          "width": "616.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #888; text-align: center; letter-spacing: 2px; z-index: 6;\">THE GRAND ESTATE<br>123 MANOR ROAD, COUNTRYSIDE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "800.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 18px; color: #d4af37; text-align: center; font-style: italic; z-index: 7;\">Reception to follow</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

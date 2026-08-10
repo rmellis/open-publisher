@@ -1,0 +1,107 @@
+{
+  "title": "Food & Living",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "40.0px",
+          "width": "816.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 100px; color: #1c1917; text-align: center; z-index: 2;\">Savor</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "108.0px",
+          "top": "180.0px",
+          "width": "600.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style=\"background: #fca5a5; border-radius: 400px 400px 0 0; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "108.0px",
+          "top": "650.0px",
+          "width": "600.0px",
+          "height": "160.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 70px; font-style: italic; color: #7f1d1d; text-align: center; z-index: 4;\">Summer<br>Harvest</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "850.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #444; z-index: 5;\">50 QUICK DINNERS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "880.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #777; z-index: 6;\">Meals under 30 mins.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "536.0px",
+          "top": "850.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #444; text-align: right; z-index: 7;\">THE PERFECT PIE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "536.0px",
+          "top": "880.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #777; text-align: right; z-index: 8;\">Secrets from a master baker.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

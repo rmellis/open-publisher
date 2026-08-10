@@ -1,0 +1,151 @@
+{
+  "title": "Family Organizer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fef08a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fef08a; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "736.0px",
+          "height": "976.0px",
+          "innerHTML": "<div style=\"background: #fff; border-radius: 20px;  z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "80.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Comic Sans MS', 'Arial Black', sans-serif; font-size: 60px; color: #d97706; text-align: center; z-index: 3;\">DECEMBER</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "180.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #fff; background: #3b82f6; border-radius: 10px; padding: 10px; text-align: center; z-index: 4;\">MOM</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "318.0px",
+          "top": "200.0px",
+          "width": "180.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #fff; background: #ef4444; border-radius: 10px; padding: 10px; text-align: center; z-index: 5;\">DAD</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "200.0px",
+          "width": "180.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #fff; background: #10b981; border-radius: 10px; padding: 10px; text-align: center; z-index: 6;\">KIDS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "260.0px",
+          "width": "180.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #444; line-height: 2.5; z-index: 7;\">1st - Yoga<br>5th - Book Club<br>12th - Dentist<br>24th - Bake Sale</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "318.0px",
+          "top": "260.0px",
+          "width": "180.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #444; line-height: 2.5; z-index: 8;\">3rd - Golf<br>10th - Oil Change<br>15th - PTA Meeting</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "260.0px",
+          "width": "180.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #444; line-height: 2.5; z-index: 9;\">4th - Soccer<br>8th - Field Trip<br>20th - Half Day<br>25th - CHRISTMAS!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "550.0px",
+          "width": "656.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"border-top: 4px dashed #fcd34d; z-index: 10;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "580.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Comic Sans MS', sans-serif; font-size: 30px; color: #d97706; text-align: center; z-index: 11;\">CHORE CHART</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "650.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #444; line-height: 2; text-align: center; z-index: 12;\">[ ] Take out Trash &nbsp;&nbsp;&nbsp; [ ] Feed Dog &nbsp;&nbsp;&nbsp; [ ] Wash Dishes<br>[ ] Clean Rooms &nbsp;&nbsp;&nbsp; [ ] Vacuum &nbsp;&nbsp;&nbsp; [ ] Water Plants</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

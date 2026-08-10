@@ -1,0 +1,96 @@
+{
+  "title": "Clean Executive Resume",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "50px",
+          "top": "60px",
+          "width": "400px",
+          "height": "60px",
+          "innerHTML": "<div style=\"font-family: 'Georgia', serif; font-size: 48px; color: #2c3e50; z-index: 2;\">Alex Morgan</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "120px",
+          "width": "400px",
+          "height": "30px",
+          "innerHTML": "<div style=\"font-family: 'Segoe UI', sans-serif; font-size: 18px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 3px; z-index: 3;\">Senior Operations Director</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "160px",
+          "width": "716px",
+          "height": "2px",
+          "innerHTML": "<div style=\"background: #bdc3c7; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "200px",
+          "width": "200px",
+          "height": "30px",
+          "innerHTML": "<div style=\"font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: bold; color: #34495e; z-index: 5;\">EXPERIENCE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280px",
+          "top": "200px",
+          "width": "486px",
+          "height": "150px",
+          "innerHTML": "<div style=\"font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #333; line-height: 1.6; z-index: 6;\"><b>Global Corp Inc. | 2020 - Present</b><br>Spearheaded international logistics redesign resulting in a 24% reduction in overhead costs. Managed a cross-functional team of 150+ employees across three continents.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "400px",
+          "width": "200px",
+          "height": "30px",
+          "innerHTML": "<div style=\"font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: bold; color: #34495e; z-index: 7;\">EDUCATION</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280px",
+          "top": "400px",
+          "width": "486px",
+          "height": "100px",
+          "innerHTML": "<div style=\"font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #333; line-height: 1.6; z-index: 8;\"><b>Master of Business Administration</b><br>University of Excellence | Class of 2018</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

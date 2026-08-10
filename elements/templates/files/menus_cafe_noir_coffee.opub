@@ -1,0 +1,107 @@
+{
+  "title": "Cafe Noir Coffee",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#1c1917",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #1c1917; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "736.0px",
+          "height": "976.0px",
+          "innerHTML": "<div style=\"border: 1px solid #a8a29e; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "120.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #d6d3d1; text-align: center; letter-spacing: 10px; z-index: 3;\">CAF\u00c9 NOIR</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "210.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 16px; color: #78716c; text-align: center; font-style: italic; z-index: 4;\">Locally Roasted. Carefully Crafted.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "320.0px",
+          "width": "516.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 24px; color: #d6d3d1; letter-spacing: 3px; border-bottom: 1px solid #57534e; padding-bottom: 5px; z-index: 5;\">COFFEE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "390.0px",
+          "width": "516.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Courier, monospace; font-size: 18px; color: #a8a29e; line-height: 2.5; z-index: 6;\">Espresso ............................ 3.00<br>Americano ........................... 3.50<br>Cappuccino .......................... 4.50<br>Vanilla Latte ....................... 5.00<br>Pour Over ........................... 5.50</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "650.0px",
+          "width": "516.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 24px; color: #d6d3d1; letter-spacing: 3px; border-bottom: 1px solid #57534e; padding-bottom: 5px; z-index: 7;\">TEA & MORE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "720.0px",
+          "width": "516.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Courier, monospace; font-size: 18px; color: #a8a29e; line-height: 2.5; z-index: 8;\">Matcha Latte ........................ 5.50<br>Chai Tea ............................ 4.00<br>Hot Chocolate ....................... 4.50</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

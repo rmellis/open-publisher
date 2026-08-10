@@ -1,0 +1,107 @@
+{
+  "title": "Luxury Real Estate",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"background: #0f766e; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "45.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 50px; font-weight: bold; color: #ffffff; letter-spacing: 5px; text-align: center; z-index: 3;\">OPEN HOUSE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "716.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 40px; color: #0f766e; text-align: center; z-index: 4;\">123 Meadow Lane, Suburbia</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "280.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 60px; font-weight: 900; color: #111827; text-align: center; z-index: 5;\">$850,000</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "400.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"background: #f3f4f6; border-radius: 8px; z-index: 6;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "435.0px",
+          "width": "616.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #374151; text-align: center; z-index: 7;\">4 BEDS &nbsp; | &nbsp; 3 BATHS &nbsp; | &nbsp; 2,500 SQ FT</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "550.0px",
+          "width": "516.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #4b5563; line-height: 1.8; text-align: center; z-index: 8;\">Fully renovated chef's kitchen, vaulted ceilings, and a sprawling backyard perfect for entertaining. Join us this Saturday from 10 AM to 2 PM.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

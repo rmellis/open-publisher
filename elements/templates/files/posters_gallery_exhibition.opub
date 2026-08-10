@@ -1,0 +1,96 @@
+{
+  "title": "Gallery Exhibition",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "80.0px",
+          "width": "656.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style=\"background:#ff7e5f; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "550.0px",
+          "width": "500.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 90px; font-weight: 900; color: #111; line-height: 0.9; z-index: 3;\">MODERN<br>ART.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "45.0px",
+          "top": "780.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 24px; color: #555; z-index: 4;\">A retrospective on abstract minimalism.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "45.0px",
+          "top": "840.0px",
+          "width": "50.0px",
+          "height": "4.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 5;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "45.0px",
+          "top": "870.0px",
+          "width": "300.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #111; z-index: 6;\">OPENS JULY 15</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "45.0px",
+          "top": "900.0px",
+          "width": "300.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #777; z-index: 7;\">The Downtown Gallery<br>450 Arts District Blvd.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

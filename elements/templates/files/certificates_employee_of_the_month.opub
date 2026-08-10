@@ -1,0 +1,96 @@
+{
+  "title": "Employee of the Month",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "1056px",
+      "height": "816px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1056.0px",
+          "height": "816.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "976.0px",
+          "height": "736.0px",
+          "innerHTML": "<div style=\"border: 5px solid #ca8a04; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "856.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 40px; color: #ca8a04; text-align: center; letter-spacing: 10px; z-index: 3;\">EMPLOYEE OF THE MONTH</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "428.0px",
+          "top": "230.0px",
+          "width": "200.0px",
+          "height": "4.0px",
+          "innerHTML": "<div style=\"background: #ca8a04; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "320.0px",
+          "width": "856.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 60px; font-weight: bold; color: #111; text-align: center; z-index: 5;\">Elena Rodriguez</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "450.0px",
+          "width": "656.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #555; text-align: center; line-height: 1.8; z-index: 6;\">Thank you for your tireless dedication, positive attitude,<br>and setting an incredible standard for the entire team in August 2026.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "478.0px",
+          "top": "600.0px",
+          "width": "100.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"background: #ca8a04; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 7;\"><div style=\"color: white; font-family: Arial; font-weight: bold; text-align: center; font-size: 24px;\">#1</div></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

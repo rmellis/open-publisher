@@ -1,0 +1,129 @@
+{
+  "title": "Startup Brief",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"background: #0f172a; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 64px; color: #ffffff; letter-spacing: -2px; z-index: 3;\">THE WEEKLY ROOT</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "140.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; z-index: 4;\">Tech \u2022 Design \u2022 Culture | Issue 42</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "716.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 36px; font-weight: bold; color: #0f172a; z-index: 5;\">The Future of Remote Teams</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "320.0px",
+          "width": "716.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #e2e8f0; z-index: 6;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "350.0px",
+          "width": "716.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 16px; color: #334155; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 7;\">As companies continue to adapt to hybrid models, the tools we use are evolving faster than ever. This week, we explore the top 5 software suites transforming how distributed teams collaborate across time zones. <br><br>From asynchronous video updates to AI-driven project management, the landscape of work has fundamentally shifted.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "700.0px",
+          "width": "716.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"background: #f8fafc; border: 1px solid #cbd5e1; padding: 20px; z-index: 8;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "730.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #0f172a; z-index: 9;\">Upcoming Events</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "780.0px",
+          "width": "656.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #475569; line-height: 1.6; z-index: 10;\">\u2022 <b>Webinar:</b> Designing for Accessibility (Nov 12)<br>\u2022 <b>Workshop:</b> Advanced CSS Grid (Nov 15)</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "title": "University Prospectus",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f8fafc",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f8fafc; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "600.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #1e3a8a; border-radius: 0 0 400px 0; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "500.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 60px; color: #ffffff; z-index: 3;\">Kingsbridge</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "180.0px",
+          "width": "500.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; color: #bfdbfe; letter-spacing: 3px; z-index: 4;\">UNIVERSITY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "450.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 32px; color: #1e3a8a; z-index: 5;\">Shape Your Future.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "510.0px",
+          "width": "400.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #475569; line-height: 1.8; z-index: 6;\">Join a community of scholars dedicated to excellence. With over 150 undergraduate programs and a world-class faculty, Kingsbridge offers an unparalleled educational experience in the heart of the city.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "500.0px",
+          "top": "450.0px",
+          "width": "266.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #bfdbfe; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "520.0px",
+          "top": "480.0px",
+          "width": "226.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #1e3a8a; padding: 20px; z-index: 8;\">KEY DATES:<br><br>Fall Admissions:<br>Nov 1st<br><br>Financial Aid:<br>Jan 15th<br><br>Campus Tours:<br>Every Friday</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

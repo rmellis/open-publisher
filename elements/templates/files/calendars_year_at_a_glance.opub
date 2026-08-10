@@ -1,0 +1,74 @@
+{
+  "title": "Year-at-a-Glance",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "60.0px",
+          "width": "716.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 60px; color: #111; text-align: center; letter-spacing: 5px; z-index: 2;\">2026</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "308.0px",
+          "top": "150.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "656.0px",
+          "height": "350.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #333; column-count: 3; column-gap: 50px; line-height: 1.8; z-index: 4;\">JANUARY<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>FEBRUARY<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>MARCH<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>APRIL<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>MAY<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>JUNE<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "580.0px",
+          "width": "656.0px",
+          "height": "350.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #333; column-count: 3; column-gap: 50px; line-height: 1.8; z-index: 5;\">JULY<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>AUGUST<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>SEPTEMBER<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>OCTOBER<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>NOVEMBER<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span><br><br>DECEMBER<br><span style=\"font-weight:normal; font-size:12px; color:#777;\">S M T W T F S<br>  1 2 3 4 5 6<br>7 8 9 ...</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

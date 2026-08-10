@@ -1,0 +1,96 @@
+{
+  "title": "Eco Foundation",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f0fdf4",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f0fdf4; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "600.0px",
+          "top": "0.0px",
+          "width": "216.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #166534; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "150.0px",
+          "width": "500.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 80px; font-weight: 900; color: #15803d; line-height: 1; z-index: 3;\">PROTECT<br>OUR<br>PLANET.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "500.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #166534; z-index: 4;\">Our Mission</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "550.0px",
+          "width": "450.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #1f2937; line-height: 1.8; z-index: 5;\">We are dedicated to preserving global biodiversity through community-led conservation projects, sustainable agriculture initiatives, and aggressive climate advocacy.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "680.0px",
+          "top": "100.0px",
+          "width": "900.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #dcfce7; transform: rotate(90deg); transform-origin: left top; white-space: nowrap; z-index: 6;\">THE GLOBAL EARTH INITIATIVE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "800.0px",
+          "width": "250.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"background: #15803d; padding: 15px; color: #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center; border-radius: 5px; z-index: 7;\">DONATE TODAY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

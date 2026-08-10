@@ -1,0 +1,107 @@
+{
+  "title": "Corporate Seminar",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#1e1b4b",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #1e1b4b; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "100.0px",
+          "width": "656.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 80px; font-weight: 900; color: #c7d2fe; letter-spacing: -2px; z-index: 2;\">INNOVATE 2026</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "656.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; color: #818cf8; z-index: 3;\">A SUMMIT FOR TECH LEADERS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "260.0px",
+          "width": "150.0px",
+          "height": "5.0px",
+          "innerHTML": "<div style=\"background: #4f46e5; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "300.0px",
+          "width": "500.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; color: #e0e7ff; line-height: 1.6; z-index: 5;\">Join 500+ executives to discuss the integration of AI into modern enterprise workflows.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "450.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #c7d2fe; z-index: 6;\">KEYNOTE SPEAKERS:</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "500.0px",
+          "width": "656.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #a5b4fc; line-height: 2; z-index: 7;\">Dr. Sarah Jenkins - CEO, DataCorp<br>Mark Robinson - VP of Engineering, CloudNet<br>Elena Rostova - Head of AI, FutureSystems</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "850.0px",
+          "width": "656.0px",
+          "height": "65.0px",
+          "innerHTML": "<div style=\"background: #312e81; padding: 20px; text-align: center; color: #fff; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; z-index: 8;\">REGISTER AT INNOVATE-SUMMIT.COM</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

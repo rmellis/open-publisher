@@ -1,0 +1,151 @@
+{
+  "title": "Travel Agency",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f0f9ff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f0f9ff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "716.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 64px; font-weight: 900; color: #0369a1; text-align: center; letter-spacing: 2px; z-index: 2;\">ESCAPE TO THE ALPS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 20px; color: #0c4a6e; text-align: center; font-style: italic; z-index: 3;\">Experience the ultimate winter getaway.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "350.0px",
+          "width": "200.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #0284c7; border-radius: 10px; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "380.0px",
+          "width": "200.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #fff; text-align: center; z-index: 5;\">SKI PASSES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "440.0px",
+          "width": "200.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #e0f2fe; text-align: center; padding: 10px; z-index: 6;\">Access to over 150 premium trails across 3 mountain peaks.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "308.0px",
+          "top": "350.0px",
+          "width": "200.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #0284c7; border-radius: 10px; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "308.0px",
+          "top": "380.0px",
+          "width": "200.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #fff; text-align: center; z-index: 8;\">CABINS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "308.0px",
+          "top": "440.0px",
+          "width": "200.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #e0f2fe; text-align: center; padding: 10px; z-index: 9;\">Luxury heated chalets with panoramic views of the valley.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "350.0px",
+          "width": "200.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #0284c7; border-radius: 10px; z-index: 10;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "380.0px",
+          "width": "200.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #fff; text-align: center; z-index: 11;\">TOURS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "440.0px",
+          "width": "200.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #e0f2fe; text-align: center; padding: 10px; z-index: 12;\">Guided snowshoe and snowmobile tours available daily.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

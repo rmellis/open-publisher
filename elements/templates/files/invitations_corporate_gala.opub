@@ -1,0 +1,107 @@
+{
+  "title": "Corporate Gala",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#0f172a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #0f172a; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "0.0px",
+          "width": "616.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"border-left: 2px solid #38bdf8; border-right: 2px solid #38bdf8; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; color: #94a3b8; text-align: center; letter-spacing: 10px; z-index: 3;\">A N N U A L</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 90px; color: #ffffff; text-align: center; z-index: 4;\">GALA</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "358.0px",
+          "top": "380.0px",
+          "width": "100.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #38bdf8; z-index: 5;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "450.0px",
+          "width": "616.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #cbd5e1; text-align: center; line-height: 2; z-index: 6;\">Join us for an evening of innovation, networking,<br>and recognizing industry excellence.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "650.0px",
+          "width": "616.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #ffffff; text-align: center; z-index: 7;\">DECEMBER 12 | THE METROPOLITAN</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "700.0px",
+          "width": "616.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #38bdf8; text-align: center; z-index: 8;\">BLACK TIE ATTIRE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

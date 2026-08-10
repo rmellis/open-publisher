@@ -1,0 +1,151 @@
+{
+  "title": "Rustic Italian",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#fffbeb",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #fffbeb; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "80.0px",
+          "width": "656.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"border-top: 4px solid #78350f; border-bottom: 4px solid #78350f; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "100.0px",
+          "width": "656.0px",
+          "height": "70.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 60px; color: #78350f; text-align: center; z-index: 3;\">Trattoria Roma</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "180.0px",
+          "width": "656.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #b45309; text-align: center; letter-spacing: 4px; z-index: 4;\">AUTHENTIC FAMILY RECIPES</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "300.0px",
+          "width": "516.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 28px; color: #78350f; text-align: center; border-bottom: 1px solid #d44400; padding-bottom: 10px; z-index: 5;\">ANTIPASTI</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "380.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #451a03; z-index: 6;\">Bruschetta Classico <span style=\"float: right;\">$12</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "410.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #78350f; font-style: italic; z-index: 7;\">Toasted artisan bread, vine tomatoes, fresh basil, garlic.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "500.0px",
+          "width": "516.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 28px; color: #78350f; text-align: center; border-bottom: 1px solid #d44400; padding-bottom: 10px; z-index: 8;\">SECONDI</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "580.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #451a03; z-index: 9;\">Linguine alle Vongole <span style=\"float: right;\">$24</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "610.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #78350f; font-style: italic; z-index: 10;\">Fresh clams, white wine sauce, parsley, chili flakes.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "670.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #451a03; z-index: 11;\">Vitello Tonnato <span style=\"float: right;\">$28</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "700.0px",
+          "width": "516.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #78350f; font-style: italic; z-index: 12;\">Veal scaloppine, lemon caper sauce, roasted potatoes.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "title": "Modern Minimal",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "716.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style=\"font-family: Helvetica, sans-serif; font-size: 80px; font-weight: 900; color: #111; letter-spacing: -3px; z-index: 2;\">FOCUS.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "150.0px",
+          "width": "716.0px",
+          "height": "10.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 3;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "180.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #777; display: flex; justify-content: space-between; z-index: 4;\"><span>VOL. 04</span><span>THE DESIGN ISSUE</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "500.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 40px; color: #111; line-height: 1.2; z-index: 5;\">Why less is almost always better than more.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "380.0px",
+          "width": "716.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #555; line-height: 1.8; column-count: 2; column-gap: 40px; z-index: 6;\">In a world cluttered with notifications, pop-ups, and infinite scrolling, the most valuable commodity is human attention. <br><br>Minimalism isn't just an aesthetic choice anymore; it is a functional requirement for building products that people actually want to use. We strip away the unnecessary so the essential can speak.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "700.0px",
+          "width": "416.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"border: 1px solid #111; padding: 30px; text-align: center; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "230.0px",
+          "top": "740.0px",
+          "width": "356.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 20px; font-style: italic; color: #111; z-index: 8;\">\"Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.\"</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

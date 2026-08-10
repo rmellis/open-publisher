@@ -1,0 +1,118 @@
+{
+  "title": "Yearly View",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "100.0px",
+          "top": "20.0px",
+          "width": "600.0px",
+          "height": "80.0px",
+          "innerHTML": "<h1 style='text-align:center;'>2024</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "120.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>JAN<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "220.0px",
+          "top": "120.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>FEB<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "390.0px",
+          "top": "120.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>MAR<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "560.0px",
+          "top": "120.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>APR<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "260.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>MAY<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "220.0px",
+          "top": "260.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>JUN<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "390.0px",
+          "top": "260.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>JUL<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "560.0px",
+          "top": "260.0px",
+          "width": "150.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-size:10px; border:1px solid #ccc;'>AUG<br>1 2 3...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

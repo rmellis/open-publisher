@@ -1,0 +1,118 @@
+{
+  "title": "Graduation Diploma",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "1056px",
+      "height": "816px",
+      "background": "#fdfbf7",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1056.0px",
+          "height": "816.0px",
+          "innerHTML": "<div style=\"background: #fdfbf7; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "60.0px",
+          "width": "936.0px",
+          "height": "696.0px",
+          "innerHTML": "<div style=\"border: 1px solid #78716c; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "160.0px",
+          "width": "856.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 24px; color: #444; text-align: center; letter-spacing: 5px; text-transform: uppercase; z-index: 3;\">The Board of Trustees of</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "210.0px",
+          "width": "856.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 40px; color: #1c1917; text-align: center; z-index: 4;\">HARRISON UNIVERSITY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "300.0px",
+          "width": "856.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 18px; color: #444; text-align: center; font-style: italic; z-index: 5;\">hereby confers upon</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "360.0px",
+          "width": "856.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 60px; color: #111; text-align: center; z-index: 6;\">Thomas Arlington</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "480.0px",
+          "width": "756.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 18px; color: #444; text-align: center; line-height: 1.8; z-index: 7;\">the degree of Bachelor of Arts in Graphic Design<br>with all the rights, honors, and privileges thereunto appertaining.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "680.0px",
+          "width": "256.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style=\"background: #111; z-index: 8;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "690.0px",
+          "width": "256.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center; z-index: 9;\">PRESIDENT OF THE UNIVERSITY</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

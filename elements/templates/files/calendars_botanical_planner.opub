@@ -1,0 +1,85 @@
+{
+  "title": "Botanical Planner",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#f0fdf4",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #f0fdf4; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "500.0px",
+          "top": "-100.0px",
+          "width": "400.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #bbf7d0; border-radius: 400px; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "100.0px",
+          "width": "400.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 90px; color: #166534; font-style: italic; z-index: 3;\">March</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "400.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 24px; color: #4ade80; letter-spacing: 5px; z-index: 4;\">SPRING BLOOMS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "300.0px",
+          "width": "656.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"border-top: 1px solid #166534; z-index: 5;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "880.0px",
+          "width": "656.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: 'Times New Roman', serif; font-size: 24px; color: #166534; font-style: italic; text-align: center; z-index: 8;\">\"To plant a garden is to believe in tomorrow.\"</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

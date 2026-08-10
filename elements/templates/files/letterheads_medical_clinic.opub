@@ -1,0 +1,107 @@
+{
+  "title": "Medical Clinic",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "10.0px",
+          "height": "956.0px",
+          "innerHTML": "<div style=\"border-left: 10px solid #0d9488; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "80.0px",
+          "width": "500.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 36px; font-weight: bold; color: #0d9488; z-index: 3;\">Apex Medical Care</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "130.0px",
+          "width": "500.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #64748b; z-index: 4;\">500 Health Way, Wellness City, ST 12345<br>Phone: (555) 123-4567 | Fax: (555) 123-4568</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "220.0px",
+          "width": "300.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; z-index: 5;\"><b>Date:</b><br><b>Patient Name:</b><br><b>DOB:</b></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "350.0px",
+          "width": "656.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.8; z-index: 6;\">To Whom It May Concern,<br><br>Type medical notes, referrals, or official clinic documentation here.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "850.0px",
+          "width": "300.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"border-top: 1px solid #cbd5e1; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "860.0px",
+          "width": "300.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #0f172a; font-weight: bold; z-index: 8;\">Dr. Jane Smith, MD<br>Chief Medical Officer</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

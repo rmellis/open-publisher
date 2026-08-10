@@ -1,0 +1,151 @@
+{
+  "title": "Real Estate Market",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"background: #0c4a6e; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "40.0px",
+          "width": "716.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 50px; color: #ffffff; text-align: center; z-index: 3;\">THE MARKET REPORT</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "716.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #bae6fd; text-align: center; letter-spacing: 2px; z-index: 4;\">MONTHLY REAL ESTATE INSIGHTS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "716.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 28px; font-weight: bold; color: #0f172a; text-align: center; z-index: 5;\">Interest Rates Drop: What It Means For You</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "260.0px",
+          "width": "616.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style=\"font-family: Georgia, serif; font-size: 16px; color: #475569; line-height: 1.8; text-align: center; z-index: 6;\">For the first time in 14 months, the central bank has lowered rates, creating a unique window of opportunity for both buyers and sellers in the suburban market.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "400.0px",
+          "width": "340.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #f1f5f9; border: 1px solid #cbd5e1; z-index: 7;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "70.0px",
+          "top": "430.0px",
+          "width": "300.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #0c4a6e; text-align: center; z-index: 8;\">Current Avg Price</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "70.0px",
+          "top": "500.0px",
+          "width": "300.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 50px; color: #10b981; text-align: center; z-index: 9;\">$450K</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "426.0px",
+          "top": "400.0px",
+          "width": "340.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"background: #f1f5f9; border: 1px solid #cbd5e1; z-index: 10;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "446.0px",
+          "top": "430.0px",
+          "width": "300.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #0c4a6e; text-align: center; z-index: 11;\">Featured Listing</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "446.0px",
+          "top": "500.0px",
+          "width": "300.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #475569; text-align: center; line-height: 1.6; z-index: 12;\"><b>123 Maple Street</b><br>4 Bed | 3 Bath | 2,500 sqft<br><br>A gorgeous newly renovated property in the heart of downtown.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

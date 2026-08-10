@@ -1,0 +1,85 @@
+{
+  "title": "Modern Geo",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "300.0px",
+          "innerHTML": "<svg viewBox=\"0 0 100 100\" preserveAspectRatio=\"none\" style=\"width:100%; height:100%; display:block;\"><polygon points=\"0,0 100,0 100,15 0,35\" fill=\"#00c6ff\" /></svg>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "900.0px",
+          "width": "794.0px",
+          "height": "223.0px",
+          "innerHTML": "<svg viewBox=\"0 0 100 100\" preserveAspectRatio=\"none\" style=\"width:100%; height:100%; display:block;\"><polygon points=\"100,100 0,100 0,85 100,65\" fill=\"#00c6ff\" /></svg>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "30.0px",
+          "width": "400.0px",
+          "height": "60.0px",
+          "innerHTML": "<h1 style='color:white; font-family:sans-serif; margin:0;'>COMPANY NAME</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "90.0px",
+          "width": "300.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style='color:white; font-family:sans-serif; font-size:12px;'>123 Business Rd, Tech City</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "500.0px",
+          "top": "1000.0px",
+          "width": "250.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='color:white; font-family:sans-serif; font-size:12px; text-align:right;'>www.company.com<br>info@company.com</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "694.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='font-family:serif; font-size:12px; color:#333; line-height:2;'>Dear [Name],<br><br>Start typing your letter here...</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

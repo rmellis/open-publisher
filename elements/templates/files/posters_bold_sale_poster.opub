@@ -1,0 +1,85 @@
+{
+  "title": "Bold Sale Poster",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#e74c3c",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0px",
+          "top": "0px",
+          "width": "816px",
+          "height": "1056px",
+          "innerHTML": "<div style=\"background: #e74c3c; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "80px",
+          "width": "716px",
+          "height": "200px",
+          "innerHTML": "<div style=\"font-family: 'Impact', sans-serif; font-size: 150px; color: #ffffff; text-align: center;  z-index: 2;\">MASSIVE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "250px",
+          "width": "716px",
+          "height": "200px",
+          "innerHTML": "<div style=\"font-family: 'Impact', sans-serif; font-size: 180px; color: #f1c40f; text-align: center;  z-index: 3;\">SALE!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100px",
+          "top": "480px",
+          "width": "616px",
+          "height": "100px",
+          "innerHTML": "<div style=\"background: #ffffff; border: 4px solid #c0392b; z-index: 4;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100px",
+          "top": "480px",
+          "width": "616px",
+          "height": "100px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 40px; font-weight: bold; color: #e74c3c; text-align: center; z-index: 5; padding-top: 25px;\">UP TO 75% OFF EVERYTHING</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50px",
+          "top": "680px",
+          "width": "716px",
+          "height": "50px",
+          "innerHTML": "<div style=\"font-family: 'Arial', sans-serif; font-size: 24px; font-weight: bold; color: #ffffff; text-align: center; z-index: 6;\">THIS WEEKEND ONLY. DO NOT MISS OUT.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

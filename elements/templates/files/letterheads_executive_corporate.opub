@@ -1,0 +1,118 @@
+{
+  "title": "Executive Corporate",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"background: #1e3a8a; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "20.0px",
+          "width": "400.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: 'Arial Black', sans-serif; font-size: 30px; color: #ffffff; z-index: 3;\">NEXUS HOLDINGS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "566.0px",
+          "top": "20.0px",
+          "width": "200.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #bfdbfe; text-align: right; z-index: 4;\">1-800-555-0199<br>contact@nexus.com</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "150.0px",
+          "width": "300.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #333; z-index: 5;\">DATE: [Insert Date]</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "300.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; z-index: 6;\">TO:<br>[Recipient Name]<br>[Title/Company]<br>[Address]</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "350.0px",
+          "width": "656.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #444; line-height: 1.8; z-index: 7;\">Dear [Name],<br><br>Begin typing your formal letter here. This template is designed for official corporate communications, proposals, and memorandums.<br><br>Sincerely,<br><br><br><b>[Your Name]</b><br>[Your Title]</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "950.0px",
+          "width": "656.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style=\"background: #e2e8f0; z-index: 8;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "970.0px",
+          "width": "656.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 12px; color: #94a3b8; text-align: center; z-index: 9;\">100 Business Parkway, Suite 500, Metropolis, NY 10001 | nexus-holdings.com</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

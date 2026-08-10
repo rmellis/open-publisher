@@ -1,0 +1,74 @@
+{
+  "title": "Tech Startup",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 123456789,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style=\"background: #ffffff; z-index: 1;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "10.0px",
+          "innerHTML": "<div style=\"background:#8b5cf6; z-index: 2;\"></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "60.0px",
+          "width": "300.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style=\"font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #111; z-index: 3;\">{'dev_corp'}</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "200.0px",
+          "width": "696.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.8; z-index: 4;\">Date: [Date]<br><br>Hi [Name],<br><br>Type your proposal, offer letter, or internal memo here. Clean, crisp, and code-ready.</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "556.0px",
+          "top": "60.0px",
+          "width": "200.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #a1a1aa; text-align: right; z-index: 5;\">hello@devcorp.io<br>www.devcorp.io<br>@devcorp</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}
