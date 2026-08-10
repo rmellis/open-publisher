@@ -125,7 +125,10 @@ function toggleSpreadMode() {
                     p2.elements.push(newEl);
                 }
             });
-            newPages.push(p1, p2);
+            newPages.push(p1);
+            if (p2.elements.length > 0) {
+                newPages.push(p2);
+            }
         });
         state.pages = newPages;
         state.currentPageIndex = state.currentPageIndex * 2;
