@@ -316,7 +316,7 @@ function initTemplates() {
 
     // Maps pixel dimensions to a human-readable page size label.
     // Checks paper sizes first, then p-scale video resolutions, then falls back to raw dimensions.
-    function getPageSizeLabel(w, h) {
+    window.getPageSizeLabel = function(w, h) {
         const tol = 5;
         const near = (a, b) => Math.abs(a - b) <= tol;
 
@@ -384,7 +384,7 @@ function initTemplates() {
                     const w = parseInt(page.width) || 794;
                     const h = parseInt(page.height) || 1123;
                     const scale = 100 / w; // scale to fit 100px width thumbnail
-                    const sizeLabel = getPageSizeLabel(w, h);
+                    const sizeLabel = window.getPageSizeLabel(w, h);
                     
                     const content = `
                         <div style="

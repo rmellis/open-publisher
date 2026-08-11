@@ -11,6 +11,21 @@ function saveDocument() {
         margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
+    
+    if (window.DashboardSystem && window.html2canvas) {
+        const paper = document.getElementById('paper');
+        html2canvas(paper, { scale: 0.2 }).then(canvas => {
+            const thumbDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            let sizeLabel = 'Custom';
+            if (typeof window.getPageSizeLabel === 'function' && state.pages.length > 0) {
+                const w = parseInt(state.pages[0].width);
+                const h = parseInt(state.pages[0].height);
+                sizeLabel = window.getPageSizeLabel(w, h);
+            }
+            DashboardSystem.addToRecent(docData.title + '.opub', docData, thumbDataUrl, sizeLabel);
+        }).catch(err => console.log('Could not generate thumbnail', err));
+    }
+
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

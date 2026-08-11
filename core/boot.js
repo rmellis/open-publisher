@@ -21,8 +21,12 @@ window.onload = function() {
     // Set Default Zoom to 60%
     setZoom(0.6);
     
-    // Create first page
-    addNewPage();
+    // Show Dashboard on startup
+    if (window.DashboardSystem) {
+        DashboardSystem.show();
+    } else {
+        addNewPage();
+    }
     
     // Events
     paper.addEventListener('mousedown', handleMouseDown);

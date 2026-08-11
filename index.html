@@ -48,6 +48,7 @@
 	<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js?v=4.16.17';</script>
 	
     <link rel="stylesheet" href="style.css?v=4.16.17">
+    <link rel="stylesheet" href="ui/dashboard.css?v=4.16.17">
 	<!-- clipart data moved to bottom -->
 	<script type="application/ld+json">
 {
@@ -119,6 +120,182 @@
     </div>
     <div style="position: absolute; bottom: -12px; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; pointer-events: none;">
         <div id="splash-progress-bar" style="width: 0%; height: 100%; background: var(--ui-theme-color, #1a8f83); border-radius: 3px; transition: width 0.1s linear; box-shadow: 0 0 5px var(--ui-theme-color, rgba(26, 143, 131, 0.5));"></div>
+    </div>
+</div>
+
+<div id="dashboard-overlay" style="display: none;">
+    <div class="dashboard-header">
+        <div class="dashboard-logo">
+            <i class="fas fa-print"></i> Open Publisher
+        </div>
+        <div class="dashboard-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="dashboard-search-input" placeholder="Search templates..." spellcheck="false" autocomplete="off">
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="dashboard-skip-btn" onclick="DashboardSystem.startBlank('A4')">
+                Skip / Open Editor <i class="fas fa-arrow-right"></i>
+            </button>
+            <div class="custom-dialog-close" onclick="DashboardSystem.hide()" title="Close Dashboard">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-body">
+        <div class="dashboard-nav">
+            <div class="dashboard-nav-item active" data-tab="dashboard-tab-new" id="nav-tab-new">
+                <i class="fas fa-home"></i> Home
+            </div>
+            <div class="dashboard-nav-item" data-tab="dashboard-tab-new">
+                <i class="far fa-file"></i> New
+            </div>
+            <div class="dashboard-nav-item" data-tab="dashboard-tab-open">
+                <i class="far fa-folder-open"></i> Open
+            </div>
+            <div class="dashboard-nav-item" data-tab="dashboard-tab-recent">
+                <i class="far fa-clock"></i> Recent
+            </div>
+            <div class="dashboard-nav-divider"></div>
+            <div class="dashboard-nav-item disabled" title="Coming Soon">
+                <i class="fas fa-cloud"></i> Shared With Me <span class="coming-soon-badge">Soon</span>
+            </div>
+            <div class="dashboard-nav-divider"></div>
+            <div class="dashboard-nav-label">Categories</div>
+            <div id="dashboard-nav-categories">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <!-- NEW TAB (Default) -->
+            <div class="dashboard-tab-pane active" id="dashboard-tab-new">
+                <div class="dashboard-section">
+                    <div class="dashboard-section-title">Blank Documents</div>
+                    <div class="dashboard-grid-container">
+                        <div class="dashboard-scroll-btn dashboard-scroll-left"><i class="fas fa-chevron-left"></i></div>
+                        <div class="dashboard-blank-grid">
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('A4')">
+                                <div class="blank-card-preview" style="width: 105px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">A4</div>
+                                <div class="blank-card-desc">210 x 297mm</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('Letter')">
+                                <div class="blank-card-preview" style="width: 116px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">Letter</div>
+                                <div class="blank-card-desc">8.5 x 11"</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('A5')">
+                                <div class="blank-card-preview" style="width: 105px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">A5</div>
+                                <div class="blank-card-desc">148 x 210mm</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('A3')">
+                                <div class="blank-card-preview" style="width: 105px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">A3</div>
+                                <div class="blank-card-desc">297 x 420mm</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('Legal')">
+                                <div class="blank-card-preview" style="width: 90px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">Legal</div>
+                                <div class="blank-card-desc">8.5 x 14"</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('Tabloid')">
+                                <div class="blank-card-preview" style="width: 96px; height: 150px;">
+                                    <i class="far fa-file"></i>
+                                </div>
+                                <div class="blank-card-title">Tabloid</div>
+                                <div class="blank-card-desc">11 x 17"</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('BusinessCard')">
+                                <div class="blank-card-preview" style="width: 150px; height: 86px;">
+                                    <i class="far fa-address-card"></i>
+                                </div>
+                                <div class="blank-card-title">Business Card</div>
+                                <div class="blank-card-desc">3.5 x 2"</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('Square')">
+                                <div class="blank-card-preview" style="width: 150px; height: 150px;">
+                                    <i class="far fa-square"></i>
+                                </div>
+                                <div class="blank-card-title">Square</div>
+                                <div class="blank-card-desc">210 x 210mm</div>
+                            </div>
+                            <div class="blank-card" onclick="DashboardSystem.startBlank('Custom')">
+                                <div class="blank-card-preview" style="width: 135px; height: 135px; border-style: dashed;">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="blank-card-title">Custom Size...</div>
+                                <div class="blank-card-desc">Set dimensions</div>
+                            </div>
+                        </div>
+                        <div class="dashboard-scroll-btn dashboard-scroll-right"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-section">
+                    <div class="dashboard-section-title">Featured</div>
+                    <div class="dashboard-grid-container">
+                        <div class="dashboard-scroll-btn dashboard-scroll-left"><i class="fas fa-chevron-left"></i></div>
+                        <div class="dashboard-template-grid" id="dashboard-featured-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="dashboard-scroll-btn dashboard-scroll-right"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+                
+                <div id="dashboard-categories-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- RECENT TAB -->
+            <div class="dashboard-tab-pane" id="dashboard-tab-recent">
+                <div class="dashboard-section-title">Recent Files</div>
+                <div class="dashboard-recent-grid" id="dashboard-recent-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- OPEN TAB -->
+            <div class="dashboard-tab-pane" id="dashboard-tab-open">
+                <div class="dashboard-section-title">Open Document</div>
+                <div class="dashboard-open-area">
+                    <div class="dashboard-dropzone" onclick="document.getElementById('file-open').click()">
+                        <i class="fas fa-file-upload"></i>
+                        <p>Click to open or drag and drop files here</p>
+                        <span>Supports .opub, .json, .html, .pub (Coming Soon)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CATEGORY TAB (Dynamic) -->
+            <div class="dashboard-tab-pane" id="dashboard-tab-category">
+                <div class="dashboard-section-title" id="dashboard-category-title">Category Name</div>
+                <div class="dashboard-expanded-grid" id="dashboard-category-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- SEARCH TAB (Dynamic) -->
+            <div class="dashboard-tab-pane" id="dashboard-tab-search">
+                <div class="dashboard-section-title" id="dashboard-search-title">Search Results</div>
+                <div class="dashboard-expanded-grid" id="dashboard-search-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+        </div>
     </div>
 </div>
 <script>
@@ -293,15 +470,15 @@
                 pBar.style.width = ((bootIndex / bootMessages.length) * 100) + '%';
             }
             
-            // Base speed of 30ms, with an 8% chance to "hang" for a realistic 150-300ms
-            var delay = 30;
+            // Base speed of 15ms, with an 8% chance to "hang" for a realistic 75-150ms
+            var delay = 15;
             if (Math.random() < 0.08) {
-                delay += Math.floor(Math.random() * 150) + 150;
+                delay += Math.floor(Math.random() * 75) + 75;
             }
             setTimeout(nextBootStep, delay);
         } else {
             console.log("✅ Open Publisher successfully initialized.");
-            var countdown = 4;
+            var countdown = 1;
             var countdownInterval = setInterval(function() {
                 window._allowSplashLogs = true;
                 if (countdown > 0) {
@@ -341,6 +518,7 @@
     <span class="app-title">
         <i class="fas fa-print"></i> Open Publisher
         <div class="undo-redo-controls">
+            <i class="fas fa-home undo-redo-btn" onclick="if(window.DashboardSystem) DashboardSystem.show()" title="Home"></i>
             <i class="fas fa-save undo-redo-btn" onclick="saveDocument()" title="Save (JSON)"></i>
             <i class="fas fa-undo undo-redo-btn" onclick="undo()" title="Undo (Ctrl+Z)"></i>
             <i class="fas fa-redo undo-redo-btn" onclick="redo()" title="Redo (Ctrl+Y)"></i>
@@ -366,6 +544,7 @@
         <div class="group">
             <div class="tool-btn" onclick="handleNewDocument()"><i class="fas fa-file"></i>New</div>
             <div class="tool-btn" onclick="showTemplateModal()"><i class="fas fa-columns"></i>Templates</div>
+            <div class="tool-btn" onclick="DashboardSystem.show()"><i class="fas fa-th-large"></i>Dashboard</div>
             <div class="group-label">New</div>
         </div>
         <div class="group">
@@ -1077,8 +1256,9 @@
     <script src="tools/proofing/word-count.js"></script>
     <script src="io/export/export.js?v=4.16.18"></script>
     <script src="core/keyboard.js?v=4.16.18"></script>
-    <script src="core/selection.js?v=4.16.18"></script>
-    <script src="core/boot.js?v=4.16.18"></script>
+    <script src="core/selection.js?v=4.16.18"></script>    <script src="ui/dashboard.js?v=4.16.17"></script>
+    <script src="core/boot.js?v=4.16.17"></script>
+</body>
 
 <footer style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">
     <h2>Free Online Desktop Publishing Tool</h2>
