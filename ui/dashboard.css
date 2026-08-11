@@ -1,10 +1,10 @@
 /* Dashboard (Start Screen) */
 #dashboard-overlay {
     position: fixed;
-    top: 2.5vh;
+    top: 5vh;
     left: 2.5vw;
     width: 95vw;
-    height: 95vh;
+    height: 90vh;
     background-color: #f5f5f5;
     z-index: 999998; /* Just behind the splash screen */
     display: flex;
