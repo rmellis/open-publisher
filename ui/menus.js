@@ -1,4 +1,4 @@
-﻿/* =========================================================================
+/* =========================================================================
    CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM)
 ========================================================================= */
 
@@ -52,6 +52,14 @@ const ContextMenuSystem = {
 
         // Build dynamic menu based on target
         window._contextTargetLink = e.target.closest('a');
+        
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            window._contextTargetRange = sel.getRangeAt(0).cloneRange();
+        } else {
+            window._contextTargetRange = null;
+        }
+        
         let html = '';
 
         if (isRibbonBlank) {
@@ -288,8 +296,10 @@ const ContextMenuSystem = {
                     html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
                     html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
                     html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
-                    if (window._contextTargetLink || (sel && sel.toString().trim().length > 0)) {
+                    if (window._contextTargetLink) {
                         html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
+                    } else if (sel && sel.toString().trim().length > 0) {
+                        html += this.buildItem('Add Hyperlink', 'fa-link', 'ContextMenuActions.addHyperlink()');
                     }
                     html += this.buildDivider();
                     html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
@@ -324,9 +334,12 @@ const ContextMenuSystem = {
                         html += this.buildItem('Clear Cell Text', 'fa-eraser', 'if(window.clearSelectedCellText) window.clearSelectedCellText()');
                     }
                     html += this.buildItem('Convert to Text', 'fa-align-left', 'if(window.ContextRibbonActions) ContextRibbonActions.convertTableToText()');
-                    if (window._contextTargetLink || (window.getSelection() && window.getSelection().toString().trim().length > 0)) {
+                    if (window._contextTargetLink) {
                         html += this.buildDivider();
                         html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
+                    } else if (window.getSelection() && window.getSelection().toString().trim().length > 0) {
+                        html += this.buildDivider();
+                        html += this.buildItem('Add Hyperlink', 'fa-link', 'ContextMenuActions.addHyperlink()');
                     }
                 }
                 // 4. SHAPE CONTEXT MENU

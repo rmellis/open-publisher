@@ -159,7 +159,7 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=4.17.4')
+        fetch('elements/templates/template-index.json?v=4.17.6')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -176,7 +176,7 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=4.17.4`)
+        fetch(`elements/templates/files/${t.file}?v=4.17.6`)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];

@@ -232,6 +232,36 @@ function switchTab(t) {
 
 window.ContextMenuActions = {
     
+    addHyperlink: function() {
+        if (!window._contextTargetRange) return;
+        const savedRange = window._contextTargetRange;
+        
+        const content = `
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">URL:</label>
+                <input type="text" id="hyperlink-url-input" value="https://" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" autocomplete="off">
+            </div>
+        `;
+        
+        DialogSystem.show('Add Hyperlink', content, () => {
+            const url = document.getElementById('hyperlink-url-input').value.trim();
+            if (url && url !== 'https://') {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+                document.execCommand('createLink', false, url);
+                if (typeof pushHistory !== 'undefined') pushHistory();
+            }
+        });
+        
+        setTimeout(() => {
+            const input = document.getElementById('hyperlink-url-input');
+            if (input) {
+                input.focus();
+                input.setSelectionRange(8, 8);
+            }
+        }, 50);
+    },
     removeHyperlink: function() {
         if (window._contextTargetLink && window._contextTargetLink.parentNode) {
             const link = window._contextTargetLink;
