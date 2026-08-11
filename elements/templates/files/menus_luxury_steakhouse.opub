@@ -1,0 +1,85 @@
+{
+  "title": "Luxury Steakhouse Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 814921008,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap');</style><div style='background: #1a1a1a; width:100%; height:100%; box-shadow: inset 0 0 100px rgba(0,0,0,0.8);'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "1023.0px",
+          "innerHTML": "<div style='border:1px solid #d4af37; width:100%; height:100%; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "100.0px",
+          "width": "394.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='text-align:center; color:#d4af37; font-family:\"Playfair Display\", serif;'><h1 style='font-size:42px; font-weight:700; margin:0; letter-spacing:4px; text-transform:uppercase;'>THE FORGE</h1><div style='width:50px; height:2px; background:#d4af37; margin:15px auto;'></div><p style='font-family:\"Lato\", sans-serif; font-size:14px; font-weight:300; letter-spacing:6px; color:#aaaaaa;'>PRIME STEAKHOUSE</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "300.0px",
+          "width": "594.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='font-family:\"Playfair Display\", serif; color:#ffffff;'><h2 style='text-align:center; font-size:24px; color:#d4af37; letter-spacing:3px; margin-bottom:30px; text-transform:uppercase;'>Appetizers</h2><div style='display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;'><span>Oysters Rockefeller</span><span>$24</span></div><p style='font-family:\"Lato\", sans-serif; font-size:12px; color:#888; margin-top:-10px; margin-bottom:20px; font-weight:300;'>Spinach, Pernod, hollandaise</p><div style='display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;'><span>Wagyu Beef Carpaccio</span><span>$28</span></div><p style='font-family:\"Lato\", sans-serif; font-size:12px; color:#888; margin-top:-10px; margin-bottom:20px; font-weight:300;'>Truffle oil, parmesan, capers, arugula</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "550.0px",
+          "width": "594.0px",
+          "height": "350.0px",
+          "innerHTML": "<div style='font-family:\"Playfair Display\", serif; color:#ffffff;'><h2 style='text-align:center; font-size:24px; color:#d4af37; letter-spacing:3px; margin-bottom:30px; text-transform:uppercase;'>Prime Cuts</h2><div style='display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;'><span>Filet Mignon (8 oz)</span><span>$65</span></div><p style='font-family:\"Lato\", sans-serif; font-size:12px; color:#888; margin-top:-10px; margin-bottom:20px; font-weight:300;'>Center cut, incredibly tender</p><div style='display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;'><span>Bone-In Ribeye (22 oz)</span><span>$85</span></div><p style='font-family:\"Lato\", sans-serif; font-size:12px; color:#888; margin-top:-10px; margin-bottom:20px; font-weight:300;'>Dry-aged 45 days, rich marbling</p><div style='display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;'><span>Tomahawk for Two (40 oz)</span><span>$150</span></div><p style='font-family:\"Lato\", sans-serif; font-size:12px; color:#888; margin-top:-10px; margin-bottom:20px; font-weight:300;'>Carved tableside, bone marrow butter</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "920.0px",
+          "width": "594.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Playfair Display\", serif; color:#ffffff;'><h2 style='text-align:center; font-size:20px; color:#d4af37; letter-spacing:3px; margin-bottom:20px; text-transform:uppercase;'>Accompaniments</h2><p style='text-align:center; font-family:\"Lato\", sans-serif; font-size:14px; color:#cccccc; font-weight:300; line-height:2;'>Truffle Mac & Cheese $18 &nbsp;\u2022&nbsp; Grilled Asparagus $14<br>Pommes Pur\u00e9e $15 &nbsp;\u2022&nbsp; Wild Mushrooms $16</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

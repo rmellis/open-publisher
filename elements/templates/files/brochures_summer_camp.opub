@@ -1,0 +1,63 @@
+{
+  "title": "Summer Camp Fun",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 917717745,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "500.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'/>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "350.0px",
+          "width": "794.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='background:linear-gradient(to top, #32cd32, transparent); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "400.0px",
+          "width": "694.0px",
+          "height": "100.0px",
+          "innerHTML": "<h1 style='color:#ffff00; font-family:sans-serif; font-size:60px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin:0;'>Summer Camp Fun</h1>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "550.0px",
+          "width": "694.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='color:#222; font-family:sans-serif;'><h2 style='color:#32cd32;'>Discover Excellence</h2><p style='font-size:18px; line-height:1.8;'>Experience the best in class services and premium quality. Our commitment to excellence ensures that you receive only the finest experience. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

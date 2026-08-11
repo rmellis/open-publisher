@@ -1,0 +1,30 @@
+{
+  "title": "Holiday Party",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5463246,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#b71c1c",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "1023.0px",
+          "innerHTML": "<div style='border:3px solid #ffc107;box-sizing:border-box;text-align:center;padding:100px;'><h1 style='color:#ffc107;font-size:70px;text-transform:uppercase;'>Holiday<br>Party</h1><p style='color:#fff;font-size:24px;'>Celebrate the season!</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

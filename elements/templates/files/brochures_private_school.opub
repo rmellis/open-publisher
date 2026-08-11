@@ -1,0 +1,85 @@
+{
+  "title": "Brochures Private School",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 826701667,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #1b4332; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "714.0px",
+          "height": "400.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80' style='width:100%; height:100%; object-fit:cover; border: 4px solid #d4af37;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "480.0px",
+          "width": "714.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 30px;'><h1 style='font-family: \"Times New Roman\", serif; color: #d4af37; font-size: 36px; margin: 0; letter-spacing: 2px;'>ST. JUDE'S ACADEMY</h1><p style='color: #fff; font-family: sans-serif; font-size: 14px; letter-spacing: 4px; margin-top: 10px; text-transform: uppercase;'>Excellence Since 1884</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "640.0px",
+          "width": "330.0px",
+          "height": "250.0px",
+          "innerHTML": "<h2 style='font-family: \"Times New Roman\", serif; color: #d4af37; font-size: 24px; margin: 0 0 15px 0;'>A Tradition of Excellence</h2><p style='color: #ddd; font-family: sans-serif; font-size: 13px; line-height: 1.8; margin: 0;'>At St. Jude's, we nurture the leaders of tomorrow through rigorous academics, character development, and a commitment to service. Our historic campus provides an inspiring environment where intellectual curiosity flourishes.</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "410.0px",
+          "top": "640.0px",
+          "width": "344.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background: rgba(255,255,255,0.05); padding: 25px; border-left: 3px solid #d4af37;'><h3 style='font-family: \"Times New Roman\", serif; color: #fff; font-size: 18px; margin: 0 0 15px 0;'>Academic Achievements</h3><ul style='color: #ddd; font-family: sans-serif; font-size: 12px; line-height: 2; padding-left: 15px;'><li style='margin-bottom: 8px;'>100% University Acceptance Rate</li><li style='margin-bottom: 8px;'>45 National Merit Scholars in 2023</li><li style='margin-bottom: 8px;'>12:1 Student-to-Teacher Ratio</li><li style='margin-bottom: 8px;'>Advanced Placement across 24 Subjects</li></ul></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "930.0px",
+          "width": "714.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background: #d4af37; padding: 20px; display: flex; justify-content: space-between; align-items: center;'><div style='color: #1b4332;'><h4 style='font-family: \"Times New Roman\", serif; font-size: 18px; margin: 0;'>Admissions for 2025 Now Open</h4><p style='font-family: sans-serif; font-size: 12px; margin: 5px 0 0 0;'>Schedule a campus tour today.</p></div><div style='background: #1b4332; color: #d4af37; padding: 10px 20px; font-family: sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;'>APPLY NOW</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

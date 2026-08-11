@@ -1,0 +1,41 @@
+{
+  "title": "Financial Report Cover",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 416435798,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#1e1e1e",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.4;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "400.0px",
+          "width": "594.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='border:2px solid #c5a880; padding:40px; text-align:center;'><h1 style='color:#c5a880; font-size:50px; letter-spacing:5px;'>FINANCIAL<br/>SUMMARY</h1><p style='color:white;'>Fiscal Year 2024</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

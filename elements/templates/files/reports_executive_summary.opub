@@ -1,0 +1,151 @@
+{
+  "title": "Executive Summary Report",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 607023390,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');</style><div style='background: #f8f9fa; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "180.0px",
+          "innerHTML": "<div style='background: #0a1628; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#ffffff;'><h1 style='margin:0; font-size:36px; font-weight:700;'>EXECUTIVE SUMMARY</h1><p style='margin:5px 0 0 0; font-size:14px; color:#007a8a; font-weight:500; letter-spacing:1px;'>Q3 2026 FINANCIAL PERFORMANCE</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "650.0px",
+          "top": "50.0px",
+          "width": "94.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='background:#007a8a; border-radius:4px; display:flex; align-items:center; justify-content:center; color:white; font-family:\"Roboto\", sans-serif; font-size:24px; font-weight:700;'>SYNERGY</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "220.0px",
+          "width": "794.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#0a1628;'><h2 style='font-size:20px; font-weight:700; border-left:4px solid #007a8a; padding-left:15px; margin:0;'>KEY PERFORMANCE INDICATORS</h2></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "290.0px",
+          "width": "218.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:20px; box-sizing:border-box; font-family:\"Roboto\", sans-serif;'><p style='margin:0; font-size:12px; color:#6c757d; font-weight:500; text-transform:uppercase;'>Total Revenue</p><h3 style='margin:10px 0 5px 0; font-size:28px; color:#0a1628;'>$24.5M</h3><p style='margin:0; font-size:12px; color:#28a745; font-weight:700;'>\u25b2 +12.4% YoY</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "288.0px",
+          "top": "290.0px",
+          "width": "218.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:20px; box-sizing:border-box; font-family:\"Roboto\", sans-serif;'><p style='margin:0; font-size:12px; color:#6c757d; font-weight:500; text-transform:uppercase;'>Net Profit Margin</p><h3 style='margin:10px 0 5px 0; font-size:28px; color:#0a1628;'>18.2%</h3><p style='margin:0; font-size:12px; color:#28a745; font-weight:700;'>\u25b2 +2.1% YoY</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "526.0px",
+          "top": "290.0px",
+          "width": "218.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:20px; box-sizing:border-box; font-family:\"Roboto\", sans-serif;'><p style='margin:0; font-size:12px; color:#6c757d; font-weight:500; text-transform:uppercase;'>Customer Churn</p><h3 style='margin:10px 0 5px 0; font-size:28px; color:#0a1628;'>2.4%</h3><p style='margin:0; font-size:12px; color:#dc3545; font-weight:700;'>\u25bc -0.5% YoY</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "450.0px",
+          "width": "794.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#0a1628;'><h2 style='font-size:20px; font-weight:700; border-left:4px solid #007a8a; padding-left:15px; margin:0;'>OVERVIEW & HIGHLIGHTS</h2></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "520.0px",
+          "width": "694.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:30px; box-sizing:border-box; font-family:\"Roboto\", sans-serif; font-size:14px; color:#495057; line-height:1.8;'><p>The third quarter of 2026 saw record-breaking revenue growth driven primarily by the successful launch of our Enterprise Cloud solution in the APAC region. Operational efficiencies resulting from the Q1 restructuring have fully materialized, improving our net profit margins beyond initial forecasts.</p><p style='margin-top:15px;'>Key risks heading into Q4 include supply chain volatility in hardware components and aggressive pricing strategies from emerging competitors in the EMEA sector.</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "760.0px",
+          "width": "337.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:30px; box-sizing:border-box; font-family:\"Roboto\", sans-serif;'><h3 style='font-size:16px; color:#0a1628; margin:0 0 15px 0;'>Strategic Initiatives Q4</h3><ul style='font-size:13px; color:#495057; line-height:2.0; padding-left:20px;'><li>Launch AI-driven analytics module.</li><li>Expand sales workforce by 15% in Europe.</li><li>Complete acquisition of DataTech Solutions.</li><li>Reduce cloud infrastructure costs by 5%.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "407.0px",
+          "top": "760.0px",
+          "width": "337.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background:white; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:30px; box-sizing:border-box; font-family:\"Roboto\", sans-serif; display:flex; align-items:center; justify-content:center;'><div style='width:150px; height:150px; border-radius:50%; background:conic-gradient(#007a8a 0% 60%, #0a1628 60% 85%, #e9ecef 85% 100%); display:flex; align-items:center; justify-content:center;'><div style='width:100px; height:100px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center;'><span style='font-size:12px; font-weight:700; color:#0a1628;'>Rev Split</span></div></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

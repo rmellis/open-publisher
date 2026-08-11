@@ -1,0 +1,63 @@
+{
+  "title": "Calendars Wedding Planning",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 757216970,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #fffbfa; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "714.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='border: 2px solid #e8d0c3; padding: 30px; display: flex; justify-content: space-between; align-items: center;'><div style='flex: 1;'><style>@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');</style><h1 style='font-family: \"Great Vibes\", cursive; color: #c48b71; font-size: 56px; margin: 0;'>September</h1><p style='font-family: sans-serif; color: #888; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; margin: 5px 0 0 0;'>The Wedding of E & J</p></div><div style='text-align: right;'><p style='font-family: \"Great Vibes\", cursive; color: #e8d0c3; font-size: 80px; margin: 0; line-height: 0.8;'>2024</p></div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "220.0px",
+          "width": "480.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style='display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center;'><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>SUN</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>MON</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>TUE</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>WED</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>THU</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>FRI</p><p style='color: #c48b71; font-family: sans-serif; font-size: 12px; font-weight: bold;'>SAT</p><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>1</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>2</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>3</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>4</span><div style='background: #fdf5f2; color: #c48b71; font-family: sans-serif; font-size: 10px; padding: 2px; margin-top: 5px;'>Cake Tasting</div></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>5</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>6</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>7</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>8</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>9</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>10</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>11</span><div style='background: #fdf5f2; color: #c48b71; font-family: sans-serif; font-size: 10px; padding: 2px; margin-top: 5px;'>Dress Fitting</div></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>12</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px;'><span style='font-family: sans-serif; font-size: 14px; color: #333;'>13</span></div><div style='border: 1px solid #f0e6e1; height: 100px; padding: 5px; background: #faf0eb;'><span style='font-family: sans-serif; font-size: 14px; color: #c48b71; font-weight: bold;'>14</span><div style='background: #c48b71; color: #fff; font-family: sans-serif; font-size: 10px; padding: 2px; margin-top: 5px; font-weight: bold;'>WEDDING DAY!</div></div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "220.0px",
+          "width": "214.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style='background: #faf0eb; padding: 20px; height: 100%; box-sizing: border-box;'><h3 style='font-family: sans-serif; color: #c48b71; font-size: 16px; margin: 0 0 20px 0; letter-spacing: 2px; text-transform: uppercase;'>Vendor Checklist</h3><ul style='list-style: none; padding: 0; margin: 0; color: #555; font-family: sans-serif; font-size: 13px; line-height: 2.5;'><li style='display: flex; align-items: center;'><div style='width: 15px; height: 15px; border: 1px solid #c48b71; margin-right: 10px;'></div> Venue Finalized</li><li style='display: flex; align-items: center;'><div style='width: 15px; height: 15px; border: 1px solid #c48b71; margin-right: 10px;'></div> Caterer Menu Set</li><li style='display: flex; align-items: center;'><div style='width: 15px; height: 15px; border: 1px solid #c48b71; margin-right: 10px;'></div> Florist Consult</li><li style='display: flex; align-items: center;'><div style='width: 15px; height: 15px; border: 1px solid #c48b71; margin-right: 10px; background: #c48b71;'></div> Photographer Booked</li><li style='display: flex; align-items: center;'><div style='width: 15px; height: 15px; border: 1px solid #c48b71; margin-right: 10px; background: #c48b71;'></div> Band/DJ Secured</li></ul><img src='https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=400&q=80' style='width: 100%; height: 200px; object-fit: cover; margin-top: 40px; border: 4px solid #fff;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

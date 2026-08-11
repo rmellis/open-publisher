@@ -1,0 +1,118 @@
+{
+  "title": "Gaming Magazine Cover",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 455283448,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#121212",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #121212; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover; opacity:0.8;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgba(18,18,18,0.2) 0%, rgba(18,18,18,0.9) 100%);'></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "40.0px",
+          "width": "754.0px",
+          "height": "180.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap\");</style><div style='font-family:\"Orbitron\", sans-serif; text-align:center; color:#fff; font-size:120px; line-height:1; text-transform:uppercase; text-shadow: 4px 4px 0px #8a2be2, -4px -4px 0px #00ffff; letter-spacing:-2px;'>CTRL+</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "160.0px",
+          "width": "754.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='font-family:sans-serif; text-align:center; color:#fff; font-size:16px; font-weight:bold; letter-spacing:10px; background:#8a2be2; padding:5px 0;'>THE ULTIMATE GAMING AUTHORITY // ISSUE 42</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "400.0px",
+          "width": "300.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#fff;'><div style='background:#00ffff; color:#000; display:inline-block; padding:5px 10px; font-weight:bold; margin-bottom:10px;'>EXCLUSIVE</div><div style='font-family:\"Orbitron\", sans-serif; font-size:40px; font-weight:900; line-height:1.1; margin-bottom:10px;'>CYBER<br/>REALM 2</div><div style='font-size:16px; color:#ccc;'>FIRST LOOK AT THE MOST ANTICIPATED RPG OF THE DECADE</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "450.0px",
+          "top": "500.0px",
+          "width": "300.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#fff; text-align:right;'><div style='font-family:\"Orbitron\", sans-serif; font-size:30px; font-weight:900; color:#8a2be2; margin-bottom:5px;'>HARDWARE</div><div style='font-size:24px; font-weight:bold; margin-bottom:10px;'>NEXT-GEN<br/>VR HEADSETS</div><div style='font-size:14px; color:#ccc;'>ARE THEY WORTH THE HYPE?</div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "700.0px",
+          "width": "300.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#fff;'><div style='font-family:\"Orbitron\", sans-serif; font-size:24px; font-weight:900; color:#00ffff; margin-bottom:5px;'>ESPORTS</div><div style='font-size:20px; font-weight:bold; margin-bottom:10px;'>CHAMPIONSHIP<br/>FINALS RECAP</div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "950.0px",
+          "width": "714.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); border-left: 5px solid #8a2be2; padding:20px; font-family:sans-serif; color:#fff;'><div style='font-size:14px; font-weight:bold; color:#00ffff; margin-bottom:5px;'>PLUS:</div><div style='font-size:18px;'>TOP 10 INDIE GEMS YOU MISSED \u2022 DEVELOPER INTERVIEWS \u2022 RETRO CORNER: 16-BIT CLASSICS</div></div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "650.0px",
+          "top": "50.0px",
+          "width": "100.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background:#00ffff; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#000; font-family:sans-serif; font-weight:900; box-shadow: 0 0 20px rgba(0,255,255,0.5); transform: rotate(15deg);'><div style='font-size:30px;'>$5.99</div><div style='font-size:12px;'>AUG '26</div></div>",
+          "transform": "none",
+          "zIndex": 9,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

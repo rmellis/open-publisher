@@ -1,0 +1,140 @@
+{
+  "title": "Modern Data Scientist Resume",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 920887512,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');</style><div style='background:#0d1117; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "714.0px",
+          "height": "160.0px",
+          "innerHTML": "<div style='border:1px solid #30363d; border-radius:8px; background:#161b22; padding:30px; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "70.0px",
+          "top": "70.0px",
+          "width": "400.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:\"Fira Code\", monospace; color:#c9d1d9;'><h1 style='font-size:32px; margin:0; color:#58a6ff;'>> ALEX_MERCER</h1><p style='font-size:14px; color:#8b949e; margin-top:10px;'>Machine Learning Engineer // Data Scientist</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "480.0px",
+          "top": "70.0px",
+          "width": "240.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:\"Fira Code\", monospace; color:#8b949e; font-size:11px; line-height:2.0; text-align:right;'><span style='color:#3fb950;'>def</span> <span style='color:#d2a8ff;'>contact</span>():<br>&nbsp;&nbsp;email = 'alex.m@data.io'<br>&nbsp;&nbsp;github = 'github.com/amercer'<br>&nbsp;&nbsp;return email, github</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "230.0px",
+          "width": "250.0px",
+          "height": "850.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#c9d1d9;'><h3 style='font-family:\"Fira Code\", monospace; color:#58a6ff; font-size:16px; border-bottom:1px dashed #30363d; padding-bottom:10px;'>// SKILLS</h3></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "280.0px",
+          "width": "250.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#8b949e; font-size:12px; line-height:1.5;'><p>Python / PyTorch</p><div style='width:100%; height:6px; background:#21262d; border-radius:3px; margin-bottom:15px;'><div style='width:95%; height:100%; background:#3fb950; border-radius:3px;'></div></div><p>SQL / BigQuery</p><div style='width:100%; height:6px; background:#21262d; border-radius:3px; margin-bottom:15px;'><div style='width:90%; height:100%; background:#3fb950; border-radius:3px;'></div></div><p>AWS / MLOps</p><div style='width:100%; height:6px; background:#21262d; border-radius:3px; margin-bottom:15px;'><div style='width:75%; height:100%; background:#3fb950; border-radius:3px;'></div></div><p>R / Tableau</p><div style='width:100%; height:6px; background:#21262d; border-radius:3px; margin-bottom:15px;'><div style='width:60%; height:100%; background:#3fb950; border-radius:3px;'></div></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "230.0px",
+          "width": "434.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#c9d1d9;'><h3 style='font-family:\"Fira Code\", monospace; color:#58a6ff; font-size:16px; border-bottom:1px dashed #30363d; padding-bottom:10px;'>// ABOUT_ME</h3><p style='color:#8b949e; font-size:12px; line-height:1.8; margin-top:15px;'>Data Scientist with 6+ years deploying scalable ML models. Proven track record of turning massive datasets into actionable insights. Specialize in NLP, recommendation systems, and distributed cloud computing.</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "410.0px",
+          "width": "434.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#c9d1d9;'><h3 style='font-family:\"Fira Code\", monospace; color:#58a6ff; font-size:16px; border-bottom:1px dashed #30363d; padding-bottom:10px;'>// EXPERIENCE</h3></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "460.0px",
+          "width": "434.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif;'><h4 style='color:#c9d1d9; font-size:16px; margin:0;'>Senior ML Engineer <span style='color:#8b949e; font-size:12px; font-weight:400;'>@ FinTech Innovators</span></h4><p style='color:#3fb950; font-size:11px; font-family:\"Fira Code\", monospace; margin:5px 0 10px 0;'>2020 - PRESENT</p><ul style='color:#8b949e; font-size:12px; line-height:1.6; padding-left:15px;'><li>Built fraud detection ensemble model reducing false positives by 42%.</li><li>Deployed real-time inference API processing 10k req/sec on AWS.</li><li>Led migration from on-prem Hadoop to Snowflake.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "630.0px",
+          "width": "434.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif;'><h4 style='color:#c9d1d9; font-size:16px; margin:0;'>Data Scientist <span style='color:#8b949e; font-size:12px; font-weight:400;'>@ E-Comm Giant</span></h4><p style='color:#3fb950; font-size:11px; font-family:\"Fira Code\", monospace; margin:5px 0 10px 0;'>2016 - 2020</p><ul style='color:#8b949e; font-size:12px; line-height:1.6; padding-left:15px;'><li>Developed collaborative filtering recommendation engine.</li><li>A/B tested ML features driving $12M incremental revenue.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "320.0px",
+          "top": "800.0px",
+          "width": "434.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:\"Roboto\", sans-serif; color:#c9d1d9;'><h3 style='font-family:\"Fira Code\", monospace; color:#58a6ff; font-size:16px; border-bottom:1px dashed #30363d; padding-bottom:10px;'>// EDUCATION</h3><div style='margin-top:15px;'><h4 style='margin:0; font-size:15px;'>M.S. Computer Science</h4><p style='color:#8b949e; font-size:12px; margin:5px 0;'>Stanford University | 2014 - 2016 | Focus: AI</p></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

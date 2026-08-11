@@ -1,0 +1,41 @@
+{
+  "title": "Cocktail Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 2438901,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#121212",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background:#4a148c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:60px;letter-spacing:10px;'>COCKTAILS</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "350.0px",
+          "width": "594.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='color:#b388ff;font-size:24px;'><p><strong>Old Fashioned</strong> ... </p><p><strong>Martini</strong> ... </p><p><strong>Negroni</strong> ... </p></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

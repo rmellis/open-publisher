@@ -1,0 +1,30 @@
+{
+  "title": "House Warming",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 1347707,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fbe9e7",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "594.0px",
+          "height": "700.0px",
+          "innerHTML": "<div style='text-align:center;'><h1 style='color:#bf360c;font-size:60px;'>Housewarming<br>Party</h1><p style='color:#3e2723;font-size:24px;margin-top:60px;'>New home, same us.</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

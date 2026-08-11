@@ -1,0 +1,118 @@
+{
+  "title": "Tech Startup Pitch",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 329826499,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#0a1628",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #0a1628, #112240); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "20.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #3b82f6; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "0.0px",
+          "width": "394.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.3; mix-blend-mode: luminosity;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to right, #0a1628 0%, transparent 100%);'></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "150.0px",
+          "width": "600.0px",
+          "height": "250.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Inter:wght@400;800;900&display=swap\");</style><div style='font-family:\"Inter\", sans-serif;'><div style='color:#3b82f6; font-weight:800; font-size:18px; letter-spacing:4px; text-transform:uppercase;'>Global Innovators Network</div><div style='color:#fff; font-size:80px; font-weight:900; line-height:1; margin-top:20px; letter-spacing:-2px;'>PITCH<br/>DAY 2026</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "450.0px",
+          "width": "500.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-family:\"Inter\", sans-serif; color:#94a3b8; font-size:20px; line-height:1.6;'>Join the next generation of founders, investors, and technologists. 15 startups. 1 stage. Endless possibilities.</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "620.0px",
+          "width": "674.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='display:grid; grid-template-columns: 1fr 1fr; gap:40px; font-family:\"Inter\", sans-serif;'><div style='background:rgba(255,255,255,0.05); padding:30px; border-radius:12px; border-left:4px solid #3b82f6;'><div style='color:#fff; font-size:24px; font-weight:800;'>Keynote</div><div style='color:#3b82f6; font-size:16px; font-weight:bold; margin-top:10px;'>SARAH JENKINS</div><div style='color:#94a3b8; font-size:14px; margin-top:5px;'>Partner at Apex Ventures</div></div><div style='background:rgba(255,255,255,0.05); padding:30px; border-radius:12px; border-left:4px solid #10b981;'><div style='color:#fff; font-size:24px; font-weight:800;'>Panel</div><div style='color:#10b981; font-size:16px; font-weight:bold; margin-top:10px;'>FUTURE OF AI</div><div style='color:#94a3b8; font-size:14px; margin-top:5px;'>Leading minds in tech</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "900.0px",
+          "width": "200.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:\"Inter\", sans-serif; color:#fff;'><div style='font-size:14px; color:#3b82f6; font-weight:800; letter-spacing:2px;'>WHEN</div><div style='font-size:22px; font-weight:bold; margin-top:10px;'>NOV 12, 2026<br/>9AM - 6PM</div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "900.0px",
+          "width": "200.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:\"Inter\", sans-serif; color:#fff;'><div style='font-size:14px; color:#3b82f6; font-weight:800; letter-spacing:2px;'>WHERE</div><div style='font-size:22px; font-weight:bold; margin-top:10px;'>TECH HUB SF<br/>CALIFORNIA</div></div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "550.0px",
+          "top": "910.0px",
+          "width": "184.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='background:#3b82f6; color:#fff; font-family:\"Inter\", sans-serif; font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; border-radius:8px; height:100%; cursor:pointer;'>REGISTER NOW</div>",
+          "transform": "none",
+          "zIndex": 9,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

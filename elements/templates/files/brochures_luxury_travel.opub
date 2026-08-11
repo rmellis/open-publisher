@@ -1,0 +1,85 @@
+{
+  "title": "Brochures Luxury Travel",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 285846815,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #0a2463; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "600.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1200&q=80' style='width:100%; height:100%; object-fit:cover;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='background: linear-gradient(to bottom, rgba(10,36,99,0) 50%, rgba(10,36,99,1) 100%); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "694.0px",
+          "height": "150.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');</style><h1 style='font-family: \"Cinzel\", serif; color: #c9a84c; font-size: 50px; margin: 0; text-align: center; text-shadow: 0 4px 10px rgba(0,0,0,0.5);'>SANTORINI</h1><p style='color: #fff; font-family: sans-serif; font-size: 14px; text-align: center; letter-spacing: 6px; margin-top: 10px; text-transform: uppercase;'>The Sapphire of the Aegean</p>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "700.0px",
+          "width": "320.0px",
+          "height": "300.0px",
+          "innerHTML": "<p style='color: #e0e0e0; font-family: sans-serif; font-size: 14px; line-height: 1.8; margin: 0;'>Experience unparalleled luxury in our cliffside villas. Awaken to panoramic views of the caldera, dine on world-class Mediterranean cuisine, and let our dedicated concierges curate your perfect island escape.</p><div style='margin-top: 30px;'><h3 style='font-family: \"Cinzel\", serif; color: #c9a84c; font-size: 18px; margin: 0 0 10px 0;'>7-Day Itinerary Includes:</h3><ul style='color: #e0e0e0; font-family: sans-serif; font-size: 13px; line-height: 1.6; padding-left: 15px;'><li style='margin-bottom: 5px;'>Private helicopter transfer</li><li style='margin-bottom: 5px;'>Sunset catamaran cruise</li><li style='margin-bottom: 5px;'>Exclusive wine tasting</li><li style='margin-bottom: 5px;'>Spa wellness package</li></ul></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "424.0px",
+          "top": "700.0px",
+          "width": "320.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='border: 1px solid #c9a84c; padding: 30px; border-radius: 4px; background: rgba(255,255,255,0.03);'><h3 style='font-family: \"Cinzel\", serif; color: #fff; font-size: 24px; text-align: center; margin: 0 0 5px 0;'>Signature Villa</h3><p style='color: #c9a84c; font-family: sans-serif; font-size: 12px; text-align: center; letter-spacing: 2px; margin: 0 0 20px 0;'>ALL-INCLUSIVE</p><p style='color: #fff; font-family: \"Cinzel\", serif; font-size: 36px; text-align: center; margin: 0;'>$12,500</p><p style='color: #888; font-family: sans-serif; font-size: 11px; text-align: center; margin: 5px 0 25px 0;'>per couple / week</p><div style='background: #c9a84c; color: #0a2463; text-align: center; padding: 12px; font-family: sans-serif; font-size: 13px; font-weight: bold; letter-spacing: 1px; border-radius: 2px;'>RESERVE NOW</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

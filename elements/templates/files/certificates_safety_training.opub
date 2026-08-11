@@ -1,0 +1,41 @@
+{
+  "title": "Safety Training",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 9049265,
+      "width": "1123px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "1083.0px",
+          "height": "754.0px",
+          "innerHTML": "<div style='border:15px solid #ff9800;width:100%;height:100%;box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "923.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='text-align:center;color:#333;font-size:48px;font-family:sans-serif;'><strong>Safety Training Certified</strong></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

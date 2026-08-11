@@ -1,0 +1,107 @@
+{
+  "title": "Newsletters Luxury Brand",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 339509709,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "716.0px",
+          "height": "150.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');</style><div style='border: 2px solid #d4af37; padding: 20px; text-align: center;'><h1 style='font-family: Playfair Display, serif; color: #d4af37; font-size: 60px; margin: 0; letter-spacing: 10px; text-transform: uppercase;'>MAISON</h1><p style='color: #fff; margin: 5px 0 0 0; letter-spacing: 5px;'>PARIS</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "230.0px",
+          "width": "340.0px",
+          "height": "450.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; border: 1px solid #333;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "230.0px",
+          "width": "346.0px",
+          "height": "100.0px",
+          "innerHTML": "<h2 style='font-family: Playfair Display, serif; color: #fff; font-size: 32px; margin: 0;'>THE FALL COLLECTION</h2>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "350.0px",
+          "width": "346.0px",
+          "height": "200.0px",
+          "innerHTML": "<p style='color: #aaa; font-family: sans-serif; font-size: 14px; line-height: 1.8;'>Discover the new silhouettes of the season. Elegance redefined with bold textures and timeless shapes. A journey through modern luxury.</p><div style='margin-top:20px;'><a style='color: #d4af37; text-decoration: none; border-bottom: 1px solid #d4af37; padding-bottom: 2px; font-family: sans-serif; font-size: 12px; letter-spacing: 2px;'>READ MORE \u25b8</a></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "580.0px",
+          "width": "346.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='border-left: 4px solid #d4af37; padding-left: 20px;'><p style='font-family: Playfair Display, serif; color: #d4af37; font-size: 20px; font-style: italic; margin: 0;'>\"Fashion is the armor to survive the reality of everyday life.\"</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "710.0px",
+          "width": "716.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background: #111; padding: 30px; display: flex; align-items: center;'><div style='flex: 1; padding-right: 20px;'><h3 style='font-family: Playfair Display, serif; color: #fff; margin:0 0 10px 0;'>Exclusive Access</h3><p style='color: #888; font-family: sans-serif; font-size: 12px; line-height: 1.5; margin:0;'>Join our private viewing at the flagship store this weekend.</p></div><div style='width: 150px; height: 140px;'><img src='https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=300&q=80' style='width:100%; height:100%; object-fit:cover;'></div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "980.0px",
+          "width": "816.0px",
+          "height": "76.0px",
+          "innerHTML": "<div style='text-align: center; border-top: 1px solid #333; padding-top: 30px;'><p style='color: #555; font-family: sans-serif; font-size: 10px; letter-spacing: 2px;'>\u00a9 2024 MAISON PARIS. ALL RIGHTS RESERVED. \u2726 \u25c6 \u2726</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

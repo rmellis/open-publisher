@@ -1,0 +1,118 @@
+{
+  "title": "Art Deco Cocktail Party",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 980951528,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Rye:wght@400&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');</style><div style='background: #1a1a1a; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "754.0px",
+          "height": "1083.0px",
+          "innerHTML": "<div style='border:2px solid #c9a84c; width:100%; height:100%; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "30.0px",
+          "width": "734.0px",
+          "height": "1063.0px",
+          "innerHTML": "<div style='border:1px solid #c9a84c; width:100%; height:100%; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "347.0px",
+          "top": "100.0px",
+          "width": "100.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='text-align:center; font-size:60px;'>\ud83c\udf78</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "594.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#ffffff; font-family:\"Josefin Sans\", sans-serif; font-size:18px; font-weight:300; letter-spacing:6px; text-transform:uppercase;'>You are invited to a</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "350.0px",
+          "width": "694.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='text-align:center; color:#c9a84c; font-family:\"Rye\", cursive;'><h1 style='font-size:72px; font-weight:400; margin:0; line-height:1.2; text-transform:uppercase;'>Roaring 20s<br>Cocktail Party</h1></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "600.0px",
+          "width": "594.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='text-align:center; color:#dddddd; font-family:\"Josefin Sans\", sans-serif; font-size:20px; font-weight:300; line-height:2; text-transform:uppercase; letter-spacing:4px;'><p>Friday, October 23rd<br><span style='color:#c9a84c; font-weight:400;'>Eight O'Clock in the Evening</span></p></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "800.0px",
+          "width": "594.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='text-align:center; color:#ffffff; font-family:\"Josefin Sans\", sans-serif; font-size:22px; font-weight:400; letter-spacing:2px;'><p>THE GATSBY PENTHOUSE<br>WEST EGG, NEW YORK</p></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "950.0px",
+          "width": "594.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='text-align:center; color:#c9a84c; font-family:\"Josefin Sans\", sans-serif; font-size:14px; font-weight:300; letter-spacing:4px; text-transform:uppercase;'>Vintage Attire Requested</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

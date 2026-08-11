@@ -1,0 +1,63 @@
+{
+  "title": "House Cleaning",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 100000020,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#e1f5fe",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='background:#039be5; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "694.0px",
+          "height": "150.0px",
+          "innerHTML": "<h1 style='color:white; font-family:sans-serif; font-size:60px; text-align:center;'>SPARKLING CLEAN</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "350.0px",
+          "width": "594.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='background-image:url(\"https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?auto=format&fit=crop&w=800&q=80\"); background-size:cover; width:100%; height:100%; border-radius:20px;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "800.0px",
+          "width": "594.0px",
+          "height": "200.0px",
+          "innerHTML": "<h2 style='color:#0277bd; font-family:sans-serif; text-align:center;'>Professional Cleaning Services</h2><p style='color:#01579b; font-family:sans-serif; text-align:center; font-size:20px;'>Residential & Commercial \u2022 Eco-friendly products</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

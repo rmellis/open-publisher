@@ -1,0 +1,63 @@
+{
+  "title": "Social Media Food Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 291138562,
+      "width": "794px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "794.0px",
+          "innerHTML": "<div style='background: #121212; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "550.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=1000&q=80' style='width:100%; height:100%; object-fit:cover; clip-path: ellipse(120% 100% at 50% 0%);'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "500.0px",
+          "width": "794.0px",
+          "height": "294.0px",
+          "innerHTML": "<div style='display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 0 50px; box-sizing: border-box; text-align: center;'><style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap');</style><p style='font-family: sans-serif; color: #d4af37; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; margin: 0 0 10px 0;'>Chef's Special</p><h1 style='font-family: \"Playfair Display\", serif; color: #fff; font-size: 38px; margin: 0 0 15px 0;'>Pan-Seared Scallops</h1><p style='font-family: sans-serif; color: #aaa; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;'>with cauliflower pur\u00e9e, crispy pancetta, and brown butter foam</p><p style='font-family: sans-serif; color: #fff; font-size: 24px; font-weight: bold; margin: 0;'>$38</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "150.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='background: rgba(0,0,0,0.6); padding: 10px 20px; border: 1px solid #d4af37;'><p style='font-family: sans-serif; color: #fff; font-size: 14px; letter-spacing: 2px; margin: 0; text-transform: uppercase; text-align: center;'>L'ATELIER</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

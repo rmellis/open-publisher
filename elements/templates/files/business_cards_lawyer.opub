@@ -1,0 +1,30 @@
+{
+  "title": "Lawyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 7901402,
+      "width": "336px",
+      "height": "192px",
+      "background": "#fafafa",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "296.0px",
+          "height": "152.0px",
+          "innerHTML": "<div style='border:1px solid #9e9e9e;width:100%;height:100%;box-sizing:border-box;padding:20px;'><strong style='color:#424242;font-size:18px;'>Legal Partners</strong><br><span style='font-size:10px;color:#757575;'>Attorneys at Law</span></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

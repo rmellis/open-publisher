@@ -1,0 +1,30 @@
+{
+  "title": "Sunday Brunch",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 7914203,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffccbc",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "594.0px",
+          "height": "923.0px",
+          "innerHTML": "<div style='background:#fff;border-radius:15px;padding:50px;box-sizing:border-box;text-align:center;'><h1 style='color:#d84315;font-size:55px;'>Sunday Brunch</h1><p style='color:#5d4037;font-size:22px;margin-top:40px;'>Mimosa - <br><br>Avocado Toast - </p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

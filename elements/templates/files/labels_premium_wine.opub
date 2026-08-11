@@ -1,0 +1,151 @@
+{
+  "title": "Premium Wine Label",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 544253593,
+      "width": "300px",
+      "height": "450px",
+      "background": "#f4ecd8",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "300.0px",
+          "height": "450.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&display=swap');</style><div style='background:#f4ecd8; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "15.0px",
+          "top": "15.0px",
+          "width": "270.0px",
+          "height": "420.0px",
+          "innerHTML": "<div style='border:1px solid #333333; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "260.0px",
+          "height": "410.0px",
+          "innerHTML": "<div style='border:1px solid #d4af37; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "90.0px",
+          "top": "38.0px",
+          "width": "120.0px",
+          "height": "110.0px",
+          "innerHTML": "<div style='text-align:center; color:#5a3000; font-size:11px; font-family:\"Cinzel\",serif; line-height:1.4; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:40px; margin-bottom:2px;'>&#9770;</div><div style='letter-spacing:2px; font-size:8px; text-transform:uppercase; border-top:1px solid #5a3000; border-bottom:1px solid #5a3000; padding:3px 0; margin-top:4px;'>Est. MDCCCXII</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "158.0px",
+          "width": "240.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='text-align:center; color:#5a3e1b; font-family:\"Cinzel\",serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#10022; Estate Grown &#10022;</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "182.0px",
+          "width": "240.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='text-align:center; color:#111111; font-family:\"Cinzel\",serif; font-size:28px; font-weight:700; letter-spacing:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>CH&#194;TEAU</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "228.0px",
+          "width": "240.0px",
+          "height": "55.0px",
+          "innerHTML": "<div style='text-align:center; color:#5a0000; font-family:\"Great Vibes\",cursive; font-size:44px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Montrose</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "288.0px",
+          "width": "200.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style='background:#d4af37; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "302.0px",
+          "width": "240.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='text-align:center; color:#333333; font-family:\"Cinzel\",serif; font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Cabernet Sauvignon</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "338.0px",
+          "width": "240.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style='text-align:center; color:#666666; font-family:\"Cinzel\",serif; font-size:10px; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>NAPA VALLEY &nbsp;|&nbsp; 2024</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "370.0px",
+          "width": "200.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style='background:#d4af37; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "382.0px",
+          "width": "240.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='text-align:center; color:#333333; font-family:\"Cinzel\",serif; font-size:8px; font-weight:700; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>750 ML &nbsp;&nbsp;&nbsp; 14.5% ALC. BY VOL.</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

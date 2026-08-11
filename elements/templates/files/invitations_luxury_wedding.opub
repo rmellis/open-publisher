@@ -1,0 +1,195 @@
+{
+  "title": "Luxury Wedding",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 141035619,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fdfbf7",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:wght@300;400;600&display=swap');</style><div style='background:#fdfbf7; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "220.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.22;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "903.0px",
+          "width": "794.0px",
+          "height": "220.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; transform:scaleY(-1); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.22;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "30.0px",
+          "width": "734.0px",
+          "height": "1063.0px",
+          "innerHTML": "<div style='border:1px solid #d8c9c3; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "38.0px",
+          "top": "38.0px",
+          "width": "718.0px",
+          "height": "1047.0px",
+          "innerHTML": "<div style='border:1px solid #e8dcd8; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "247.0px",
+          "top": "95.0px",
+          "width": "300.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style='text-align:center; color:#b76e79; font-family:\"Pinyon Script\", cursive; font-size:80px; line-height:1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>A &amp; J</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "247.0px",
+          "top": "192.0px",
+          "width": "300.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:#d8c9c3; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "210.0px",
+          "width": "594.0px",
+          "height": "110.0px",
+          "innerHTML": "<div style='text-align:center; color:#8a7b75; font-family:\"Cormorant Garamond\", serif; font-size:14px; font-weight:300; letter-spacing:3px; text-transform:uppercase; line-height:2.2; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Together with their families<br>request the honor of your presence<br>at the marriage of</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "355.0px",
+          "width": "634.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#b76e79; font-family:\"Pinyon Script\", cursive; font-size:68px; font-weight:400; line-height:1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Amelia Rose</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "450.0px",
+          "width": "634.0px",
+          "height": "35.0px",
+          "innerHTML": "<div style='text-align:center; color:#aaaaaa; font-family:\"Cormorant Garamond\", serif; font-size:22px; font-weight:300; letter-spacing:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>— and —</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "498.0px",
+          "width": "634.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#b76e79; font-family:\"Pinyon Script\", cursive; font-size:68px; font-weight:400; line-height:1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>James William</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "247.0px",
+          "top": "610.0px",
+          "width": "300.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:#d8c9c3; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "630.0px",
+          "width": "594.0px",
+          "height": "140.0px",
+          "innerHTML": "<div style='text-align:center; color:#8a7b75; font-family:\"Cormorant Garamond\", serif; font-size:16px; font-weight:300; line-height:2.2; text-transform:uppercase; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Saturday, The Twentieth of June<br>Two Thousand and Twenty-Six<br>at Four O'Clock in the Afternoon</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "810.0px",
+          "width": "594.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#5a4f4b; font-family:\"Cormorant Garamond\", serif; font-size:18px; font-weight:400; letter-spacing:2px; text-transform:uppercase; line-height:2; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Villa del Sol<br>Santa Barbara, California</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "247.0px",
+          "top": "918.0px",
+          "width": "300.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:#d8c9c3; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "934.0px",
+          "width": "594.0px",
+          "height": "40.0px",
+          "innerHTML": "<div style='text-align:center; color:#b76e79; font-family:\"Cormorant Garamond\", serif; font-size:13px; font-weight:300; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Reception to follow</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

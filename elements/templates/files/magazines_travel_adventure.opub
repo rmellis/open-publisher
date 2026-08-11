@@ -1,0 +1,52 @@
+{
+  "title": "Travel Magazine Cover",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 538767219,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "50.0px",
+          "width": "794.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='text-align:center;'><h1 style='font-size:90px; color:#ff7f50; text-shadow:2px 2px 5px rgba(0,0,0,0.5); font-weight:bold;'>EXPLORE</h1></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "850.0px",
+          "width": "400.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background:rgba(0,128,128,0.8); color:white; padding:20px;'><h3>HIDDEN GEMS</h3><p>Off the beaten path.</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

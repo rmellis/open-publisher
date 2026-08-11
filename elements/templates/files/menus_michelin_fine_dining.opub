@@ -1,0 +1,74 @@
+{
+  "title": "Michelin Fine Dining Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 441507426,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');</style><div style='background: #ffffff; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "347.0px",
+          "top": "100.0px",
+          "width": "100.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='text-align:center; font-family:\"Inter\", sans-serif; font-size:12px; font-weight:600; letter-spacing:4px;'>L'AURA</div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "297.0px",
+          "top": "160.0px",
+          "width": "200.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style='background:#000000; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "594.0px",
+          "height": "700.0px",
+          "innerHTML": "<div style='font-family:\"Inter\", sans-serif; text-align:center; color:#111111; font-weight:300;'><p style='font-size:14px; letter-spacing:2px; margin-bottom:50px; text-transform:uppercase;'>Tasting Menu</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>AMUSE-BOUCHE</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>Sea Urchin, Yuzu, Shiso Tempura</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>FIRST</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>White Asparagus, Caviar, Smoked Buttermilk</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>SECOND</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>Langoustine, Fermented White Peach, Vanilla</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>MAIN</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>A5 Wagyu, Black Garlic, Foraged Mushrooms, Pine</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>PRE-DESSERT</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>Green Apple Consomm\u00e9, Sorrel, Celery</p><h3 style='font-size:16px; font-weight:400; margin-bottom:10px;'>DESSERT</h3><p style='font-size:12px; color:#555; margin-bottom:40px;'>Dark Chocolate, Miso Caramel, Hojicha Ice Cream</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "1000.0px",
+          "width": "594.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='text-align:center; font-family:\"Inter\", sans-serif; font-size:10px; color:#888; font-weight:300; letter-spacing:2px;'>WINE PAIRING AVAILABLE UPON REQUEST</div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

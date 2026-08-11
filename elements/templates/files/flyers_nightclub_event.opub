@@ -1,0 +1,107 @@
+{
+  "title": "Neon Nightclub Event",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 948828413,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#0d0d0d",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #0d0d0d 0%, #1a0533 100%); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.6;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, transparent 30%, #0d0d0d 100%);'></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "694.0px",
+          "height": "200.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap\");</style><div style='font-family:\"Montserrat\", sans-serif; font-size:90px; color:#b347ff; text-transform:uppercase; line-height:1; letter-spacing:5px; text-shadow: 0 0 20px #b347ff, 0 0 40px #b347ff;'>NEON<br/><span style=\"color:#00fff5; text-shadow: 0 0 20px #00fff5;\">NIGHTS</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "460.0px",
+          "width": "200.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='background:#b347ff; color:#fff; font-family:sans-serif; font-weight:bold; font-size:14px; padding:5px 15px; border-radius:20px; display:inline-block; letter-spacing:2px;'>SATURDAY OCT 31</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "750.0px",
+          "width": "694.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#ccc; font-size:24px; line-height:1.5; border-left:4px solid #00fff5; padding-left:20px;'>FEATURING DJ APEX, STELLAR SOUNDS & MORE.<br/>DOORS OPEN 10PM.</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "900.0px",
+          "width": "300.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#fff;'><div style='font-size:18px; color:#b347ff; font-weight:bold; letter-spacing:2px;'>VENUE</div><div style='font-size:20px; margin-top:10px;'>THE UNDERGROUND<br/>123 NEON AVE, NY 10012</div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "900.0px",
+          "width": "300.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#fff;'><div style='font-size:18px; color:#00fff5; font-weight:bold; letter-spacing:2px;'>TICKETS</div><div style='font-size:20px; margin-top:10px;'>STARTING AT $25<br/>WWW.NEONNIGHTS.COM</div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "1100.0px",
+          "width": "794.0px",
+          "height": "23.0px",
+          "innerHTML": "<div style='background: linear-gradient(90deg, #b347ff, #00fff5); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

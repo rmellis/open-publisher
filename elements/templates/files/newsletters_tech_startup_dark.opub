@@ -1,0 +1,107 @@
+{
+  "title": "Newsletters Tech Startup Dark",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 558742335,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style='background: #0f172a; width:100%; height:100%; font-family: sans-serif;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%); padding: 40px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;'><h1 style='color: #f8fafc; font-size: 32px; font-weight: 900; margin: 0; letter-spacing: -1px;'><span style='color: #3b82f6;'>\u25cf</span> SYNTHESIS</h1><div style='background: #3b82f6; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;'>VOL. 42</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "160.0px",
+          "width": "450.0px",
+          "height": "300.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "540.0px",
+          "top": "160.0px",
+          "width": "226.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='background: #1e293b; border-radius: 12px; padding: 25px; height: 100%; box-sizing: border-box; border: 1px solid #334155;'><h3 style='color: #3b82f6; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 0;'>Quick Stats</h3><div style='margin-top: 20px;'><p style='color: #94a3b8; font-size: 12px; margin: 0;'>Active Users</p><p style='color: #f8fafc; font-size: 28px; font-weight: 900; margin: 5px 0 15px 0;'>2.4M <span style='color: #10b981; font-size: 14px;'>\u25b2 12%</span></p><p style='color: #94a3b8; font-size: 12px; margin: 0;'>System Uptime</p><p style='color: #f8fafc; font-size: 28px; font-weight: 900; margin: 5px 0 15px 0;'>99.99%</p></div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "716.0px",
+          "height": "60.0px",
+          "innerHTML": "<h2 style='color: #f8fafc; font-size: 24px; font-weight: 900; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin: 0;'>Platform Update v2.0</h2>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "580.0px",
+          "width": "340.0px",
+          "height": "200.0px",
+          "innerHTML": "<p style='color: #cbd5e1; font-size: 14px; line-height: 1.7; margin: 0;'>We've completely rewritten our core processing engine. The new architecture allows for sub-millisecond response times across global endpoints. Our engineering team has been working on this transition for the past six months, optimizing every data path.</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "420.0px",
+          "top": "580.0px",
+          "width": "346.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background: #020617; border-radius: 8px; padding: 20px; font-family: monospace; border: 1px solid #334155;'><p style='color: #64748b; font-size: 12px; margin: 0 0 10px 0;'>// new_engine.js</p><p style='color: #38bdf8; font-size: 13px; margin: 5px 0;'>const engine = new Engine({</p><p style='color: #f8fafc; font-size: 13px; margin: 5px 0;'>  mode: 'ultra-fast',</p><p style='color: #f8fafc; font-size: 13px; margin: 5px 0;'>  scale: 'global'</p><p style='color: #38bdf8; font-size: 13px; margin: 5px 0;'>});</p><p style='color: #10b981; font-size: 13px; margin: 5px 0;'>await engine.start();</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "820.0px",
+          "width": "716.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px; padding: 30px; display: flex; justify-content: space-between; align-items: center;'><div style='color: #fff;'><h3 style='margin: 0 0 5px 0; font-size: 18px;'>Upcoming Webinar</h3><p style='margin: 0; font-size: 14px; opacity: 0.9;'>Mastering the new API features</p></div><div style='background: #fff; color: #2563eb; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px;'>Register Now \u25b8</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

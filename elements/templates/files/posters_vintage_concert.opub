@@ -1,0 +1,151 @@
+{
+  "title": "Vintage Concert",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 773829401,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#f5e642",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@700&display=swap');</style><div style='background:#f5e642; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "25.0px",
+          "top": "25.0px",
+          "width": "744.0px",
+          "height": "1073.0px",
+          "innerHTML": "<div style='border:4px solid #2d1a00; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "35.0px",
+          "top": "35.0px",
+          "width": "724.0px",
+          "height": "1053.0px",
+          "innerHTML": "<div style='border:1px solid #2d1a00; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "55.0px",
+          "width": "694.0px",
+          "height": "35.0px",
+          "innerHTML": "<div style='font-family:\"Bebas Neue\",sans-serif; text-align:center; color:#2d1a00; font-size:26px; letter-spacing:8px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>PRESENTS LIVE IN CONCERT</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "100.0px",
+          "width": "694.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:\"Bebas Neue\",sans-serif; text-align:center; color:#2d1a00; font-size:118px; line-height:0.9; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THE<br>VELVET<br>UNDER<br>GROUND</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "390.0px",
+          "width": "694.0px",
+          "height": "350.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "760.0px",
+          "width": "694.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:#2d1a00; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "775.0px",
+          "width": "694.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='font-family:\"Bebas Neue\",sans-serif; text-align:center; color:#2d1a00; font-size:52px; letter-spacing:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>WITH SPECIAL GUESTS</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "850.0px",
+          "width": "694.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='font-family:\"Bebas Neue\",sans-serif; text-align:center; color:#d4a017; font-size:36px; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THE THUNDERBIRDS &amp; SONIC YOUTH</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "915.0px",
+          "width": "694.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:#2d1a00; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "930.0px",
+          "width": "694.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='display:flex; justify-content:space-between; align-items:center; font-family:\"Bebas Neue\",sans-serif; color:#2d1a00; font-size:32px; padding:10px 20px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div>FRIDAY AUG 15</div><div style='color:#d4a017; font-size:24px;'>&#9670;</div><div>FILLMORE WEST</div><div style='color:#d4a017; font-size:24px;'>&#9670;</div><div>TICKETS $5</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "1000.0px",
+          "width": "694.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:#2d1a00; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

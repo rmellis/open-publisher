@@ -1,0 +1,85 @@
+{
+  "title": "Social Media Portfolio Showcase",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 388446422,
+      "width": "794px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "794.0px",
+          "innerHTML": "<div style='background: #0f172a; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "347.0px",
+          "height": "347.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?auto=format&fit=crop&w=600&q=80' style='width:100%; height:100%; object-fit:cover; border-radius: 16px;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "407.0px",
+          "top": "40.0px",
+          "width": "347.0px",
+          "height": "347.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%); width:100%; height:100%; border-radius: 16px; display: flex; align-items: center; justify-content: center;'><h2 style='color: #fff; font-family: Helvetica, sans-serif; font-size: 32px; font-weight: bold;'>UI/UX</h2></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "407.0px",
+          "width": "347.0px",
+          "height": "240.0px",
+          "innerHTML": "<div style='background: #1e293b; width:100%; height:100%; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 40px; box-sizing: border-box;'><p style='color: #38bdf8; font-family: Helvetica, sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 10px 0;'>Latest Project</p><h3 style='color: #fff; font-family: Helvetica, sans-serif; font-size: 28px; font-weight: bold; margin: 0;'>Fintech App Redesign</h3></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "407.0px",
+          "top": "407.0px",
+          "width": "347.0px",
+          "height": "240.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=600&q=80' style='width:100%; height:100%; object-fit:cover; border-radius: 16px;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "680.0px",
+          "width": "714.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='display: flex; justify-content: space-between; align-items: center; height: 100%;'><div style='display: flex; align-items: center;'><img src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=100&q=80' style='width: 60px; height: 60px; border-radius: 50%; margin-right: 20px;'><div style='color: #fff;'><p style='font-family: Helvetica, sans-serif; font-size: 18px; font-weight: bold; margin: 0;'>Alex Rivera</p><p style='font-family: Helvetica, sans-serif; font-size: 14px; color: #94a3b8; margin: 5px 0 0 0;'>Product Designer</p></div></div><div style='background: #fff; color: #0f172a; padding: 12px 24px; border-radius: 30px; font-family: Helvetica, sans-serif; font-weight: bold; font-size: 14px;'>alexrivera.design</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

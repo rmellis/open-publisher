@@ -1,0 +1,140 @@
+{
+  "title": "Yacht Charter",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 694788588,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#0f172a",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: linear-gradient(180deg, #0f172a 0%, #020617 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "480.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "380.0px",
+          "width": "794.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background:linear-gradient(to bottom, transparent, #0f172a); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "694.0px",
+          "height": "35.0px",
+          "innerHTML": "<div style='font-family:Arial,sans-serif; font-size:11px; font-weight:400; color:rgba(148,163,184,0.8); letter-spacing:6px; text-transform:uppercase; text-align:right; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9875; AZURE YACHTING CHARTER CO.</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "540.0px",
+          "width": "694.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style='font-family:Arial,sans-serif; text-align:right; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:58px; font-weight:900; color:#ffffff; letter-spacing:2px; text-transform:uppercase; line-height:0.95;'>AZIMUT 72</div><div style='font-size:13px; color:#94a3b8; letter-spacing:6px; margin-top:8px; text-transform:uppercase;'>ULTIMATE FREEDOM</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "650.0px",
+          "width": "694.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, rgba(148,163,184,0.4), rgba(148,163,184,0.4), transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "668.0px",
+          "width": "320.0px",
+          "height": "220.0px",
+          "innerHTML": "<div style='-webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#e2e8f0; font-family:Arial,sans-serif; font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; border-bottom:1px solid rgba(148,163,184,0.3); padding-bottom:8px; margin-bottom:16px;'>SPECIFICATIONS</div><div style='display:grid; grid-template-columns:1fr 1fr; gap:12px;'><div style='background:rgba(255,255,255,0.05); padding:14px; border-left:2px solid #3b82f6; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;'>Length</div><div style='color:#ffffff; font-family:Arial,sans-serif; font-size:16px; font-weight:700;'>74 ft</div></div><div style='background:rgba(255,255,255,0.05); padding:14px; border-left:2px solid #3b82f6; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;'>Guests</div><div style='color:#ffffff; font-family:Arial,sans-serif; font-size:16px; font-weight:700;'>8 Guests</div></div><div style='background:rgba(255,255,255,0.05); padding:14px; border-left:2px solid #3b82f6; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;'>Speed</div><div style='color:#ffffff; font-family:Arial,sans-serif; font-size:16px; font-weight:700;'>26 kn</div></div><div style='background:rgba(255,255,255,0.05); padding:14px; border-left:2px solid #3b82f6; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;'>Crew</div><div style='color:#ffffff; font-family:Arial,sans-serif; font-size:16px; font-weight:700;'>3 Pro</div></div></div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "424.0px",
+          "top": "668.0px",
+          "width": "320.0px",
+          "height": "220.0px",
+          "innerHTML": "<div style='-webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#e2e8f0; font-family:Arial,sans-serif; font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; border-bottom:1px solid rgba(148,163,184,0.3); padding-bottom:8px; margin-bottom:16px;'>AMENITIES</div><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:13px; line-height:2.0;'>&#9875; Williams Jet Tender 325<br>&#9875; 2&times; Seabob F5S<br>&#9875; Paddleboards &amp; Snorkel Gear<br>&#9875; Zero Speed Stabilisers<br>&#9875; Starlink WiFi<br>&#9875; Flybridge Jacuzzi</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "910.0px",
+          "width": "694.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, rgba(148,163,184,0.4), rgba(148,163,184,0.4), transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "930.0px",
+          "width": "694.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background:rgba(255,255,255,0.07); padding:20px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(148,163,184,0.15); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div><div style='color:#94a3b8; font-family:Arial,sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;'>Summer Rate &bull; Mediterranean</div><div style='color:#ffffff; font-family:Arial,sans-serif; font-size:28px; font-weight:900; letter-spacing:-1px;'>&#8364;45,000<span style='font-size:14px; font-weight:400; color:#94a3b8;'> / week</span></div></div><div style='background:#3b82f6; color:#ffffff; padding:14px 28px; font-family:Arial,sans-serif; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>ENQUIRE NOW</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "1058.0px",
+          "width": "694.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='text-align:center; color:rgba(148,163,184,0.5); font-family:Arial,sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>info@azureyachts.com &nbsp;&bull;&nbsp; +44 (0)20 7946 0000 &nbsp;&bull;&nbsp; azureyachts.com</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

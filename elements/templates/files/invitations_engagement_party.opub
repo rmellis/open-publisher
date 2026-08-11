@@ -1,0 +1,30 @@
+{
+  "title": "Engagement Party",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5521931,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "1023.0px",
+          "innerHTML": "<div style='background:#f8bbd0;border-radius:500px 500px 0 0;text-align:center;padding-top:200px;box-sizing:border-box;'><h1 style='color:#880e4f;font-size:60px;'>We're Engaged!</h1></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

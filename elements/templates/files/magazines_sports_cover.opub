@@ -1,0 +1,52 @@
+{
+  "title": "Sports Magazine Cover",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 637862681,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#000000",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.9;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='text-align:center; padding-top:50px;'><h1 style='font-size:120px; color:#ff0000; font-style:italic; font-weight:900;'>ATHLETE</h1></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "300.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='color:white; background:rgba(255,0,0,0.8); padding:10px;'><h2>CHAMPION MINDSET</h2></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

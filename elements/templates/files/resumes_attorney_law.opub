@@ -1,0 +1,151 @@
+{
+  "title": "Premium Law Attorney Resume",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 367073625,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "280.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');</style><div style='background: linear-gradient(135deg, #0a1628 0%, #050a12 100%); width:100%; height:100%; box-shadow: 5px 0 15px rgba(0,0,0,0.1);'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "280.0px",
+          "height": "280.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.3;mix-blend-mode:luminosity;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "80.0px",
+          "width": "200.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='color:#d4af37; font-family:\"Playfair Display\", serif; text-align:center;'><h1 style='font-size:32px; margin:0; font-weight:900; letter-spacing:2px;'>ARTHUR<br>PENDLETON</h1><hr style='border:none; border-top:2px solid #d4af37; margin:15px 0;'><p style='font-size:12px; font-family:\"Lato\", sans-serif; letter-spacing:3px; margin:0;'>SENIOR PARTNER</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "300.0px",
+          "width": "200.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='color:#f0f0f0; font-family:\"Lato\", sans-serif; font-size:11px; line-height:1.8;'><h3 style='color:#d4af37; font-family:\"Playfair Display\", serif; font-size:16px; letter-spacing:1px; margin-bottom:10px;'>CONTACT \u2726</h3><p>\ud83d\udcde +1 (555) 019-8234<br>\u2709 apendleton@lawfirm.com<br>\ud83d\udccd 1400 Broadway, NY</p><br><h3 style='color:#d4af37; font-family:\"Playfair Display\", serif; font-size:16px; letter-spacing:1px; margin-bottom:10px;'>EXPERTISE \u2726</h3><p>Corporate Law<br>Mergers & Acquisitions<br>Intellectual Property<br>Civil Litigation</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "80.0px",
+          "width": "420.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='color:#0a1628; font-family:\"Playfair Display\", serif;'><h2 style='font-size:24px; font-weight:700; border-bottom:1px solid #d4af37; padding-bottom:10px; margin-bottom:15px;'>EXECUTIVE PROFILE</h2><p style='font-family:\"Lato\", sans-serif; font-size:12px; line-height:1.6; color:#444;'>Accomplished Senior Attorney with over 15 years of prestigious firm experience. Recognized for aggressive representation and exceptional negotiation skills in high-stakes corporate disputes.</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "240.0px",
+          "width": "420.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='color:#0a1628; font-family:\"Playfair Display\", serif;'><h2 style='font-size:24px; font-weight:700; border-bottom:1px solid #d4af37; padding-bottom:10px; margin-bottom:15px;'>PROFESSIONAL EXPERIENCE</h2></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "300.0px",
+          "width": "420.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Lato\", sans-serif;'><h4 style='font-size:16px; margin:0; color:#0a1628; font-weight:700;'>Partner | Pearson & Specter Litigation</h4><p style='font-size:11px; color:#d4af37; margin:5px 0 10px 0; font-weight:700;'>2018 \u2014 PRESENT  \u25c6  NEW YORK, NY</p><ul style='font-size:12px; color:#444; line-height:1.6; padding-left:15px;'><li>Lead counsel for Fortune 500 tech mergers.</li><li>Recovered $400M in damages across civil suits.</li><li>Managed a team of 45 junior associates.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "470.0px",
+          "width": "420.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Lato\", sans-serif;'><h4 style='font-size:16px; margin:0; color:#0a1628; font-weight:700;'>Senior Associate | Rand & Associates</h4><p style='font-size:11px; color:#d4af37; margin:5px 0 10px 0; font-weight:700;'>2012 \u2014 2018  \u25c6  BOSTON, MA</p><ul style='font-size:12px; color:#444; line-height:1.6; padding-left:15px;'><li>Defended major pharmaceutical entities.</li><li>Drafted over 200 complex licensing agreements.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "640.0px",
+          "width": "420.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='color:#0a1628; font-family:\"Playfair Display\", serif;'><h2 style='font-size:24px; font-weight:700; border-bottom:1px solid #d4af37; padding-bottom:10px; margin-bottom:15px;'>EDUCATION</h2></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "330.0px",
+          "top": "700.0px",
+          "width": "420.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:\"Lato\", sans-serif;'><h4 style='font-size:16px; margin:0; color:#0a1628; font-weight:700;'>Juris Doctor (J.D.)</h4><p style='font-size:11px; color:#d4af37; margin:5px 0 10px 0; font-weight:700;'>HARVARD LAW SCHOOL  \u25c6  2009 \u2014 2012</p><p style='font-size:12px; color:#444; line-height:1.6;'>Magna Cum Laude. Editor of the Harvard Law Review.</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "0.0px",
+          "width": "4.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='width:100%; height:100%; background:#d4af37;'></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "700.0px",
+          "top": "1000.0px",
+          "width": "50.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='font-size:40px; color:#e0e0e0; font-family:serif;'>\u2696</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "title": "Minimal Architect Resume",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 485432075,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap');</style><div style='background-color:#ffffff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); background-size: 20px 20px; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "60.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:#111111; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "10.0px",
+          "top": "500.0px",
+          "width": "40.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='transform:rotate(-90deg); transform-origin:left top; color:white; font-family:\"Oswald\", sans-serif; font-size:24px; letter-spacing:10px; white-space:nowrap; position:absolute; left:20px; top:600px;'>PORTFOLIO & CURRICULUM VITAE</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "120.0px",
+          "top": "80.0px",
+          "width": "600.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Oswald\", sans-serif; color:#111111; text-transform:uppercase;'><h1 style='font-size:54px; margin:0; line-height:1; letter-spacing:4px;'>DAVID<br>BAUMANN</h1><div style='width:60px; height:4px; background:#111111; margin:20px 0;'></div><p style='font-family:\"Open Sans\", sans-serif; font-weight:600; font-size:14px; letter-spacing:2px;'>LEAD ARCHITECT / URBAN DESIGNER</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "120.0px",
+          "top": "280.0px",
+          "width": "200.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='font-family:\"Open Sans\", sans-serif; font-size:11px; color:#444;'><h3 style='font-family:\"Oswald\", sans-serif; font-size:16px; color:#111; letter-spacing:2px; margin-bottom:15px;'>CONTACT</h3><p style='line-height:2;'>T: +44 7700 900077<br>E: d.baumann@arch.co.uk<br>W: baumann-design.com<br>L: London, UK</p><br><br><h3 style='font-family:\"Oswald\", sans-serif; font-size:16px; color:#111; letter-spacing:2px; margin-bottom:15px;'>SOFTWARE</h3><p style='line-height:2;'>AutoCAD<br>Revit Architecture<br>Rhino 3D<br>SketchUp<br>V-Ray Rendering</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "350.0px",
+          "top": "280.0px",
+          "width": "400.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:\"Open Sans\", sans-serif; font-size:12px; color:#444; line-height:1.8;'><h3 style='font-family:\"Oswald\", sans-serif; font-size:16px; color:#111; letter-spacing:2px; margin-bottom:15px;'>PROFILE</h3><p>Award-winning architect with a decade of experience designing sustainable commercial and residential spaces. Adept at managing projects from conceptual design through construction administration, ensuring seamless integration of structural aesthetics and environmental efficiency.</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "350.0px",
+          "top": "480.0px",
+          "width": "400.0px",
+          "height": "350.0px",
+          "innerHTML": "<div style='font-family:\"Open Sans\", sans-serif; font-size:12px; color:#444; line-height:1.6;'><h3 style='font-family:\"Oswald\", sans-serif; font-size:16px; color:#111; letter-spacing:2px; margin-bottom:20px;'>EXPERIENCE</h3><h4 style='font-size:14px; color:#111; margin:0 0 5px 0;'>Senior Architect | Foster & Partners</h4><p style='font-size:10px; font-weight:600; margin:0 0 10px 0;'>2018 - PRESENT</p><ul style='padding-left:15px; margin-bottom:25px;'><li>Lead designer for a 40-story mixed-use tower in Canary Wharf.</li><li>Spearheaded LEED Platinum certification efforts.</li></ul><h4 style='font-size:14px; color:#111; margin:0 0 5px 0;'>Architectural Designer | Zaha Hadid Architects</h4><p style='font-size:10px; font-weight:600; margin:0 0 10px 0;'>2013 - 2018</p><ul style='padding-left:15px;'><li>Assisted in parametric modeling for international cultural centers.</li><li>Prepared comprehensive construction documents.</li></ul></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "350.0px",
+          "top": "800.0px",
+          "width": "400.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:\"Open Sans\", sans-serif; font-size:12px; color:#444; line-height:1.6;'><h3 style='font-family:\"Oswald\", sans-serif; font-size:16px; color:#111; letter-spacing:2px; margin-bottom:20px;'>EDUCATION</h3><h4 style='font-size:14px; color:#111; margin:0 0 5px 0;'>Master of Architecture (M.Arch)</h4><p style='font-size:10px; font-weight:600; margin:0 0 10px 0;'>UCL Bartlett School of Architecture | 2011 - 2013</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

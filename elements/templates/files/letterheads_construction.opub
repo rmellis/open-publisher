@@ -1,0 +1,52 @@
+{
+  "title": "Construction Co.",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 535437784,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:#ffa500; width:100%; height:100%; display:flex; align-items:center; padding-left:50px; box-sizing:border-box;'><h1 style='color:#333333; font-family:sans-serif; margin:0;'>Construction Co.</h1></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "150.0px",
+          "width": "694.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style='color:#333; font-family:serif; font-size:14px; line-height:1.6;'><p>Date: _________</p><br><p>Dear [Name],</p><br><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris.</p><br><br><br><p>Sincerely,</p><p><b>Construction Co. Team</b></p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "1000.0px",
+          "width": "794.0px",
+          "height": "123.0px",
+          "innerHTML": "<div style='background:#ffa500; width:100%; height:100%; display:flex; align-items:center; justify-content:center;'><p style='color:#333333; font-family:sans-serif;'>123 Business Rd. | City, State 12345 | (555) 123-4567 | info@example.com</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

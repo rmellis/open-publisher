@@ -1,0 +1,52 @@
+{
+  "title": "Food Label",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 714814258,
+      "width": "350px",
+      "height": "250px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "350.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background:#ffcc80; width:100%; height:100%; border:4px solid #ef6c00; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "100.0px",
+          "height": "210.0px",
+          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; border-radius:5px;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "130.0px",
+          "top": "50.0px",
+          "width": "200.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='color:#e65100;'><h2 style='margin:0; font-size:24px;'>ARTISAN</h2><h1 style='margin:0; font-size:36px; line-height:1;'>COFFEE</h1><p style='font-size:10px;'>DARK ROAST - 250G</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

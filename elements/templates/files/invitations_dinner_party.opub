@@ -1,0 +1,30 @@
+{
+  "title": "Dinner Party",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5797485,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#1b5e20",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "300.0px",
+          "width": "794.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='background:#fff;text-align:center;padding:100px;box-sizing:border-box;'><h1 style='color:#1b5e20;font-size:60px;font-family:serif;'>You're Invited</h1><p style='color:#333;font-size:24px;'>To an evening of fine dining and good company.</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

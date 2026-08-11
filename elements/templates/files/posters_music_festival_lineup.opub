@@ -1,0 +1,107 @@
+{
+ "title": "Music Festival Lineup Poster",
+ "isTemplate": true,
+ "hasMasterPage": false,
+ "isSpreadMode": false,
+ "pages": [
+  {
+   "id": 1005,
+   "width": "794px",
+   "height": "1123px",
+   "background": "#000000",
+   "header": "",
+   "footer": "",
+   "borderStyle": "none",
+   "elements": [
+    {
+     "left": "0.0px",
+     "top": "0.0px",
+     "width": "794.0px",
+     "height": "1123.0px",
+     "innerHTML": "<div style='background:linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #ea580c 100%); -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 1,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "60.0px",
+     "width": "714.0px",
+     "height": "150.0px",
+     "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Anton&display=swap\");</style><div style='font-family:\"Anton\", sans-serif; font-size:96px; color:#ffffff; text-align:center; line-height:1; text-transform:uppercase; text-shadow:0 10px 20px rgba(0,0,0,0.3);'>SUNBURN<br>FESTIVAL</div>",
+     "transform": "none",
+     "zIndex": 2,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "240.0px",
+     "width": "714.0px",
+     "height": "40.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:24px; font-weight:bold; color:#fde047; text-align:center; letter-spacing:4px;'>AUGUST 14-16, 2026 &middot; MIAMI BEACH, FL</div>",
+     "transform": "none",
+     "zIndex": 3,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "340.0px",
+     "width": "714.0px",
+     "height": "120.0px",
+     "innerHTML": "<div style='font-family:\"Anton\", sans-serif; font-size:64px; color:#ffffff; text-align:center; line-height:1.2; text-shadow:0 4px 10px rgba(0,0,0,0.2);'>THE WEEKND &middot; DUA LIPA<br>ARCTIC MONKEYS</div>",
+     "transform": "none",
+     "zIndex": 4,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "500.0px",
+     "width": "714.0px",
+     "height": "180.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:36px; font-weight:900; color:#ffffff; text-align:center; line-height:1.4; text-transform:uppercase;'>Calvin Harris &middot; Odesza &middot; SZA<br>Tame Impala &middot; Flume &middot; Doja Cat<br>Rufus Du Sol &middot; Kendrick Lamar</div>",
+     "transform": "none",
+     "zIndex": 5,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "720.0px",
+     "width": "714.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:20px; font-weight:bold; color:#ffedd5; text-align:center; line-height:1.8; text-transform:uppercase;'>Peggy Gou &middot; Fred Again.. &middot; Jamie xx &middot; Kaytranada<br>Rosalía &middot; Disclosure &middot; Four Tet &middot; Bicep<br>Jungle &middot; Dom Dolla &middot; John Summit &middot; Gorgon City<br>Bonobo &middot; Caribou &middot; SG Lewis &middot; Channel Tres</div>",
+     "transform": "none",
+     "zIndex": 6,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "900.0px",
+     "width": "714.0px",
+     "height": "60.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:14px; font-weight:normal; color:#ffffff; text-align:center; line-height:1.6; opacity:0.8;'>+ MANY MORE TO BE ANNOUNCED</div>",
+     "transform": "none",
+     "zIndex": 7,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "1000.0px",
+     "width": "714.0px",
+     "height": "80.0px",
+     "innerHTML": "<div style='background-color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact; border-radius:40px; display:flex; align-items:center; justify-content:center; width:400px; height:60px; margin:0 auto;'><span style='font-family:sans-serif; font-size:20px; font-weight:900; color:#db2777; letter-spacing:2px;'>GET TICKETS AT SUNBURN.FEST</span></div>",
+     "transform": "none",
+     "zIndex": 8,
+     "scaleX": "1",
+     "scaleY": "1"
+    }
+   ]
+  }
+ ]
+}

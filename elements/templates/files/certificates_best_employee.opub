@@ -1,0 +1,41 @@
+{
+  "title": "Best Employee",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 1111197,
+      "width": "1123px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "1083.0px",
+          "height": "754.0px",
+          "innerHTML": "<div style='border:8px solid #000;width:100%;height:100%;box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "150.0px",
+          "width": "1123.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='text-align:center;font-size:64px;font-family:serif;font-weight:bold;'>EMPLOYEE OF THE YEAR</div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

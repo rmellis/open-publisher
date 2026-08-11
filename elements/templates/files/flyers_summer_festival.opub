@@ -1,0 +1,63 @@
+{
+  "title": "Summer Festival",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 100000001,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff3e0",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='background-image:url(\"https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80\"); background-size:cover; width:100%; height:100%; border-radius: 20px;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "400.0px",
+          "width": "694.0px",
+          "height": "150.0px",
+          "innerHTML": "<h1 style='color:#e65100; font-family:sans-serif; font-size:60px; text-align:center; margin:0;'>SUMMER FESTIVAL</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "550.0px",
+          "width": "494.0px",
+          "height": "100.0px",
+          "innerHTML": "<h2 style='color:#ef6c00; font-family:sans-serif; text-align:center;'>Live Music & Food</h2>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "700.0px",
+          "width": "694.0px",
+          "height": "200.0px",
+          "innerHTML": "<p style='color:#333; font-family:sans-serif; font-size:20px; text-align:center;'>August 15-17 \u2022 City Park<br>Tickets available online</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

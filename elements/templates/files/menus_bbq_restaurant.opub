@@ -1,0 +1,41 @@
+{
+  "title": "BBQ Restaurant Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5865830,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#3e2723",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background:#d84315;color:#fff;display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:bold;text-transform:uppercase;'>Smokehouse BBQ</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "250.0px",
+          "width": "694.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='background:#5d4037;color:#fff;padding:40px;'><h2 style='color:#ffcc80;'>Platters</h2><p>Brisket...</p><p>Pulled Pork...</p><p>Ribs...</p></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

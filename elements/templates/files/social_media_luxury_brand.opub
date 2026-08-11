@@ -1,0 +1,151 @@
+{
+  "title": "Luxury Brand Post",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 512551081,
+      "width": "794px",
+      "height": "794px",
+      "background": "#0d0d0d",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "794.0px",
+          "innerHTML": "<div style='background:#0d0d0d; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "30.0px",
+          "width": "734.0px",
+          "height": "734.0px",
+          "innerHTML": "<div style='border:1px solid #c9a84c; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "714.0px",
+          "height": "714.0px",
+          "innerHTML": "<div style='border:1px solid rgba(201,168,76,0.3); width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "130.0px",
+          "width": "594.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='text-align:center; color:#c9a84c; font-family:\"Georgia\", serif; font-size:11px; font-weight:400; letter-spacing:6px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9830; MAISON ÉLÈVE &#9830;</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "175.0px",
+          "width": "594.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, #c9a84c, transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "200.0px",
+          "width": "634.0px",
+          "height": "160.0px",
+          "innerHTML": "<div style='text-align:center; color:#ffffff; font-family:\"Georgia\", serif; font-size:62px; font-weight:400; line-height:1.1; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THE NEW<br>COLLECTION</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "375.0px",
+          "width": "634.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, #c9a84c, transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "395.0px",
+          "width": "594.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='text-align:center; color:rgba(255,255,255,0.65); font-family:\"Georgia\", serif; font-size:15px; font-weight:300; line-height:1.8; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Crafted in limited numbers for those who<br>appreciate the art of true luxury.</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "247.0px",
+          "top": "490.0px",
+          "width": "300.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='background:#c9a84c; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><span style='color:#0d0d0d; font-family:Arial,sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase;'>DISCOVER NOW</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "570.0px",
+          "width": "594.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style='text-align:center; color:#c9a84c; font-family:Georgia, serif; font-size:12px; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>www.maisoneleve.com</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "620.0px",
+          "width": "594.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, #c9a84c, transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "645.0px",
+          "width": "594.0px",
+          "height": "25.0px",
+          "innerHTML": "<div style='text-align:center; color:rgba(201,168,76,0.6); font-family:Arial,sans-serif; font-size:10px; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9830; AUTUMN / WINTER 2026 &#9830;</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

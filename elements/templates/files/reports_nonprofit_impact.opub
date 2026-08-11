@@ -1,0 +1,41 @@
+{
+  "title": "Nonprofit Impact Report",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 356358313,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#f1f8e9",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "500.0px",
+          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "400.0px",
+          "width": "594.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='background:white; padding:40px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);'><h1 style='color:#33691e;'>IMPACT REPORT</h1><h2 style='color:#558b2f;'>2023-2024</h2><p>Making a difference together.</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

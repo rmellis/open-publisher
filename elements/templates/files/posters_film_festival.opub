@@ -1,0 +1,118 @@
+{
+  "title": "Film Festival Poster",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 575542455,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#111111",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #111; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "700.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.8;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, transparent 0%, #111 100%);'></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "600.0px",
+          "width": "694.0px",
+          "height": "250.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap\");</style><div style='font-family:\"Cinzel\", serif; text-align:center;'><div style='color:#d4af37; font-size:20px; letter-spacing:10px; margin-bottom:20px;'>15TH ANNUAL</div><div style='color:#fff; font-size:72px; font-weight:700; line-height:1.1; text-transform:uppercase;'>International<br/>Film Festival</div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "347.0px",
+          "top": "830.0px",
+          "width": "100.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:#d4af37; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "870.0px",
+          "width": "694.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#ccc; font-size:16px; text-align:center; letter-spacing:4px; line-height:2;'>FEATURING 50+ PREMIERES FROM AROUND THE GLOBE<br/>SPECIAL DIRECTOR'S CUT SCREENINGS</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "980.0px",
+          "width": "694.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='display:flex; justify-content:space-around; align-items:center; border: 1px solid rgba(212,175,55,0.3); padding:20px; font-family:\"Cinzel\", serif; color:#fff;'><div style='text-align:center;'><div style='color:#d4af37; font-size:14px; letter-spacing:2px;'>DATES</div><div style='font-size:24px; margin-top:5px;'>OCT 10-15</div></div><div>\u2726</div><div style='text-align:center;'><div style='color:#d4af37; font-size:14px; letter-spacing:2px;'>LOCATION</div><div style='font-size:24px; margin-top:5px;'>GRAND THEATER</div></div><div>\u2726</div><div style='text-align:center;'><div style='color:#d4af37; font-size:14px; letter-spacing:2px;'>TICKETS</div><div style='font-size:24px; margin-top:5px;'>FILMFEST.COM</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "754.0px",
+          "height": "1083.0px",
+          "innerHTML": "<div style='border: 1px solid rgba(255,255,255,0.1); width:100%; height:100%; pointer-events:none; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "30.0px",
+          "top": "50.0px",
+          "width": "40.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='color:#fff; font-size:24px; writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:10px; font-family:sans-serif;'>\u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "724.0px",
+          "top": "50.0px",
+          "width": "40.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='color:#fff; font-size:24px; writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:10px; font-family:sans-serif;'>\u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc \u25fc</div>",
+          "transform": "none",
+          "zIndex": 9,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

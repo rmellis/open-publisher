@@ -1,0 +1,129 @@
+{
+  "title": "Graduation Certificate",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 968664597,
+      "width": "1123px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1123.0px",
+          "height": "794.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');</style><div style='background: #0a1628; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1123.0px",
+          "height": "794.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?auto=format&fit=crop&w=1200&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.1;mix-blend-mode:screen;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "1043.0px",
+          "height": "714.0px",
+          "innerHTML": "<div style='border:4px double #c0c0c0; width:100%; height:100%; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "923.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='text-align:center; color:#d4af37; font-family:\"Playfair Display\", serif;'><h2 style='font-size:20px; font-weight:400; letter-spacing:4px; margin-bottom:10px;'>THE BOARD OF TRUSTEES OF</h2><h1 style='font-size:42px; font-weight:900; margin:0; letter-spacing:2px; text-transform:uppercase;'>Wellington University</h1></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "280.0px",
+          "width": "923.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='text-align:center; color:#e0e0e0; font-family:\"Playfair Display\", serif; font-size:16px; font-style:italic;'>hereby confers upon</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "350.0px",
+          "width": "923.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#ffffff; font-family:\"Playfair Display\", serif; font-size:52px; font-weight:700;'>Jonathan Edward Smith</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "460.0px",
+          "width": "823.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:#cccccc; font-family:\"Playfair Display\", serif; font-size:16px; line-height:1.6;'>the degree of<br><strong style='color:#d4af37; font-size:24px; font-weight:700;'>Master of Business Administration</strong><br>with all the rights, privileges, and honors appertaining thereto.</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "620.0px",
+          "width": "250.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='border-bottom:1px solid #c0c0c0; text-align:center;'><p style='font-family:\"Playfair Display\", serif; color:#fff; font-size:20px; margin:10px 0 0 0; font-style:italic;'>Dr. A. Sterling</p></div><div style='text-align:center; color:#c0c0c0; font-family:\"Playfair Display\", serif; font-size:12px; margin-top:8px;'>CHANCELLOR</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "673.0px",
+          "top": "620.0px",
+          "width": "250.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='border-bottom:1px solid #c0c0c0; text-align:center;'><p style='font-family:\"Playfair Display\", serif; color:#fff; font-size:20px; margin:10px 0 0 0; font-style:italic;'>Prof. M. Hastings</p></div><div style='text-align:center; color:#c0c0c0; font-family:\"Playfair Display\", serif; font-size:12px; margin-top:8px;'>DEAN OF ACADEMICS</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "521.0px",
+          "top": "600.0px",
+          "width": "80.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='width:80px; height:80px; border-radius:50%; background:#d4af37; border:3px solid #c0c0c0; display:flex; align-items:center; justify-content:center; color:#0a1628; font-size:36px;'>\ud83c\udf93</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+ "title": "Architecture Firm Brochure",
+ "isTemplate": true,
+ "hasMasterPage": false,
+ "isSpreadMode": false,
+ "pages": [
+  {
+   "id": 1001,
+   "width": "794px",
+   "height": "1123px",
+   "background": "#ffffff",
+   "header": "",
+   "footer": "",
+   "borderStyle": "none",
+   "elements": [
+    {
+     "left": "0.0px",
+     "top": "0.0px",
+     "width": "794.0px",
+     "height": "561.5px",
+     "innerHTML": "<div style='background-color:#0d0d0d; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 1,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "40.0px",
+     "width": "714.0px",
+     "height": "481.5px",
+     "innerHTML": "<div style='overflow:hidden; width:100%; height:100%; border-radius:4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);'><img src='https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; display:block;' /></div>",
+     "transform": "none",
+     "zIndex": 2,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "540.0px",
+     "width": "714.0px",
+     "height": "10.0px",
+     "innerHTML": "<div style='background-color:#c9a84c; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 3,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "600.0px",
+     "width": "714.0px",
+     "height": "80.0px",
+     "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@700&display=swap\");</style><div style='font-family:\"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size:72px; font-weight:700; color:#0d0d0d; letter-spacing:-2px; line-height:1;'>FORMA STUDIO</div>",
+     "transform": "none",
+     "zIndex": 4,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "690.0px",
+     "width": "714.0px",
+     "height": "30.0px",
+     "innerHTML": "<div style='font-family:Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; color:#c9a84c; letter-spacing:2px; text-transform:uppercase;'>Visionary Architecture & Design</div>",
+     "transform": "none",
+     "zIndex": 5,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "760.0px",
+     "width": "330.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='font-family:Georgia, serif; font-size:14px; line-height:1.8; color:#333333;'>We believe that architecture should be a harmonious blend of form and function. Our award-winning studio specializes in creating spaces that inspire, endure, and elevate the human experience. With over two decades of expertise, FORMA STUDIO brings visionary concepts to life.</div>",
+     "transform": "none",
+     "zIndex": 6,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "420.0px",
+     "top": "760.0px",
+     "width": "330.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:2.2; color:#0d0d0d; font-weight:bold;'><ul style='margin:0; padding-left:20px; color:#c9a84c;'><li style='margin-bottom:8px;'><span style='color:#0d0d0d;'>Commercial Architecture</span></li><li style='margin-bottom:8px;'><span style='color:#0d0d0d;'>Residential Design</span></li><li style='margin-bottom:8px;'><span style='color:#0d0d0d;'>Urban Planning</span></li><li style='margin-bottom:8px;'><span style='color:#0d0d0d;'>Interior Architecture</span></li></ul></div>",
+     "transform": "none",
+     "zIndex": 7,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "1000.0px",
+     "width": "714.0px",
+     "height": "60.0px",
+     "innerHTML": "<div style='border-top:1px solid #e0e0e0; padding-top:20px; display:flex; justify-content:space-between; font-family:Helvetica, Arial, sans-serif; font-size:12px; color:#666666;'><span>123 Design District, New York, NY 10001</span><span>+1 (212) 555-0198</span><span>hello@formastudio.com</span><span>www.formastudio.com</span></div>",
+     "transform": "none",
+     "zIndex": 8,
+     "scaleX": "1",
+     "scaleY": "1"
+    }
+   ]
+  }
+ ]
+}

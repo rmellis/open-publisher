@@ -1,0 +1,96 @@
+{
+  "title": "Brochures Fine Art Gallery",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 401351536,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #ffffff; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "594.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='border-bottom: 1px solid #000; padding-bottom: 20px;'><h1 style='font-family: Helvetica, Arial, sans-serif; color: #000; font-size: 18px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase;'>Galerie Blanc</h1></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "594.0px",
+          "height": "500.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:contain;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "750.0px",
+          "width": "594.0px",
+          "height": "100.0px",
+          "innerHTML": "<h2 style='font-family: Helvetica, Arial, sans-serif; color: #000; font-size: 28px; font-weight: normal; margin: 0;'>Ephemeral States</h2><p style='font-family: Helvetica, Arial, sans-serif; color: #666; font-size: 14px; margin: 10px 0 0 0;'>An Exhibition by Elena Rostova</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "850.0px",
+          "width": "300.0px",
+          "height": "150.0px",
+          "innerHTML": "<p style='font-family: Helvetica, Arial, sans-serif; color: #333; font-size: 12px; line-height: 1.8; margin: 0; text-align: justify;'>Rostova's latest series challenges our perception of permanence through large-scale abstract color fields. By utilizing pigment blends that subtly shift under different lighting conditions, the artwork insists on being experienced rather than merely viewed.</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "450.0px",
+          "top": "850.0px",
+          "width": "244.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family: Helvetica, Arial, sans-serif; color: #333; font-size: 12px; line-height: 1.8;'><p style='font-weight: bold; margin: 0 0 5px 0;'>Exhibition Dates</p><p style='margin: 0 0 15px 0;'>October 15 \u2013 November 30, 2024</p><p style='font-weight: bold; margin: 0 0 5px 0;'>Opening Reception</p><p style='margin: 0;'>Thursday, Oct 17, 6\u20138 PM</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "1050.0px",
+          "width": "594.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='border-top: 1px solid #eee; padding-top: 15px;'><p style='font-family: Helvetica, Arial, sans-serif; color: #999; font-size: 10px; margin: 0;'>142 West 24th Street, New York, NY 10011 | Tue\u2013Sat 10AM\u20136PM | galerie-blanc.com</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

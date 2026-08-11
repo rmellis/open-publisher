@@ -1,0 +1,52 @@
+{
+  "title": "Pet Grooming Salon",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 100000003,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#e0f2f1",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='background-image:url(\"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80\"); background-size:cover; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "400.0px",
+          "width": "794.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background:#00695c; color:white; font-family:sans-serif; text-align:center; padding-top:40px; font-size:40px; font-weight:bold; border-radius: 50px 50px 0 0;'>Happy Paws Grooming</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "650.0px",
+          "width": "594.0px",
+          "height": "200.0px",
+          "innerHTML": "<p style='color:#004d40; font-family:sans-serif; font-size:24px; text-align:center;'>Professional grooming services for dogs and cats. Book your appointment today!</p>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

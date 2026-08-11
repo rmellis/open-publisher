@@ -1,0 +1,74 @@
+{
+  "title": "Social Media Services Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 390224158,
+      "width": "794px",
+      "height": "794px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "794.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); width:100%; height:100%; padding: 50px; box-sizing: border-box;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='text-align: center;'><h1 style='font-family: Arial, sans-serif; color: #333; font-size: 36px; font-weight: 900; margin: 0; text-transform: uppercase;'>Social Media Packages</h1><p style='color: #666; font-family: sans-serif; font-size: 16px; margin: 10px 0 0 0;'>Scale your brand with expert management</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "218.0px",
+          "height": "480.0px",
+          "innerHTML": "<div style='background: #fff; border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.1); height: 100%; box-sizing: border-box;'><div style='background: #fdf2f8; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto;'><p style='font-size: 24px; margin: 0;'>\ud83c\udf31</p></div><h2 style='font-family: Arial, sans-serif; color: #333; font-size: 22px; margin: 0 0 10px 0;'>Starter</h2><p style='color: #ec4899; font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; margin: 0 0 20px 0;'>$499<span style='font-size: 14px; color: #999; font-weight: normal;'>/mo</span></p><ul style='list-style: none; padding: 0; margin: 0; text-align: left; color: #666; font-family: sans-serif; font-size: 13px; line-height: 2;'><li style='margin-bottom: 10px;'>\u2713 3 Posts per week</li><li style='margin-bottom: 10px;'>\u2713 Basic community mgmt</li><li style='margin-bottom: 10px;'>\u2713 Monthly report</li><li style='margin-bottom: 10px;'>\u2715 Ad management</li></ul><div style='margin-top: 40px; background: #f3f4f6; padding: 12px; border-radius: 8px; font-family: sans-serif; font-weight: bold; color: #4b5563; cursor: pointer;'>Select Plan</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "288.0px",
+          "top": "170.0px",
+          "width": "218.0px",
+          "height": "540.0px",
+          "innerHTML": "<div style='background: #fff; border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 20px 40px rgba(236,72,153,0.3); height: 100%; box-sizing: border-box; position: relative; border: 3px solid #ec4899;'><div style='position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #ec4899; color: #fff; padding: 5px 15px; border-radius: 20px; font-family: sans-serif; font-size: 12px; font-weight: bold;'>MOST POPULAR</div><div style='background: #fdf2f8; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto;'><p style='font-size: 24px; margin: 0;'>\ud83d\ude80</p></div><h2 style='font-family: Arial, sans-serif; color: #333; font-size: 22px; margin: 0 0 10px 0;'>Growth</h2><p style='color: #ec4899; font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; margin: 0 0 20px 0;'>$999<span style='font-size: 14px; color: #999; font-weight: normal;'>/mo</span></p><ul style='list-style: none; padding: 0; margin: 0; text-align: left; color: #666; font-family: sans-serif; font-size: 13px; line-height: 2;'><li style='margin-bottom: 10px;'>\u2713 5 Posts per week</li><li style='margin-bottom: 10px;'>\u2713 Active community mgmt</li><li style='margin-bottom: 10px;'>\u2713 Bi-weekly strategy</li><li style='margin-bottom: 10px;'>\u2713 $200 Ad spend mgmt</li><li style='margin-bottom: 10px;'>\u2713 Custom graphics</li></ul><div style='margin-top: 40px; background: #ec4899; padding: 12px; border-radius: 8px; font-family: sans-serif; font-weight: bold; color: #fff; cursor: pointer;'>Select Plan</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "526.0px",
+          "top": "200.0px",
+          "width": "218.0px",
+          "height": "480.0px",
+          "innerHTML": "<div style='background: #fff; border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.1); height: 100%; box-sizing: border-box;'><div style='background: #fdf2f8; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto;'><p style='font-size: 24px; margin: 0;'>\ud83d\udc51</p></div><h2 style='font-family: Arial, sans-serif; color: #333; font-size: 22px; margin: 0 0 10px 0;'>Agency</h2><p style='color: #ec4899; font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; margin: 0 0 20px 0;'>$2499<span style='font-size: 14px; color: #999; font-weight: normal;'>/mo</span></p><ul style='list-style: none; padding: 0; margin: 0; text-align: left; color: #666; font-family: sans-serif; font-size: 13px; line-height: 2;'><li style='margin-bottom: 10px;'>\u2713 Daily Posts</li><li style='margin-bottom: 10px;'>\u2713 24/7 community mgmt</li><li style='margin-bottom: 10px;'>\u2713 Video editing</li><li style='margin-bottom: 10px;'>\u2713 Unlimited Ad mgmt</li></ul><div style='margin-top: 40px; background: #f3f4f6; padding: 12px; border-radius: 8px; font-family: sans-serif; font-weight: bold; color: #4b5563; cursor: pointer;'>Select Plan</div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

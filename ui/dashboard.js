@@ -159,7 +159,7 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=4.17.2')
+        fetch('elements/templates/template-index.json?v=4.17.3')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -176,7 +176,7 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=4.17.2`)
+        fetch(`elements/templates/files/${t.file}?v=4.17.3`)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];
@@ -302,23 +302,34 @@ window.DashboardSystem = {
         const featuredContainer = document.getElementById('dashboard-featured-grid');
         if (!featuredContainer || !this.templateData) return;
         featuredContainer.innerHTML = '';
-        
-        // Pick one from each category up to 8
-        const cats = Object.keys(this.templateData);
-        let count = 0;
-        
-        for (let i = 0; i < cats.length; i++) {
-            if (count >= 8) break;
-            const cat = cats[i];
-            const templates = this.templateData[cat];
-            if (templates && templates.length > 0) {
-                // Pick the first one as featured
-                const t = templates[0];
-                featuredContainer.appendChild(this.createTemplateCard(t));
-                count++;
-            }
-        }
+
+        // Curated hand-picked featured templates — the best of the premium collection
+        const featured = [
+            { name: 'Executive Summary',       file: 'reports_executive_summary.opub',         category: 'Reports' },
+            { name: 'Luxury Wedding',           file: 'invitations_luxury_wedding.opub',         category: 'Invitations' },
+            { name: 'Michelin Fine Dining',     file: 'menus_michelin_fine_dining.opub',         category: 'Menus' },
+            { name: 'Black Tie Gala',           file: 'invitations_black_tie_gala.opub',         category: 'Invitations' },
+            { name: 'Film Festival',            file: 'posters_film_festival.opub',              category: 'Posters' },
+            { name: 'Nightclub Event',          file: 'flyers_nightclub_event.opub',             category: 'Flyers' },
+            { name: 'Creative Director',        file: 'resumes_creative_director.opub',          category: 'Resumes' },
+            { name: 'Gaming Magazine',          file: 'magazines_gaming_cover.opub',             category: 'Magazines' },
+            { name: 'Luxury Brand Post',        file: 'social_media_luxury_brand.opub',          category: 'Social Media' },
+            { name: 'Gold Excellence Award',    file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
+            { name: 'Vintage Concert',          file: 'posters_vintage_concert.opub',            category: 'Posters' },
+            { name: 'Yacht Charter',            file: 'brochures_yacht_charter.opub',            category: 'Brochures' },
+        ];
+
+        featured.forEach(item => {
+            // Find full template object from loaded data so card renders correctly
+            const catTemplates = this.templateData[item.category];
+            const template = catTemplates
+                ? catTemplates.find(t => t.file === item.file)
+                : null;
+            const t = template || { name: item.name, file: item.file };
+            featuredContainer.appendChild(this.createTemplateCard(t));
+        });
     },
+
     
     renderCategoriesRows: function() {
         const container = document.getElementById('dashboard-categories-container');

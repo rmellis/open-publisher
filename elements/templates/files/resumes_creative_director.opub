@@ -1,0 +1,239 @@
+{
+  "title": "Creative Director",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 354256012,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "240.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: linear-gradient(180deg, #1a0533 0%, #2d1b69 50%, #11998e 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "240.0px",
+          "top": "0.0px",
+          "width": "554.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:#ffffff; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "40.0px",
+          "width": "200.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='width:200px; height:200px; border-radius:50%; overflow:hidden; border:3px solid rgba(255,255,255,0.4); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "265.0px",
+          "width": "200.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='color:#ffffff; font-family:Arial, sans-serif; font-size:11px; font-weight:300; letter-spacing:1px; text-transform:uppercase; line-height:2; -webkit-print-color-adjust:exact; print-color-adjust:exact; opacity:0.7;'>sophia@creativestudio.io<br>+1 (323) 555-0198<br>creativestudio.io/sophia</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "370.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:rgba(255,255,255,0.3); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "385.0px",
+          "width": "200.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='color:#11998e; font-family:Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SKILLS</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "415.0px",
+          "width": "200.0px",
+          "height": "260.0px",
+          "innerHTML": "<div style='color:#ffffff; font-family:Arial, sans-serif; font-size:12px; line-height:1.8; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='margin-bottom:10px;'>Brand Identity<div style='background:rgba(255,255,255,0.15); border-radius:3px; margin-top:3px; height:5px; width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#11998e; height:5px; width:95%; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div></div><div style='margin-bottom:10px;'>Art Direction<div style='background:rgba(255,255,255,0.15); border-radius:3px; margin-top:3px; height:5px; width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#11998e; height:5px; width:90%; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div></div><div style='margin-bottom:10px;'>UI / UX Design<div style='background:rgba(255,255,255,0.15); border-radius:3px; margin-top:3px; height:5px; width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#11998e; height:5px; width:80%; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div></div><div style='margin-bottom:10px;'>Motion &amp; Video<div style='background:rgba(255,255,255,0.15); border-radius:3px; margin-top:3px; height:5px; width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#11998e; height:5px; width:70%; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div></div><div style='margin-bottom:10px;'>Figma / Adobe CC<div style='background:rgba(255,255,255,0.15); border-radius:3px; margin-top:3px; height:5px; width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#11998e; height:5px; width:98%; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "700.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:rgba(255,255,255,0.3); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "715.0px",
+          "width": "200.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='color:#11998e; font-family:Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EDUCATION</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "745.0px",
+          "width": "200.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='color:#ffffff; font-family:Arial, sans-serif; font-size:12px; line-height:1.8; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><b>MFA Graphic Design</b><br><span style='opacity:0.7; font-size:11px;'>Rhode Island School<br>of Design · 2015</span><br><br><b>BA Visual Arts</b><br><span style='opacity:0.7; font-size:11px;'>UCLA · 2013</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "50.0px",
+          "width": "490.0px",
+          "height": "110.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:48px; font-weight:900; color:#1a1a2e; letter-spacing:-2px; line-height:1;'>SOPHIA</div><div style='font-size:48px; font-weight:900; color:#1a1a2e; letter-spacing:-2px; line-height:1;'>BLAKE</div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "172.0px",
+          "width": "490.0px",
+          "height": "28.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:14px; font-weight:700; color:#11998e; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>CREATIVE DIRECTOR</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "210.0px",
+          "width": "490.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:#e5e7eb; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "225.0px",
+          "width": "490.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='font-family:Georgia, serif; font-size:13px; color:#52525b; line-height:1.7; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Award-winning Creative Director with 12+ years crafting iconic brand identities for Fortune 500 companies and global agencies. Known for visionary storytelling that bridges design excellence with measurable business results.</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "305.0px",
+          "width": "490.0px",
+          "height": "22.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:11px; font-weight:700; color:#1a1a2e; letter-spacing:3px; text-transform:uppercase; border-bottom:2px solid #1a1a2e; padding-bottom:5px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EXPERIENCE</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "340.0px",
+          "width": "490.0px",
+          "height": "160.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:14px; font-weight:700; color:#1a1a2e;'>VP Creative Director — TBWA\\Chiat\\Day</div><div style='font-size:12px; color:#11998e; margin:3px 0 6px;'>2020 – Present · Los Angeles, CA</div><div style='font-size:12px; color:#52525b; line-height:1.6;'>Led creative vision for Nike, Apple, and Airbnb global campaigns. Built and managed 35-person design team. Increased agency revenue by 40% through new business wins totalling $120M.</div><br><div style='font-size:14px; font-weight:700; color:#1a1a2e;'>Senior Art Director — Wieden+Kennedy</div><div style='font-size:12px; color:#11998e; margin:3px 0 6px;'>2017 – 2020 · Portland, OR</div><div style='font-size:12px; color:#52525b; line-height:1.6;'>Directed award-winning campaigns for Old Spice and Delta Airlines. Cannes Lions Gold winner 2019.</div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "515.0px",
+          "width": "490.0px",
+          "height": "22.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:11px; font-weight:700; color:#1a1a2e; letter-spacing:3px; text-transform:uppercase; border-bottom:2px solid #1a1a2e; padding-bottom:5px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>PORTFOLIO HIGHLIGHTS</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "550.0px",
+          "width": "490.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='background:#f3f4f6; border-radius:6px; overflow:hidden;'><img src='https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=400&q=80' style='width:100%; height:90px; object-fit:cover;'><div style='padding:6px; font-family:Arial,sans-serif; font-size:10px; color:#52525b;'>Nike — Brand Campaign 2023</div></div><div style='background:#f3f4f6; border-radius:6px; overflow:hidden;'><img src='https://images.unsplash.com/photo-1572044162444-ad60f128bdea?auto=format&fit=crop&w=400&q=80' style='width:100%; height:90px; object-fit:cover;'><div style='padding:6px; font-family:Arial,sans-serif; font-size:10px; color:#52525b;'>Airbnb — Visual Identity</div></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "770.0px",
+          "width": "490.0px",
+          "height": "22.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:11px; font-weight:700; color:#1a1a2e; letter-spacing:3px; text-transform:uppercase; border-bottom:2px solid #1a1a2e; padding-bottom:5px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>AWARDS</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "280.0px",
+          "top": "804.0px",
+          "width": "490.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:12px; color:#52525b; line-height:2; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9733; Cannes Lions Gold — Film Craft (2022, 2019)<br>&#9733; D&amp;AD Yellow Pencil — Brand Identity (2021)<br>&#9733; One Show Best in Show — Integrated (2020)<br>&#9733; Fast Company Innovation by Design (2023)</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

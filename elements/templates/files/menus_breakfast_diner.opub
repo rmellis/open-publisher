@@ -1,0 +1,41 @@
+{
+  "title": "Breakfast Diner Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5958347,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fff9c4",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "180.0px",
+          "innerHTML": "<div style='background:#fbc02d;color:#3e2723;display:flex;align-items:center;justify-content:center;font-size:56px;font-family:sans-serif;'>SUNNY SIDE DINER</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "250.0px",
+          "width": "594.0px",
+          "height": "700.0px",
+          "innerHTML": "<div style='color:#3e2723;'><h2>Classics</h2><p>Two Eggs & Bacon ... </p><p>Pancakes ... </p></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

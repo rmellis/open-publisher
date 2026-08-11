@@ -1,0 +1,63 @@
+{
+  "title": "Food Truck Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 100000004,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffebee",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "594.0px",
+          "height": "150.0px",
+          "innerHTML": "<h1 style='color:#c62828; font-family:sans-serif; font-size:60px; text-align:center; border-bottom: 5px solid #d32f2f;'>STREET EATS</h1>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "300.0px",
+          "width": "300.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='background-image:url(\"https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80\"); background-size:cover; width:100%; height:100%; border-radius: 150px;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "300.0px",
+          "width": "344.0px",
+          "height": "300.0px",
+          "innerHTML": "<h2 style='color:#b71c1c; font-family:sans-serif;'>Our Menu</h2><ul style='color:#c62828; font-family:sans-serif; font-size:20px; list-style-type:none; padding:0;'><li>Spicy Burger - $10</li><li>Loaded Fries - $6</li><li>Tacos - $8</li></ul>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "700.0px",
+          "width": "594.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='background:#c62828; color:white; font-family:sans-serif; text-align:center; padding:20px; font-size:24px;'>Find us downtown every Friday!</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

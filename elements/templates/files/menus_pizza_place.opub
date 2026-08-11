@@ -1,0 +1,52 @@
+{
+  "title": "Pizza Place Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 3930411,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background:#b71c1c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:50px;'>MAMA MIA PIZZERIA</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "120.0px",
+          "width": "794.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='background:#1b5e20;'></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "694.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style='color:#333;font-size:24px;'><p><strong>Margherita</strong> ... </p><p><strong>Pepperoni</strong> ... </p></div>",
+          "transform": "none",
+          "zIndex": 12,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

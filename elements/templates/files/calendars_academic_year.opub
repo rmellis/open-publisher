@@ -1,0 +1,63 @@
+{
+  "title": "Calendars Academic Year",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 129870961,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #f8f9fa; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='background: #0a2463; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;'><h1 style='font-family: \"Times New Roman\", serif; color: #c9a84c; font-size: 42px; margin: 0;'>Academic Year 2024-2025</h1><p style='font-family: sans-serif; color: #fff; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; margin: 10px 0 0 0;'>University Planning Guide</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "200.0px",
+          "width": "320.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='background: #fff; border: 1px solid #e9ecef; border-top: 4px solid #0a2463; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'><h2 style='font-family: sans-serif; font-size: 20px; color: #0a2463; margin: 0 0 20px 0;'>Fall Semester</h2><ul style='list-style: none; padding: 0; margin: 0; font-family: sans-serif; font-size: 13px; color: #495057; line-height: 2.5;'><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Classes Begin</span> <strong>Sep 3</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Add/Drop Deadline</span> <strong>Sep 17</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Midterms Week</span> <strong>Oct 21-25</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Thanksgiving Break</span> <strong>Nov 27-29</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Classes End</span> <strong>Dec 10</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5; color: #c9a84c; font-weight: bold;'><span>Final Exams</span> <strong>Dec 12-18</strong></li></ul></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "424.0px",
+          "top": "200.0px",
+          "width": "320.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='background: #fff; border: 1px solid #e9ecef; border-top: 4px solid #0a2463; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'><h2 style='font-family: sans-serif; font-size: 20px; color: #0a2463; margin: 0 0 20px 0;'>Spring Semester</h2><ul style='list-style: none; padding: 0; margin: 0; font-family: sans-serif; font-size: 13px; color: #495057; line-height: 2.5;'><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Classes Begin</span> <strong>Jan 13</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Add/Drop Deadline</span> <strong>Jan 27</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Spring Break</span> <strong>Mar 10-14</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Midterms Week</span> <strong>Mar 3-7</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5;'><span>Classes End</span> <strong>May 2</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5; color: #c9a84c; font-weight: bold;'><span>Final Exams</span> <strong>May 5-9</strong></li><li style='display: flex; justify-content: space-between; border-bottom: 1px solid #f1f3f5; color: #0a2463; font-weight: bold;'><span>Commencement</span> <strong>May 17</strong></li></ul></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

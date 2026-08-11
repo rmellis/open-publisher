@@ -1,0 +1,107 @@
+{
+ "title": "Dark Tech Newsletter",
+ "isTemplate": true,
+ "hasMasterPage": false,
+ "isSpreadMode": false,
+ "pages": [
+  {
+   "id": 1004,
+   "width": "816px",
+   "height": "1056px",
+   "background": "#0f172a",
+   "header": "",
+   "footer": "",
+   "borderStyle": "none",
+   "elements": [
+    {
+     "left": "0.0px",
+     "top": "0.0px",
+     "width": "816.0px",
+     "height": "1056.0px",
+     "innerHTML": "<div style='background-color:#0f172a; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 1,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "0.0px",
+     "top": "0.0px",
+     "width": "816.0px",
+     "height": "140.0px",
+     "innerHTML": "<div style='background-color:#3b82f6; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%; padding:40px 50px; box-sizing:border-box;'><style>@import url(\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap\");</style><div style='font-family:\"Space Grotesk\", sans-serif; font-size:48px; color:#ffffff; font-weight:bold; line-height:1; display:flex; justify-content:space-between; align-items:center;'><span>WIRE // TECH</span><span style='font-size:16px; font-weight:normal; font-family:sans-serif;'>ISSUE 128 &middot; OCT 2026</span></div></div>",
+     "transform": "none",
+     "zIndex": 2,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "50.0px",
+     "top": "190.0px",
+     "width": "716.0px",
+     "height": "180.0px",
+     "innerHTML": "<div style='font-family:sans-serif;'><div style='display:inline-block; background:#1e40af; -webkit-print-color-adjust:exact; print-color-adjust:exact; color:#ffffff; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:bold; text-transform:uppercase; margin-bottom:15px;'>Artificial Intelligence</div><div style='font-family:\"Space Grotesk\", sans-serif; font-size:42px; font-weight:700; color:#f8fafc; line-height:1.2; margin-bottom:15px;'>The Next Generation of Neural Architecture</div><div style='font-size:18px; color:#94a3b8; line-height:1.5;'>How recent breakthroughs in transformer efficiency are paving the way for running massive models on consumer hardware.</div></div>",
+     "transform": "none",
+     "zIndex": 3,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "50.0px",
+     "top": "410.0px",
+     "width": "340.0px",
+     "height": "350.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:14px; line-height:1.7; color:#cbd5e1;'><p>The landscape of artificial intelligence is shifting dramatically. Until recently, training and running state-of-the-art models required massive server farms and specialized hardware that only tech giants could afford.</p><p>However, a new wave of algorithmic optimizations, including selective state spaces and highly efficient quantization techniques, has drastically reduced the computational overhead.</p><p>Researchers have published new findings suggesting that what previously required a cluster of high-end GPUs can now be accomplished on a single consumer-grade machine with negligible loss in accuracy.</p></div>",
+     "transform": "none",
+     "zIndex": 4,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "426.0px",
+     "top": "410.0px",
+     "width": "340.0px",
+     "height": "350.0px",
+     "innerHTML": "<div style='font-family:sans-serif; font-size:14px; line-height:1.7; color:#cbd5e1;'><p>This democratization of computing power opens the door for independent developers and smaller research teams to innovate without being bottlenecked by hardware costs.</p><p>The implications for edge computing are particularly exciting. By moving inference closer to the user, we eliminate latency issues and address critical privacy concerns that have plagued cloud-dependent AI services.</p><p>As these optimized architectures move from academic papers to production-ready frameworks, expect to see a surge in powerful, local-first applications across both mobile and desktop platforms.</p></div>",
+     "transform": "none",
+     "zIndex": 5,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "50.0px",
+     "top": "800.0px",
+     "width": "716.0px",
+     "height": "2.0px",
+     "innerHTML": "<div style='background-color:#334155; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 6,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "50.0px",
+     "top": "830.0px",
+     "width": "716.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='font-family:sans-serif;'><div style='font-family:\"Space Grotesk\", sans-serif; font-size:24px; font-weight:700; color:#f8fafc; margin-bottom:20px;'>Upcoming Events &amp; Webinars</div><div style='display:flex; justify-content:space-between; margin-bottom:15px;'><div style='color:#3b82f6; font-weight:bold; width:120px;'>Oct 15, 2026</div><div style='color:#e2e8f0; flex:1; font-weight:bold;'>DevOps Summit Virtual</div><div style='color:#94a3b8; text-align:right;'>Online</div></div><div style='display:flex; justify-content:space-between; margin-bottom:15px;'><div style='color:#3b82f6; font-weight:bold; width:120px;'>Oct 22, 2026</div><div style='color:#e2e8f0; flex:1; font-weight:bold;'>WebAssembly in Production</div><div style='color:#94a3b8; text-align:right;'>San Francisco, CA</div></div></div>",
+     "transform": "none",
+     "zIndex": 7,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "0.0px",
+     "top": "1000.0px",
+     "width": "816.0px",
+     "height": "56.0px",
+     "innerHTML": "<div style='text-align:center; font-family:sans-serif; font-size:12px; color:#64748b; padding-top:20px;'>© 2026 WIRE // TECH Media. Unsubscribe | Privacy Policy | wiretech.example.com</div>",
+     "transform": "none",
+     "zIndex": 8,
+     "scaleX": "1",
+     "scaleY": "1"
+    }
+   ]
+  }
+ ]
+}

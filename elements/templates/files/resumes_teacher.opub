@@ -1,0 +1,52 @@
+{
+  "title": "Teacher Resume",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 728773702,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fcf8f2",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "250.0px",
+          "innerHTML": "<div style='background:#4a90e2; width:100%; height:100%; color:white; padding:40px;'><h1>John Doe</h1><h2>Educator & Mentor</h2></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "280.0px",
+          "width": "320.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='color:#444;'><img src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80' style='width:100%; height:200px; object-fit:cover; margin-bottom:20px;'/><h3>About Me</h3><p>Passionate teacher...</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "400.0px",
+          "top": "280.0px",
+          "width": "344.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='color:#444;'><h3>Experience</h3><hr/><p>High School Teacher (2015-Now)</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

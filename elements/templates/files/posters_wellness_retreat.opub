@@ -1,0 +1,107 @@
+{
+  "title": "Wellness Retreat Poster",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 940768071,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#f5f0e8",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #f5f0e8; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "47.0px",
+          "top": "47.0px",
+          "width": "700.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%; border-radius: 300px 300px 0 0; overflow:hidden;'><img src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(74,124,89,0.2);'></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "47.0px",
+          "top": "680.0px",
+          "width": "700.0px",
+          "height": "150.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&display=swap\");</style><div style='font-family:\"Cormorant Garamond\", serif; text-align:center;'><div style='color:#4a7c59; font-size:80px; font-weight:600; line-height:1;'>Mindful Escape</div><div style='color:#333; font-size:24px; letter-spacing:6px; margin-top:20px; text-transform:uppercase;'>A 3-Day Yoga & Wellness Retreat</div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "197.0px",
+          "top": "860.0px",
+          "width": "400.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#666; font-size:16px; line-height:1.8; text-align:center;'>Disconnect from the noise and reconnect with your inner peace. Join us for daily yoga, meditation, nature walks, and nourishing organic meals.</div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "97.0px",
+          "top": "980.0px",
+          "width": "600.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='display:flex; justify-content:space-between; align-items:center; background:#4a7c59; color:#f5f0e8; border-radius:40px; padding:0 40px; height:100%; font-family:sans-serif; font-size:16px; letter-spacing:2px;'><div style='font-weight:bold;'>MARCH 12-15, 2026</div><div>\u25cf</div><div>PINE VALLEY LODGE</div><div>\u25cf</div><div style='font-weight:bold;'>BOOK NOW</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "1100.0px",
+          "width": "794.0px",
+          "height": "23.0px",
+          "innerHTML": "<div style='background:#4a7c59; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "754.0px",
+          "height": "1083.0px",
+          "innerHTML": "<div style='border: 1px solid rgba(74,124,89,0.3); width:100%; height:100%; pointer-events:none; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "347.0px",
+          "top": "20.0px",
+          "width": "100.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='background:#f5f0e8; display:flex; justify-content:center; align-items:center; color:#4a7c59; font-size:24px;'>\ud83c\udf3f</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

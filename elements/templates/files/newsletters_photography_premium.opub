@@ -1,0 +1,96 @@
+{
+  "title": "Newsletters Photography Premium",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 148674857,
+      "width": "816px",
+      "height": "1056px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "1056.0px",
+          "innerHTML": "<div style='background: #111; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "816.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='display: flex; justify-content: center; align-items: center; height: 100%;'><h1 style='color: #fff; font-family: Helvetica, Arial, sans-serif; font-size: 40px; font-weight: 300; letter-spacing: 15px; text-transform: uppercase; margin: 0;'>LENS & LIGHT</h1></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "150.0px",
+          "width": "816.0px",
+          "height": "500.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80' style='width:100%; height:100%; object-fit:cover;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "680.0px",
+          "width": "716.0px",
+          "height": "60.0px",
+          "innerHTML": "<h2 style='color: #fff; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 400; letter-spacing: 5px; margin: 0; text-transform: uppercase;'>The Shadows Series</h2>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "750.0px",
+          "width": "400.0px",
+          "height": "150.0px",
+          "innerHTML": "<p style='color: #999; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 2; margin: 0;'>Exploring the dichotomy of urban isolation and connection through high-contrast monochrome photography. Shot entirely on medium format film over the course of three months in the streets of Tokyo and Seoul.</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "500.0px",
+          "top": "750.0px",
+          "width": "266.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='border: 1px solid #333; padding: 25px;'><h3 style='color: #fff; font-family: Helvetica, Arial, sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 15px 0;'>Upcoming Workshops</h3><p style='color: #ccc; font-family: Helvetica, Arial, sans-serif; font-size: 12px; margin: 0 0 5px 0;'>Nov 12 \u2014 Street Portraiture</p><p style='color: #ccc; font-family: Helvetica, Arial, sans-serif; font-size: 12px; margin: 0 0 15px 0;'>Nov 24 \u2014 Darkroom Basics</p><a style='color: #fff; font-family: Helvetica, Arial, sans-serif; font-size: 11px; text-decoration: none; border-bottom: 1px solid #fff; padding-bottom: 2px;'>REGISTER</a></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "950.0px",
+          "width": "716.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='border-top: 1px solid #333; padding-top: 20px; display: flex; justify-content: space-between;'><p style='color: #555; font-family: Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: 2px;'>ISSUE NO. 08</p><p style='color: #555; font-family: Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: 2px;'>OCTOBER 2024</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

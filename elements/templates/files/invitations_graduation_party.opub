@@ -1,0 +1,41 @@
+{
+  "title": "Graduation Party",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 6531393,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#e3f2fd",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='background:#0d47a1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:70px;font-family:serif;'>Class of 2024</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "500.0px",
+          "width": "594.0px",
+          "height": "400.0px",
+          "innerHTML": "<div style='text-align:center;color:#0d47a1;font-size:30px;'>Join us in celebrating<br><strong style='font-size:50px;'>Emily's</strong><br>Graduation!</div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

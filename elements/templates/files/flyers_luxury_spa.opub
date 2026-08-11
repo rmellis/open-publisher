@@ -1,0 +1,107 @@
+{
+  "title": "Luxury Spa Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 301542128,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#1c1c1c",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #1c1c1c; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "500.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%;'><img src='https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=800&q=80' style='width:100%;height:100%;object-fit:cover;opacity:0.7;'><div style='position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, transparent 30%, #1c1c1c 100%);'></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "97.0px",
+          "top": "450.0px",
+          "width": "600.0px",
+          "height": "200.0px",
+          "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap\");</style><div style='font-family:\"Playfair Display\", serif; text-align:center;'><div style='color:#c9a84c; font-size:24px; letter-spacing:8px; text-transform:uppercase;'>Serenity Spa</div><div style='color:#fff; font-size:72px; font-weight:700; margin-top:20px; line-height:1.1;'>A Day of Pure<br/><i>Relaxation</i></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "297.0px",
+          "top": "680.0px",
+          "width": "200.0px",
+          "height": "2.0px",
+          "innerHTML": "<div style='background:#c9a84c; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "97.0px",
+          "top": "720.0px",
+          "width": "600.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='font-family:sans-serif; color:#aaa; font-size:18px; line-height:1.8; text-align:center;'>Treat yourself to our signature massage, revitalizing facials, and luxury thermal baths. Experience tranquility in the heart of the city.</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "97.0px",
+          "top": "850.0px",
+          "width": "600.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='display:flex; justify-content:space-between; color:#fff; font-family:\"Playfair Display\", serif;'><div style='text-align:center;'><div style='color:#c9a84c; font-size:36px; font-weight:700;'>$149</div><div style='font-size:18px; margin-top:10px;'>Classic Package</div></div><div style='text-align:center;'><div style='color:#c9a84c; font-size:36px; font-weight:700;'>$249</div><div style='font-size:18px; margin-top:10px;'>Premium Package</div></div><div style='text-align:center;'><div style='color:#c9a84c; font-size:36px; font-weight:700;'>$399</div><div style='font-size:18px; margin-top:10px;'>Couples Retreat</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "1000.0px",
+          "width": "794.0px",
+          "height": "123.0px",
+          "innerHTML": "<div style='background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; font-family:sans-serif; color:#aaa; font-size:14px; letter-spacing:2px;'><div style='margin-bottom:10px;'>BOOK YOUR APPOINTMENT TODAY</div><div style='color:#c9a84c; font-weight:bold;'>WWW.SERENITYSPA.COM | (555) 123-4567</div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "20.0px",
+          "width": "754.0px",
+          "height": "1083.0px",
+          "innerHTML": "<div style='border: 1px solid rgba(201,168,76,0.3); width:100%; height:100%; pointer-events:none; box-sizing:border-box;'></div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

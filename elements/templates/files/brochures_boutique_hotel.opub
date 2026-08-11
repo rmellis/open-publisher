@@ -1,0 +1,96 @@
+{
+  "title": "Brochures Boutique Hotel",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 280702780,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: #fffcf7; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "50.0px",
+          "width": "694.0px",
+          "height": "450.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=1200&q=80' style='width:100%; height:100%; object-fit:cover; border-radius: 12px 12px 0 0;'>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "500.0px",
+          "width": "694.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='background: #b05c34; padding: 30px; text-align: center; border-radius: 0 0 12px 12px;'><style>@import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');</style><h1 style='font-family: \"Marcellus\", serif; color: #fffcf7; font-size: 32px; margin: 0; letter-spacing: 4px;'>CASA TERRA</h1><p style='color: #f3dfc8; font-family: sans-serif; font-size: 11px; letter-spacing: 3px; margin-top: 10px; text-transform: uppercase;'>A Desert Sanctuary</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "660.0px",
+          "width": "320.0px",
+          "height": "200.0px",
+          "innerHTML": "<h2 style='font-family: \"Marcellus\", serif; color: #5a311b; font-size: 22px; margin: 0 0 15px 0;'>Find Your Oasis</h2><p style='color: #555; font-family: sans-serif; font-size: 13px; line-height: 1.8; margin: 0;'>Nestled in the heart of the Sonoran Desert, Casa Terra offers an intimate retreat with just 14 casitas. Disconnect from the noise and reconnect with nature in our beautifully curated spaces featuring local artisan textiles and panoramic views.</p>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "424.0px",
+          "top": "660.0px",
+          "width": "320.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='background: #fdf5eb; border: 1px solid #eaddcf; border-radius: 8px; padding: 25px;'><h3 style='font-family: \"Marcellus\", serif; color: #b05c34; font-size: 16px; margin: 0 0 15px 0;'>Property Highlights</h3><ul style='color: #5a311b; font-family: sans-serif; font-size: 12px; line-height: 2; padding-left: 15px;'><li style='margin-bottom: 5px;'>Infinity salt water pool</li><li style='margin-bottom: 5px;'>Farm-to-table restaurant</li><li style='margin-bottom: 5px;'>Open-air yoga pavilion</li><li style='margin-bottom: 5px;'>Private fire pits for stargazing</li></ul></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "900.0px",
+          "width": "694.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='display: flex; gap: 20px;'><div style='flex: 1;'><img src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80' style='width: 100%; height: 100px; object-fit: cover; border-radius: 6px;'></div><div style='flex: 1;'><img src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80' style='width: 100%; height: 100px; object-fit: cover; border-radius: 6px;'></div><div style='flex: 1;'><img src='https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=400&q=80' style='width: 100%; height: 100px; object-fit: cover; border-radius: 6px;'></div></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "1070.0px",
+          "width": "694.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='text-align: center;'><p style='font-family: sans-serif; color: #b05c34; font-size: 11px; margin: 0;'>7200 Desert Rose Lane, Sedona, AZ 86336 | +1 (928) 555-0199 | casaterra.com</p></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

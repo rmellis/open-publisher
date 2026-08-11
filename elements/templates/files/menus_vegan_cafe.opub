@@ -1,0 +1,41 @@
+{
+  "title": "Vegan Cafe Menu",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 9247506,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#f1f8e9",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='background:#33691e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:42px;letter-spacing:4px;'>EARTH CAFE</div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "594.0px",
+          "height": "800.0px",
+          "innerHTML": "<div style='color:#1b5e20;text-align:center;'><h2>Bowls</h2><p>Acai...</p><p>Buddha...</p><br><h2>Smoothies</h2><p>Green Machine...</p></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

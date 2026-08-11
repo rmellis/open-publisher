@@ -1,0 +1,41 @@
+{
+  "title": "Consultant",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 4497050,
+      "width": "336px",
+      "height": "192px",
+      "background": "#eceff1",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "172.0px",
+          "width": "336.0px",
+          "height": "20.0px",
+          "innerHTML": "<div style='background:#37474f;width:100%;height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "30.0px",
+          "width": "200.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='color:#263238;'><strong style='font-size:22px;'>A. Consultant</strong><br><span style='font-size:12px;'>Strategy Expert</span></div>",
+          "transform": "none",
+          "zIndex": 11,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

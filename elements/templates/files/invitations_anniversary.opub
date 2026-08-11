@@ -1,0 +1,30 @@
+{
+  "title": "Anniversary",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 5955412,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#fdf5e6",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "100.0px",
+          "top": "200.0px",
+          "width": "594.0px",
+          "height": "700.0px",
+          "innerHTML": "<div style='text-align:center;'><h1 style='color:#b76e79;font-size:80px;font-family:serif;font-weight:normal;'>50th</h1><h2 style='color:#333;font-size:40px;font-weight:normal;'>Anniversary</h2><p style='color:#666;font-size:20px;margin-top:50px;'>Join us for an elegant evening.</p></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

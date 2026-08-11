@@ -1,0 +1,129 @@
+{
+ "title": "Social Media Before After",
+ "isTemplate": true,
+ "hasMasterPage": false,
+ "isSpreadMode": false,
+ "pages": [
+  {
+   "id": 1006,
+   "width": "794px",
+   "height": "794px",
+   "background": "#ffffff",
+   "header": "",
+   "footer": "",
+   "borderStyle": "none",
+   "elements": [
+    {
+     "left": "0.0px",
+     "top": "0.0px",
+     "width": "397.0px",
+     "height": "794.0px",
+     "innerHTML": "<div style='background-color:#1a1a1a; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 1,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "397.0px",
+     "top": "0.0px",
+     "width": "397.0px",
+     "height": "794.0px",
+     "innerHTML": "<div style='background-color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 2,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "120.0px",
+     "width": "317.0px",
+     "height": "400.0px",
+     "innerHTML": "<div style='overflow:hidden; width:100%; height:100%; border-radius:12px; filter:grayscale(100%) opacity(0.6);'><img src='https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; display:block;' /></div>",
+     "transform": "none",
+     "zIndex": 3,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "437.0px",
+     "top": "120.0px",
+     "width": "317.0px",
+     "height": "400.0px",
+     "innerHTML": "<div style='overflow:hidden; width:100%; height:100%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15);'><img src='https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; display:block;' /></div>",
+     "transform": "none",
+     "zIndex": 4,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "40.0px",
+     "width": "317.0px",
+     "height": "50.0px",
+     "innerHTML": "<style>@import url(\"https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap\");</style><div style='font-family:\"Oswald\", sans-serif; font-size:42px; color:#ffffff; text-align:center; letter-spacing:2px;'>BEFORE</div>",
+     "transform": "none",
+     "zIndex": 5,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "437.0px",
+     "top": "40.0px",
+     "width": "317.0px",
+     "height": "50.0px",
+     "innerHTML": "<div style='font-family:\"Oswald\", sans-serif; font-size:42px; color:#1a1a1a; text-align:center; letter-spacing:2px;'>AFTER</div>",
+     "transform": "none",
+     "zIndex": 6,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "395.0px",
+     "top": "0.0px",
+     "width": "4.0px",
+     "height": "794.0px",
+     "innerHTML": "<div style='background-color:#ef4444; -webkit-print-color-adjust:exact; print-color-adjust:exact; width:100%; height:100%;'></div>",
+     "transform": "none",
+     "zIndex": 7,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "40.0px",
+     "top": "560.0px",
+     "width": "317.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='text-align:center; font-family:sans-serif;'><div style='font-size:36px; font-weight:900; color:#ef4444; margin-bottom:5px;'>210 LBS</div><div style='font-size:16px; color:#999999; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;'>Body Weight</div><div style='font-size:36px; font-weight:900; color:#ef4444; margin-bottom:5px;'>24%</div><div style='font-size:16px; color:#999999; text-transform:uppercase; letter-spacing:1px;'>Body Fat</div></div>",
+     "transform": "none",
+     "zIndex": 8,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "437.0px",
+     "top": "560.0px",
+     "width": "317.0px",
+     "height": "150.0px",
+     "innerHTML": "<div style='text-align:center; font-family:sans-serif;'><div style='font-size:36px; font-weight:900; color:#10b981; margin-bottom:5px;'>175 LBS</div><div style='font-size:16px; color:#666666; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;'>Body Weight</div><div style='font-size:36px; font-weight:900; color:#10b981; margin-bottom:5px;'>11%</div><div style='font-size:16px; color:#666666; text-transform:uppercase; letter-spacing:1px;'>Body Fat</div></div>",
+     "transform": "none",
+     "zIndex": 9,
+     "scaleX": "1",
+     "scaleY": "1"
+    },
+    {
+     "left": "0.0px",
+     "top": "740.0px",
+     "width": "794.0px",
+     "height": "40.0px",
+     "innerHTML": "<div style='text-align:center; font-family:sans-serif; font-size:14px; font-weight:bold; color:#ffffff; background:#1a1a1a; padding:10px 0; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>@ELEVATEFITNESS | 12-WEEK TRANSFORMATION PROGRAM</div>",
+     "transform": "none",
+     "zIndex": 10,
+     "scaleX": "1",
+     "scaleY": "1"
+    }
+   ]
+  }
+ ]
+}

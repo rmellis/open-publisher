@@ -1,0 +1,173 @@
+{
+  "title": "Gold Excellence Award",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 913851200,
+      "width": "1123px",
+      "height": "794px",
+      "background": "#2a0000",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "1123.0px",
+          "height": "794.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');</style><style>@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');</style><div style='background: linear-gradient(135deg, #4a0e0e 0%, #2a0000 60%, #4a0e0e 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "25.0px",
+          "top": "25.0px",
+          "width": "1073.0px",
+          "height": "744.0px",
+          "innerHTML": "<div style='border:3px solid #d4af37; width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "38.0px",
+          "top": "38.0px",
+          "width": "1047.0px",
+          "height": "718.0px",
+          "innerHTML": "<div style='border:1px solid rgba(212,175,55,0.5); width:100%; height:100%; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "68.0px",
+          "width": "723.0px",
+          "height": "50.0px",
+          "innerHTML": "<div style='text-align:center; color:#d4af37; font-family:\"Cinzel\",serif; font-size:11px; font-weight:400; letter-spacing:8px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9830; THE BOARD OF DIRECTORS &#9830;</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "125.0px",
+          "width": "823.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, #d4af37, #f3e5ab, #d4af37, transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "150.0px",
+          "width": "923.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style='text-align:center; color:#d4af37; font-family:\"Cinzel\",serif; font-size:46px; font-weight:700; letter-spacing:6px; text-transform:uppercase; line-height:1.1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>CERTIFICATE OF EXCELLENCE</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "150.0px",
+          "top": "248.0px",
+          "width": "823.0px",
+          "height": "3.0px",
+          "innerHTML": "<div style='background:linear-gradient(to right, transparent, #d4af37, #f3e5ab, #d4af37, transparent); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "268.0px",
+          "width": "923.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='text-align:center; color:rgba(224,224,224,0.85); font-family:\"Cinzel\",serif; font-size:13px; letter-spacing:4px; text-transform:uppercase; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THIS AWARD IS PROUDLY PRESENTED TO</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "308.0px",
+          "width": "923.0px",
+          "height": "90.0px",
+          "innerHTML": "<div style='text-align:center; color:#ffffff; font-family:\"Great Vibes\",cursive; font-size:72px; line-height:1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Eleanor Rosewood</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "250.0px",
+          "top": "405.0px",
+          "width": "623.0px",
+          "height": "1.0px",
+          "innerHTML": "<div style='background:rgba(212,175,55,0.5); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "200.0px",
+          "top": "420.0px",
+          "width": "723.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='text-align:center; color:rgba(204,204,204,0.9); font-family:\"Cinzel\",serif; font-size:13px; line-height:1.8; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>In recognition of outstanding performance, unwavering dedication,<br>and exceptional contribution to the success of the organization<br>during the fiscal year 2026.</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "461.0px",
+          "top": "535.0px",
+          "width": "200.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #d4af37 0%, #f3e5ab 50%, #aa7c11 100%); margin:0 auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(212,175,55,0.4); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='width:64px; height:64px; border-radius:50%; border:2px solid rgba(74,14,14,0.6); display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='color:#4a0e0e; font-size:22px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>&#9733;</div></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "180.0px",
+          "top": "648.0px",
+          "width": "220.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='border-bottom:1px solid #d4af37; padding-bottom:8px; font-family:Georgia,serif; font-style:italic; color:#d4af37; font-size:22px;'>James H. Mitchell</div><div style='color:#d4af37; font-family:\"Cinzel\",serif; font-size:10px; letter-spacing:3px; margin-top:8px; text-transform:uppercase;'>PRESIDENT &amp; CEO</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "723.0px",
+          "top": "648.0px",
+          "width": "220.0px",
+          "height": "60.0px",
+          "innerHTML": "<div style='text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='border-bottom:1px solid #d4af37; padding-bottom:8px; font-family:Georgia,serif; font-style:italic; color:#d4af37; font-size:22px;'>Sarah L. Thompson</div><div style='color:#d4af37; font-family:\"Cinzel\",serif; font-size:10px; letter-spacing:3px; margin-top:8px; text-transform:uppercase;'>AUGUST 11, 2026</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

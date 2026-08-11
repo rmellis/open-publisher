@@ -1,0 +1,74 @@
+{
+  "title": "Fashion Brand Letterhead",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 621447328,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@300;400;700&display=swap');</style><div style='background: #ffffff; width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "80.0px",
+          "innerHTML": "<div style='background: #000000; width:100%; height:100%; display:flex; align-items:center; justify-content:space-between; padding:0 50px; box-sizing:border-box;'><span style='font-family:Arial, sans-serif; color:#ffffff; font-size:24px; font-weight:700; letter-spacing:4px;'>MAISON V</span><span style='font-family:Arial, sans-serif; color:#ffffff; font-size:10px; letter-spacing:2px;'>PARIS \u2022 MILAN \u2022 NEW YORK</span></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "150.0px",
+          "width": "200.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:11px; color:#666; line-height:1.8;'><p><strong>MAISON V HEADQUARTERS</strong><br>Avenue Montaigne<br>75008 Paris, France<br>T. +33 1 40 70 00 00</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "350.0px",
+          "width": "634.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='font-family:Arial, sans-serif; font-size:12px; color:#111; line-height:2.0;'><p>To Whom It May Concern,</p><p style='margin-top:20px;'>Enclosed you will find the press materials and lookbook for the upcoming Spring/Summer 2027 collection. This season focuses on structural minimalism, utilizing innovative recycled fabrics developed exclusively in our Italian mills.</p><p style='margin-top:20px;'>Please note that all imagery is under strict embargo until Monday, the 14th of September at 9:00 AM CET.</p><p style='margin-top:20px;'>For any press inquiries or sample requests, please contact our PR department directly.</p><p style='margin-top:60px;'>Sincerely,</p><p style='font-weight:700; margin-top:20px;'>The PR Team<br>MAISON V</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "1050.0px",
+          "width": "634.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='border-top:1px solid #eee; padding-top:10px; font-family:Arial, sans-serif; font-size:9px; color:#999; text-align:center; letter-spacing:1px;'>MAISON V SAS - REGISTERED IN PARIS - VAT FR 12 3456789</div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

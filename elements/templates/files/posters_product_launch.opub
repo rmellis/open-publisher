@@ -1,0 +1,85 @@
+{
+  "title": "Posters Product Launch",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 593142183,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#ffffff",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: linear-gradient(135deg, #000000 0%, #1a0033 50%, #001133 100%); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 0,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background: radial-gradient(circle at 50% 50%, rgba(123, 31, 162, 0.4) 0%, rgba(0,0,0,0) 70%); width:100%; height:100%;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "100.0px",
+          "top": "100.0px",
+          "width": "594.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='text-align: center;'><p style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; color: #fff; font-size: 24px; font-weight: 600; letter-spacing: 10px; text-transform: uppercase; margin: 0;'>Unveiling The Future</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "197.0px",
+          "top": "250.0px",
+          "width": "400.0px",
+          "height": "400.0px",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:contain; filter: drop-shadow(0 0 30px rgba(123,31,162,0.8));'>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "750.0px",
+          "width": "794.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='text-align: center;'><h1 style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; color: #fff; font-size: 72px; font-weight: 900; margin: 0; letter-spacing: -2px; background: -webkit-linear-gradient(#fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>QUANTUM X</h1><p style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; color: #38bdf8; font-size: 20px; font-weight: 400; margin: 10px 0 0 0;'>Beyond limits.</p></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "950.0px",
+          "width": "794.0px",
+          "height": "100.0px",
+          "innerHTML": "<div style='display: flex; justify-content: center; gap: 20px;'><div style='background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 30px; text-align: center;'><p style='font-family: sans-serif; color: #fff; font-size: 32px; font-weight: bold; margin: 0;'>09</p><p style='font-family: sans-serif; color: #aaa; font-size: 12px; text-transform: uppercase; margin: 5px 0 0 0;'>Days</p></div><div style='background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 30px; text-align: center;'><p style='font-family: sans-serif; color: #fff; font-size: 32px; font-weight: bold; margin: 0;'>14</p><p style='font-family: sans-serif; color: #aaa; font-size: 12px; text-transform: uppercase; margin: 5px 0 0 0;'>Hours</p></div><div style='background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 15px 30px; text-align: center;'><p style='font-family: sans-serif; color: #fff; font-size: 32px; font-weight: bold; margin: 0;'>59</p><p style='font-family: sans-serif; color: #aaa; font-size: 12px; text-transform: uppercase; margin: 5px 0 0 0;'>Mins</p></div></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}

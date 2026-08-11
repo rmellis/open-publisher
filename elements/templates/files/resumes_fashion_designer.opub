@@ -1,0 +1,140 @@
+{
+  "title": "Creative Fashion Designer CV",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 811197408,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#111111",
+      "header": "Header",
+      "footer": "Footer",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400&display=swap');</style><div style='background:#111111; width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "300.0px",
+          "innerHTML": "<div style='position:relative; width:100%; height:100%; overflow:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.4;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "90.0px",
+          "width": "694.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='font-family:\"Cormorant Garamond\",serif; color:#ffffff; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='font-size:60px; margin:0; letter-spacing:8px; font-weight:400; text-transform:uppercase;'>Elena Rossi</h1><div style='width:40px; height:2px; background:#ff2d78; margin:15px auto; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div><p style='font-family:\"Inter\",sans-serif; font-weight:300; letter-spacing:5px; font-size:12px; color:#aaaaaa;'>AVANT-GARDE FASHION DESIGNER</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "50.0px",
+          "top": "350.0px",
+          "width": "200.0px",
+          "height": "600.0px",
+          "innerHTML": "<div style='font-family:\"Inter\",sans-serif; color:#dddddd; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h3 style='font-family:\"Cormorant Garamond\",serif; font-size:18px; color:#ffffff; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px; letter-spacing:2px;'>INFO</h3><p style='font-size:11px; line-height:2.5; font-weight:300;'><span style='color:#ff2d78; font-weight:400;'>W</span> elenarossi.com<br><span style='color:#ff2d78; font-weight:400;'>E</span> studio@elenarossi.com<br><span style='color:#ff2d78; font-weight:400;'>P</span> +39 02 1234 5678<br><span style='color:#ff2d78; font-weight:400;'>L</span> Milan, Italy</p><br><h3 style='font-family:\"Cormorant Garamond\",serif; font-size:18px; color:#ffffff; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px; letter-spacing:2px;'>SKILLS</h3><p style='font-size:11px; line-height:2.5; font-weight:300;'>Haute Couture<br>Pattern Making<br>Textile Innovation<br>Adobe Creative Suite<br>CLO 3D Design</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "350.0px",
+          "width": "444.0px",
+          "height": "200.0px",
+          "innerHTML": "<div style='font-family:\"Inter\",sans-serif; color:#aaaaaa; font-weight:300; font-size:12px; line-height:1.8; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h3 style='font-family:\"Cormorant Garamond\",serif; font-size:22px; color:#ffffff; letter-spacing:2px; margin-bottom:15px;'>VISION</h3><p>Award-winning fashion designer specialising in sustainable luxury and conceptual ready-to-wear. My work blurs the line between architecture and garment, utilising innovative sustainable textiles to create striking, modern silhouettes that challenge traditional aesthetic boundaries.</p></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "520.0px",
+          "width": "444.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='font-family:\"Cormorant Garamond\",serif; font-size:22px; color:#ffffff; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EXHIBITIONS &amp; ROLES</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "565.0px",
+          "width": "444.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-family:\"Inter\",sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h4 style='color:#ffffff; font-size:14px; margin:0; font-weight:400; letter-spacing:1px;'>Creative Director</h4><p style='color:#ff2d78; font-size:10px; margin:5px 0 10px 0; letter-spacing:2px;'>MAISON LUMINAIRE &nbsp;|&nbsp; 2020 — PRESENT</p><p style='color:#aaaaaa; font-size:11px; font-weight:300; line-height:1.6;'>Led the design of 4 seasonal collections. Increased brand visibility by 40% globally. Debuted 'Ethereal' collection at Paris Fashion Week.</p></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "705.0px",
+          "width": "444.0px",
+          "height": "120.0px",
+          "innerHTML": "<div style='font-family:\"Inter\",sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h4 style='color:#ffffff; font-size:14px; margin:0; font-weight:400; letter-spacing:1px;'>Senior Designer</h4><p style='color:#ff2d78; font-size:10px; margin:5px 0 10px 0; letter-spacing:2px;'>ATELIER BLANC &nbsp;|&nbsp; 2015 — 2020</p><p style='color:#aaaaaa; font-size:11px; font-weight:300; line-height:1.6;'>Specialised in sculptural evening wear. Managed fabric sourcing across Italy and Japan. Three Vogue Italia cover features.</p></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "300.0px",
+          "top": "855.0px",
+          "width": "130.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; border:1px solid #333; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "450.0px",
+          "top": "855.0px",
+          "width": "130.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; border:1px solid #333; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover;'></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "600.0px",
+          "top": "855.0px",
+          "width": "130.0px",
+          "height": "150.0px",
+          "innerHTML": "<div style='background:#ff2d78; width:100%; height:100%; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><span style='color:white; font-family:\"Cormorant Garamond\",serif; font-size:14px; letter-spacing:2px; text-align:center;'>VIEW<br>PORTFOLIO</span></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}
