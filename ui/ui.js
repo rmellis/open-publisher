@@ -6,6 +6,17 @@ const DialogSystem = {
             overlay.className = 'custom-dialog-overlay';
             overlay.id = 'custom-dialog-overlay';
             document.body.appendChild(overlay);
+            
+            // Allow Esc key to close open dialogs
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const overlayElem = document.getElementById('custom-dialog-overlay');
+                    // Only close if it's currently displayed
+                    if (overlayElem && overlayElem.style.display !== 'none') {
+                        DialogSystem.close();
+                    }
+                }
+            });
         }
     },
     show: function(title, contentHtml, onConfirm, isAlert = false, confirmText = 'OK', onApply = null) {
