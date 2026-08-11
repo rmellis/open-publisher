@@ -1,10 +1,10 @@
 /* Dashboard (Start Screen) */
 #dashboard-overlay {
     position: fixed;
-    top: 5vh;
+    top: 7vh;
     left: 2.5vw;
     width: 95vw;
-    height: 90vh;
+    height: 88vh;
     background-color: #f5f5f5;
     z-index: 999998; /* Just behind the splash screen */
     display: flex;
@@ -47,6 +47,10 @@ body.dark-mode .dashboard-header {
     font-size: 20px;
     font-weight: 700;
     color: #ffffff;
+}
+
+body.bright-theme .dashboard-logo {
+    color: #111111;
 }
 
 .dashboard-logo i {
@@ -99,6 +103,26 @@ body.dark-mode .dashboard-search input {
     align-items: center;
     gap: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body.bright-theme .dashboard-skip-btn {
+    color: #111111;
+    border-color: #111111;
+    background: transparent;
+}
+
+body.bright-theme .dashboard-skip-btn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+body.bright-theme .dashboard-header .custom-dialog-close {
+    color: #111111;
+    background: rgba(0,0,0,0.15);
+}
+
+body.bright-theme .dashboard-header .custom-dialog-close:hover {
+    background: rgba(235, 87, 87, 0.9);
+    color: #ffffff;
 }
 
 .dashboard-skip-btn:hover {
@@ -157,6 +181,10 @@ body.dark-mode .dashboard-nav {
 .dashboard-nav-item.active {
     background-color: var(--ui-theme-color);
     font-weight: 600;
+}
+
+body.bright-theme .dashboard-nav-item.active {
+    color: #111111;
 }
 
 .dashboard-nav-divider {
