@@ -50,6 +50,10 @@ window.handlePublisherFileLoad = (evt) => {
                 if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
                 if (typeof pushHistory === 'function') pushHistory(); 
             }, 500);
+            
+            if (typeof DashboardSystem !== 'undefined' && DashboardSystem) {
+                DashboardSystem.close();
+            }
         };
 
         if (rawData.encrypted) {
