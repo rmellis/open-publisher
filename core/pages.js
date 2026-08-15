@@ -1,4 +1,4 @@
-﻿// --- SERIALIZER & RENDER ---
+// --- SERIALIZER & RENDER ---
 function renderPage(pageData) {
     deselect();
     
@@ -100,6 +100,7 @@ function renderPage(pageData) {
         el.style.height = data.height;
         el.style.transform = data.transform || 'none';
         el.style.zIndex = data.zIndex || 10;
+        if (data.overflow) el.style.overflow = data.overflow;
         if (data.type) el.setAttribute('data-type', data.type);
         
         // Restore scale attributes

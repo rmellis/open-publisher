@@ -71,6 +71,7 @@ function serializeCurrentPage() {
             height: el.style.height,
             transform: el.style.transform,
             zIndex: el.style.zIndex,
+            overflow: el.style.overflow,
             type: el.getAttribute('data-type') || 'box',
             innerHTML: '', 
             imgSrc: '', 
