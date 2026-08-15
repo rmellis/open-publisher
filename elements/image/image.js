@@ -1,4 +1,4 @@
-﻿function triggerUpload() { document.getElementById('img-upload').click(); }
+function triggerUpload() { document.getElementById('img-upload').click(); }
 
 document.getElementById('img-upload').addEventListener('change', (e) => {
     if(e.target.files[0]) {
@@ -66,6 +66,7 @@ window.toggleCrop = function() {
     }
     const el = state.selectedEl;
     const img = el.querySelector('.element-content img');
+    const contentDiv = el.querySelector('.element-content');
     
     if(!img) {
         if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Notice', "Only images can be cropped.");
@@ -88,10 +89,16 @@ window.toggleCrop = function() {
         const parentW = el.offsetWidth || 1;
         const parentH = el.offsetHeight || 1;
         
-        // ✨ BUG FIX: Prevent the container from collapsing when the child image is taken out of flow (position: absolute)
-        // If the container was relying on the child's natural size, this locks it in place.
+        // Prevent the container from collapsing when the child image is taken out of flow (position: absolute)
         el.style.width = parentW + 'px';
         el.style.height = parentH + 'px';
+
+        // BUG FIX 4.17.7: Force overflow as inline styles to beat any pre-existing inline style
+        // (e.g. set by syncWordArt). The wrapper needs to be 'visible' so resize handles
+        // can poke out beyond the element boundary. The content div must be 'hidden' to
+        // actually mask the uncropped portions of the image in the editor view.
+        el.style.overflow = 'visible';
+        if (contentDiv) contentDiv.style.overflow = 'hidden';
 
         img.style.width = w + 'px';
         img.style.height = h + 'px';
@@ -114,9 +121,15 @@ window.toggleCrop = function() {
         el.classList.remove('cropping');
         if (cropBtn) cropBtn.classList.remove('active-tool');
         if (statusMsg) statusMsg.innerText = "Element Selected";
+
+        // Restore overflow to defaults now that we are out of crop mode.
+        // The wrapper clips elements to the page boundary; the content div goes back to visible
+        // so that things like WordArt shadows and text can bleed outside their box as intended.
+        el.style.overflow = 'hidden';
+        if (contentDiv) contentDiv.style.overflow = 'visible';
         
         // Convert fixed pixels back into percentages.
-        // This natively restores the browser's ability to stretch the image when the box is resized.
+        // This restores the browser's ability to stretch the image when the box is resized.
         const wrapperW = el.offsetWidth || 1;
         const wrapperH = el.offsetHeight || 1;
         const imgW = img.offsetWidth;
