@@ -399,13 +399,13 @@ function selectElement(el) {
         if (paper) paper.style.cursor = 'default';
         document.body.classList.remove('linking-mode');
 
-        const isTextBox = el.querySelector('.text-content') !== null || el.querySelector('div[contenteditable]') !== null;
+        const isTextBox = el.querySelector('.text-content') !== null || el.querySelector('[contenteditable="true"]') !== null;
         if (!isTextBox) {
             if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Invalid Selection', 'Please select a text box to link to.');
             return;
         }
 
-        const textContent = el.querySelector('.text-content') || el.querySelector('div[contenteditable]');
+        const textContent = el.querySelector('.text-content') || el.querySelector('[contenteditable="true"]');
         if (textContent && textContent.innerText.trim() !== '' && textContent.innerText.trim() !== 'Click to edit text') {
             if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Link Text Box', 'You need to select an empty text box to pour the text into.');
             return;

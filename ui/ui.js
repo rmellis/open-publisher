@@ -284,7 +284,7 @@ window.ContextMenuActions = {
         // Recover focus if lost due to clicking the context menu
         if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
             if (typeof state !== 'undefined' && state.selectedEl) {
-                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
                 if (innerText) {
                     targetBox = innerText;
                     targetBox.focus();
@@ -374,7 +374,7 @@ window.ContextMenuActions = {
         let targetBox = document.activeElement;
         if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
             if (state.selectedEl) {
-                targetBox = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                targetBox = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
                 if (targetBox) {
                     targetBox.focus();
                     if (state.lastRange) {

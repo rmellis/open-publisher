@@ -967,7 +967,7 @@
         let targetBox = document.activeElement;
         if (!targetBox || (!targetBox.isContentEditable && targetBox.tagName !== 'INPUT' && targetBox.tagName !== 'TEXTAREA')) {
             if (typeof state !== 'undefined' && state.selectedEl) {
-                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
                 if (innerText) {
                     targetBox = innerText;
                     if (state.lastRange) {

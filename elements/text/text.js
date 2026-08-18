@@ -172,7 +172,7 @@ function execCmd(cmd, val) {
     
     // Ensure focus is explicitly maintained on the target text box so typing can resume
     if (state.selectedEl) {
-        const textEditBox = state.selectedEl.querySelector('div[contenteditable]');
+        const textEditBox = state.selectedEl.querySelector('[contenteditable="true"]');
         if (textEditBox && document.activeElement !== textEditBox) {
             textEditBox.focus();
         }

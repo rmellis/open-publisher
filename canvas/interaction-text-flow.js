@@ -6,7 +6,7 @@ window.flowTextBoxes = function(headBox) {
     let current = headBox;
     let boxes = [];
     while(current) {
-        const content = current.querySelector('.text-content') || current.querySelector('div[contenteditable]');
+        const content = current.querySelector('.text-content') || current.querySelector('[contenteditable="true"]');
         if (content) {
             let text = content.innerText;
             if (fullTextStr.length > 0 && !/\s$/.test(fullTextStr) && !/^\s/.test(text)) {

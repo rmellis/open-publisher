@@ -17,7 +17,7 @@
         }
 
         const isTextBox = (state.selectedEl.querySelector && state.selectedEl.querySelector('.text-content') !== null) || 
-                          (state.selectedEl.querySelector && state.selectedEl.querySelector('div[contenteditable]') !== null) || 
+                          (state.selectedEl.querySelector && state.selectedEl.querySelector('[contenteditable="true"]') !== null) || 
                           (state.selectedEl.classList && state.selectedEl.classList.contains('el-text'));
         
         if (!isTextBox) {
@@ -28,7 +28,7 @@
         }
 
         const textNode = (state.selectedEl.querySelector && state.selectedEl.querySelector('.text-content')) || 
-                         (state.selectedEl.querySelector && state.selectedEl.querySelector('div[contenteditable]')) || 
+                         (state.selectedEl.querySelector && state.selectedEl.querySelector('[contenteditable="true"]')) || 
                          state.selectedEl;
         const text = textNode.innerText || '';
         
@@ -53,7 +53,7 @@
         }
         
         const isTextBox = (state.selectedEl.querySelector && state.selectedEl.querySelector('.text-content') !== null) || 
-                          (state.selectedEl.querySelector && state.selectedEl.querySelector('div[contenteditable]') !== null) || 
+                          (state.selectedEl.querySelector && state.selectedEl.querySelector('[contenteditable="true"]') !== null) || 
                           (state.selectedEl.classList && state.selectedEl.classList.contains('el-text'));
         if (!isTextBox) {
             if(typeof DialogSystem !== 'undefined') DialogSystem.alert("Word Count", "Selected element is not a text box.");
@@ -61,7 +61,7 @@
         }
 
         const textNode = (state.selectedEl.querySelector && state.selectedEl.querySelector('.text-content')) || 
-                         (state.selectedEl.querySelector && state.selectedEl.querySelector('div[contenteditable]')) || 
+                         (state.selectedEl.querySelector && state.selectedEl.querySelector('[contenteditable="true"]')) || 
                          state.selectedEl;
         const text = textNode.innerText || '';
 

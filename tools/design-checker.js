@@ -15,7 +15,7 @@ window.runDesignChecker = function() {
         elements.forEach(el => {
             // 1. Check Text Overflow
             if (el.dataset.type === 'text') {
-                const contentDiv = el.querySelector('.element-content div[contenteditable]');
+                const contentDiv = el.querySelector('.element-content [contenteditable="true"]');
                 if (contentDiv) {
                     // Check if scrollHeight is strictly greater than clientHeight
                     // Some browsers add fractional differences, so giving a 2px leeway

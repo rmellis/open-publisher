@@ -111,7 +111,7 @@ document.addEventListener('selectionchange', () => {
             
             // If they are not actively editing, but have a text element selected and want to paste text into it
             if (e.shiftKey && !textEditing && typeof state !== 'undefined' && state.selectedEl) {
-                const innerText = state.selectedEl.querySelector('div[contenteditable]') || state.selectedEl.querySelector('.text-content');
+                const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
                 if (innerText) {
                     innerText.focus();
                     textEditing = true;
