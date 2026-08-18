@@ -311,6 +311,8 @@ const ContextMenuSystem = {
                     html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
                     html += this.buildItem('Insert Column Right', 'fa-arrow-right', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColRight()');
                     html += this.buildDivider();
+                    html += this.buildItem('Select All Cells', 'fa-border-all', 'if(window.ContextRibbonActions) ContextRibbonActions.selectAllCells()');
+                    html += this.buildDivider();
                     
                     const targetCell = e.target.closest('td, th');
                     const isMerged = targetCell && (parseInt(targetCell.getAttribute('colspan')) > 1 || parseInt(targetCell.getAttribute('rowspan')) > 1);

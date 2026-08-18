@@ -1422,6 +1422,19 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     const getTable = () => state.selectedEl?.querySelector('table');
 
+    ContextRibbonActions.selectAllCells = function() {
+        const table = getTable();
+        if (table) {
+            window._tableSelectionStartCell = null;
+            if (window._tableSelectedCells) {
+                window._tableSelectedCells.forEach(c => c.classList.remove('op-selected-cell'));
+            }
+            window._tableSelectedCells = Array.from(table.querySelectorAll('td, th'));
+            window._tableSelectedCells.forEach(c => c.classList.add('op-selected-cell'));
+            if (state.selectedEl) state.selectedEl.classList.add('selected');
+        }
+    };
+
     // --- Layout Logic ---
     ContextRibbonActions.insertRowAbove = function() {
         const cell = this.getActiveCell(); const table = getTable();
@@ -1659,10 +1672,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
 
     ContextRibbonActions.cellAlign = function(vAlign, hAlign) {
-        const cell = this.getActiveCell();
-        if (cell) {
-            cell.style.verticalAlign = vAlign;
-            cell.style.textAlign = hAlign;
+        const cells = this.getTargetCells();
+        if (cells && cells.length > 0) {
+            cells.forEach(cell => {
+                cell.style.verticalAlign = vAlign;
+                cell.style.textAlign = hAlign;
+            });
             pushHistory();
         }
     };

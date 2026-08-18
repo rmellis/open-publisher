@@ -147,6 +147,37 @@ function execCmd(cmd, val) {
         return;
     }
     
+    // --- NEW: Multi-Cell Table Formatting ---
+    // If the user has multiple table cells selected (e.g. via the green cross), apply the formatting to all of them.
+    if (window._tableSelectedCells && window._tableSelectedCells.length > 1) {
+        try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
+        const sel = window.getSelection();
+        
+        window._tableSelectedCells.forEach(cell => {
+            const editable = cell.querySelector('[contenteditable="true"]') || cell;
+            editable.focus();
+            sel.selectAllChildren(editable);
+            
+            if (cmd === 'hiliteColor') {
+                document.execCommand('hiliteColor', false, val);
+                document.execCommand('backColor', false, val);
+            } else {
+                document.execCommand(cmd, false, val);
+            }
+        });
+        
+        try { document.execCommand('styleWithCSS', false, false); } catch(e) {}
+        
+        // Restore focus to the first cell so the user doesn't lose their cursor
+        const firstEditable = window._tableSelectedCells[0].querySelector('[contenteditable="true"]') || window._tableSelectedCells[0];
+        firstEditable.focus();
+        sel.selectAllChildren(firstEditable);
+        if(sel.rangeCount > 0) state.lastRange = sel.getRangeAt(0).cloneRange();
+        
+        if(!state.isProgrammaticUpdate) updateFloatToolbarValues();
+        return;
+    }
+
     // Crucial fix: The native OS color picker (<input type="color">) steals focus when opened.
     // If we don't restore the selection before executing the command, it fails because
     // the text box is no longer the active selection.
