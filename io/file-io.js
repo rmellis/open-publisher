@@ -905,8 +905,29 @@ function uploadAndConvertExcel(file, fileName) {
                 if (typeof createWrapper === 'function' && tableHTML) {
                     const wrapper = createWrapper(tableHTML);
                     wrapper.setAttribute('data-type', 'table');
-                    wrapper.style.width = '500px';
-                    wrapper.style.height = 'auto';
+                    const tbl = wrapper.querySelector('table');
+                    if(tbl) {
+                        const clone = tbl.cloneNode(true);
+                        clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
+                        clone.style.width = 'max-content'; clone.style.height = 'max-content';
+                        clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
+                        document.body.appendChild(clone);
+                        
+                        const h = clone.offsetHeight;
+                        
+                        document.body.removeChild(clone);
+                        
+                        wrapper.style.width = '500px';
+                        wrapper.style.height = (h + 10) + 'px';
+                    } else {
+                        wrapper.style.width = '500px';
+                        wrapper.style.height = '300px';
+                    }
+                    if(typeof state !== 'undefined' && state.history && state.history.length > 0) {
+                        state.history.pop();
+                        state.historyIndex--;
+                        if(typeof pushHistory === 'function') pushHistory();
+                    }
                 }
             } catch(err) {
                 if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Error', "Error parsing spreadsheet: " + err);

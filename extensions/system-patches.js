@@ -3015,6 +3015,19 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1
                 };
+                
+                const tbl = state.selectedEl.querySelector('table');
+                if (tbl) {
+                    const clone = tbl.cloneNode(true);
+                    clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
+                    clone.style.width = 'max-content'; clone.style.height = 'max-content';
+                    clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
+                    document.body.appendChild(clone);
+                    const minW = clone.offsetWidth; const minH = clone.offsetHeight;
+                    document.body.removeChild(clone);
+                    state.dragData.minW = Math.max(10, minW); 
+                    state.dragData.minH = Math.max(10, minH);
+                }
             }
             e.preventDefault(); return;
         }
@@ -3215,6 +3228,25 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     newT = d.t + dy; 
                     if (state.cropMode) imgDy = -(dy / sY); 
                 }
+            }
+            
+            // TABLE & MIN-BOUNDS CLAMPING
+            // Enforce minimum width/height so tables cannot be squished past their physical bounds
+            if (d.minW !== undefined && rawW < d.minW) {
+                if (d.dir.includes('w')) {
+                    const diff = d.minW - rawW;
+                    newL -= diff;
+                    if (state.cropMode) imgDx += (diff / sX);
+                }
+                rawW = d.minW;
+            }
+            if (d.minH !== undefined && rawH < d.minH) {
+                if (d.dir.includes('n')) {
+                    const diff = d.minH - rawH;
+                    newT -= diff;
+                    if (state.cropMode) imgDy += (diff / sY);
+                }
+                rawH = d.minH;
             }
 
             // Aspect Ratio Lock (Standard Resize Only)

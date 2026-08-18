@@ -84,8 +84,31 @@ window.handleMouseDown = function(e) {
                 w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
                 l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
                 scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
-                scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1
+                scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                minW: 10, minH: 10
             };
+            const tbl = state.selectedEl.querySelector('table');
+            if (tbl) {
+                // Clone the table off-screen to measure its true unconstrained bounds
+                const clone = tbl.cloneNode(true);
+                clone.style.position = 'absolute';
+                clone.style.visibility = 'hidden';
+                clone.style.width = 'max-content';
+                clone.style.height = 'max-content';
+                // Reset any inline constraints it might have had
+                clone.style.maxWidth = 'none';
+                clone.style.maxHeight = 'none';
+                
+                document.body.appendChild(clone);
+                
+                const actualMinW = clone.offsetWidth;
+                const actualMinH = clone.offsetHeight;
+                
+                document.body.removeChild(clone);
+                
+                state.dragData.minW = Math.max(10, actualMinW); 
+                state.dragData.minH = Math.max(10, actualMinH);
+            }
             const img = state.selectedEl.querySelector('img');
             if(img && state.cropMode) {
                  state.dragData.imgW = parseFloat(img.style.width) || img.offsetWidth;
@@ -248,10 +271,29 @@ window.handleMouseMove = function(e) {
         let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
         let imgDx = 0, imgDy = 0;
         
-        if (d.dir.includes('e')) rawW = d.w + dx;
-        else if (d.dir.includes('w')) { rawW = d.w - dx; newL = d.l + dx; if(state.cropMode) imgDx = -dx; }
-        if (d.dir.includes('s')) rawH = d.h + dy;
-        else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
+            if (d.dir.includes('e')) rawW = d.w + dx;
+            else if (d.dir.includes('w')) { rawW = d.w - dx; newL = d.l + dx; if(state.cropMode) imgDx = -dx; }
+            if (d.dir.includes('s')) rawH = d.h + dy;
+            else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
+
+            // TABLE & MIN-BOUNDS CLAMPING
+            // Enforce minimum width/height so tables cannot be squished past their physical bounds
+            if (d.minW !== undefined && rawW < d.minW) {
+                if (d.dir.includes('w')) {
+                    const diff = d.minW - rawW;
+                    newL -= diff;
+                    if (state.cropMode) imgDx += diff;
+                }
+                rawW = d.minW;
+            }
+            if (d.minH !== undefined && rawH < d.minH) {
+                if (d.dir.includes('n')) {
+                    const diff = d.minH - rawH;
+                    newT -= diff;
+                    if (state.cropMode) imgDy += diff;
+                }
+                rawH = d.minH;
+            }
         
         if (state.cropMode) {
             const img = state.selectedEl.querySelector('img');

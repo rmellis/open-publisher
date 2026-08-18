@@ -272,6 +272,25 @@
             if (d.dir.includes('s')) rawH = d.h + dy; 
             else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
 
+            // TABLE & MIN-BOUNDS CLAMPING
+            // Enforce minimum width/height so tables cannot be squished past their physical bounds
+            if (d.minW !== undefined && rawW < d.minW) {
+                if (d.dir.includes('w')) {
+                    const diff = d.minW - rawW;
+                    newL -= diff;
+                    if (state.cropMode) imgDx += diff;
+                }
+                rawW = d.minW;
+            }
+            if (d.minH !== undefined && rawH < d.minH) {
+                if (d.dir.includes('n')) {
+                    const diff = d.minH - rawH;
+                    newT -= diff;
+                    if (state.cropMode) imgDy += diff;
+                }
+                rawH = d.minH;
+            }
+
             // --- 🚨 THE NEW ASPECT RATIO LOCK 🚨 ---
             if (e.shiftKey && !state.cropMode) {
                 // Determine scale relative to the starting dimensions (avoiding div by zero)

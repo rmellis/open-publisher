@@ -1,4 +1,4 @@
-﻿function initTablePicker() {
+function initTablePicker() {
     const grid = document.getElementById('table-picker-grid');
     const label = document.getElementById('table-grid-label');
     
@@ -94,7 +94,35 @@ function insertTable(rows, cols) {
         html += '</tr>';
     }
     html += '</table>';
-    createWrapper(html);
+    const el = createWrapper(html);
+    el.setAttribute('data-type', 'table');
+    
+    const tbl = el.querySelector('table');
+    if (tbl) {
+        const clone = tbl.cloneNode(true);
+        clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
+        clone.style.width = 'max-content'; clone.style.height = 'max-content';
+        clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
+        document.body.appendChild(clone);
+        
+        const minW = clone.offsetWidth;
+        const minH = clone.offsetHeight;
+        
+        document.body.removeChild(clone);
+        
+        el.style.width = Math.max(200, minW + 10) + 'px';
+        el.style.height = Math.max(100, minH + 10) + 'px';
+    } else {
+        el.style.width = Math.max(200, cols * 50) + 'px';
+        el.style.height = Math.max(100, rows * 25) + 'px';
+    }
+    
+    // Replace the default 200x100 history snapshot with our correctly-sized one
+    if(typeof state !== 'undefined' && state.history && state.history.length > 0) {
+        state.history.pop();
+        state.historyIndex--;
+        if(typeof pushHistory === 'function') pushHistory();
+    }
 }
 
 function addTable() { 
@@ -155,11 +183,35 @@ function addTable() {
         const tpl = window.tableTemplatesData[index];
         if(!tpl) return;
 
-        // Utilize the app's native 'createWrapper' engine!
         if (typeof createWrapper === 'function') {
             const el = createWrapper(tpl.insertHTML);
-            el.style.width = '500px';
-            el.style.height = '150px'; // Give it a sensible default height
+            el.setAttribute('data-type', 'table');
+            
+            // Allow the browser to render the table naturally to measure it
+            const tbl = el.querySelector('table');
+            if (tbl) {
+                const clone = tbl.cloneNode(true);
+                clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
+                clone.style.width = 'max-content'; clone.style.height = 'max-content';
+                clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
+                document.body.appendChild(clone);
+                
+                const minH = clone.offsetHeight;
+                
+                document.body.removeChild(clone);
+                
+                el.style.width = '500px';
+                el.style.height = Math.max(150, minH + 10) + 'px';
+            } else {
+                el.style.width = '500px';
+                el.style.height = '150px';
+            }
+            
+            if(typeof state !== 'undefined' && state.history && state.history.length > 0) {
+                state.history.pop();
+                state.historyIndex--;
+                if(typeof pushHistory === 'function') pushHistory();
+            }
         } else {
             alert("Error: Core layout engine not found.");
         }
