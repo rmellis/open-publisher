@@ -1,3 +1,51 @@
+window.switchOptionsTab = function(activeId) {
+    document.querySelectorAll('.opt-tab').forEach(el => {
+        el.style.background = 'transparent';
+        el.style.borderLeftColor = 'transparent';
+        el.style.fontWeight = 'normal';
+    });
+    document.querySelectorAll('.opt-content').forEach(el => el.style.display = 'none');
+    
+    const activeTab = document.getElementById('opt-tab-' + activeId);
+    if (activeTab) {
+        activeTab.style.background = '#f0f0f0';
+        activeTab.style.borderLeftColor = 'var(--ui-theme-color)';
+        activeTab.style.fontWeight = 'bold';
+    }
+    const activeContent = document.getElementById('opt-content-' + activeId);
+    if (activeContent) activeContent.style.display = 'block';
+};
+
+window.saveGlobalOptions = function(closeDialog = true) {
+    const cbHyphen = document.getElementById('opt-autohyphenate');
+    if (cbHyphen) {
+        localStorage.setItem('opub_autoHyphenate', cbHyphen.checked ? 'true' : 'false');
+    }
+    
+    const cbSpell = document.getElementById('opt-spellcheck');
+    if (cbSpell) {
+        localStorage.setItem('opub_spellcheck', cbSpell.checked ? 'true' : 'false');
+    }
+    
+    const txtUser = document.getElementById('opt-username');
+    if (txtUser) {
+        localStorage.setItem('opub_username', txtUser.value);
+    }
+    
+    if (closeDialog) {
+        if(typeof DialogSystem !== 'undefined') DialogSystem.close();
+    } else {
+        const applyBtn = document.getElementById('custom-dialog-apply');
+        if (applyBtn) {
+            const originalText = applyBtn.innerText;
+            applyBtn.innerText = 'Applied!';
+            setTimeout(() => {
+                if (applyBtn) applyBtn.innerText = originalText;
+            }, 1000);
+        }
+    }
+};
+
 window.showOptionsModal = function() {
     const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
     const username = localStorage.getItem('opub_username') || 'Publisher User';

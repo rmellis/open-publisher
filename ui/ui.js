@@ -1897,3 +1897,61 @@ window.highlightIssueElement = function(elementId) {
         setTimeout(() => { el.style.transition = ''; }, 200);
     }, 1500);
 };
+
+window.toggleSnapOption = function(option, btn) {
+    const isTurningOn = !state.snap[option];
+    state.snap[option] = isTurningOn;
+    if (btn) btn.querySelector('.check').style.opacity = isTurningOn ? '1' : '0';
+    
+    if (option === 'grid' && isTurningOn) {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Show Grid?', '<p>You enabled Snap to Grid. Would you like to make the grid background visually visible on the canvas as well?</p>', () => {
+                const paperEl = document.getElementById('paper');
+                if (paperEl && !paperEl.classList.contains('theme-grid')) {
+                    paperEl.classList.add('theme-grid');
+                }
+            });
+            setTimeout(() => {
+                const footer = document.querySelector('#custom-dialog-box .custom-dialog-footer');
+                if (footer) {
+                    const btns = footer.querySelectorAll('button');
+                    if (btns.length >= 2) {
+                        btns[0].innerText = 'No, Keep Hidden';
+                        btns[1].innerText = 'Yes, Show Grid';
+                    }
+                }
+            }, 10);
+        }
+    } else if (option === 'grid' && !isTurningOn) {
+        const paperEl = document.getElementById('paper');
+        if (paperEl && paperEl.classList.contains('theme-grid') && typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Hide Grid?', '<p>You disabled Snap to Grid. Would you like to hide the grid background as well?</p>', () => {
+                paperEl.classList.remove('theme-grid');
+            });
+            setTimeout(() => {
+                const footer = document.querySelector('#custom-dialog-box .custom-dialog-footer');
+                if (footer) {
+                    const btns = footer.querySelectorAll('button');
+                    if (btns.length >= 2) {
+                        btns[0].innerText = 'No, Keep Visible';
+                        btns[1].innerText = 'Yes, Hide Grid';
+                    }
+                }
+            }, 10);
+        }
+
+        setTimeout(() => {
+            const input = document.getElementById('doc-protect-pw');
+            if (input) input.focus();
+        }, 100);
+    }
+};
+
+window.setProofMode = function(filterStr) {
+    const paperEl = document.getElementById('paper');
+    const banner = document.getElementById('color-blind-banner');
+    if (paperEl) paperEl.style.filter = filterStr;
+    if (banner) {
+        banner.style.display = filterStr === 'none' ? 'none' : 'block';
+    }
+};
