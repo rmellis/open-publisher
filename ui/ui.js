@@ -300,20 +300,15 @@ window.ContextMenuActions = {
         const isTextEditing = targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA');
 
         if (!isTextEditing) {
+            let clipboardReadFailed = false;
             try {
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    const text = await navigator.clipboard.readText().catch(() => "");
-                    if (text === "openpublisher_internal_multi") {
-                        if (typeof window.pasteEl === 'function') window.pasteEl(inPlace);
-                        return;
-                    }
-                }
-                
                 if (navigator.clipboard && navigator.clipboard.read) {
-                    const items = await navigator.clipboard.read().catch(() => []);
+                    const items = await navigator.clipboard.read().catch(() => { clipboardReadFailed = true; return []; });
+                    let handledImage = false;
                     for (const item of items) {
                         for (const type of item.types) {
                             if (type.startsWith('image/')) {
+                                handledImage = true;
                                 const blob = await item.getType(type);
                                 const reader = new FileReader();
                                 reader.onload = function(event) {
@@ -326,11 +321,26 @@ window.ContextMenuActions = {
                             }
                         }
                     }
+                    if (handledImage) return;
                 }
-            } catch(e) { console.warn("Clipboard OS read failed", e); }
+                
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText().catch(() => { clipboardReadFailed = true; return null; });
+                    if (text === "openpublisher_internal_multi") {
+                        if (typeof window.pasteEl === 'function') window.pasteEl(inPlace);
+                        return;
+                    }
+                    // If text is anything else (including empty string), we successfully read the clipboard 
+                    // and it did NOT contain our internal marker. This means the internal clipboard is stale!
+                    if (text !== null && text !== "openpublisher_internal_multi") {
+                        // Let it fall through to the dialog
+                        clipboardReadFailed = false; 
+                    }
+                }
+            } catch(e) { console.warn("Clipboard OS read failed", e); clipboardReadFailed = true; }
 
-            // Fallback to internal elements just in case permissions failed or we are in a legacy browser
-            if (state.copiedEl || (state.copiedElements && state.copiedElements.length > 0)) {
+            // Fallback to internal elements ONLY if we couldn't securely read the OS clipboard (e.g., legacy browser or permissions denied)
+            if (clipboardReadFailed && (state.copiedEl || (state.copiedElements && state.copiedElements.length > 0))) {
                 if (typeof window.pasteEl === 'function') window.pasteEl(inPlace);
                 return;
             }
@@ -394,11 +404,33 @@ window.ContextMenuActions = {
                     }
                 }
             } else {
-                // Emtpy internal buffer (e.g., trying to paste from outside the app via the ribbon)
-                if (typeof DialogSystem !== 'undefined') {
-                    DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
-                } else {
-                    alert('Please use Ctrl+V or Cmd+V to paste text from other applications.');
+                let textPasted = false;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText();
+                        if (text && text !== "openpublisher_internal_multi") {
+                            const success = document.execCommand('insertText', false, text);
+                            if (!success) {
+                                const selection = window.getSelection();
+                                if (selection.rangeCount > 0) {
+                                    const range = selection.getRangeAt(0);
+                                    range.deleteContents();
+                                    range.insertNode(document.createTextNode(text));
+                                    range.collapse(false);
+                                }
+                            }
+                            textPasted = true;
+                        }
+                    }
+                } catch(e) { console.warn("OS Text paste failed", e); }
+                
+                if (!textPasted) {
+                    // Empty internal buffer (e.g., trying to paste from outside the app via the ribbon and readText failed)
+                    if (typeof DialogSystem !== 'undefined') {
+                        DialogSystem.show('Paste', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + V<br>• <b>Mac:</b> Cmd + V</div></div>', null, true);
+                    } else {
+                        alert('Please use Ctrl+V or Cmd+V to paste text from other applications.');
+                    }
                 }
             }
         } catch (err) {
@@ -446,8 +478,34 @@ window.ContextMenuActions = {
                     }
                     return;
                 } else {
-                    // Empty internal buffer (e.g., trying to paste from outside the app via the ribbon)
-                    DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
+                    let textPasted = false;
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.readText) {
+                            const text = await navigator.clipboard.readText();
+                            if (text && text !== "openpublisher_internal_multi") {
+                                const success = document.execCommand('insertText', false, text);
+                                if (!success) {
+                                    const selection = window.getSelection();
+                                    if (selection.rangeCount > 0) {
+                                        const range = selection.getRangeAt(0);
+                                        range.deleteContents();
+                                        range.insertNode(document.createTextNode(text));
+                                        range.collapse(false);
+                                    }
+                                }
+                                textPasted = true;
+                            }
+                        }
+                    } catch(e) { console.warn("OS Text paste without formatting failed", e); }
+                    
+                    if (!textPasted) {
+                        // Empty internal buffer (e.g., trying to paste from outside the app via the ribbon)
+                        if (typeof DialogSystem !== 'undefined') {
+                            DialogSystem.show('Paste Without Formatting', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">To paste text without formatting from other applications, please use your keyboard shortcut:<br><br>• <b>Windows / Linux:</b> Ctrl + Shift + V<br>• <b>Mac:</b> Cmd + Shift + V</div></div>', null, true);
+                        } else {
+                            alert('Please use Ctrl+Shift+V or Cmd+Shift+V to paste text from other applications.');
+                        }
+                    }
                 }
             } catch (err) {
                 console.warn('Paste without formatting failed:', err);

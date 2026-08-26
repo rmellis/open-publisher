@@ -1255,7 +1255,17 @@
             const clipboardData = e.clipboardData || window.clipboardData;
             if (!clipboardData) return;
             
-            // 1. Check if the clipboard contains our internal copy marker
+            // 1. Check if it's an image first. If it is, it's external (we don't write images to clipboard internally).
+            // Let it fall through to smart-images.js
+            if (clipboardData.items) {
+                for (let i = 0; i < clipboardData.items.length; i++) {
+                    if (clipboardData.items[i].type.startsWith('image/')) {
+                        return; // Bypass internal text check because an image was explicitly copied
+                    }
+                }
+            }
+            
+            // 2. Check if the clipboard contains our internal copy marker
             const text = clipboardData.getData('text/plain');
             if (text === "openpublisher_internal_multi") {
                 e.preventDefault();
@@ -1263,9 +1273,6 @@
                 if (typeof window.pasteEl === 'function') window.pasteEl();
                 return;
             }
-            
-            // 2. If it's an image, DO NOT stop propagation here!
-            // Let it fall through to smart-images.js which has the proper modern image paste handler.
             
         } catch (err) { console.error("Ghost Hook paste routing failed:", err); }
     }, true); 
