@@ -72,8 +72,7 @@ document.addEventListener('keydown', (e) => {
                 setTimeout(() => window._isShiftPasting = false, 100);
                 // Do NOT preventDefault, allow the native paste event to trigger!
             } else if (!e.shiftKey && !textEditing) {
-                e.preventDefault();
-                pasteEl();
+                // Native paste event in legacy-fixes.js now cleanly handles Ctrl+V for both internal vector elements and external images.
             }
         }
         
