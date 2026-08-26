@@ -130,9 +130,9 @@ const ContextMenuSystem = {
         }
         else if (!el && isWorkspace && !isPaperOrInside && !isMarginGuides) {
             // --- PASTEBOARD MENU ---
-            const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
+            const canPaste = ''; // Always enabled so we can check OS clipboard securely on click
             
-            html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
+            html += this.buildItem('Paste', 'fa-paste', `if(window.ContextMenuActions) ContextMenuActions.pasteNormal()`, canPaste);
             html += this.buildItem('Select All', 'fa-object-group', 'if(window.selectAllElements) window.selectAllElements()');
             html += this.buildDivider();
             html += this.buildItem('Toggle Rulers', 'fa-ruler-combined', 'if(window.toggleRulers) window.toggleRulers()');
@@ -172,10 +172,10 @@ const ContextMenuSystem = {
         else {
             if (!el) {
                 // --- PAPER MENU ---
-                const canPaste = state.copiedData || state.copiedEl ? '' : 'disabled';
+                const canPaste = ''; // Always enabled
                 
-                html += this.buildItem('Paste', 'fa-paste', `pasteEl()`, canPaste);
-                html += this.buildItem('Paste in Place', 'fa-clipboard-check', `pasteEl(true)`, canPaste);
+                html += this.buildItem('Paste', 'fa-paste', `if(window.ContextMenuActions) ContextMenuActions.pasteNormal()`, canPaste);
+                html += this.buildItem('Paste in Place', 'fa-clipboard-check', `if(window.ContextMenuActions) ContextMenuActions.pasteNormal(true)`, canPaste);
                 html += this.buildDivider();
                 
                 const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ui-theme-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;

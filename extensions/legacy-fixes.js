@@ -1079,7 +1079,7 @@
     };
 
     // --- 3. MULTI-ITEM PASTE ---
-    window.pasteEl = function() {
+    window.pasteEl = function(inPlace = false) {
         // First check if we have our new array of copied elements
         if (state.copiedElements && state.copiedElements.length > 0) {
             
@@ -1090,11 +1090,13 @@
                 // Clone the clone so we can paste multiple times in a row
                 const n = originalClone.cloneNode(true);
                 
-                // Shift it down and right by 20px so it doesn't perfectly overlap
-                const currentLeft = parseFloat(n.style.left) || 0;
-                const currentTop = parseFloat(n.style.top) || 0;
-                n.style.left = (currentLeft + 20) + 'px';
-                n.style.top = (currentTop + 20) + 'px';
+                if (!inPlace) {
+                    // Shift it down and right by 20px so it doesn't perfectly overlap
+                    const currentLeft = parseFloat(n.style.left) || 0;
+                    const currentTop = parseFloat(n.style.top) || 0;
+                    n.style.left = (currentLeft + 20) + 'px';
+                    n.style.top = (currentTop + 20) + 'px';
+                }
                 
                 // Add to paper
                 const paper = document.getElementById('paper');
@@ -1125,8 +1127,10 @@
         // Fallback for older single-item copies just in case
         else if (state.copiedEl) {
             const n = state.copiedEl.cloneNode(true);
-            n.style.left = (parseFloat(n.style.left)+20)+'px';
-            n.style.top = (parseFloat(n.style.top)+20)+'px';
+            if (!inPlace) {
+                n.style.left = (parseFloat(n.style.left)+20)+'px';
+                n.style.top = (parseFloat(n.style.top)+20)+'px';
+            }
             const paper = document.getElementById('paper');
             if(paper) paper.appendChild(n);
             window.selectElement(n);
@@ -1159,22 +1163,7 @@
             }
         }
 
-        // --- 2. OVERRIDE CTRL + V ---
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
-            if (isTextEditing) return;
-
-            // If they have copied data in EITHER the old or new array
-            if (state.copiedEl || (state.copiedElements && state.copiedElements.length > 0)) {
-                e.preventDefault();
-                e.stopImmediatePropagation(); // Kill the original broken shortcut
-                
-                // Activate the Ghost Hook shield for multi-pastes
-                window._isInternalPaste = true;
-                setTimeout(() => { window._isInternalPaste = false; }, 100);
-
-                if (typeof window.pasteEl === 'function') window.pasteEl();
-            }
-        }
+        // Ctrl+V override removed to allow native paste events to handle it properly
     }, true); // 'true' runs this in the Capture Phase, beating the old code to the punch!
 
     // --- 3. NATIVE COPY SYNC ---
@@ -1265,44 +1254,20 @@
         try {
             const clipboardData = e.clipboardData || window.clipboardData;
             if (!clipboardData) return;
-            const items = clipboardData.items;
-            if (!items) return;
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-
-                    const blob = item.getAsFile();
-                    if (!blob) continue;
-
-                    const file = new File([blob], "pasted-image.png", { type: blob.type });
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(file);
-
-                    const dropEvent = new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dataTransfer });
-                    const dropTarget = document.getElementById('workspace') || document.querySelector('.canvas-container') || document.querySelector('.canvas') || document.body;
-                    dropTarget.dispatchEvent(dropEvent);
-
-                    setTimeout(() => {
-                        if (!document.querySelector('img[src^="data:image"]')) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                                const img = new Image();
-                                img.src = ev.target.result;
-                                img.style.maxWidth = '300px';
-                                img.style.position = 'absolute';
-                                img.style.zIndex = '9999';
-                                dropTarget.appendChild(img);
-                            };
-                            reader.readAsDataURL(blob);
-                        }
-                    }, 500);
-                    return; 
-                }
+            
+            // 1. Check if the clipboard contains our internal copy marker
+            const text = clipboardData.getData('text/plain');
+            if (text === "openpublisher_internal_multi") {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (typeof window.pasteEl === 'function') window.pasteEl();
+                return;
             }
-        } catch (err) { console.error("Ghost Hook Image injection failed:", err); }
+            
+            // 2. If it's an image, DO NOT stop propagation here!
+            // Let it fall through to smart-images.js which has the proper modern image paste handler.
+            
+        } catch (err) { console.error("Ghost Hook paste routing failed:", err); }
     }, true); 
 })();
 

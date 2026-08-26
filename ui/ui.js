@@ -278,7 +278,7 @@ window.ContextMenuActions = {
         if (typeof pushHistory !== 'undefined') pushHistory();
     },
 
-    pasteNormal: async function() {
+    pasteNormal: async function(inPlace = false) {
         let targetBox = document.activeElement;
         
         // Recover focus if lost due to clicking the context menu
@@ -300,8 +300,44 @@ window.ContextMenuActions = {
         const isTextEditing = targetBox && (targetBox.isContentEditable || targetBox.tagName === 'INPUT' || targetBox.tagName === 'TEXTAREA');
 
         if (!isTextEditing) {
-            // Not editing text? Just paste elements.
-            if (typeof window.pasteEl === 'function') window.pasteEl();
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText().catch(() => "");
+                    if (text === "openpublisher_internal_multi") {
+                        if (typeof window.pasteEl === 'function') window.pasteEl(inPlace);
+                        return;
+                    }
+                }
+                
+                if (navigator.clipboard && navigator.clipboard.read) {
+                    const items = await navigator.clipboard.read().catch(() => []);
+                    for (const item of items) {
+                        for (const type of item.types) {
+                            if (type.startsWith('image/')) {
+                                const blob = await item.getType(type);
+                                const reader = new FileReader();
+                                reader.onload = function(event) {
+                                    if (typeof window.insertSmartImage === 'function') {
+                                        window.insertSmartImage(event.target.result);
+                                    }
+                                };
+                                reader.readAsDataURL(blob);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } catch(e) { console.warn("Clipboard OS read failed", e); }
+
+            // Fallback to internal elements just in case permissions failed or we are in a legacy browser
+            if (state.copiedEl || (state.copiedElements && state.copiedElements.length > 0)) {
+                if (typeof window.pasteEl === 'function') window.pasteEl(inPlace);
+                return;
+            }
+
+            if (typeof DialogSystem !== 'undefined') {
+                DialogSystem.show('Clipboard', '<div style="display:flex; align-items:center; gap:20px;"><i class="fas fa-info-circle fa-2x" style="color:var(--ui-theme-color);"></i><div style="font-size:14px; max-width:350px; line-height:1.4;">OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true);
+            }
             return;
         }
         
