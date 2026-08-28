@@ -1126,7 +1126,7 @@
         
         const dialogBox = document.getElementById('custom-dialog-box');
         if(dialogBox) {
-            dialogBox.style.width = '850px';
+            dialogBox.style.width = '1050px';
             dialogBox.style.maxWidth = '95vw';
             const body = dialogBox.querySelector('.custom-dialog-body');
             if (body) { body.style.maxHeight = '75vh'; body.style.overflowY = 'auto'; }

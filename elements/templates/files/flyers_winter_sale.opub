@@ -1,0 +1,43 @@
+﻿{
+  "pages": [
+    {
+      "width": "794px",
+      "height": "1123px",
+      "background": "#6eb6d1",
+      "elements": [
+        {
+          "top": "400px",
+          "left": "0px",
+          "width": "794px",
+          "height": "723px",
+          "zIndex": 10,
+          "innerHTML": "<svg width='100%' height='100%' viewBox='0 0 100 100' preserveAspectRatio='none' style='display:block;'><polygon points='0,40 30,10 60,50 90,20 100,30 100,100 0,100' fill='#a3d3e6' /></svg>"
+        },
+        {
+          "top": "550px",
+          "left": "0px",
+          "width": "794px",
+          "height": "573px",
+          "zIndex": 20,
+          "innerHTML": "<svg width='100%' height='100%' viewBox='0 0 100 100' preserveAspectRatio='none' style='display:block;'><polygon points='0,60 25,20 50,60 80,30 100,50 100,100 0,100' fill='#ffffff' /></svg>"
+        },
+        {
+          "top": "150px",
+          "left": "0px",
+          "width": "794px",
+          "height": "300px",
+          "zIndex": 30,
+          "innerHTML": "<div style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);letter-spacing:5px;'>WINTER</div><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);margin-top:-20px;letter-spacing:5px;'>SALE</div></div>"
+        },
+        {
+          "top": "950px",
+          "left": "0px",
+          "width": "794px",
+          "height": "100px",
+          "zIndex": 40,
+          "innerHTML": "<div style='text-align:center;font-family:Arial,sans-serif;font-size:35px;color:#004080;font-weight:bold;letter-spacing:2px;'>UP TO 50% OFF SITEWIDE</div>"
+        }
+      ]
+    }
+  ]
+}

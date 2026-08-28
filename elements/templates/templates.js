@@ -371,7 +371,7 @@ function initTemplates() {
             gridDiv.appendChild(div);
             
             // Fetch the template file
-            fetch(`elements/templates/files/${t.file}?v=4.16.17`)
+            fetch(`elements/templates/files/${t.file}?v=4.18.0`)
                 .then(res => res.json())
                 .then(opubData => {
                     const page = opubData.pages[0];
