@@ -146,7 +146,7 @@ body.dark-mode .dashboard-skip-btn:hover {
 /* Left Nav */
 .dashboard-nav {
     width: 250px;
-    background-color: var(--pub-dark);
+    background-color: var(--ui-theme-dark);
     color: white;
     display: flex;
     flex-direction: column;

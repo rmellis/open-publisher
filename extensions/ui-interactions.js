@@ -680,8 +680,6 @@
         });
     }
 })();
-
-
 (function initAboutBox() {
     // 1. Automatically inject the "About" button into the "File" ribbon tab
     function injectButton() {
@@ -691,8 +689,9 @@
             aboutGroup.id = 'about-btn-group';
             aboutGroup.className = 'group';
             aboutGroup.innerHTML = `
+                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
                 <div class="tool-btn" onclick="window.showAboutDialog()"><i class="fas fa-info-circle"></i>About</div>
-                <div class="group-label">Info</div>
+                <div class="group-label">Help</div>
             `;
             fileRibbon.appendChild(aboutGroup);
         }
@@ -704,7 +703,47 @@
         injectButton();
     }
 
-    // 2. Render the Custom About Dialog
+    // 2. Render the Knowledge Base Dialog
+    window.showKnowledgeBase = function() {
+        const kbHtml = `<iframe src="https://kb.openpublisher.app/?in_app=true" style="width:100%; height:100%; min-height:500px; border:none; display:block;"></iframe>`;
+        DialogSystem.show('Knowledge Base', kbHtml, null, true);
+        
+        const dialogBox = document.getElementById('custom-dialog-box');
+        if(dialogBox) {
+            // Decouple from flex centering so CSS resize works naturally from the top-left anchor
+            const w = 1200;
+            const h = window.innerHeight * 0.85;
+            const left = Math.max(0, (window.innerWidth - w) / 2);
+            const top = Math.max(0, (window.innerHeight - h) / 2);
+            
+            dialogBox.style.position = 'absolute';
+            dialogBox.style.left = left + 'px';
+            dialogBox.style.top = top + 'px';
+            
+            // Set dimensions and enable native resizing
+            dialogBox.style.width = '1200px';
+            dialogBox.style.height = '85vh';
+            dialogBox.style.maxWidth = '95vw';
+            dialogBox.style.maxHeight = '95vh';
+            dialogBox.style.resize = 'both';
+            dialogBox.style.overflow = 'hidden'; // Required for CSS resize property to work
+            
+            const body = dialogBox.querySelector('.custom-dialog-body');
+            if (body) { 
+                body.style.padding = '0'; 
+                body.style.height = 'calc(100% - 40px)'; // Account for header
+                body.style.overflow = 'hidden'; 
+            }
+            
+            // Hide the OK/Cancel footer entirely
+            const footer = dialogBox.querySelector('.custom-dialog-footer');
+            if (footer) {
+                footer.style.display = 'none';
+            }
+        }
+    };
+
+    // 3. Render the Custom About Dialog
     window.showAboutDialog = function() {
         const aboutHtml = `
             <style>
@@ -752,7 +791,7 @@
                 .about-footer-link {
                     display: inline-flex; align-items: center; gap: 6px;
                     color: #64748b; text-decoration: none; font-size: 13.5px; font-weight: 600;
-                    transition: color 0.2s;
+                    transition: color 0.2s; white-space: nowrap;
                 }
                 .about-footer-link:hover { color: #0f172a; text-decoration: none; }
                 .about-footer-link i { font-size: 16px; }
@@ -768,6 +807,10 @@
                     An open-source, no-signup alternative to traditional desktop publishing software. 
                     It is <strong>100% ad-free</strong> and completely free to use. Design flyers and documents locally in your browser, with support for 
                     <strong>.pub</strong>, <strong>.doc</strong>, and <strong>.docx</strong> files via cloud conversion.
+                    <br><br>
+                    <a href="#" onclick="window.showKnowledgeBase(); return false;" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--ui-theme-color); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <img src="ui/icons/kb.webp" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
+                    </a>
                 </div>
 
                 <div class="ywa-card">

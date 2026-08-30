@@ -93,6 +93,7 @@ const ContextMenuSystem = {
             html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
             html += this.buildDivider();
             html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+            html += this.buildItemRaw('Knowledge Base', '<img src="ui/icons/kb.webp" style="width:14px; height:14px; object-fit:contain;">', 'if(window.showKnowledgeBase) window.showKnowledgeBase()');
             html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
         }
         else if (isRuler) {
@@ -167,6 +168,7 @@ const ContextMenuSystem = {
             html += this.buildItem('Print Document', 'fa-print', 'if(window.printFullDocument) window.printFullDocument()');
             html += this.buildDivider();
             html += this.buildItem('Reload App', 'fa-sync-alt', 'window.location.reload()');
+            html += this.buildItemRaw('Knowledge Base', '<img src="ui/icons/kb.webp" style="width:14px; height:14px; object-fit:contain;">', 'if(window.showKnowledgeBase) window.showKnowledgeBase()');
             html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
         }
         else {
