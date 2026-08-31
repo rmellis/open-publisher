@@ -217,6 +217,57 @@ const ContextMenuSystem = {
                 const isTable = el.querySelector('table');
                 const isText = !isImage && !isShape && !isWordArt && !isTable;
 
+                let clickedWord = "";
+                let clickedWordRange = null;
+
+                const extractWordFromRange = (r, offset) => {
+                    if (r && r.startContainer.nodeType === 3) {
+                        const text = r.startContainer.textContent;
+                        let start = offset, end = offset;
+                        while (start > 0 && /[A-Za-z0-9_']/.test(text[start - 1])) start--;
+                        while (end < text.length && /[A-Za-z0-9_']/.test(text[end])) end++;
+                        const w = text.substring(start, end).trim();
+                        if (w) {
+                            const newRange = document.createRange();
+                            newRange.setStart(r.startContainer, start);
+                            newRange.setEnd(r.startContainer, end);
+                            return { word: w, range: newRange };
+                        }
+                    }
+                    return null;
+                };
+
+                const sel = window.getSelection();
+                
+                if (sel && sel.toString().trim() && sel.rangeCount > 0) {
+                    const selText = sel.toString().trim();
+                    if (selText.split(/\s+/).length === 1) { 
+                        clickedWord = selText;
+                        clickedWordRange = sel.getRangeAt(0);
+                    }
+                }
+
+                if (!clickedWord && document.caretRangeFromPoint) {
+                    const r = document.caretRangeFromPoint(e.clientX, e.clientY);
+                    if (r) {
+                        const res = extractWordFromRange(r, r.startOffset);
+                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                    }
+                } 
+                else if (!clickedWord && document.caretPositionFromPoint) {
+                    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                    if (pos) {
+                        const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
+                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                    }
+                }
+
+                if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
+                    const r = sel.getRangeAt(0);
+                    const res = extractWordFromRange(r, r.startOffset);
+                    if (res) { clickedWord = res.word; clickedWordRange = res.range; }
+                }
+
                 // 2. PICTURE CONTEXT MENU
                 if (isImage) {
                     html += this.buildItem('Change Picture...', 'fa-exchange-alt', 'ContextMenuActions.changePicture()');
@@ -238,57 +289,6 @@ const ContextMenuSystem = {
                 }
                 // 3. TEXT BOX CONTEXT MENU
                 else if (isText || isWordArt) {
-                    let clickedWord = "";
-                    let clickedWordRange = null;
-
-                    const extractWordFromRange = (r, offset) => {
-                        if (r && r.startContainer.nodeType === 3) {
-                            const text = r.startContainer.textContent;
-                            let start = offset, end = offset;
-                            while (start > 0 && /[A-Za-z0-9_']/.test(text[start - 1])) start--;
-                            while (end < text.length && /[A-Za-z0-9_']/.test(text[end])) end++;
-                            const w = text.substring(start, end).trim();
-                            if (w) {
-                                const newRange = document.createRange();
-                                newRange.setStart(r.startContainer, start);
-                                newRange.setEnd(r.startContainer, end);
-                                return { word: w, range: newRange };
-                            }
-                        }
-                        return null;
-                    };
-
-                    const sel = window.getSelection();
-                    
-                    if (sel && sel.toString().trim() && sel.rangeCount > 0) {
-                        const selText = sel.toString().trim();
-                        if (selText.split(/\s+/).length === 1) { 
-                            clickedWord = selText;
-                            clickedWordRange = sel.getRangeAt(0);
-                        }
-                    }
-
-                    if (!clickedWord && document.caretRangeFromPoint) {
-                        const r = document.caretRangeFromPoint(e.clientX, e.clientY);
-                        if (r) {
-                            const res = extractWordFromRange(r, r.startOffset);
-                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                        }
-                    } 
-                    else if (!clickedWord && document.caretPositionFromPoint) {
-                        const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-                        if (pos) {
-                            const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
-                            if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                        }
-                    }
-
-                    if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
-                        const r = sel.getRangeAt(0);
-                        const res = extractWordFromRange(r, r.startOffset);
-                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                    }
-                    
                     if (clickedWord && clickedWordRange) {
                         window._currentSpellCheckWord = clickedWord;
                         window._currentSpellCheckRange = clickedWordRange;
@@ -308,6 +308,11 @@ const ContextMenuSystem = {
                 }
                 // 3.5. TABLE CONTEXT MENU
                 else if (isTable) {
+                    if (clickedWord && clickedWordRange) {
+                        window._currentSpellCheckWord = clickedWord;
+                        window._currentSpellCheckRange = clickedWordRange;
+                        html += '<div id="spell-check-results"></div>';
+                    }
                     html += this.buildItem('Insert Row Above', 'fa-arrow-up', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()');
                     html += this.buildItem('Insert Row Below', 'fa-arrow-down', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowBelow()');
                     html += this.buildItem('Insert Column Left', 'fa-arrow-left', 'if(window.ContextRibbonActions) ContextRibbonActions.insertColLeft()');
