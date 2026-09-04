@@ -799,7 +799,7 @@
 
             <div class="about-container">
                 <div class="about-header">
-                    <div class="about-title"><i class="fas fa-print"></i> Open Publisher</div>
+                    <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
                     <div class="about-subtitle">Free Online Desktop Publishing Tool</div>
                 </div>
                 
