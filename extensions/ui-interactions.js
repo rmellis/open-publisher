@@ -579,78 +579,41 @@
                 selectedTargets = [state.selectedEl];
             }
 
-            if (imageFiles.length > 1 && selectedTargets.length <= 1) {
-                const allPlaceholders = Array.from(document.querySelectorAll('.pub-element[data-is-placeholder="true"]'));
-                if (allPlaceholders.length > 0) {
-                    allPlaceholders.sort((a, b) => {
-                        const rectA = a.getBoundingClientRect();
-                        const rectB = b.getBoundingClientRect();
-                        if (Math.abs(rectA.top - rectB.top) < 50) return rectA.left - rectB.left;
-                        return rectA.top - rectB.top;
-                    });
-                    if (selectedTargets.length === 1 && selectedTargets[0].getAttribute('data-is-placeholder') === 'true') {
-                        const otherPlaceholders = allPlaceholders.filter(p => p !== selectedTargets[0]);
-                        selectedTargets = [selectedTargets[0], ...otherPlaceholders];
-                    } else {
-                        selectedTargets = allPlaceholders;
-                    }
+            // If dropping exactly 1 image onto a single selected target/placeholder, do direct smart swap
+            if (imageFiles.length === 1 && selectedTargets.length === 1) {
+                const target = selectedTargets[0];
+                const img = target.querySelector('.element-content img') || target.querySelector('img');
+                if (img) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        img.src = evt.target.result;
+                        img.removeAttribute('crossorigin');
+                        img.style.objectFit = 'fill';
+                        target.removeAttribute('data-is-placeholder');
+                        if (typeof pushHistory === 'function') pushHistory();
+                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                    };
+                    reader.readAsDataURL(imageFiles[0]);
+                    return;
                 }
             }
 
             const paperEl = document.getElementById('paper');
-            const rect = paperEl.getBoundingClientRect();
+            const rect = paperEl ? paperEl.getBoundingClientRect() : { left: 0, top: 0 };
             const scale = typeof getScale === 'function' ? getScale() : 1;
             let dropX = (e.clientX - rect.left) / scale;
             let dropY = (e.clientY - rect.top) / scale;
-            let filesProcessed = 0;
 
-            imageFiles.forEach((file, index) => {
+            // Route to unified batch image handler!
+            if (typeof window.handleBatchImageFiles === 'function') {
+                window.handleBatchImageFiles(imageFiles, { x: dropX, y: dropY });
+            } else if (imageFiles.length === 1 && typeof window.insertSmartImage === 'function') {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    const result = evt.target.result;
-                    if (index < selectedTargets.length) {
-                        const target = selectedTargets[index];
-                        const img = target.querySelector('.element-content img') || target.querySelector('img');
-                        if (img) {
-                            img.src = result;
-                            img.removeAttribute('crossorigin');
-                            img.style.objectFit = 'fill';
-                            target.removeAttribute('data-is-placeholder');
-                        }
-                        filesProcessed++;
-                        if (filesProcessed === imageFiles.length) {
-                            if (typeof pushHistory === 'function') pushHistory();
-                            if (typeof updateThumbnails === 'function') updateThumbnails();
-                        }
-                    } else {
-                        const offset = (index - selectedTargets.length) * 20;
-                        const tempImg = new Image();
-                        tempImg.onload = function() {
-                            const maxWidth = 400; const maxHeight = 400;
-                            let targetWidth = tempImg.width; let targetHeight = tempImg.height;
-                            if (targetWidth > maxWidth || targetHeight > maxHeight) {
-                                const ratio = Math.min(maxWidth / targetWidth, maxHeight / targetHeight);
-                                targetWidth = targetWidth * ratio; targetHeight = targetHeight * ratio;
-                            }
-                            if (typeof createWrapper === 'function') {
-                                const wrapper = createWrapper(`<img src="${result}" style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;">`);
-                                wrapper.style.width = targetWidth + 'px'; 
-                                wrapper.style.height = targetHeight + 'px';
-                                wrapper.setAttribute('data-type', 'image');
-                                wrapper.style.left = (dropX + offset) + 'px';
-                                wrapper.style.top = (dropY + offset) + 'px';
-                            }
-                            filesProcessed++;
-                            if (filesProcessed === imageFiles.length) {
-                                if (typeof pushHistory === 'function') pushHistory();
-                                if (typeof updateThumbnails === 'function') updateThumbnails();
-                            }
-                        };
-                        tempImg.src = result;
-                    }
+                    window.insertSmartImage(evt.target.result, null, { x: dropX, y: dropY });
                 };
-                reader.readAsDataURL(file);
-            });
+                reader.readAsDataURL(imageFiles[0]);
+            }
         }
 
         otherFiles.forEach(file => {

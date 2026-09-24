@@ -1,13 +1,18 @@
 function triggerUpload() { document.getElementById('img-upload').click(); }
 
 document.getElementById('img-upload').addEventListener('change', (e) => {
-    if(e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            createWrapper(`<img src="${evt.target.result}">`);
-        };
-        reader.readAsDataURL(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+        if (typeof window.handleBatchImageFiles === 'function') {
+            window.handleBatchImageFiles(e.target.files);
+        } else if (e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                createWrapper(`<img src="${evt.target.result}">`);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
     }
+    e.target.value = '';
 });
 
 function toggleCrop() {

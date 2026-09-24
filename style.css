@@ -278,6 +278,23 @@ body.dark-mode .custom-dialog .pp-card:hover { border-color: var(--ui-theme-colo
 body.dark-mode .custom-dialog .pp-card-title { color: var(--ui-text) !important; }
 body.dark-mode .custom-dialog .pp-card-desc { color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important; }
 
+/* Batch Image Import Modal Cards */
+.batch-import-card:hover {
+    border-color: var(--ui-theme-color) !important;
+    background: color-mix(in srgb, var(--ui-theme-color) 6%, var(--ui-panel-bg, #ffffff)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+body.dark-mode .custom-dialog .batch-import-card {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+}
+body.dark-mode .custom-dialog .batch-import-card:hover {
+    border-color: var(--ui-theme-color) !important;
+    background: color-mix(in srgb, var(--ui-theme-color) 15%, var(--ui-panel-bg)) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
 /* Template Category Overrides */
 body.dark-mode #template-cats {
     border-bottom: 2px solid var(--ui-border) !important;

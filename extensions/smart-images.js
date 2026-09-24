@@ -75,14 +75,23 @@
                 finalHeight = Math.round(finalHeight * scale);
             }
 
+            // Use drop coordinates if supplied, otherwise default to 50px
+            let leftPos = 50;
+            let topPos = 50;
+            if (dropCoords && typeof dropCoords.x === 'number' && typeof dropCoords.y === 'number') {
+                leftPos = Math.round(dropCoords.x);
+                topPos = Math.round(dropCoords.y);
+            }
+
             // 🚨 THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
             const el = document.createElement('div');
             el.className = 'pub-element';
-            el.style.left = '50px';
-            el.style.top = '50px';
+            el.style.left = leftPos + 'px';
+            el.style.top = topPos + 'px';
             el.style.width = finalWidth + 'px';
             el.style.height = finalHeight + 'px';
             el.style.zIndex = 10;
+            el.setAttribute('data-type', 'image');
             
             el.setAttribute('data-scaleX', "1");
             el.setAttribute('data-scaleY', "1");
@@ -115,22 +124,319 @@
         img.src = imageSrc;
     };
 
+    // --- BATCH IMAGE IMPORT SYSTEM ---
+    window._pendingBatchImages = null;
+
+    function readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function loadImageElement(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = (err) => reject(err);
+            img.src = src;
+        });
+    }
+
+    function showBatchImportSpinner(count, mode) {
+        const spinner = document.createElement('div');
+        spinner.id = 'op-batch-import-spinner';
+        const modeText = mode === 'newPages' 
+            ? `Generating ${count} new pages...` 
+            : `Adding ${count} images to page...`;
+        spinner.innerHTML = `
+            <div style="text-align: center; color: var(--ui-theme-color); font-family: 'Segoe UI', Arial, sans-serif; background: rgba(255,255,255,0.95); padding: 24px 44px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.08); pointer-events: auto;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <div style="font-size: 18px; font-weight: 600; letter-spacing: 0.5px; color: #1e293b;">${modeText}</div>
+                <div style="font-size: 14px; opacity: 0.75; margin-top: 5px; color: #64748b;">Please wait</div>
+            </div>
+        `;
+        spinner.style.position = 'fixed';
+        spinner.style.top = '0';
+        spinner.style.left = '0';
+        spinner.style.width = '100vw';
+        spinner.style.height = '100vh';
+        spinner.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+        spinner.style.backdropFilter = 'blur(1px)';
+        spinner.style.display = 'flex';
+        spinner.style.alignItems = 'center';
+        spinner.style.justifyContent = 'center';
+        spinner.style.zIndex = '999999';
+        spinner.style.pointerEvents = 'auto';
+        document.body.appendChild(spinner);
+        return spinner;
+    }
+
+    function createSmartImageElement(src, x, y, width, height) {
+        const el = document.createElement('div');
+        el.className = 'pub-element';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.width = width + 'px';
+        el.style.height = height + 'px';
+        el.style.zIndex = 10;
+        el.setAttribute('data-type', 'image');
+        el.setAttribute('data-scaleX', "1");
+        el.setAttribute('data-scaleY', "1");
+
+        el.innerHTML = `
+            <div class="element-content">
+                <img src="${src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
+            </div>
+            <div class="resize-handle rh-nw" data-dir="nw"></div>
+            <div class="resize-handle rh-n" data-dir="n"></div>
+            <div class="resize-handle rh-ne" data-dir="ne"></div>
+            <div class="resize-handle rh-e" data-dir="e"></div>
+            <div class="resize-handle rh-se" data-dir="se"></div>
+            <div class="resize-handle rh-s" data-dir="s"></div>
+            <div class="resize-handle rh-sw" data-dir="sw"></div>
+            <div class="resize-handle rh-w" data-dir="w"></div>
+            <div class="rotate-stick"></div>
+            <div class="rotate-handle"></div>
+        `;
+        return el;
+    }
+
+    window.handleBatchImageFiles = function(fileList, dropCoords = null) {
+        const files = Array.from(fileList || []).filter(f => f && f.type && f.type.startsWith('image/'));
+        if (files.length === 0) return;
+
+        if (files.length === 1) {
+            // Direct single-image insert with zero friction
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                window.insertSmartImage(evt.target.result, null, dropCoords);
+            };
+            reader.readAsDataURL(files[0]);
+            return;
+        }
+
+        // Multiple images: store pending and show modal
+        window._pendingBatchImages = {
+            files: files,
+            dropCoords: dropCoords
+        };
+        window.showBatchImageChoiceModal(files.length);
+    };
+
+    window.showBatchImageChoiceModal = function(count) {
+        const modalHtml = `
+            <div style="font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px; max-width: 520px; margin: 0 auto; padding: 4px 0;">
+                <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    You selected <strong>${count} images</strong>. How would you like to add them to your publication?
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Option 1: Current Page -->
+                    <div class="batch-import-card" onclick="window.executeBatchImageImport('currentPage')" 
+                         style="border: 2px solid var(--ui-border, #e2e8f0); border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s ease; background: var(--ui-panel-bg, #ffffff);">
+                        <div style="width: 48px; height: 48px; border-radius: 10px; background: color-mix(in srgb, var(--ui-theme-color) 12%, transparent); color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 600; font-size: 15px; color: var(--ui-text, #1e293b); margin-bottom: 3px;">
+                                Place all on current page
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; line-height: 1.4;">
+                                Add all ${count} images onto the active page with staggered positioning.
+                            </div>
+                        </div>
+                        <div style="color: var(--ui-theme-color); font-size: 16px; padding-right: 4px;">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Option 2: New Page for Each -->
+                    <div class="batch-import-card" onclick="window.executeBatchImageImport('newPages')" 
+                         style="border: 2px solid var(--ui-border, #e2e8f0); border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s ease; background: var(--ui-panel-bg, #ffffff);">
+                        <div style="width: 48px; height: 48px; border-radius: 10px; background: color-mix(in srgb, var(--ui-theme-color) 12%, transparent); color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                            <i class="fas fa-copy"></i>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 600; font-size: 15px; color: var(--ui-text, #1e293b); margin-bottom: 3px;">
+                                Create a new page for each image
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; line-height: 1.4;">
+                                Automatically generate ${count} pages, placing each image centered on its own page.
+                            </div>
+                        </div>
+                        <div style="color: var(--ui-theme-color); font-size: 16px; padding-right: 4px;">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Import Multiple Images', modalHtml, null, false);
+        }
+    };
+
+    window.executeBatchImageImport = async function(mode) {
+        if (!window._pendingBatchImages || !window._pendingBatchImages.files) {
+            if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+            return;
+        }
+
+        const { files, dropCoords } = window._pendingBatchImages;
+        window._pendingBatchImages = null;
+        if (typeof DialogSystem !== 'undefined') DialogSystem.close();
+
+        const spinner = showBatchImportSpinner(files.length, mode);
+
+        try {
+            if (mode === 'currentPage') {
+                await importBatchOnCurrentPage(files, dropCoords);
+            } else if (mode === 'newPages') {
+                await importBatchOnNewPages(files);
+            }
+        } catch (err) {
+            console.error("Batch image import failed:", err);
+            if (typeof DialogSystem !== 'undefined') {
+                DialogSystem.alert('Import Error', 'An error occurred while importing images: ' + (err.message || err));
+            }
+        } finally {
+            if (spinner && spinner.parentNode) spinner.parentNode.removeChild(spinner);
+        }
+    };
+
+    async function importBatchOnCurrentPage(files, dropCoords) {
+        const paperEl = document.getElementById('paper');
+        const paperW = paperEl ? paperEl.offsetWidth : 794;
+        const paperH = paperEl ? paperEl.offsetHeight : 1123;
+        const maxWidth = paperW - 80;
+        const maxHeight = paperH - 80;
+
+        let baseX = 50;
+        let baseY = 50;
+        if (dropCoords && typeof dropCoords.x === 'number' && typeof dropCoords.y === 'number') {
+            baseX = Math.round(dropCoords.x);
+            baseY = Math.round(dropCoords.y);
+        }
+
+        let lastInsertedEl = null;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const dataUrl = await readFileAsDataURL(file);
+            const img = await loadImageElement(dataUrl);
+
+            let finalWidth = img.naturalWidth || 300;
+            let finalHeight = img.naturalHeight || 200;
+
+            if (finalWidth > maxWidth || finalHeight > maxHeight) {
+                const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+                finalWidth = Math.round(finalWidth * ratio);
+                finalHeight = Math.round(finalHeight * ratio);
+            }
+
+            const offset = (i % 10) * 25;
+            let posX = baseX + offset;
+            let posY = baseY + offset;
+
+            if (posX + finalWidth > paperW + 100) posX = Math.max(20, paperW - finalWidth - 20);
+            if (posY + finalHeight > paperH + 100) posY = Math.max(20, paperH - finalHeight - 20);
+
+            const el = createSmartImageElement(img.src, posX, posY, finalWidth, finalHeight);
+            if (paperEl) {
+                paperEl.appendChild(el);
+                lastInsertedEl = el;
+            }
+        }
+
+        if (lastInsertedEl && typeof selectElement === 'function') {
+            selectElement(lastInsertedEl);
+        }
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+        if (typeof pushHistory === 'function') pushHistory();
+
+        const statusMsg = document.getElementById('status-msg');
+        if (statusMsg) statusMsg.innerText = `Added ${files.length} images to page`;
+    }
+
+    async function importBatchOnNewPages(files) {
+        const paperEl = document.getElementById('paper');
+        const currentElements = paperEl ? paperEl.querySelectorAll('.pub-element') : [];
+        const isDocEmpty = (typeof state !== 'undefined' && state.pages && state.pages.length === 1 && currentElements.length === 0);
+
+        const firstTargetIndex = isDocEmpty ? 0 : (typeof state !== 'undefined' && state.pages ? state.pages.length : 0);
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const dataUrl = await readFileAsDataURL(file);
+            const img = await loadImageElement(dataUrl);
+
+            if (i === 0 && isDocEmpty) {
+                // Use current empty page for the first image
+            } else {
+                if (typeof serializeCurrentPage === 'function' && typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
+                    state.pages[state.currentPageIndex] = serializeCurrentPage();
+                }
+                if (typeof addNewPage === 'function') {
+                    addNewPage();
+                }
+            }
+
+            const currentPaper = document.getElementById('paper');
+            const paperW = currentPaper ? currentPaper.offsetWidth : 794;
+            const paperH = currentPaper ? currentPaper.offsetHeight : 1123;
+            const maxWidth = paperW - 80;
+            const maxHeight = paperH - 80;
+
+            let finalWidth = img.naturalWidth || 300;
+            let finalHeight = img.naturalHeight || 200;
+
+            if (finalWidth > maxWidth || finalHeight > maxHeight) {
+                const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+                finalWidth = Math.round(finalWidth * ratio);
+                finalHeight = Math.round(finalHeight * ratio);
+            }
+
+            const posX = Math.max(20, Math.round((paperW - finalWidth) / 2));
+            const posY = Math.max(20, Math.round((paperH - finalHeight) / 2));
+
+            const el = createSmartImageElement(img.src, posX, posY, finalWidth, finalHeight);
+            if (currentPaper) {
+                currentPaper.appendChild(el);
+            }
+
+            if (typeof serializeCurrentPage === 'function' && typeof state !== 'undefined' && state.pages) {
+                state.pages[state.currentPageIndex] = serializeCurrentPage();
+            }
+        }
+
+        if (typeof switchPage === 'function' && typeof firstTargetIndex === 'number' && typeof state !== 'undefined' && state.pages && firstTargetIndex < state.pages.length) {
+            switchPage(firstTargetIndex);
+        }
+
+        if (typeof updateSidebar === 'function') updateSidebar();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+        if (typeof pushHistory === 'function') pushHistory();
+
+        const statusMsg = document.getElementById('status-msg');
+        if (statusMsg) statusMsg.innerText = `Created ${files.length} pages for batch images`;
+    }
+
     // 2. Kill the old event listener by cloning and replacing the upload button
     const oldUploadBtn = document.getElementById('img-upload');
     if (oldUploadBtn) {
         const newUploadBtn = oldUploadBtn.cloneNode(true);
         oldUploadBtn.parentNode.replaceChild(newUploadBtn, oldUploadBtn);
 
-        // 3. Attach our new smart listener
+        // 3. Attach our new smart listener supporting single and multiple files
         newUploadBtn.addEventListener('change', (e) => {
-            if(e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    window.insertSmartImage(evt.target.result);
-                };
-                reader.readAsDataURL(e.target.files[0]);
+            if (e.target.files && e.target.files.length > 0) {
+                window.handleBatchImageFiles(e.target.files);
             }
-            e.target.value = ''; // Reset input so the same file can be chosen again
+            e.target.value = ''; // Reset input so the same files can be chosen again
         });
     }
 
