@@ -403,6 +403,8 @@ body {
     justify-content: space-between;
     font-size: 13px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 101;
 }
 .v5-logo-icon {
     display: inline-block;
@@ -498,6 +500,8 @@ body.bright-theme:not(.dark-mode) {
     display: flex;
     flex-direction: column;
     height: 150px;
+    position: relative;
+    z-index: 100;
 }
 
 .ribbon-tabs {
@@ -1514,7 +1518,7 @@ td, th {
     margin-left: auto;
     padding-left: 15px;
 }
-.status-bar { color: white; }
+.status-bar { color: white; position: relative; z-index: 100; }
 
 .zoom-slider-btn {
     background: none;
@@ -3233,7 +3237,7 @@ svg .shape-path, svg .shape-path * {
             overflow: hidden; 
             border-radius: 4px; 
             pointer-events: none !important;  
-            z-index: 9999; 
+            z-index: 90; 
             will-change: top, left, width, height; 
             transition: height 0.2s ease; 
         } 

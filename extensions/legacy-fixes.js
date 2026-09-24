@@ -1796,7 +1796,7 @@
     overlayWrapper = document.createElement('div'); 
     overlayWrapper.id = 'ts-overlay-wrapper'; 
 
-    overlayWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; overflow: hidden;'; 
+    overlayWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; overflow: hidden;'; 
     overlayWrapper.setAttribute('data-html2canvas-ignore', 'true'); 
     document.body.appendChild(overlayWrapper); 
 
@@ -1815,6 +1815,7 @@
             entry.target.dataset.glassVisible = (entry.intersectionRatio >= 0.4) ? 'true' : 'false';
         });
     }, {
+        root: document.getElementById('sidebar') || null,
         // Fire callbacks frequently during the slide animation for instant hiding
         threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
     });
@@ -1872,6 +1873,21 @@
         } 
 
         const thumbs = document.querySelectorAll('.page-thumb'); 
+        const sb = document.getElementById('sidebar');
+        const sbRect = sb ? sb.getBoundingClientRect() : null;
+        const isSbVisible = sb && sbRect && sbRect.width > 5 && sbRect.height > 5;
+
+        if (!isSbVisible || !overlayWrapper) {
+            if (overlayWrapper) overlayWrapper.style.display = 'none';
+        } else {
+            overlayWrapper.style.display = 'block';
+            // Clip overlay wrapper precisely to the visible sidebar bounds so no glass panel can ever render into ribbon or status bar
+            const clipTop = Math.max(0, Math.floor(sbRect.top));
+            const clipRight = Math.max(0, Math.floor(window.innerWidth - sbRect.right));
+            const clipBottom = Math.max(0, Math.floor(window.innerHeight - sbRect.bottom));
+            const clipLeft = Math.max(0, Math.floor(sbRect.left));
+            overlayWrapper.style.clipPath = `inset(${clipTop}px ${clipRight}px ${clipBottom}px ${clipLeft}px)`;
+        }
          
         thumbs.forEach((thumb, index) => { 
             // Hook new thumbs into the clipping observer
@@ -1893,7 +1909,14 @@
             // Check if the sidebar is collapsing over it
             const isVisible = thumb.dataset.glassVisible !== 'false';
 
-            if (isVisible && rect.width > 0 && rect.height > 0 && 
+            // Boundary check: ensure the thumb has visible overlap with the sidebar bounds
+            const isInsideSidebar = isSbVisible && 
+                rect.bottom > sbRect.top && 
+                rect.top < sbRect.bottom && 
+                rect.right > sbRect.left && 
+                rect.left < sbRect.right;
+
+            if (isVisible && isInsideSidebar && rect.width > 0 && rect.height > 0 && 
                 rect.top < window.innerHeight && rect.bottom > 0 &&
                 rect.left < window.innerWidth && rect.right > 0) { 
                 
@@ -1927,6 +1950,12 @@
         requestAnimationFrame(syncPositions); 
     }; 
     requestAnimationFrame(syncPositions); 
+
+    const sbEl = document.getElementById('sidebar');
+    if (sbEl) {
+        sbEl.addEventListener('scroll', syncPositions, { passive: true });
+    }
+    window.addEventListener('resize', syncPositions, { passive: true }); 
 
     // ========================================== 
     // THE VISUAL BUILDER 
