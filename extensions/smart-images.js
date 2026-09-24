@@ -235,7 +235,7 @@
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <!-- Option 1: Current Page -->
-                    <div class="batch-import-card" onclick="window.executeBatchImageImport('currentPage')" 
+                    <div id="batch-opt-current-page" class="batch-import-card" role="button" tabindex="0" onclick="window.executeBatchImageImport('currentPage')" 
                          style="border: 2px solid var(--ui-border, #e2e8f0); border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s ease; background: var(--ui-panel-bg, #ffffff);">
                         <div style="width: 48px; height: 48px; border-radius: 10px; background: color-mix(in srgb, var(--ui-theme-color) 12%, transparent); color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
                             <i class="fas fa-layer-group"></i>
@@ -254,10 +254,10 @@
                     </div>
 
                     <!-- Option 2: New Page for Each -->
-                    <div class="batch-import-card" onclick="window.executeBatchImageImport('newPages')" 
+                    <div id="batch-opt-new-pages" class="batch-import-card" role="button" tabindex="0" onclick="window.executeBatchImageImport('newPages')" 
                          style="border: 2px solid var(--ui-border, #e2e8f0); border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s ease; background: var(--ui-panel-bg, #ffffff);">
                         <div style="width: 48px; height: 48px; border-radius: 10px; background: color-mix(in srgb, var(--ui-theme-color) 12%, transparent); color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
-                            <i class="fas fa-copy"></i>
+                            <i class="fas fa-file-circle-plus"></i>
                         </div>
                         <div style="flex-grow: 1;">
                             <div style="font-weight: 600; font-size: 15px; color: var(--ui-text, #1e293b); margin-bottom: 3px;">
@@ -278,6 +278,49 @@
         if (typeof DialogSystem !== 'undefined') {
             DialogSystem.show('Import Multiple Images', modalHtml, null, false);
         }
+
+        // Programmatic event bindings and UI cleanup for desktop shells (NW.js / Electron / Web)
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('custom-dialog-confirm');
+            if (confirmBtn) confirmBtn.style.display = 'none';
+
+            const optCurrent = document.getElementById('batch-opt-current-page');
+            const optNew = document.getElementById('batch-opt-new-pages');
+
+            if (optCurrent) {
+                const triggerCurrent = (e) => {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    window.executeBatchImageImport('currentPage');
+                };
+                optCurrent.addEventListener('click', triggerCurrent);
+                optCurrent.addEventListener('pointerdown', (e) => {
+                    if (e.button === 0) triggerCurrent(e);
+                });
+                optCurrent.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerCurrent(e);
+                    }
+                });
+            }
+
+            if (optNew) {
+                const triggerNew = (e) => {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    window.executeBatchImageImport('newPages');
+                };
+                optNew.addEventListener('click', triggerNew);
+                optNew.addEventListener('pointerdown', (e) => {
+                    if (e.button === 0) triggerNew(e);
+                });
+                optNew.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerNew(e);
+                    }
+                });
+            }
+        }, 20);
     };
 
     window.executeBatchImageImport = async function(mode) {
@@ -363,33 +406,37 @@
     }
 
     async function importBatchOnNewPages(files) {
+        if (!files || files.length === 0) return;
+
+        // Ensure state and state.pages are present
+        if (typeof state === 'undefined') window.state = { pages: [] };
+        if (!state.pages) state.pages = [];
+
+        // Save active page before appending new pages
+        if (typeof serializeCurrentPage === 'function' && state.pages.length > 0 && typeof state.currentPageIndex === 'number' && state.pages[state.currentPageIndex]) {
+            state.pages[state.currentPageIndex] = serializeCurrentPage();
+        }
+
         const paperEl = document.getElementById('paper');
         const currentElements = paperEl ? paperEl.querySelectorAll('.pub-element') : [];
-        const isDocEmpty = (typeof state !== 'undefined' && state.pages && state.pages.length === 1 && currentElements.length === 0);
+        const isDocEmpty = (state.pages.length === 1 && currentElements.length === 0);
 
-        const firstTargetIndex = isDocEmpty ? 0 : (typeof state !== 'undefined' && state.pages ? state.pages.length : 0);
+        // Inherit page dimensions from the current document or default A4
+        const basePage = state.pages.length > 0 ? state.pages[0] : null;
+        let defaultW = (basePage && basePage.width) ? basePage.width : (paperEl && paperEl.style.width ? paperEl.style.width : '794px');
+        let defaultH = (basePage && basePage.height) ? basePage.height : (paperEl && paperEl.style.height ? paperEl.style.height : '1123px');
+
+        const firstTargetIndex = isDocEmpty ? 0 : state.pages.length;
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const dataUrl = await readFileAsDataURL(file);
             const img = await loadImageElement(dataUrl);
 
-            if (i === 0 && isDocEmpty) {
-                // Use current empty page for the first image
-            } else {
-                if (typeof serializeCurrentPage === 'function' && typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
-                    state.pages[state.currentPageIndex] = serializeCurrentPage();
-                }
-                if (typeof addNewPage === 'function') {
-                    addNewPage();
-                }
-            }
-
-            const currentPaper = document.getElementById('paper');
-            const paperW = currentPaper ? currentPaper.offsetWidth : 794;
-            const paperH = currentPaper ? currentPaper.offsetHeight : 1123;
-            const maxWidth = paperW - 80;
-            const maxHeight = paperH - 80;
+            const pW = parseFloat(defaultW) || 794;
+            const pH = parseFloat(defaultH) || 1123;
+            const maxWidth = pW - 80;
+            const maxHeight = pH - 80;
 
             let finalWidth = img.naturalWidth || 300;
             let finalHeight = img.naturalHeight || 200;
@@ -400,21 +447,62 @@
                 finalHeight = Math.round(finalHeight * ratio);
             }
 
-            const posX = Math.max(20, Math.round((paperW - finalWidth) / 2));
-            const posY = Math.max(20, Math.round((paperH - finalHeight) / 2));
+            const posX = Math.max(20, Math.round((pW - finalWidth) / 2));
+            const posY = Math.max(20, Math.round((pH - finalHeight) / 2));
 
-            const el = createSmartImageElement(img.src, posX, posY, finalWidth, finalHeight);
-            if (currentPaper) {
-                currentPaper.appendChild(el);
-            }
+            const imgElData = {
+                left: posX + 'px',
+                top: posY + 'px',
+                width: finalWidth + 'px',
+                height: finalHeight + 'px',
+                transform: 'none',
+                zIndex: 10,
+                type: 'image',
+                imgSrc: dataUrl,
+                altText: file.name ? file.name.replace(/\.[^/.]+$/, "") : '',
+                scaleX: "1",
+                scaleY: "1",
+                imgStyle: {
+                    width: '100%',
+                    height: '100%',
+                    top: '0px',
+                    left: '0px',
+                    position: 'absolute',
+                    objectFit: 'fill'
+                }
+            };
 
-            if (typeof serializeCurrentPage === 'function' && typeof state !== 'undefined' && state.pages) {
-                state.pages[state.currentPageIndex] = serializeCurrentPage();
+            if (i === 0 && isDocEmpty) {
+                // Populate the existing empty page
+                const el = createSmartImageElement(img.src, posX, posY, finalWidth, finalHeight);
+                if (paperEl) paperEl.appendChild(el);
+                if (typeof serializeCurrentPage === 'function') {
+                    state.pages[0] = serializeCurrentPage();
+                } else {
+                    state.pages[0].elements = [imgElData];
+                }
+            } else {
+                // Construct new page data in memory without DOM layout thrashing or race conditions
+                const isLand = pW >= pH;
+                const newPage = {
+                    id: Date.now() + i + Math.random(),
+                    orientation: isLand ? 'landscape' : 'portrait',
+                    width: defaultW,
+                    height: defaultH,
+                    background: '#ffffff',
+                    header: (basePage && basePage.header) ? basePage.header : 'Header (Type here)',
+                    footer: (basePage && basePage.footer) ? basePage.footer : 'Footer (Type here)',
+                    borderStyle: (basePage && basePage.borderStyle) ? basePage.borderStyle : 'none',
+                    elements: [imgElData]
+                };
+                state.pages.push(newPage);
             }
         }
 
-        if (typeof switchPage === 'function' && typeof firstTargetIndex === 'number' && typeof state !== 'undefined' && state.pages && firstTargetIndex < state.pages.length) {
-            switchPage(firstTargetIndex);
+        // Navigate to the start of the newly added pages
+        state.currentPageIndex = firstTargetIndex;
+        if (typeof renderPage === 'function' && state.pages[firstTargetIndex]) {
+            renderPage(state.pages[firstTargetIndex]);
         }
 
         if (typeof updateSidebar === 'function') updateSidebar();
