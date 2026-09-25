@@ -1,47 +1,4 @@
 /* =========================================================================
-   DYNAMIC RULER ENGINE (MATHEMATICAL REDRAW & CRISP TEXT)
-   ========================================================================= */
-function initRulers() {
-    // Sync Rulers when scrolling or resizing
-    const vp = document.getElementById('viewport');
-    if(vp) vp.addEventListener('scroll', window.syncRulers);
-    window.addEventListener('resize', window.syncRulers);
-    
-    // Force the initial mathematical draw
-    window.lastRulerZoom = -1; 
-    
-    // Trigger an initial sync to draw them on load
-    setTimeout(window.syncRulers, 50);
-}
-
-window.syncRulers = function() {
-    const paperEl = document.getElementById('paper');
-    if(!paperEl) return;
-    const zoom = state.zoom || 1.0;
-    
-    // 1. If the zoom changed, perfectly redraw the rulers so text stays 100% crisp!
-    if (window.lastRulerZoom !== zoom) {
-        window.lastRulerZoom = zoom;
-        window.drawCrispRulers(zoom);
-    }
-
-    // 2. Shift the rulers to track the paper perfectly
-    const hRect = document.getElementById('ruler-h').getBoundingClientRect();
-    const vRect = document.getElementById('ruler-v').getBoundingClientRect();
-    const pRect = paperEl.getBoundingClientRect();
-    
-    const offsetX = pRect.left - hRect.left;
-    const offsetY = pRect.top - vRect.top;
-    
-    const hInner = document.getElementById('ruler-h-inner');
-    const vInner = document.getElementById('ruler-v-inner');
-    
-    // Only use translation. NO CSS scaling here, which permanently cures the blurry text bug!
-    if (hInner) hInner.style.transform = `translateX(${offsetX}px)`;
-    if (vInner) vInner.style.transform = `translateY(${offsetY}px)`;
-};
-
-/* =========================================================================
    CANVAS RULER ENGINE (Hardware Accelerated, 100% Crisp, Zero Lag)
    ========================================================================= */
 window.initRulers = function() {
@@ -89,6 +46,15 @@ window.initRulers = function() {
     setTimeout(window.syncRulers, 50);
 };
 
+window.setRulerUnit = function(unit) {
+    if (typeof state !== 'undefined') {
+        state.rulerUnit = unit;
+        state._userExplicitRulerUnit = true;
+        if (typeof window.syncRulers === 'function') window.syncRulers();
+        if (typeof pushHistory === 'function') pushHistory();
+    }
+};
+
 window.syncRulers = function() {
     const hCanvas = document.getElementById('ruler-h-canvas');
     const vCanvas = document.getElementById('ruler-v-canvas');
@@ -100,9 +66,13 @@ window.syncRulers = function() {
     const pRect = paperEl.getBoundingClientRect();
 
     const zoom = state.zoom || 1.0;
-    // Mathematical constants: 1 cm = 37.795275 pixels (at standard 96 web DPI)
-    const pxPerMm = 37.795275 / 10;
-    
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+
+    // Default ruler unit to cm (standard for desktop publishing in metric regions and Open Publisher's historical default)
+    const rulerUnit = (typeof state !== 'undefined' && state._userExplicitRulerUnit && state.rulerUnit) ? state.rulerUnit : 'cm';
+
     // High-DPI screen support for ultimate crispness (Retina displays)
     const dpr = window.devicePixelRatio || 1; 
 
@@ -139,76 +109,224 @@ window.syncRulers = function() {
     vCtx.strokeStyle = borderStyle;
     vCtx.lineWidth = 1;
 
-    // Optical Level of Detail (LOD) - Smart spacing based on zoom
-    let labelStepMm = 10;
-    let tickStepMm = 1;
-    if (zoom >= 0.8) { 
-        labelStepMm = 10; // Labels every 1cm
-        tickStepMm = 1;   // Ticks every 1mm
-    } else if (zoom >= 0.5) { 
-        labelStepMm = 20; // Labels every 2cm
-        tickStepMm = 5;   // Ticks every 5mm
-    } else if (zoom >= 0.3) { 
-        labelStepMm = 50; // Labels every 5cm
-        tickStepMm = 10;  // Ticks every 10mm (1cm)
-    } else { 
-        labelStepMm = 100; // Labels every 10cm
-        tickStepMm = 50;   // Ticks every 5cm
-    }
-
     // Offsets (Where is the paper on the screen?)
     const offsetX = (pRect.left - hRect.left) + ((state.rulerOriginX || 0) * zoom);
     const offsetY = (pRect.top - vRect.top) + ((state.rulerOriginY || 0) * zoom);
 
-    // Visible ranges (ONLY draw what is currently on screen for extreme performance!)
-    const startMmH = Math.floor(-offsetX / (pxPerMm * zoom));
-    const endMmH = Math.ceil((hRect.width - offsetX) / (pxPerMm * zoom));
+    // Effective visual zoom relative to standard 96 DPI
+    const effectiveZoom = zoom * (pageDpi / 96);
 
-    hCtx.beginPath();
-    for (let mm = startMmH; mm <= endMmH; mm++) {
-        // Only draw the required ticks, but ALWAYS guarantee the 1cm major marks
-        if (mm % tickStepMm !== 0 && mm % 10 !== 0) continue;
+    if (rulerUnit === 'in') {
+        // --- INCHES RULER ---
+        const pxPerUnit = pageDpi; // 1 inch = pageDpi canvas pixels
         
-        const pos = offsetX + (mm * pxPerMm * zoom);
-        const lineX = Math.floor(pos) + 0.5; // +0.5 ensures perfectly crisp 1px lines in Canvas
-
-        let tickH = 5;
-        if (mm % 10 === 0) tickH = hRect.height;
-        else if (mm % 5 === 0) tickH = hRect.height * 0.5;
-
-        hCtx.moveTo(lineX, hRect.height - tickH);
-        hCtx.lineTo(lineX, hRect.height);
-
-        if (mm % labelStepMm === 0) {
-            hCtx.fillText(mm / 10, lineX + 3, 10);
+        let labelStep = 1; // Major label step in inches
+        let subDivisions = 8; // 1/8 inch
+        if (effectiveZoom >= 1.5) {
+            subDivisions = 16; // 1/16"
+        } else if (effectiveZoom >= 0.75) {
+            subDivisions = 8;  // 1/8"
+        } else if (effectiveZoom >= 0.4) {
+            subDivisions = 4;  // 1/4"
+        } else if (effectiveZoom >= 0.2) {
+            subDivisions = 2;  // 1/2"
+        } else if (effectiveZoom >= 0.1) {
+            labelStep = 2;
+            subDivisions = 1;
+        } else {
+            labelStep = 5;
+            subDivisions = 1;
         }
-    }
-    hCtx.stroke();
 
-    // Vertical Ruler
-    const startMmV = Math.floor(-offsetY / (pxPerMm * zoom));
-    const endMmV = Math.ceil((vRect.height - offsetY) / (pxPerMm * zoom));
+        const tickStep = 1 / subDivisions;
+        const startH = Math.floor(-offsetX / (pxPerUnit * zoom) * subDivisions) / subDivisions;
+        const endH = Math.ceil((hRect.width - offsetX) / (pxPerUnit * zoom) * subDivisions) / subDivisions;
 
-    vCtx.beginPath();
-    for (let mm = startMmV; mm <= endMmV; mm++) {
-        if (mm % tickStepMm !== 0 && mm % 10 !== 0) continue;
-        
-        const pos = offsetY + (mm * pxPerMm * zoom);
-        const lineY = Math.floor(pos) + 0.5;
+        hCtx.beginPath();
+        for (let unit = startH; unit <= endH + 0.0001; unit += tickStep) {
+            const roundedUnit = Math.round(unit * subDivisions) / subDivisions;
+            const pos = offsetX + (roundedUnit * pxPerUnit * zoom);
+            const lineX = Math.floor(pos) + 0.5;
 
-        let tickW = 5;
-        if (mm % 10 === 0) tickW = vRect.width;
-        else if (mm % 5 === 0) tickW = vRect.width * 0.5;
+            const isMajor = Math.abs(roundedUnit - Math.round(roundedUnit)) < 0.001;
+            const isHalf = Math.abs((roundedUnit * 2) - Math.round(roundedUnit * 2)) < 0.001;
+            const isQuarter = Math.abs((roundedUnit * 4) - Math.round(roundedUnit * 4)) < 0.001;
 
-        vCtx.moveTo(vRect.width - tickW, lineY);
-        vCtx.lineTo(vRect.width, lineY);
+            let tickH = 4;
+            if (isMajor) tickH = hRect.height;
+            else if (isHalf) tickH = hRect.height * 0.6;
+            else if (isQuarter) tickH = hRect.height * 0.4;
 
-        if (mm % labelStepMm === 0) {
-            // Drawn upright (un-rotated), exactly like MS Publisher!
-            vCtx.fillText(mm / 10, 2, lineY + 10);
+            hCtx.moveTo(lineX, hRect.height - tickH);
+            hCtx.lineTo(lineX, hRect.height);
+
+            if (isMajor && Math.round(roundedUnit) % labelStep === 0) {
+                hCtx.fillText(Math.round(roundedUnit), lineX + 3, 10);
+            }
         }
+        hCtx.stroke();
+
+        const startV = Math.floor(-offsetY / (pxPerUnit * zoom) * subDivisions) / subDivisions;
+        const endV = Math.ceil((vRect.height - offsetY) / (pxPerUnit * zoom) * subDivisions) / subDivisions;
+
+        vCtx.beginPath();
+        for (let unit = startV; unit <= endV + 0.0001; unit += tickStep) {
+            const roundedUnit = Math.round(unit * subDivisions) / subDivisions;
+            const pos = offsetY + (roundedUnit * pxPerUnit * zoom);
+            const lineY = Math.floor(pos) + 0.5;
+
+            const isMajor = Math.abs(roundedUnit - Math.round(roundedUnit)) < 0.001;
+            const isHalf = Math.abs((roundedUnit * 2) - Math.round(roundedUnit * 2)) < 0.001;
+            const isQuarter = Math.abs((roundedUnit * 4) - Math.round(roundedUnit * 4)) < 0.001;
+
+            let tickW = 4;
+            if (isMajor) tickW = vRect.width;
+            else if (isHalf) tickW = vRect.width * 0.6;
+            else if (isQuarter) tickW = vRect.width * 0.4;
+
+            vCtx.moveTo(vRect.width - tickW, lineY);
+            vCtx.lineTo(vRect.width, lineY);
+
+            if (isMajor && Math.round(roundedUnit) % labelStep === 0) {
+                vCtx.fillText(Math.round(roundedUnit), 2, lineY + 10);
+            }
+        }
+        vCtx.stroke();
+    } else if (rulerUnit === 'px') {
+        // --- PIXELS RULER ---
+        let labelStepPx = 100;
+        let tickStepPx = 10;
+        if (effectiveZoom >= 1.5) {
+            labelStepPx = 50;
+            tickStepPx = 5;
+        } else if (effectiveZoom >= 0.7) {
+            labelStepPx = 100;
+            tickStepPx = 10;
+        } else if (effectiveZoom >= 0.3) {
+            labelStepPx = 200;
+            tickStepPx = 20;
+        } else {
+            labelStepPx = 500;
+            tickStepPx = 50;
+        }
+
+        const startH = Math.floor(-offsetX / zoom / tickStepPx) * tickStepPx;
+        const endH = Math.ceil((hRect.width - offsetX) / zoom / tickStepPx) * tickStepPx;
+
+        hCtx.beginPath();
+        for (let px = startH; px <= endH; px += tickStepPx) {
+            const pos = offsetX + (px * zoom);
+            const lineX = Math.floor(pos) + 0.5;
+            let tickH = 4;
+            if (px % labelStepPx === 0) tickH = hRect.height;
+            else if (px % (labelStepPx / 2) === 0) tickH = hRect.height * 0.5;
+
+            hCtx.moveTo(lineX, hRect.height - tickH);
+            hCtx.lineTo(lineX, hRect.height);
+
+            if (px % labelStepPx === 0) {
+                hCtx.fillText(px, lineX + 3, 10);
+            }
+        }
+        hCtx.stroke();
+
+        const startV = Math.floor(-offsetY / zoom / tickStepPx) * tickStepPx;
+        const endV = Math.ceil((vRect.height - offsetY) / zoom / tickStepPx) * tickStepPx;
+
+        vCtx.beginPath();
+        for (let px = startV; px <= endV; px += tickStepPx) {
+            const pos = offsetY + (px * zoom);
+            const lineY = Math.floor(pos) + 0.5;
+            let tickW = 4;
+            if (px % labelStepPx === 0) tickW = vRect.width;
+            else if (px % (labelStepPx / 2) === 0) tickW = vRect.width * 0.5;
+
+            vCtx.moveTo(vRect.width - tickW, lineY);
+            vCtx.lineTo(vRect.width, lineY);
+
+            if (px % labelStepPx === 0) {
+                vCtx.fillText(px, 2, lineY + 10);
+            }
+        }
+        vCtx.stroke();
+    } else {
+        // --- METRIC (CENTIMETERS / MILLIMETERS) RULER ---
+        // 1 mm = pageDpi / 25.4 canvas pixels
+        const pxPerMm = pageDpi / 25.4;
+
+        // Optical Level of Detail (LOD) - Smart spacing based on effective visual zoom
+        let labelStepMm = 10;
+        let tickStepMm = 1;
+        if (effectiveZoom >= 0.5) { 
+            labelStepMm = 10; // Labels every 1cm
+            tickStepMm = 1;   // Ticks every 1mm
+        } else if (effectiveZoom >= 0.22) { 
+            labelStepMm = 10; // Labels every 1cm
+            tickStepMm = 2;   // Ticks every 2mm
+        } else if (effectiveZoom >= 0.12) { 
+            labelStepMm = 20; // Labels every 2cm
+            tickStepMm = 5;   // Ticks every 5mm
+        } else if (effectiveZoom >= 0.06) { 
+            labelStepMm = 50; // Labels every 5cm
+            tickStepMm = 10;  // Ticks every 10mm (1cm)
+        } else { 
+            labelStepMm = 100; // Labels every 10cm
+            tickStepMm = 50;   // Ticks every 5cm
+        }
+
+        const isMm = (rulerUnit === 'mm');
+
+        // Visible ranges (ONLY draw what is currently on screen for extreme performance!)
+        const startMmH = Math.floor(-offsetX / (pxPerMm * zoom));
+        const endMmH = Math.ceil((hRect.width - offsetX) / (pxPerMm * zoom));
+
+        hCtx.beginPath();
+        for (let mm = startMmH; mm <= endMmH; mm++) {
+            // Only draw the required ticks, but ALWAYS guarantee the 1cm major marks
+            if (mm % tickStepMm !== 0 && mm % 10 !== 0) continue;
+            
+            const pos = offsetX + (mm * pxPerMm * zoom);
+            const lineX = Math.floor(pos) + 0.5; // +0.5 ensures perfectly crisp 1px lines in Canvas
+
+            let tickH = 5;
+            if (mm % 10 === 0) tickH = hRect.height;
+            else if (mm % 5 === 0) tickH = hRect.height * 0.5;
+
+            hCtx.moveTo(lineX, hRect.height - tickH);
+            hCtx.lineTo(lineX, hRect.height);
+
+            if (mm % labelStepMm === 0) {
+                const labelText = isMm ? mm : (mm / 10);
+                hCtx.fillText(labelText, lineX + 3, 10);
+            }
+        }
+        hCtx.stroke();
+
+        // Vertical Ruler
+        const startMmV = Math.floor(-offsetY / (pxPerMm * zoom));
+        const endMmV = Math.ceil((vRect.height - offsetY) / (pxPerMm * zoom));
+
+        vCtx.beginPath();
+        for (let mm = startMmV; mm <= endMmV; mm++) {
+            if (mm % tickStepMm !== 0 && mm % 10 !== 0) continue;
+            
+            const pos = offsetY + (mm * pxPerMm * zoom);
+            const lineY = Math.floor(pos) + 0.5;
+
+            let tickW = 5;
+            if (mm % 10 === 0) tickW = vRect.width;
+            else if (mm % 5 === 0) tickW = vRect.width * 0.5;
+
+            vCtx.moveTo(vRect.width - tickW, lineY);
+            vCtx.lineTo(vRect.width, lineY);
+
+            if (mm % labelStepMm === 0) {
+                const labelText = isMm ? mm : (mm / 10);
+                vCtx.fillText(labelText, 2, lineY + 10);
+            }
+        }
+        vCtx.stroke();
     }
-    vCtx.stroke();
 
     if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
 };
@@ -417,6 +535,62 @@ window.updateIndentMarkersPosition = function() {
     }
 };
 
+window.syncHandleScaling = function(z) {
+    const zoom = parseFloat(z) || (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+    if (!zoom || zoom <= 0) return;
+
+    // Optical screen sizes calibrated to the standard 60% page zoom appearance:
+    // Resize handle: ~10px visual screen width/height (10 / 0.6 = 16.667px at 60% zoom)
+    // Rotate circle: ~11px visual diameter
+    // Rotate stick length: ~24px visual length (40px at 60% zoom)
+    // Rotate top distance: stick length + half circle diameter
+    // Border width: 1 physical screen pixel across all zoom levels
+    const handleSize = (10 / zoom).toFixed(3) + 'px';
+    const handleHalf = (5 / zoom).toFixed(3) + 'px';
+    const rotateSize = (11 / zoom).toFixed(3) + 'px';
+    const rotateHalf = (5.5 / zoom).toFixed(3) + 'px';
+    const rotateStickLen = (24 / zoom).toFixed(3) + 'px';
+    const rotateTop = (29.5 / zoom).toFixed(3) + 'px';
+    const borderWidth = Math.max(1, 1 / zoom).toFixed(3) + 'px';
+    const handleRadius = (2 / zoom).toFixed(3) + 'px';
+    const cropHandleSize = (13.33 / zoom).toFixed(3) + 'px';
+    const cropHandleHalf = (6.67 / zoom).toFixed(3) + 'px';
+    const cropBorderWidth = Math.max(1.5, 2 / zoom).toFixed(3) + 'px';
+    const shapeHandleSize = (8.5 / zoom).toFixed(3) + 'px';
+
+    const root = document.documentElement;
+    if (root) {
+        root.style.setProperty('--handle-size', handleSize);
+        root.style.setProperty('--handle-half', handleHalf);
+        root.style.setProperty('--rotate-size', rotateSize);
+        root.style.setProperty('--rotate-half', rotateHalf);
+        root.style.setProperty('--rotate-stick-len', rotateStickLen);
+        root.style.setProperty('--rotate-top', rotateTop);
+        root.style.setProperty('--handle-border-width', borderWidth);
+        root.style.setProperty('--handle-radius', handleRadius);
+        root.style.setProperty('--crop-handle-size', cropHandleSize);
+        root.style.setProperty('--crop-handle-half', cropHandleHalf);
+        root.style.setProperty('--crop-border-width', cropBorderWidth);
+        root.style.setProperty('--shape-handle-size', shapeHandleSize);
+    }
+
+    const paperEl = document.getElementById('paper');
+    if (paperEl) {
+        paperEl.style.setProperty('--handle-size', handleSize);
+        paperEl.style.setProperty('--handle-half', handleHalf);
+        paperEl.style.setProperty('--rotate-size', rotateSize);
+        paperEl.style.setProperty('--rotate-half', rotateHalf);
+        paperEl.style.setProperty('--rotate-stick-len', rotateStickLen);
+        paperEl.style.setProperty('--rotate-top', rotateTop);
+        paperEl.style.setProperty('--handle-border-width', borderWidth);
+        paperEl.style.setProperty('--handle-radius', handleRadius);
+        paperEl.style.setProperty('--crop-handle-size', cropHandleSize);
+        paperEl.style.setProperty('--crop-handle-half', cropHandleHalf);
+        paperEl.style.setProperty('--crop-border-width', cropBorderWidth);
+        paperEl.style.setProperty('--shape-handle-size', shapeHandleSize);
+    }
+};
+
 window.setZoom = function(z) {
     state.zoom = z;
     const paperEl = document.getElementById('paper');
@@ -425,12 +599,40 @@ window.setZoom = function(z) {
         paperEl.style.setProperty('--zoom-level', z);
     }
     if (window.syncRulers) window.syncRulers();
+    if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(z);
     const slider = document.getElementById('zoom-slider');
-    if (slider) slider.value = Math.round(z * 100);
+    if (slider) {
+        const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+            || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+            || 96;
+        const minZoomVal = Math.max(2, Math.round(10 * (96 / pageDpi)));
+        slider.min = Math.min(5, minZoomVal);
+        slider.value = Math.round(z * 100);
+    }
     const display = document.getElementById('zoom-level-display');
     if (display) display.textContent = Math.round(z * 100) + '%';
     if (typeof updateMultiPageView === 'function') updateMultiPageView(z);
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+};
+
+window.zoomStepOut = function() {
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
+    let delta = 0.1;
+    if (state.zoom < 0.25) delta = 0.02;
+    else if (state.zoom < 0.5) delta = 0.05;
+    const nextZ = Math.max(minZoom, Math.round((state.zoom - delta) * 100) / 100);
+    setZoom(nextZ);
+};
+
+window.zoomStepIn = function() {
+    let delta = 0.1;
+    if (state.zoom < 0.25) delta = 0.02;
+    else if (state.zoom < 0.5) delta = 0.05;
+    const nextZ = Math.min(3.0, Math.round((state.zoom + delta) * 100) / 100);
+    setZoom(nextZ);
 };
 
 // --- MARGIN GUIDE OVERLAY ---
@@ -465,7 +667,9 @@ window.syncMarginGuideOverlay = function() {
     const z  = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
 
     // Read the current margin values from state (paper-coordinate pixels)
-    const m = (typeof state !== 'undefined' && state.margins) ? state.margins : { top: 48, right: 48, bottom: 48, left: 48 };
+    const curDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
+    const defaultM = Math.round(0.5 * curDpi);
+    const m = (typeof state !== 'undefined' && state.margins) ? state.margins : { top: defaultM, right: defaultM, bottom: defaultM, left: defaultM };
 
     ov.style.left   = (pr.left   + m.left   * z) + 'px';
     ov.style.top    = (pr.top    + m.top    * z) + 'px';
@@ -496,7 +700,7 @@ window.syncMarginGuideOverlay = function() {
 
 // Run a rAF loop to keep the overlay locked to the paper on every frame.
 // This handles fast panning, window resize, and any layout shift without
-// needing discrete events — cost is one getBoundingClientRect + 4 style writes per frame.
+// needing discrete events - cost is one getBoundingClientRect + 4 style writes per frame.
 (function marginOverlayRAFLoop() {
     window.syncMarginGuideOverlay();
     requestAnimationFrame(marginOverlayRAFLoop);
@@ -505,17 +709,27 @@ window.syncMarginGuideOverlay = function() {
 window._compensateBorderSVGForZoom = function() { /* no-op */ };
 
 // --- MULTI-PAGE VIEW ---
-// When zoom is low enough, render read-only preview clones of all pages beside the active page
+// When zoom is low enough, render read-only preview clones of all pages beside the active page.
+// The threshold scales dynamically based on DPI so multi-page view activates at the exact same
+// optical physical size on screen regardless of whether the document is 72, 96, 140, or 300 DPI.
 window._multiPageActive = false;
+
+window.getMultiPageThreshold = function(pageDpi) {
+    const dpi = pageDpi 
+        || (state && state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    return 0.45 * (96 / dpi);
+};
 
 function updateMultiPageView(z) {
     const viewport = document.getElementById('viewport');
     const paperEl = document.getElementById('paper');
     if (!viewport || !paperEl) return;
 
-    const THRESHOLD = 0.45;
+    const threshold = window.getMultiPageThreshold();
 
-    if (z <= THRESHOLD && state.pages.length > 1) {
+    if (z <= threshold && state.pages && state.pages.length > 1) {
         if (!window._multiPageActive) enterMultiPageView(z);
         else refreshMultiPageZoom(z);
     } else if (window._multiPageActive) {
@@ -534,6 +748,14 @@ function enterMultiPageView(z) {
     window._multiPageActive = true;
     viewport.classList.add('multi-page-mode');
 
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    const dpiRatio = pageDpi / 96;
+    const gap = Math.round(30 * dpiRatio);
+    const pad = Math.round(20 * dpiRatio);
+    const borderWidth = Math.max(2, Math.round(2 * dpiRatio));
+
     // Create a wrapper to hold all page previews in a flow
     let wrapper = document.getElementById('multi-page-wrapper');
     if (!wrapper) {
@@ -542,24 +764,31 @@ function enterMultiPageView(z) {
         viewport.appendChild(wrapper);
     }
     wrapper.innerHTML = '';
+    wrapper.style.gap = gap + 'px';
+    wrapper.style.padding = pad + 'px';
 
     state.pages.forEach((pageData, i) => {
+        const pDpi = parseFloat(pageData.dpi) || pageDpi;
+        const pRatio = pDpi / 96;
+        const pW = parseFloat(pageData.width) || (794 * pRatio);
+        const pH = parseFloat(pageData.height) || (1123 * pRatio);
+
         if (i === state.currentPageIndex) {
             // The real paper is already in the viewport, so we add a placeholder marker
             const marker = document.createElement('div');
             marker.className = 'multi-page-slot multi-page-slot-active';
             marker.setAttribute('data-page-index', i);
-
-            const pW = parseFloat(pageData.width) || 794;
-            const pH = parseFloat(pageData.height) || 1123;
             marker.style.width = pW + 'px';
             marker.style.height = pH + 'px';
+            marker.style.borderWidth = borderWidth + 'px';
 
             // Page label
             const label = document.createElement('div');
             label.className = 'multi-page-label multi-page-label-active';
             let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
             label.textContent = labelText + ' (Editing)';
+            label.style.fontSize = Math.round(13 * dpiRatio) + 'px';
+            label.style.bottom = `-${Math.round(28 * dpiRatio)}px`;
             marker.appendChild(label);
 
             wrapper.appendChild(marker);
@@ -569,6 +798,10 @@ function enterMultiPageView(z) {
         const slot = document.createElement('div');
         slot.className = 'multi-page-slot';
         slot.setAttribute('data-page-index', i);
+        slot.style.width = pW + 'px';
+        slot.style.height = pH + 'px';
+        slot.style.borderWidth = borderWidth + 'px';
+
         slot.onclick = () => {
             // Seamless in-place page switch without leaving multi-page view
             const currentZoom = state.zoom;
@@ -582,14 +815,9 @@ function enterMultiPageView(z) {
             window._multiPageActive = false;
             if (wr) wr.remove();
             switchPage(i);
-            // Re-enter multi-page view at the same zoom
-            enterMultiPageView(currentZoom);
+            // Re-evaluate multi-page view for the new page at the same zoom
+            updateMultiPageView(currentZoom);
         };
-
-        const pW = parseFloat(pageData.width) || 794;
-        const pH = parseFloat(pageData.height) || 1123;
-        slot.style.width = pW + 'px';
-        slot.style.height = pH + 'px';
 
         // Build a full-size preview (same as renderThumbnailHTML but at 1:1)
         const previewContainer = document.createElement('div');
@@ -640,6 +868,8 @@ function enterMultiPageView(z) {
         label.className = 'multi-page-label';
         let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
         label.textContent = labelText;
+        label.style.fontSize = Math.round(13 * dpiRatio) + 'px';
+        label.style.bottom = `-${Math.round(28 * dpiRatio)}px`;
         slot.appendChild(label);
 
         wrapper.appendChild(slot);
@@ -658,13 +888,18 @@ function refreshMultiPageZoom(z) {
     const wrapper = document.getElementById('multi-page-wrapper');
     if (!wrapper) return;
 
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    const dpiRatio = pageDpi / 96;
+    const GAP = Math.round(30 * dpiRatio);
+    const PADDING = Math.round(40 * dpiRatio); // 20px padding * dpiRatio on each side
+
     // Calculate total width needed for all pages side-by-side at full (unscaled) size
-    const GAP = 30;
-    const PADDING = 40; // 20px padding on each side
     let totalWidth = PADDING;
     const slots = wrapper.querySelectorAll('.multi-page-slot');
     slots.forEach((slot, i) => {
-        totalWidth += parseFloat(slot.style.width) || 794;
+        totalWidth += parseFloat(slot.style.width) || (794 * dpiRatio);
         if (i < slots.length - 1) totalWidth += GAP;
     });
     totalWidth += PADDING;
@@ -700,12 +935,16 @@ function exitMultiPageView() {
 window.fitToPage = function() {
     const viewport = document.getElementById('viewport');
     const paperEl = document.getElementById('paper');
-    if (!viewport || !paperEl) return;
+    if (!viewport || !paperEl || !paperEl.offsetWidth || !paperEl.offsetHeight) return;
     const padding = 80; // 40px padding on top/bottom
     const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
     const scaleY = (viewport.clientHeight - padding) / paperEl.offsetHeight;
     const z = Math.min(scaleX, scaleY);
-    setZoom(Math.max(0.2, Math.min(3.0, z)));
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
+    setZoom(Math.max(minZoom, Math.min(3.0, z)));
     viewport.scrollTop = 0;
     viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * z - viewport.clientWidth)/2);
 };
@@ -713,11 +952,20 @@ window.fitToPage = function() {
 window.fitToWidth = function() {
     const viewport = document.getElementById('viewport');
     const paperEl = document.getElementById('paper');
-    if (!viewport || !paperEl) return;
+    if (!viewport || !paperEl || !paperEl.offsetWidth) return;
     const padding = 80;
     const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
-    setZoom(Math.max(0.2, Math.min(3.0, scaleX)));
+    const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
+        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
+        || 96;
+    const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
+    setZoom(Math.max(minZoom, Math.min(3.0, scaleX)));
     viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * scaleX - viewport.clientWidth)/2);
 };
+
+// Initialize handle scaling
+if (typeof window.syncHandleScaling === 'function') {
+    window.syncHandleScaling(0.6);
+}
 
 

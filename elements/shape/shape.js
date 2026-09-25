@@ -1,4 +1,4 @@
-﻿window.exitShapeEditMode = function() {
+window.exitShapeEditMode = function() {
     if(!state.shapeEditMode) return;
     state.shapeEditMode = false;
     
@@ -239,7 +239,7 @@ window.initShapes = function() {
             { name: 'Summing Junction', markup: `<circle cx="50" cy="50" r="40" /><path d="M22,22 L78,78 M22,78 L78,22" stroke-width="2" />` },
             { name: 'Or', markup: `<circle cx="50" cy="50" r="40" /><path d="M50,10 V90 M10,50 H90" stroke-width="2" />` },
             { name: 'Collate', markup: `<polygon points="5,15 95,15 50,50 95,85 5,85 50,50" fill-rule="evenodd" />` },
-            { name: 'Sort', markup: `<polygon points="50,5 95,50 5,50 Z M50,95 95,50 5,50 Z" fill-rule="evenodd" />` },
+            { name: 'Sort', markup: `<path d="M50,5 L95,50 L5,50 Z M50,95 L95,50 L5,50 Z" fill-rule="evenodd" />` },
             { name: 'Merge', markup: `<polygon points="5,15 95,15 50,85" />` },
             { name: 'Delay', markup: `<path d="M5,15 H50 A35,35 0 0,1 50,85 H5 Z" />` }
         ],

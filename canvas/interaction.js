@@ -496,19 +496,26 @@ function setupZoomControls() {
     window.addEventListener('wheel', (e) => {
         if(e.ctrlKey) {
             e.preventDefault();
-            let delta = e.deltaY > 0 ? -0.1 : 0.1;
-            setZoom(Math.max(0.2, Math.min(3.0, state.zoom + delta)));
+            if (e.deltaY > 0) {
+                if (typeof window.zoomStepOut === 'function') window.zoomStepOut();
+                else setZoom(Math.max(0.05, state.zoom - 0.1));
+            } else {
+                if (typeof window.zoomStepIn === 'function') window.zoomStepIn();
+                else setZoom(Math.min(3.0, state.zoom + 0.1));
+            }
         }
     }, {passive: false});
 
     document.addEventListener('keydown', (e) => {
         if(e.ctrlKey && (e.key === '+' || e.key === '=')) {
             e.preventDefault();
-            setZoom(Math.max(0.2, Math.min(3.0, state.zoom + 0.1)));
+            if (typeof window.zoomStepIn === 'function') window.zoomStepIn();
+            else setZoom(Math.min(3.0, state.zoom + 0.1));
         }
         if(e.ctrlKey && e.key === '-') {
             e.preventDefault();
-            setZoom(Math.max(0.2, Math.min(3.0, state.zoom - 0.1)));
+            if (typeof window.zoomStepOut === 'function') window.zoomStepOut();
+            else setZoom(Math.max(0.05, state.zoom - 0.1));
         }
         if(e.ctrlKey && e.key === '0') {
             e.preventDefault();

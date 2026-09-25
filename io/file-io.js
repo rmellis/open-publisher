@@ -1,10 +1,13 @@
 
 function saveDocument() {
     state.pages[state.currentPageIndex] = serializeCurrentPage();
-    // Ensure all pages have explicit orientation set
+    // Ensure all pages have explicit orientation and dpi set
     state.pages.forEach(p => {
         if (!p.orientation) {
             p.orientation = parseFloat(p.width) >= parseFloat(p.height) ? 'landscape' : 'portrait';
+        }
+        if (!p.dpi) {
+            p.dpi = state.dpi || 96;
         }
     });
     const firstPage = state.pages[0] || {};
@@ -12,12 +15,17 @@ function saveDocument() {
     const docData = {
         title: document.getElementById('doc-title').innerText,
         orientation: docOrientation,
+        dpi: state.dpi || 96,
+        unit: state.unit || 'cm',
+        rulerUnit: state.rulerUnit || 'cm',
+        rulerUnitExplicit: !!state._userExplicitRulerUnit,
         pages: state.pages,
         hasMasterPage: state.hasMasterPage || false,
         isSpreadMode: state.isSpreadMode || false,
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
         margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
+        marginsDpi: state.marginsDpi || state.dpi || 96,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     

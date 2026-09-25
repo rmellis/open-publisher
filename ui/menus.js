@@ -97,6 +97,15 @@ const ContextMenuSystem = {
             html += this.buildItem('About Open Publisher', 'fa-info-circle', 'if(window.showAboutDialog) window.showAboutDialog()');
         }
         else if (isRuler) {
+            const currentUnit = (typeof state !== 'undefined' && state._userExplicitRulerUnit && state.rulerUnit) ? state.rulerUnit : 'cm';
+            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--ui-theme-color); -webkit-text-stroke: 1px var(--ui-theme-color);"></i>';
+            
+            html += this.buildItem('Centimeters (cm)' + (currentUnit === 'cm' ? checkIcon : ''), 'fa-ruler-horizontal', "if(window.setRulerUnit) window.setRulerUnit('cm')");
+            html += this.buildItem('Inches (in)' + (currentUnit === 'in' ? checkIcon : ''), 'fa-ruler-horizontal', "if(window.setRulerUnit) window.setRulerUnit('in')");
+            html += this.buildItem('Millimeters (mm)' + (currentUnit === 'mm' ? checkIcon : ''), 'fa-ruler-horizontal', "if(window.setRulerUnit) window.setRulerUnit('mm')");
+            html += this.buildItem('Pixels (px)' + (currentUnit === 'px' ? checkIcon : ''), 'fa-ruler-horizontal', "if(window.setRulerUnit) window.setRulerUnit('px')");
+
+            html += this.buildDivider();
             html += this.buildItem('Hide Rulers', 'fa-eye-slash', 'if(window.toggleRulers) window.toggleRulers()');
             html += this.buildItem('Toggle Margins', 'fa-vector-square', 'if(window.toggleMargins) window.toggleMargins()');
             html += this.buildItem('Page Design / Size', 'fa-ruler-combined', 'changeSize()');
@@ -104,7 +113,6 @@ const ContextMenuSystem = {
             
             html += this.buildDivider();
             
-            const checkIcon = '<i class="fas fa-check" style="margin-left: auto; color: var(--ui-theme-color); -webkit-text-stroke: 1px var(--ui-theme-color);"></i>';
             const checkGrid = 'Snap to Grid' + (state.snap.grid ? checkIcon : '');
             const checkGuides = 'Snap to Guides' + (state.snap.guides ? checkIcon : '');
             const checkObjects = 'Snap to Objects' + (state.snap.objects ? checkIcon : '');

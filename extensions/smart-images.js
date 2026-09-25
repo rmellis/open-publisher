@@ -2,7 +2,7 @@
     console.log("🛠️ Smart Image Script initializing...");
 
     // 1. The Bulletproof Image Builder
-    window.insertSmartImage = function(imageSrc, fallbackSrc) {
+    window.insertSmartImage = function(imageSrc, fallbackSrc, dropCoords = null) {
         const spinner = document.createElement('div');
         spinner.id = 'op-image-import-spinner';
         spinner.innerHTML = `
@@ -34,6 +34,7 @@
 
         const img = new Image();
         let fallbackAttempted = false;
+        let loaded = false;
 
         img.onerror = function() {
             if (fallbackSrc && !fallbackAttempted) {
@@ -46,6 +47,7 @@
             }
         };
         img.onload = function() {
+            if (loaded) return;
             // Check if the proxy returned a 1x1 error pixel instead of a 404
             if (img.naturalWidth <= 1 && fallbackSrc && !fallbackAttempted) {
                 console.warn("Primary image returned 1x1 pixel, falling back to:", fallbackSrc);
@@ -60,68 +62,80 @@
                 return;
             }
 
+            loaded = true;
             removeSpinner();
-            let finalWidth = img.naturalWidth;
-            let finalHeight = img.naturalHeight;
 
-            // Use actual paper size, fallback to A4 if missing
-            const maxWidth = (paper ? paper.offsetWidth : 794) - 40;
-            const maxHeight = (paper ? paper.offsetHeight : 1123) - 40;
+            try {
+                let finalWidth = img.naturalWidth;
+                let finalHeight = img.naturalHeight;
 
-            // Scale down if it exceeds the page bounds, preserving aspect ratio
-            if (finalWidth > maxWidth || finalHeight > maxHeight) {
-                const scale = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
-                finalWidth = Math.round(finalWidth * scale);
-                finalHeight = Math.round(finalHeight * scale);
-            }
+                const currentPaper = document.getElementById('paper') || (typeof paper !== 'undefined' ? paper : null);
 
-            // Use drop coordinates if supplied, otherwise default to 50px
-            let leftPos = 50;
-            let topPos = 50;
-            if (dropCoords && typeof dropCoords.x === 'number' && typeof dropCoords.y === 'number') {
-                leftPos = Math.round(dropCoords.x);
-                topPos = Math.round(dropCoords.y);
-            }
+                // Use actual paper size, fallback to A4 if missing
+                const maxWidth = (currentPaper ? currentPaper.offsetWidth : 794) - 40;
+                const maxHeight = (currentPaper ? currentPaper.offsetHeight : 1123) - 40;
 
-            // 🚨 THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
-            const el = document.createElement('div');
-            el.className = 'pub-element';
-            el.style.left = leftPos + 'px';
-            el.style.top = topPos + 'px';
-            el.style.width = finalWidth + 'px';
-            el.style.height = finalHeight + 'px';
-            el.style.zIndex = 10;
-            el.setAttribute('data-type', 'image');
-            
-            el.setAttribute('data-scaleX', "1");
-            el.setAttribute('data-scaleY', "1");
-            
-            // Inject the HTML with the exact resize handles so it behaves normally
-            el.innerHTML = `
-                <div class="element-content">
-                    <img src="${img.src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
-                </div>
-                <div class="resize-handle rh-nw" data-dir="nw"></div>
-                <div class="resize-handle rh-n" data-dir="n"></div>
-                <div class="resize-handle rh-ne" data-dir="ne"></div>
-                <div class="resize-handle rh-e" data-dir="e"></div>
-                <div class="resize-handle rh-se" data-dir="se"></div>
-                <div class="resize-handle rh-s" data-dir="s"></div>
-                <div class="resize-handle rh-sw" data-dir="sw"></div>
-                <div class="resize-handle rh-w" data-dir="w"></div>
-                <div class="rotate-stick"></div>
-                <div class="rotate-handle"></div>
-            `;
-            
-            if (paper) {
-                paper.appendChild(el);
-                if (typeof selectElement === 'function') selectElement(el);
-                if (typeof updateThumbnails === 'function') updateThumbnails();
-                if (typeof pushHistory === 'function') pushHistory();
+                // Scale down if it exceeds the page bounds, preserving aspect ratio
+                if (finalWidth > maxWidth || finalHeight > maxHeight) {
+                    const scale = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+                    finalWidth = Math.round(finalWidth * scale);
+                    finalHeight = Math.round(finalHeight * scale);
+                }
+
+                // Use drop coordinates if supplied, otherwise default to 50px
+                let leftPos = 50;
+                let topPos = 50;
+                if (dropCoords && typeof dropCoords.x === 'number' && typeof dropCoords.y === 'number') {
+                    leftPos = Math.round(dropCoords.x);
+                    topPos = Math.round(dropCoords.y);
+                }
+
+                // 🚨 THE BYPASS: Create the element manually to avoid the 200x100 hardcode!
+                const el = document.createElement('div');
+                el.className = 'pub-element';
+                el.style.left = leftPos + 'px';
+                el.style.top = topPos + 'px';
+                el.style.width = finalWidth + 'px';
+                el.style.height = finalHeight + 'px';
+                el.style.zIndex = 10;
+                el.setAttribute('data-type', 'image');
+                
+                el.setAttribute('data-scaleX', "1");
+                el.setAttribute('data-scaleY', "1");
+                
+                // Inject the HTML with the exact resize handles so it behaves normally
+                el.innerHTML = `
+                    <div class="element-content">
+                        <img src="${img.src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
+                    </div>
+                    <div class="resize-handle rh-nw" data-dir="nw"></div>
+                    <div class="resize-handle rh-n" data-dir="n"></div>
+                    <div class="resize-handle rh-ne" data-dir="ne"></div>
+                    <div class="resize-handle rh-e" data-dir="e"></div>
+                    <div class="resize-handle rh-se" data-dir="se"></div>
+                    <div class="resize-handle rh-s" data-dir="s"></div>
+                    <div class="resize-handle rh-sw" data-dir="sw"></div>
+                    <div class="resize-handle rh-w" data-dir="w"></div>
+                    <div class="rotate-stick"></div>
+                    <div class="rotate-handle"></div>
+                `;
+                
+                if (currentPaper) {
+                    currentPaper.appendChild(el);
+                    if (typeof selectElement === 'function') selectElement(el);
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    if (typeof pushHistory === 'function') pushHistory();
+                }
+            } catch (err) {
+                console.error("Error creating smart image element:", err);
+                removeSpinner();
             }
         };
         
         img.src = imageSrc;
+        if (img.complete && img.naturalWidth > 1) {
+            img.onload();
+        }
     };
 
     // --- BATCH IMAGE IMPORT SYSTEM ---

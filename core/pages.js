@@ -1,6 +1,8 @@
 // --- SERIALIZER & RENDER ---
 function renderPage(pageData) {
     deselect();
+    const pageDpi = (pageData && pageData.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;
+    if (typeof state !== 'undefined') state.dpi = pageDpi;
     
     // Normalize and enforce explicit orientation if present
     if (pageData.orientation) {
@@ -34,16 +36,21 @@ function renderPage(pageData) {
         let h = parseFloat(pageData.height || '1123');
         if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
         
-        let shortEdge = Math.min(w, h);
-        let longEdge = Math.max(w, h);
-        
         let fmt = 'A4';
-        if (shortEdge >= 1100) fmt = 'A3';
-        else if (shortEdge >= 1000) fmt = 'Tabloid';
-        else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
-        else if (shortEdge > 800) fmt = 'Letter';
-        else if (shortEdge < 400) fmt = 'BusinessCard';
-        else if (shortEdge < 600) fmt = 'A5';
+        if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
+            fmt = window.UnitConversionService.detectFormat(w, h, pageDpi);
+        } else {
+            let shortEdge = Math.min(w, h);
+            let longEdge = Math.max(w, h);
+            
+            if (Math.abs(w - h) <= 10) fmt = 'Square';
+            else if (shortEdge >= 1100) fmt = 'A3';
+            else if (shortEdge >= 1000) fmt = 'Tabloid';
+            else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
+            else if (shortEdge > 800) fmt = 'Letter';
+            else if (shortEdge < 400) fmt = 'BusinessCard';
+            else if (shortEdge < 600) fmt = 'A5';
+        }
         
         window.setPageFormatIcon(fmt);
     }
@@ -89,7 +96,28 @@ function renderPage(pageData) {
 
     const marginGuides = paper.querySelector('.margin-guides');
     if (marginGuides) {
-        const m = state.margins || {top: 48, right: 48, bottom: 48, left: 48};
+        if (!state.margins) {
+            state.margins = {
+                top: Math.round(0.5 * pageDpi),
+                right: Math.round(0.5 * pageDpi),
+                bottom: Math.round(0.5 * pageDpi),
+                left: Math.round(0.5 * pageDpi)
+            };
+            state.marginsDpi = pageDpi;
+        } else if (state.marginsDpi && state.marginsDpi !== pageDpi && state.marginsDpi > 0) {
+            const ratio = pageDpi / state.marginsDpi;
+            state.margins = {
+                top: Math.round(state.margins.top * ratio),
+                right: Math.round(state.margins.right * ratio),
+                bottom: Math.round(state.margins.bottom * ratio),
+                left: Math.round(state.margins.left * ratio)
+            };
+            state.marginsDpi = pageDpi;
+        } else if (!state.marginsDpi) {
+            state.marginsDpi = pageDpi;
+        }
+
+        const m = state.margins;
         marginGuides.style.inset = 'auto';
         marginGuides.style.top = m.top + 'px';
         marginGuides.style.right = m.right + 'px';
@@ -182,9 +210,14 @@ function renderPage(pageData) {
     
     toggleHeaderFooter(state.headersVisible);
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
+    if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(pageDpi);
     updatePageNumbers();
     updateSidebar();
     scheduleEmojiMigrate();
+    if (typeof updateMultiPageView === 'function') updateMultiPageView(state.zoom);
+    if (typeof window.syncRulers === 'function') window.syncRulers();
+    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
 }
 
 // --- HISTORY MANAGEMENT ---
@@ -251,6 +284,7 @@ function addNewPage() {
         id: Date.now(),
         orientation: isLand ? 'landscape' : 'portrait',
         width: pageW, height: defaultH,
+        dpi: (state.pages.length > 0 && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].dpi) ? state.pages[state.currentPageIndex].dpi : (state.dpi || 96),
         background: '#ffffff',
         header: 'Header (Type here)', 
         footer: 'Footer (Type here)',
@@ -366,16 +400,280 @@ function deletePage(index, event) {
 }
 
 function handleNewDocument() {
-    const msg = `<p style="margin-top:0;">Create a new document?</p>
-                 <p style="color:#555;"><strong>OK:</strong> Save to history and start fresh.<br>
-                 <strong>Cancel:</strong> Abort.</p>`;
-                 
-    DialogSystem.show('New Document', msg, () => {
-         state.pages = [];
-         state.history = [];
-         state.historyIndex = -1;
-         addNewPage();
-    });
+    const activeDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
+    const activeUnit = (typeof state !== 'undefined' && state.unit) ? state.unit : 'cm';
+
+    const ucs = window.UnitConversionService || {
+        toPixels: (v, u, d) => Math.round(parseFloat(v) || 0),
+        fromPixels: (v, u, d) => parseFloat(v) || 0,
+        convert: (v) => parseFloat(v) || 0,
+        formatValue: (v) => parseFloat(v) || 0,
+        getPresetDimensions: () => ({ width: 8.27, height: 11.69, widthPx: 794, heightPx: 1123 })
+    };
+
+    let defaultPreset = 'A4';
+    try {
+        const locale = navigator.language || navigator.userLanguage || '';
+        if (locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX')) {
+            defaultPreset = 'Letter';
+        }
+    } catch(e) {}
+
+    const initDims = ucs.getPresetDimensions(defaultPreset, activeUnit, activeDpi);
+
+    const formHtml = `
+        <div style="margin-bottom:12px;">
+            <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:6px;">Page Format:</label>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button type="button" class="btn-secondary newdoc-preset-btn ${defaultPreset === 'A4' ? 'active' : ''}" data-preset="A4" style="padding:4px 8px; font-size:12px;">A4</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn ${defaultPreset === 'Letter' ? 'active' : ''}" data-preset="Letter" style="padding:4px 8px; font-size:12px;">Letter</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="A3" style="padding:4px 8px; font-size:12px;">A3</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="A5" style="padding:4px 8px; font-size:12px;">A5</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="Legal" style="padding:4px 8px; font-size:12px;">Legal</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="Tabloid" style="padding:4px 8px; font-size:12px;">Tabloid</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="BusinessCard" style="padding:4px 8px; font-size:12px;">Business Card</button>
+                <button type="button" class="btn-secondary newdoc-preset-btn" data-preset="Square" style="padding:4px 8px; font-size:12px;">Square</button>
+            </div>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:6px;">Orientation:</label>
+            <div style="display:flex; gap:10px;">
+                <button type="button" id="newdoc-orient-portrait" class="btn-secondary newdoc-orient-btn active" data-orient="portrait" style="flex:1; padding:6px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <i class="far fa-file"></i> Portrait
+                </button>
+                <button type="button" id="newdoc-orient-landscape" class="btn-secondary newdoc-orient-btn" data-orient="landscape" style="flex:1; padding:6px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <i class="far fa-file" style="transform:rotate(90deg);"></i> Landscape
+                </button>
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-bottom:12px;">
+            <div style="flex:1;">
+                <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:4px;">Units:</label>
+                <select id="newdoc-dialog-unit" style="width:100%; padding:6px;">
+                    <option value="cm" ${activeUnit === 'cm' ? 'selected' : ''}>Centimeters (cm)</option>
+                    <option value="in" ${activeUnit === 'in' ? 'selected' : ''}>Inches (in)</option>
+                    <option value="mm" ${activeUnit === 'mm' ? 'selected' : ''}>Millimeters (mm)</option>
+                    <option value="px" ${activeUnit === 'px' ? 'selected' : ''}>Pixels (px)</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:4px;">DPI (Resolution):</label>
+                <select id="newdoc-dialog-dpi-select" style="width:100%; padding:6px;">
+                    <option value="72" ${activeDpi === 72 ? 'selected' : ''}>72 DPI (Draft/Screen)</option>
+                    <option value="96" ${activeDpi === 96 ? 'selected' : ''}>96 DPI (Web/CSS / Default)</option>
+                    <option value="140" ${activeDpi === 140 ? 'selected' : ''}>140 DPI</option>
+                    <option value="150" ${activeDpi === 150 ? 'selected' : ''}>150 DPI (Medium Print)</option>
+                    <option value="300" ${activeDpi === 300 ? 'selected' : ''}>300 DPI (High-Res Print)</option>
+                    <option value="custom" ${![72, 96, 140, 150, 300].includes(activeDpi) ? 'selected' : ''}>Custom...</option>
+                </select>
+            </div>
+        </div>
+        <div id="newdoc-dialog-dpi-custom-group" style="display:${![72, 96, 140, 150, 300].includes(activeDpi) ? 'block' : 'none'}; margin-bottom:12px;">
+            <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:4px;">Custom DPI:</label>
+            <input type="number" id="newdoc-dialog-dpi-custom" value="${activeDpi}" min="10" max="2400" style="width:100%; padding:6px;">
+        </div>
+        <div style="display:flex; gap:12px; margin-bottom:12px;">
+            <div class="input-group" style="flex:1; margin-bottom:0;">
+                <label id="newdoc-width-label">Width (${activeUnit}):</label>
+                <input type="number" step="any" id="newdoc-dialog-width" value="${initDims.width}">
+            </div>
+            <div class="input-group" style="flex:1; margin-bottom:0;">
+                <label id="newdoc-height-label">Height (${activeUnit}):</label>
+                <input type="number" step="any" id="newdoc-dialog-height" value="${initDims.height}">
+            </div>
+        </div>
+        <div id="newdoc-canvas-preview" style="background:#e8f4f2; border:1px solid #b2dfdb; border-radius:6px; padding:8px 12px; font-size:12px; color:#004d40; text-align:center;">
+            Resulting Canvas: <strong id="newdoc-preview-text">${initDims.widthPx} &times; ${initDims.heightPx} px (${activeDpi} DPI, Portrait)</strong>
+        </div>
+    `;
+
+    DialogSystem.show('New Document', formHtml, () => {
+        const u = document.getElementById('newdoc-dialog-unit').value;
+        const selDpi = document.getElementById('newdoc-dialog-dpi-select').value;
+        const customDpiVal = parseInt(document.getElementById('newdoc-dialog-dpi-custom').value) || 96;
+        const d = (selDpi === 'custom') ? Math.max(10, customDpiVal) : (parseInt(selDpi) || 96);
+        
+        const wVal = parseFloat(document.getElementById('newdoc-dialog-width').value) || 0;
+        const hVal = parseFloat(document.getElementById('newdoc-dialog-height').value) || 0;
+
+        if (wVal && hVal && window.UnitConversionService) {
+            const finalW = window.UnitConversionService.toPixels(wVal, u, d);
+            const finalH = window.UnitConversionService.toPixels(hVal, u, d);
+            const isLand = finalW >= finalH;
+
+            state.pages = [];
+            state.history = [];
+            state.historyIndex = -1;
+            state.dpi = d;
+            state.unit = u;
+            state.margins = {
+                top: Math.round(0.5 * d),
+                right: Math.round(0.5 * d),
+                bottom: Math.round(0.5 * d),
+                left: Math.round(0.5 * d)
+            };
+            state.marginsDpi = d;
+
+            let pageW = finalW + 'px';
+            let pageH = finalH + 'px';
+            if (state.isSpreadMode) pageW = (finalW * 2) + 'px';
+            paper.style.width = pageW;
+            paper.style.height = pageH;
+
+            const newPage = {
+                id: Date.now(),
+                orientation: isLand ? 'landscape' : 'portrait',
+                width: pageW,
+                height: pageH,
+                dpi: d,
+                background: '#ffffff',
+                header: 'Header (Type here)',
+                footer: 'Footer (Type here)',
+                borderStyle: 'none',
+                elements: []
+            };
+
+            state.pages.push(newPage);
+            state.currentPageIndex = 0;
+            renderPage(newPage);
+            updateSidebar();
+            if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+            if (typeof window.setPageFormatIcon === 'function') {
+                const detectedFmt = (window.UnitConversionService && window.UnitConversionService.detectFormat)
+                    ? window.UnitConversionService.detectFormat(finalW, finalH, d)
+                    : (currentPreset || 'A4');
+                window.setPageFormatIcon(detectedFmt);
+            }
+            
+            setTimeout(() => {
+                if (typeof updateThumbnails === 'function') updateThumbnails();
+                pushHistory();
+            }, 50);
+        }
+    }, false, 'Create Document');
+
+    setTimeout(() => {
+        let currentUnit = activeUnit;
+        let currentOrient = 'portrait';
+        let currentPreset = defaultPreset;
+
+        const getDialogDpi = () => {
+            const sel = document.getElementById('newdoc-dialog-dpi-select');
+            if (sel && sel.value === 'custom') {
+                const cust = document.getElementById('newdoc-dialog-dpi-custom');
+                return Math.max(10, parseInt(cust ? cust.value : 96) || 96);
+            }
+            return parseInt(sel ? sel.value : 96) || 96;
+        };
+
+        const updatePreview = () => {
+            if (!window.UnitConversionService) return;
+            const u = document.getElementById('newdoc-dialog-unit').value;
+            const d = getDialogDpi();
+            const wVal = parseFloat(document.getElementById('newdoc-dialog-width').value) || 0;
+            const hVal = parseFloat(document.getElementById('newdoc-dialog-height').value) || 0;
+            const wPx = window.UnitConversionService.toPixels(wVal, u, d);
+            const hPx = window.UnitConversionService.toPixels(hVal, u, d);
+            const orientLabel = (wPx >= hPx) ? 'Landscape' : 'Portrait';
+            const prevText = document.getElementById('newdoc-preview-text');
+            if (prevText) {
+                prevText.innerHTML = `${wPx} &times; ${hPx} px (${d} DPI, ${orientLabel})`;
+            }
+        };
+
+        // Orientation buttons
+        const orientBtns = document.querySelectorAll('.newdoc-orient-btn');
+        orientBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const orient = btn.getAttribute('data-orient');
+                if (orient === currentOrient) return;
+                currentOrient = orient;
+                orientBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Swap width and height
+                const wEl = document.getElementById('newdoc-dialog-width');
+                const hEl = document.getElementById('newdoc-dialog-height');
+                const oldW = wEl.value;
+                wEl.value = hEl.value;
+                hEl.value = oldW;
+                updatePreview();
+            });
+        });
+
+        // Units dropdown
+        const unitSelect = document.getElementById('newdoc-dialog-unit');
+        if (unitSelect) {
+            unitSelect.addEventListener('change', function() {
+                const nextUnit = this.value;
+                const d = getDialogDpi();
+                const wEl = document.getElementById('newdoc-dialog-width');
+                const hEl = document.getElementById('newdoc-dialog-height');
+                const curW = parseFloat(wEl.value) || 0;
+                const curH = parseFloat(hEl.value) || 0;
+
+                if (window.UnitConversionService) {
+                    const convW = window.UnitConversionService.convert(curW, currentUnit, nextUnit, d);
+                    const convH = window.UnitConversionService.convert(curH, currentUnit, nextUnit, d);
+                    wEl.value = window.UnitConversionService.formatValue(convW, nextUnit);
+                    hEl.value = window.UnitConversionService.formatValue(convH, nextUnit);
+                }
+                currentUnit = nextUnit;
+                document.getElementById('newdoc-width-label').innerText = `Width (${nextUnit}):`;
+                document.getElementById('newdoc-height-label').innerText = `Height (${nextUnit}):`;
+                updatePreview();
+            });
+        }
+
+        // DPI dropdown
+        const dpiSelect = document.getElementById('newdoc-dialog-dpi-select');
+        const customDpiGroup = document.getElementById('newdoc-dialog-dpi-custom-group');
+        if (dpiSelect) {
+            dpiSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    if (customDpiGroup) customDpiGroup.style.display = 'block';
+                } else {
+                    if (customDpiGroup) customDpiGroup.style.display = 'none';
+                }
+                updatePreview();
+            });
+        }
+
+        const customDpiInput = document.getElementById('newdoc-dialog-dpi-custom');
+        if (customDpiInput) customDpiInput.addEventListener('input', updatePreview);
+
+        const wInput = document.getElementById('newdoc-dialog-width');
+        const hInput = document.getElementById('newdoc-dialog-height');
+        if (wInput) wInput.addEventListener('input', updatePreview);
+        if (hInput) hInput.addEventListener('input', updatePreview);
+
+        // Preset buttons
+        const presetBtns = document.querySelectorAll('.newdoc-preset-btn');
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const presetKey = btn.getAttribute('data-preset');
+                currentPreset = presetKey;
+                presetBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const u = document.getElementById('newdoc-dialog-unit').value;
+                const d = getDialogDpi();
+                if (window.UnitConversionService) {
+                    const dims = window.UnitConversionService.getPresetDimensions(presetKey, u, d);
+                    if (currentOrient === 'landscape') {
+                        wInput.value = dims.height;
+                        hInput.value = dims.width;
+                    } else {
+                        wInput.value = dims.width;
+                        hInput.value = dims.height;
+                    }
+                }
+                updatePreview();
+            });
+        });
+
+        updatePreview();
+    }, 0);
 }
 
 function renderThumbnailHTML(pageData, pageIndex) {
@@ -484,8 +782,9 @@ function updateSidebar() {
         if (state.hasMasterPage && i === 0) {
             labelText = 'Master Page';
         }
-        const pW_Inches = (pW / 96).toFixed(1);
-        const pH_Inches = (pH / 96).toFixed(1);
+        const pDpi = parseFloat(p.dpi) || (typeof state !== 'undefined' && parseFloat(state.dpi)) || 96;
+        const pW_Inches = (pW / pDpi).toFixed(1);
+        const pH_Inches = (pH / pDpi).toFixed(1);
         let sizeText = `<span style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">${pW_Inches} x ${pH_Inches} in</span>`;
         
         div.innerHTML = `

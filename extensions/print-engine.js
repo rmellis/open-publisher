@@ -217,9 +217,27 @@
 
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const loadImageStrict = (imgEl, src) => new Promise((resolve) => {
-        imgEl.onload = resolve;
-        imgEl.onerror = resolve; 
-        imgEl.src = src;
+        let settled = false;
+        const done = () => {
+            if (!settled) {
+                settled = true;
+                resolve();
+            }
+        };
+        imgEl.onload = done;
+        imgEl.onerror = done;
+        if (imgEl.complete && imgEl.naturalWidth !== undefined && imgEl.naturalWidth > 0 && imgEl.src === src) {
+            done();
+            return;
+        }
+        if (imgEl.src !== src) {
+            imgEl.src = src;
+        }
+        if (imgEl.complete && imgEl.naturalWidth !== undefined && imgEl.naturalWidth > 0) {
+            done();
+            return;
+        }
+        setTimeout(done, 2500); // 2.5s safety timeout ensures print never hangs
     });
 
     const PRINT_MATH_SPACE = '\u205F';
@@ -304,6 +322,30 @@
     };
 
     window.bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
+        let isSettled = false;
+        const safetyTimer = setTimeout(() => {
+            if (!isSettled) {
+                isSettled = true;
+                reject(new Error("bakeImageForPrint timeout"));
+            }
+        }, 3000);
+
+        const safeResolve = (val) => {
+            if (!isSettled) {
+                isSettled = true;
+                clearTimeout(safetyTimer);
+                resolve(val);
+            }
+        };
+
+        const safeReject = (err) => {
+            if (!isSettled) {
+                isSettled = true;
+                clearTimeout(safetyTimer);
+                reject(err);
+            }
+        };
+
         const attemptLoad = (useCORS) => {
             const tempImg = new Image();
             let loadSrc = src;
@@ -315,6 +357,7 @@
                 }
             }
             tempImg.onload = () => {
+                if (isSettled) return;
                 const scale = 2;
                 
                 let finalFilter = filter;
@@ -370,16 +413,20 @@
                 ctx.restore();
                 
                 try {
-                    resolve({ src: c.toDataURL('image/png'), padX, padY, padW, padH });
+                    safeResolve({ src: c.toDataURL('image/png'), padX, padY, padW, padH });
                 } catch (e) {
-                    reject(e);
+                    safeReject(e);
                 }
             };
             tempImg.onerror = (e) => {
+                if (isSettled) return;
                 if (useCORS) attemptLoad(false);
-                else reject(e);
+                else safeReject(e);
             };
             tempImg.src = loadSrc;
+            if (tempImg.complete && tempImg.naturalWidth > 0) {
+                tempImg.onload();
+            }
         };
         attemptLoad(!src.startsWith('data:'));
     });
@@ -471,13 +518,34 @@
             }
 
             // Determine the Master Layout based ENTIRELY on Page 1
-            const masterPW = parseFloat(pagesToPrint[0].width) || 794;
-            const masterPH = parseFloat(pagesToPrint[0].height) || 1123;
+            const masterPage = pagesToPrint[0] || {};
+            const masterPW = parseFloat(masterPage.width) || 794;
+            const masterPH = parseFloat(masterPage.height) || 1123;
             const masterIsPortrait = masterPW <= masterPH;
             
-            // Convert exact pixels to physical inches (96 DPI standard) for the iframe
-            const widthInches = (masterPW / 96).toFixed(3);
-            const heightInches = (masterPH / 96).toFixed(3);
+            // Resolve master DPI: check page.dpi, then state.dpi, then fallback heuristics
+            let masterDpi = parseFloat(masterPage.dpi) || (typeof state !== 'undefined' && parseFloat(state.dpi)) || 0;
+            if (!masterDpi || masterDpi <= 0) {
+                const shortEdge = Math.min(masterPW, masterPH);
+                if (shortEdge >= 2000) masterDpi = 300;
+                else if (shortEdge >= 1000) masterDpi = 140;
+                else masterDpi = 96;
+            }
+
+            // Convert exact canvas pixels to physical inches using document DPI
+            let widthInches = (masterPW / masterDpi).toFixed(3);
+            let heightInches = (masterPH / masterDpi).toFixed(3);
+
+            if (typeof window.UnitConversionService !== 'undefined') {
+                const fmt = window.UnitConversionService.detectFormat(masterPW, masterPH, masterDpi);
+                const preset = window.UnitConversionService.PRESETS[fmt];
+                if (preset) {
+                    const pWIn = masterIsPortrait ? preset.widthIn : preset.heightIn;
+                    const pHIn = masterIsPortrait ? preset.heightIn : preset.widthIn;
+                    widthInches = pWIn.toFixed(3);
+                    heightInches = pHIn.toFixed(3);
+                }
+            }
 
             let iframeHTMLString = '';
 
@@ -614,7 +682,7 @@
                         cropDiv.style.transformOrigin = 'center center';
 
                         let img = document.createElement('img');
-                        img.src = finalSrc;
+                        // Note: do not prematurely set img.src here so loadImageStrict can manage onload/onerror/src and prevent event swallowed bugs
                         const savedImgStyle = { ...(el.imgStyle || {}) };
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
                         img.style.clipPath = 'none';
@@ -958,8 +1026,15 @@
                     if (statusEl) statusEl.innerText = `Implementing textures for page ${i + 1}...`;
                     await Promise.all(bgUrls.map(url => {
                         return new Promise(resolve => {
-                            const img = new Image(); img.crossOrigin = "Anonymous";
-                            img.onload = resolve; img.onerror = resolve; img.src = url;
+                            let settled = false;
+                            const done = () => { if (!settled) { settled = true; resolve(); } };
+                            const img = new Image(); 
+                            img.crossOrigin = "Anonymous";
+                            img.onload = done; 
+                            img.onerror = done; 
+                            img.src = url;
+                            if (img.complete && img.naturalWidth > 0) done();
+                            setTimeout(done, 2000);
                         });
                     }));
                 }
@@ -967,13 +1042,27 @@
                 if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
                 await sleep(100); 
                 
-                // Scale 3 ensures maximum pixel density before the physical print mappings apply
+                // Calculate optimal html2canvas scale based on page DPI (target print density is ~300 DPI)
+                const pageDpi = parseFloat(page.dpi) || masterDpi || 96;
+                const targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
+                const fallbackScale = Math.max(1, targetScale - 1);
+
                 let h2cBg = page.background || '#ffffff';
                 if (h2cBg.includes('gradient')) h2cBg = null;
 
-                const canvas = await html2canvas(pageWrapper, { 
-                    scale: 3, useCORS: true, logging: false, backgroundColor: h2cBg
-                });
+                let canvas;
+                try {
+                    const h2cPromise = html2canvas(pageWrapper, { 
+                        scale: targetScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 4000
+                    });
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`html2canvas scale ${targetScale} timeout`)), 12000));
+                    canvas = await Promise.race([h2cPromise, timeoutPromise]);
+                } catch (h2cErr) {
+                    console.warn(`[Print Engine] html2canvas scale ${targetScale} failed or timed out, falling back to scale ${fallbackScale}:`, h2cErr);
+                    canvas = await html2canvas(pageWrapper, { 
+                        scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000
+                    });
+                }
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const isPortrait = pW <= pH;
@@ -984,15 +1073,21 @@
                 let imgStyle = '';
                 if (isPortrait !== masterIsPortrait) {
                     // Rotate the image 90 degrees and apply the 1.004 scale for micro-bleed
-                    imgStyle = `position: absolute; top: 50%; left: 50%; width: ${pW}px !important; height: ${pH}px !important; transform: translate(-50%, -50%) rotate(90deg) scale(1.004); object-fit: fill; display: block; border: none; outline: none; margin: 0; padding: 0; max-width: none !important;`;
+                    imgStyle = `position: absolute; top: 50%; left: 50%; width: ${heightInches}in !important; height: ${widthInches}in !important; transform: translate(-50%, -50%) rotate(90deg) scale(1.004); object-fit: fill; display: block; border: none; outline: none; margin: 0; padding: 0; max-width: none !important;`;
                 } else {
                     // Normal orientation with -0.2% micro-bleed
                     imgStyle = `position: absolute; top: -0.2%; left: -0.2%; width: 100.4% !important; height: 100.4% !important; object-fit: fill; display: block; border: none; outline: none; margin: 0; padding: 0; max-width: none !important;`;
                 }
                 
-                // Collect the rendered page into the HTML string, locked exactly to the master layout size
+                const isLastPage = (i === totalPages - 1);
+                const pageBreakCss = isLastPage 
+                    ? 'page-break-after: avoid; break-after: avoid;' 
+                    : 'page-break-after: always; break-after: page;';
+
+                // Collect the rendered page into the HTML string, locked exactly to the master layout size.
+                // Using height: calc(${heightInches}in - 1px) eliminates sub-pixel rounding overflow into blank sheets.
                 iframeHTMLString += `
-                    <div class="page" style="width: ${widthInches}in; height: ${heightInches}in; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: white; margin: 0; padding: 0; box-sizing: border-box;">
+                    <div class="page" style="width: ${widthInches}in; height: calc(${heightInches}in - 1px); position: relative; overflow: hidden; ${pageBreakCss} background: white; margin: 0; padding: 0; box-sizing: border-box; page-break-inside: avoid; break-inside: avoid; font-size: 0; line-height: 0;">
                         <img src="${imgData}" style="${imgStyle}">
                     </div>
                 `;
@@ -1007,12 +1102,12 @@
             const printIframe = document.createElement('iframe');
             printIframe.className = 'op-print-frame';
             
-            // Set the iframe's internal viewport to exactly match the Master paper width.
+            // Set the iframe's internal viewport to match the physical Master paper size.
             printIframe.style.cssText = `
                 position: fixed; 
                 top: 0; 
                 left: 0; 
-                width: ${masterPW}px; 
+                width: ${widthInches}in; 
                 height: 100vh; 
                 z-index: -9999; 
                 opacity: 0.01; 
@@ -1047,10 +1142,15 @@
                             overflow: visible !important;
                         }
                         
+                        .page {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                        }
+                        
                         /* Stop the printer from kicking out a blank page at the end */
                         .page:last-child {
-                            page-break-after: auto !important;
-                            break-after: auto !important;
+                            page-break-after: avoid !important;
+                            break-after: avoid !important;
                         }
                     </style>
                 </head>

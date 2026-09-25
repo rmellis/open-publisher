@@ -1,4 +1,4 @@
-﻿// OpenPublisher - A free desktop publishing tool
+// OpenPublisher - A free desktop publishing tool
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -33,7 +33,12 @@ let state = {
     snap: { grid: false, guides: true, objects: true },
     isGuidesLocked: false,
     currentScheme: 'Classic',
-    documentProperties: { author: '', company: '', subject: '', keywords: '' }
+    documentProperties: { author: '', company: '', subject: '', keywords: '' },
+    dpi: 96,
+    unit: 'cm',
+    rulerUnit: 'cm',
+    margins: { top: 48, right: 48, bottom: 48, left: 48 },
+    marginsDpi: 96
 };
 
 const colorSchemes = {

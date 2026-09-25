@@ -19,8 +19,42 @@ window.handlePublisherFileLoad = (evt) => {
             state.hasMasterPage = data.hasMasterPage || false;
             state.rulerOriginX = data.rulerOriginX || 0;
             state.rulerOriginY = data.rulerOriginY || 0;
-            state.margins = data.margins || {top: 48, right: 48, bottom: 48, left: 48};
             state.documentProperties = data.documentProperties || { author: '', company: '', subject: '', keywords: '' };
+            state.dpi = data.dpi || (data.pages && data.pages[0] && data.pages[0].dpi) || 96;
+            const docDpi = state.dpi;
+            const loadedMargins = data.margins || { top: Math.round(0.5 * docDpi), right: Math.round(0.5 * docDpi), bottom: Math.round(0.5 * docDpi), left: Math.round(0.5 * docDpi) };
+            const loadedMarginsDpi = data.marginsDpi || (data.dpi ? data.dpi : 96);
+
+            if (data.marginsDpi && data.marginsDpi !== docDpi && data.marginsDpi > 0) {
+                const ratio = docDpi / data.marginsDpi;
+                state.margins = {
+                    top: Math.round(loadedMargins.top * ratio),
+                    right: Math.round(loadedMargins.right * ratio),
+                    bottom: Math.round(loadedMargins.bottom * ratio),
+                    left: Math.round(loadedMargins.left * ratio)
+                };
+                state.marginsDpi = docDpi;
+            } else if (!data.marginsDpi && docDpi !== 96 && loadedMargins.top === 48 && loadedMargins.right === 48 && loadedMargins.bottom === 48 && loadedMargins.left === 48) {
+                const ratio = docDpi / 96;
+                state.margins = {
+                    top: Math.round(48 * ratio),
+                    right: Math.round(48 * ratio),
+                    bottom: Math.round(48 * ratio),
+                    left: Math.round(48 * ratio)
+                };
+                state.marginsDpi = docDpi;
+            } else {
+                state.margins = loadedMargins;
+                state.marginsDpi = loadedMarginsDpi;
+            }
+            state.unit = data.unit || 'cm';
+            if (data.rulerUnit && data.rulerUnitExplicit) {
+                state.rulerUnit = data.rulerUnit;
+                state._userExplicitRulerUnit = true;
+            } else {
+                state.rulerUnit = 'cm';
+                state._userExplicitRulerUnit = false;
+            }
             
             // Read Spreads state (or infer for legacy saves)
             if (data.isSpreadMode !== undefined) {
@@ -46,6 +80,7 @@ window.handlePublisherFileLoad = (evt) => {
             if (state.pages && Array.isArray(state.pages)) {
                 state.pages.forEach(p => {
                     if (!p.id) p.id = Date.now() + Math.random();
+                    if (!p.dpi) p.dpi = state.dpi;
                     // If root document has orientation and page does not, inherit root orientation
                     if (!p.orientation && data.orientation) {
                         p.orientation = data.orientation;

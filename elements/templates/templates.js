@@ -287,7 +287,7 @@ function initTemplates() {
         "Social Media": "fa-share-alt"
     };
 
-    fetch('elements/templates/template-index.json?v=4.16.17')
+    fetch('elements/templates/template-index.json?v=5.1.4')
         .then(res => res.json())
         .then(indexData => {
             Object.keys(indexData).forEach(cat => {
@@ -319,6 +319,19 @@ function initTemplates() {
     window.getPageSizeLabel = function(w, h) {
         const tol = 5;
         const near = (a, b) => Math.abs(a - b) <= tol;
+
+        // Check against dynamic DPI presets if UnitConversionService is loaded
+        if (window.UnitConversionService && window.UnitConversionService.PRESETS) {
+            const currentDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
+            const dpis = Array.from(new Set([currentDpi, 140, 96, 300, 150, 72]));
+            for (const d of dpis) {
+                for (const key in window.UnitConversionService.PRESETS) {
+                    const dims = window.UnitConversionService.getPresetDimensions(key, 'px', d);
+                    if (near(w, dims.widthPx) && near(h, dims.heightPx)) return dims.name;
+                    if (near(w, dims.heightPx) && near(h, dims.widthPx)) return dims.name + ' ↔';
+                }
+            }
+        }
 
         // --- Paper sizes (portrait orientation, px at 96dpi) ---
         const paper = [
@@ -371,7 +384,7 @@ function initTemplates() {
             gridDiv.appendChild(div);
             
             // Fetch the template file
-            fetch(`elements/templates/files/${t.file}?v=5.1.3`)
+            fetch(`elements/templates/files/${t.file}?v=5.1.4`)
                 .then(res => res.json())
                 .then(opubData => {
                     const page = opubData.pages[0];
@@ -418,6 +431,14 @@ function loadTemplate(opubData) {
         state.pages = []; // Wipe document
         state.history = [];
         state.historyIndex = -1;
+        state.dpi = opubData.dpi || (opubData.pages && opubData.pages[0] && opubData.pages[0].dpi) || 96;
+        state.margins = opubData.margins || {
+            top: Math.round(0.5 * state.dpi),
+            right: Math.round(0.5 * state.dpi),
+            bottom: Math.round(0.5 * state.dpi),
+            left: Math.round(0.5 * state.dpi)
+        };
+        state.marginsDpi = opubData.marginsDpi || state.dpi;
         
         // Deep copy the pages to avoid reference issues
         state.pages = JSON.parse(JSON.stringify(opubData.pages));

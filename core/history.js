@@ -65,6 +65,7 @@ function serializeCurrentPage() {
         ignoreBackground: existingPage.ignoreBackground || false,
         width: curW,
         height: curH,
+        dpi: existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
         background: paper.style.background || 'white',
         header: paper.querySelector('.page-header').innerHTML,
         footer: paper.querySelector('.page-footer').innerHTML,

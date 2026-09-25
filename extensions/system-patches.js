@@ -123,6 +123,9 @@
     window.renderSelectionOverlays = function() {
         const paper = document.getElementById('paper');
         if(!paper) return;
+        if (typeof window.syncHandleScaling === 'function') {
+            window.syncHandleScaling(state.zoom);
+        }
         let container = document.getElementById('selection-overlay-container');
         if (!container) {
             container = document.createElement('div');
@@ -152,7 +155,7 @@
             `;
             
             const box = document.createElement('div');
-            box.style.cssText = 'position: absolute; inset: -1px; border: 1px dashed var(--selection); pointer-events: none;';
+            box.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: var(--handle-border-width, 1px) dashed var(--selection); pointer-events: none; box-sizing: border-box;';
             overlay.appendChild(box);
 
             if (els.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
@@ -372,6 +375,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         
         const docData = {
             title: currentTitle,
+            dpi: state.dpi || 96,
+            unit: state.unit || 'cm',
+            rulerUnit: state.rulerUnit || 'cm',
+            rulerUnitExplicit: !!state._userExplicitRulerUnit,
             pages: state.pages,
             isTemplate: isTemplate,
             hasMasterPage: state.hasMasterPage || false,
@@ -379,6 +386,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             rulerOriginX: state.rulerOriginX || 0,
             rulerOriginY: state.rulerOriginY || 0,
             margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
+            marginsDpi: state.marginsDpi || state.dpi || 96,
             documentProperties: state.documentProperties || { author: '', company: '', subject: '', keywords: '' }
         };
         let savePayload = docData;

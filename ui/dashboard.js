@@ -137,37 +137,14 @@ window.DashboardSystem = {
         
         if (size === 'Custom') {
             changeSize(); // Native function
-        } else if (size === 'Square') {
-            // No direct string for Square in setPageSize natively, 
-            // setPageSize only does strings or if we just manually set width/height
-            // Let's just create a custom square page
-            state.pages = [];
-            let newPage = {
-                id: Date.now(),
-                width: '794px',
-                height: '794px',
-                background: '#ffffff',
-                header: 'Header',
-                footer: 'Footer',
-                borderStyle: 'none',
-                elements: []
-            };
-            state.pages.push(newPage);
-            state.currentPageIndex = 0;
-            renderPage(newPage);
-            if(window.minimapSystem) minimapSystem.updateMinimap();
-            updateTitleBar();
         } else {
             setPageSize(size);
-        }
-        
-        if (size !== 'Square' && size !== 'Custom') {
             addNewPage();
         }
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=4.17.12')
+        fetch('elements/templates/template-index.json?v=5.1.4')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -184,7 +161,7 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=4.17.12`)
+        fetch(`elements/templates/files/${t.file}?v=5.1.4`)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];
