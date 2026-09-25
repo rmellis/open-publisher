@@ -1,8 +1,36 @@
 // ==========================================
 // KEYBOARD SHORTCUTS ENGINE
 // ==========================================
-
 document.addEventListener('keydown', (e) => {
+        if (typeof state !== 'undefined' && state.viewMode === 'multipage') {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (typeof window.openPageInSingleMode === 'function') {
+                    window.openPageInSingleMode(state.currentPageIndex || 0);
+                }
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (typeof window.setViewMode === 'function') {
+                    window.setViewMode('single');
+                }
+                return;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prev = Math.max(0, (state.currentPageIndex || 0) - 1);
+                if (typeof window.selectMultiPageSlot === 'function') window.selectMultiPageSlot(prev);
+                return;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = Math.min((state.pages ? state.pages.length - 1 : 0), (state.currentPageIndex || 0) + 1);
+                if (typeof window.selectMultiPageSlot === 'function') window.selectMultiPageSlot(next);
+                return;
+            }
+        }
+
         if (e.key === 'Tab' && document.activeElement && document.activeElement.isContentEditable) {
             e.preventDefault();
             if (window.handleTabKey) window.handleTabKey(e);

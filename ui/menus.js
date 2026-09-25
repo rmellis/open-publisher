@@ -158,6 +158,7 @@ const ContextMenuSystem = {
             html += this.buildDivider();
             html += this.buildItem('Page Orientation', 'fa-sync-alt', 'if(window.toggleOrientation) window.toggleOrientation()');
             html += this.buildItem('Toggle Spreads', 'fa-book-open', 'if(window.toggleSpreadMode) window.toggleSpreadMode()');
+            html += this.buildItem('Multi-Page Overview', 'fa-th-large', 'if(window.toggleMultiPageView) window.toggleMultiPageView()');
             html += this.buildItem('Run Design Checker', 'fa-stethoscope', 'if(window.showInfoModal) { window.showInfoModal(); setTimeout(window.runDesignChecker, 300); }');
         }
         else if (isZoomBar) {

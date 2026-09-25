@@ -399,8 +399,11 @@
             let posX = baseX + offset;
             let posY = baseY + offset;
 
-            if (posX + finalWidth > paperW + 100) posX = Math.max(20, paperW - finalWidth - 20);
-            if (posY + finalHeight > paperH + 100) posY = Math.max(20, paperH - finalHeight - 20);
+            const minMargin = 20;
+            const maxX = Math.max(minMargin, paperW - finalWidth - minMargin);
+            const maxY = Math.max(minMargin, paperH - finalHeight - minMargin);
+            posX = Math.max(minMargin, Math.min(maxX, posX));
+            posY = Math.max(minMargin, Math.min(maxY, posY));
 
             const el = createSmartImageElement(img.src, posX, posY, finalWidth, finalHeight);
             if (paperEl) {
@@ -503,6 +506,8 @@
                     orientation: isLand ? 'landscape' : 'portrait',
                     width: defaultW,
                     height: defaultH,
+                    dpi: (basePage && basePage.dpi) || (typeof state !== 'undefined' && state.dpi) || 96,
+                    unit: (basePage && basePage.unit) || (typeof state !== 'undefined' && state.unit) || 'cm',
                     background: '#ffffff',
                     header: (basePage && basePage.header) ? basePage.header : 'Header (Type here)',
                     footer: (basePage && basePage.footer) ? basePage.footer : 'Footer (Type here)',

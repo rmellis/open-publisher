@@ -1237,11 +1237,11 @@
     // 1. DIALOG CRASH PREVENTION
     if (typeof DialogSystem !== 'undefined' && !DialogSystem._isSafelyPatched) {
         const originalShow = DialogSystem.show;
-        DialogSystem.show = function(title, content, onConfirm, isAlert) {
+        DialogSystem.show = function(title, content, onConfirm, isAlert, confirmText, onApply) {
             const safeConfirm = onConfirm ? function() {
                 try { onConfirm(); } catch(e) { console.error("Dialog Blocked:", e); }
             } : null;
-            originalShow.call(DialogSystem, title, content, safeConfirm, isAlert);
+            originalShow.call(DialogSystem, title, content, safeConfirm, isAlert, confirmText, onApply);
         };
         DialogSystem._isSafelyPatched = true;
     }

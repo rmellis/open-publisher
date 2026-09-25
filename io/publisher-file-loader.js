@@ -98,9 +98,22 @@ window.handlePublisherFileLoad = (evt) => {
                     } else {
                         p.orientation = (parseFloat(p.width) >= parseFloat(p.height || '1123')) ? 'landscape' : 'portrait';
                     }
+                    if (p.elements && Array.isArray(p.elements)) {
+                        p.elements.forEach(el => {
+                            if (!el.left || isNaN(parseFloat(el.left))) el.left = '20px';
+                            if (!el.top || isNaN(parseFloat(el.top))) el.top = '20px';
+                            if (parseFloat(el.left) < -200) el.left = '20px';
+                            if (parseFloat(el.top) < -200) el.top = '20px';
+                        });
+                    }
                     window._orientedPagesRegistry.add(p.id);
                 });
             }
+            if (window._multiPageActive && typeof exitMultiPageView === 'function') {
+                exitMultiPageView();
+            }
+            state.viewMode = 'single';
+            if (typeof window.updateViewModeUI === 'function') window.updateViewModeUI();
             state.history = [];
             state.historyIndex = -1;
             state.currentPageIndex = 0;

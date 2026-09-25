@@ -56,6 +56,21 @@ window.setRulerUnit = function(unit) {
 };
 
 window.syncRulers = function() {
+    const rh = document.getElementById('ruler-h');
+    const rv = document.getElementById('ruler-v');
+    const rc = document.querySelector('.ruler-c');
+
+    if (window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage')) {
+        if (rh) rh.style.display = 'none';
+        if (rv) rv.style.display = 'none';
+        if (rc) rc.style.display = 'none';
+        return;
+    } else {
+        if (rh && rh.style.display === 'none') rh.style.display = '';
+        if (rv && rv.style.display === 'none') rv.style.display = '';
+        if (rc && rc.style.display === 'none') rc.style.display = '';
+    }
+
     const hCanvas = document.getElementById('ruler-h-canvas');
     const vCanvas = document.getElementById('ruler-v-canvas');
     const paperEl = document.getElementById('paper');
@@ -594,9 +609,12 @@ window.syncHandleScaling = function(z) {
 window.setZoom = function(z) {
     state.zoom = z;
     const paperEl = document.getElementById('paper');
-    if (paperEl) {
+    if (paperEl && (!state.viewMode || state.viewMode === 'single')) {
         paperEl.style.transform = `scale(${z})`;
         paperEl.style.setProperty('--zoom-level', z);
+    }
+    if (state.viewMode === 'multipage' && window._multiPageActive) {
+        if (typeof refreshMultiPageZoom === 'function') refreshMultiPageZoom(z);
     }
     if (window.syncRulers) window.syncRulers();
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(z);
@@ -611,7 +629,6 @@ window.setZoom = function(z) {
     }
     const display = document.getElementById('zoom-level-display');
     if (display) display.textContent = Math.round(z * 100) + '%';
-    if (typeof updateMultiPageView === 'function') updateMultiPageView(z);
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
 };
 
@@ -654,6 +671,11 @@ window.syncMarginGuideOverlay = function() {
     const guide  = document.getElementById('margin-guides');
     const ov     = document.getElementById('margin-guide-overlay');
     if (!ov || !paper || !guide) return;
+
+    if (window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage')) {
+        ov.style.display = 'none';
+        return;
+    }
 
     // Mirror visibility of the real margin-guides div
     if (guide.style.display === 'none') {
@@ -708,32 +730,163 @@ window.syncMarginGuideOverlay = function() {
 
 window._compensateBorderSVGForZoom = function() { /* no-op */ };
 
-// --- MULTI-PAGE VIEW ---
-// When zoom is low enough, render read-only preview clones of all pages beside the active page.
-// The threshold scales dynamically based on DPI so multi-page view activates at the exact same
-// optical physical size on screen regardless of whether the document is 72, 96, 140, or 300 DPI.
+// --- MULTI-PAGE VIEW & VIEW MODES ---
+// Decoupled from viewport zoom: zoom level scales the active view mode (single or multipage)
+// without ever automatically triggering a layout switch. Multi-Page Overview is an explicit toggle.
 window._multiPageActive = false;
 
 window.getMultiPageThreshold = function(pageDpi) {
-    const dpi = pageDpi 
-        || (state && state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
-        || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
-        || 96;
-    return 0.45 * (96 / dpi);
+    return 0.2;
+};
+
+window.showMultiPageIntroModal = function(force = false) {
+    if (!force) {
+        try {
+            if (localStorage.getItem('op_hide_multipage_intro') === '1') {
+                return;
+            }
+        } catch (e) {}
+    }
+    if (typeof DialogSystem === 'undefined') return;
+
+    const html = `
+        <div class="multipage-dialog-box">
+            <div class="multipage-dialog-header-wrap">
+                <div class="multipage-dialog-icon">
+                    <i class="fas fa-th-large" style="color:var(--ui-theme-color, #008080); font-size:20px;"></i>
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:14px; margin-bottom:3px;">Multi-Page Overview Mode</div>
+                    <div style="opacity:0.8; font-size:12px;">Preview and organize all pages in your publication side-by-side.</div>
+                </div>
+            </div>
+
+            <div class="multipage-dialog-card">
+                <div style="font-weight:600; font-size:12px; margin-bottom:6px; color:var(--ui-theme-color, #008080);">
+                    <i class="fas fa-tools" style="margin-right:5px;"></i> Mode Functions & Navigation
+                </div>
+                <ul style="margin:0; padding-left:18px; font-size:12px; line-height:1.6; opacity:0.9;">
+                    <li><b>Select & Center:</b> Single-click any page thumbnail or slot to center it in view.</li>
+                    <li><b>Edit Page:</b> Double-click any page or press <kbd style="background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.15); border-radius:3px; padding:1px 5px; font-size:11px;">Enter</kbd> to return to Single-Page editing mode.</li>
+                    <li><b>Arrow Navigation:</b> Use <kbd style="background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.15); border-radius:3px; padding:1px 5px; font-size:11px;">Left</kbd> and <kbd style="background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.15); border-radius:3px; padding:1px 5px; font-size:11px;">Right</kbd> arrow keys to navigate between pages, or <kbd style="background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.15); border-radius:3px; padding:1px 5px; font-size:11px;">Esc</kbd> to exit.</li>
+                    <li><b>Zoom & Pan:</b> Use the zoom slider, mouse wheel, or pan tool to inspect your layout at any scale.</li>
+                </ul>
+            </div>
+
+            <div class="multipage-dialog-warning">
+                <div style="font-weight:600; font-size:12px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-ruler-combined"></i> Why are rulers and margin guides hidden?
+                </div>
+                <div style="font-size:12px; line-height:1.5;">
+                    Rulers and margin guides measure relative to a single active page origin. In Multi-Page Overview, multiple pages tile across differing canvas positions, so rulers are temporarily hidden to prevent misleading coordinates. They will automatically restore when you return to Single-Page mode.
+                </div>
+            </div>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; opacity:0.85; cursor:pointer; user-select:none; margin-top:6px;">
+                <input type="checkbox" id="op-multipage-intro-dont-show" onchange="try { if (this.checked) localStorage.setItem('op_hide_multipage_intro', '1'); else localStorage.removeItem('op_hide_multipage_intro'); } catch(e){}" style="cursor:pointer;" />
+                Do not show this notice again
+            </label>
+        </div>
+    `;
+
+    DialogSystem.show('Multi-Page Overview', html, null, true, 'Got It');
+};
+
+window.setViewMode = function(mode) {
+    if (typeof state === 'undefined') return;
+    if (mode === 'multipage') {
+        if (!state.pages || state.pages.length <= 1) {
+            // Cannot enter multi-page overview if there is only 1 page
+            const statusMsg = document.getElementById('status-msg');
+            if (statusMsg) statusMsg.innerText = 'Multi-Page Overview requires at least 2 pages';
+            mode = 'single';
+        }
+    }
+    state.viewMode = mode;
+    if (mode === 'multipage') {
+        if (!window._multiPageActive) {
+            enterMultiPageView(state.zoom);
+            window.showMultiPageIntroModal();
+        }
+    } else {
+        if (window._multiPageActive) {
+            exitMultiPageView();
+        }
+    }
+    window.updateViewModeUI();
+};
+
+window.toggleMultiPageView = function() {
+    const newMode = (state.viewMode === 'multipage') ? 'single' : 'multipage';
+    window.setViewMode(newMode);
+};
+
+window.updateViewModeUI = function() {
+    const isMulti = typeof state !== 'undefined' && state.viewMode === 'multipage';
+    
+    // Ribbon buttons
+    const btnRibbonSingle = document.getElementById('ribbon-view-single');
+    const btnRibbonMulti = document.getElementById('ribbon-view-multi');
+    if (btnRibbonSingle) btnRibbonSingle.classList.toggle('active-tool', !isMulti);
+    if (btnRibbonMulti) btnRibbonMulti.classList.toggle('active-tool', isMulti);
+
+    // Status bar buttons
+    const statusSingle = document.getElementById('status-view-single');
+    const statusMulti = document.getElementById('status-view-multi');
+    if (statusSingle) statusSingle.classList.toggle('active', !isMulti);
+    if (statusMulti) statusMulti.classList.toggle('active', isMulti);
+};
+
+window.selectMultiPageSlot = function(index) {
+    if (typeof state === 'undefined' || !state.pages || !state.pages[index]) return;
+    state.currentPageIndex = index;
+    window.highlightAndCenterMultiPageSlot(index);
+    if (typeof updateSidebar === 'function') updateSidebar();
+    const pageCountStatus = document.getElementById('page-count-status');
+    if (pageCountStatus) pageCountStatus.innerText = `Page ${index + 1} of ${state.pages.length}`;
+};
+
+window.highlightAndCenterMultiPageSlot = function(index) {
+    const wrapper = document.getElementById('multi-page-wrapper');
+    const viewport = document.getElementById('viewport');
+    if (!wrapper || !viewport) return;
+
+    const slots = wrapper.querySelectorAll('.multi-page-slot');
+    slots.forEach((s, idx) => {
+        const isActive = (idx === index);
+        s.classList.toggle('multi-page-slot-active', isActive);
+        const lbl = s.querySelector('.multi-page-label');
+        if (lbl) {
+            lbl.classList.toggle('multi-page-label-active', isActive);
+            let baseTxt = state.hasMasterPage && idx === 0 ? 'Master Page' : `Page ${idx + 1}`;
+            lbl.textContent = isActive ? `${baseTxt} (Selected - Double-click to Edit)` : baseTxt;
+        }
+    });
+
+    const targetSlot = slots[index];
+    if (targetSlot) {
+        const z = state.zoom || 1;
+        const slotCenter = (targetSlot.offsetLeft + targetSlot.offsetWidth / 2) * z;
+        const vpCenter = viewport.clientWidth / 2;
+        const scrollTarget = Math.max(0, slotCenter - vpCenter);
+        viewport.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+    }
+};
+
+window.openPageInSingleMode = function(index) {
+    if (typeof state === 'undefined') return;
+    state.currentPageIndex = index;
+    window.setViewMode('single');
+    if (typeof switchPage === 'function') switchPage(index);
+    setTimeout(() => {
+        if (typeof fitToPage === 'function') fitToPage();
+    }, 50);
 };
 
 function updateMultiPageView(z) {
-    const viewport = document.getElementById('viewport');
-    const paperEl = document.getElementById('paper');
-    if (!viewport || !paperEl) return;
-
-    const threshold = window.getMultiPageThreshold();
-
-    if (z <= threshold && state.pages && state.pages.length > 1) {
-        if (!window._multiPageActive) enterMultiPageView(z);
-        else refreshMultiPageZoom(z);
-    } else if (window._multiPageActive) {
-        exitMultiPageView();
+    // Only update if multi-page view is explicitly active
+    if (state && state.viewMode === 'multipage' && window._multiPageActive) {
+        refreshMultiPageZoom(z);
     }
 }
 
@@ -741,22 +894,36 @@ function enterMultiPageView(z) {
     const viewport = document.getElementById('viewport');
     const paperEl = document.getElementById('paper');
     if (!viewport || !paperEl) return;
+    if (!state.pages || state.pages.length <= 1) return;
 
-    // Save the current page before rendering previews
-    state.pages[state.currentPageIndex] = serializeCurrentPage();
+    // Save active page state before switching view
+    if (typeof serializeCurrentPage === 'function' && state.pages[state.currentPageIndex]) {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
 
     window._multiPageActive = true;
+    state.viewMode = 'multipage';
     viewport.classList.add('multi-page-mode');
+
+    const canvasArea = document.getElementById('canvas-area');
+    if (canvasArea) canvasArea.classList.add('multi-page-canvas');
+    if (window.syncRulers) window.syncRulers();
+
+    // Hide fixed margin guide overlay while in multi-page mode
+    const ov = document.getElementById('margin-guide-overlay');
+    if (ov) ov.style.display = 'none';
+
+    // Paper is hidden in multi-page mode; preview containers represent all pages
+    paperEl.style.display = 'none';
 
     const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
         || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
         || 96;
     const dpiRatio = pageDpi / 96;
     const gap = Math.round(30 * dpiRatio);
-    const pad = Math.round(20 * dpiRatio);
+    const pad = Math.round(30 * dpiRatio);
     const borderWidth = Math.max(2, Math.round(2 * dpiRatio));
 
-    // Create a wrapper to hold all page previews in a flow
     let wrapper = document.getElementById('multi-page-wrapper');
     if (!wrapper) {
         wrapper = document.createElement('div');
@@ -773,56 +940,65 @@ function enterMultiPageView(z) {
         const pW = parseFloat(pageData.width) || (794 * pRatio);
         const pH = parseFloat(pageData.height) || (1123 * pRatio);
 
-        if (i === state.currentPageIndex) {
-            // The real paper is already in the viewport, so we add a placeholder marker
-            const marker = document.createElement('div');
-            marker.className = 'multi-page-slot multi-page-slot-active';
-            marker.setAttribute('data-page-index', i);
-            marker.style.width = pW + 'px';
-            marker.style.height = pH + 'px';
-            marker.style.borderWidth = borderWidth + 'px';
-
-            // Page label
-            const label = document.createElement('div');
-            label.className = 'multi-page-label multi-page-label-active';
-            let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
-            label.textContent = labelText + ' (Editing)';
-            label.style.fontSize = Math.round(13 * dpiRatio) + 'px';
-            label.style.bottom = `-${Math.round(28 * dpiRatio)}px`;
-            marker.appendChild(label);
-
-            wrapper.appendChild(marker);
-            return;
-        }
-
         const slot = document.createElement('div');
-        slot.className = 'multi-page-slot';
+        const isActive = (i === state.currentPageIndex);
+        slot.className = `multi-page-slot ${isActive ? 'multi-page-slot-active' : ''}`;
         slot.setAttribute('data-page-index', i);
         slot.style.width = pW + 'px';
         slot.style.height = pH + 'px';
         slot.style.borderWidth = borderWidth + 'px';
+        slot.title = `Page ${i + 1} - Click to select, Double-click to edit`;
 
-        slot.onclick = () => {
-            // Seamless in-place page switch without leaving multi-page view
-            const currentZoom = state.zoom;
-            // Move paper back to viewport temporarily so switchPage can work
-            const vp = document.getElementById('viewport');
-            const pp = document.getElementById('paper');
-            const wr = document.getElementById('multi-page-wrapper');
-            if (vp && pp && wr) {
-                vp.insertBefore(pp, wr);
-            }
-            window._multiPageActive = false;
-            if (wr) wr.remove();
-            switchPage(i);
-            // Re-evaluate multi-page view for the new page at the same zoom
-            updateMultiPageView(currentZoom);
+        slot.onclick = (e) => {
+            e.stopPropagation();
+            window.selectMultiPageSlot(i);
         };
 
-        // Build a full-size preview (same as renderThumbnailHTML but at 1:1)
+        slot.ondblclick = (e) => {
+            e.stopPropagation();
+            window.openPageInSingleMode(i);
+        };
+
+        // Build preview container
         const previewContainer = document.createElement('div');
         previewContainer.style.cssText = `position: relative; width: ${pW}px; height: ${pH}px; background: ${pageData.background || '#ffffff'}; overflow: hidden; pointer-events: none;`;
 
+        // Render master page elements if applicable
+        if (state.hasMasterPage && i !== 0 && state.pages[0] && !pageData.ignoreMasterPage && state.pages[0].elements) {
+            state.pages[0].elements.forEach(data => {
+                const sX = data.scaleX || "1";
+                const sY = data.scaleY || "1";
+                const elBox = document.createElement('div');
+                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 5}; opacity: 0.9;`;
+                const scaleBox = document.createElement('div');
+                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+                if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
+                if (data.imgSrc && data.imgSrc !== '') {
+                    const imgDiv = document.createElement('div');
+                    const s = data.imgStyle || {};
+                    let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                    if (s.clipPath && s.clipPath !== 'none') {
+                        thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                    }
+                    imgDiv.style.cssText = thumbImgCss;
+                    let objFit = s.objectFit || '100% 100%';
+                    if (objFit === 'fill') objFit = '100% 100%';
+                    if (objFit === 'contain') objFit = 'contain';
+                    imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
+                    scaleBox.appendChild(imgDiv);
+                } else if (data.clipPath) {
+                    const clipDiv = document.createElement('div');
+                    clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
+                    scaleBox.appendChild(clipDiv);
+                } else {
+                    scaleBox.innerHTML = (data.innerHTML || '').replace(/contenteditable="true"/g, 'contenteditable="false"');
+                }
+                elBox.appendChild(scaleBox);
+                previewContainer.appendChild(elBox);
+            });
+        }
+
+        // Render page elements
         if (pageData.elements && pageData.elements.length > 0) {
             pageData.elements.forEach(data => {
                 const sX = data.scaleX || "1";
@@ -865,9 +1041,9 @@ function enterMultiPageView(z) {
 
         // Page label
         const label = document.createElement('div');
-        label.className = 'multi-page-label';
+        label.className = `multi-page-label ${isActive ? 'multi-page-label-active' : ''}`;
         let labelText = state.hasMasterPage && i === 0 ? 'Master Page' : `Page ${i + 1}`;
-        label.textContent = labelText;
+        label.textContent = isActive ? `${labelText} (Selected - Double-click to Edit)` : labelText;
         label.style.fontSize = Math.round(13 * dpiRatio) + 'px';
         label.style.bottom = `-${Math.round(28 * dpiRatio)}px`;
         slot.appendChild(label);
@@ -875,13 +1051,30 @@ function enterMultiPageView(z) {
         wrapper.appendChild(slot);
     });
 
-    // Move #paper into the active slot
-    const activeSlot = wrapper.querySelector('.multi-page-slot-active');
-    if (activeSlot) {
-        activeSlot.insertBefore(paperEl, activeSlot.firstChild);
+    // Calculate a comfortable zoom level for overview if current zoom is too large
+    let targetZoom = z || state.zoom || 0.35;
+    if (targetZoom > 0.4) {
+        if (viewport && viewport.clientHeight) {
+            const pRatio = pageDpi / 96;
+            const approxH = (1123 * pRatio) + 120;
+            targetZoom = Math.min(0.4, Math.max(0.1, (viewport.clientHeight - 80) / approxH));
+        } else {
+            targetZoom = 0.35;
+        }
     }
+    state.zoom = targetZoom;
+    const slider = document.getElementById('zoom-slider');
+    if (slider) slider.value = Math.round(targetZoom * 100);
+    const display = document.getElementById('zoom-level-display');
+    if (display) display.textContent = Math.round(targetZoom * 100) + '%';
 
-    refreshMultiPageZoom(z);
+    refreshMultiPageZoom(targetZoom);
+    window.updateViewModeUI();
+
+    // Center active page in viewport
+    setTimeout(() => {
+        window.highlightAndCenterMultiPageSlot(state.currentPageIndex);
+    }, 30);
 }
 
 function refreshMultiPageZoom(z) {
@@ -893,24 +1086,26 @@ function refreshMultiPageZoom(z) {
         || 96;
     const dpiRatio = pageDpi / 96;
     const GAP = Math.round(30 * dpiRatio);
-    const PADDING = Math.round(40 * dpiRatio); // 20px padding * dpiRatio on each side
+    const PADDING = Math.round(60 * dpiRatio);
 
-    // Calculate total width needed for all pages side-by-side at full (unscaled) size
     let totalWidth = PADDING;
+    let maxHeight = 0;
     const slots = wrapper.querySelectorAll('.multi-page-slot');
     slots.forEach((slot, i) => {
-        totalWidth += parseFloat(slot.style.width) || (794 * dpiRatio);
+        const slotW = parseFloat(slot.style.width) || (794 * dpiRatio);
+        const slotH = parseFloat(slot.style.height) || (1123 * dpiRatio);
+        totalWidth += slotW;
+        if (slotH > maxHeight) maxHeight = slotH;
         if (i < slots.length - 1) totalWidth += GAP;
     });
     totalWidth += PADDING;
+    maxHeight += PADDING * 2;
 
+    wrapper._totalUnscaledWidth = totalWidth;
+    wrapper._totalUnscaledHeight = maxHeight;
     wrapper.style.width = totalWidth + 'px';
     wrapper.style.minWidth = totalWidth + 'px';
     wrapper.style.transform = `scale(${z})`;
-
-    // Paper keeps scale(1) since wrapper handles zoom
-    const paperEl = document.getElementById('paper');
-    if (paperEl) paperEl.style.transform = 'scale(1)';
 }
 
 function exitMultiPageView() {
@@ -919,21 +1114,44 @@ function exitMultiPageView() {
     if (!viewport || !paperEl) return;
 
     window._multiPageActive = false;
+    state.viewMode = 'single';
     viewport.classList.remove('multi-page-mode');
 
-    // Move paper back to viewport root
+    const canvasArea = document.getElementById('canvas-area');
+    if (canvasArea) canvasArea.classList.remove('multi-page-canvas');
+
     const wrapper = document.getElementById('multi-page-wrapper');
-    if (wrapper) {
-        viewport.insertBefore(paperEl, wrapper);
-        wrapper.remove();
+    if (wrapper) wrapper.remove();
+
+    // Restore paper display and zoom
+    paperEl.style.display = '';
+    paperEl.style.transform = `scale(${state.zoom})`;
+
+    // Re-render active page into paper
+    if (typeof renderPage === 'function' && state.pages && state.pages[state.currentPageIndex]) {
+        renderPage(state.pages[state.currentPageIndex]);
     }
 
-    // Restore paper zoom
-    paperEl.style.transform = `scale(${state.zoom})`;
+    if (window.syncRulers) window.syncRulers();
+    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    window.updateViewModeUI();
 }
 
 window.fitToPage = function() {
     const viewport = document.getElementById('viewport');
+    if (state.viewMode === 'multipage') {
+        const wrapper = document.getElementById('multi-page-wrapper');
+        if (!viewport || !wrapper) return;
+        const totalW = wrapper._totalUnscaledWidth || 2000;
+        const totalH = wrapper._totalUnscaledHeight || 1200;
+        const pad = 80;
+        const scaleX = (viewport.clientWidth - pad) / totalW;
+        const scaleY = (viewport.clientHeight - pad) / totalH;
+        const z = Math.min(scaleX, scaleY);
+        setZoom(Math.max(0.04, Math.min(1.0, z)));
+        return;
+    }
+
     const paperEl = document.getElementById('paper');
     if (!viewport || !paperEl || !paperEl.offsetWidth || !paperEl.offsetHeight) return;
     const padding = 80; // 40px padding on top/bottom

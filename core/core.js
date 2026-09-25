@@ -38,7 +38,8 @@ let state = {
     unit: 'cm',
     rulerUnit: 'cm',
     margins: { top: 48, right: 48, bottom: 48, left: 48 },
-    marginsDpi: 96
+    marginsDpi: 96,
+    viewMode: 'single'
 };
 
 const colorSchemes = {

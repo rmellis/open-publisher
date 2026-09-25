@@ -1122,6 +1122,100 @@ body.dark-mode .tab.active {
 }
 
 /* --- MULTI-PAGE VIEW --- */
+.canvas-area.multi-page-canvas {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+}
+.canvas-area.multi-page-canvas .ruler-c,
+.canvas-area.multi-page-canvas .ruler-h,
+.canvas-area.multi-page-canvas .ruler-v {
+    display: none !important;
+}
+.canvas-area.multi-page-canvas #viewport {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 / -1 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.status-view-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    border-radius: 3px;
+    width: 22px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    padding: 0;
+    opacity: 0.85;
+}
+.status-view-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+.status-view-btn.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Multi-Page Overview Intro Dialog */
+.multipage-dialog-box {
+    max-width: 480px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.multipage-dialog-header-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.multipage-dialog-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: rgba(0, 128, 128, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+body.dark-mode .multipage-dialog-icon {
+    background: rgba(0, 180, 180, 0.2);
+}
+.multipage-dialog-card {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+body.dark-mode .multipage-dialog-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+.multipage-dialog-warning {
+    background: #fff8e6;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 14px;
+    color: #664d03;
+}
+body.dark-mode .multipage-dialog-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.25);
+    color: #ffd56b;
+}
+
 .viewport.multi-page-mode {
     align-items: flex-start;
     justify-content: flex-start;
@@ -1130,10 +1224,10 @@ body.dark-mode .tab.active {
     display: flex;
     flex-wrap: nowrap;
     gap: 30px;
-    padding: 20px;
+    padding: 30px 40px 70px 40px;
     transform-origin: top left;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start;
 }
 .multi-page-slot {
     background: white;
@@ -1142,16 +1236,18 @@ body.dark-mode .tab.active {
     flex-shrink: 0;
     overflow: hidden;
     cursor: pointer;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    border: 2px solid transparent;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    border: 3px solid transparent;
+    outline: none;
 }
 .multi-page-slot:hover:not(.multi-page-slot-active) {
     box-shadow: 4px 4px 25px color-mix(in srgb, var(--ui-theme-color) 40%, transparent);
-    border-color: var(--ui-theme-color);
+    border-color: color-mix(in srgb, var(--ui-theme-color) 70%, transparent);
 }
 .multi-page-slot-active {
-    cursor: default;
-    border: 2px solid var(--ui-theme-color);
+    cursor: pointer;
+    border: 3px solid var(--ui-theme-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.25), 4px 4px 25px rgba(0,0,0,0.3) !important;
 }
 .multi-page-label {
     position: absolute;

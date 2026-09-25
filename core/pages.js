@@ -214,7 +214,9 @@ function renderPage(pageData) {
     updatePageNumbers();
     updateSidebar();
     scheduleEmojiMigrate();
-    if (typeof updateMultiPageView === 'function') updateMultiPageView(state.zoom);
+    if (typeof state !== 'undefined' && state.viewMode === 'multipage' && typeof updateMultiPageView === 'function') {
+        updateMultiPageView(state.zoom);
+    }
     if (typeof window.syncRulers === 'function') window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
@@ -767,7 +769,26 @@ function updateSidebar() {
     state.pages.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = `page-thumb-container ${i === state.currentPageIndex ? 'active' : ''}`;
-        div.onclick = () => switchPage(i);
+        div.onclick = () => {
+            if (typeof state !== 'undefined' && state.viewMode === 'multipage') {
+                if (typeof window.selectMultiPageSlot === 'function') {
+                    window.selectMultiPageSlot(i);
+                } else {
+                    state.currentPageIndex = i;
+                    updateSidebar();
+                }
+            } else {
+                switchPage(i);
+            }
+        };
+        div.ondblclick = () => {
+            if (typeof window.openPageInSingleMode === 'function') {
+                window.openPageInSingleMode(i);
+            } else {
+                switchPage(i);
+                if (typeof fitToPage === 'function') fitToPage();
+            }
+        };
         div.oncontextmenu = (e) => {
             e.preventDefault();
             e.stopPropagation();
