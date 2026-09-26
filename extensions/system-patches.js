@@ -370,12 +370,35 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         // 1. Serialize the current page before saving
         state.pages[state.currentPageIndex] = serializeCurrentPage();
         
+        const firstPage = state.pages[0] || {};
+        const curDpi = state.dpi || (firstPage && firstPage.dpi) || 96;
+        state.dpi = curDpi;
+
+        const detectedFormat = (typeof state !== 'undefined' && state.format)
+            || (firstPage && firstPage.format)
+            || (window.UnitConversionService ? window.UnitConversionService.detectFormat(parseFloat(firstPage.width || paper.style.width || 794), parseFloat(firstPage.height || paper.style.height || 1123), curDpi) : 'A4');
+        state.format = detectedFormat;
+
+        // Ensure all pages have explicit orientation, dpi, and format set
+        state.pages.forEach(p => {
+            if (!p.orientation) {
+                p.orientation = parseFloat(p.width) >= parseFloat(p.height) ? 'landscape' : 'portrait';
+            }
+            if (!p.dpi) {
+                p.dpi = curDpi;
+            }
+            if (!p.format) {
+                p.format = detectedFormat;
+            }
+        });
+        
         // Get the current title from the UI
         const currentTitle = document.getElementById('doc-title').innerText || 'Publication1';
         
         const docData = {
             title: currentTitle,
-            dpi: state.dpi || 96,
+            format: detectedFormat,
+            dpi: curDpi,
             unit: state.unit || 'cm',
             rulerUnit: state.rulerUnit || 'cm',
             rulerUnitExplicit: !!state._userExplicitRulerUnit,
@@ -386,9 +409,20 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             rulerOriginX: state.rulerOriginX || 0,
             rulerOriginY: state.rulerOriginY || 0,
             margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
-            marginsDpi: state.marginsDpi || state.dpi || 96,
+            marginsDpi: state.marginsDpi || curDpi,
             documentProperties: state.documentProperties || { author: '', company: '', subject: '', keywords: '' }
         };
+
+        if (window.DashboardSystem) {
+            const paper = document.getElementById('paper');
+            let thumbPromise = (window.html2canvas && paper)
+                ? html2canvas(paper, { scale: 0.2 }).then(canvas => canvas.toDataURL('image/jpeg', 0.6)).catch(() => '')
+                : Promise.resolve('');
+            thumbPromise.then(thumbDataUrl => {
+                DashboardSystem.addToRecent(currentTitle + '.opub', docData, thumbDataUrl, detectedFormat);
+            });
+        }
+        
         let savePayload = docData;
         if (state.documentPassword) {
             try {

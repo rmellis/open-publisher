@@ -3,6 +3,7 @@ function renderPage(pageData) {
     deselect();
     const pageDpi = (pageData && pageData.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;
     if (typeof state !== 'undefined') state.dpi = pageDpi;
+    if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(pageDpi);
     
     // Normalize and enforce explicit orientation if present
     if (pageData.orientation) {
@@ -36,21 +37,26 @@ function renderPage(pageData) {
         let h = parseFloat(pageData.height || '1123');
         if (typeof state !== 'undefined' && state.isSpreadMode) w = w / 2;
         
-        let fmt = 'A4';
-        if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
-            fmt = window.UnitConversionService.detectFormat(w, h, pageDpi);
-        } else {
-            let shortEdge = Math.min(w, h);
-            let longEdge = Math.max(w, h);
-            
-            if (Math.abs(w - h) <= 10) fmt = 'Square';
-            else if (shortEdge >= 1100) fmt = 'A3';
-            else if (shortEdge >= 1000) fmt = 'Tabloid';
-            else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
-            else if (shortEdge > 800) fmt = 'Letter';
-            else if (shortEdge < 400) fmt = 'BusinessCard';
-            else if (shortEdge < 600) fmt = 'A5';
+        let fmt = pageData.format || (typeof state !== 'undefined' && state.format);
+        if (!fmt || fmt === 'Custom') {
+            if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
+                fmt = window.UnitConversionService.detectFormat(w, h, pageDpi);
+            } else {
+                let shortEdge = Math.min(w, h);
+                let longEdge = Math.max(w, h);
+                
+                if (Math.abs(w - h) <= 10) fmt = 'Square';
+                else if (shortEdge >= 1100) fmt = 'A3';
+                else if (shortEdge >= 1000) fmt = 'Tabloid';
+                else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
+                else if (shortEdge > 800) fmt = 'Letter';
+                else if (shortEdge < 400) fmt = 'BusinessCard';
+                else if (shortEdge < 600) fmt = 'A5';
+                else fmt = 'A4';
+            }
         }
+        if (typeof state !== 'undefined') state.format = fmt;
+        pageData.format = fmt;
         
         window.setPageFormatIcon(fmt);
     }
@@ -287,6 +293,7 @@ function addNewPage() {
         orientation: isLand ? 'landscape' : 'portrait',
         width: pageW, height: defaultH,
         dpi: (state.pages.length > 0 && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].dpi) ? state.pages[state.currentPageIndex].dpi : (state.dpi || 96),
+        format: (state.pages.length > 0 && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].format) ? state.pages[state.currentPageIndex].format : (state.format || 'A4'),
         background: '#ffffff',
         header: 'Header (Type here)', 
         footer: 'Footer (Type here)',
@@ -522,12 +529,19 @@ function handleNewDocument() {
             paper.style.width = pageW;
             paper.style.height = pageH;
 
+            const detectedFmt = (window.UnitConversionService && window.UnitConversionService.detectFormat)
+                ? window.UnitConversionService.detectFormat(finalW, finalH, d)
+                : (currentPreset || 'A4');
+            const chosenFmt = currentPreset || detectedFmt;
+            state.format = chosenFmt;
+
             const newPage = {
                 id: Date.now(),
                 orientation: isLand ? 'landscape' : 'portrait',
                 width: pageW,
                 height: pageH,
                 dpi: d,
+                format: chosenFmt,
                 background: '#ffffff',
                 header: 'Header (Type here)',
                 footer: 'Footer (Type here)',
@@ -541,10 +555,7 @@ function handleNewDocument() {
             updateSidebar();
             if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
             if (typeof window.setPageFormatIcon === 'function') {
-                const detectedFmt = (window.UnitConversionService && window.UnitConversionService.detectFormat)
-                    ? window.UnitConversionService.detectFormat(finalW, finalH, d)
-                    : (currentPreset || 'A4');
-                window.setPageFormatIcon(detectedFmt);
+                window.setPageFormatIcon(chosenFmt);
             }
             
             setTimeout(() => {

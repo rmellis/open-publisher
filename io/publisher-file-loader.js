@@ -19,9 +19,9 @@ window.handlePublisherFileLoad = (evt) => {
             state.hasMasterPage = data.hasMasterPage || false;
             state.rulerOriginX = data.rulerOriginX || 0;
             state.rulerOriginY = data.rulerOriginY || 0;
-            state.documentProperties = data.documentProperties || { author: '', company: '', subject: '', keywords: '' };
             state.dpi = data.dpi || (data.pages && data.pages[0] && data.pages[0].dpi) || 96;
             const docDpi = state.dpi;
+            state.format = data.format || (data.pages && data.pages[0] && data.pages[0].format) || null;
             const loadedMargins = data.margins || { top: Math.round(0.5 * docDpi), right: Math.round(0.5 * docDpi), bottom: Math.round(0.5 * docDpi), left: Math.round(0.5 * docDpi) };
             const loadedMarginsDpi = data.marginsDpi || (data.dpi ? data.dpi : 96);
 
@@ -81,6 +81,7 @@ window.handlePublisherFileLoad = (evt) => {
                 state.pages.forEach(p => {
                     if (!p.id) p.id = Date.now() + Math.random();
                     if (!p.dpi) p.dpi = state.dpi;
+                    if (!p.format && state.format) p.format = state.format;
                     // If root document has orientation and page does not, inherit root orientation
                     if (!p.orientation && data.orientation) {
                         p.orientation = data.orientation;
@@ -118,6 +119,8 @@ window.handlePublisherFileLoad = (evt) => {
             state.historyIndex = -1;
             state.currentPageIndex = 0;
             renderPage(state.pages[0]);
+            if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
+            if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
             // Sync the margin guide overlay after the page renders so it is correctly
             // positioned over the paper at the current zoom level.
             setTimeout(() => {

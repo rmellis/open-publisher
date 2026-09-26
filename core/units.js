@@ -89,7 +89,7 @@
             // Physical to physical conversion
             let inVal = num;
             if (from === 'cm') inVal = num / 2.54;
-            else if (from === 'mm') inVal = num / 2.54;
+            else if (from === 'mm') inVal = num / 25.4;
 
             if (to === 'in') return inVal;
             if (to === 'cm') return inVal * 2.54;
@@ -163,9 +163,10 @@
             const shortEdge = Math.min(width, height);
             const longEdge = Math.max(width, height);
 
-            const dList = Array.from(new Set([parseFloat(dpi) || 96, 96, 140, 300, 150, 72]));
+            const activeDpi = parseFloat(dpi) || 96;
+            const dList = Array.from(new Set([activeDpi, 96, 140, 300, 150, 72]));
             for (const d of dList) {
-                const tol = Math.max(8, d * 0.08);
+                const tol = Math.max(16, d * 0.08);
                 for (const key in PRESETS) {
                     const p = this.getPresetDimensions(key, 'px', d);
                     const pShort = Math.min(p.widthPx, p.heightPx);
@@ -176,17 +177,16 @@
                 }
             }
 
-            const activeDpi = parseFloat(dpi) || 96;
             const shortIn = shortEdge / activeDpi;
             const longIn = longEdge / activeDpi;
 
             if (shortIn >= 11.2) return 'A3';
             if (shortIn >= 10.5 && longIn >= 16.0) return 'Tabloid';
-            if (shortIn >= 8.2 && longIn >= 13.0) return 'Legal';
-            if (shortIn >= 8.35 && longIn <= 11.5) return 'Letter';
-            if (shortIn >= 7.8 && longIn >= 11.2) return 'A4';
-            if (shortIn >= 5.2 && longIn >= 7.8) return 'A5';
-            if (shortIn <= 2.8 && longIn <= 4.0) return 'BusinessCard';
+            if (shortIn >= 8.2 && longIn >= 13.2) return 'Legal';
+            if (Math.abs(shortIn - 8.5) <= 0.6 && Math.abs(longIn - 11.0) <= 0.6) return 'Letter';
+            if (Math.abs(shortIn - 8.27) <= 0.6 && Math.abs(longIn - 11.69) <= 0.6) return 'A4';
+            if (Math.abs(shortIn - 5.83) <= 0.5 && Math.abs(longIn - 8.27) <= 0.5) return 'A5';
+            if (shortIn <= 2.8 && longIn <= 4.2) return 'BusinessCard';
 
             return 'Custom';
         }

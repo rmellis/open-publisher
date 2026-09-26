@@ -36,6 +36,7 @@ function setPageSize(format) {
     paper.style.height = h;
     
     // Auto-update the UI format icon immediately
+    if (typeof state !== 'undefined') state.format = format;
     if (typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(format);
     
     if (typeof state !== 'undefined' && state.pages && state.pages.length > 0 && state.pages[state.currentPageIndex]) {
@@ -43,6 +44,7 @@ function setPageSize(format) {
         state.pages[state.currentPageIndex].width = w;
         state.pages[state.currentPageIndex].height = h;
         state.pages[state.currentPageIndex].dpi = dpi;
+        state.pages[state.currentPageIndex].format = format;
         state.pages[state.currentPageIndex].orientation = isLand ? 'landscape' : 'portrait';
         if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
         window._orientedPagesRegistry.add(state.pages[state.currentPageIndex].id);
@@ -392,18 +394,32 @@ function changeSize() {
     const initialW = ucs.formatValue(ucs.fromPixels(currentW, activeUnit, activeDpi), activeUnit);
     const initialH = ucs.formatValue(ucs.fromPixels(currentH, activeUnit, activeDpi), activeUnit);
 
+    const activeFormat = (typeof state !== 'undefined' && (state.format || (state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].format))) 
+        || (ucs.detectFormat ? ucs.detectFormat(currentW, currentH, activeDpi) : 'A4');
+
+    const presetList = [
+        { key: 'A4', label: 'A4' },
+        { key: 'Letter', label: 'Letter' },
+        { key: 'A3', label: 'A3' },
+        { key: 'A5', label: 'A5' },
+        { key: 'Legal', label: 'Legal' },
+        { key: 'Tabloid', label: 'Tabloid' },
+        { key: 'BusinessCard', label: 'Business Card' },
+        { key: 'Square', label: 'Square' }
+    ];
+
+    const presetBtnsHtml = presetList.map(p => {
+        const isAct = (activeFormat && activeFormat.toLowerCase() === p.key.toLowerCase());
+        const cls = isAct ? 'btn-secondary resize-preset-btn active' : 'btn-secondary resize-preset-btn';
+        const style = isAct ? 'padding:4px 8px; font-size:12px; background:var(--ui-theme-color, #007670); color:#fff; border-color:var(--ui-theme-dark, #005a55); font-weight:600;' : 'padding:4px 8px; font-size:12px;';
+        return `<button type="button" class="${cls}" data-preset="${p.key}" style="${style}">${p.label}</button>`;
+    }).join('\n                ');
+
     const formHtml = `
         <div style="margin-bottom:12px;">
             <label style="font-weight:600; font-size:12px; color:var(--ui-theme-dark); display:block; margin-bottom:6px;">Preset Formats:</label>
             <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="A4" style="padding:4px 8px; font-size:12px;">A4</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="Letter" style="padding:4px 8px; font-size:12px;">Letter</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="A3" style="padding:4px 8px; font-size:12px;">A3</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="A5" style="padding:4px 8px; font-size:12px;">A5</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="Legal" style="padding:4px 8px; font-size:12px;">Legal</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="Tabloid" style="padding:4px 8px; font-size:12px;">Tabloid</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="BusinessCard" style="padding:4px 8px; font-size:12px;">Business Card</button>
-                <button type="button" class="btn-secondary resize-preset-btn" data-preset="Square" style="padding:4px 8px; font-size:12px;">Square</button>
+                ${presetBtnsHtml}
             </div>
         </div>
         <div style="display:flex; gap:12px; margin-bottom:12px;">
@@ -593,15 +609,30 @@ function changeSize() {
                 }
             }
             
+            const detectedFmt = (window.UnitConversionService && window.UnitConversionService.detectFormat)
+                ? window.UnitConversionService.detectFormat(finalW, finalH, d)
+                : 'Custom';
+            const finalFormat = window._lastSelectedPreset || detectedFmt;
+            if (typeof state !== 'undefined') state.format = finalFormat;
+            
             if (state.pages && state.pages[state.currentPageIndex]) {
                 const curP = state.pages[state.currentPageIndex];
                 curP.width = targetW;
                 curP.height = finalH + 'px';
                 curP.dpi = d;
+                curP.format = finalFormat;
                 const isLand = parseFloat(targetW) >= parseFloat(finalH);
                 curP.orientation = isLand ? 'landscape' : 'portrait';
                 if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                 window._orientedPagesRegistry.add(curP.id);
+            }
+            if (typeof state !== 'undefined' && state.pages && Array.isArray(state.pages)) {
+                state.pages.forEach(pg => {
+                    if (pg) {
+                        pg.dpi = d;
+                        if (!pg.format || pg.format === 'Custom') pg.format = finalFormat;
+                    }
+                });
             }
             if (typeof updateSidebar === 'function') updateSidebar();
             if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -610,10 +641,7 @@ function changeSize() {
             if (typeof window.syncRulers === 'function') window.syncRulers();
             if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
             if (typeof window.setPageFormatIcon === 'function') {
-                const detectedFmt = (window.UnitConversionService && window.UnitConversionService.detectFormat)
-                    ? window.UnitConversionService.detectFormat(finalW, finalH, d)
-                    : 'Custom';
-                window.setPageFormatIcon(detectedFmt);
+                window.setPageFormatIcon(finalFormat);
             }
             if (typeof window.notifyDpiChanged === 'function') {
                 window.notifyDpiChanged(d, finalW, finalH, shouldScaleContent, oldDpi);
@@ -628,6 +656,27 @@ function changeSize() {
 
     setTimeout(() => {
         let currentUnit = activeUnit;
+        window._lastSelectedPreset = presetList.some(p => p.key.toLowerCase() === activeFormat.toLowerCase()) ? activeFormat : null;
+
+        const updatePresetHighlights = (selectedKey) => {
+            document.querySelectorAll('.resize-preset-btn').forEach(b => {
+                const k = b.getAttribute('data-preset');
+                if (selectedKey && k && k.toLowerCase() === selectedKey.toLowerCase()) {
+                    b.classList.add('active');
+                    b.style.background = 'var(--ui-theme-color, #007670)';
+                    b.style.color = '#fff';
+                    b.style.borderColor = 'var(--ui-theme-dark, #005a55)';
+                    b.style.fontWeight = '600';
+                } else {
+                    b.classList.remove('active');
+                    b.style.background = '';
+                    b.style.color = '';
+                    b.style.borderColor = '';
+                    b.style.fontWeight = '';
+                }
+            });
+        };
+
         const getDialogDpi = () => {
             const sel = document.getElementById('resize-dialog-dpi-select');
             if (sel && sel.value === 'custom') {
@@ -662,10 +711,16 @@ function changeSize() {
                 const curH = parseFloat(hEl.value) || 0;
 
                 if (window.UnitConversionService) {
-                    const convW = window.UnitConversionService.convert(curW, currentUnit, nextUnit, d);
-                    const convH = window.UnitConversionService.convert(curH, currentUnit, nextUnit, d);
-                    wEl.value = window.UnitConversionService.formatValue(convW, nextUnit);
-                    hEl.value = window.UnitConversionService.formatValue(convH, nextUnit);
+                    if (window._lastSelectedPreset) {
+                        const dims = window.UnitConversionService.getPresetDimensions(window._lastSelectedPreset, nextUnit, d);
+                        wEl.value = dims.width;
+                        hEl.value = dims.height;
+                    } else {
+                        const convW = window.UnitConversionService.convert(curW, currentUnit, nextUnit, d);
+                        const convH = window.UnitConversionService.convert(curH, currentUnit, nextUnit, d);
+                        wEl.value = window.UnitConversionService.formatValue(convW, nextUnit);
+                        hEl.value = window.UnitConversionService.formatValue(convH, nextUnit);
+                    }
                 }
                 currentUnit = nextUnit;
                 document.getElementById('resize-width-label').innerText = `Width (${nextUnit}):`;
@@ -683,27 +738,63 @@ function changeSize() {
                 } else {
                     if (customDpiGroup) customDpiGroup.style.display = 'none';
                 }
+                if (window._lastSelectedPreset && window.UnitConversionService) {
+                    const u = document.getElementById('resize-dialog-unit').value;
+                    const d = getDialogDpi();
+                    const dims = window.UnitConversionService.getPresetDimensions(window._lastSelectedPreset, u, d);
+                    const wInput = document.getElementById('dialog-width');
+                    const hInput = document.getElementById('dialog-height');
+                    if (wInput) wInput.value = dims.width;
+                    if (hInput) hInput.value = dims.height;
+                }
                 updatePreview();
             });
         }
 
         const customDpiInput = document.getElementById('resize-dialog-dpi-custom');
-        if (customDpiInput) customDpiInput.addEventListener('input', updatePreview);
+        if (customDpiInput) {
+            customDpiInput.addEventListener('input', function() {
+                if (window._lastSelectedPreset && window.UnitConversionService) {
+                    const u = document.getElementById('resize-dialog-unit').value;
+                    const d = getDialogDpi();
+                    const dims = window.UnitConversionService.getPresetDimensions(window._lastSelectedPreset, u, d);
+                    const wInput = document.getElementById('dialog-width');
+                    const hInput = document.getElementById('dialog-height');
+                    if (wInput) wInput.value = dims.width;
+                    if (hInput) hInput.value = dims.height;
+                }
+                updatePreview();
+            });
+        }
 
         const wInput = document.getElementById('dialog-width');
         const hInput = document.getElementById('dialog-height');
-        if (wInput) wInput.addEventListener('input', updatePreview);
-        if (hInput) hInput.addEventListener('input', updatePreview);
+        if (wInput) {
+            wInput.addEventListener('input', () => {
+                window._lastSelectedPreset = null;
+                updatePresetHighlights(null);
+                updatePreview();
+            });
+        }
+        if (hInput) {
+            hInput.addEventListener('input', () => {
+                window._lastSelectedPreset = null;
+                updatePresetHighlights(null);
+                updatePreview();
+            });
+        }
 
         document.querySelectorAll('.resize-preset-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const presetKey = btn.getAttribute('data-preset');
+                window._lastSelectedPreset = presetKey;
+                updatePresetHighlights(presetKey);
                 const u = document.getElementById('resize-dialog-unit').value;
                 const d = getDialogDpi();
                 if (window.UnitConversionService) {
                     const dims = window.UnitConversionService.getPresetDimensions(presetKey, u, d);
-                    wInput.value = dims.width;
-                    hInput.value = dims.height;
+                    if (wInput) wInput.value = dims.width;
+                    if (hInput) hInput.value = dims.height;
                 }
                 updatePreview();
             });

@@ -1357,28 +1357,32 @@
         window._formatHooked = true;
         window.loadTemplate = function(t) {
             originalLoad(t);
-            let w = t.w;
-            let h = t.h || 1123;
+            const p0 = (t && t.pages && t.pages[0]) || {};
+            let w = parseFloat(t.w || p0.width || 794);
+            let h = parseFloat(t.h || p0.height || 1123);
             if (typeof state !== 'undefined' && state.isSpreadMode) {
                 w = w / 2;
             }
-            const activeDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
-            let fmt = 'A4';
-            if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
-                fmt = window.UnitConversionService.detectFormat(w, h, activeDpi);
-            } else {
-                let shortEdge = Math.min(w, h);
-                let longEdge = Math.max(w, h);
-                
-                if (Math.abs(w - h) <= 10) fmt = 'Square';
-                else if (shortEdge >= 1100) fmt = 'A3';
-                else if (shortEdge >= 1000) fmt = 'Tabloid';
-                else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
-                else if (shortEdge > 800) fmt = 'Letter';
-                else if (shortEdge < 400) fmt = 'BusinessCard';
-                else if (shortEdge < 600) fmt = 'A5';
+            const activeDpi = (p0.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;
+            let fmt = t.format || p0.format || (typeof state !== 'undefined' && state.format);
+            if (!fmt || fmt === 'Custom') {
+                if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
+                    fmt = window.UnitConversionService.detectFormat(w, h, activeDpi);
+                } else {
+                    let shortEdge = Math.min(w, h);
+                    let longEdge = Math.max(w, h);
+                    
+                    if (Math.abs(w - h) <= 10) fmt = 'Square';
+                    else if (shortEdge >= 1100) fmt = 'A3';
+                    else if (shortEdge >= 1000) fmt = 'Tabloid';
+                    else if (shortEdge >= 810 && longEdge > 1100) fmt = 'Legal';
+                    else if (shortEdge > 800) fmt = 'Letter';
+                    else if (shortEdge < 400) fmt = 'BusinessCard';
+                    else if (shortEdge < 600) fmt = 'A5';
+                    else fmt = 'A4';
+                }
             }
-            
+            if (typeof state !== 'undefined') state.format = fmt;
             window.setPageFormatIcon(fmt);
         };
     }

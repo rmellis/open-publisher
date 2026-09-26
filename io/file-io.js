@@ -1,21 +1,32 @@
 
 function saveDocument() {
     state.pages[state.currentPageIndex] = serializeCurrentPage();
-    // Ensure all pages have explicit orientation and dpi set
+    const firstPage = state.pages[0] || {};
+    const curDpi = state.dpi || (firstPage && firstPage.dpi) || 96;
+    state.dpi = curDpi;
+    const detectedFormat = (typeof state !== 'undefined' && state.format)
+        || (firstPage && firstPage.format)
+        || (window.UnitConversionService ? window.UnitConversionService.detectFormat(parseFloat(firstPage.width || paper.style.width || 794), parseFloat(firstPage.height || paper.style.height || 1123), curDpi) : 'A4');
+    state.format = detectedFormat;
+
+    // Ensure all pages have explicit orientation, dpi, and format set
     state.pages.forEach(p => {
         if (!p.orientation) {
             p.orientation = parseFloat(p.width) >= parseFloat(p.height) ? 'landscape' : 'portrait';
         }
         if (!p.dpi) {
-            p.dpi = state.dpi || 96;
+            p.dpi = curDpi;
+        }
+        if (!p.format) {
+            p.format = detectedFormat;
         }
     });
-    const firstPage = state.pages[0] || {};
     const docOrientation = firstPage.orientation || (parseFloat(firstPage.width) >= parseFloat(firstPage.height) ? 'landscape' : 'portrait');
     const docData = {
         title: document.getElementById('doc-title').innerText,
         orientation: docOrientation,
-        dpi: state.dpi || 96,
+        format: detectedFormat,
+        dpi: curDpi,
         unit: state.unit || 'cm',
         rulerUnit: state.rulerUnit || 'cm',
         rulerUnitExplicit: !!state._userExplicitRulerUnit,
@@ -25,7 +36,7 @@ function saveDocument() {
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
         margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
-        marginsDpi: state.marginsDpi || state.dpi || 96,
+        marginsDpi: state.marginsDpi || curDpi,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
     
@@ -1334,34 +1345,38 @@ function uploadAndConvertPub(file) {
 // ==========================================
 
 // --- STANDARD FILE OPEN MENU ---
-document.getElementById('file-open').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
+const fileOpenEl = document.getElementById('file-open');
+if (fileOpenEl) {
+    fileOpenEl.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    const fileName = file.name.toLowerCase();
+        const fileName = file.name.toLowerCase();
 
-    // 1. Handle Publisher Files
-    if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
-        if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
-        e.target.value = ''; 
-        return;
-    }
+        // 1. Handle Publisher Files
+        if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+            if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
+            e.target.value = ''; 
+            return;
+        }
 
-    // 2. Handle Word Documents
-    if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
-        if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
-        e.target.value = ''; 
-        return;
-    }
+        // 2. Handle Word Documents
+        if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+            if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
+            e.target.value = ''; 
+            return;
+        }
 
-    // 3. Handle OpenPublisher Native Files (.json or .opub)
-    if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
-        const reader = new FileReader();
-        reader.onload = window.handlePublisherFileLoad;
-        reader.readAsText(file);
-        e.target.value = ''; 
-    }
-});
+        // 3. Handle OpenPublisher Native Files (.json or .opub)
+        if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
+            const reader = new FileReader();
+            reader.onload = window.handlePublisherFileLoad;
+            reader.readAsText(file);
+            e.target.value = ''; 
+        }
+    });
+}
+
 
 // --- INSERT FILE (TEXT) MENU ---
 document.getElementById('insert-file-input').addEventListener('change', (e) => {

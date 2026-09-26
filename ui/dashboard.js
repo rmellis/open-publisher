@@ -92,6 +92,10 @@ window.DashboardSystem = {
         });
     },
     
+    open: function() {
+        this.show();
+    },
+    
     show: function() {
         document.body.classList.add('dashboard-open');
         const ft = document.getElementById('float-toolbar');
@@ -511,16 +515,32 @@ window.DashboardSystem = {
                 state.history = [];
                 state.historyIndex = -1;
                 
+                const fileData = file.data || {};
+                state.dpi = fileData.dpi || (fileData.pages && fileData.pages[0] && fileData.pages[0].dpi) || 96;
+                state.unit = fileData.unit || 'cm';
+                state.format = fileData.format || (fileData.pages && fileData.pages[0] && fileData.pages[0].format) || (file.pageSize !== 'Custom' ? file.pageSize : null) || null;
+                state.margins = fileData.margins;
+                state.marginsDpi = fileData.marginsDpi || state.dpi;
+                state.hasMasterPage = fileData.hasMasterPage || false;
+                state.isSpreadMode = !!fileData.isSpreadMode;
+                state.rulerOriginX = fileData.rulerOriginX || 0;
+                state.rulerOriginY = fileData.rulerOriginY || 0;
+                state.rulerUnit = fileData.rulerUnit || 'cm';
+                state._userExplicitRulerUnit = !!fileData.rulerUnitExplicit;
+                state.documentProperties = fileData.documentProperties || { author: '', company: '', subject: '', keywords: '' };
+
                 // Deep clone pages to avoid mutating recent files cache directly
-                state.pages = JSON.parse(JSON.stringify(file.data.pages || []));
+                state.pages = JSON.parse(JSON.stringify(fileData.pages || []));
                 state.currentPageIndex = 0;
                 
-                // Normalize and enforce orientation on recent pages
+                // Normalize and enforce orientation, dpi, and format on recent pages
                 if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
                 state.pages.forEach(p => {
                     if (!p.id) p.id = Date.now() + Math.random();
-                    if (!p.orientation && file.data && file.data.orientation) {
-                        p.orientation = file.data.orientation;
+                    if (!p.dpi) p.dpi = state.dpi;
+                    if (!p.format && state.format) p.format = state.format;
+                    if (!p.orientation && fileData.orientation) {
+                        p.orientation = fileData.orientation;
                     }
                     if (p.orientation) {
                         let curW = parseFloat(p.width) || 794;
@@ -540,7 +560,15 @@ window.DashboardSystem = {
                 
                 document.getElementById('doc-title').innerText = file.name.replace('.opub', '');
                 
+                if (window._multiPageActive && typeof exitMultiPageView === 'function') {
+                    exitMultiPageView();
+                }
+                state.viewMode = 'single';
+                if (typeof window.updateViewModeUI === 'function') window.updateViewModeUI();
+
                 renderPage(state.pages[state.currentPageIndex]);
+                if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
+                if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
                 if(window.minimapSystem) minimapSystem.updateMinimap();
                 updateTitleBar();
             };
@@ -551,6 +579,10 @@ window.DashboardSystem = {
     
     // Call this whenever a file is saved or opened to update the recent list
     addToRecent: function(name, opubData, thumbDataUrl, pageSizeLabel) {
+        if (typeof name === 'object' && name !== null && !opubData) {
+            opubData = name;
+            name = opubData.title || 'Untitled';
+        }
         try {
             let recentFiles = [];
             const stored = localStorage.getItem('op_recent_files');
@@ -559,11 +591,15 @@ window.DashboardSystem = {
             // Remove if already exists (to bump to top)
             recentFiles = recentFiles.filter(f => f.name !== name);
             
+            const explicitSizeLabel = (pageSizeLabel && pageSizeLabel !== 'Custom')
+                ? pageSizeLabel
+                : ((opubData && opubData.format) || (typeof state !== 'undefined' && state.format) || pageSizeLabel || 'Custom');
+
             recentFiles.unshift({
                 name: name,
                 thumbnail: thumbDataUrl,
                 lastModified: new Date().toISOString(),
-                pageSize: pageSizeLabel || 'Custom',
+                pageSize: explicitSizeLabel,
                 data: opubData
             });
             

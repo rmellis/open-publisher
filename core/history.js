@@ -66,6 +66,7 @@ function serializeCurrentPage() {
         width: curW,
         height: curH,
         dpi: existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
+        format: existingPage.format || (typeof state !== 'undefined' && state.format) || (window.UnitConversionService ? window.UnitConversionService.detectFormat(parseFloat(curW), parseFloat(curH), existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96)) : 'A4'),
         background: paper.style.background || 'white',
         header: paper.querySelector('.page-header').innerHTML,
         footer: paper.querySelector('.page-footer').innerHTML,

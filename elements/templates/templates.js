@@ -316,19 +316,20 @@ function initTemplates() {
 
     // Maps pixel dimensions to a human-readable page size label.
     // Checks paper sizes first, then p-scale video resolutions, then falls back to raw dimensions.
-    window.getPageSizeLabel = function(w, h) {
-        const tol = 5;
+    window.getPageSizeLabel = function(w, h, dpi) {
+        const activeDpi = parseFloat(dpi) || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96);
+        const tol = Math.max(16, activeDpi * 0.08);
         const near = (a, b) => Math.abs(a - b) <= tol;
 
         // Check against dynamic DPI presets if UnitConversionService is loaded
         if (window.UnitConversionService && window.UnitConversionService.PRESETS) {
-            const currentDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
-            const dpis = Array.from(new Set([currentDpi, 140, 96, 300, 150, 72]));
+            const dpis = Array.from(new Set([activeDpi, 96, 140, 300, 150, 72]));
             for (const d of dpis) {
+                const dTol = Math.max(16, d * 0.08);
                 for (const key in window.UnitConversionService.PRESETS) {
                     const dims = window.UnitConversionService.getPresetDimensions(key, 'px', d);
-                    if (near(w, dims.widthPx) && near(h, dims.heightPx)) return dims.name;
-                    if (near(w, dims.heightPx) && near(h, dims.widthPx)) return dims.name + ' ↔';
+                    if (Math.abs(w - dims.widthPx) <= dTol && Math.abs(h - dims.heightPx) <= dTol) return dims.name;
+                    if (Math.abs(w - dims.heightPx) <= dTol && Math.abs(h - dims.widthPx) <= dTol) return dims.name + ' ↔';
                 }
             }
         }
@@ -432,6 +433,7 @@ function loadTemplate(opubData) {
         state.history = [];
         state.historyIndex = -1;
         state.dpi = opubData.dpi || (opubData.pages && opubData.pages[0] && opubData.pages[0].dpi) || 96;
+        state.format = opubData.format || (opubData.pages && opubData.pages[0] && opubData.pages[0].format) || null;
         state.margins = opubData.margins || {
             top: Math.round(0.5 * state.dpi),
             right: Math.round(0.5 * state.dpi),
@@ -447,6 +449,8 @@ function loadTemplate(opubData) {
         if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
         state.pages.forEach(p => {
             p.id = Date.now() + Math.random();
+            p.dpi = state.dpi;
+            if (state.format) p.format = state.format;
             if (!p.orientation && opubData && opubData.orientation) {
                 p.orientation = opubData.orientation;
             }
@@ -469,6 +473,8 @@ function loadTemplate(opubData) {
         state.currentPageIndex = 0;
         
         renderPage(state.pages[0]);
+        if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
+        if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
         updateSidebar();
         document.getElementById('template-modal').style.display = 'none';
         pushHistory();
