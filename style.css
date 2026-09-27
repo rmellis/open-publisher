@@ -1119,6 +1119,12 @@ body.dark-mode .tab.active {
     transform-origin: top center; 
     margin-bottom: 50px;
     flex-shrink: 0; 
+    outline: none !important;
+}
+
+#paper:focus,
+#paper:focus-visible {
+    outline: none !important;
 }
 
 /* --- MULTI-PAGE VIEW --- */

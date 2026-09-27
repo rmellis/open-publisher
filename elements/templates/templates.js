@@ -475,6 +475,9 @@ function loadTemplate(opubData) {
         renderPage(state.pages[0]);
         if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
         if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
+        if (typeof window.focusPage === 'function') {
+            window.focusPage(0);
+        }
         updateSidebar();
         document.getElementById('template-modal').style.display = 'none';
         pushHistory();

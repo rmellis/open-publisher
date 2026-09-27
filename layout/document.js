@@ -53,6 +53,11 @@ function setPageSize(format) {
     if (typeof window.syncRulers === 'function') window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(dpi);
+    if (typeof window.focusPage === 'function') {
+        window.focusPage();
+    } else if (typeof window.updateCanvasScrollBounds === 'function') {
+        window.updateCanvasScrollBounds();
+    }
     
     const sizeDrop = document.getElementById('size-dropdown');
     if(sizeDrop) sizeDrop.style.display = 'none';
@@ -647,6 +652,11 @@ function changeSize() {
                 window.notifyDpiChanged(d, finalW, finalH, shouldScaleContent, oldDpi);
             } else if (typeof window.updateDpiDisplay === 'function') {
                 window.updateDpiDisplay(d);
+            }
+            if (typeof window.focusPage === 'function') {
+                window.focusPage();
+            } else if (typeof window.updateCanvasScrollBounds === 'function') {
+                window.updateCanvasScrollBounds();
             }
             pushHistory();
             const sizeDrop = document.getElementById('size-dropdown');

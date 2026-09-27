@@ -121,11 +121,17 @@ window.handlePublisherFileLoad = (evt) => {
             renderPage(state.pages[0]);
             if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
             if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
+            if (typeof window.focusPage === 'function') {
+                window.focusPage(0);
+            }
             // Sync the margin guide overlay after the page renders so it is correctly
             // positioned over the paper at the current zoom level.
             setTimeout(() => {
                 if (typeof window.syncMarginGuideOverlay === 'function') {
                     window.syncMarginGuideOverlay();
+                }
+                if (typeof window.focusPage === 'function') {
+                    window.focusPage(0);
                 }
             }, 100);
 

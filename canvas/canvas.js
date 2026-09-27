@@ -19,7 +19,10 @@ window.initRulers = function() {
 
     const vp = document.getElementById('viewport');
     if(vp) vp.addEventListener('scroll', window.syncRulers);
-    window.addEventListener('resize', window.syncRulers);
+    window.addEventListener('resize', () => {
+        if (window.syncRulers) window.syncRulers();
+        if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
+    });
 
     h.addEventListener('dblclick', (e) => {
         if (!state.selectedEl || !state.selectedEl.querySelector('[contenteditable="true"]')) return;
@@ -606,6 +609,67 @@ window.syncHandleScaling = function(z) {
     }
 };
 
+window.updateCanvasScrollBounds = function() {
+    const vp = document.getElementById('viewport');
+    const paper = document.getElementById('paper');
+    if (!vp || !paper) return;
+    if (vp.classList.contains('panning')) return;
+
+    const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+    const pad = 50;
+    const paperW = paper.offsetWidth || 794;
+    const paperH = paper.offsetHeight || 1123;
+    const scaledW = paperW * z;
+    const scaledH = paperH * z;
+    const vpW = vp.clientWidth;
+    const vpH = vp.clientHeight;
+
+    // With justify-content:center, paper's natural left edge (in viewport coords) is:
+    //   naturalLeft = (vpW - scaledW) / 2
+    // We need naturalLeft >= pad (50px) so the left side is scrollable to.
+    // If naturalLeft < pad, shift paper right by the deficit.
+    const naturalLeft = (vpW - scaledW) / 2;
+    const shiftNeeded = pad - naturalLeft;
+
+    if (shiftNeeded > 0) {
+        // Paper overflows viewport - shift right so left edge has minimum padding
+        paper.style.left = shiftNeeded + 'px';
+    } else {
+        // Paper fits - no shift needed
+        paper.style.left = '';
+    }
+
+    // Place a 1px sizer div at the right edge of the scaled content + pad.
+    // This forces scrollWidth to accommodate the full scaled width.
+    // Only needed when content overflows the viewport.
+    const rightEdge = shiftNeeded > 0
+        ? pad + scaledW + pad          // shifted: left(pad) + scaledW + right pad
+        : vpW;                         // fits: no extra scroll needed
+
+    let sizer = document.getElementById('canvas-scroll-sizer');
+    if (rightEdge > vpW) {
+        // Need horizontal scroll space
+        if (!sizer) {
+            sizer = document.createElement('div');
+            sizer.id = 'canvas-scroll-sizer';
+            sizer.style.position = 'absolute';
+            sizer.style.pointerEvents = 'none';
+            sizer.style.visibility = 'hidden';
+            sizer.style.width = '1px';
+            sizer.style.height = '1px';
+            vp.appendChild(sizer);
+        }
+        sizer.style.left = (rightEdge - 1) + 'px';
+        sizer.style.top = (pad + scaledH + pad - 1) + 'px';
+    } else {
+        // Page fits - remove sizer so there's no spurious scrollbar
+        if (sizer) sizer.remove();
+    }
+
+    if (window.syncRulers) window.syncRulers();
+    if (window.syncMarginGuideOverlay) window.syncMarginGuideOverlay();
+};
+
 window.setZoom = function(z) {
     state.zoom = z;
     const paperEl = document.getElementById('paper');
@@ -630,6 +694,7 @@ window.setZoom = function(z) {
     const display = document.getElementById('zoom-level-display');
     if (display) display.textContent = Math.round(z * 100) + '%';
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
 };
 
 window.zoomStepOut = function() {
@@ -1145,18 +1210,26 @@ window.fitToPage = function() {
         const totalW = wrapper._totalUnscaledWidth || 2000;
         const totalH = wrapper._totalUnscaledHeight || 1200;
         const pad = 80;
-        const scaleX = (viewport.clientWidth - pad) / totalW;
-        const scaleY = (viewport.clientHeight - pad) / totalH;
+        const vpW = viewport.clientWidth || (window.innerWidth - 300);
+        const vpH = viewport.clientHeight || (window.innerHeight - 150);
+        const scaleX = (vpW - pad) / totalW;
+        const scaleY = (vpH - pad) / totalH;
         const z = Math.min(scaleX, scaleY);
         setZoom(Math.max(0.04, Math.min(1.0, z)));
         return;
     }
 
     const paperEl = document.getElementById('paper');
-    if (!viewport || !paperEl || !paperEl.offsetWidth || !paperEl.offsetHeight) return;
+    if (!viewport || !paperEl) return;
+    const paperW = paperEl.offsetWidth || parseInt(paperEl.style.width) || (state.pages && state.pages[state.currentPageIndex] && parseInt(state.pages[state.currentPageIndex].width)) || 794;
+    const paperH = paperEl.offsetHeight || parseInt(paperEl.style.height) || (state.pages && state.pages[state.currentPageIndex] && parseInt(state.pages[state.currentPageIndex].height)) || 1123;
+    if (paperW <= 0 || paperH <= 0) return;
+
+    const vpW = viewport.clientWidth || (window.innerWidth - 300);
+    const vpH = viewport.clientHeight || (window.innerHeight - 150);
     const padding = 80; // 40px padding on top/bottom
-    const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
-    const scaleY = (viewport.clientHeight - padding) / paperEl.offsetHeight;
+    const scaleX = (vpW - padding) / paperW;
+    const scaleY = (vpH - padding) / paperH;
     const z = Math.min(scaleX, scaleY);
     const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
         || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
@@ -1164,21 +1237,85 @@ window.fitToPage = function() {
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, z)));
     viewport.scrollTop = 0;
-    viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * z - viewport.clientWidth)/2);
+    viewport.scrollLeft = Math.max(0, (paperW * z - vpW) / 2);
 };
 
 window.fitToWidth = function() {
     const viewport = document.getElementById('viewport');
     const paperEl = document.getElementById('paper');
-    if (!viewport || !paperEl || !paperEl.offsetWidth) return;
+    if (!viewport || !paperEl) return;
+    const paperW = paperEl.offsetWidth || parseInt(paperEl.style.width) || (state.pages && state.pages[state.currentPageIndex] && parseInt(state.pages[state.currentPageIndex].width)) || 794;
+    if (paperW <= 0) return;
+    const vpW = viewport.clientWidth || (window.innerWidth - 300);
     const padding = 80;
-    const scaleX = (viewport.clientWidth - padding) / paperEl.offsetWidth;
+    const scaleX = (vpW - padding) / paperW;
     const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
         || (typeof state !== 'undefined' && parseFloat(state.dpi)) 
         || 96;
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, scaleX)));
-    viewport.scrollLeft = Math.max(0, (paperEl.offsetWidth * scaleX - viewport.clientWidth)/2);
+    viewport.scrollLeft = Math.max(0, (paperW * scaleX - vpW) / 2);
+};
+
+window.focusPage = function(pageIndex = null) {
+    // 1. Ensure single page mode if in multi-page mode
+    if (state.viewMode === 'multipage' && typeof window.setViewMode === 'function') {
+        const targetIdx = (typeof pageIndex === 'number') ? pageIndex : (state.currentPageIndex || 0);
+        if (typeof window.openPageInSingleMode === 'function') {
+            window.openPageInSingleMode(targetIdx);
+        } else {
+            window.setViewMode('single');
+        }
+    }
+
+    // 2. Switch to target page if requested
+    if (typeof pageIndex === 'number' && pageIndex >= 0 && state.pages && pageIndex < state.pages.length) {
+        if (state.currentPageIndex !== pageIndex && typeof renderPage === 'function' && state.pages[pageIndex]) {
+            state.currentPageIndex = pageIndex;
+            renderPage(state.pages[pageIndex]);
+        }
+    }
+
+    // 3. Clear active selection so focus rests cleanly on the page canvas
+    state.selectedEl = null;
+    if (typeof window.clearSelectionOverlays === 'function') {
+        window.clearSelectionOverlays();
+    }
+    const floatBar = document.getElementById('float-toolbar');
+    if (floatBar) floatBar.style.display = 'none';
+
+    // 4. Centering and viewport positioning
+    const viewport = document.getElementById('viewport');
+    const paperEl = document.getElementById('paper');
+    if (!viewport || !paperEl) return;
+
+    // Reset pan offsets
+    paperEl.style.left = '';
+    paperEl.style.top = '';
+    if (paperEl.hasAttribute('tabindex')) {
+        paperEl.removeAttribute('tabindex');
+    }
+
+    // Reset viewport vertical scroll to top of document
+    viewport.scrollTop = 0;
+
+    // Fit page to viewport to calculate ideal optical scale for current DPI and paper size
+    if (typeof window.fitToPage === 'function') {
+        window.fitToPage();
+    }
+
+    if (typeof window.updateCanvasScrollBounds === 'function') {
+        window.updateCanvasScrollBounds();
+    }
+    viewport.scrollTop = 0;
+
+    // Synchronize all canvas overlays, rulers, and tools
+    if (typeof window.syncRulers === 'function') window.syncRulers();
+    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
+    if (window.minimapSystem && typeof window.minimapSystem.updateMinimap === 'function') {
+        window.minimapSystem.updateMinimap();
+    }
 };
 
 // Initialize handle scaling

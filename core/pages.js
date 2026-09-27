@@ -428,6 +428,7 @@ function handleNewDocument() {
         }
     } catch(e) {}
 
+    let currentPreset = defaultPreset;
     const initDims = ucs.getPresetDimensions(defaultPreset, activeUnit, activeDpi);
 
     const formHtml = `
@@ -557,6 +558,9 @@ function handleNewDocument() {
             if (typeof window.setPageFormatIcon === 'function') {
                 window.setPageFormatIcon(chosenFmt);
             }
+            if (typeof window.focusPage === 'function') {
+                window.focusPage(0);
+            }
             
             setTimeout(() => {
                 if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -568,7 +572,7 @@ function handleNewDocument() {
     setTimeout(() => {
         let currentUnit = activeUnit;
         let currentOrient = 'portrait';
-        let currentPreset = defaultPreset;
+        currentPreset = defaultPreset;
 
         const getDialogDpi = () => {
             const sel = document.getElementById('newdoc-dialog-dpi-select');

@@ -144,11 +144,14 @@ window.DashboardSystem = {
         } else {
             setPageSize(size);
             addNewPage();
+            if (typeof window.focusPage === 'function') {
+                window.focusPage(0);
+            }
         }
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=5.1.4')
+        fetch('elements/templates/template-index.json?v=5.1.7')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -569,6 +572,14 @@ window.DashboardSystem = {
                 renderPage(state.pages[state.currentPageIndex]);
                 if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
                 if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
+                if (typeof window.focusPage === 'function') {
+                    window.focusPage(state.currentPageIndex);
+                }
+                setTimeout(() => {
+                    if (typeof window.focusPage === 'function') {
+                        window.focusPage(state.currentPageIndex);
+                    }
+                }, 100);
                 if(window.minimapSystem) minimapSystem.updateMinimap();
                 updateTitleBar();
             };
