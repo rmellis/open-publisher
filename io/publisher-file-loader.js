@@ -56,13 +56,16 @@ window.handlePublisherFileLoad = (evt) => {
                 state._userExplicitRulerUnit = false;
             }
             
-            // Read Spreads state (or infer for legacy saves)
+            // Read Spreads state from saved metadata.
+            // isSpreadMode is always saved explicitly in modern .opub files.
+            // For legacy files that predate this field, default to false - do NOT
+            // infer from page width, as high-DPI pages (e.g. 300 DPI A4 = 2480px)
+            // would incorrectly exceed any pixel-width threshold.
             if (data.isSpreadMode !== undefined) {
-                state.isSpreadMode = data.isSpreadMode;
-            } else if (data.pages && data.pages.length > 0) {
-                const w = parseInt(data.pages[0].width) || 0;
-                state.isSpreadMode = w >= 1500; // Infer spreads if width is double standard
+                state.isSpreadMode = !!data.isSpreadMode;
             } else {
+                // Legacy file with no isSpreadMode field: always default to false.
+                // The user can toggle spreads manually if the document requires it.
                 state.isSpreadMode = false;
             }
             
