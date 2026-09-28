@@ -1862,10 +1862,10 @@ window.ContextRibbonSystem = {
                         </div>
                         <span class="ribbon-mini-label" style="margin-left:4px;">px</span>
                     </div>
-                    <div style="display:flex; align-items:center; margin-top:2px; cursor:pointer;" onclick="const cb = document.getElementById('ribbon-el-lock'); cb.checked = !cb.checked; ContextRibbonActions.toggleAspectLock(cb.checked);">
-                        <input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--ui-theme-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked); event.stopPropagation();">
-                        <span class="ribbon-mini-label" style="user-select:none;">Lock aspect ratio</span>
-                    </div>
+                    <label for="ribbon-el-lock" style="display:flex; align-items:center; margin-top:2px; cursor:pointer; user-select:none;">
+                        <input type="checkbox" id="ribbon-el-lock" style="margin:0 4px 0 0; cursor:pointer; accent-color: var(--ui-theme-color);" onchange="ContextRibbonActions.toggleAspectLock(this.checked);">
+                        <span class="ribbon-mini-label" style="user-select:none; cursor:pointer;">Lock aspect ratio</span>
+                    </label>
                 </div>
                 <div class="group-label">Size</div>
             </div>`;
