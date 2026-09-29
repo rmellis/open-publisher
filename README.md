@@ -369,7 +369,10 @@ chmod +x openpublisher-5.1.x-linux.run
 
 All package formats install cleanly, register `application/x-openpublisher` MIME types, and automatically refresh icon and desktop application caches.
 
-**Linux Emoji Support:** A bundled Noto Color Emoji font (COLRv1) ensures emoji characters render correctly even on Linux systems without a system emoji font installed. The font activates only for emoji codepoints, leaving all text rendering to system fonts.
+** Linux Emoji Support:** A bundled Noto Color Emoji font (COLRv1) ensures emoji characters render correctly even on Linux systems without a system emoji font installed. The font activates only for emoji codepoints, leaving all text rendering to system fonts.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/8145450f-8524-4f57-a656-e6654e792b4e" alt="Open Publisher on linux" width="720"/>
+</p>
 
 ### FreeBSD
 
@@ -377,6 +380,10 @@ Open Publisher V5 introduces an official native FreeBSD distribution:
 
 - **Standalone Package (`.pkg`)** - Self-contained FreeBSD package built on an Electron runtime bridge (`electron-preload.js`) that polyfills the entire NW.js API surface.
 - **Smooth 60 FPS Resizing** - Uses hardware-synchronized `requestAnimationFrame` hitboxes across 8 in-window perimeter points, eliminating legacy window manager stutter under X11.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/84bfcae0-50ad-4d19-8437-218ecdf29487" alt="Open Publisher on FreeBSD" width="720"/>
+</p>
 
 ---
 
@@ -387,13 +394,25 @@ Open Publisher V5 introduces an official native FreeBSD distribution:
 
 The V5 startup splash screen features an adaptive dual-theme design: a signature elevated teal radial gradient in default/light mode, and a deep studio slate with ambient cyan glow in dark mode. A live status console displays boot progress ("Initializing workspace... Loading publishing engine... Preparing canvas... Ready") during startup.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/aa256495-1a71-482c-b9f9-243af2c0c7ca" alt="Open Publisher Splash Screen" width="750"/>
+</p>
+
 ### First-Run Wizard
 
 On first launch, Open Publisher presents a glassmorphic 8-step interactive onboarding wizard. The wizard highlights key workspace areas including the Ribbon tools, WordArt gallery, free clipart stickers, ready-made templates, colour themes, and the `.opub` document format. Step pill navigation allows jumping directly to any slide. The wizard is also accessible by launching with `--firstrun`.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6f41fabb-84e5-4e6c-b9a5-3d8ccfd55e47" alt="Open Publisher FirstRun Screen" width="750"/>
+</p>
+
 ### Dashboard (Start Screen)
 
 The Dashboard greets you when no document is open, providing:
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9aac5200-b49f-45ba-966a-7d3577991e67" alt="Open Publisher Dashboard" width="750"/>
+</p>
 
 - **Recent Documents**: A visual grid of your last opened publications. Clicking any card restores the full document state including page size, DPI, unit, margins, ruler origin, and spread mode.
 - **New Document**: Opens the New Document dialog with format preset buttons, orientation toggle, unit selector, DPI picker, and a live canvas pixel preview.
