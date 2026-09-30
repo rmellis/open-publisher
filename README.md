@@ -413,7 +413,7 @@ The Dashboard greets you when no document is open, providing:
 ## The Interface and Workspace
 
 <p align="center">
-  <img src="docs/screenshots/windows_ribbon.png" alt="Open Publisher main window with ribbon and canvas" width="750"/>
+  <img src="https://github.com/user-attachments/assets/a4d2d3b6-e057-4acb-999d-352b4a2f5d78" alt="Open Publisher main window with ribbon and canvas" width="800"/>
 </p>
 
 The workspace is designed for uncluttered creative productivity:
@@ -480,6 +480,10 @@ Open Publisher V5 incorporates enterprise-grade protections to ensure your creat
   - Webview crashes are intercepted immediately; a replacement process launches automatically with the `--recovered` flag, presenting an interactive session restore modal and generating a diagnostic crash dump on the Desktop.
 - **Taskbar Progress Indication**:
   - The Windows taskbar button shows a live green progress bar during saves and document loads, matching the status bar glow animation.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/45faebcd-49d1-4dbd-9f39-de52ea45978d" alt="Atomic Save - Backup Manager" width="500"/>
+</p>
 
 ---
 
@@ -550,6 +554,10 @@ When a unit other than pixels is selected, the canvas rulers display tick marks 
 
 Page format and DPI are stored in `.opub` files as explicit metadata. When you reopen a saved 300 DPI A4 document, it loads at 300 DPI A4 - not at "Custom" 96 DPI.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f452cc56-7774-4493-80cb-8eace349f982" alt="dpi" width="439"/>
+</p>
+
 ---
 
 <a id="master-pages-and-themes"></a>
@@ -563,7 +571,7 @@ Page format and DPI are stored in `.opub` files as explicit metadata. When you r
 **Theme Studio** (Page Design ribbon) applies consistent visual styling across the entire document:
 
 <p align="center">
-  <img src="docs/screenshots/theme_studio.png" alt="Theme Studio with colour schemes and textured backgrounds" width="700"/>
+  <img src="https://github.com/user-attachments/assets/328080f0-34b6-4256-9736-3f4663df17eb" alt="Theme Studio with colour schemes and textured backgrounds" width="700"/>
 </p>
 
 - **Colour Schemes** - Classic, Pastel, Neon, Corporate. Shapes and elements dynamically update to match.
