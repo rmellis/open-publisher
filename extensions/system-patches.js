@@ -365,10 +365,28 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     return JSON.parse(dec.decode(decryptedContent));
 };
 
-    window.saveDocument = async function(isTemplate = false) {
-        
+    let _desktopBridgeActive = false;
+
+    function isDesktopEnvironment() {
+        return _desktopBridgeActive || 
+               !!(window.desktopIPC && window.desktopIPC.isDesktop) || 
+               !!window._opBridgeActive || 
+               (typeof navigator !== 'undefined' && (
+                   navigator.userAgent.includes('OpenPublisher') || 
+                   navigator.userAgent.includes('nwjs') || 
+                   navigator.userAgent.includes('Electron')
+               ));
+    }
+
+    async function masterSaveDocument(isTemplate = false) {
         // 1. Serialize the current page before saving
-        state.pages[state.currentPageIndex] = serializeCurrentPage();
+        const isDashOpen = () => {
+            const dash = document.getElementById('dashboard-overlay');
+            return dash && window.getComputedStyle(dash).display !== 'none';
+        };
+        if (typeof serializeCurrentPage === 'function' && !isDashOpen()) {
+            try { state.pages[state.currentPageIndex] = serializeCurrentPage(); } catch(e) {}
+        }
         
         const firstPage = state.pages[0] || {};
         const curDpi = state.dpi || (firstPage && firstPage.dpi) || 96;
@@ -393,7 +411,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         });
         
         // Get the current title from the UI
-        const currentTitle = document.getElementById('doc-title').innerText || 'Publication1';
+        const titleEl = document.getElementById('doc-title');
+        const currentTitle = titleEl ? titleEl.innerText.replace(/ \*$/, '') : 'Publication1';
         
         const docData = {
             title: currentTitle,
@@ -433,6 +452,17 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Encryption Error', 'Failed to encrypt document: ' + err.message);
                 return;
             }
+        }
+
+        // DESKTOP WRAPPER PATH:
+        // Safely bridges directly to wrapper.html atomicSave with full AES-GCM encryption & rich metadata
+        if (isDesktopEnvironment()) {
+            if (typeof window._updateDirtyBaseline === 'function') {
+                try { window._updateDirtyBaseline(); } catch(e) {}
+            }
+            const payloadStr = JSON.stringify(savePayload);
+            console.log('OP_IPC:' + JSON.stringify({ type: 'OP_SAVE_DATA', payload: payloadStr }));
+            return;
         }
         
         const blob = new Blob([JSON.stringify(savePayload)], {type: 'application/json'});
@@ -489,9 +519,71 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             // Clean up the memory leak 
             setTimeout(() => URL.revokeObjectURL(a.href), 100);
         }
-    };
+    }
+
+    // Previous Versions snapshot extractor with full encryption support
+    async function masterExtractSnapshot(isManual) {
+        if (typeof state === 'undefined' || !state.pages) return;
+        const isDashOpen = () => {
+            const dash = document.getElementById('dashboard-overlay');
+            return dash && window.getComputedStyle(dash).display !== 'none';
+        };
+        if (typeof serializeCurrentPage === 'function' && !isDashOpen()) {
+            try { state.pages[state.currentPageIndex] = serializeCurrentPage(); } catch(e) {}
+        }
+        const titleEl = document.getElementById('doc-title');
+        const docTitle = titleEl ? titleEl.innerText.replace(/ \*$/, '') : 'Publication';
+        const docData = { title: docTitle, pages: state.pages };
+        let payload = docData;
+        if (state.documentPassword && typeof window.encryptDocumentData === 'function') {
+            try {
+                payload = await window.encryptDocumentData(docData, state.documentPassword);
+            } catch(e) {}
+        }
+        console.log('OP_IPC:' + JSON.stringify({ 
+            type: 'OP_PERIODIC_VERSION_DATA', 
+            payload: JSON.stringify(payload),
+            isManual: !!isManual 
+        }));
+    }
+
+    // Protect window.saveDocument and window.extractDocumentSnapshot from being hijacked
+    // by desktop wrapper scripts that lack encryption & metadata support:
+    try {
+        Object.defineProperty(window, 'saveDocument', {
+            get: function() {
+                return masterSaveDocument;
+            },
+            set: function(newFn) {
+                // When wrapper.html runs: window.saveDocument = function() { ... }
+                // We intercept the assignment, record that the desktop bridge is active,
+                // and retain our secure masterSaveDocument with AES-GCM encryption & full metadata.
+                _desktopBridgeActive = true;
+                console.log("OpenPublisher: Desktop save bridge connected securely with encryption support.");
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } catch(e) {
+        window.saveDocument = masterSaveDocument;
+    }
+
+    try {
+        Object.defineProperty(window, 'extractDocumentSnapshot', {
+            get: function() {
+                return masterExtractSnapshot;
+            },
+            set: function(newFn) {
+                _desktopBridgeActive = true;
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } catch(e) {
+        window.extractDocumentSnapshot = masterExtractSnapshot;
+    }
     
-    console.log("✅ Modern Save System with Title Sync installed.");
+    console.log("✅ Modern Secure Save System with Title Sync & Desktop Encryption Bridge installed.");
 })();
 
 

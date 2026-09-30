@@ -274,23 +274,11 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 ---
 
-<details>
-<summary>📋 Incremental version history (5.1.0 - 5.1.9)</summary>
-
-| Version | Change |
-|---|---|
-| **5.1.0** | Foundation release: atomic saves, Previous Versions, Backup Manager, Clipboard Scrapbook, unified clipboard engine, offline spellcheck, First-Run Wizard, FreeBSD/Linux Flatpak, 8GB memory uncap, auxiliary windows |
-| **5.1.1** | Bulk image import: multi-file select/drop, single-page or per-image-page dialog, sequential async pipeline |
-| **5.1.2** | Fixed multi-page batch import not triggering inside NW.js; in-memory page generation for 20+ image batches |
-| **5.1.3** | Fixed page preview outlines bleeding behind the ribbon bar on many-page documents |
-| **5.1.4** | Physical units (cm/mm/in/px), DPI selector (72/96/140/150/300/custom), zero-spillage 300 DPI print engine, upgraded New Document and Resize dialogs |
-| **5.1.5** | Multi-Page Overview decoupled from zoom; explicit toggle; keyboard navigation (Arrow/Enter/Escape); rulers suppressed in overview |
-| **5.1.6** | Page format and DPI stored as document metadata; full state restored from Recent Files; status bar DPI badge sync |
-| **5.1.7** | Automatic page centering on load; full horizontal scrollbars at all zoom levels; canvas focus outline removed |
-| **5.1.8** | Lock Aspect Ratio checkbox race condition fixed; single click on checkbox or label reliably toggles |
-| **5.1.9** | Spread mode stored as document metadata; high-DPI documents no longer incorrectly open with spreads enabled |
-
-</details>
+> ### 📦 Release Notes & Version History
+> Looking for detailed changelogs, patch notes, or download binaries for previous and current versions?
+> Every release is documented in detail with installer and asset downloads on GitHub:
+>
+> 🚀 **[View All Releases & Full Changelogs on GitHub](https://github.com/rmellis/open-publisher/releases)**
 
 ---
 

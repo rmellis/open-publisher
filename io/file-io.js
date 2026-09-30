@@ -1,5 +1,4 @@
-
-function saveDocument() {
+window.saveDocument = function() {
     state.pages[state.currentPageIndex] = serializeCurrentPage();
     const firstPage = state.pages[0] || {};
     const curDpi = state.dpi || (firstPage && firstPage.dpi) || 96;
@@ -73,7 +72,11 @@ window.saveDocumentAs = function() {
         const input = document.getElementById('save-as-filename');
         if (input && input.value.trim() !== '') {
             document.getElementById('doc-title').innerText = input.value.trim();
-            saveDocument();
+            if (typeof window.saveDocument === 'function') {
+                window.saveDocument();
+            } else {
+                saveDocument();
+            }
         }
     }, false, 'Save As');
 };
