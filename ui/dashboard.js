@@ -151,7 +151,7 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=5.1.11')
+        fetch('elements/templates/template-index.json?v=5.1.12')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
