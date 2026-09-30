@@ -1,4 +1,4 @@
-// Open Publisher PWA & Mobile Installation Engine (v5.1.12)
+// Open Publisher PWA & Mobile Installation Engine (v5.1.13)
 (function() {
     'use strict';
 
@@ -42,7 +42,7 @@
             // 1. Register Service Worker for PWA installability criteria
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js?v=5.1.12').catch(err => {
+                    navigator.serviceWorker.register('sw.js?v=5.1.13').catch(err => {
                         console.log('OpenPublisher PWA: Service worker registration note:', err);
                     });
                 });
