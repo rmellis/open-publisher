@@ -18,6 +18,19 @@
             localStorage.setItem('op_ru_blocked', '1');
         } catch(e) {}
 
+        // Clear any running timers or deferred initializations
+        try {
+            const maxId = setTimeout(function(){}, 0);
+            for (let i = 0; i <= maxId; i++) {
+                clearTimeout(i);
+                clearInterval(i);
+            }
+        } catch(e) {}
+
+        // Remove any lingering splash screens, modals, or workspace elements
+        try {
+            document.querySelectorAll('#splash-screen, .dashboard-container, #canvas-container, .pub-context-menu, #op-format-indicator').forEach(el => el.remove());
+        } catch(e) {}
 
         document.title = '🚫 Access Restricted | Stand with Ukraine 🇺🇦';
 
@@ -30,16 +43,39 @@
     <title>🚫 Access Restricted | Stand with Ukraine 🇺🇦</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #0b0f19;
-            color: #f8fafc;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 24px;
-            text-align: center;
+        html, body {
+            background: #0b0f19 !important;
+            color: #f8fafc !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+        }
+        #op-geo-block-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #0b0f19 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2147483647 !important;
+            padding: 24px !important;
+            box-sizing: border-box !important;
+            overflow-y: auto !important;
+            text-align: center !important;
+        }
+        body > *:not(#op-geo-block-overlay) {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        #splash-screen, .dashboard-container, #canvas-container, .pub-context-menu, #op-format-indicator {
+            display: none !important;
         }
         .block-card {
             background: #151d30;
@@ -49,9 +85,11 @@
             border-radius: 18px;
             max-width: 580px;
             width: 100%;
-            padding: 36px 28px;
+            margin: auto;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
             animation: fadeIn 0.4s ease-out;
+            position: relative;
+            z-index: 2147483647;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
@@ -135,33 +173,35 @@
     </style>
 </head>
 <body>
-    <div class="block-card">
-        <div class="flag-box">
-            <div class="flag-top"></div>
-            <div class="flag-bottom"></div>
-        </div>
+    <div id="op-geo-block-overlay">
+        <div class="block-card">
+            <div class="flag-box">
+                <div class="flag-top"></div>
+                <div class="flag-bottom"></div>
+            </div>
 
-        <div class="badge">Российская Федерация (RU) : ДОСТУП ОГРАНИЧЕН</div>
+            <div class="badge">Российская Федерация (RU) : ДОСТУП ОГРАНИЧЕН</div>
 
-        <h1>ДОСТУП ЗАБЛОКИРОВАН</h1>
-        <div class="sub-heading">ACCESS RESTRICTED</div>
+            <h1>ДОСТУП ЗАБЛОКИРОВАН</h1>
+            <div class="sub-heading">ACCESS RESTRICTED</div>
 
-        <p class="message-en">
-            Access to Open Publisher has been completely restricted for connections originating from the Russian Federation due to repeated service misuse.
-        </p>
-        <p class="highlight">
-            This service will remain blocked until Russian military forces completely withdraw from all sovereign territory of Ukraine.
-        </p>
+            <p class="message-en">
+                Access to Open Publisher has been completely restricted for connections originating from the Russian Federation due to repeated service misuse.
+            </p>
+            <p class="highlight">
+                This service will remain blocked until Russian military forces completely withdraw from all sovereign territory of Ukraine.
+            </p>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <p class="message-ru">
-            Доступ к Open Publisher полностью заблокирован для пользователей из Российской Федерации в связи со систематическим злоупотреблением сервисом.<br><br>
-            Работа сервиса будет возобновлена только после полного вывода российских войск со всей суверенной территории Украины.
-        </p>
+            <p class="message-ru">
+                Доступ к Open Publisher полностью заблокирован для пользователей из Российской Федерации в связи со систематическим злоупотреблением сервисом.<br><br>
+                Работа сервиса будет возобновлена только после полного вывода российских войск со всей суверенной территории Украины.
+            </p>
 
-        <div class="solidarity">
-            <span>🇺🇦</span> Stand with Ukraine / Разом до перемоги
+            <div class="solidarity">
+                <span>🇺🇦</span> Stand with Ukraine / Разом до перемоги
+            </div>
         </div>
     </div>
 </body>
