@@ -1,4 +1,4 @@
-﻿/* =========================================================================
+/* =========================================================================
    ADD-ON: WORDART ENGINE v6.0 (Screenshot UI Match, 200 Styles, Select Logic)
    Bakes complex text effects into pure PNG images. Matches the native UI 
    banner design, makes modal smoothly draggable, and fixes the Arch-Down bug.
@@ -9,10 +9,10 @@
     // 1. (Native Ribbon UI defined in index.html)
 
     // 2. The Core Canvas Rendering Engine
-    const generateWordArtPNG = async (text, styleId) => {
+    const generateWordArtPNG = async (text, styleId, isPreview = false) => {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             
             const baseFont = '900 130px "Arial Black", Impact, sans-serif';
             ctx.font = baseFont;
@@ -943,6 +943,23 @@
             };
 
             const finalCanvas = trimCanvas(canvas);
+            if (isPreview) {
+                const maxW = 240;
+                const maxH = 70;
+                const scale = Math.min(maxW / finalCanvas.width, maxH / finalCanvas.height, 1.0);
+                const thumbW = Math.max(1, Math.round(finalCanvas.width * scale));
+                const thumbH = Math.max(1, Math.round(finalCanvas.height * scale));
+
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = thumbW;
+                thumbCanvas.height = thumbH;
+                const tctx = thumbCanvas.getContext('2d');
+                tctx.imageSmoothingEnabled = true;
+                tctx.imageSmoothingQuality = 'medium';
+                tctx.drawImage(finalCanvas, 0, 0, thumbW, thumbH);
+                resolve(thumbCanvas.toDataURL('image/png'));
+                return;
+            }
             resolve(finalCanvas.toDataURL('image/png'));
         });
     };
@@ -1035,6 +1052,28 @@
                     box-shadow: 0 4px 8px rgba(0, 118, 112, 0.15);
                 }
 
+                /* Skeleton Loader for Lazy Loading */
+                .beta-wa-skeleton {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: betaWaSkeletonShimmer 1.5s infinite;
+                    border-radius: 8px;
+                    color: #94a3b8;
+                    font-size: 11px;
+                    font-weight: 600;
+                    font-family: 'Segoe UI', sans-serif;
+                    user-select: none;
+                }
+                @keyframes betaWaSkeletonShimmer {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+
                 /* Custom Footer */
                 .wa-modal-footer {
                     padding: 10px 20px;
@@ -1099,47 +1138,140 @@
         if (!grid) {
             grid = document.createElement('div');
             grid.id = 'beta-wa-grid';
+            grid.dataset.selectedId = '1';
             // Put it in safe zone immediately
             const safeZone = document.getElementById('modal-safe-zone');
             if (safeZone) safeZone.appendChild(grid);
             
-            // Build previews ONLY ONCE!
-            const renderPreviews = async () => {
-                for(let i = 1; i <= 500; i++) {
-                    const btn = document.createElement('div');
-                    btn.className = 'beta-wa-card' + (i === 1 ? ' selected' : '');
-                    
-                    // Generate canvases without blocking the main thread!
-                    generateWordArtPNG("WordArt", i).then(previewData => {
-                        btn.innerHTML = `<img src="${previewData}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
-                    });
-                    
-                    btn.onclick = () => {
-                        grid.querySelectorAll('.beta-wa-card').forEach(c => c.classList.remove('selected'));
-                        btn.classList.add('selected');
-                        grid.dataset.selectedId = i;
-                    };
-                    
-                    btn.ondblclick = () => {
-                        grid.dataset.selectedId = i;
-                        document.getElementById('wa-btn-ok').click();
-                    };
-                    
-                    grid.appendChild(btn);
-                    
-                    // Yield control to the browser every 10 items to prevent UI freezing
-                    if (i % 10 === 0) {
-                        await new Promise(r => setTimeout(r, 0));
-                    }
-                }
-            };
-            renderPreviews();
+            // Build all 500 card frames instantly with skeleton placeholders
+            for (let i = 1; i <= 500; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'beta-wa-card' + (i === 1 ? ' selected' : '');
+                btn.dataset.styleId = i;
+                btn.innerHTML = `<div class="beta-wa-skeleton"><span class="beta-wa-num">Style ${i}</span></div>`;
+                
+                btn.onclick = () => {
+                    grid.querySelectorAll('.beta-wa-card').forEach(c => c.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    grid.dataset.selectedId = i;
+                };
+                
+                btn.ondblclick = () => {
+                    grid.dataset.selectedId = i;
+                    const okBtn = document.getElementById('wa-btn-ok');
+                    if (okBtn) okBtn.click();
+                };
+                
+                grid.appendChild(btn);
+            }
         }
 
         DialogSystem.show('', uiHTML, null, true);
         
         const container = document.getElementById('beta-wa-grid-container');
         if (container && grid) container.appendChild(grid);
+
+        // In-Memory Preview Cache
+        window._betaWAPreviewCache = window._betaWAPreviewCache || new Map();
+
+        // Helper to render card preview
+        const renderCard = (card) => {
+            if (!card || card.dataset.rendered === 'true' || card.dataset.rendering === 'true') return;
+            const styleId = parseInt(card.dataset.styleId);
+            if (!styleId) return;
+
+            if (window._betaWAPreviewCache.has(styleId)) {
+                const previewData = window._betaWAPreviewCache.get(styleId);
+                card.innerHTML = `<img src="${previewData}" alt="WordArt Style ${styleId}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
+                card.dataset.rendered = 'true';
+                return;
+            }
+
+            card.dataset.rendering = 'true';
+            generateWordArtPNG("WordArt", styleId, true).then(previewData => {
+                window._betaWAPreviewCache.set(styleId, previewData);
+                card.innerHTML = `<img src="${previewData}" alt="WordArt Style ${styleId}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
+                card.dataset.rendered = 'true';
+                delete card.dataset.rendering;
+            }).catch(err => {
+                console.warn(`WordArt preview error for style ${styleId}:`, err);
+                delete card.dataset.rendering;
+            });
+        };
+
+        // Disconnect existing observer if open was previously triggered
+        if (window._waObserver) {
+            window._waObserver.disconnect();
+        }
+
+        // Viewport-Aware Lazy Loading via IntersectionObserver
+        if (container && 'IntersectionObserver' in window) {
+            window._waObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const card = entry.target;
+                        renderCard(card);
+                        obs.unobserve(card);
+                    }
+                });
+            }, {
+                root: container,
+                rootMargin: '250px 0px 250px 0px',
+                threshold: 0.01
+            });
+
+            grid.querySelectorAll('.beta-wa-card:not([data-rendered="true"])').forEach(c => {
+                window._waObserver.observe(c);
+            });
+        } else {
+            // Immediate fallback
+            grid.querySelectorAll('.beta-wa-card:not([data-rendered="true"])').forEach(c => {
+                renderCard(c);
+            });
+        }
+
+        // Idle Pre-Warming: Render off-screen styles in idle slices
+        const startIdlePrewarm = () => {
+            if (window._waPrewarmActive) return;
+            window._waPrewarmActive = true;
+            let currentId = 1;
+
+            const prewarmStep = () => {
+                let processed = 0;
+                while (currentId <= 500 && processed < 2) {
+                    const id = currentId++;
+                    if (!window._betaWAPreviewCache.has(id)) {
+                        processed++;
+                        generateWordArtPNG("WordArt", id, true).then(previewData => {
+                            window._betaWAPreviewCache.set(id, previewData);
+                            const card = grid.querySelector(`.beta-wa-card[data-style-id="${id}"]`);
+                            if (card && card.dataset.rendered !== 'true') {
+                                card.innerHTML = `<img src="${previewData}" alt="WordArt Style ${id}" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;">`;
+                                card.dataset.rendered = 'true';
+                                if (window._waObserver) window._waObserver.unobserve(card);
+                            }
+                        }).catch(() => {});
+                    }
+                }
+
+                if (currentId <= 500) {
+                    if (window.requestIdleCallback) {
+                        requestIdleCallback(prewarmStep, { timeout: 1000 });
+                    } else {
+                        setTimeout(prewarmStep, 30);
+                    }
+                } else {
+                    window._waPrewarmActive = false;
+                }
+            };
+
+            if (window.requestIdleCallback) {
+                requestIdleCallback(prewarmStep, { timeout: 1000 });
+            } else {
+                setTimeout(prewarmStep, 30);
+            }
+        };
+        startIdlePrewarm();
 
         // 🛠️ Updated Drag Logic
         setTimeout(() => {

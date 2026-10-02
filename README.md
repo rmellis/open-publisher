@@ -78,7 +78,7 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
   </td>
   <td align="center" valign="top">
     <img src="https://github.com/user-attachments/assets/07153a3f-cf3b-489e-98d3-418bf3b0ea1d" width="48" height="48" alt="Web"/><br/>
-    <a href="https://app.openpublisher.app"><strong>Open in Browser</strong></a><br/>
+    <a href="https://openpublisher.app"><strong>Open in Browser</strong></a><br/>
     <sub>No install required, but slightly less features</sub>
   </td>
 </tr>
@@ -351,8 +351,8 @@ Open Publisher is packaged in five formats for universal Linux distribution acro
 
 **Installing via `.run` script:**
 ```bash
-chmod +x openpublisher-5.1.x-linux.run
-./openpublisher-5.1.x-linux.run
+chmod +x openpublisher-5.2.x-linux.run
+./openpublisher-5.2.x-linux.run
 ```
 
 All package formats install cleanly, register `application/x-openpublisher` MIME types, and automatically refresh icon and desktop application caches.
