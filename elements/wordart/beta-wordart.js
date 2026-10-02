@@ -1354,6 +1354,7 @@
                     img.src = finalImgData;
                     img.setAttribute('data-beta-wa-text', finalStr);
                     img.setAttribute('data-beta-wa-style', styleId);
+                    img.style.objectFit = 'fill';
                 }
             } else {
                 const img = new Image();
@@ -1370,7 +1371,7 @@
                     
                     el.innerHTML = `
                         <div class="element-content">
-                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:contain; position:absolute; top:0; left:0;">
+                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:fill; position:absolute; top:0; left:0;">
                         </div>
                         <div class="resize-handle rh-nw" data-dir="nw"></div>
                         <div class="resize-handle rh-n" data-dir="n"></div>

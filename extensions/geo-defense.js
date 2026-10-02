@@ -1,4 +1,4 @@
-// Open Publisher Geographic Access Control & Defense Engine (v5.2.0)
+// Open Publisher Geographic Access Control & Defense Engine (v5.2.1)
 (function() {
     'use strict';
 

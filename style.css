@@ -276,6 +276,16 @@ body.dark-mode .wa-modal-input::placeholder {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
+/* Beta WordArt Canvas Element WYSIWYG Parity */
+.beta-wa-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: fill !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 /* About Dialog Overrides */
 body.dark-mode .custom-dialog .about-container { color: var(--ui-text) !important; }
 body.dark-mode .custom-dialog .about-subtitle { color: color-mix(in srgb, var(--ui-text) 70%, transparent) !important; }

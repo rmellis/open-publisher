@@ -276,6 +276,22 @@ window.handleMouseMove = function(e) {
             if (d.dir.includes('s')) rawH = d.h + dy;
             else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
 
+            // PROPORTIONAL CORNER RESIZE (Shift key or data-aspect-lock)
+            const isAspectLocked = e.shiftKey || (state.selectedEl && state.selectedEl.getAttribute('data-aspect-lock') === 'true');
+            const isCorner = d.dir === 'nw' || d.dir === 'ne' || d.dir === 'se' || d.dir === 'sw';
+            if (isAspectLocked && isCorner && d.w > 0 && d.h > 0) {
+                const aspect = d.w / d.h;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    const targetH = rawW / aspect;
+                    if (d.dir.includes('n')) newT = d.t + (d.h - targetH);
+                    rawH = targetH;
+                } else {
+                    const targetW = rawH * aspect;
+                    if (d.dir.includes('w')) newL = d.l + (d.w - targetW);
+                    rawW = targetW;
+                }
+            }
+
             // TABLE & MIN-BOUNDS CLAMPING
             // Enforce minimum width/height so tables cannot be squished past their physical bounds
             if (d.minW !== undefined && rawW < d.minW) {
