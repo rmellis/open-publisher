@@ -693,6 +693,13 @@ window.setZoom = function(z) {
     }
     const display = document.getElementById('zoom-level-display');
     if (display) display.textContent = Math.round(z * 100) + '%';
+
+    if (window._zoomWaTimer) clearTimeout(window._zoomWaTimer);
+    window._zoomWaTimer = setTimeout(() => {
+        if (typeof window.upgradeAllCanvasWordArt === 'function') {
+            window.upgradeAllCanvasWordArt(paperEl);
+        }
+    }, 200);
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
 };

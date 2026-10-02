@@ -106,9 +106,15 @@ function serializeCurrentPage() {
         data.p3d = content ? content.getAttribute('data-3d-p') : null;
         const img = content ? content.querySelector('img') : null;
         const shapeDiv = content ? content.querySelector('div') : null;
-        const isTrueImage = img && (data.type === 'image' || data.type === 'emoji' || (content.children.length === 1 && content.children[0].tagName === 'IMG'));
+        const isBetaWordArt = img && (img.classList.contains('beta-wa-img') || img.hasAttribute('data-beta-wa-text') || data.type === 'beta-wordart');
+        const isTrueImage = !isBetaWordArt && img && (data.type === 'image' || data.type === 'emoji' || (content.children.length === 1 && content.children[0].tagName === 'IMG'));
 
-        if (isTrueImage) {
+        if (isBetaWordArt) {
+            data.type = 'beta-wordart';
+            data.waText = img.getAttribute('data-beta-wa-text') || '';
+            data.waStyle = img.getAttribute('data-beta-wa-style') || '';
+            data.innerHTML = content ? content.innerHTML : '';
+        } else if (isTrueImage) {
             data.imgSrc = img.src;
             data.altText = img.alt || '';
             const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';

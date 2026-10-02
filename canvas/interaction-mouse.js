@@ -342,6 +342,14 @@ window.handleMouseMove = function(e) {
             }
             state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
             if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
+            if(state.selectedEl && state.selectedEl.querySelector('.beta-wa-img')) {
+                if (window._waResizeTimer) clearTimeout(window._waResizeTimer);
+                window._waResizeTimer = setTimeout(() => {
+                    if (state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(state.selectedEl);
+                    }
+                }, 40);
+            }
         }
         if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
@@ -371,6 +379,19 @@ window.handleMouseUp = function() {
             }
         }
     } else if(state.dragMode) {
+        if (state.dragMode === 'resize') {
+            if (window._waResizeTimer) { clearTimeout(window._waResizeTimer); window._waResizeTimer = null; }
+            if (state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+                window.refreshBetaWordArt(state.selectedEl);
+            }
+            if (state.dragData && state.dragData.multi) {
+                state.dragData.multi.forEach(item => {
+                    if (item.el && typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(item.el);
+                    }
+                });
+            }
+        }
         setTimeout(() => { if(typeof updateThumbnails === 'function') updateThumbnails(); }, 50);
         if(typeof pushHistory === 'function') pushHistory();
         if(state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0) && typeof showFloatToolbar === 'function') showFloatToolbar();

@@ -226,6 +226,7 @@ function renderPage(pageData) {
     if (typeof window.syncRulers === 'function') window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
+    if (typeof window.upgradeAllCanvasWordArt === 'function') window.upgradeAllCanvasWordArt(paper);
 }
 
 // --- HISTORY MANAGEMENT ---

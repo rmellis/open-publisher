@@ -9,15 +9,32 @@
     // 1. (Native Ribbon UI defined in index.html)
 
     // 2. The Core Canvas Rendering Engine
-    const generateWordArtPNG = async (text, styleId, isPreview = false) => {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            
-            const baseFont = '900 130px "Arial Black", Impact, sans-serif';
-            ctx.font = baseFont;
-            
-            const totalWidth = ctx.measureText(text).width;
+    const highResWordArtCache = new Map();
+    const baselineDimCache = new Map();
+
+    const renderWordArtCanvasSync = (text, styleId, isPreview = false, scaleFactor = 1.0, scaleFactorY = null) => {
+        let safeScaleX = 1.0;
+        let safeScaleY = 1.0;
+        if (scaleFactorY !== null && scaleFactorY !== undefined) {
+            safeScaleX = Math.max(0.5, Math.min(12.0, parseFloat(scaleFactor) || 1.0));
+            safeScaleY = Math.max(0.5, Math.min(18.0, parseFloat(scaleFactorY) || 1.0));
+        } else {
+            const uniform = Math.max(0.5, Math.min(12.0, parseFloat(scaleFactor) || 1.0));
+            safeScaleX = uniform;
+            safeScaleY = uniform;
+        }
+        const cacheKey = `${text}__${styleId}__${isPreview}__${safeScaleX.toFixed(2)}__${safeScaleY.toFixed(2)}`;
+        if (highResWordArtCache.has(cacheKey)) {
+            return highResWordArtCache.get(cacheKey);
+        }
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        const baseFont = '900 130px "Arial Black", Impact, sans-serif';
+        ctx.font = baseFont;
+        
+        const totalWidth = ctx.measureText(text).width;
             
             // Defines which styles render on a curve (Arch Up / Arch Down) or Circle
             const archUpStyles = [5, 19, 30, 37, 45, 51, 62, 73, 87, 97, 105, 112, 125, 137, 145, 158, 163, 172, 188, 199];
@@ -45,20 +62,14 @@
                 angleSpan = Math.PI * 2;
                 cWidth = (actualRadius * 2) + 300;
                 cHeight = (actualRadius * 2) + 300;
-                canvas.width = cWidth;
-                canvas.height = cHeight;
                 arcCenterY = cHeight / 2;
             } else if (isWavy) {
                 cWidth = totalWidth + 280;
                 cHeight = 400;
-                canvas.width = cWidth;
-                canvas.height = cHeight;
                 arcCenterY = cHeight / 2;
             } else if (isZigZag || isTriangle) {
                 cWidth = totalWidth + 280;
                 cHeight = 480;
-                canvas.width = cWidth;
-                canvas.height = cHeight;
                 arcCenterY = cHeight / 2;
             } else if (isCurved) {
                 actualRadius = Math.max(250, totalWidth / (Math.PI * 0.7)); 
@@ -69,19 +80,18 @@
                 cWidth = (2 * actualRadius * Math.sin(angleSpan / 2)) + 280;
                 cHeight = sagitta + 360; 
                 
-                canvas.width = cWidth;
-                canvas.height = cHeight;
-                
                 const cy = cHeight / 2;
                 const midpointOffset = (actualRadius + actualRadius * Math.cos(angleSpan / 2)) / 2;
                 arcCenterY = isArchUp ? (cy + midpointOffset) : (cy - midpointOffset);
-            } else {
-                canvas.width = cWidth;
-                canvas.height = cHeight;
             }
             
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            canvas.width = Math.max(1, Math.round(cWidth * safeScaleX));
+            canvas.height = Math.max(1, Math.round(cHeight * safeScaleY));
+            
+            ctx.scale(safeScaleX, safeScaleY);
+            
+            const cx = cWidth / 2;
+            const cy = cHeight / 2;
             
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -93,8 +103,10 @@
                     ctx.font = layer.font || baseFont;
                     
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
 
                     if (layer.stroke) {
@@ -121,8 +133,10 @@
                     ctx.font = layer.font || baseFont;
                     
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
                     
                     let fillStyle = layer.fill;
@@ -171,8 +185,10 @@
                     ctx.font = layer.font || baseFont;
                     
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
                     
                     let fillStyle = layer.fill;
@@ -219,8 +235,10 @@
                     ctx.save();
                     ctx.font = layer.font || baseFont;
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     }
                     let fillStyle = layer.fill;
                     if (layer.gradient) {
@@ -269,8 +287,10 @@
                     ctx.save();
                     ctx.font = layer.font || baseFont;
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     }
                     let fillStyle = layer.fill;
                     let currentPos = 0;
@@ -317,8 +337,10 @@
                     ctx.font = layer.font || baseFont;
                     
                     if (layer.shadow) {
-                        ctx.shadowColor = layer.shadow.color; ctx.shadowBlur = layer.shadow.blur;
-                        ctx.shadowOffsetX = layer.shadow.x; ctx.shadowOffsetY = layer.shadow.y;
+                        ctx.shadowColor = layer.shadow.color; 
+                        ctx.shadowBlur = layer.shadow.blur;
+                        ctx.shadowOffsetX = layer.shadow.x; 
+                        ctx.shadowOffsetY = layer.shadow.y;
                     } else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
                     
                     let fillStyle = layer.fill;
@@ -925,12 +947,13 @@
                     if (found) break;
                 }
                 
-                // Add 10px safe padding
-                const pad = 10;
-                top = Math.max(0, top - pad);
-                bottom = Math.min(height, bottom + pad);
-                left = Math.max(0, left - pad);
-                right = Math.min(width, right + pad);
+                // Add safe padding scaled with resolution
+                const padX = Math.round(10 * safeScaleX);
+                const padY = Math.round(10 * safeScaleY);
+                top = Math.max(0, top - padY);
+                bottom = Math.min(height, bottom + padY);
+                left = Math.max(0, left - padX);
+                right = Math.min(width, right + padX);
                 
                 const trimW = right - left;
                 const trimH = bottom - top;
@@ -943,6 +966,17 @@
             };
 
             const finalCanvas = trimCanvas(canvas);
+
+            // Cache unscaled baseline dimensions for this text and style
+            const baseDimKey = `${text}__${styleId}`;
+            if (!baselineDimCache.has(baseDimKey)) {
+                baselineDimCache.set(baseDimKey, {
+                    width: Math.max(1, Math.round(finalCanvas.width / safeScaleX)),
+                    height: Math.max(1, Math.round(finalCanvas.height / safeScaleY))
+                });
+            }
+
+            let resultDataUrl = '';
             if (isPreview) {
                 const maxW = 240;
                 const maxH = 70;
@@ -957,10 +991,90 @@
                 tctx.imageSmoothingEnabled = true;
                 tctx.imageSmoothingQuality = 'medium';
                 tctx.drawImage(finalCanvas, 0, 0, thumbW, thumbH);
-                resolve(thumbCanvas.toDataURL('image/png'));
-                return;
+                resultDataUrl = thumbCanvas.toDataURL('image/png');
+            } else {
+                resultDataUrl = finalCanvas.toDataURL('image/png');
             }
-            resolve(finalCanvas.toDataURL('image/png'));
+
+            highResWordArtCache.set(cacheKey, resultDataUrl);
+            if (highResWordArtCache.size > 200) {
+                highResWordArtCache.delete(highResWordArtCache.keys().next().value);
+            }
+            return resultDataUrl;
+    };
+
+    const generateWordArtPNG = async (text, styleId, isPreview = false, scaleFactor = 1.0, scaleFactorY = null) => {
+        return renderWordArtCanvasSync(text, styleId, isPreview, scaleFactor, scaleFactorY);
+    };
+
+    window.renderWordArtCanvasSync = renderWordArtCanvasSync;
+    window.generateWordArtPNG = generateWordArtPNG;
+
+    window.refreshBetaWordArt = function(el) {
+        if (!el) return;
+        const waImg = el.querySelector('.beta-wa-img');
+        if (!waImg) return;
+        const text = waImg.getAttribute('data-beta-wa-text');
+        const styleId = parseInt(waImg.getAttribute('data-beta-wa-style'), 10);
+        if (!text || !styleId || typeof window.renderWordArtCanvasSync !== 'function') return;
+
+        const dispW = parseFloat(el.style.width) || el.offsetWidth || 500;
+        const dispH = parseFloat(el.style.height) || el.offsetHeight || 120;
+
+        // Retrieve unscaled baseline dimensions
+        let baseW = parseFloat(el.getAttribute('data-beta-wa-basew'));
+        let baseH = parseFloat(el.getAttribute('data-beta-wa-baseh'));
+        if (!baseW || !baseH) {
+            const baseDimKey = `${text}__${styleId}`;
+            if (baselineDimCache.has(baseDimKey)) {
+                const cached = baselineDimCache.get(baseDimKey);
+                baseW = cached.width;
+                baseH = cached.height;
+            } else {
+                window.renderWordArtCanvasSync(text, styleId, false, 1.0, 1.0);
+                if (baselineDimCache.has(baseDimKey)) {
+                    const cached = baselineDimCache.get(baseDimKey);
+                    baseW = cached.width;
+                    baseH = cached.height;
+                } else {
+                    baseW = 600;
+                    baseH = 130;
+                }
+            }
+            if (baseW && baseH) {
+                el.setAttribute('data-beta-wa-basew', baseW);
+                el.setAttribute('data-beta-wa-baseh', baseH);
+            }
+        }
+
+        const dpr = Math.max(1.0, window.devicePixelRatio || 1);
+        const supersample = Math.max(3.0, dpr * 1.5); // 3.0x to 4.5x density
+
+        // Target pixel dimensions guaranteed across screen DPI and zoom levels
+        const targetW = Math.max(800, Math.min(6000, Math.round(dispW * supersample)));
+        const targetH = Math.max(400, Math.min(4500, Math.round(dispH * supersample)));
+
+        const scaleX = Math.max(0.8, Math.min(12.0, Math.round((targetW / baseW) * 10) / 10));
+        const scaleY = Math.max(0.8, Math.min(18.0, Math.round((targetH / baseH) * 10) / 10));
+
+        try {
+            const highResSrc = window.renderWordArtCanvasSync(text, styleId, false, scaleX, scaleY);
+            if (highResSrc && waImg.src !== highResSrc) {
+                waImg.src = highResSrc;
+            }
+        } catch (err) {
+            console.warn('[WordArt] Failed to upscale editor WordArt:', err);
+        }
+    };
+
+    window.upgradeAllCanvasWordArt = function(container = null) {
+        const root = container || document.getElementById('paper') || document;
+        const betaWordArts = root.querySelectorAll('.beta-wa-img');
+        betaWordArts.forEach(waImg => {
+            const parentEl = waImg.closest('.pub-element') || waImg.parentElement;
+            if (parentEl && typeof window.refreshBetaWordArt === 'function') {
+                window.refreshBetaWordArt(parentEl);
+            }
         });
     };
 
@@ -1345,22 +1459,32 @@
             const styleId = grid.dataset.selectedId ? parseInt(grid.dataset.selectedId) : 1;
             DialogSystem.close(); 
             
-            const finalImgData = await generateWordArtPNG(finalStr, styleId);
+            // Baseline 1.0 scale to determine natural unscaled layout dimensions
+            const baselineImgData = await generateWordArtPNG(finalStr, styleId, false, 1.0, 1.0);
+            
+            // High-resolution 3.5x supersampled PNG for initial canvas rendering
+            const editorScale = 3.5;
+            const highResImgData = await generateWordArtPNG(finalStr, styleId, false, editorScale, editorScale);
             const safeStr = finalStr.replace(/"/g, '&quot;');
             
             if (editTarget) {
                 const img = editTarget.querySelector('.beta-wa-img');
                 if (img) {
-                    img.src = finalImgData;
                     img.setAttribute('data-beta-wa-text', finalStr);
                     img.setAttribute('data-beta-wa-style', styleId);
                     img.style.objectFit = 'fill';
+                    if (typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(editTarget);
+                    } else {
+                        img.src = highResImgData;
+                    }
                 }
             } else {
                 const img = new Image();
                 img.onload = function() {
                     const el = document.createElement('div');
                     el.className = 'pub-element';
+                    el.setAttribute('data-type', 'beta-wordart');
                     el.style.left = '50px';
                     el.style.top = '50px';
                     el.style.width = img.naturalWidth + 'px';
@@ -1368,10 +1492,12 @@
                     el.style.zIndex = 10;
                     el.setAttribute('data-scaleX', "1");
                     el.setAttribute('data-scaleY', "1");
+                    el.setAttribute('data-beta-wa-basew', img.naturalWidth);
+                    el.setAttribute('data-beta-wa-baseh', img.naturalHeight);
                     
                     el.innerHTML = `
                         <div class="element-content">
-                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${finalImgData}" draggable="false" style="width:100%; height:100%; object-fit:fill; position:absolute; top:0; left:0;">
+                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${highResImgData}" draggable="false" style="width:100%; height:100%; object-fit:fill; position:absolute; top:0; left:0; image-rendering:-webkit-optimize-contrast; image-rendering:high-quality;">
                         </div>
                         <div class="resize-handle rh-nw" data-dir="nw"></div>
                         <div class="resize-handle rh-n" data-dir="n"></div>
@@ -1387,12 +1513,13 @@
                     const paper = document.getElementById('paper');
                     if (paper) {
                         paper.appendChild(el);
+                        if (typeof window.refreshBetaWordArt === 'function') window.refreshBetaWordArt(el);
                         if (typeof selectElement === 'function') selectElement(el);
                         if (typeof updateThumbnails === 'function') updateThumbnails();
                         if (typeof pushHistory === 'function') pushHistory();
                     }
                 };
-                img.src = finalImgData;
+                img.src = baselineImgData;
             }
         };
 

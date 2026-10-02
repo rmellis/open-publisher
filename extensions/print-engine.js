@@ -162,6 +162,31 @@
                     }
                     scaler.appendChild(elDiv);
                 });
+
+                // ✨ HIGH-RES WORDART PRINT BAKING (Native Browser Print Spooler) ✨
+                const betaWordArts = Array.from(scaler.querySelectorAll('.beta-wa-img'));
+                betaWordArts.forEach(waImg => {
+                    const text = waImg.getAttribute('data-beta-wa-text');
+                    const styleId = parseInt(waImg.getAttribute('data-beta-wa-style'), 10);
+                    if (text && styleId && typeof window.renderWordArtCanvasSync === 'function') {
+                        const parentEl = waImg.closest('.pub-element') || waImg.parentElement;
+                        const dispW = parentEl ? (parseFloat(parentEl.style.width) || parentEl.offsetWidth || 800) : 800;
+                        const dispH = parentEl ? (parseFloat(parentEl.style.height) || parentEl.offsetHeight || 200) : 200;
+                        const baseW = parentEl ? (parseFloat(parentEl.getAttribute('data-beta-wa-basew')) || 600) : 600;
+                        const baseH = parentEl ? (parseFloat(parentEl.getAttribute('data-beta-wa-baseh')) || 130) : 130;
+                        const targetW = Math.max(1600, Math.min(6000, Math.round(dispW * 4.0)));
+                        const targetH = Math.max(600, Math.min(4500, Math.round(dispH * 4.0)));
+                        const scaleX = Math.max(1.0, Math.min(12.0, targetW / baseW));
+                        const scaleY = Math.max(1.0, Math.min(18.0, targetH / baseH));
+                        try {
+                            const highResSrc = window.renderWordArtCanvasSync(text, styleId, false, scaleX, scaleY);
+                            if (highResSrc) waImg.src = highResSrc;
+                        } catch (err) {
+                            console.warn('[Print Engine] Failed to upscale WordArt for spooler:', err);
+                        }
+                    }
+                });
+
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
             });
@@ -867,6 +892,36 @@
                 });
 
                 pageWrapper.querySelectorAll('.wa-text').forEach(flattenWaTextForPrint);
+
+                // ✨ HIGH-RES WORDART PRINT BAKING (Physical Print & PDF Export) ✨
+                const betaWordArts = Array.from(pageWrapper.querySelectorAll('.beta-wa-img'));
+                if (betaWordArts.length > 0 && (typeof window.generateWordArtPNG === 'function' || typeof window.renderWordArtCanvasSync === 'function')) {
+                    if (statusEl) statusEl.innerText = `Baking high-resolution WordArt on page ${i + 1}...`;
+                    for (const waImg of betaWordArts) {
+                        const text = waImg.getAttribute('data-beta-wa-text');
+                        const styleId = parseInt(waImg.getAttribute('data-beta-wa-style'), 10);
+                        if (text && styleId) {
+                            const parentEl = waImg.closest('.pub-element') || waImg.parentElement;
+                            const dispW = parentEl ? (parseFloat(parentEl.style.width) || parentEl.offsetWidth || 800) : 800;
+                            const dispH = parentEl ? (parseFloat(parentEl.style.height) || parentEl.offsetHeight || 200) : 200;
+                            const baseW = parentEl ? (parseFloat(parentEl.getAttribute('data-beta-wa-basew')) || 600) : 600;
+                            const baseH = parentEl ? (parseFloat(parentEl.getAttribute('data-beta-wa-baseh')) || 130) : 130;
+                            const targetW = Math.max(1600, Math.min(6000, Math.round(dispW * 4.0)));
+                            const targetH = Math.max(600, Math.min(4500, Math.round(dispH * 4.0)));
+                            const scaleX = Math.max(1.0, Math.min(12.0, targetW / baseW));
+                            const scaleY = Math.max(1.0, Math.min(18.0, targetH / baseH));
+                            try {
+                                const renderFn = window.generateWordArtPNG || window.renderWordArtCanvasSync;
+                                const highResSrc = await renderFn(text, styleId, false, scaleX, scaleY);
+                                if (highResSrc) {
+                                    await loadImageStrict(waImg, highResSrc);
+                                }
+                            } catch (err) {
+                                console.warn('[Print Engine] Failed to upscale WordArt for print:', err);
+                            }
+                        }
+                    }
+                }
 
                 if (statusEl) statusEl.innerText = `Converting WordArt to a printable format on page ${i + 1}...`;
                 

@@ -1494,6 +1494,7 @@ window.ContextRibbonActions = {
         
         if (newW >= 10) el.style.width = newW + 'px';
         if (newH >= 10) el.style.height = newH + 'px';
+        if (typeof window.refreshBetaWordArt === 'function') window.refreshBetaWordArt(el);
         
         if (typeof updateThumbnails === 'function') updateThumbnails();
         pushHistory();

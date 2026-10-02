@@ -348,6 +348,14 @@ function handleMouseMove(e) {
             if(state.selectedEl.querySelector('.wa-text')) {
                 syncWordArt(state.selectedEl);
             }
+            if(state.selectedEl.querySelector('.beta-wa-img')) {
+                if (window._waResizeTimer) clearTimeout(window._waResizeTimer);
+                window._waResizeTimer = setTimeout(() => {
+                    if (state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(state.selectedEl);
+                    }
+                }, 40);
+            }
         }
 
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
@@ -373,6 +381,10 @@ function handleMouseUp() {
     }
 
     if(state.dragMode) {
+        if (state.dragMode === 'resize' && state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+            if (window._waResizeTimer) { clearTimeout(window._waResizeTimer); window._waResizeTimer = null; }
+            window.refreshBetaWordArt(state.selectedEl);
+        }
         setTimeout(() => updateThumbnails(), 50);
         pushHistory(); 
         // Show toolbar again if item is selected
