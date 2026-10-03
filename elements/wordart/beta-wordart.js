@@ -30,6 +30,8 @@
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         
         const baseFont = '900 130px "Arial Black", Impact, sans-serif';
         ctx.font = baseFont;
@@ -989,7 +991,7 @@
                 thumbCanvas.height = thumbH;
                 const tctx = thumbCanvas.getContext('2d');
                 tctx.imageSmoothingEnabled = true;
-                tctx.imageSmoothingQuality = 'medium';
+                tctx.imageSmoothingQuality = 'high';
                 tctx.drawImage(finalCanvas, 0, 0, thumbW, thumbH);
                 resultDataUrl = thumbCanvas.toDataURL('image/png');
             } else {
@@ -1048,20 +1050,27 @@
         }
 
         const dpr = Math.max(1.0, window.devicePixelRatio || 1);
-        const supersample = Math.max(3.0, dpr * 1.5); // 3.0x to 4.5x density
+        const currentZoom = (typeof state !== 'undefined' && state && state.zoom) ? Math.max(0.2, state.zoom) : 0.6;
 
-        // Target pixel dimensions guaranteed across screen DPI and zoom levels
-        const targetW = Math.max(800, Math.min(6000, Math.round(dispW * supersample)));
-        const targetH = Math.max(400, Math.min(4500, Math.round(dispH * supersample)));
+        // Physical on-screen pixel demand for the element:
+        const screenW = dispW * currentZoom * dpr;
+        const screenH = dispH * currentZoom * dpr;
 
-        const scaleX = Math.max(0.8, Math.min(12.0, Math.round((targetW / baseW) * 10) / 10));
-        const scaleY = Math.max(0.8, Math.min(18.0, Math.round((targetH / baseH) * 10) / 10));
+        // Optimal 2.0x supersampling over physical screen pixels provides pristine,
+        // razor-sharp anti-aliased curves and smooth downscaling without aliasing artifacts:
+        const targetW = Math.max(500, Math.min(3600, Math.round(screenW * 2.0)));
+        const targetH = Math.max(200, Math.min(2600, Math.round(screenH * 2.0)));
+
+        const scaleX = Math.max(0.6, Math.min(10.0, Math.round((targetW / baseW) * 10) / 10));
+        const scaleY = Math.max(0.6, Math.min(14.0, Math.round((targetH / baseH) * 10) / 10));
 
         try {
             const highResSrc = window.renderWordArtCanvasSync(text, styleId, false, scaleX, scaleY);
             if (highResSrc && waImg.src !== highResSrc) {
                 waImg.src = highResSrc;
             }
+            waImg.style.setProperty('image-rendering', 'auto');
+            waImg.style.setProperty('image-rendering', 'smooth');
         } catch (err) {
             console.warn('[WordArt] Failed to upscale editor WordArt:', err);
         }
@@ -1462,8 +1471,9 @@
             // Baseline 1.0 scale to determine natural unscaled layout dimensions
             const baselineImgData = await generateWordArtPNG(finalStr, styleId, false, 1.0, 1.0);
             
-            // High-resolution 3.5x supersampled PNG for initial canvas rendering
-            const editorScale = 3.5;
+            // Optimal supersampled PNG for initial canvas rendering matching current zoom
+            const currentZoom = (typeof state !== 'undefined' && state && state.zoom) ? Math.max(0.4, state.zoom) : 0.6;
+            const editorScale = Math.max(1.0, Math.min(3.0, Math.round(currentZoom * 2.0 * 10) / 10));
             const highResImgData = await generateWordArtPNG(finalStr, styleId, false, editorScale, editorScale);
             const safeStr = finalStr.replace(/"/g, '&quot;');
             
@@ -1473,6 +1483,8 @@
                     img.setAttribute('data-beta-wa-text', finalStr);
                     img.setAttribute('data-beta-wa-style', styleId);
                     img.style.objectFit = 'fill';
+                    img.style.setProperty('image-rendering', 'auto');
+                    img.style.setProperty('image-rendering', 'smooth');
                     if (typeof window.refreshBetaWordArt === 'function') {
                         window.refreshBetaWordArt(editTarget);
                     } else {
@@ -1497,7 +1509,7 @@
                     
                     el.innerHTML = `
                         <div class="element-content">
-                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${highResImgData}" draggable="false" style="width:100%; height:100%; object-fit:fill; position:absolute; top:0; left:0; image-rendering:-webkit-optimize-contrast; image-rendering:high-quality;">
+                            <img class="beta-wa-img" data-beta-wa-text="${safeStr}" data-beta-wa-style="${styleId}" src="${highResImgData}" draggable="false" style="width:100%; height:100%; object-fit:fill; position:absolute; top:0; left:0; image-rendering:auto; image-rendering:smooth;">
                         </div>
                         <div class="resize-handle rh-nw" data-dir="nw"></div>
                         <div class="resize-handle rh-n" data-dir="n"></div>

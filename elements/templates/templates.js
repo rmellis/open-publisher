@@ -287,7 +287,7 @@ function initTemplates() {
         "Social Media": "fa-share-alt"
     };
 
-    fetch('elements/templates/template-index.json?v=5.1.4')
+    fetch('elements/templates/template-index.json?v=5.2.3')
         .then(res => res.json())
         .then(indexData => {
             Object.keys(indexData).forEach(cat => {
@@ -385,7 +385,7 @@ function initTemplates() {
             gridDiv.appendChild(div);
             
             // Fetch the template file
-            fetch(`elements/templates/files/${t.file}?v=5.1.4`)
+            fetch(`elements/templates/files/${t.file}?v=5.2.3`)
                 .then(res => res.json())
                 .then(opubData => {
                     const page = opubData.pages[0];

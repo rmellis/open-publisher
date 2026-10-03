@@ -284,8 +284,8 @@ body.dark-mode .wa-modal-input::placeholder {
     position: absolute;
     top: 0;
     left: 0;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: high-quality;
+    image-rendering: auto !important;
+    image-rendering: smooth !important;
 }
 
 /* About Dialog Overrides */
