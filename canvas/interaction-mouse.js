@@ -32,6 +32,28 @@ window.handleMouseDown = function(e) {
         if(!e.target.closest('.pub-element.cropping')) if(typeof toggleCrop === 'function') toggleCrop();
     }
 
+    if(e.target.classList.contains('arrow-tip-handle')) {
+        state.dragMode = 'arrow-tip';
+        const arrowEl = state.selectedEl;
+        if(arrowEl) {
+            const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
+            const h = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
+            const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7);
+            state.dragData = {
+                startX: e.clientX,
+                startY: e.clientY,
+                dir: e.target.dataset.arrowTipHandle || 'right',
+                startHead: headLength,
+                w: w,
+                h: h,
+                el: arrowEl
+            };
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+    }
+
     if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
         if(e.target.classList.contains('rotate-handle')) {
             state.dragMode = 'rotate';
@@ -264,6 +286,50 @@ window.handleMouseMove = function(e) {
             state.selectedEl.style.transform = `rotate(${(Math.atan2(e.clientY - state.dragData.cy, e.clientX - state.dragData.cx) * (180/Math.PI)) + 90}deg)`;
         }
     } 
+    else if(state.dragMode === 'arrow-tip') {
+        const d = state.dragData;
+        let curDx = dx;
+        let curDy = dy;
+        if (d.el && d.el.style && d.el.style.transform) {
+            const rotMatch = d.el.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+            if (rotMatch) {
+                const rotDeg = parseFloat(rotMatch[1]) || 0;
+                const rad = rotDeg * (Math.PI / 180);
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                curDx = dx * cos + dy * sin;
+                curDy = -dx * sin + dy * cos;
+            }
+        }
+
+        let newHead = d.startHead;
+        if (d.dir === 'right' || d.dir === 'double-h-right') {
+            newHead = d.startHead - curDx;
+        } else if (d.dir === 'left' || d.dir === 'double-h-left') {
+            newHead = d.startHead + curDx;
+        } else if (d.dir === 'up' || d.dir === 'double-v-top') {
+            newHead = d.startHead + curDy;
+        } else if (d.dir === 'down' || d.dir === 'double-v-bottom') {
+            newHead = d.startHead - curDy;
+        }
+
+        const isVert = (d.dir === 'up' || d.dir === 'down' || d.dir.includes('double-v'));
+        const isDouble = d.dir.includes('double');
+        const maxHead = isVert 
+            ? (isDouble ? Math.floor((d.h - 16) / 2) : d.h - 8)
+            : (isDouble ? Math.floor((d.w - 16) / 2) : d.w - 8);
+
+        newHead = Math.max(8, Math.min(Math.round(newHead), Math.max(10, maxHead)));
+
+        if (typeof window.refreshSmartArrow === 'function') {
+            window.refreshSmartArrow(d.el, d.w, d.h, newHead);
+        }
+
+        const overlay = document.querySelector('.selected-overlay');
+        if (overlay && typeof window.updateArrowTipOverlay === 'function') {
+            window.updateArrowTipOverlay(overlay, d.el, newHead);
+        }
+    }
     else if(state.dragMode === 'resize') {
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
@@ -350,6 +416,11 @@ window.handleMouseMove = function(e) {
                     }
                 }, 40);
             }
+            if(state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg'))) {
+                if (typeof window.refreshSmartArrow === 'function') {
+                    window.refreshSmartArrow(state.selectedEl, rawW, rawH);
+                }
+            }
         }
         if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
@@ -379,15 +450,34 @@ window.handleMouseUp = function() {
             }
         }
     } else if(state.dragMode) {
+        if (state.dragMode === 'arrow-tip') {
+            if (state.selectedEl) {
+                state.selectedEl.setAttribute('data-arrow-head-custom', 'true');
+            }
+            if (typeof pushHistory === 'function') pushHistory();
+            state.dragMode = null;
+            return;
+        }
         if (state.dragMode === 'resize') {
             if (window._waResizeTimer) { clearTimeout(window._waResizeTimer); window._waResizeTimer = null; }
+            if (window._arrowResizeTimer) { clearTimeout(window._arrowResizeTimer); window._arrowResizeTimer = null; }
             if (state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
                 window.refreshBetaWordArt(state.selectedEl);
+            }
+            if (state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                window.refreshSmartArrow(state.selectedEl);
+                const overlay = document.querySelector('.selected-overlay');
+                if (overlay && typeof window.updateArrowTipOverlay === 'function') {
+                    window.updateArrowTipOverlay(overlay, state.selectedEl);
+                }
             }
             if (state.dragData && state.dragData.multi) {
                 state.dragData.multi.forEach(item => {
                     if (item.el && typeof window.refreshBetaWordArt === 'function') {
                         window.refreshBetaWordArt(item.el);
+                    }
+                    if (item.el && (item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                        window.refreshSmartArrow(item.el);
                     }
                 });
             }

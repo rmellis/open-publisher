@@ -1495,6 +1495,7 @@ window.ContextRibbonActions = {
         if (newW >= 10) el.style.width = newW + 'px';
         if (newH >= 10) el.style.height = newH + 'px';
         if (typeof window.refreshBetaWordArt === 'function') window.refreshBetaWordArt(el);
+        if (typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
         
         if (typeof updateThumbnails === 'function') updateThumbnails();
         pushHistory();
@@ -1897,7 +1898,7 @@ window.ContextRibbonSystem = {
     },
     updateTabs: function(el) {
         this.hideAllTabs(false); if (!el) return;
-        const isImage = el.querySelector('img') || el.getAttribute('data-type') === 'emoji', isShape = el.getAttribute('data-type') === 'shape', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
+        const isImage = el.querySelector('img') || el.getAttribute('data-type') === 'emoji', isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
         else if (isTable) { 

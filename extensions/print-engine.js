@@ -187,6 +187,14 @@
                     }
                 });
 
+                // ✨ HIGH-RES SMART ARROW PRINT BAKING (Native Browser Print Spooler) ✨
+                const smartArrows = Array.from(scaler.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"]'));
+                smartArrows.forEach(arrowEl => {
+                    if (typeof window.bakeSmartArrowForPrint === 'function') {
+                        window.bakeSmartArrowForPrint(arrowEl, 4.0);
+                    }
+                });
+
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
             });
@@ -919,6 +927,19 @@
                             } catch (err) {
                                 console.warn('[Print Engine] Failed to upscale WordArt for print:', err);
                             }
+                        }
+                    }
+                }
+
+                // ✨ HIGH-RES SMART ARROW PRINT BAKING (Physical Print & PDF Export) ✨
+                const printSmartArrows = Array.from(pageWrapper.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"]'));
+                if (printSmartArrows.length > 0 && typeof window.bakeSmartArrowForPrint === 'function') {
+                    if (statusEl) statusEl.innerText = `Baking high-resolution Arrows on page ${i + 1}...`;
+                    for (const arrowEl of printSmartArrows) {
+                        try {
+                            window.bakeSmartArrowForPrint(arrowEl, 4.0);
+                        } catch (err) {
+                            console.warn('[Print Engine] Failed to bake Smart Arrow for export:', err);
                         }
                     }
                 }

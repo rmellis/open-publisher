@@ -179,10 +179,459 @@
                 
                 overlay.appendChild(rStick);
                 overlay.appendChild(rHandle);
+
+                // --- SMART ARROW INNER TIP CONTROLS (Sub-box, amber handle, pill slider) ---
+                if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg')) {
+                    if (typeof window.renderSmartArrowTipControls === 'function') {
+                        window.renderSmartArrowTipControls(overlay, el);
+                    }
+                }
             }
 
             container.appendChild(overlay);
         });
+    };
+
+    /**
+     * Render Smart Arrow Inner Tip Sub-Selection Box, Drag Handle, and Floating Pill Slider.
+     */
+    window.renderSmartArrowTipControls = function(overlay, el) {
+        if (!overlay || !el || typeof window.getArrowTipInfo !== 'function') return;
+        const info = window.getArrowTipInfo(el);
+        if (!info) return;
+
+        const oldCont = overlay.querySelector('.arrow-tip-container');
+        if (oldCont) oldCont.remove();
+
+        const container = document.createElement('div');
+        container.className = 'arrow-tip-container';
+
+        // 1. Inner sub-selection box(es) around arrowhead point (>)
+        info.subBoxes.forEach((sb, idx) => {
+            const subbox = document.createElement('div');
+            subbox.className = 'arrow-tip-subbox';
+            subbox.dataset.index = String(idx);
+            subbox.style.left = sb.left + 'px';
+            subbox.style.top = sb.top + 'px';
+            subbox.style.width = sb.width + 'px';
+            subbox.style.height = sb.height + 'px';
+
+            const badge = document.createElement('div');
+            badge.className = 'arrow-tip-badge';
+            badge.innerText = `Tip: ${info.headLength}px`;
+            subbox.appendChild(badge);
+
+            container.appendChild(subbox);
+        });
+
+        // 2. Amber junction drag handle(s)
+        info.handles.forEach(h => {
+            const handle = document.createElement('div');
+            handle.className = 'arrow-tip-handle';
+            handle.dataset.arrowTipHandle = h.dir;
+            handle.style.left = h.x + 'px';
+            handle.style.top = h.y + 'px';
+            handle.style.cursor = h.cursor;
+            handle.title = 'Drag to resize arrowhead tip (>)';
+
+            handle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                state.dragMode = 'arrow-tip';
+                const arrowEl = state.selectedEl || el;
+                if (arrowEl) {
+                    const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
+                    const hDim = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
+                    const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(hDim * 0.7);
+                    state.dragData = {
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        dir: h.dir,
+                        startHead: headLength,
+                        w: w,
+                        h: hDim,
+                        el: arrowEl
+                    };
+                }
+            });
+
+            container.appendChild(handle);
+        });
+
+        // 3. Floating Action Bar overlay (Tip Slider + Fill & Outline Color Pickers)
+        const topPos = parseFloat(el.style.top) || 0;
+        const paperEl = document.getElementById('paper');
+        const paperH = (paperEl && parseFloat(paperEl.style.height)) || 1123;
+        const zoom = (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+        const uiScale = Math.min(3.5, Math.max(0.5, 1 / zoom));
+        const isNearBottom = (topPos + info.h + (75 * uiScale) > paperH);
+
+        const pathEl = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+        let curFill = pathEl ? (pathEl.getAttribute('fill') || '#296869') : '#296869';
+        let curStroke = pathEl ? (pathEl.getAttribute('stroke') || '#1a4344') : '#1a4344';
+        const isNoFill = (!curFill || curFill === 'none' || curFill === 'transparent');
+        const rawStrokeWidth = pathEl ? parseFloat(pathEl.getAttribute('stroke-width')) : 2;
+        const curStrokeWidth = (pathEl && curStroke !== 'none' && curStroke !== 'transparent') ? (isNaN(rawStrokeWidth) ? 2 : rawStrokeWidth) : 0;
+        const isNoStroke = (!curStroke || curStroke === 'none' || curStroke === 'transparent' || curStrokeWidth <= 0);
+
+        const sliderPill = document.createElement('div');
+        sliderPill.className = 'arrow-tip-slider-overlay' + (isNearBottom ? ' dock-top' : '');
+
+        sliderPill.innerHTML = `
+            <div class="arrow-tip-top-row">
+                <div class="arrow-tip-slider-section">
+                    <i class="fas fa-play" style="color: #f59e0b; font-size: 9px;"></i>
+                    <span style="font-size: 11px; font-weight: 600; color: #374151; white-space: nowrap;">Tip:</span>
+                    <input type="range" class="arrow-tip-range-input" min="${info.minHead}" max="${info.maxHead}" value="${info.headLength}">
+                    <span class="arrow-tip-range-val">${info.headLength}px</span>
+                </div>
+                <div class="arrow-tip-divider"></div>
+                <div class="arrow-color-section">
+                    <button type="button" class="arrow-color-btn arrow-fill-btn" title="Arrow Fill Color (Click to change, right-click to toggle transparent)">
+                        <span class="arrow-color-swatch-wrap">
+                            <span class="arrow-color-swatch arrow-fill-swatch${isNoFill ? ' no-color' : ''}" style="background-color: ${isNoFill ? 'transparent' : curFill}"></span>
+                        </span>
+                        <span class="arrow-color-btn-label">Fill</span>
+                    </button>
+                    <button type="button" class="arrow-color-btn arrow-stroke-btn" title="Arrow Outline Color (Click to change, right-click to toggle transparent)">
+                        <span class="arrow-color-swatch-wrap">
+                            <span class="arrow-color-swatch arrow-stroke-swatch${isNoStroke ? ' no-color' : ''}" style="background-color: ${isNoStroke ? 'transparent' : curStroke}"></span>
+                        </span>
+                        <span class="arrow-color-btn-label">Outline</span>
+                    </button>
+                </div>
+            </div>
+            <div class="arrow-tip-h-divider"></div>
+            <div class="arrow-thickness-section" title="Outline Thickness: Drag slider or scroll with mouse wheel down to 0px to remove outline">
+                <span class="arrow-thickness-label">
+                    <i class="fas fa-border-all"></i>
+                    <span>Width:</span>
+                </span>
+                <button type="button" class="arrow-thickness-step-btn arrow-thickness-dec" title="Decrease Outline Thickness (-1px)">-</button>
+                <input type="range" class="arrow-stroke-width-input" min="0" max="24" step="1" value="${curStrokeWidth}">
+                <button type="button" class="arrow-thickness-step-btn arrow-thickness-inc" title="Increase Outline Thickness (+1px)">+</button>
+                <span class="arrow-stroke-width-val">${curStrokeWidth}px</span>
+            </div>
+        `;
+
+        const rangeInput = sliderPill.querySelector('.arrow-tip-range-input');
+        const rangeVal = sliderPill.querySelector('.arrow-tip-range-val');
+        const fillBtn = sliderPill.querySelector('.arrow-fill-btn');
+        const fillSwatch = sliderPill.querySelector('.arrow-fill-swatch');
+        const strokeBtn = sliderPill.querySelector('.arrow-stroke-btn');
+        const strokeSwatch = sliderPill.querySelector('.arrow-stroke-swatch');
+        const thicknessSection = sliderPill.querySelector('.arrow-thickness-section');
+        const strokeInput = sliderPill.querySelector('.arrow-stroke-width-input');
+        const strokeVal = sliderPill.querySelector('.arrow-stroke-width-val');
+        const decBtn = sliderPill.querySelector('.arrow-thickness-dec');
+        const incBtn = sliderPill.querySelector('.arrow-thickness-inc');
+
+        sliderPill.addEventListener('mousedown', e => e.stopPropagation());
+        if (rangeInput) rangeInput.addEventListener('mousedown', e => e.stopPropagation());
+
+        if (rangeInput) {
+            rangeInput.addEventListener('input', () => {
+                const val = parseInt(rangeInput.value, 10);
+                if (rangeVal) rangeVal.innerText = val + 'px';
+                if (typeof window.refreshSmartArrow === 'function') {
+                    window.refreshSmartArrow(el, null, null, val);
+                }
+                window.updateArrowTipOverlay(overlay, el, val);
+            });
+
+            rangeInput.addEventListener('change', () => {
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        // Thickness controls & mouse wheel scrolling handler
+        function applyThickness(newVal) {
+            const val = Math.max(0, Math.min(24, parseInt(newVal, 10) || 0));
+            if (strokeInput) strokeInput.value = val;
+            if (strokeVal) strokeVal.innerText = val + 'px';
+            if (typeof window.setSmartArrowStrokeWidth === 'function') {
+                window.setSmartArrowStrokeWidth(el, val);
+            }
+            window.updateArrowTipOverlay(overlay, el);
+        }
+
+        if (strokeInput) {
+            strokeInput.addEventListener('mousedown', e => e.stopPropagation());
+            strokeInput.addEventListener('input', () => {
+                applyThickness(strokeInput.value);
+            });
+            strokeInput.addEventListener('change', () => {
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        if (decBtn) {
+            decBtn.addEventListener('mousedown', e => e.stopPropagation());
+            decBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const cur = parseInt(strokeInput ? strokeInput.value : 0, 10) || 0;
+                applyThickness(cur - 1);
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        if (incBtn) {
+            incBtn.addEventListener('mousedown', e => e.stopPropagation());
+            incBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const cur = parseInt(strokeInput ? strokeInput.value : 0, 10) || 0;
+                applyThickness(cur + 1);
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        if (thicknessSection) {
+            thicknessSection.addEventListener('mousedown', e => e.stopPropagation());
+            // Support scrolling with mouse wheel directly over thickness section all the way down to 0px!
+            thicknessSection.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const curVal = strokeInput ? (parseInt(strokeInput.value, 10) || 0) : 2;
+                // Scrolling wheel downwards decreases thickness down to 0px
+                const step = e.deltaY > 0 ? -1 : 1;
+                applyThickness(curVal + step);
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            }, { passive: false });
+        }
+
+        // Color helper
+        function toHex(col) {
+            if (!col || col === 'none' || col === 'transparent') return '#ffffff';
+            if (/^#[0-9A-Fa-f]{6}$/i.test(col)) return col;
+            if (/^#[0-9A-Fa-f]{3}$/i.test(col)) {
+                return '#' + col[1] + col[1] + col[2] + col[2] + col[3] + col[3];
+            }
+            try {
+                const dummy = document.createElement('div');
+                dummy.style.color = col;
+                document.body.appendChild(dummy);
+                const computed = window.getComputedStyle(dummy).color;
+                dummy.remove();
+                const m = computed.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                if (m) {
+                    const r = parseInt(m[1], 10).toString(16).padStart(2, '0');
+                    const g = parseInt(m[2], 10).toString(16).padStart(2, '0');
+                    const b = parseInt(m[3], 10).toString(16).padStart(2, '0');
+                    return `#${r}${g}${b}`;
+                }
+            } catch(e) {}
+            return '#007670';
+        }
+
+        // Fill button handlers
+        if (fillBtn) {
+            fillBtn.addEventListener('mousedown', e => e.stopPropagation());
+            fillBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!window.CustomColorPicker) return;
+                const path = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+                let rawCol = path ? path.getAttribute('fill') : '#296869';
+                const initialHex = (rawCol && rawCol !== 'none') ? toHex(rawCol) : '#296869';
+
+                window.CustomColorPicker.open(fillBtn, initialHex, (chosenColor) => {
+                    if (typeof window.setSmartArrowColor === 'function') {
+                        window.setSmartArrowColor(el, 'fill', chosenColor);
+                    } else {
+                        if (path) path.setAttribute('fill', chosenColor);
+                        el.removeAttribute('data-scheme-fill');
+                    }
+                    if (fillSwatch) {
+                        fillSwatch.classList.remove('no-color');
+                        fillSwatch.style.backgroundColor = chosenColor;
+                    }
+                    if (typeof window.pushHistory === 'function') window.pushHistory();
+                });
+            });
+
+            // Right click: toggle No Fill
+            fillBtn.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const path = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+                const isCurrentlyNone = path && (path.getAttribute('fill') === 'none');
+                const newFill = isCurrentlyNone ? (el.getAttribute('data-prev-fill') || '#296869') : 'none';
+                if (!isCurrentlyNone && path) {
+                    el.setAttribute('data-prev-fill', path.getAttribute('fill') || '#296869');
+                }
+                if (typeof window.setSmartArrowColor === 'function') {
+                    window.setSmartArrowColor(el, 'fill', newFill);
+                } else {
+                    if (path) path.setAttribute('fill', newFill);
+                }
+                if (fillSwatch) {
+                    if (newFill === 'none') {
+                        fillSwatch.classList.add('no-color');
+                        fillSwatch.style.backgroundColor = 'transparent';
+                    } else {
+                        fillSwatch.classList.remove('no-color');
+                        fillSwatch.style.backgroundColor = newFill;
+                    }
+                }
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        // Outline button handlers
+        if (strokeBtn) {
+            strokeBtn.addEventListener('mousedown', e => e.stopPropagation());
+            strokeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!window.CustomColorPicker) return;
+                const path = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+                let rawCol = path ? path.getAttribute('stroke') : '#1a4344';
+                const initialHex = (rawCol && rawCol !== 'none') ? toHex(rawCol) : '#1a4344';
+
+                window.CustomColorPicker.open(strokeBtn, initialHex, (chosenColor) => {
+                    if (typeof window.setSmartArrowColor === 'function') {
+                        window.setSmartArrowColor(el, 'stroke', chosenColor);
+                    } else {
+                        if (path) path.setAttribute('stroke', chosenColor);
+                        el.removeAttribute('data-scheme-stroke');
+                    }
+                    const curW = strokeInput ? (parseInt(strokeInput.value, 10) || 0) : 0;
+                    if (curW <= 0) {
+                        if (typeof window.setSmartArrowStrokeWidth === 'function') {
+                            window.setSmartArrowStrokeWidth(el, 2);
+                        }
+                    }
+                    window.updateArrowTipOverlay(overlay, el);
+                    if (typeof window.pushHistory === 'function') window.pushHistory();
+                });
+            });
+
+            // Right click: toggle No Outline
+            strokeBtn.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const path = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+                const sw = path ? (parseFloat(path.getAttribute('stroke-width')) || 0) : 0;
+                const isCurrentlyNone = path && (path.getAttribute('stroke') === 'none' || sw <= 0);
+                if (!isCurrentlyNone) {
+                    if (path) {
+                        el.setAttribute('data-prev-stroke', path.getAttribute('stroke') || '#1a4344');
+                        el.setAttribute('data-prev-stroke-width', String(sw > 0 ? sw : 2));
+                    }
+                    if (typeof window.setSmartArrowStrokeWidth === 'function') {
+                        window.setSmartArrowStrokeWidth(el, 0);
+                    }
+                } else {
+                    const prevWidth = parseInt(el.getAttribute('data-prev-stroke-width'), 10) || 2;
+                    if (typeof window.setSmartArrowStrokeWidth === 'function') {
+                        window.setSmartArrowStrokeWidth(el, prevWidth);
+                    }
+                }
+                window.updateArrowTipOverlay(overlay, el);
+                if (typeof window.pushHistory === 'function') window.pushHistory();
+            });
+        }
+
+        container.appendChild(sliderPill);
+        overlay.appendChild(container);
+    };
+
+    /**
+     * Synchronously update the position and values of the Tip subbox, handle, and slider.
+     */
+    window.updateArrowTipOverlay = function(overlay, el, forcedHead) {
+        const targetOverlay = overlay || (el && (el.querySelector('.selected-overlay') || el.querySelector('.selection-overlay'))) || document.querySelector('.selected-overlay') || document.querySelector('.selection-overlay');
+        if (!targetOverlay || !el || typeof window.getArrowTipInfo !== 'function') return;
+        const info = window.getArrowTipInfo(el, forcedHead);
+        if (!info) return;
+
+        const subboxes = targetOverlay.querySelectorAll('.arrow-tip-subbox');
+        subboxes.forEach((sb, idx) => {
+            if (info.subBoxes[idx]) {
+                const b = info.subBoxes[idx];
+                sb.style.left = b.left + 'px';
+                sb.style.top = b.top + 'px';
+                sb.style.width = b.width + 'px';
+                sb.style.height = b.height + 'px';
+                const badge = sb.querySelector('.arrow-tip-badge');
+                if (badge) badge.innerText = `Tip: ${info.headLength}px`;
+            }
+        });
+
+        const handles = targetOverlay.querySelectorAll('.arrow-tip-handle');
+        handles.forEach((hEl, idx) => {
+            if (info.handles[idx]) {
+                hEl.style.left = info.handles[idx].x + 'px';
+                hEl.style.top = info.handles[idx].y + 'px';
+            }
+        });
+
+        const rangeInput = targetOverlay.querySelector('.arrow-tip-range-input');
+        const rangeVal = targetOverlay.querySelector('.arrow-tip-range-val');
+        if (rangeInput) {
+            rangeInput.max = String(info.maxHead);
+            rangeInput.value = String(info.headLength);
+        }
+        if (rangeVal) {
+            rangeVal.innerText = info.headLength + 'px';
+        }
+
+        const sliderPill = targetOverlay.querySelector('.arrow-tip-slider-overlay');
+        if (sliderPill) {
+            const topPos = parseFloat(el.style.top) || 0;
+            const paperEl = document.getElementById('paper');
+            const paperH = (paperEl && parseFloat(paperEl.style.height)) || 1123;
+            const zoom = (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+            const uiScale = Math.min(3.5, Math.max(0.5, 1 / zoom));
+            const isNearBottom = (topPos + info.h + (75 * uiScale) > paperH);
+            sliderPill.classList.toggle('dock-top', isNearBottom);
+        }
+
+        // Sync thickness slider and readout
+        const strokeInput = targetOverlay.querySelector('.arrow-stroke-width-input');
+        const strokeVal = targetOverlay.querySelector('.arrow-stroke-width-val');
+        const path = el.querySelector('path.smart-arrow-path') || el.querySelector('svg path');
+        let currentWidth = 0;
+        if (path && path.getAttribute('stroke') !== 'none' && path.getAttribute('stroke') !== 'transparent') {
+            currentWidth = parseFloat(path.getAttribute('stroke-width')) || 0;
+        }
+        if (strokeInput && document.activeElement !== strokeInput) {
+            strokeInput.value = String(currentWidth);
+        }
+        if (strokeVal) {
+            strokeVal.innerText = currentWidth + 'px';
+        }
+
+        // Sync color swatches with arrow element's current styling
+        const fillSwatch = targetOverlay.querySelector('.arrow-fill-swatch');
+        const strokeSwatch = targetOverlay.querySelector('.arrow-stroke-swatch');
+        if (fillSwatch || strokeSwatch) {
+            if (path) {
+                const f = path.getAttribute('fill');
+                if (fillSwatch) {
+                    if (!f || f === 'none' || f === 'transparent') {
+                        fillSwatch.classList.add('no-color');
+                        fillSwatch.style.backgroundColor = 'transparent';
+                    } else {
+                        fillSwatch.classList.remove('no-color');
+                        fillSwatch.style.backgroundColor = f;
+                    }
+                }
+                const s = path.getAttribute('stroke');
+                const sw = parseFloat(path.getAttribute('stroke-width')) || 0;
+                if (strokeSwatch) {
+                    if (!s || s === 'none' || s === 'transparent' || sw <= 0) {
+                        strokeSwatch.classList.add('no-color');
+                        strokeSwatch.style.backgroundColor = 'transparent';
+                    } else {
+                        strokeSwatch.classList.remove('no-color');
+                        strokeSwatch.style.backgroundColor = s;
+                    }
+                }
+            }
+        }
     };
 
     // Polling fallback to catch selection changes across the app
@@ -3099,6 +3548,28 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             return;
         }
 
+        if(e.target.classList.contains('arrow-tip-handle')) {
+            state.dragMode = 'arrow-tip';
+            const arrowEl = state.selectedEl;
+            if (arrowEl) {
+                const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
+                const h = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
+                const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7);
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    dir: e.target.dataset.arrowTipHandle || 'right',
+                    startHead: headLength,
+                    w: w,
+                    h: h,
+                    el: arrowEl
+                };
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
 
         if(state.cropMode && state.selectedEl) {
             if(e.target.classList.contains('resize-handle')) {
@@ -3288,6 +3759,52 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         const zoom = state.zoom || 1;
         const dx = (e.clientX - state.dragData.startX) / zoom;
         const dy = (e.clientY - state.dragData.startY) / zoom;
+
+        if(state.dragMode === 'arrow-tip') {
+            const d = state.dragData;
+            let curDx = dx;
+            let curDy = dy;
+            if (d.el && d.el.style && d.el.style.transform) {
+                const rotMatch = d.el.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+                if (rotMatch) {
+                    const rotDeg = parseFloat(rotMatch[1]) || 0;
+                    const rad = rotDeg * (Math.PI / 180);
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    curDx = dx * cos + dy * sin;
+                    curDy = -dx * sin + dy * cos;
+                }
+            }
+
+            let newHead = d.startHead;
+            if (d.dir === 'right' || d.dir === 'double-h-right') {
+                newHead = d.startHead - curDx;
+            } else if (d.dir === 'left' || d.dir === 'double-h-left') {
+                newHead = d.startHead + curDx;
+            } else if (d.dir === 'up' || d.dir === 'double-v-top') {
+                newHead = d.startHead + curDy;
+            } else if (d.dir === 'down' || d.dir === 'double-v-bottom') {
+                newHead = d.startHead - curDy;
+            }
+
+            const isVert = (d.dir === 'up' || d.dir === 'down' || d.dir.includes('double-v'));
+            const isDouble = d.dir.includes('double');
+            const maxHead = isVert 
+                ? (isDouble ? Math.floor((d.h - 16) / 2) : d.h - 8)
+                : (isDouble ? Math.floor((d.w - 16) / 2) : d.w - 8);
+
+            newHead = Math.max(8, Math.min(Math.round(newHead), Math.max(10, maxHead)));
+
+            if (typeof window.refreshSmartArrow === 'function') {
+                window.refreshSmartArrow(d.el, d.w, d.h, newHead);
+            }
+
+            const overlay = document.querySelector('.selected-overlay');
+            if (overlay && typeof window.updateArrowTipOverlay === 'function') {
+                window.updateArrowTipOverlay(overlay, d.el, newHead);
+            }
+            return;
+        }
         
         if(state.dragMode === 'shape-point') {
             const w = state.selectedEl.offsetWidth;
@@ -3472,6 +3989,15 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                             window.refreshBetaWordArt(state.selectedEl);
                         }
                     }, 40);
+                }
+                if(state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg'))) {
+                    if (typeof window.refreshSmartArrow === 'function') {
+                        window.refreshSmartArrow(state.selectedEl, rawW, rawH);
+                    }
+                    const overlay = document.querySelector('.selected-overlay');
+                    if (overlay && typeof window.updateArrowTipOverlay === 'function') {
+                        window.updateArrowTipOverlay(overlay, state.selectedEl);
+                    }
                 }
             }
             if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }

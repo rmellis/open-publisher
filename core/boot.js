@@ -8,6 +8,7 @@ window.onload = function() {
     initColorSchemes();
     initThemes();
     initShapes();
+    if (typeof initArrows === 'function') initArrows();
     initRibbonResponsiveness();
     //initClipart(); //disabled to provent lag, LazyLoad method used somewhere below
     initWordArt();
@@ -29,9 +30,9 @@ window.onload = function() {
     }
     
     // Events
-    paper.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    paper.addEventListener('mousedown', e => (window.handleMouseDown || handleMouseDown)(e));
+    window.addEventListener('mousemove', e => (window.handleMouseMove || handleMouseMove)(e));
+    window.addEventListener('mouseup', e => (window.handleMouseUp || handleMouseUp)(e));
     document.addEventListener('keyup', handleKeyUp);
 
     // Keep the margin guide overlay aligned on scroll and resize

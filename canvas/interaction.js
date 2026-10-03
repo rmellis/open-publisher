@@ -356,6 +356,11 @@ function handleMouseMove(e) {
                     }
                 }, 40);
             }
+            if(state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg'))) {
+                if (typeof window.refreshSmartArrow === 'function') {
+                    window.refreshSmartArrow(state.selectedEl, rawW, rawH);
+                }
+            }
         }
 
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
@@ -381,9 +386,15 @@ function handleMouseUp() {
     }
 
     if(state.dragMode) {
-        if (state.dragMode === 'resize' && state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+        if (state.dragMode === 'resize') {
             if (window._waResizeTimer) { clearTimeout(window._waResizeTimer); window._waResizeTimer = null; }
-            window.refreshBetaWordArt(state.selectedEl);
+            if (window._arrowResizeTimer) { clearTimeout(window._arrowResizeTimer); window._arrowResizeTimer = null; }
+            if (state.selectedEl && typeof window.refreshBetaWordArt === 'function') {
+                window.refreshBetaWordArt(state.selectedEl);
+            }
+            if (state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                window.refreshSmartArrow(state.selectedEl);
+            }
         }
         setTimeout(() => updateThumbnails(), 50);
         pushHistory(); 

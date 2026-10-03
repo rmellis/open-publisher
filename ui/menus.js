@@ -221,7 +221,7 @@ const ContextMenuSystem = {
             } else {
                 // --- ELEMENT MENUS ---
                 const isImage = el.querySelector('img');
-                const isShape = el.getAttribute('data-type') === 'shape';
+                const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
                 const isWordArt = el.querySelector('.wa-text');
                 const isTable = el.querySelector('table');
                 const isText = !isImage && !isShape && !isWordArt && !isTable;

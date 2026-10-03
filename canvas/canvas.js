@@ -576,6 +576,14 @@ window.syncHandleScaling = function(z) {
     const cropBorderWidth = Math.max(1.5, 2 / zoom).toFixed(3) + 'px';
     const shapeHandleSize = (8.5 / zoom).toFixed(3) + 'px';
 
+    // Smart Arrow UI optical scaling (zoom invariance)
+    // Inverted zoom scaling ensures controls (slider pill, badge, handle) remain 
+    // constant, legible, and comfortable to use whether zoomed out to 30% or in to 200%.
+    const arrowUiScale = Math.min(3.5, Math.max(0.5, 1 / zoom)).toFixed(4);
+    const arrowHandleSize = (16 / zoom).toFixed(3) + 'px';
+    const arrowHandleBorder = Math.max(1.5, 2 / zoom).toFixed(3) + 'px';
+    const arrowBorderWidth = Math.max(1.2, 1.5 / zoom).toFixed(3) + 'px';
+
     const root = document.documentElement;
     if (root) {
         root.style.setProperty('--handle-size', handleSize);
@@ -590,6 +598,10 @@ window.syncHandleScaling = function(z) {
         root.style.setProperty('--crop-handle-half', cropHandleHalf);
         root.style.setProperty('--crop-border-width', cropBorderWidth);
         root.style.setProperty('--shape-handle-size', shapeHandleSize);
+        root.style.setProperty('--arrow-ui-scale', arrowUiScale);
+        root.style.setProperty('--arrow-handle-size', arrowHandleSize);
+        root.style.setProperty('--arrow-handle-border', arrowHandleBorder);
+        root.style.setProperty('--arrow-border-width', arrowBorderWidth);
     }
 
     const paperEl = document.getElementById('paper');
@@ -606,6 +618,10 @@ window.syncHandleScaling = function(z) {
         paperEl.style.setProperty('--crop-handle-half', cropHandleHalf);
         paperEl.style.setProperty('--crop-border-width', cropBorderWidth);
         paperEl.style.setProperty('--shape-handle-size', shapeHandleSize);
+        paperEl.style.setProperty('--arrow-ui-scale', arrowUiScale);
+        paperEl.style.setProperty('--arrow-handle-size', arrowHandleSize);
+        paperEl.style.setProperty('--arrow-handle-border', arrowHandleBorder);
+        paperEl.style.setProperty('--arrow-border-width', arrowBorderWidth);
     }
 };
 
@@ -702,6 +718,10 @@ window.setZoom = function(z) {
     }, 200);
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
+    if (typeof state !== 'undefined' && state.selectedEl && typeof window.updateArrowTipOverlay === 'function') {
+        const overlay = document.querySelector('.selected-overlay');
+        if (overlay) window.updateArrowTipOverlay(overlay, state.selectedEl);
+    }
 };
 
 window.zoomStepOut = function() {

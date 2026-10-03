@@ -156,6 +156,8 @@ function renderPage(pageData) {
         el.style.zIndex = data.zIndex || 10;
         if (data.overflow) el.style.overflow = data.overflow;
         if (data.type) el.setAttribute('data-type', data.type);
+        if (data.arrowStyle) el.setAttribute('data-arrow-style', data.arrowStyle);
+        if (data.arrowHead) el.setAttribute('data-arrow-head', data.arrowHead);
         
         // Restore scale attributes
         const sX = data.scaleX || "1";
@@ -211,6 +213,7 @@ function renderPage(pageData) {
         if (data.shrinkOverflow) applyShrinkOverflow(el);
         if (data.growFit) applyGrowFit(el);
         if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
+        if (data.type === 'smart-arrow' && typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
         paper.appendChild(el);
     });
     

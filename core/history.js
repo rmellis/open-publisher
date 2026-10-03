@@ -94,7 +94,9 @@ function serializeCurrentPage() {
             scaleX: el.getAttribute('data-scaleX') || "1",
             scaleY: el.getAttribute('data-scaleY') || "1",
             shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true',
-            growFit: el.getAttribute('data-grow-fit') === 'true'
+            growFit: el.getAttribute('data-grow-fit') === 'true',
+            arrowStyle: el.getAttribute('data-arrow-style') || null,
+            arrowHead: el.getAttribute('data-arrow-head') || null
         };
 
         const content = el.querySelector('.element-content');

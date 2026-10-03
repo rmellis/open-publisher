@@ -154,7 +154,7 @@ function applySingleElementScheme(el, schemeName) {
     if (!colorSchemes[schemeName]) return;
     const colors = colorSchemes[schemeName];
     
-    const isShape = el.getAttribute('data-type') === 'shape';
+    const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
     const svgOuter = el.querySelector('svg .shape-path') || el.querySelector('svg g') || el.querySelector('svg');
     const content = el.querySelector('.element-content');
     const cssShape = content ? content.querySelector('div[style*="clip-path"]') : null;
