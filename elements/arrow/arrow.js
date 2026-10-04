@@ -1,5 +1,5 @@
 /**
- * Open Publisher v5.3.1
+ * Open Publisher v5.3.2
  * Dedicated Smart Arrows Engine
  *
  * Implements parametric vector arrows where resizing only stretches the stem/shaft
@@ -664,15 +664,44 @@
      * High-resolution serialization of Smart Arrows to PNG for print spooler and PDF export.
      * Guarantees 0-pixel offset, no stroke clipping, and identical output across all printer drivers.
      */
-    function bakeSmartArrowForPrint(arrowEl, scaleFactor = 4.0) {
+    function bakeSmartArrowForPrint(targetEl, scaleFactor = 4.0) {
+        if (!targetEl) return;
+        const arrowEl = (targetEl.classList && targetEl.classList.contains('smart-arrow-svg'))
+            ? (targetEl.closest('[data-type="smart-arrow"]') || targetEl.closest('.pub-element') || targetEl.parentElement)
+            : targetEl;
         if (!arrowEl) return;
-        const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth || 260;
-        const h = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight || 60;
+
+        const svg = arrowEl.querySelector('svg.smart-arrow-svg') || arrowEl.querySelector('svg');
+        const path = arrowEl.querySelector('path.smart-arrow-path') || (svg ? svg.querySelector('path') : null);
+        if (!svg || !path) return;
+
         const styleId = arrowEl.getAttribute('data-arrow-style') || 'block-right';
 
-        const svg = arrowEl.querySelector('svg');
-        const path = arrowEl.querySelector('path.smart-arrow-path') || (svg ? svg.querySelector('path') : null);
-        if (!path) return;
+        // Determine true vector width and height (robust to print staging calc wrappers)
+        let w = 0;
+        let h = 0;
+        if (svg.getAttribute('viewBox')) {
+            const vb = svg.getAttribute('viewBox').trim().split(/[\s,]+/);
+            if (vb.length >= 4) {
+                w = parseFloat(vb[2]);
+                h = parseFloat(vb[3]);
+            }
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+            const content = arrowEl.querySelector('.element-content');
+            if (content && content.parentElement && content.parentElement.style.width) {
+                w = parseFloat(content.parentElement.style.width);
+                h = parseFloat(content.parentElement.style.height);
+            }
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+            w = parseFloat(arrowEl.style.width);
+            h = parseFloat(arrowEl.style.height);
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+            w = arrowEl.offsetWidth || 260;
+            h = arrowEl.offsetHeight || 60;
+        }
 
         const customHead = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head'));
         const pathData = buildArrowPath(styleId, w, h, customHead);
@@ -680,7 +709,9 @@
 
         let fill = path.getAttribute('fill') || '#296869';
         let stroke = path.getAttribute('stroke') || '#1a4344';
-        let strokeWidth = parseFloat(path.getAttribute('stroke-width')) || 2;
+        const attrStrokeWidth = path.getAttribute('stroke-width') ?? arrowEl.getAttribute('data-arrow-stroke-width');
+        let strokeWidth = attrStrokeWidth !== null ? parseFloat(attrStrokeWidth) : 2;
+        if (isNaN(strokeWidth) || strokeWidth < 0) strokeWidth = 0;
 
         if (fill.includes('var(') || stroke.includes('var(')) {
             try {
@@ -691,17 +722,27 @@
             } catch (e) {}
         }
 
+        const isStrokeOnly = pathData.isStrokeOnly || styleId.startsWith('open-barb-') || styleId === 'dimension-arrow' || styleId.startsWith('hollow-');
+        const hasStroke = stroke && stroke !== 'none' && stroke !== 'transparent' && strokeWidth > 0;
+
+        // Calculate stroke bleed padding so thick borders / joins extending beyond the bounding box are never clipped
+        const pad = hasStroke ? Math.ceil(Math.max(20, strokeWidth * 1.5 + 4)) : 0;
+
         const canvas = document.createElement('canvas');
-        const targetW = Math.max(16, Math.round(w * scaleFactor));
-        const targetH = Math.max(16, Math.round(h * scaleFactor));
+        const targetW = Math.max(16, Math.round((w + pad * 2) * scaleFactor));
+        const targetH = Math.max(16, Math.round((h + pad * 2) * scaleFactor));
         canvas.width = targetW;
         canvas.height = targetH;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         ctx.scale(scaleFactor, scaleFactor);
+        if (pad > 0) {
+            ctx.translate(pad, pad);
+        }
 
-        const isStrokeOnly = pathData.isStrokeOnly || styleId.startsWith('open-barb-') || styleId === 'dimension-arrow' || styleId.startsWith('hollow-');
+        const capAttr = path.getAttribute('stroke-linecap') || 'round';
+        const joinAttr = path.getAttribute('stroke-linejoin') || 'round';
 
         try {
             const p2d = new Path2D(d);
@@ -709,18 +750,29 @@
                 ctx.fillStyle = fill;
                 ctx.fill(p2d);
             }
-            if (stroke && stroke !== 'none' && strokeWidth > 0) {
+            if (hasStroke) {
                 ctx.strokeStyle = stroke;
                 ctx.lineWidth = strokeWidth;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
+                ctx.lineCap = capAttr;
+                ctx.lineJoin = joinAttr;
                 ctx.stroke(p2d);
             }
 
             const pngUrl = canvas.toDataURL('image/png');
             if (pngUrl) {
+                arrowEl.style.overflow = 'visible';
                 const content = arrowEl.querySelector('.element-content') || arrowEl;
-                content.innerHTML = `<img class="smart-arrow-baked-img" src="${pngUrl}" style="width:100%; height:100%; object-fit:fill; display:block; pointer-events:none;" alt="Smart Arrow">`;
+                content.style.overflow = 'visible';
+                if (content.parentElement) {
+                    content.parentElement.style.overflow = 'visible';
+                }
+
+                if (pad > 0) {
+                    content.innerHTML = `<img class="smart-arrow-baked-img" src="${pngUrl}" style="position: absolute !important; top: -${pad}px !important; left: -${pad}px !important; width: ${w + pad * 2}px !important; height: ${h + pad * 2}px !important; max-width: none !important; max-height: none !important; object-fit: fill !important; display: block !important; pointer-events: none !important;" alt="Smart Arrow">`;
+                } else {
+                    content.innerHTML = `<img class="smart-arrow-baked-img" src="${pngUrl}" style="position: absolute !important; top: 0px !important; left: 0px !important; width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: fill !important; display: block !important; pointer-events: none !important;" alt="Smart Arrow">`;
+                }
+                return content.querySelector('img.smart-arrow-baked-img');
             }
         } catch (err) {
             console.warn('[Smart Arrows] Print baking fallback:', err);
@@ -800,7 +852,7 @@
      * Initialize the Arrows dropdown gallery.
      */
     function initArrows() {
-        console.log('🏹 Initializing Smart Arrows Engine (v5.3.1)...');
+        console.log('🏹 Initializing Smart Arrows Engine (v5.3.2)...');
         const dropdown = document.getElementById('arrow-dropdown');
         if (!dropdown) return;
 

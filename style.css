@@ -1416,6 +1416,15 @@ td, th {
     overflow: visible !important;
 }
 
+/* Smart Arrow Baked Print Image (preserves stroke bleed & corner extensions outside selection box) */
+.element-content img.smart-arrow-baked-img {
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: fill !important;
+    pointer-events: none !important;
+    display: block !important;
+}
+
 .resize-handle {
     width: var(--handle-size, 15px); height: var(--handle-size, 15px); background: white; border: var(--handle-border-width, 1px) solid var(--selection);
     position: absolute; display: none; z-index: 1001; cursor: pointer;

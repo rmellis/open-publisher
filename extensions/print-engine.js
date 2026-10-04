@@ -188,7 +188,8 @@
                 });
 
                 // ✨ HIGH-RES SMART ARROW PRINT BAKING (Native Browser Print Spooler) ✨
-                const smartArrows = Array.from(scaler.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"]'));
+                const arrowTargets = Array.from(scaler.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
+                const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
                 smartArrows.forEach(arrowEl => {
                     if (typeof window.bakeSmartArrowForPrint === 'function') {
                         window.bakeSmartArrowForPrint(arrowEl, 4.0);
@@ -932,12 +933,16 @@
                 }
 
                 // ✨ HIGH-RES SMART ARROW PRINT BAKING (Physical Print & PDF Export) ✨
-                const printSmartArrows = Array.from(pageWrapper.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"]'));
+                const arrowTargets = Array.from(pageWrapper.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
+                const printSmartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
                 if (printSmartArrows.length > 0 && typeof window.bakeSmartArrowForPrint === 'function') {
                     if (statusEl) statusEl.innerText = `Baking high-resolution Arrows on page ${i + 1}...`;
                     for (const arrowEl of printSmartArrows) {
                         try {
-                            window.bakeSmartArrowForPrint(arrowEl, 4.0);
+                            const bakedImg = window.bakeSmartArrowForPrint(arrowEl, 4.0);
+                            if (bakedImg && typeof loadImageStrict === 'function') {
+                                await loadImageStrict(bakedImg, bakedImg.src);
+                            }
                         } catch (err) {
                             console.warn('[Print Engine] Failed to bake Smart Arrow for export:', err);
                         }
