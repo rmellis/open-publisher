@@ -1,5 +1,5 @@
 /**
- * Open Publisher v5.3.0
+ * Open Publisher v5.3.1
  * Dedicated Smart Arrows Engine
  *
  * Implements parametric vector arrows where resizing only stretches the stem/shaft
@@ -800,7 +800,7 @@
      * Initialize the Arrows dropdown gallery.
      */
     function initArrows() {
-        console.log('🏹 Initializing Smart Arrows Engine (v5.3.0)...');
+        console.log('🏹 Initializing Smart Arrows Engine (v5.3.1)...');
         const dropdown = document.getElementById('arrow-dropdown');
         if (!dropdown) return;
 

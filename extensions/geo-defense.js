@@ -1,4 +1,4 @@
-// Open Publisher Geographic Access Control & Defense Engine (v5.3.0)
+// Open Publisher Geographic Access Control & Defense Engine (v5.3.1)
 (function() {
     'use strict';
 
@@ -12,10 +12,77 @@
         'Asia/Kamchatka', 'Asia/Anadyr'
     ];
 
-    function renderBlockScreen() {
+    const IR_TIMEZONES = [
+        'Asia/Tehran', 'Iran'
+    ];
+
+    function getCountryConfig(country) {
+        if (country === 'IR') {
+            return {
+                countryCode: 'IR',
+                sessionKey: 'op_ir_blocked',
+                docTitle: '🚫 Access Restricted | Woman, Life, Freedom 🕊️',
+                borderTop: '#239f40',
+                borderBottom: '#da0000',
+                flagHTML: `
+                    <div class="flag-box">
+                        <div style="height: 33.33%; background: #239f40;"></div>
+                        <div style="height: 33.34%; background: #ffffff;"></div>
+                        <div style="height: 33.33%; background: #da0000;"></div>
+                    </div>
+                `,
+                badge: 'جمهوری اسلامی ایران (IR) : دسترسی مسدود است',
+                heading: 'دسترسی مسدود است',
+                subHeading: 'ACCESS RESTRICTED',
+                messageEn: 'Access to Open Publisher has been completely restricted for connections originating from Iran in strict compliance with international sanctions, trade embargoes, and export compliance regulations.',
+                highlight: 'This platform strictly prohibits access by entities and jurisdictions subject to international sanctions, and stands in unwavering support of universal human rights, civil liberties, and the freedom of expression.',
+                localMessageHTML: `
+                    دسترسی به اوپن پابلیشر (Open Publisher) برای اتصالات با مبدا ایران در راستای پایبندی به تحریم‌های بین‌المللی و مقررات کنترل صادرات نرم‌افزار به صورت کامل مسدود شده است.<br><br>
+                    این پلتفرم هرگونه استفاده توسط نهادهای مشمول تحریم‌ها را اکیداً ممنوع دانسته و در کنار حقوق اساسی بشر، آزادی زنان، برابری مدنی و گردش آزاد اطلاعات می‌ایستد.
+                `,
+                isRtl: true,
+                solidarity: '<span>🕊️</span> زن، زندگی، آزادی / Woman, Life, Freedom',
+                solidarityColor: '#34d399'
+            };
+        }
+
+        // Default: RU
+        return {
+            countryCode: 'RU',
+            sessionKey: 'op_ru_blocked',
+            docTitle: '🚫 Access Restricted | Stand with Ukraine 🇺🇦',
+            borderTop: '#0057B7',
+            borderBottom: '#FFD700',
+            flagHTML: `
+                <div class="flag-box">
+                    <div class="flag-top"></div>
+                    <div class="flag-bottom"></div>
+                </div>
+            `,
+            badge: 'Российская Федерация (RU) : ДОСТУП ОГРАНИЧЕН',
+            heading: 'ДОСТУП ЗАБЛОКИРОВАН',
+            subHeading: 'ACCESS RESTRICTED',
+            messageEn: 'Access to Open Publisher has been completely restricted for connections originating from the Russian Federation due to repeated service misuse.',
+            highlight: 'This service will remain blocked until Russian military forces completely withdraw from all sovereign territory of Ukraine.',
+            localMessageHTML: `
+                Доступ к Open Publisher полностью заблокирован для пользователей из Российской Федерации в связи со систематическим злоупотреблением сервисом.<br><br>
+                Работа сервиса будет возобновлена только после полного вывода российских войск со всей суверенной территории Украины.
+            `,
+            isRtl: false,
+            solidarity: '<span>🇺🇦</span> Stand with Ukraine / Разом до перемоги',
+            solidarityColor: '#facc15'
+        };
+    }
+
+    function renderBlockScreen(country) {
+        const c = (country || 'RU').toUpperCase();
+        const cfg = getCountryConfig(c);
+
         try {
-            sessionStorage.setItem('op_ru_blocked', '1');
-            localStorage.setItem('op_ru_blocked', '1');
+            sessionStorage.setItem(cfg.sessionKey, '1');
+            localStorage.setItem(cfg.sessionKey, '1');
+            sessionStorage.setItem('op_geo_blocked_country', c);
+            localStorage.setItem('op_geo_blocked_country', c);
         } catch(e) {}
 
         // Clear any running timers or deferred initializations
@@ -32,7 +99,7 @@
             document.querySelectorAll('#splash-screen, .dashboard-container, #canvas-container, .pub-context-menu, #op-format-indicator').forEach(el => el.remove());
         } catch(e) {}
 
-        document.title = '🚫 Access Restricted | Stand with Ukraine 🇺🇦';
+        document.title = cfg.docTitle;
 
         const blockHTML = `
 <!DOCTYPE html>
@@ -40,13 +107,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚫 Access Restricted | Stand with Ukraine 🇺🇦</title>
+    <title>${cfg.docTitle}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
             background: #0b0f19 !important;
             color: #f8fafc !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, Tahoma, sans-serif !important;
             margin: 0 !important;
             padding: 0 !important;
             width: 100vw !important;
@@ -80,8 +147,8 @@
         .block-card {
             background: #151d30;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #0057B7;
-            border-bottom: 4px solid #FFD700;
+            border-top: 4px solid ${cfg.borderTop};
+            border-bottom: 4px solid ${cfg.borderBottom};
             border-radius: 18px;
             max-width: 580px;
             width: 100%;
@@ -90,6 +157,7 @@
             animation: fadeIn 0.4s ease-out;
             position: relative;
             z-index: 2147483647;
+            padding: 32px 28px;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
@@ -103,6 +171,8 @@
             margin: 0 auto 20px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
         }
         .flag-top {
             height: 50%;
@@ -155,16 +225,17 @@
             background: rgba(255, 255, 255, 0.1);
             margin: 22px 0;
         }
-        .message-ru {
+        .message-local {
             font-size: 0.88rem;
             line-height: 1.6;
             color: #94a3b8;
+            ${cfg.isRtl ? 'direction: rtl; text-align: center;' : ''}
         }
         .solidarity {
             margin-top: 24px;
             font-size: 1rem;
             font-weight: 700;
-            color: #facc15;
+            color: ${cfg.solidarityColor};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -175,32 +246,28 @@
 <body>
     <div id="op-geo-block-overlay">
         <div class="block-card">
-            <div class="flag-box">
-                <div class="flag-top"></div>
-                <div class="flag-bottom"></div>
-            </div>
+            ${cfg.flagHTML}
 
-            <div class="badge">Российская Федерация (RU) : ДОСТУП ОГРАНИЧЕН</div>
+            <div class="badge">${cfg.badge}</div>
 
-            <h1>ДОСТУП ЗАБЛОКИРОВАН</h1>
-            <div class="sub-heading">ACCESS RESTRICTED</div>
+            <h1>${cfg.heading}</h1>
+            <div class="sub-heading">${cfg.subHeading}</div>
 
             <p class="message-en">
-                Access to Open Publisher has been completely restricted for connections originating from the Russian Federation due to repeated service misuse.
+                ${cfg.messageEn}
             </p>
             <p class="highlight">
-                This service will remain blocked until Russian military forces completely withdraw from all sovereign territory of Ukraine.
+                ${cfg.highlight}
             </p>
 
             <div class="divider"></div>
 
-            <p class="message-ru">
-                Доступ к Open Publisher полностью заблокирован для пользователей из Российской Федерации в связи со систематическим злоупотреблением сервисом.<br><br>
-                Работа сервиса будет возобновлена только после полного вывода российских войск со всей суверенной территории Украины.
+            <p class="message-local">
+                ${cfg.localMessageHTML}
             </p>
 
             <div class="solidarity">
-                <span>🇺🇦</span> Stand with Ukraine / Разом до перемоги
+                ${cfg.solidarity}
             </div>
         </div>
     </div>
@@ -211,35 +278,67 @@
         document.documentElement.innerHTML = blockHTML;
     }
 
-    // Expose simulation helper for automated testing and verification
+    // Expose simulation helpers for automated testing and verification
     window._simulateRussiaGeoBlock = function() {
-        renderBlockScreen();
+        renderBlockScreen('RU');
+    };
+    window._simulateIranGeoBlock = function() {
+        renderBlockScreen('IR');
+    };
+    window._simulateGeoBlock = function(country) {
+        renderBlockScreen((country || 'IR').toUpperCase());
+    };
+    window._resetGeoBlock = function() {
+        try {
+            sessionStorage.removeItem('op_ru_blocked');
+            localStorage.removeItem('op_ru_blocked');
+            sessionStorage.removeItem('op_ir_blocked');
+            localStorage.removeItem('op_ir_blocked');
+            sessionStorage.removeItem('op_geo_blocked_country');
+            localStorage.removeItem('op_geo_blocked_country');
+            location.reload();
+        } catch(e) {}
     };
 
     // 1. Immediate cache check
     try {
-        if (sessionStorage.getItem('op_ru_blocked') === '1' || localStorage.getItem('op_ru_blocked') === '1') {
-            renderBlockScreen();
+        if (sessionStorage.getItem('op_ir_blocked') === '1' || localStorage.getItem('op_ir_blocked') === '1' ||
+            sessionStorage.getItem('op_geo_blocked_country') === 'IR' || localStorage.getItem('op_geo_blocked_country') === 'IR') {
+            renderBlockScreen('IR');
+            return;
+        }
+        if (sessionStorage.getItem('op_ru_blocked') === '1' || localStorage.getItem('op_ru_blocked') === '1' ||
+            sessionStorage.getItem('op_geo_blocked_country') === 'RU' || localStorage.getItem('op_geo_blocked_country') === 'RU') {
+            renderBlockScreen('RU');
             return;
         }
     } catch(e) {}
 
-    // 2. Client-side Timezone & Russian Locale Heuristic Check
+    // 2. Client-side Timezone & Locale Heuristic Check
     try {
         const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const userLang = (navigator.language || '').toLowerCase();
         const userLanguages = (navigator.languages || []).map(l => l.toLowerCase());
         const hasRussianLang = userLang.startsWith('ru') || userLanguages.some(l => l.startsWith('ru'));
+        const hasPersianLang = userLang.startsWith('fa') || userLanguages.some(l => l.startsWith('fa')) ||
+                               userLang.startsWith('pes') || userLanguages.some(l => l.startsWith('pes'));
 
+        // Russia heuristic: Russian timezone + Russian language preference
         if (RU_TIMEZONES.includes(userTz) && hasRussianLang) {
-            renderBlockScreen();
+            renderBlockScreen('RU');
+            return;
+        }
+
+        // Iran heuristic: Tehran timezone OR Persian language with Iran timezone
+        if (IR_TIMEZONES.includes(userTz) || (hasPersianLang && (userTz.includes('Tehran') || userTz.includes('Iran')))) {
+            renderBlockScreen('IR');
             return;
         }
     } catch(e) {}
 
     // 3. Network Cloudflare Trace & IP Geolocation Check
     async function checkNetworkGeo() {
-        let isRussianIP = false;
+        let blockedCountry = null;
 
         // Vector A: Cloudflare /cdn-cgi/trace
         try {
@@ -251,14 +350,16 @@
             if (cfResp.ok) {
                 const text = await cfResp.text();
                 const match = text.match(/loc=([A-Z]{2})/i);
-                if (match && match[1].toUpperCase() === 'RU') {
-                    isRussianIP = true;
+                if (match) {
+                    const loc = match[1].toUpperCase();
+                    if (loc === 'RU') blockedCountry = 'RU';
+                    else if (loc === 'IR') blockedCountry = 'IR';
                 }
             }
         } catch(e) {}
 
-        if (isRussianIP) {
-            renderBlockScreen();
+        if (blockedCountry) {
+            renderBlockScreen(blockedCountry);
             return;
         }
 
@@ -267,14 +368,16 @@
             const geoResp = await fetch('https://api.country.is/', { cache: 'no-store' });
             if (geoResp.ok) {
                 const geoData = await geoResp.json();
-                if (geoData && geoData.country === 'RU') {
-                    isRussianIP = true;
+                if (geoData && geoData.country) {
+                    const c = geoData.country.toUpperCase();
+                    if (c === 'RU') blockedCountry = 'RU';
+                    else if (c === 'IR') blockedCountry = 'IR';
                 }
             }
         } catch(e) {}
 
-        if (isRussianIP) {
-            renderBlockScreen();
+        if (blockedCountry) {
+            renderBlockScreen(blockedCountry);
         }
     }
 
