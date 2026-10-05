@@ -157,7 +157,12 @@ function renderPage(pageData) {
         if (data.overflow) el.style.overflow = data.overflow;
         if (data.type) el.setAttribute('data-type', data.type);
         if (data.arrowStyle) el.setAttribute('data-arrow-style', data.arrowStyle);
-        if (data.arrowHead) el.setAttribute('data-arrow-head', data.arrowHead);
+        if (data.arrowHead) {
+            el.setAttribute('data-arrow-head', data.arrowHead);
+            el.setAttribute('data-arrow-head-px', data.arrowHead);
+            el.setAttribute('data-arrow-head-length', data.arrowHead);
+        }
+        if (data.arrowStrokeWidth) el.setAttribute('data-arrow-stroke-width', data.arrowStrokeWidth);
         
         // Restore scale attributes
         const sX = data.scaleX || "1";

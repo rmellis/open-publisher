@@ -131,6 +131,15 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
     }
 
+    // High-resolution Smart Arrow print baking for canvas capture
+    const arrowTargets = Array.from(clone.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
+    const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
+    smartArrows.forEach(arrowEl => {
+        if (typeof window.bakeSmartArrowForPrint === 'function') {
+            window.bakeSmartArrowForPrint(arrowEl, Math.max(3.0, (scaleMultiplier || 2) * 1.5));
+        }
+    });
+
     await window.bakeSVGFiltersForHtml2Canvas(clone, paper);
 
     const canvas = await html2canvas(clone, { 

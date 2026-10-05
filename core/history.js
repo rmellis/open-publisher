@@ -96,7 +96,8 @@ function serializeCurrentPage() {
             shrinkOverflow: el.getAttribute('data-shrink-overflow') === 'true',
             growFit: el.getAttribute('data-grow-fit') === 'true',
             arrowStyle: el.getAttribute('data-arrow-style') || null,
-            arrowHead: el.getAttribute('data-arrow-head') || null
+            arrowHead: el.getAttribute('data-arrow-head') || null,
+            arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null
         };
 
         const content = el.querySelector('.element-content');

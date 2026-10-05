@@ -945,6 +945,14 @@ window.ContextMenuActions = {
             clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
         }
 
+        const arrowTargets = Array.from(clone.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
+        const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
+        smartArrows.forEach(arrowEl => {
+            if (typeof window.bakeSmartArrowForPrint === 'function') {
+                window.bakeSmartArrowForPrint(arrowEl, 4.0);
+            }
+        });
+
         if (typeof window.bakeSVGFiltersForHtml2Canvas === 'function') {
             await window.bakeSVGFiltersForHtml2Canvas(clone, content);
         }

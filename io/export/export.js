@@ -208,6 +208,13 @@ window.exportAsHTML = async function(opts = {}) {
             });
             
             if (opts.email && typeof html2canvas !== 'undefined') {
+                const arrowTargets = Array.from(pageWrapper.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
+                const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
+                smartArrows.forEach(arrowEl => {
+                    if (typeof window.bakeSmartArrowForPrint === 'function') {
+                        window.bakeSmartArrowForPrint(arrowEl, 3.0);
+                    }
+                });
                 const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: page.background || '#ffffff' });
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
                 const tbl = `

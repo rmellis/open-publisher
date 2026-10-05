@@ -131,6 +131,16 @@
                 
                 elementsToRender.forEach(el => {
                     let elDiv = document.createElement('div');
+                    elDiv.className = 'pub-element';
+                    if (el.type) elDiv.setAttribute('data-type', el.type);
+                    if (el.arrowStyle) elDiv.setAttribute('data-arrow-style', el.arrowStyle);
+                    if (el.arrowHead) {
+                        elDiv.setAttribute('data-arrow-head', el.arrowHead);
+                        elDiv.setAttribute('data-arrow-head-px', el.arrowHead);
+                        elDiv.setAttribute('data-arrow-head-length', el.arrowHead);
+                    }
+                    if (el.arrowStrokeWidth) elDiv.setAttribute('data-arrow-stroke-width', el.arrowStrokeWidth);
+
                     elDiv.style.position = 'absolute';
                     elDiv.style.left = el.left;
                     elDiv.style.top = el.top;
@@ -619,6 +629,15 @@
 
                 for (let el of elementsToRender) {
                     let elDiv = document.createElement('div');
+                    elDiv.className = 'pub-element';
+                    if (el.type) elDiv.setAttribute('data-type', el.type);
+                    if (el.arrowStyle) elDiv.setAttribute('data-arrow-style', el.arrowStyle);
+                    if (el.arrowHead) {
+                        elDiv.setAttribute('data-arrow-head', el.arrowHead);
+                        elDiv.setAttribute('data-arrow-head-px', el.arrowHead);
+                        elDiv.setAttribute('data-arrow-head-length', el.arrowHead);
+                    }
+                    if (el.arrowStrokeWidth) elDiv.setAttribute('data-arrow-stroke-width', el.arrowStrokeWidth);
                     
                     elDiv.style.position = 'absolute';
                     elDiv.style.left = el.left;
