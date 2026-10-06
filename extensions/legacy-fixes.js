@@ -734,10 +734,11 @@
     window.copyEl = function(isCut = false) {
         // Check up front whether the user has text highlighted inside a contenteditable.
         // We must do this BEFORE the recover-focus block below changes focus/selection.
+        const savedCtxRange = window._contextTargetRange && !window._contextTargetRange.collapsed ? window._contextTargetRange : null;
         const selBeforeRecover = window.getSelection();
-        const hasTextSelectionBeforeRecover = selBeforeRecover && selBeforeRecover.rangeCount > 0 && !selBeforeRecover.isCollapsed;
+        const hasTextSelectionBeforeRecover = (selBeforeRecover && selBeforeRecover.rangeCount > 0 && !selBeforeRecover.isCollapsed) || !!savedCtxRange;
 
-        // Recover focus if lost due to clicking ribbon - but only when the user
+        // Recover focus if lost due to clicking ribbon or context menu - but only when the user
         // actually had text selected (i.e. this is a text copy, not an element copy).
         let targetBox = document.activeElement;
         if (hasTextSelectionBeforeRecover &&
@@ -746,11 +747,12 @@
                 const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
                 if (innerText) {
                     targetBox = innerText;
-                    if (state.lastRange) {
+                    const rangeToRestore = savedCtxRange || state.lastRange;
+                    if (rangeToRestore) {
                         targetBox.focus();
                         const sel = window.getSelection();
                         sel.removeAllRanges();
-                        sel.addRange(state.lastRange);
+                        sel.addRange(rangeToRestore);
                     }
                 }
             }
@@ -806,6 +808,7 @@
             
             if (isCut) {
                 sel.deleteFromDocument();
+                window._contextTargetRange = null;
                 if (typeof pushHistory !== 'undefined') pushHistory();
             }
             return;
@@ -2256,7 +2259,7 @@
 
 
 
-// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.3)
+// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.4)
 
 
 ;(function upgradeCropHandleSize() {

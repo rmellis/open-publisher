@@ -54,8 +54,11 @@ const ContextMenuSystem = {
         window._contextTargetLink = e.target.closest('a');
         
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
             window._contextTargetRange = sel.getRangeAt(0).cloneRange();
+            if (typeof state !== 'undefined') {
+                state.lastRange = window._contextTargetRange;
+            }
         } else {
             window._contextTargetRange = null;
         }
@@ -78,8 +81,9 @@ const ContextMenuSystem = {
             if (isDocTitle) {
                 html += this.buildDivider();
                 
-                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--ui-theme-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for copy and paste.<br><br>â€¢ <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>â€¢ <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
+                const clipboardMsg = `DialogSystem.show('Clipboard', '<div style=&quot;display:flex; align-items:center; gap:20px;&quot;><i class=&quot;fas fa-info-circle fa-2x&quot; style=&quot;color:var(--ui-theme-color);&quot;></i><div style=&quot;font-size:14px; max-width:350px; line-height:1.4;&quot;>OpenPublisher was prevented from reading your clipboard, or no data is present. Please use the keyboard shortcuts for clipboard actions.<br><br>• <b>Cut:</b> Ctrl + X (or Cmd + X on Mac)<br>• <b>Copy:</b> Ctrl + C (or Cmd + C on Mac)<br>• <b>Paste:</b> Ctrl + V (or Cmd + V on Mac)</div></div>', null, true)`;
                 
+                html += this.buildItem('Cut', 'fa-cut', clipboardMsg);
                 html += this.buildItem('Copy', 'fa-copy', clipboardMsg);
                 html += this.buildItem('Paste', 'fa-paste', clipboardMsg);
             }
@@ -372,7 +376,8 @@ const ContextMenuSystem = {
                 html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
                 html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
                 html += this.buildDivider();
-                html += this.buildItem('Copy', 'fa-copy', 'copyEl()');
+                html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
+                html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
                 html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
                 if (isText) {
                     html += this.buildItem('Paste Without Formatting', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteWithoutFormatting()');

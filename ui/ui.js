@@ -278,6 +278,46 @@ window.ContextMenuActions = {
         if (typeof pushHistory !== 'undefined') pushHistory();
     },
 
+    cut: function() {
+        if (window._contextTargetRange && typeof state !== 'undefined' && state.selectedEl) {
+            const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
+            if (innerText) {
+                try {
+                    innerText.focus();
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(window._contextTargetRange);
+                } catch(e) {}
+            }
+        }
+        if (typeof window.cutEl === 'function') {
+            window.cutEl();
+        } else if (typeof window.copyEl === 'function') {
+            window.copyEl(true);
+        } else if (typeof cutEl === 'function') {
+            cutEl();
+        }
+    },
+
+    copy: function() {
+        if (window._contextTargetRange && typeof state !== 'undefined' && state.selectedEl) {
+            const innerText = state.selectedEl.querySelector('[contenteditable="true"]') || state.selectedEl.querySelector('.text-content');
+            if (innerText) {
+                try {
+                    innerText.focus();
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(window._contextTargetRange);
+                } catch(e) {}
+            }
+        }
+        if (typeof window.copyEl === 'function') {
+            window.copyEl(false);
+        } else if (typeof copyEl === 'function') {
+            copyEl();
+        }
+    },
+
     pasteNormal: async function(inPlace = false) {
         let targetBox = document.activeElement;
         

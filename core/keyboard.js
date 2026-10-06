@@ -74,6 +74,16 @@ document.addEventListener('keydown', (e) => {
             if (typeof fitToPage === 'function') fitToPage();
             return;
         }
+        // Cut
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'X')) {
+            const sel = window.getSelection();
+            const hasTextSel = sel && sel.rangeCount > 0 && !sel.isCollapsed;
+            if (state.selectedEl && !(isTextEditing() && hasTextSel)) {
+                e.preventDefault();
+                if (typeof window.cutEl === 'function') window.cutEl();
+                else if (typeof cutEl === 'function') cutEl();
+            }
+        }
         // Copy
         if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
             const sel = window.getSelection();

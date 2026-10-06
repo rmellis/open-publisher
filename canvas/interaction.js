@@ -493,6 +493,15 @@ function selectAllElements() {
 
 function copyEl() { if(state.selectedEl) state.copiedEl = state.selectedEl.cloneNode(true); }
 
+function cutEl() { 
+    if (typeof window.copyEl === 'function') {
+        window.copyEl(true);
+    } else {
+        copyEl();
+        deleteSelected();
+    }
+}
+
 function pasteEl() { 
     if(state.copiedEl) { 
         const n = state.copiedEl.cloneNode(true);
