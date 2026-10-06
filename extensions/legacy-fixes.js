@@ -2256,7 +2256,7 @@
 
 
 ;(function installPerfectedThemeStudio() {
-    console.log("🛠️ Theme Studio initializing...");
+    console.log("🛠️ Theme Studio initializing (v5.4.0 Office-style Ribbon Gallery & 300 Themes)...");
 
     // ==========================================
     // 1. CLEANUP & PREPARATION
@@ -2270,6 +2270,9 @@
     const rogueStudio = document.getElementById('advanced-theme-studio');
     if (rogueStudio) rogueStudio.remove();
 
+    const existingPopover = document.getElementById('ts-gallery-popover');
+    if (existingPopover) existingPopover.remove();
+
     // ==========================================
     // 2. INJECT CSS
     // ==========================================
@@ -2278,54 +2281,2786 @@
     document.head.appendChild(style);
 
     // ==========================================
-    // 3. THEME DEFINITIONS
+    // 3. THEME DEFINITIONS (300 Authentic Curated Themes)
     // ==========================================
-    const gradients = [
-        { c1: '#4facfe', c2: '#00f2fe', icon: 'fa-sun' },
-        { c1: '#667eea', c2: '#764ba2', icon: 'fa-moon' },
-        { c1: '#ff0844', c2: '#ffb199', icon: 'fa-fire' },
-        { c1: '#f83600', c2: '#f9d423', icon: 'fa-bolt' },
-        { c1: '#b224ef', c2: '#7579ff', icon: 'fa-star' },
-        { c1: '#fa709a', c2: '#fee140', icon: 'fa-heart' },
-        { c1: '#89f7fe', c2: '#66a6ff', icon: 'fa-water' },
-        { c1: '#0ba360', c2: '#3cba92', icon: 'fa-leaf' },
-        { c1: '#232526', c2: '#414345', icon: 'fa-city' },
-        { c1: '#ff7e5f', c2: '#feb47b', icon: 'fa-sunset' },
-        { c1: '#a18cd1', c2: '#fbc2eb', icon: 'fa-magic' },
-        { c1: '#2b5876', c2: '#4e4376', icon: 'fa-meteor' }
+    const THEME_CATEGORIES = [
+        { id: 'gradient', name: 'Modern & Vibrant Gradients', icon: 'fa-rainbow', count: 60 },
+        { id: 'corporate', name: 'Corporate, Legal & Editorial', icon: 'fa-briefcase', count: 60 },
+        { id: 'dark', name: 'Dark Mode & Luxury', icon: 'fa-moon', count: 60 },
+        { id: 'texture', name: 'Fine Papers, Fabrics & Materials', icon: 'fa-scroll', count: 60 },
+        { id: 'pastel', name: 'Soft Pastels & Earthy Naturals', icon: 'fa-leaf', count: 60 }
     ];
 
-    const textures = [
-        { c1: '#f1f5f9', url: 'https://www.transparenttextures.com/patterns/white-wall.png', icon: 'fa-border-all' },
-        { c1: '#cbd5e1', url: 'https://www.transparenttextures.com/patterns/brushed-alum.png', icon: 'fa-align-justify' },
-        { c1: '#94a3b8', url: 'https://www.transparenttextures.com/patterns/concrete-wall.png', icon: 'fa-circle-half-stroke' },
-        { c1: '#fde047', url: 'https://www.transparenttextures.com/patterns/cream-paper.png', icon: 'fa-scroll' },
-        { c1: '#3b82f6', url: 'https://www.transparenttextures.com/patterns/denim.png', icon: 'fa-layer-group' },
-        { c1: '#1e293b', url: 'https://www.transparenttextures.com/patterns/leather.png', icon: 'fa-grip' },
-        { c1: '#8b5cf6', url: 'https://www.transparenttextures.com/patterns/wood-pattern.png', icon: 'fa-tree' },
-        { c1: '#10b981', url: 'https://www.transparenttextures.com/patterns/cubes.png', icon: 'fa-cubes' },
-        { c1: '#64748b', url: 'https://www.transparenttextures.com/patterns/asphalt-pattern.png', icon: 'fa-road' },
-        { c1: '#334155', url: 'https://www.transparenttextures.com/patterns/carbon-fibre.png', icon: 'fa-chess-board' },
-        { c1: '#fef08a', url: 'https://www.transparenttextures.com/patterns/notebook.png', icon: 'fa-book' },
-        { c1: '#ef4444', url: 'https://www.transparenttextures.com/patterns/brick-wall.png', icon: 'fa-th-large' }
+    const ALL_THEMES = [
+        {
+            "id": "aurora-sky",
+            "name": "Aurora Sky",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#4facfe",
+            "c2": "#00f2fe",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "sunset-horizon",
+            "name": "Sunset Horizon",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#fa709a",
+            "c2": "#fee140",
+            "icon": "fa-cloud-sun"
+        },
+        {
+            "id": "cosmic-violet",
+            "name": "Cosmic Violet",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#667eea",
+            "c2": "#764ba2",
+            "icon": "fa-moon"
+        },
+        {
+            "id": "crimson-ember",
+            "name": "Crimson Ember",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff0844",
+            "c2": "#ffb199",
+            "icon": "fa-fire"
+        },
+        {
+            "id": "solar-flare",
+            "name": "Solar Flare",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f83600",
+            "c2": "#f9d423",
+            "icon": "fa-bolt"
+        },
+        {
+            "id": "neon-cyberpunk",
+            "name": "Neon Cyberpunk",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#b224ef",
+            "c2": "#7579ff",
+            "icon": "fa-star"
+        },
+        {
+            "id": "azure-tide",
+            "name": "Azure Tide",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#89f7fe",
+            "c2": "#66a6ff",
+            "icon": "fa-water"
+        },
+        {
+            "id": "emerald-biosphere",
+            "name": "Emerald Biosphere",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#0ba360",
+            "c2": "#3cba92",
+            "icon": "fa-leaf"
+        },
+        {
+            "id": "twilight-glow",
+            "name": "Twilight Glow",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff7e5f",
+            "c2": "#feb47b",
+            "icon": "fa-sunset"
+        },
+        {
+            "id": "mystic-lavender",
+            "name": "Mystic Lavender",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#a18cd1",
+            "c2": "#fbc2eb",
+            "icon": "fa-magic"
+        },
+        {
+            "id": "deep-celestial",
+            "name": "Deep Celestial",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#2b5876",
+            "c2": "#4e4376",
+            "icon": "fa-meteor"
+        },
+        {
+            "id": "citrus-burst",
+            "name": "Citrus Burst",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f6d365",
+            "c2": "#fda085",
+            "icon": "fa-lemon"
+        },
+        {
+            "id": "arctic-glacier",
+            "name": "Arctic Glacier",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#cfd9df",
+            "c2": "#e2ebf0",
+            "icon": "fa-snowflake"
+        },
+        {
+            "id": "neon-mint",
+            "name": "Neon Mint",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#43e97b",
+            "c2": "#38f9d7",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "royal-amethyst",
+            "name": "Royal Amethyst",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#5f72bd",
+            "c2": "#9b23ea",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "ocean-trench",
+            "name": "Ocean Trench",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#09203f",
+            "c2": "#537895",
+            "icon": "fa-compass"
+        },
+        {
+            "id": "rose-quartz",
+            "name": "Rose Quartz",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff9a9e",
+            "c2": "#fad0c4",
+            "icon": "fa-heart"
+        },
+        {
+            "id": "electric-indigo",
+            "name": "Electric Indigo",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#30cfd0",
+            "c2": "#330867",
+            "icon": "fa-bolt-lightning"
+        },
+        {
+            "id": "amber-blaze",
+            "name": "Amber Blaze",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff9900",
+            "c2": "#ff5500",
+            "icon": "fa-fire-flame-curved"
+        },
+        {
+            "id": "bora-bora",
+            "name": "Bora Bora Blue",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#00c6ff",
+            "c2": "#0072ff",
+            "icon": "fa-umbrella-beach"
+        },
+        {
+            "id": "mauve-velvet",
+            "name": "Mauve Velvet",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#8e2de2",
+            "c2": "#4a00e0",
+            "icon": "fa-sparkles"
+        },
+        {
+            "id": "golden-hour",
+            "name": "Golden Hour",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f12711",
+            "c2": "#f5af19",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "northern-lights",
+            "name": "Northern Lights",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#43cea2",
+            "c2": "#185a9d",
+            "icon": "fa-mountain-sun"
+        },
+        {
+            "id": "cherry-blossom",
+            "name": "Cherry Blossom",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f857a6",
+            "c2": "#ff5858",
+            "icon": "fa-spa"
+        },
+        {
+            "id": "executive-slate",
+            "name": "Executive Slate",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#e2e8f0",
+            "icon": "fa-briefcase"
+        },
+        {
+            "id": "oxford-blue-wash",
+            "name": "Oxford Blue Wash",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0f4f8",
+            "c2": "#d9e2ec",
+            "icon": "fa-graduation-cap"
+        },
+        {
+            "id": "legal-ivory",
+            "name": "Legal Ivory",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fefcf3",
+            "c2": "#fdf6e2",
+            "icon": "fa-scale-balanced"
+        },
+        {
+            "id": "warm-parchment",
+            "name": "Warm Parchment",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fbf8f1",
+            "c2": "#f4ede4",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "minimalist-chalk",
+            "name": "Minimalist Chalk",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f5f5f7",
+            "c2": "#e5e5ea",
+            "icon": "fa-square"
+        },
+        {
+            "id": "financial-cool-grey",
+            "name": "Financial Cool Grey",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f1f5f9",
+            "c2": "#cbd5e1",
+            "icon": "fa-chart-line"
+        },
+        {
+            "id": "editorial-bone",
+            "name": "Editorial Bone",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#faf8f5",
+            "c2": "#ede8e1",
+            "icon": "fa-newspaper"
+        },
+        {
+            "id": "corporate-sterling",
+            "name": "Corporate Sterling",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#e2e8f0",
+            "c2": "#f8fafc",
+            "icon": "fa-building-columns"
+        },
+        {
+            "id": "harvard-crimson-wash",
+            "name": "Harvard Crimson Wash",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fdf2f2",
+            "c2": "#fde8e8",
+            "icon": "fa-landmark"
+        },
+        {
+            "id": "tech-cyan-tint",
+            "name": "Tech Cyan Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0fdfa",
+            "c2": "#ccfbf1",
+            "icon": "fa-microchip"
+        },
+        {
+            "id": "monochrome-silk",
+            "name": "Monochrome Silk",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f4f4f6",
+            "c2": "#e4e4e7",
+            "icon": "fa-feather"
+        },
+        {
+            "id": "cambridge-amber",
+            "name": "Cambridge Amber",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fffbeb",
+            "c2": "#fef3c7",
+            "icon": "fa-book-open"
+        },
+        {
+            "id": "banker-subtle-blue",
+            "name": "Banker Subtle Blue",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#eff6ff",
+            "c2": "#dbeafe",
+            "icon": "fa-vault"
+        },
+        {
+            "id": "editorial-newsprint",
+            "name": "Editorial Newsprint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f6f5f0",
+            "c2": "#eae7df",
+            "icon": "fa-feather-pointed"
+        },
+        {
+            "id": "architectural-concrete",
+            "name": "Architectural Grey",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#e4e4e7",
+            "c2": "#d4d4d8",
+            "icon": "fa-compass-drafting"
+        },
+        {
+            "id": "classic-stationery",
+            "name": "Classic Stationery",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fafaf9",
+            "c2": "#f5f5f4",
+            "icon": "fa-signature"
+        },
+        {
+            "id": "manhattan-granite",
+            "name": "Manhattan Granite",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f3f4f6",
+            "c2": "#e5e7eb",
+            "icon": "fa-city"
+        },
+        {
+            "id": "legal-manuscript",
+            "name": "Legal Manuscript",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fdfbf7",
+            "c2": "#f7f3e9",
+            "icon": "fa-file-contract"
+        },
+        {
+            "id": "nordic-frost",
+            "name": "Nordic Frost",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#ecfeff",
+            "icon": "fa-icicles"
+        },
+        {
+            "id": "consortium-blue",
+            "name": "Consortium Blue",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0f7ff",
+            "c2": "#e0f2fe",
+            "icon": "fa-handshake"
+        },
+        {
+            "id": "berlin-sand",
+            "name": "Berlin Sandstone",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fbf9f5",
+            "c2": "#f3ede2",
+            "icon": "fa-monument"
+        },
+        {
+            "id": "vienna-porcelain",
+            "name": "Vienna Porcelain",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fafaf9",
+            "c2": "#f4f4f5",
+            "icon": "fa-chess-rook"
+        },
+        {
+            "id": "matte-noir",
+            "name": "Matte Noir",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#121214",
+            "c2": "#18181b",
+            "icon": "fa-circle"
+        },
+        {
+            "id": "obsidian-gold",
+            "name": "Obsidian Gold",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1c1917",
+            "c2": "#292524",
+            "icon": "fa-crown"
+        },
+        {
+            "id": "midnight-navy",
+            "name": "Midnight Navy",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0f172a",
+            "c2": "#1e293b",
+            "icon": "fa-moon"
+        },
+        {
+            "id": "smoked-titanium",
+            "name": "Smoked Titanium",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#232526",
+            "c2": "#414345",
+            "icon": "fa-shield"
+        },
+        {
+            "id": "royal-burgundy",
+            "name": "Royal Burgundy",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#2c0b0e",
+            "c2": "#451217",
+            "icon": "fa-wine-glass"
+        },
+        {
+            "id": "emerald-velvet",
+            "name": "Emerald Velvet",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#062319",
+            "c2": "#0d3a2a",
+            "icon": "fa-ring"
+        },
+        {
+            "id": "deep-space",
+            "name": "Deep Space",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0a0f1d",
+            "c2": "#162035",
+            "icon": "fa-shuttle-space"
+        },
+        {
+            "id": "gunmetal-slate",
+            "name": "Gunmetal Slate",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#27272a",
+            "c2": "#3f3f46",
+            "icon": "fa-layer-group"
+        },
+        {
+            "id": "espresso-roast",
+            "name": "Espresso Roast",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1c140e",
+            "c2": "#2e2118",
+            "icon": "fa-mug-hot"
+        },
+        {
+            "id": "deep-teal-noir",
+            "name": "Deep Teal Noir",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#041d1e",
+            "c2": "#0a2e30",
+            "icon": "fa-water"
+        },
+        {
+            "id": "eclipse-dark",
+            "name": "Eclipse Gradient",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#090a0f",
+            "c2": "#1e2029",
+            "icon": "fa-circle-half-stroke"
+        },
+        {
+            "id": "black-onyx",
+            "name": "Black Onyx",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#050505",
+            "c2": "#1a1a1a",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "violet-night",
+            "name": "Violet Night",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#180e29",
+            "c2": "#2d184a",
+            "icon": "fa-wand-magic-sparkles"
+        },
+        {
+            "id": "dark-damask",
+            "name": "Dark Damask",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#141416",
+            "c2": "#222228",
+            "icon": "fa-chess-king"
+        },
+        {
+            "id": "cyber-matrix-dark",
+            "name": "Cyber Matrix Dark",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0d1912",
+            "c2": "#122b1e",
+            "icon": "fa-terminal"
+        },
+        {
+            "id": "charcoal-minimal",
+            "name": "Charcoal Minimal",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1e1e1e",
+            "c2": "#2d2d2d",
+            "icon": "fa-square-full"
+        },
+        {
+            "id": "steel-shadow",
+            "name": "Steel Shadow",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1a202c",
+            "c2": "#2d3748",
+            "icon": "fa-cube"
+        },
+        {
+            "id": "bronze-noir",
+            "name": "Bronze Noir",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#261e14",
+            "c2": "#3d2f1f",
+            "icon": "fa-medal"
+        },
+        {
+            "id": "midnight-amethyst",
+            "name": "Midnight Amethyst",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1e0826",
+            "c2": "#2e1040",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "carbon-graphite",
+            "name": "Carbon Graphite",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#18181b",
+            "c2": "#27272a",
+            "icon": "fa-atom"
+        },
+        {
+            "id": "dark-cognac",
+            "name": "Dark Cognac",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#2a170c",
+            "c2": "#3d2314",
+            "icon": "fa-whiskey-glass"
+        },
+        {
+            "id": "deep-sapphire",
+            "name": "Deep Sapphire",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#071527",
+            "c2": "#0f2744",
+            "icon": "fa-compass"
+        },
+        {
+            "id": "imperial-jade",
+            "name": "Imperial Jade",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#061d15",
+            "c2": "#0d3225",
+            "icon": "fa-shield-halved"
+        },
+        {
+            "id": "phantom-grey",
+            "name": "Phantom Grey",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#111827",
+            "c2": "#1f2937",
+            "icon": "fa-ghost"
+        },
+        {
+            "id": "white-wall",
+            "name": "White Wall Texture",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/white-wall.png",
+            "icon": "fa-border-all"
+        },
+        {
+            "id": "brushed-aluminum",
+            "name": "Brushed Aluminum",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#cbd5e1",
+            "url": "https://www.transparenttextures.com/patterns/brushed-alum.png",
+            "icon": "fa-align-justify"
+        },
+        {
+            "id": "concrete-wall",
+            "name": "Concrete Wall",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#94a3b8",
+            "url": "https://www.transparenttextures.com/patterns/concrete-wall.png",
+            "icon": "fa-circle-half-stroke"
+        },
+        {
+            "id": "cream-paper",
+            "name": "Cream Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fde047",
+            "url": "https://www.transparenttextures.com/patterns/cream-paper.png",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "denim-fabric",
+            "name": "Denim Fabric",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#3b82f6",
+            "url": "https://www.transparenttextures.com/patterns/denim.png",
+            "icon": "fa-layer-group"
+        },
+        {
+            "id": "black-leather",
+            "name": "Black Leather",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#1e293b",
+            "url": "https://www.transparenttextures.com/patterns/leather.png",
+            "icon": "fa-grip"
+        },
+        {
+            "id": "wood-pattern",
+            "name": "Wood Pattern",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#8b5cf6",
+            "url": "https://www.transparenttextures.com/patterns/wood-pattern.png",
+            "icon": "fa-tree"
+        },
+        {
+            "id": "cubes-pattern",
+            "name": "Cubes Pattern",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#10b981",
+            "url": "https://www.transparenttextures.com/patterns/cubes.png",
+            "icon": "fa-cubes"
+        },
+        {
+            "id": "asphalt-road",
+            "name": "Asphalt Road",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#64748b",
+            "url": "https://www.transparenttextures.com/patterns/asphalt-pattern.png",
+            "icon": "fa-road"
+        },
+        {
+            "id": "carbon-fibre",
+            "name": "Carbon Fibre",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#334155",
+            "url": "https://www.transparenttextures.com/patterns/carbon-fibre.png",
+            "icon": "fa-chess-board"
+        },
+        {
+            "id": "notebook-paper",
+            "name": "Notebook Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fef08a",
+            "url": "https://www.transparenttextures.com/patterns/notebook.png",
+            "icon": "fa-book"
+        },
+        {
+            "id": "brick-wall",
+            "name": "Brick Wall",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#ef4444",
+            "url": "https://www.transparenttextures.com/patterns/brick-wall.png",
+            "icon": "fa-th-large"
+        },
+        {
+            "id": "subtle-dots",
+            "name": "Subtle Dots",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f1f5f9",
+            "url": "https://www.transparenttextures.com/patterns/subtle-dots.png",
+            "icon": "fa-ellipsis"
+        },
+        {
+            "id": "clean-grid",
+            "name": "Blueprint Grid",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#ffffff",
+            "url": "https://www.transparenttextures.com/patterns/gridme.png",
+            "icon": "fa-table-cells"
+        },
+        {
+            "id": "linen-cloth",
+            "name": "Linen Texture",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fafaf9",
+            "url": "https://www.transparenttextures.com/patterns/retina-wood.png",
+            "icon": "fa-shirt"
+        },
+        {
+            "id": "handmade-vellum",
+            "name": "Handmade Vellum",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fef9c3",
+            "url": "https://www.transparenttextures.com/patterns/subtle-grunge.png",
+            "icon": "fa-file-lines"
+        },
+        {
+            "id": "graph-paper",
+            "name": "Graph Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/graphy.png",
+            "icon": "fa-square-check"
+        },
+        {
+            "id": "chalkboard",
+            "name": "Chalkboard Slate",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#2c3e50",
+            "url": "https://www.transparenttextures.com/patterns/chalkboard.png",
+            "icon": "fa-chalkboard"
+        },
+        {
+            "id": "diagonal-mesh",
+            "name": "Diagonal Mesh",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#e2e8f0",
+            "url": "https://www.transparenttextures.com/patterns/diagonal-noise.png",
+            "icon": "fa-lines-leaning"
+        },
+        {
+            "id": "terrazzo-stone",
+            "name": "Ruffled Vellum",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f4f4f5",
+            "url": "https://www.transparenttextures.com/patterns/crisp-paper-ruffles.png",
+            "icon": "fa-mountain"
+        },
+        {
+            "id": "aged-parchment-tex",
+            "name": "Aged Parchment",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fef3c7",
+            "url": "https://www.transparenttextures.com/patterns/aged-paper.png",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "canvas-weave",
+            "name": "Canvas Weave",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f5f5f4",
+            "url": "https://www.transparenttextures.com/patterns/canvas.png",
+            "icon": "fa-palette"
+        },
+        {
+            "id": "diag-stripes-light",
+            "name": "Diagonal Stripes",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f1f5f9",
+            "url": "https://www.transparenttextures.com/patterns/diagonal-striped-brick.png",
+            "icon": "fa-bars"
+        },
+        {
+            "id": "cork-board",
+            "name": "Natural Cork",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#e7d7b5",
+            "url": "https://www.transparenttextures.com/patterns/cork-board.png",
+            "icon": "fa-thumbtack"
+        },
+        {
+            "id": "white-diamond",
+            "name": "Diamond Mesh",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fafafa",
+            "url": "https://www.transparenttextures.com/patterns/white-diamond.png",
+            "icon": "fa-diamond"
+        },
+        {
+            "id": "honeycomb-grid",
+            "name": "Honeycomb Grid",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/hexellence.png",
+            "icon": "fa-shapes"
+        },
+        {
+            "id": "sage-matcha",
+            "name": "Sage Matcha",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#e8f5e9",
+            "c2": "#c8e6c9",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "blush-rose",
+            "name": "Blush Rose",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fce4ec",
+            "c2": "#f8bbd0",
+            "icon": "fa-spa"
+        },
+        {
+            "id": "lavender-mist",
+            "name": "Lavender Mist",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f3e5f5",
+            "c2": "#e1bee7",
+            "icon": "fa-flower"
+        },
+        {
+            "id": "terracotta-clay",
+            "name": "Terracotta Clay",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fbe9e7",
+            "c2": "#ffccbc",
+            "icon": "fa-shapes"
+        },
+        {
+            "id": "desert-sandstone",
+            "name": "Desert Sandstone",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff8e1",
+            "c2": "#ffecb3",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "mint-breeze",
+            "name": "Mint Breeze",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#e0f2f1",
+            "c2": "#b2dfdb",
+            "icon": "fa-wind"
+        },
+        {
+            "id": "soft-peach",
+            "name": "Soft Peach",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff3e0",
+            "c2": "#ffe0b2",
+            "icon": "fa-circle-dot"
+        },
+        {
+            "id": "morning-sky",
+            "name": "Morning Sky",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#e1f5fe",
+            "c2": "#b3e5fc",
+            "icon": "fa-cloud"
+        },
+        {
+            "id": "lilac-dream",
+            "name": "Lilac Dream",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#ede7f6",
+            "c2": "#d1c4e9",
+            "icon": "fa-moon"
+        },
+        {
+            "id": "buttercream",
+            "name": "Buttercream",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefde8",
+            "c2": "#fef08a",
+            "icon": "fa-ice-cream"
+        },
+        {
+            "id": "eucalyptus",
+            "name": "Eucalyptus Green",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#ecfdf5",
+            "c2": "#a7f3d0",
+            "icon": "fa-leaf"
+        },
+        {
+            "id": "coral-whisper",
+            "name": "Coral Whisper",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff1f2",
+            "c2": "#fecdd3",
+            "icon": "fa-heart"
+        },
+        {
+            "id": "warm-oat",
+            "name": "Warm Oat",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fafaf9",
+            "c2": "#e7e5e4",
+            "icon": "fa-wheat-awn"
+        },
+        {
+            "id": "dusty-mauve",
+            "name": "Dusty Mauve",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fae8ff",
+            "c2": "#f0abfc",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "glacier-mist",
+            "name": "Glacier Mist",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdfa",
+            "c2": "#99f6e4",
+            "icon": "fa-droplet"
+        },
+        {
+            "id": "chamomile",
+            "name": "Chamomile Cream",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fffbeb",
+            "c2": "#fde68a",
+            "icon": "fa-sun-plant-wilt"
+        },
+        {
+            "id": "apricot-sorbet",
+            "name": "Apricot Sorbet",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff7ed",
+            "c2": "#fed7aa",
+            "icon": "fa-apple-whole"
+        },
+        {
+            "id": "celadon-green",
+            "name": "Celadon Green",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdf4",
+            "c2": "#bbf7d0",
+            "icon": "fa-clover"
+        },
+        {
+            "id": "powder-periwinkle",
+            "name": "Powder Periwinkle",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#eef2ff",
+            "c2": "#c7d2fe",
+            "icon": "fa-cloud-meatball"
+        },
+        {
+            "id": "warm-alabaster",
+            "name": "Warm Alabaster",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefce8",
+            "c2": "#fef08a",
+            "icon": "fa-cookie"
+        },
+        {
+            "id": "rose-clay",
+            "name": "Rose Clay",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff1f2",
+            "c2": "#fecdd3",
+            "icon": "fa-feather"
+        },
+        {
+            "id": "coastal-fog",
+            "name": "Coastal Fog",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#e2e8f0",
+            "icon": "fa-water"
+        },
+        {
+            "id": "pistachio-cream",
+            "name": "Pistachio Cream",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f7fee7",
+            "c2": "#d9f99d",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "vanilla-latte",
+            "name": "Vanilla Latte",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fffbeb",
+            "c2": "#f5ebe0",
+            "icon": "fa-mug-saucer"
+        },
+        {
+            "id": "tropic-lagoon",
+            "name": "Tropic Lagoon",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#00c9ff",
+            "c2": "#92fe9d",
+            "icon": "fa-water"
+        },
+        {
+            "id": "flamingo-glow",
+            "name": "Flamingo Glow",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f85032",
+            "c2": "#e73827",
+            "icon": "fa-dove"
+        },
+        {
+            "id": "magenta-haze",
+            "name": "Magenta Haze",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#d946ef",
+            "c2": "#8b5cf6",
+            "icon": "fa-wand-magic-sparkles"
+        },
+        {
+            "id": "hyper-orange",
+            "name": "Hyper Orange",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff4e50",
+            "c2": "#f9d423",
+            "icon": "fa-fire"
+        },
+        {
+            "id": "sapphire-stream",
+            "name": "Sapphire Stream",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#1e3c72",
+            "c2": "#2a5298",
+            "icon": "fa-water"
+        },
+        {
+            "id": "matcha-lemonade",
+            "name": "Matcha Lemonade",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#84fab0",
+            "c2": "#8fd3f4",
+            "icon": "fa-glass-water"
+        },
+        {
+            "id": "peach-schnapps",
+            "name": "Peach Schnapps",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ffd1ff",
+            "c2": "#fae1dd",
+            "icon": "fa-heart"
+        },
+        {
+            "id": "cyber-lime",
+            "name": "Cyber Lime",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#a8ff78",
+            "c2": "#78ffd6",
+            "icon": "fa-bolt"
+        },
+        {
+            "id": "velvet-sun",
+            "name": "Velvet Sun",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#e1eec3",
+            "c2": "#f05053",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "plum-nebula",
+            "name": "Plum Nebula",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#3f2b96",
+            "c2": "#a8c0ff",
+            "icon": "fa-meteor"
+        },
+        {
+            "id": "electric-magenta",
+            "name": "Electric Magenta",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f72585",
+            "c2": "#7209b7",
+            "icon": "fa-star"
+        },
+        {
+            "id": "aqua-marine",
+            "name": "Aqua Marine",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#13547a",
+            "c2": "#80d0c7",
+            "icon": "fa-fish"
+        },
+        {
+            "id": "summer-solstice",
+            "name": "Summer Solstice",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ffb347",
+            "c2": "#ffcc33",
+            "icon": "fa-sun-plant-wilt"
+        },
+        {
+            "id": "blazing-orchid",
+            "name": "Blazing Orchid",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ec008c",
+            "c2": "#fc6767",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "deep-abyss",
+            "name": "Deep Abyss",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#0f2027",
+            "c2": "#2c5364",
+            "icon": "fa-cloud-rain"
+        },
+        {
+            "id": "cosmic-fusion",
+            "name": "Cosmic Fusion",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff007f",
+            "c2": "#7928ca",
+            "icon": "fa-atom"
+        },
+        {
+            "id": "zurich-clean",
+            "name": "Zurich Minimal",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8f9fa",
+            "c2": "#e9ecef",
+            "icon": "fa-building-columns"
+        },
+        {
+            "id": "tokyo-monochrome",
+            "name": "Tokyo Monochrome",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f1f3f5",
+            "c2": "#dee2e6",
+            "icon": "fa-torii-gate"
+        },
+        {
+            "id": "london-fog-wash",
+            "name": "London Fog Wash",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f4f6f8",
+            "c2": "#e1e7eb",
+            "icon": "fa-cloud"
+        },
+        {
+            "id": "wall-street-navy",
+            "name": "Wall Street Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0f4f9",
+            "c2": "#dce5ef",
+            "icon": "fa-money-bill-wave"
+        },
+        {
+            "id": "scandi-birch",
+            "name": "Scandinavian Birch",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fcfbfa",
+            "c2": "#f3ede2",
+            "icon": "fa-tree"
+        },
+        {
+            "id": "parliament-vellum",
+            "name": "Parliament Vellum",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fbf9f2",
+            "c2": "#f4eedb",
+            "icon": "fa-scale-unbalanced"
+        },
+        {
+            "id": "florence-marble",
+            "name": "Florence Marble",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#faf9f6",
+            "c2": "#ede9e3",
+            "icon": "fa-monument"
+        },
+        {
+            "id": "geneva-diplomat",
+            "name": "Geneva Diplomat",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f2f5f9",
+            "c2": "#e2e8f1",
+            "icon": "fa-landmark-flag"
+        },
+        {
+            "id": "silicon-slate",
+            "name": "Silicon Slate",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f3f4f6",
+            "c2": "#d1d5db",
+            "icon": "fa-microchip"
+        },
+        {
+            "id": "boston-brahmin",
+            "name": "Boston Crimson Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fff5f5",
+            "c2": "#fed7d7",
+            "icon": "fa-graduation-cap"
+        },
+        {
+            "id": "frankfurt-steel",
+            "name": "Frankfurt Steel",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#eff2f5",
+            "c2": "#dbe1e8",
+            "icon": "fa-coins"
+        },
+        {
+            "id": "sorbonne-cream",
+            "name": "Sorbonne Cream",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fefcf6",
+            "c2": "#faf1da",
+            "icon": "fa-book"
+        },
+        {
+            "id": "amsterdam-wash",
+            "name": "Amsterdam Wash",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0f9ff",
+            "c2": "#e0f2fe",
+            "icon": "fa-bridge-water"
+        },
+        {
+            "id": "chicago-limestone",
+            "name": "Chicago Limestone",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f7f7f5",
+            "c2": "#eae8e1",
+            "icon": "fa-building"
+        },
+        {
+            "id": "chartered-slate",
+            "name": "Chartered Slate",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f1f5f9",
+            "c2": "#cbd5e1",
+            "icon": "fa-file-invoice"
+        },
+        {
+            "id": "notary-parchment",
+            "name": "Notary Parchment",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fdfbee",
+            "c2": "#f9f2d5",
+            "icon": "fa-stamp"
+        },
+        {
+            "id": "press-gallery",
+            "name": "Press Gallery Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#eceff1",
+            "icon": "fa-bullhorn"
+        },
+        {
+            "id": "kyoto-washi",
+            "name": "Kyoto Washi Wash",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fbfaf7",
+            "c2": "#f5f0e6",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "vampire-garnet",
+            "name": "Vampire Garnet",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#210408",
+            "c2": "#380710",
+            "icon": "fa-droplet"
+        },
+        {
+            "id": "midnight-pine",
+            "name": "Midnight Pine",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#03170e",
+            "c2": "#072e1d",
+            "icon": "fa-tree"
+        },
+        {
+            "id": "caviar-black",
+            "name": "Caviar Black",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0d0d0f",
+            "c2": "#17181c",
+            "icon": "fa-circle"
+        },
+        {
+            "id": "black-diamond-dark",
+            "name": "Black Diamond Dark",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#111116",
+            "c2": "#21212c",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "dark-nebula",
+            "name": "Dark Nebula",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#14052b",
+            "c2": "#280a54",
+            "icon": "fa-star"
+        },
+        {
+            "id": "basalt-lava",
+            "name": "Basalt Lava",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1c1917",
+            "c2": "#322521",
+            "icon": "fa-volcano"
+        },
+        {
+            "id": "space-cadet",
+            "name": "Space Cadet Navy",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0b132b",
+            "c2": "#1c2541",
+            "icon": "fa-shuttle-space"
+        },
+        {
+            "id": "truffle-dark",
+            "name": "Truffle Roast",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1b1612",
+            "c2": "#2b231c",
+            "icon": "fa-cookie-bite"
+        },
+        {
+            "id": "black-tuxedo",
+            "name": "Black Tuxedo",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0a0a0c",
+            "c2": "#1a1a22",
+            "icon": "fa-user-tie"
+        },
+        {
+            "id": "dark-petroleum",
+            "name": "Dark Petroleum",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#02161a",
+            "c2": "#052c35",
+            "icon": "fa-oil-well"
+        },
+        {
+            "id": "cyber-void",
+            "name": "Cyber Void",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#090d16",
+            "c2": "#131c31",
+            "icon": "fa-terminal"
+        },
+        {
+            "id": "gothic-plum",
+            "name": "Gothic Plum",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1b0e1e",
+            "c2": "#301736",
+            "icon": "fa-cross"
+        },
+        {
+            "id": "abyssal-indigo",
+            "name": "Abyssal Indigo",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0c0d21",
+            "c2": "#161842",
+            "icon": "fa-compass"
+        },
+        {
+            "id": "bronze-patina",
+            "name": "Bronze Patina",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#161b17",
+            "c2": "#242c26",
+            "icon": "fa-shield"
+        },
+        {
+            "id": "noir-carbonite",
+            "name": "Noir Carbonite",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#141414",
+            "c2": "#242424",
+            "icon": "fa-cube"
+        },
+        {
+            "id": "midnight-chambray",
+            "name": "Midnight Chambray",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0c1926",
+            "c2": "#14283d",
+            "icon": "fa-vest"
+        },
+        {
+            "id": "paper-fibers",
+            "name": "Paper Fibers",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fdfcf7",
+            "url": "https://www.transparenttextures.com/patterns/paper-fibres.png",
+            "icon": "fa-newspaper"
+        },
+        {
+            "id": "woven-fabric",
+            "name": "Woven Fabric",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/fabric-plaid.png",
+            "icon": "fa-rug"
+        },
+        {
+            "id": "leather-grain",
+            "name": "Saddle Leather",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#d2b48c",
+            "url": "https://www.transparenttextures.com/patterns/soft-wallpaper.png",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "carbon-weave",
+            "name": "Carbon Weave",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#1e293b",
+            "url": "https://www.transparenttextures.com/patterns/dark-geometric.png",
+            "icon": "fa-shield-halved"
+        },
+        {
+            "id": "handmade-paper",
+            "name": "Handmade Craft Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#faf8f0",
+            "url": "https://www.transparenttextures.com/patterns/handmade-paper.png",
+            "icon": "fa-leaf"
+        },
+        {
+            "id": "rough-cloth",
+            "name": "Rough Burlap",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f5ede1",
+            "url": "https://www.transparenttextures.com/patterns/rough-cloth.png",
+            "icon": "fa-bag-shopping"
+        },
+        {
+            "id": "cross-stitch",
+            "name": "Cross Stitch",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f1f5f9",
+            "url": "https://www.transparenttextures.com/patterns/cross-stripes.png",
+            "icon": "fa-xmark"
+        },
+        {
+            "id": "vintage-speckle",
+            "name": "Vintage Speckle",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fcfbf7",
+            "url": "https://www.transparenttextures.com/patterns/subtle-freckles.png",
+            "icon": "fa-certificate"
+        },
+        {
+            "id": "herringbone-tex",
+            "name": "Herringbone Weave",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f5f5f4",
+            "url": "https://www.transparenttextures.com/patterns/herringbone.png",
+            "icon": "fa-bars-staggered"
+        },
+        {
+            "id": "crinkled-paper",
+            "name": "Crinkled Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fefce8",
+            "url": "https://www.transparenttextures.com/patterns/crinkled-paper-texture.png",
+            "icon": "fa-file"
+        },
+        {
+            "id": "felt-surface",
+            "name": "Wool Felt",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#e2e8f0",
+            "url": "https://www.transparenttextures.com/patterns/felt.png",
+            "icon": "fa-mitten"
+        },
+        {
+            "id": "light-wool",
+            "name": "Light Wool Weave",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fafaf9",
+            "url": "https://www.transparenttextures.com/patterns/knitted-netting.png",
+            "icon": "fa-socks"
+        },
+        {
+            "id": "micro-perforated",
+            "name": "Micro Perforated",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/perforated-white.png",
+            "icon": "fa-braille"
+        },
+        {
+            "id": "subtle-stripes",
+            "name": "Fine Pinstripe",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/pinstripe-light.png",
+            "icon": "fa-align-left"
+        },
+        {
+            "id": "honey-dew",
+            "name": "Honeydew Melon",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdf4",
+            "c2": "#dcfce7",
+            "icon": "fa-apple-whole"
+        },
+        {
+            "id": "seafoam-glow",
+            "name": "Seafoam Glow",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#e6fffa",
+            "c2": "#b2f5ea",
+            "icon": "fa-water"
+        },
+        {
+            "id": "pale-papaya",
+            "name": "Pale Papaya",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff7ed",
+            "c2": "#fed7aa",
+            "icon": "fa-lemon"
+        },
+        {
+            "id": "cloud-dancer",
+            "name": "Cloud Dancer",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#f1f5f9",
+            "icon": "fa-cloud"
+        },
+        {
+            "id": "rosewater",
+            "name": "Rosewater Tint",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff1f2",
+            "c2": "#ffe4e6",
+            "icon": "fa-spa"
+        },
+        {
+            "id": "creamy-macaron",
+            "name": "Creamy Macaron",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fdf4ff",
+            "c2": "#fae8ff",
+            "icon": "fa-cookie"
+        },
+        {
+            "id": "almond-milk",
+            "name": "Almond Milk",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fdfbf7",
+            "c2": "#f7f1e5",
+            "icon": "fa-mug-hot"
+        },
+        {
+            "id": "foggy-fjord",
+            "name": "Foggy Fjord",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdfa",
+            "c2": "#ccfbf1",
+            "icon": "fa-mountain"
+        },
+        {
+            "id": "soft-thistle",
+            "name": "Soft Thistle",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#faf5ff",
+            "c2": "#f3e8ff",
+            "icon": "fa-plant-wilt"
+        },
+        {
+            "id": "chamomile-tea",
+            "name": "Chamomile Tea",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefce8",
+            "c2": "#fef9c3",
+            "icon": "fa-mug-saucer"
+        },
+        {
+            "id": "linen-whisper",
+            "name": "Linen Whisper",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fbfaf8",
+            "c2": "#f4efe6",
+            "icon": "fa-feather"
+        },
+        {
+            "id": "pale-sagebrush",
+            "name": "Pale Sagebrush",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f2f7f4",
+            "c2": "#dcece1",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "blush-prosecco",
+            "name": "Blush Prosecco",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff5f5",
+            "c2": "#fed7d7",
+            "icon": "fa-champagne-glasses"
+        },
+        {
+            "id": "arctic-morning",
+            "name": "Arctic Morning",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0f9ff",
+            "c2": "#bae6fd",
+            "icon": "fa-snowflake"
+        },
+        {
+            "id": "warm-shortbread",
+            "name": "Warm Shortbread",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fffbeb",
+            "c2": "#fde68a",
+            "icon": "fa-bread-slice"
+        },
+        {
+            "id": "silver-willow",
+            "name": "Silver Willow",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#e2e8f0",
+            "icon": "fa-tree"
+        },
+        {
+            "id": "neon-sunburst",
+            "name": "Neon Sunburst",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff416c",
+            "c2": "#ff4b2b",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "malibu-sunset",
+            "name": "Malibu Sunset",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff6b6b",
+            "c2": "#ffe66d",
+            "icon": "fa-umbrella-beach"
+        },
+        {
+            "id": "deep-sapphire-glow",
+            "name": "Sapphire Glow",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#0052d4",
+            "c2": "#4364f7",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "electric-violet",
+            "name": "Electric Violet",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#7f00ff",
+            "c2": "#e100ff",
+            "icon": "fa-bolt"
+        },
+        {
+            "id": "caribbean-turquoise",
+            "name": "Caribbean Turquoise",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#00b4db",
+            "c2": "#0083b0",
+            "icon": "fa-water"
+        },
+        {
+            "id": "ember-glow",
+            "name": "Ember Glow",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#e65c00",
+            "c2": "#f9d423",
+            "icon": "fa-fire"
+        },
+        {
+            "id": "amethyst-haze",
+            "name": "Amethyst Haze",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#9d50bb",
+            "c2": "#6e48aa",
+            "icon": "fa-wand-magic-sparkles"
+        },
+        {
+            "id": "acid-lime",
+            "name": "Acid Lime",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#11998e",
+            "c2": "#38ef7d",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "crimson-tide",
+            "name": "Crimson Tide",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#642b73",
+            "c2": "#c6426e",
+            "icon": "fa-wave-square"
+        },
+        {
+            "id": "solar-wind",
+            "name": "Solar Wind",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#fe8c00",
+            "c2": "#f83600",
+            "icon": "fa-wind"
+        },
+        {
+            "id": "plasma-blue",
+            "name": "Plasma Blue",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#0575e6",
+            "c2": "#00f260",
+            "icon": "fa-atom"
+        },
+        {
+            "id": "bubblegum-pop",
+            "name": "Bubblegum Pop",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff9a8b",
+            "c2": "#ff6a88",
+            "icon": "fa-candy-cane"
+        },
+        {
+            "id": "ultramarine-flow",
+            "name": "Ultramarine Flow",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#1fa2ff",
+            "c2": "#12d8fa",
+            "icon": "fa-water"
+        },
+        {
+            "id": "magma-core",
+            "name": "Magma Core",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#cb2d3e",
+            "c2": "#ef473a",
+            "icon": "fa-volcano"
+        },
+        {
+            "id": "neon-cyan-surge",
+            "name": "Neon Cyan Surge",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#00f0ff",
+            "c2": "#5200ff",
+            "icon": "fa-bolt-lightning"
+        },
+        {
+            "id": "velvet-ruby",
+            "name": "Velvet Ruby",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#870000",
+            "c2": "#190a05",
+            "icon": "fa-ring"
+        },
+        {
+            "id": "tropical-hibiscus",
+            "name": "Tropical Hibiscus",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#fd746c",
+            "c2": "#ff9068",
+            "icon": "fa-spa"
+        },
+        {
+            "id": "arctic-aurora",
+            "name": "Arctic Aurora",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#02aab0",
+            "c2": "#00cdac",
+            "icon": "fa-icicles"
+        },
+        {
+            "id": "cosmic-flare",
+            "name": "Cosmic Flare",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#ff00cc",
+            "c2": "#333399",
+            "icon": "fa-meteor"
+        },
+        {
+            "id": "golden-amber",
+            "name": "Golden Amber",
+            "cat": "gradient",
+            "type": "gradient",
+            "c1": "#f7971e",
+            "c2": "#ffd200",
+            "icon": "fa-coins"
+        },
+        {
+            "id": "delaware-chancery",
+            "name": "Delaware Chancery",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fcfcf9",
+            "c2": "#f5f4ed",
+            "icon": "fa-scale-balanced"
+        },
+        {
+            "id": "singapore-finance",
+            "name": "Singapore Financial",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f0fdf4",
+            "c2": "#e2f7ea",
+            "icon": "fa-landmark"
+        },
+        {
+            "id": "canary-wharf",
+            "name": "Canary Wharf Slate",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#eff6ff",
+            "c2": "#dbeafe",
+            "icon": "fa-building-columns"
+        },
+        {
+            "id": "edinburgh-parchment",
+            "name": "Edinburgh Parchment",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fdfbee",
+            "c2": "#f5edd6",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "mit-cyber-tint",
+            "name": "MIT Slate Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f4f6f9",
+            "c2": "#e5eaf2",
+            "icon": "fa-microchip"
+        },
+        {
+            "id": "cambridge-don",
+            "name": "Cambridge Don Ivory",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fcfaf2",
+            "c2": "#f7f1df",
+            "icon": "fa-feather"
+        },
+        {
+            "id": "oxford-press",
+            "name": "Oxford Press Tint",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f7f7f9",
+            "c2": "#eaebf0",
+            "icon": "fa-book"
+        },
+        {
+            "id": "barrister-silk",
+            "name": "Barrister Silk",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fbfbfb",
+            "c2": "#f0f0f2",
+            "icon": "fa-user-tie"
+        },
+        {
+            "id": "rotterdam-modern",
+            "name": "Rotterdam Modern",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f1f5f9",
+            "c2": "#e1e7ef",
+            "icon": "fa-city"
+        },
+        {
+            "id": "stockholm-clean",
+            "name": "Stockholm Clean",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f9fafb",
+            "c2": "#eceef1",
+            "icon": "fa-square"
+        },
+        {
+            "id": "milan-editorial",
+            "name": "Milan Editorial",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#faf8f5",
+            "c2": "#f2ede4",
+            "icon": "fa-newspaper"
+        },
+        {
+            "id": "monaco-prestige",
+            "name": "Monaco Prestige",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fcfaf4",
+            "c2": "#f6eee0",
+            "icon": "fa-crown"
+        },
+        {
+            "id": "hague-tribunal",
+            "name": "The Hague Tribunal",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f3f6fa",
+            "c2": "#e3eaf3",
+            "icon": "fa-gavel"
+        },
+        {
+            "id": "seoul-minimal",
+            "name": "Seoul Minimal",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8f9fa",
+            "c2": "#e5e7eb",
+            "icon": "fa-archway"
+        },
+        {
+            "id": "dublin-parliament",
+            "name": "Dublin Parliament",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f8faf5",
+            "c2": "#e8f0df",
+            "icon": "fa-clover"
+        },
+        {
+            "id": "helsinki-frost",
+            "name": "Helsinki Frost",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f6f9fb",
+            "c2": "#e4edf3",
+            "icon": "fa-snowflake"
+        },
+        {
+            "id": "madrid-manuscript",
+            "name": "Madrid Manuscript",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#faf7f0",
+            "c2": "#f2ecd8",
+            "icon": "fa-signature"
+        },
+        {
+            "id": "toronto-sterling",
+            "name": "Toronto Sterling",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f3f4f6",
+            "c2": "#e1e3e8",
+            "icon": "fa-tower-observation"
+        },
+        {
+            "id": "geneva-treaty",
+            "name": "Geneva Treaty Paper",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#fdfbf7",
+            "c2": "#f7f2e7",
+            "icon": "fa-file-contract"
+        },
+        {
+            "id": "brussels-chancery",
+            "name": "Brussels Chancery",
+            "cat": "corporate",
+            "type": "gradient",
+            "c1": "#f2f5f9",
+            "c2": "#e4ebf4",
+            "icon": "fa-shield-halved"
+        },
+        {
+            "id": "royal-velvet-dark",
+            "name": "Royal Velvet Dark",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1f0036",
+            "c2": "#35005c",
+            "icon": "fa-crown"
+        },
+        {
+            "id": "dark-mahogany",
+            "name": "Dark Mahogany",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1a0d0a",
+            "c2": "#2e1610",
+            "icon": "fa-tree"
+        },
+        {
+            "id": "deep-merlot",
+            "name": "Deep Merlot",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#260611",
+            "c2": "#3f0d1f",
+            "icon": "fa-wine-glass"
+        },
+        {
+            "id": "obsidian-shale",
+            "name": "Obsidian Shale",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#121316",
+            "c2": "#1e2025",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "astral-navy",
+            "name": "Astral Navy",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#081226",
+            "c2": "#102142",
+            "icon": "fa-meteor"
+        },
+        {
+            "id": "midnight-forest",
+            "name": "Midnight Forest",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#041910",
+            "c2": "#092e1f",
+            "icon": "fa-leaf"
+        },
+        {
+            "id": "black-pearl",
+            "name": "Black Pearl",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0e1118",
+            "c2": "#1b212f",
+            "icon": "fa-circle"
+        },
+        {
+            "id": "carbon-matrix",
+            "name": "Carbon Matrix",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0f1412",
+            "c2": "#1c2622",
+            "icon": "fa-terminal"
+        },
+        {
+            "id": "dark-amethyst-noir",
+            "name": "Amethyst Noir",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#170a24",
+            "c2": "#28143d",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "smoked-obsidian",
+            "name": "Smoked Obsidian",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#161616",
+            "c2": "#262626",
+            "icon": "fa-cloud"
+        },
+        {
+            "id": "abyssal-trench",
+            "name": "Abyssal Trench",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#030e1c",
+            "c2": "#091e38",
+            "icon": "fa-water"
+        },
+        {
+            "id": "dark-espresso-crema",
+            "name": "Dark Crema",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1f150e",
+            "c2": "#332317",
+            "icon": "fa-mug-hot"
+        },
+        {
+            "id": "steel-monolith",
+            "name": "Steel Monolith",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1a1d24",
+            "c2": "#282d37",
+            "icon": "fa-monument"
+        },
+        {
+            "id": "gothic-crypt",
+            "name": "Gothic Crypt",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#130f1c",
+            "c2": "#221b30",
+            "icon": "fa-cross"
+        },
+        {
+            "id": "dark-cast-iron",
+            "name": "Dark Cast Iron",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#17181c",
+            "c2": "#23252b",
+            "icon": "fa-shield"
+        },
+        {
+            "id": "velvet-noir",
+            "name": "Velvet Noir",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0f0d14",
+            "c2": "#1e1929",
+            "icon": "fa-feather"
+        },
+        {
+            "id": "black-amber",
+            "name": "Black Amber",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1f1305",
+            "c2": "#33200a",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "cyber-graphite",
+            "name": "Cyber Graphite",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#111418",
+            "c2": "#1e232a",
+            "icon": "fa-microchip"
+        },
+        {
+            "id": "midnight-indigo",
+            "name": "Midnight Indigo",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#0b0c26",
+            "c2": "#141640",
+            "icon": "fa-compass"
+        },
+        {
+            "id": "dark-hematite",
+            "name": "Dark Hematite",
+            "cat": "dark",
+            "type": "gradient",
+            "c1": "#1b1c1e",
+            "c2": "#2b2d30",
+            "icon": "fa-atom"
+        },
+        {
+            "id": "subtle-zebra",
+            "name": "Subtle Zebra Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/subtle-zebra-3d.png",
+            "icon": "fa-bars"
+        },
+        {
+            "id": "criss-cross",
+            "name": "Criss Cross Linen",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fafaf9",
+            "url": "https://www.transparenttextures.com/patterns/crissxcross.png",
+            "icon": "fa-xmark"
+        },
+        {
+            "id": "graph-coders",
+            "name": "Engineer Grid",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f1f5f9",
+            "url": "https://www.transparenttextures.com/patterns/graph-paper.png",
+            "icon": "fa-table-cells"
+        },
+        {
+            "id": "woven-basket",
+            "name": "Woven Basket",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fbf7ee",
+            "url": "https://www.transparenttextures.com/patterns/woven.png",
+            "icon": "fa-basket-shopping"
+        },
+        {
+            "id": "french-stucco",
+            "name": "French Stucco",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f7f6f0",
+            "url": "https://www.transparenttextures.com/patterns/french-stucco.png",
+            "icon": "fa-paint-roller"
+        },
+        {
+            "id": "grey-sand",
+            "name": "Grey Sand Texture",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#e2e8f0",
+            "url": "https://www.transparenttextures.com/patterns/grey-sandbag.png",
+            "icon": "fa-water"
+        },
+        {
+            "id": "white-tiles",
+            "name": "Mosaic Tiles",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#ffffff",
+            "url": "https://www.transparenttextures.com/patterns/white-tiles.png",
+            "icon": "fa-border-all"
+        },
+        {
+            "id": "rice-paper",
+            "name": "Japanese Rice Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fcfbf4",
+            "url": "https://www.transparenttextures.com/patterns/rice-paper-2.png",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "clean-linen",
+            "name": "Pressed White Linen",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fefefe",
+            "url": "https://www.transparenttextures.com/patterns/white-linen.png",
+            "icon": "fa-shirt"
+        },
+        {
+            "id": "wave-cut",
+            "name": "Wave Cut Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f0fdfa",
+            "url": "https://www.transparenttextures.com/patterns/wave-cut.png",
+            "icon": "fa-water"
+        },
+        {
+            "id": "cardboard-grain",
+            "name": "Kraft Cardboard",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#e8d8b8",
+            "url": "https://www.transparenttextures.com/patterns/cardboard-flat.png",
+            "icon": "fa-box"
+        },
+        {
+            "id": "light-honeycomb",
+            "name": "Honeycomb Mesh",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/white-diamond-dark.png",
+            "icon": "fa-shapes"
+        },
+        {
+            "id": "sandpaper-tex",
+            "name": "Fine Sandpaper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f5f0e6",
+            "url": "https://www.transparenttextures.com/patterns/sandpaper.png",
+            "icon": "fa-brush"
+        },
+        {
+            "id": "twill-weave",
+            "name": "Heavy Cotton Twill",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f1f5f9",
+            "url": "https://www.transparenttextures.com/patterns/twill.png",
+            "icon": "fa-layer-group"
+        },
+        {
+            "id": "padded-leather",
+            "name": "Padded White Leather",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fafafa",
+            "url": "https://www.transparenttextures.com/patterns/padded-light.png",
+            "icon": "fa-couch"
+        },
+        {
+            "id": "brushed-steel-tex",
+            "name": "Brushed Steel",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#cbd5e1",
+            "url": "https://www.transparenttextures.com/patterns/brushed-alum-dark.png",
+            "icon": "fa-shield"
+        },
+        {
+            "id": "subtle-net",
+            "name": "Subtle Netting",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f8fafc",
+            "url": "https://www.transparenttextures.com/patterns/subtle-net.png",
+            "icon": "fa-table-cells-large"
+        },
+        {
+            "id": "groove-paper",
+            "name": "Grooved Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#faf9f5",
+            "url": "https://www.transparenttextures.com/patterns/groovepaper.png",
+            "icon": "fa-file"
+        },
+        {
+            "id": "chalk-dust",
+            "name": "Light Chalk Texture",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#f4f4f5",
+            "url": "https://www.transparenttextures.com/patterns/chalkdust.png",
+            "icon": "fa-pen-nib"
+        },
+        {
+            "id": "vintage-wallpaper",
+            "name": "Victorian Damask Paper",
+            "cat": "texture",
+            "type": "texture",
+            "c1": "#fcfbf6",
+            "url": "https://www.transparenttextures.com/patterns/vintage-speckles.png",
+            "icon": "fa-crown"
+        },
+        {
+            "id": "elderflower-cream",
+            "name": "Elderflower Cream",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefce8",
+            "c2": "#fef08a",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "lavender-ice",
+            "name": "Lavender Ice",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f5f3ff",
+            "c2": "#ede9fe",
+            "icon": "fa-snowflake"
+        },
+        {
+            "id": "soft-cashmere",
+            "name": "Soft Cashmere",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#faf7f2",
+            "c2": "#ede4d6",
+            "icon": "fa-mitten"
+        },
+        {
+            "id": "ocean-foam",
+            "name": "Ocean Foam",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#ecfdf5",
+            "c2": "#d1fae5",
+            "icon": "fa-water"
+        },
+        {
+            "id": "blush-peony",
+            "name": "Blush Peony",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff1f2",
+            "c2": "#ffe4e6",
+            "icon": "fa-spa"
+        },
+        {
+            "id": "sweet-cantaloupe",
+            "name": "Sweet Cantaloupe",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff7ed",
+            "c2": "#fed7aa",
+            "icon": "fa-lemon"
+        },
+        {
+            "id": "willow-green",
+            "name": "Willow Green",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdf4",
+            "c2": "#dcfce7",
+            "icon": "fa-leaf"
+        },
+        {
+            "id": "powder-hydrangea",
+            "name": "Powder Hydrangea",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#eff6ff",
+            "c2": "#dbeafe",
+            "icon": "fa-seedling"
+        },
+        {
+            "id": "soft-chamois",
+            "name": "Soft Chamois",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fdfbf7",
+            "c2": "#f5edd8",
+            "icon": "fa-scroll"
+        },
+        {
+            "id": "pebble-grey",
+            "name": "Pebble Grey",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f8fafc",
+            "c2": "#e2e8f0",
+            "icon": "fa-gem"
+        },
+        {
+            "id": "pale-terracotta",
+            "name": "Pale Terracotta",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fff1ee",
+            "c2": "#fed7cd",
+            "icon": "fa-shapes"
+        },
+        {
+            "id": "creamy-vanilla",
+            "name": "Creamy Vanilla",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefdf0",
+            "c2": "#fef7cd",
+            "icon": "fa-ice-cream"
+        },
+        {
+            "id": "mint-eucalyptus",
+            "name": "Mint Eucalyptus",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdf9",
+            "c2": "#ccfbf1",
+            "icon": "fa-wind"
+        },
+        {
+            "id": "soft-primrose",
+            "name": "Soft Primrose",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fffbeb",
+            "c2": "#fef3c7",
+            "icon": "fa-sun"
+        },
+        {
+            "id": "misty-heath",
+            "name": "Misty Heath",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#faf5ff",
+            "c2": "#f3e8ff",
+            "icon": "fa-cloud"
+        },
+        {
+            "id": "warm-biscuit",
+            "name": "Warm Biscuit",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#faf6f0",
+            "c2": "#ece2d0",
+            "icon": "fa-cookie"
+        },
+        {
+            "id": "blush-quartz",
+            "name": "Blush Quartz",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fdf2f4",
+            "c2": "#fce2e6",
+            "icon": "fa-heart"
+        },
+        {
+            "id": "pale-aquamarine",
+            "name": "Pale Aquamarine",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#f0fdfa",
+            "c2": "#bbf7d0",
+            "icon": "fa-water"
+        },
+        {
+            "id": "soft-flaxen",
+            "name": "Soft Flaxen",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fefce8",
+            "c2": "#fbf3b9",
+            "icon": "fa-wheat-awn"
+        },
+        {
+            "id": "nordic-birch-pastel",
+            "name": "Nordic Birch Pastel",
+            "cat": "pastel",
+            "type": "gradient",
+            "c1": "#fafaf8",
+            "c2": "#ede8db",
+            "icon": "fa-tree"
+        }
     ];
 
-// ==========================================
+    const getThemeBackgroundCss = (t) => {
+        if (t.type === 'gradient') {
+            return `linear-gradient(135deg, ${t.c1}, ${t.c2})`;
+        } else {
+            return `${t.c1} url('${t.url}')`;
+        }
+    };
+
+    const createSwatchEl = (t, extraClass = '') => {
+        const div = document.createElement('div');
+        div.className = `ts-swatch ${extraClass}`.trim();
+        div.setAttribute('data-theme-id', t.id);
+        div.setAttribute('data-theme-name', t.name);
+        div.setAttribute('data-type', t.type);
+        div.setAttribute('data-c1', t.c1);
+        if (t.c2) div.setAttribute('data-c2', t.c2);
+        if (t.url) div.setAttribute('data-url', t.url);
+        div.title = t.name;
+        div.style.background = getThemeBackgroundCss(t);
+        return div;
+    };
+
+    // ==========================================
     // 4. BUILD THE UI DOM
     // ==========================================
     const studioContainer = document.createElement('div');
     studioContainer.id = 'advanced-theme-studio';
-    studioContainer.className = 'group'; 
+    studioContainer.className = 'group';
 
-    let swatchesHTML = `<div class="ts-swatch-grid">`;
-    gradients.forEach((g) => {
-        swatchesHTML += `<div class="ts-swatch" data-type="gradient" data-c1="${g.c1}" data-c2="${g.c2}" style="background: linear-gradient(135deg, ${g.c1}, ${g.c2});"><i class="fas ${g.icon}"></i></div>`;
-    });
-    textures.forEach((t) => {
-        swatchesHTML += `<div class="ts-swatch" data-type="texture" data-c1="${t.c1}" data-url="${t.url}" style="background: ${t.c1} url('${t.url}');"><i class="fas ${t.icon}"></i></div>`;
-    });
-    swatchesHTML += `</div>`;
+    // 4a. Compact Ribbon Gallery Container
+    const galleryContainer = document.createElement('div');
+    galleryContainer.className = 'ts-gallery-container';
+    galleryContainer.id = 'ts-gallery-container';
 
+    const galleryViewport = document.createElement('div');
+    galleryViewport.className = 'ts-gallery-viewport';
+    galleryViewport.id = 'ts-gallery-viewport';
+
+    const galleryStrip = document.createElement('div');
+    galleryStrip.className = 'ts-gallery-strip';
+    galleryStrip.id = 'ts-gallery-strip';
+
+    // Populate gallery strip with all 88 themes
+    ALL_THEMES.forEach(t => {
+        galleryStrip.appendChild(createSwatchEl(t));
+    });
+    galleryViewport.appendChild(galleryStrip);
+
+    // Vertical Gallery Controls (▲, ▼, ⌄)
+    const galleryControls = document.createElement('div');
+    galleryControls.className = 'ts-gallery-controls';
+    galleryControls.innerHTML = `
+        <button type="button" class="ts-gallery-btn" id="ts-gallery-up" title="Previous Themes (Up)">
+            <svg viewBox="0 0 16 16" width="9" height="9" fill="currentColor"><path d="M8 4.5l5 5.5H3z"/></svg>
+        </button>
+        <button type="button" class="ts-gallery-btn" id="ts-gallery-down" title="Next Themes (Down)">
+            <svg viewBox="0 0 16 16" width="9" height="9" fill="currentColor"><path d="M8 11.5l-5-5.5h10z"/></svg>
+        </button>
+        <button type="button" class="ts-gallery-btn" id="ts-gallery-more" title="More Themes (300 Catalog)">
+            <svg viewBox="0 0 16 16" width="9" height="9" fill="currentColor"><path d="M2 3h12v1.8H2zm1.5 4.2h9L8 13z"/></svg>
+        </button>
+    `;
+
+    galleryContainer.appendChild(galleryViewport);
+    galleryContainer.appendChild(galleryControls);
+
+    // Build ribbon layout
     studioContainer.innerHTML = `<div class="ts-ribbon-container">
             <div id="ts-clear-theme-btn" title="Remove Theme">
                 <i class="fas fa-eraser"></i>
@@ -2338,7 +5073,7 @@
             </div>
             
             <div class="ts-divider"></div>
-            ${swatchesHTML}
+            <!-- galleryContainer inserted here -->
             <div class="ts-divider"></div>
             
             <div class="ts-sliders">
@@ -2358,18 +5093,266 @@
         </div>
         <div class="group-label">Theme Studio</div>`;
 
-    // Inject into the ribbon
+    const dividers = studioContainer.querySelectorAll('.ts-divider');
+    dividers[0].parentNode.insertBefore(galleryContainer, dividers[1]);
+
+    // Inject studio container into the ribbon
     if (oldThemeGroup && oldThemeGroup.parentNode) {
         oldThemeGroup.parentNode.insertBefore(studioContainer, oldThemeGroup.nextSibling);
     } else {
         document.body.appendChild(studioContainer);
     }
+
+    // 4b. Create Categorized Dropdown Popover
+    const popover = document.createElement('div');
+    popover.id = 'ts-gallery-popover';
+    popover.style.display = 'none';
+
+    let popoverBodyHTML = '';
+    THEME_CATEGORIES.forEach(cat => {
+        const catThemes = ALL_THEMES.filter(t => t.cat === cat.id);
+        popoverBodyHTML += `
+            <div class="ts-cat-section" data-cat="${cat.id}">
+                <div class="ts-cat-header">
+                    <span class="ts-cat-title"><i class="fas ${cat.icon}"></i> ${cat.name}</span>
+                    <span class="ts-cat-badge">${catThemes.length}</span>
+                </div>
+                <div class="ts-cat-grid">
+        `;
+        catThemes.forEach(t => {
+            const bg = getThemeBackgroundCss(t);
+            const c2Attr = t.c2 ? `data-c2="${t.c2}"` : '';
+            const urlAttr = t.url ? `data-url="${t.url}"` : '';
+            popoverBodyHTML += `<div class="ts-swatch" data-theme-id="${t.id}" data-theme-name="${t.name}" data-type="${t.type}" data-c1="${t.c1}" ${c2Attr} ${urlAttr} title="${t.name}" style="background: ${bg};"></div>`;
+        });
+        popoverBodyHTML += `
+                </div>
+            </div>
+        `;
+    });
+
+    popover.innerHTML = `
+        <div class="ts-popover-header">
+            <div class="ts-popover-title-row">
+                <span class="ts-popover-title"><i class="fas fa-palette"></i> Theme Studio Catalog <span class="ts-badge-count">300</span></span>
+                <button type="button" class="ts-popover-close" id="ts-popover-close" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ts-popover-search-wrap">
+                <i class="fas fa-search ts-search-icon"></i>
+                <input type="text" id="ts-popover-search" placeholder="Search themes (e.g. Slate, Gold, Linen, Lavender)..." autocomplete="off">
+                <button type="button" id="ts-popover-clear-search" style="display:none;" title="Clear Search"><i class="fas fa-times-circle"></i></button>
+            </div>
+        </div>
+        <div class="ts-popover-body" id="ts-popover-body">
+            ${popoverBodyHTML}
+            <div id="ts-popover-empty" class="ts-popover-empty" style="display:none;">
+                <i class="fas fa-search" style="font-size:24px; opacity:0.4;"></i>
+                <span>No matching themes found</span>
+            </div>
+        </div>
+        <div class="ts-popover-footer">
+            <button type="button" class="ts-popover-action-btn" id="ts-pop-clear-btn">
+                <i class="fas fa-eraser"></i> Remove Theme
+            </button>
+            <button type="button" class="ts-popover-action-btn" id="ts-pop-ignore-btn">
+                <i class="fas fa-ban"></i> Toggle Ignore Theme
+            </button>
+        </div>
+    `;
+    document.body.appendChild(popover);
+
     if (typeof window.updateIgnoreThemeButtonUI === 'function') {
         window.updateIgnoreThemeButtonUI();
     }
 
     // ==========================================
-    // 5. THEME INJECTION & SAVE BACKUP
+    // 5. GALLERY STRIP NAVIGATION & POPOVER LOGIC
+    // ==========================================
+    let currentGalleryRow = 0;
+    const swatchesPerRow = 8;
+    const totalRows = Math.ceil(ALL_THEMES.length / swatchesPerRow);
+    const maxGalleryRow = Math.max(0, totalRows - 2); // 2 rows visible in viewport
+    const rowStepHeight = 28; // 24px swatch + 4px gap
+
+    const updateGalleryStripPosition = () => {
+        galleryStrip.style.transform = `translateY(-${currentGalleryRow * rowStepHeight}px)`;
+        const upBtn = document.getElementById('ts-gallery-up');
+        const downBtn = document.getElementById('ts-gallery-down');
+        if (upBtn) {
+            upBtn.classList.toggle('disabled', currentGalleryRow <= 0);
+            upBtn.disabled = currentGalleryRow <= 0;
+        }
+        if (downBtn) {
+            downBtn.classList.toggle('disabled', currentGalleryRow >= maxGalleryRow);
+            downBtn.disabled = currentGalleryRow >= maxGalleryRow;
+        }
+    };
+    updateGalleryStripPosition();
+
+    document.getElementById('ts-gallery-up').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentGalleryRow > 0) {
+            currentGalleryRow--;
+            updateGalleryStripPosition();
+        }
+    });
+
+    document.getElementById('ts-gallery-down').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentGalleryRow < maxGalleryRow) {
+            currentGalleryRow++;
+            updateGalleryStripPosition();
+        }
+    });
+
+    galleryViewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY > 0 && currentGalleryRow < maxGalleryRow) {
+            currentGalleryRow++;
+            updateGalleryStripPosition();
+        } else if (e.deltaY < 0 && currentGalleryRow > 0) {
+            currentGalleryRow--;
+            updateGalleryStripPosition();
+        }
+    }, { passive: false });
+
+    const moreBtn = document.getElementById('ts-gallery-more');
+    const closeBtn = document.getElementById('ts-popover-close');
+    const searchInput = document.getElementById('ts-popover-search');
+    const clearSearchBtn = document.getElementById('ts-popover-clear-search');
+    const popEmpty = document.getElementById('ts-popover-empty');
+
+    const openThemePopover = () => {
+        popover.style.display = 'flex';
+        moreBtn.classList.add('active');
+
+        const rect = galleryContainer.getBoundingClientRect();
+        const popWidth = 520;
+        let left = rect.left;
+        if (left + popWidth > window.innerWidth - 10) {
+            left = window.innerWidth - popWidth - 10;
+        }
+        if (left < 10) left = 10;
+        popover.style.top = (rect.bottom + 4) + 'px';
+        popover.style.left = left + 'px';
+
+        if (searchInput) {
+            searchInput.value = '';
+            filterPopoverThemes('');
+            setTimeout(() => searchInput.focus(), 50);
+        }
+    };
+
+    const closeThemePopover = () => {
+        popover.style.display = 'none';
+        moreBtn.classList.remove('active');
+    };
+
+    const toggleThemePopover = (e) => {
+        if (e) e.stopPropagation();
+        if (popover.style.display === 'none' || !popover.style.display) {
+            openThemePopover();
+        } else {
+            closeThemePopover();
+        }
+    };
+
+    moreBtn.addEventListener('click', toggleThemePopover);
+    if (closeBtn) closeBtn.addEventListener('click', closeThemePopover);
+
+    const filterPopoverThemes = (query) => {
+        const q = (query || '').trim().toLowerCase();
+        let totalMatches = 0;
+        const sections = popover.querySelectorAll('.ts-cat-section');
+
+        sections.forEach(sec => {
+            let catMatches = 0;
+            sec.querySelectorAll('.ts-swatch').forEach(sw => {
+                const name = (sw.getAttribute('data-theme-name') || '').toLowerCase();
+                const match = !q || name.includes(q);
+                sw.style.display = match ? '' : 'none';
+                if (match) catMatches++;
+            });
+            sec.style.display = catMatches > 0 ? '' : 'none';
+            const badge = sec.querySelector('.ts-cat-badge');
+            if (badge) badge.textContent = catMatches;
+            totalMatches += catMatches;
+        });
+
+        if (popEmpty) popEmpty.style.display = totalMatches === 0 ? 'flex' : 'none';
+        if (clearSearchBtn) clearSearchBtn.style.display = q ? 'block' : 'none';
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filterPopoverThemes(e.target.value);
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (searchInput.value) {
+                    searchInput.value = '';
+                    filterPopoverThemes('');
+                } else {
+                    closeThemePopover();
+                }
+            }
+        });
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterPopoverThemes('');
+            searchInput.focus();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (popover.style.display !== 'none' && popover.style.display) {
+            if (!popover.contains(e.target) && !moreBtn.contains(e.target)) {
+                closeThemePopover();
+            }
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && popover.style.display !== 'none' && popover.style.display) {
+            closeThemePopover();
+        }
+    });
+
+    document.getElementById('ts-pop-clear-btn').addEventListener('click', () => {
+        document.getElementById('ts-clear-theme-btn').click();
+        closeThemePopover();
+    });
+    document.getElementById('ts-pop-ignore-btn').addEventListener('click', () => {
+        if (typeof toggleIgnoreTheme === 'function') toggleIgnoreTheme();
+        closeThemePopover();
+    });
+
+    const highlightActiveSwatch = (themeId, c1) => {
+        const allSwatches = document.querySelectorAll('.ts-swatch');
+        allSwatches.forEach(s => {
+            const matches = (themeId && s.getAttribute('data-theme-id') === themeId) ||
+                            (!themeId && s.getAttribute('data-c1') === c1);
+            s.classList.toggle('active', !!matches);
+        });
+
+        if (themeId) {
+            const stripSwatches = Array.from(galleryStrip.querySelectorAll('.ts-swatch'));
+            const idx = stripSwatches.findIndex(s => s.getAttribute('data-theme-id') === themeId);
+            if (idx >= 0) {
+                const targetRow = Math.floor(idx / swatchesPerRow);
+                if (targetRow < currentGalleryRow || targetRow > currentGalleryRow + 1) {
+                    currentGalleryRow = Math.min(targetRow, maxGalleryRow);
+                    updateGalleryStripPosition();
+                }
+            }
+        }
+    };
+
+    // ==========================================
+    // 6. THEME INJECTION & SAVE BACKUP
     // ==========================================
     const applyThemeToCanvas = (swatch) => {
         const paper = document.getElementById('paper');
@@ -2396,18 +5379,24 @@
         const existingTheme = paper.querySelector('[data-is-theme="true"]');
         if (existingTheme) existingTheme.remove();
 
+        const id = swatch.getAttribute('data-theme-id') || '';
+        const name = swatch.getAttribute('data-theme-name') || '';
         const type = swatch.getAttribute('data-type');
         const c1 = swatch.getAttribute('data-c1');
         const c2 = swatch.getAttribute('data-c2') || '';
         const url = swatch.getAttribute('data-url') || '';
 
-        // ✨ THE SAVE BACKUP: Anchor the configuration to the root document.
-        // The app's serializer will natively save these attributes into the .opub file.
+        // Anchor configuration to root document
         paper.setAttribute('data-theme-saved', 'true');
+        paper.setAttribute('data-theme-id', id);
+        paper.setAttribute('data-theme-name', name);
         paper.setAttribute('data-theme-type', type);
         paper.setAttribute('data-theme-c1', c1);
         paper.setAttribute('data-theme-c2', c2);
         paper.setAttribute('data-theme-url', url);
+
+        // Synchronize active highlights across strip & popover
+        highlightActiveSwatch(id, c1);
 
         // Mute app's tab switching temporarily
         const originalSwitchTab = window.switchTab;
@@ -2480,7 +5469,7 @@
     };
 
     // ==========================================
-    // 6. CLEAR THEME LOGIC
+    // 7. CLEAR THEME LOGIC
     // ==========================================
     document.getElementById('ts-clear-theme-btn').addEventListener('click', () => {
         const paper = document.getElementById('paper');
@@ -2491,12 +5480,12 @@
             
             // Wipe save backup
             paper.removeAttribute('data-theme-saved');
-            ['type', 'c1', 'c2', 'url', 'sat', 'bri', 'tex'].forEach(attr => {
+            ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'tex'].forEach(attr => {
                 paper.removeAttribute(`data-theme-${attr}`);
             });
         }
         
-        swatches.forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.ts-swatch').forEach(s => s.classList.remove('active'));
         document.getElementById('ts-sat-slider').value = 100;
         document.getElementById('ts-bri-slider').value = 100;
         document.getElementById('ts-tex-slider').value = 100;
@@ -2505,7 +5494,7 @@
     });
 
     // ==========================================
-    // 7. PRINT RESCUE HOOK
+    // 8. PRINT RESCUE HOOK
     // ==========================================
     window.addEventListener('beforeprint', () => {
         setTimeout(() => {
@@ -2533,7 +5522,7 @@
     });
 
     // ==========================================
-    // 8. THE SELF-HEALING ENGINE & Z-INDEX
+    // 9. THE SELF-HEALING ENGINE & Z-INDEX
     // ==========================================
     window.restoreThemeFromSave = function() {
         const paper = document.getElementById('paper');
@@ -2546,10 +5535,9 @@
 
         let theme = paper.querySelector('[data-is-theme="true"]');
 
-        // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
+        // Heal Scenario 1: Document loaded, theme was enabled, but wrapper was wiped out
         if (!theme) {
             console.log("🛠️ Theme Studio: Reconstructing deleted theme wrapper from save file...");
-            // Save active tab to prevent jump
             const activeTabEl = document.querySelector('.tab.active');
             let activeTabId = 'design';
             if (activeTabEl) {
@@ -2562,7 +5550,7 @@
             window.switchTab = function() {};
 
             if (typeof createWrapper === 'function') {
-                theme = createWrapper(`<div class="op-theme-container"></div>`); // temporary shell
+                theme = createWrapper(`<div class="op-theme-container"></div>`);
                 theme.setAttribute('data-is-theme', 'true');
                 theme.setAttribute('data-type', 'box');
                 theme.style.cssText += 'left: 0px !important; top: 0px !important; width: 100% !important; height: 100% !important; z-index: 0 !important;';
@@ -2575,7 +5563,7 @@
             }
         }
 
-        // ✨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
+        // Heal Scenario 2: Wrapper exists, but inner visuals were stripped during Save/Load
         if (theme && !theme.querySelector('.op-theme-bg')) {
             console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
             
@@ -2585,7 +5573,7 @@
             const url = paper.getAttribute('data-theme-url');
 
             if (type && c1) {
-                theme.innerHTML = ''; // Clear junk HTML from the save serializer
+                theme.innerHTML = '';
                 
                 const container = document.createElement('div');
                 container.className = 'op-theme-container';
@@ -2620,12 +5608,9 @@
                 if (tex && document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = tex;
 
                 // Restore UI Swatch highlight
-                const swatches = document.querySelectorAll('.ts-swatch');
-                swatches.forEach(s => s.classList.remove('active'));
-                const activeSwatch = Array.from(swatches).find(s => s.getAttribute('data-c1') === c1);
-                if (activeSwatch) activeSwatch.classList.add('active');
+                const savedId = paper.getAttribute('data-theme-id');
+                highlightActiveSwatch(savedId, c1);
 
-                // Apply restored filter values directly to the new container
                 updateLiveFilters();
             }
         }
@@ -2642,7 +5627,7 @@
 
         let theme = document.querySelector('[data-is-theme="true"]');
 
-        // ✨ FEATURE: Ignore Background Override
+        // Ignore Background Override
         if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
             if (theme) theme.remove();
             return;
@@ -2658,7 +5643,7 @@
     }, 500);
 
     // ==========================================
-    // 9. THE DELAYED MOUSE-STEALTH DEFENSE
+    // 10. THE DELAYED MOUSE-STEALTH DEFENSE
     // ==========================================
     let stealthTimer = null;
     
@@ -2704,14 +5689,18 @@
     window.addEventListener('beforeprint', unstealthTheme, true);
 
     // ==========================================
-    // 10. BIND EVENT LISTENERS
+    // 11. BIND SWATCH & SLIDER EVENT LISTENERS
     // ==========================================
-    const swatches = studioContainer.querySelectorAll('.ts-swatch');
-    swatches.forEach(swatch => {
+    galleryStrip.querySelectorAll('.ts-swatch').forEach(swatch => {
         swatch.addEventListener('click', () => {
-            swatches.forEach(s => s.classList.remove('active'));
-            swatch.classList.add('active');
             applyThemeToCanvas(swatch);
+        });
+    });
+
+    popover.querySelectorAll('.ts-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            applyThemeToCanvas(swatch);
+            // Popover remains open so user can preview and audition multiple themes against canvas without menu closing
         });
     });
 

@@ -3551,15 +3551,416 @@ svg .shape-path, svg .shape-path * {
 
         /* Studio Container & Layout */
         #advanced-theme-studio { display: flex; flex-direction: column; justify-content: center; height: 100%; }
-        .ts-ribbon-container { display: flex; align-items: center; gap: 15px; padding: 2px 10px; }
+        .ts-ribbon-container { display: flex; align-items: center; gap: 10px; padding: 2px 8px; }
         .ts-divider { width: 1px; height: 65px; background: #cbd5e1; }
 
-        /* Swatch Grid */
-        .ts-swatch-grid { display: grid; grid-template-columns: repeat(12, 34px); grid-template-rows: repeat(2, 34px); gap: 5px; }
-        .ts-swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: transform 0.1s ease, box-shadow 0.1s ease; overflow: hidden; border: 1px solid rgba(0,0,0,0.1); }
-        .ts-swatch:hover { transform: scale(1.08); box-shadow: 0 3px 6px rgba(0,0,0,0.2); z-index: 2; }
-        .ts-swatch.active { outline: 2px solid var(--ui-theme-color); outline-offset: 1px; }
-        .ts-swatch i { position: absolute; bottom: 2px; right: 2px; color: rgba(255, 255, 255, 0.9); font-size: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        /* Office-style Gallery Preview Container - OpenPublisher Teal Theme */
+        .ts-gallery-container {
+            display: flex;
+            align-items: stretch;
+            height: 58px;
+            border: 1px solid var(--ui-theme-dark);
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--ui-panel-bg, #ffffff);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            position: relative;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+        .ts-gallery-container:hover {
+            border-color: var(--ui-theme-dark);
+            box-shadow: 0 2px 6px color-mix(in srgb, var(--ui-theme-dark) 15%, transparent);
+        }
+        .ts-gallery-viewport {
+            width: 194px;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            background: #ffffff;
+            padding: 2px 3px;
+            box-sizing: border-box;
+        }
+        .ts-gallery-strip {
+            display: grid;
+            grid-template-columns: repeat(8, 20px);
+            grid-auto-rows: 24px;
+            gap: 4px;
+            padding: 0;
+            transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+            will-change: transform;
+        }
+
+        /* Swatch Miniature Page Card (Portrait Aspect Ratio ~1:1.2) */
+        .ts-swatch {
+            width: 20px;
+            height: 24px;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            box-sizing: border-box;
+            background-size: cover;
+            background-repeat: repeat;
+        }
+        .ts-swatch:hover {
+            transform: scale(1.2);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            border-color: var(--ui-theme-dark);
+        }
+        .ts-swatch.active {
+            outline: 2px solid var(--ui-theme-dark);
+            outline-offset: 1px;
+            box-shadow: 0 0 0 1px #ffffff;
+            z-index: 5;
+        }
+
+        /* Gallery Navigation Controls - Signature Solid Teal Action Box */
+        .ts-gallery-controls {
+            display: flex;
+            flex-direction: column;
+            width: 20px;
+            height: 100%;
+            background: var(--ui-theme-dark);
+            border-left: 1px solid var(--ui-theme-dark);
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        .ts-gallery-btn {
+            flex: 1;
+            border: none;
+            background: var(--ui-theme-dark);
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            transition: background 0.1s ease;
+            font-size: 7px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+            line-height: 1;
+            box-sizing: border-box;
+        }
+        .ts-gallery-btn:last-child {
+            border-bottom: none;
+        }
+        .ts-gallery-btn svg, .ts-gallery-btn i {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        .ts-gallery-btn:hover {
+            background: var(--ui-theme-color);
+        }
+        .ts-gallery-btn:active, .ts-gallery-btn.active {
+            background: #00433f;
+        }
+        .ts-gallery-btn.disabled, .ts-gallery-btn:disabled {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* More Themes Dropdown Trigger - Distinct slightly lighter teal green */
+        #ts-gallery-more {
+            background: var(--ui-theme-color, #007670);
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+        }
+        #ts-gallery-more:hover {
+            background: #008f86;
+        }
+        #ts-gallery-more:active, #ts-gallery-more.active {
+            background: #005a55;
+        }
+
+        /* Categorized Dropdown Popover - Signature 1px Teal Outline */
+        #ts-gallery-popover {
+            position: fixed;
+            z-index: 99999;
+            width: 520px;
+            max-height: 520px;
+            background: #ffffff;
+            color: var(--ui-text, #1e293b);
+            border: 1px solid var(--ui-theme-dark) !important;
+            border-radius: 6px;
+            box-shadow: 0 8px 24px color-mix(in srgb, var(--ui-theme-dark) 20%, transparent), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: inherit;
+            animation: tsPopoverFadeIn 0.15s ease-out;
+        }
+        @keyframes tsPopoverFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ts-popover-header {
+            padding: 10px 14px;
+            background: #ffffff;
+            border-bottom: 1px solid color-mix(in srgb, var(--ui-theme-dark) 20%, transparent);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ts-popover-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ts-popover-title {
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ui-theme-dark);
+        }
+        .ts-badge-count {
+            background: var(--ui-theme-dark);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 12px;
+        }
+        .ts-popover-close {
+            background: transparent;
+            border: none;
+            color: var(--ui-text-muted, #64748b);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+        }
+        .ts-popover-close:hover {
+            background: rgba(0, 0, 0, 0.06);
+            color: #ef4444;
+        }
+
+        .ts-popover-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .ts-search-icon {
+            position: absolute;
+            left: 10px;
+            color: var(--ui-theme-dark);
+            font-size: 12px;
+            pointer-events: none;
+        }
+        #ts-popover-search {
+            width: 100%;
+            padding: 7px 30px 7px 30px;
+            border-radius: 4px;
+            border: 1px solid var(--ui-border);
+            background: #f8fafc;
+            color: inherit;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            box-sizing: border-box;
+        }
+        #ts-popover-search:focus {
+            border-color: var(--ui-theme-dark);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-theme-dark) 20%, transparent);
+            background: #ffffff;
+        }
+        #ts-popover-clear-search {
+            position: absolute;
+            right: 8px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px;
+        }
+        #ts-popover-clear-search:hover {
+            color: #475569;
+        }
+
+        .ts-popover-body {
+            padding: 8px 14px 14px 14px;
+            overflow-y: auto;
+            max-height: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .ts-popover-body::-webkit-scrollbar { width: 6px; }
+        .ts-popover-body::-webkit-scrollbar-track { background: transparent; }
+        .ts-popover-body::-webkit-scrollbar-thumb {
+            background: color-mix(in srgb, var(--ui-theme-dark) 30%, transparent);
+            border-radius: 3px;
+        }
+        .ts-popover-body::-webkit-scrollbar-thumb:hover {
+            background: var(--ui-theme-dark);
+        }
+
+        .ts-cat-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .ts-cat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ui-theme-dark);
+            padding-bottom: 4px;
+            border-bottom: 1px solid color-mix(in srgb, var(--ui-theme-dark) 18%, transparent);
+        }
+        .ts-cat-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ts-cat-badge {
+            background: color-mix(in srgb, var(--ui-theme-dark) 12%, transparent);
+            color: var(--ui-theme-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+        .ts-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 42px);
+            gap: 7px;
+        }
+        .ts-cat-grid .ts-swatch {
+            width: 42px;
+            height: 48px;
+            border-radius: 3px;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+        }
+        .ts-cat-grid .ts-swatch:hover {
+            transform: translateY(-2px) scale(1.08);
+            box-shadow: 0 4px 10px color-mix(in srgb, var(--ui-theme-dark) 35%, transparent);
+            border-color: var(--ui-theme-dark);
+            z-index: 10;
+        }
+        .ts-cat-grid .ts-swatch.active {
+            outline: 2px solid var(--ui-theme-dark);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px #ffffff;
+        }
+
+        .ts-popover-empty {
+            padding: 24px 10px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ts-popover-footer {
+            padding: 8px 14px;
+            background: #ffffff;
+            border-top: 1px solid color-mix(in srgb, var(--ui-theme-dark) 20%, transparent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .ts-popover-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--ui-theme-dark);
+            background: color-mix(in srgb, var(--ui-theme-dark) 8%, transparent);
+            color: var(--ui-theme-dark);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .ts-popover-action-btn:hover {
+            background: var(--ui-theme-dark);
+            color: #ffffff;
+        }
+        .ts-popover-action-btn:hover i {
+            color: #ffffff !important;
+        }
+        .ts-popover-action-btn i {
+            color: var(--ui-theme-dark);
+        }
+
+        /* Dark Mode Overrides */
+        body.dark-mode #ts-gallery-popover {
+            background: #1a1a22;
+            border-color: var(--ui-theme-color) !important;
+            color: #e2e8f0;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 6px color-mix(in srgb, var(--ui-theme-color) 25%, transparent) !important;
+        }
+        body.dark-mode .ts-popover-header,
+        body.dark-mode .ts-popover-footer {
+            background: #1a1a22;
+            border-color: color-mix(in srgb, var(--ui-theme-color) 30%, transparent);
+        }
+        body.dark-mode #ts-popover-search {
+            background: #242430;
+            border-color: #3f3f4e;
+            color: #f1f5f9;
+        }
+        body.dark-mode #ts-popover-search:focus {
+            border-color: var(--ui-theme-color);
+        }
+        body.dark-mode .ts-cat-header {
+            color: #5eead4;
+            border-color: rgba(94, 234, 212, 0.2);
+        }
+        body.dark-mode .ts-cat-badge {
+            background: rgba(94, 234, 212, 0.15);
+            color: #5eead4;
+        }
+        body.dark-mode .ts-popover-action-btn {
+            background: #22222d;
+            border-color: var(--ui-theme-color);
+            color: #5eead4;
+        }
+        body.dark-mode .ts-popover-action-btn:hover {
+            background: var(--ui-theme-color);
+            color: #ffffff;
+        }
+        body.dark-mode .ts-gallery-container {
+            border-color: var(--ui-theme-color);
+            background: #22222d;
+        }
+        body.dark-mode .ts-gallery-viewport {
+            background: #22222d;
+        }
+        body.dark-mode .ts-gallery-controls {
+            background: var(--ui-theme-color);
+            border-color: var(--ui-theme-color);
+        }
+        body.dark-mode .ts-gallery-btn {
+            background: var(--ui-theme-color);
+        }
+        body.dark-mode .ts-gallery-btn:hover {
+            background: var(--ui-theme-dark);
+        }
 
         /* Sliders */
         .ts-sliders { display: flex; flex-direction: column; gap: 6px; width: 130px; }
