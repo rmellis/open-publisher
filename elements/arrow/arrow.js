@@ -1,5 +1,5 @@
 /**
- * Open Publisher v5.3.4
+ * Open Publisher v5.3.5
  * Dedicated Smart Arrows Engine
  *
  * Implements 98 authentic parametric vector arrows across 7 harmonized categories
@@ -1823,7 +1823,7 @@
      * Initialize Smart Arrow Dropdown Gallery UI with 7-column layout.
      */
     function initArrows() {
-        console.log('🏹 Initializing Smart Arrows Engine (v5.3.4 - 98 Authentic Styles)...');
+        console.log('🏹 Initializing Smart Arrows Engine (v5.3.5 - 98 Authentic Styles)...');
         const dropdown = document.getElementById('arrow-dropdown');
         if (!dropdown) return;
 

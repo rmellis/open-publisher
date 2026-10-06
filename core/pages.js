@@ -235,6 +235,7 @@ function renderPage(pageData) {
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
     if (typeof window.upgradeAllCanvasWordArt === 'function') window.upgradeAllCanvasWordArt(paper);
+    if (typeof window.updateIgnoreThemeButtonUI === 'function') window.updateIgnoreThemeButtonUI();
 }
 
 // --- HISTORY MANAGEMENT ---

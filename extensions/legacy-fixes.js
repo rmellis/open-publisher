@@ -2332,7 +2332,7 @@
                 <span style="line-height: 1.2;">Remove<br>Theme</span>
             </div>
             
-            <div id="no-bg-btn" onclick="clearPageBackground()" title="Override Master Theme (Blank Page)">
+            <div id="no-bg-btn" onclick="toggleIgnoreTheme()" title="Ignore Theme (Blank Page)">
                 <i class="fas fa-ban"></i>
                 <span style="line-height: 1.2;">Ignore<br>Theme</span>
             </div>
@@ -2364,6 +2364,9 @@
     } else {
         document.body.appendChild(studioContainer);
     }
+    if (typeof window.updateIgnoreThemeButtonUI === 'function') {
+        window.updateIgnoreThemeButtonUI();
+    }
 
     // ==========================================
     // 5. THEME INJECTION & SAVE BACKUP
@@ -2372,9 +2375,22 @@
         const paper = document.getElementById('paper');
         if (!paper) return;
 
+        // When applying a theme, ensure ignoreBackground is turned off on current page
+        if (state.pages && state.pages[state.currentPageIndex]) {
+            state.pages[state.currentPageIndex].ignoreBackground = false;
+        }
+        if (typeof window.updateIgnoreThemeButtonUI === 'function') {
+            window.updateIgnoreThemeButtonUI();
+        }
+
         // Save active tab to prevent jump
         const activeTabEl = document.querySelector('.tab.active');
-        const activeTabId = activeTabEl ? activeTabEl.id.replace('tab-', '') : null;
+        let activeTabId = 'design';
+        if (activeTabEl) {
+            const m = activeTabEl.getAttribute('onclick')?.match(/switchTab\(['"]([^'"]+)['"]\)/);
+            if (m && m[1]) activeTabId = m[1];
+            else if (activeTabEl.id) activeTabId = activeTabEl.id.replace('tab-', '');
+        }
 
         // Clear existing
         const existingTheme = paper.querySelector('[data-is-theme="true"]');
@@ -2519,21 +2535,32 @@
     // ==========================================
     // 8. THE SELF-HEALING ENGINE & Z-INDEX
     // ==========================================
-    setInterval(() => {
+    window.restoreThemeFromSave = function() {
         const paper = document.getElementById('paper');
-        if (!paper) return;
+        if (!paper || paper.getAttribute('data-theme-saved') !== 'true') return;
 
-        let theme = document.querySelector('[data-is-theme="true"]');
-
-        // ✨ FEATURE: Ignore Background Override
-        if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
-            if (theme) theme.remove();
+        // If current page ignores theme, do not restore
+        if (state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
             return;
         }
 
+        let theme = paper.querySelector('[data-is-theme="true"]');
+
         // ✨ HEAL SCENARIO 1: Document loaded, theme was enabled, but wrapper was wiped out.
-        if (!theme && paper.getAttribute('data-theme-saved') === 'true') {
+        if (!theme) {
             console.log("🛠️ Theme Studio: Reconstructing deleted theme wrapper from save file...");
+            // Save active tab to prevent jump
+            const activeTabEl = document.querySelector('.tab.active');
+            let activeTabId = 'design';
+            if (activeTabEl) {
+                const m = activeTabEl.getAttribute('onclick')?.match(/switchTab\(['"]([^'"]+)['"]\)/);
+                if (m && m[1]) activeTabId = m[1];
+                else if (activeTabEl.id) activeTabId = activeTabEl.id.replace('tab-', '');
+            }
+
+            const originalSwitchTab = window.switchTab;
+            window.switchTab = function() {};
+
             if (typeof createWrapper === 'function') {
                 theme = createWrapper(`<div class="op-theme-container"></div>`); // temporary shell
                 theme.setAttribute('data-is-theme', 'true');
@@ -2541,10 +2568,15 @@
                 theme.style.cssText += 'left: 0px !important; top: 0px !important; width: 100% !important; height: 100% !important; z-index: 0 !important;';
                 if (typeof deselect === 'function') deselect();
             }
+
+            window.switchTab = originalSwitchTab;
+            if (activeTabId && typeof window.switchTab === 'function') {
+                window.switchTab(activeTabId);
+            }
         }
 
         // ✨ HEAL SCENARIO 2: Wrapper exists, but the inner SVG visuals were stripped during Save/Load.
-        if (theme && !theme.querySelector('.op-theme-bg') && paper.getAttribute('data-theme-saved') === 'true') {
+        if (theme && !theme.querySelector('.op-theme-bg')) {
             console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
             
             const type = paper.getAttribute('data-theme-type');
@@ -2583,9 +2615,9 @@
                 const bri = paper.getAttribute('data-theme-bri');
                 const tex = paper.getAttribute('data-theme-tex');
                 
-                if (sat) document.getElementById('ts-sat-slider').value = sat;
-                if (bri) document.getElementById('ts-bri-slider').value = bri;
-                if (tex) document.getElementById('ts-tex-slider').value = tex;
+                if (sat && document.getElementById('ts-sat-slider')) document.getElementById('ts-sat-slider').value = sat;
+                if (bri && document.getElementById('ts-bri-slider')) document.getElementById('ts-bri-slider').value = bri;
+                if (tex && document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = tex;
 
                 // Restore UI Swatch highlight
                 const swatches = document.querySelectorAll('.ts-swatch');
@@ -2601,6 +2633,23 @@
         // Maintain Stacking Order
         if (theme && theme.style.zIndex !== '0') {
             theme.style.zIndex = '0';
+        }
+    };
+
+    setInterval(() => {
+        const paper = document.getElementById('paper');
+        if (!paper) return;
+
+        let theme = document.querySelector('[data-is-theme="true"]');
+
+        // ✨ FEATURE: Ignore Background Override
+        if (state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
+            if (theme) theme.remove();
+            return;
+        }
+
+        if (typeof window.restoreThemeFromSave === 'function') {
+            window.restoreThemeFromSave();
         }
         const border = document.getElementById('native-blueprint-border');
         if (border && border.style.zIndex !== '2') {

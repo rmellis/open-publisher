@@ -3573,6 +3573,18 @@ svg .shape-path, svg .shape-path * {
         #ts-clear-theme-btn i, #no-bg-btn i, #ts-clear-border-btn i { font-size: 24px; color: var(--ui-theme-color); margin-bottom: 6px; }
         #ts-clear-theme-btn:hover, #no-bg-btn:hover, #ts-clear-border-btn:hover { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
         #ts-clear-theme-btn:active, #no-bg-btn:active, #ts-clear-border-btn:active { background: rgba(0, 0, 0, 0.1); }
+        #no-bg-btn.active {
+            background: color-mix(in srgb, var(--ui-theme-color) 20%, transparent) !important;
+            border: 1.5px solid var(--ui-theme-color) !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+        #no-bg-btn.active i {
+            color: var(--ui-theme-color) !important;
+            transform: scale(1.08);
+        }
+        #no-bg-btn.active:hover {
+            background: color-mix(in srgb, var(--ui-theme-color) 30%, transparent) !important;
+        }
 
 /* Extracted Block 24 */
 /* 1. Stop the main wrapper from chopping off the handles */

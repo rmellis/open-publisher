@@ -1,27 +1,56 @@
 // --- THEMES & STYLES ---
+window.updateIgnoreThemeButtonUI = function() {
+    const btn = document.getElementById('no-bg-btn');
+    if (!btn) return;
+    const isIgnored = !!(typeof state !== 'undefined' && state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground);
+    btn.classList.toggle('active', isIgnored);
+    btn.setAttribute('aria-pressed', isIgnored ? 'true' : 'false');
+    btn.title = isIgnored ? 'Theme Ignored on this page (Click to re-enable themes)' : 'Ignore Theme (Blank Page)';
+};
+
+window.toggleIgnoreTheme = function() {
+    if (typeof state === 'undefined' || !state.pages || !state.pages[state.currentPageIndex]) return;
+    const curPage = state.pages[state.currentPageIndex];
+    
+    const isCurrentlyIgnored = !!curPage.ignoreBackground;
+    const willIgnore = !isCurrentlyIgnored;
+    curPage.ignoreBackground = willIgnore;
+    
+    const paper = document.getElementById('paper');
+    if (willIgnore) {
+        // Toggled ON: ignore master theme and set blank page
+        if (curPage.background && curPage.background !== '#ffffff') {
+            curPage._previousBg = curPage.background;
+        }
+        curPage.background = '#ffffff';
+        if (paper) {
+            paper.style.background = '#ffffff';
+            const theme = paper.querySelector('[data-is-theme="true"]');
+            if (theme) theme.remove();
+        }
+        document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
+    } else {
+        // Toggled OFF: re-enable theme
+        if (paper && paper.getAttribute('data-theme-saved') === 'true') {
+            if (typeof window.restoreThemeFromSave === 'function') {
+                window.restoreThemeFromSave();
+            }
+        } else if (curPage._previousBg) {
+            curPage.background = curPage._previousBg;
+            if (paper) paper.style.background = curPage._previousBg;
+        }
+    }
+    
+    if (typeof window.updateIgnoreThemeButtonUI === 'function') {
+        window.updateIgnoreThemeButtonUI();
+    }
+    if (typeof pushHistory === 'function') pushHistory();
+};
+window.clearPageBackground = window.toggleIgnoreTheme;
+
 function initThemes() {
     const container = document.getElementById('theme-group');
     
-window.clearPageBackground = function() {
-    document.querySelectorAll('.theme-swatch-item').forEach(el => el.style.border = '1px solid #ccc');
-    
-    // Flag this specific page to ignore the master theme
-    if (state.pages[state.currentPageIndex]) {
-        state.pages[state.currentPageIndex].ignoreBackground = true;
-        state.pages[state.currentPageIndex].background = '#ffffff';
-    }
-    
-    // Manually destroy the theme wrapper on this page right now
-    const paper = document.getElementById('paper');
-    if (paper) {
-        paper.style.background = '#ffffff';
-        const theme = paper.querySelector('[data-is-theme="true"]');
-        if (theme) theme.remove();
-    }
-    
-    if (typeof pushHistory === 'function') pushHistory();
-};
-
     const colors = [
         '#ffffff', '#fdf2f0', '#e8f6f3', '#fef9e7', '#f4ecf7', '#eaf2f8',
         '#ebf5fb', '#e8daef', '#d4e6f1', '#d1f2eb', '#fcf3cf', '#fadbd8',
@@ -66,6 +95,10 @@ window.clearPageBackground = function() {
             
             const paper = document.getElementById('paper');
             if (paper) paper.style.background = c; 
+            
+            if (typeof window.updateIgnoreThemeButtonUI === 'function') {
+                window.updateIgnoreThemeButtonUI();
+            }
             
             pushHistory(); 
         };
