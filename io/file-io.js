@@ -35,9 +35,27 @@ window.saveDocument = function() {
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
         margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
-        marginsDpi: state.marginsDpi || curDpi,
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
+    
+    const paperEl = document.getElementById('paper');
+    if (paperEl && paperEl.getAttribute('data-theme-saved') === 'true') {
+        docData.themeSettings = {
+            saved: true,
+            id: paperEl.getAttribute('data-theme-id') || '',
+            name: paperEl.getAttribute('data-theme-name') || '',
+            type: paperEl.getAttribute('data-theme-type') || '',
+            c1: paperEl.getAttribute('data-theme-c1') || '',
+            c2: paperEl.getAttribute('data-theme-c2') || '',
+            url: paperEl.getAttribute('data-theme-url') || '',
+            sat: paperEl.getAttribute('data-theme-sat') || '100',
+            bri: paperEl.getAttribute('data-theme-bri') || '100',
+            con: paperEl.getAttribute('data-theme-con') || '100',
+            hue: paperEl.getAttribute('data-theme-hue') || '0',
+            tex: paperEl.getAttribute('data-theme-tex') || '100',
+            size: paperEl.getAttribute('data-theme-size') || '100'
+        };
+    }
     
     if (window.DashboardSystem && window.html2canvas) {
         const paper = document.getElementById('paper');

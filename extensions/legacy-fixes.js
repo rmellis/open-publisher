@@ -2256,7 +2256,7 @@
 
 
 ;(function installPerfectedThemeStudio() {
-    console.log("🛠️ Theme Studio initializing (v5.4.0 Office-style Ribbon Gallery & 300 Themes)...");
+    console.log("🛠️ Theme Studio initializing (v5.4.1 Modernized Background Controls & 300 Themes)...");
 
     // ==========================================
     // 1. CLEANUP & PREPARATION
@@ -5076,18 +5076,55 @@
             <!-- galleryContainer inserted here -->
             <div class="ts-divider"></div>
             
-            <div class="ts-sliders">
-                <div class="ts-slider-group">
-                    <label style="white-space: nowrap; padding-right: 10px;">Saturation <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
-                    <input type="range" id="ts-sat-slider" class="ts-slider" min="0" max="200" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
+            <div class="ts-sliders-container" id="ts-sliders-container">
+                <div class="ts-sliders-col" id="ts-col-1">
+                    <div class="ts-slider-row" id="ts-row-sat">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Saturation</span>
+                            <span class="ts-badge-pill" id="ts-sat-badge" title="Click to reset Saturation to 100%">100%</span>
+                        </div>
+                        <input type="range" id="ts-sat-slider" class="ts-slider" min="0" max="200" value="100" aria-label="Saturation">
+                    </div>
+                    <div class="ts-slider-row" id="ts-row-bri">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Brightness</span>
+                            <span class="ts-badge-pill" id="ts-bri-badge" title="Click to reset Brightness to 100%">100%</span>
+                        </div>
+                        <input type="range" id="ts-bri-slider" class="ts-slider" min="50" max="150" value="100" aria-label="Brightness">
+                    </div>
+                    <div class="ts-slider-row" id="ts-row-con">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Contrast</span>
+                            <span class="ts-badge-pill" id="ts-con-badge" title="Click to reset Contrast to 100%">100%</span>
+                        </div>
+                        <input type="range" id="ts-con-slider" class="ts-slider" min="50" max="150" value="100" aria-label="Contrast">
+                    </div>
                 </div>
-                <div class="ts-slider-group">
-                    <label style="white-space: nowrap; padding-right: 10px;">Brightness <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
-                    <input type="range" id="ts-bri-slider" class="ts-slider" min="50" max="150" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
-                </div>
-                <div class="ts-slider-group">
-                    <label style="white-space: nowrap; padding-right: 10px;">Texture <span style="font-size: 11px; color: #888; margin-left: 2px;">N/A</span></label>
-                    <input type="range" id="ts-tex-slider" class="ts-slider" min="0" max="100" value="100" disabled style="filter: grayscale(100%); opacity: 0.5; cursor: not-allowed;">
+                
+                <div class="ts-divider"></div>
+
+                <div class="ts-sliders-col" id="ts-col-2">
+                    <div class="ts-slider-row" id="ts-row-hue">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Hue Shift</span>
+                            <span class="ts-badge-pill" id="ts-hue-badge" title="Click to reset Hue Shift to 0°">0°</span>
+                        </div>
+                        <input type="range" id="ts-hue-slider" class="ts-slider" min="0" max="360" value="0" aria-label="Hue Shift">
+                    </div>
+                    <div class="ts-slider-row" id="ts-row-tex">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Texture</span>
+                            <span class="ts-badge-pill" id="ts-tex-badge" title="Click to reset Texture to 100%">100%</span>
+                        </div>
+                        <input type="range" id="ts-tex-slider" class="ts-slider" min="0" max="100" value="100" aria-label="Texture Opacity">
+                    </div>
+                    <div class="ts-slider-row" id="ts-row-size">
+                        <div class="ts-slider-label-wrap">
+                            <span class="ts-slider-label">Zoom</span>
+                            <span class="ts-badge-pill" id="ts-size-badge" title="Click to reset Pattern Zoom to 100%">100%</span>
+                        </div>
+                        <input type="range" id="ts-size-slider" class="ts-slider" min="25" max="300" step="5" value="100" aria-label="Pattern Zoom">
+                    </div>
                 </div>
             </div>
         </div>
@@ -5428,6 +5465,15 @@
                 texDiv.className = 'op-theme-tex';
                 texDiv.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; background-repeat:repeat; opacity:1;';
                 texDiv.style.backgroundImage = `url('${url}')`;
+                const preloadImg = new Image();
+                preloadImg.onload = () => {
+                    if (preloadImg.naturalWidth > 0) {
+                        texDiv.setAttribute('data-base-w', preloadImg.naturalWidth);
+                        texDiv.setAttribute('data-base-h', preloadImg.naturalHeight);
+                        updateLiveFilters();
+                    }
+                };
+                preloadImg.src = url;
                 container.appendChild(texDiv);
             }
             
@@ -5444,29 +5490,230 @@
         if (typeof pushHistory === 'function') pushHistory();
     };
 
+    const updateSliderTrackFill = (slider, min, max, val) => {
+        if (!slider) return;
+        const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+        const isDark = document.body.classList.contains('dark-mode');
+        const bgEmpty = isDark ? '#334155' : '#e2e8f0';
+        slider.style.background = `linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) ${pct}%, ${bgEmpty} ${pct}%, ${bgEmpty} 100%)`;
+    };
+
     const updateLiveFilters = () => {
         const paper = document.getElementById('paper');
         if (!paper) return;
 
-        const themeLayer = paper.querySelector('[data-is-theme="true"]');
-        if (!themeLayer) return;
+        const satSlider = document.getElementById('ts-sat-slider');
+        const briSlider = document.getElementById('ts-bri-slider');
+        const conSlider = document.getElementById('ts-con-slider');
+        const hueSlider = document.getElementById('ts-hue-slider');
+        const texSlider = document.getElementById('ts-tex-slider');
+        const sizeSlider = document.getElementById('ts-size-slider');
+        const satBadge = document.getElementById('ts-sat-badge');
+        const briBadge = document.getElementById('ts-bri-badge');
+        const conBadge = document.getElementById('ts-con-badge');
+        const hueBadge = document.getElementById('ts-hue-badge');
+        const texBadge = document.getElementById('ts-tex-badge');
+        const sizeBadge = document.getElementById('ts-size-badge');
 
-        const sat = document.getElementById('ts-sat-slider').value;
-        const bri = document.getElementById('ts-bri-slider').value;
-        const texVal = document.getElementById('ts-tex-slider').value;
-        const texStr = texVal / 100;
+        const sat = satSlider ? parseInt(satSlider.value, 10) : 100;
+        const bri = briSlider ? parseInt(briSlider.value, 10) : 100;
+        const con = conSlider ? parseInt(conSlider.value, 10) : 100;
+        const hue = hueSlider ? parseInt(hueSlider.value, 10) : 0;
+        const texVal = texSlider ? parseInt(texSlider.value, 10) : 100;
+        const sizeVal = sizeSlider ? parseInt(sizeSlider.value, 10) : 100;
+        const texStr = (texVal / 100).toString();
 
-        // Backup slider states for saving
+        // Backup slider states for saving & printing
         paper.setAttribute('data-theme-sat', sat);
         paper.setAttribute('data-theme-bri', bri);
+        paper.setAttribute('data-theme-con', con);
+        paper.setAttribute('data-theme-hue', hue);
         paper.setAttribute('data-theme-tex', texVal);
+        paper.setAttribute('data-theme-size', sizeVal);
 
-        const container = themeLayer.querySelector('.op-theme-container');
-        if (container) container.style.filter = `saturate(${sat}%) brightness(${bri}%)`;
+        // Also save to active page model so switching pages retains adjustments
+        if (state.pages && state.pages[state.currentPageIndex]) {
+            state.pages[state.currentPageIndex].themeSettings = {
+                saved: paper.getAttribute('data-theme-saved') === 'true',
+                id: paper.getAttribute('data-theme-id') || '',
+                name: paper.getAttribute('data-theme-name') || '',
+                type: paper.getAttribute('data-theme-type') || '',
+                c1: paper.getAttribute('data-theme-c1') || '',
+                c2: paper.getAttribute('data-theme-c2') || '',
+                url: paper.getAttribute('data-theme-url') || '',
+                sat: String(sat),
+                bri: String(bri),
+                con: String(con),
+                hue: String(hue),
+                tex: String(texVal),
+                size: String(sizeVal)
+            };
+        }
 
-        const texLayer = themeLayer.querySelector('.op-theme-tex');
-        if (texLayer) texLayer.style.opacity = texStr;
+        // Update numeric badges
+        if (satBadge) satBadge.textContent = `${sat}%`;
+        if (briBadge) briBadge.textContent = `${bri}%`;
+        if (conBadge) conBadge.textContent = `${con}%`;
+        if (hueBadge) hueBadge.textContent = `${hue}°`;
+
+        // Update slider tracks
+        if (satSlider) updateSliderTrackFill(satSlider, 0, 200, sat);
+        if (briSlider) updateSliderTrackFill(briSlider, 50, 150, bri);
+        if (conSlider) updateSliderTrackFill(conSlider, 50, 150, con);
+        if (hueSlider) updateSliderTrackFill(hueSlider, 0, 360, hue);
+        if (texSlider) updateSliderTrackFill(texSlider, 0, 100, texVal);
+        if (sizeSlider) updateSliderTrackFill(sizeSlider, 25, 300, sizeVal);
+
+        const themeLayer = paper.querySelector('[data-is-theme="true"]');
+        const themeType = paper.getAttribute('data-theme-type') || '';
+        const hasTextureLayer = themeLayer && !!themeLayer.querySelector('.op-theme-tex');
+        const isTextureTheme = themeType === 'texture' || hasTextureLayer;
+
+        const texRow = document.getElementById('ts-row-tex');
+        const sizeRow = document.getElementById('ts-row-size');
+        if (texSlider && texBadge) {
+            if (isTextureTheme) {
+                texSlider.disabled = false;
+                texBadge.textContent = `${texVal}%`;
+                texBadge.title = 'Click to reset Texture Opacity to 100%';
+                texBadge.classList.remove('ts-badge-disabled');
+                if (texRow) texRow.classList.remove('disabled');
+            } else {
+                texSlider.disabled = true;
+                texBadge.textContent = 'None';
+                texBadge.title = 'Texture opacity applies to textured themes';
+                texBadge.classList.add('ts-badge-disabled');
+                if (texRow) texRow.classList.add('disabled');
+            }
+        }
+        if (sizeSlider && sizeBadge) {
+            if (isTextureTheme) {
+                sizeSlider.disabled = false;
+                sizeBadge.textContent = `${sizeVal}%`;
+                sizeBadge.title = 'Click to reset Pattern Zoom to 100%';
+                sizeBadge.classList.remove('ts-badge-disabled');
+                if (sizeRow) sizeRow.classList.remove('disabled');
+            } else {
+                sizeSlider.disabled = true;
+                sizeBadge.textContent = 'None';
+                sizeBadge.title = 'Pattern zoom applies to textured themes';
+                sizeBadge.classList.add('ts-badge-disabled');
+                if (sizeRow) sizeRow.classList.add('disabled');
+            }
+        }
+
+        document.querySelectorAll('.op-theme-container').forEach(container => {
+            container.style.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+            container.style.webkitFilter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+        });
+        document.querySelectorAll('.op-theme-tex').forEach(texLayer => {
+            texLayer.style.opacity = texStr;
+            const baseW = parseFloat(texLayer.getAttribute('data-base-w')) || 100;
+            if (sizeVal === 100) {
+                texLayer.style.backgroundSize = 'auto auto';
+            } else {
+                const scaledW = Math.round(baseW * (sizeVal / 100));
+                texLayer.style.backgroundSize = `${scaledW}px auto`;
+            }
+        });
     };
+
+    // Wire up adjustment listeners
+    const satSlider = document.getElementById('ts-sat-slider');
+    const briSlider = document.getElementById('ts-bri-slider');
+    const conSlider = document.getElementById('ts-con-slider');
+    const hueSlider = document.getElementById('ts-hue-slider');
+    const texSlider = document.getElementById('ts-tex-slider');
+    const sizeSlider = document.getElementById('ts-size-slider');
+    const satBadge = document.getElementById('ts-sat-badge');
+    const briBadge = document.getElementById('ts-bri-badge');
+    const conBadge = document.getElementById('ts-con-badge');
+    const hueBadge = document.getElementById('ts-hue-badge');
+    const texBadge = document.getElementById('ts-tex-badge');
+    const sizeBadge = document.getElementById('ts-size-badge');
+
+    if (satSlider) {
+        satSlider.addEventListener('input', () => updateLiveFilters());
+        satSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+    if (briSlider) {
+        briSlider.addEventListener('input', () => updateLiveFilters());
+        briSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+    if (conSlider) {
+        conSlider.addEventListener('input', () => updateLiveFilters());
+        conSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+    if (hueSlider) {
+        hueSlider.addEventListener('input', () => updateLiveFilters());
+        hueSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+    if (texSlider) {
+        texSlider.addEventListener('input', () => updateLiveFilters());
+        texSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+    if (sizeSlider) {
+        sizeSlider.addEventListener('input', () => updateLiveFilters());
+        sizeSlider.addEventListener('change', () => { if (typeof pushHistory === 'function') pushHistory(); });
+    }
+
+    if (satBadge) {
+        satBadge.addEventListener('click', () => {
+            if (satSlider) {
+                satSlider.value = 100;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+    if (briBadge) {
+        briBadge.addEventListener('click', () => {
+            if (briSlider) {
+                briSlider.value = 100;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+    if (conBadge) {
+        conBadge.addEventListener('click', () => {
+            if (conSlider) {
+                conSlider.value = 100;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+    if (hueBadge) {
+        hueBadge.addEventListener('click', () => {
+            if (hueSlider) {
+                hueSlider.value = 0;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+    if (texBadge) {
+        texBadge.addEventListener('click', () => {
+            if (texSlider && !texSlider.disabled) {
+                texSlider.value = 100;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+    if (sizeBadge) {
+        sizeBadge.addEventListener('click', () => {
+            if (sizeSlider && !sizeSlider.disabled) {
+                sizeSlider.value = 100;
+                updateLiveFilters();
+                if (typeof pushHistory === 'function') pushHistory();
+            }
+        });
+    }
+
+    // Initial sync of track fill and badges
+    updateLiveFilters();
 
     // ==========================================
     // 7. CLEAR THEME LOGIC
@@ -5480,15 +5727,22 @@
             
             // Wipe save backup
             paper.removeAttribute('data-theme-saved');
-            ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'tex'].forEach(attr => {
+            ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'con', 'hue', 'tex', 'size'].forEach(attr => {
                 paper.removeAttribute(`data-theme-${attr}`);
             });
+            if (state.pages && state.pages[state.currentPageIndex]) {
+                delete state.pages[state.currentPageIndex].themeSettings;
+            }
         }
         
         document.querySelectorAll('.ts-swatch').forEach(s => s.classList.remove('active'));
-        document.getElementById('ts-sat-slider').value = 100;
-        document.getElementById('ts-bri-slider').value = 100;
-        document.getElementById('ts-tex-slider').value = 100;
+        if (document.getElementById('ts-sat-slider')) document.getElementById('ts-sat-slider').value = 100;
+        if (document.getElementById('ts-bri-slider')) document.getElementById('ts-bri-slider').value = 100;
+        if (document.getElementById('ts-con-slider')) document.getElementById('ts-con-slider').value = 100;
+        if (document.getElementById('ts-hue-slider')) document.getElementById('ts-hue-slider').value = 0;
+        if (document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = 100;
+        if (document.getElementById('ts-size-slider')) document.getElementById('ts-size-slider').value = 100;
+        updateLiveFilters();
 
         if (typeof pushHistory === 'function') pushHistory();
     });
@@ -5515,6 +5769,55 @@
                         child.style.transform = 'none';
                         const content = child.querySelector('.element-content');
                         if (content) content.style.transform = 'none';
+
+                        // Ensure background filter and texture opacity are explicitly preserved in print spooler
+                        const container = child.querySelector('.op-theme-container');
+                        if (container) {
+                            const paper = document.getElementById('paper');
+                            const sat = paper ? (paper.getAttribute('data-theme-sat') || '100') : '100';
+                            const bri = paper ? (paper.getAttribute('data-theme-bri') || '100') : '100';
+                            const con = paper ? (paper.getAttribute('data-theme-con') || '100') : '100';
+                            const hue = paper ? (paper.getAttribute('data-theme-hue') || '0') : '0';
+                            const tex = paper ? (paper.getAttribute('data-theme-tex') || '100') : '100';
+                            const size = paper ? (paper.getAttribute('data-theme-size') || '100') : '100';
+
+                            container.style.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+                            container.style.webkitFilter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+                            const texLayer = container.querySelector('.op-theme-tex');
+                            if (texLayer) {
+                                texLayer.style.opacity = (parseFloat(tex) / 100).toString();
+                                const baseW = parseFloat(texLayer.getAttribute('data-base-w')) || 100;
+                                if (size !== '100') {
+                                    texLayer.style.backgroundSize = `${Math.round(baseW * (parseFloat(size) / 100))}px auto`;
+                                }
+                            }
+
+                            if (typeof window.bakeThemeBackgroundForPrint === 'function') {
+                                const tSettings = {
+                                    saved: true,
+                                    id: paper ? (paper.getAttribute('data-theme-id') || '') : '',
+                                    type: paper ? (paper.getAttribute('data-theme-type') || 'color') : 'color',
+                                    c1: paper ? (paper.getAttribute('data-theme-c1') || '#ffffff') : '#ffffff',
+                                    c2: paper ? (paper.getAttribute('data-theme-c2') || '') : '',
+                                    url: paper ? (paper.getAttribute('data-theme-url') || '') : '',
+                                    sat: sat,
+                                    bri: bri,
+                                    con: con,
+                                    hue: hue,
+                                    tex: tex,
+                                    size: size
+                                };
+                                const pw = pageWrapper.offsetWidth || 794;
+                                const ph = pageWrapper.offsetHeight || 1123;
+                                window.bakeThemeBackgroundForPrint(tSettings, pw, ph).then(bakedUrl => {
+                                    if (bakedUrl) {
+                                        container.innerHTML = `<img class="op-theme-baked-bg" src="${bakedUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:fill; display:block; border:none; outline:none; margin:0; padding:0; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;">`;
+                                        container.style.filter = 'none';
+                                        container.style.webkitFilter = 'none';
+                                    }
+                                }).catch(() => {});
+                            }
+                        }
                     }
                 });
             });
@@ -5526,7 +5829,29 @@
     // ==========================================
     window.restoreThemeFromSave = function() {
         const paper = document.getElementById('paper');
-        if (!paper || paper.getAttribute('data-theme-saved') !== 'true') return;
+        if (!paper) return;
+
+        // If current page has themeSettings saved on page model, synchronize to paper attributes
+        if (state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].themeSettings) {
+            const ts = state.pages[state.currentPageIndex].themeSettings;
+            if (ts.saved) {
+                paper.setAttribute('data-theme-saved', 'true');
+                if (ts.id) paper.setAttribute('data-theme-id', ts.id);
+                if (ts.name) paper.setAttribute('data-theme-name', ts.name);
+                if (ts.type) paper.setAttribute('data-theme-type', ts.type);
+                if (ts.c1) paper.setAttribute('data-theme-c1', ts.c1);
+                if (ts.c2) paper.setAttribute('data-theme-c2', ts.c2);
+                if (ts.url) paper.setAttribute('data-theme-url', ts.url);
+                if (ts.sat) paper.setAttribute('data-theme-sat', ts.sat);
+                if (ts.bri) paper.setAttribute('data-theme-bri', ts.bri);
+                if (ts.con) paper.setAttribute('data-theme-con', ts.con);
+                if (ts.hue) paper.setAttribute('data-theme-hue', ts.hue);
+                if (ts.tex) paper.setAttribute('data-theme-tex', ts.tex);
+                if (ts.size) paper.setAttribute('data-theme-size', ts.size);
+            }
+        }
+
+        if (paper.getAttribute('data-theme-saved') !== 'true') return;
 
         // If current page ignores theme, do not restore
         if (state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].ignoreBackground) {
@@ -5601,18 +5926,44 @@
                 // Restore UI Sliders
                 const sat = paper.getAttribute('data-theme-sat');
                 const bri = paper.getAttribute('data-theme-bri');
+                const con = paper.getAttribute('data-theme-con');
+                const hue = paper.getAttribute('data-theme-hue');
                 const tex = paper.getAttribute('data-theme-tex');
+                const size = paper.getAttribute('data-theme-size');
                 
                 if (sat && document.getElementById('ts-sat-slider')) document.getElementById('ts-sat-slider').value = sat;
                 if (bri && document.getElementById('ts-bri-slider')) document.getElementById('ts-bri-slider').value = bri;
+                if (con && document.getElementById('ts-con-slider')) document.getElementById('ts-con-slider').value = con;
+                if (hue && document.getElementById('ts-hue-slider')) document.getElementById('ts-hue-slider').value = hue;
                 if (tex && document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = tex;
+                if (size && document.getElementById('ts-size-slider')) document.getElementById('ts-size-slider').value = size;
 
                 // Restore UI Swatch highlight
                 const savedId = paper.getAttribute('data-theme-id');
                 highlightActiveSwatch(savedId, c1);
 
-                updateLiveFilters();
             }
+        } else if (theme && theme.querySelector('.op-theme-bg')) {
+            const sat = paper.getAttribute('data-theme-sat');
+            const bri = paper.getAttribute('data-theme-bri');
+            const con = paper.getAttribute('data-theme-con');
+            const hue = paper.getAttribute('data-theme-hue');
+            const tex = paper.getAttribute('data-theme-tex');
+            const size = paper.getAttribute('data-theme-size');
+            const satEl = document.getElementById('ts-sat-slider');
+            const briEl = document.getElementById('ts-bri-slider');
+            const conEl = document.getElementById('ts-con-slider');
+            const hueEl = document.getElementById('ts-hue-slider');
+            const texEl = document.getElementById('ts-tex-slider');
+            const sizeEl = document.getElementById('ts-size-slider');
+            let needsUpdate = false;
+            if (sat && satEl && satEl.value !== sat) { satEl.value = sat; needsUpdate = true; }
+            if (bri && briEl && briEl.value !== bri) { briEl.value = bri; needsUpdate = true; }
+            if (con && conEl && conEl.value !== con) { conEl.value = con; needsUpdate = true; }
+            if (hue && hueEl && hueEl.value !== hue) { hueEl.value = hue; needsUpdate = true; }
+            if (tex && texEl && texEl.value !== tex) { texEl.value = tex; needsUpdate = true; }
+            if (size && sizeEl && sizeEl.value !== size) { sizeEl.value = size; needsUpdate = true; }
+            if (needsUpdate) updateLiveFilters();
         }
 
         // Maintain Stacking Order

@@ -475,6 +475,162 @@
         attemptLoad(!src.startsWith('data:'));
     });
 
+    window.bakeThemeBackgroundForPrint = async function(themeSettings, width, height) {
+        if (!themeSettings || !themeSettings.saved) return null;
+        const c1 = themeSettings.c1 || '#ffffff';
+        const c2 = themeSettings.c2 || '';
+        const type = themeSettings.type || 'color';
+        const url = themeSettings.url || '';
+        const sat = themeSettings.sat !== undefined ? parseFloat(themeSettings.sat) : 100;
+        const bri = themeSettings.bri !== undefined ? parseFloat(themeSettings.bri) : 100;
+        const con = themeSettings.con !== undefined ? parseFloat(themeSettings.con) : 100;
+        const hue = themeSettings.hue !== undefined ? parseFloat(themeSettings.hue) : 0;
+        const tex = themeSettings.tex !== undefined ? parseFloat(themeSettings.tex) : 100;
+        const texOpacity = isNaN(tex) ? 1 : Math.max(0, Math.min(1, tex / 100));
+        const sizeVal = themeSettings.size !== undefined ? parseFloat(themeSettings.size) : 100;
+        const patternScale = isNaN(sizeVal) ? 1 : Math.max(0.2, Math.min(4, sizeVal / 100));
+
+        const scale = 2;
+        const targetW = Math.max(100, Math.round((parseFloat(width) || 794) * scale));
+        const targetH = Math.max(100, Math.round((parseFloat(height) || 1123) * scale));
+
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = targetW;
+        baseCanvas.height = targetH;
+        const baseCtx = baseCanvas.getContext('2d');
+
+        // 1. Draw base fill (gradient or solid)
+        if (type === 'gradient' && c2) {
+            const grad = baseCtx.createLinearGradient(0, 0, targetW, targetH);
+            grad.addColorStop(0, c1);
+            grad.addColorStop(1, c2);
+            baseCtx.fillStyle = grad;
+            baseCtx.fillRect(0, 0, targetW, targetH);
+        } else {
+            baseCtx.fillStyle = c1;
+            baseCtx.fillRect(0, 0, targetW, targetH);
+        }
+
+        // 2. If textured theme, load and tile texture pattern with patternScale and texOpacity
+        if (type === 'texture' && url) {
+            try {
+                const textureImg = new Image();
+                textureImg.crossOrigin = 'Anonymous';
+                let safeUrl = url;
+                if (safeUrl.startsWith('http') && !safeUrl.includes('wsrv.nl')) {
+                    const clean = safeUrl.replace(/^https?:\/\//, '');
+                    safeUrl = `https://wsrv.nl/?url=${encodeURIComponent(clean)}`;
+                }
+                await new Promise((resolve) => {
+                    const timer = setTimeout(resolve, 2000);
+                    textureImg.onload = () => { clearTimeout(timer); resolve(); };
+                    textureImg.onerror = () => { clearTimeout(timer); resolve(); };
+                    textureImg.src = safeUrl;
+                    if (textureImg.complete && textureImg.naturalWidth > 0) {
+                        clearTimeout(timer);
+                        resolve();
+                    }
+                });
+
+                if (textureImg.naturalWidth > 0) {
+                    const tileW = Math.max(4, Math.round(textureImg.naturalWidth * patternScale * scale));
+                    const tileH = Math.max(4, Math.round(textureImg.naturalHeight * patternScale * scale));
+
+                    const tileCanvas = document.createElement('canvas');
+                    tileCanvas.width = tileW;
+                    tileCanvas.height = tileH;
+                    const tileCtx = tileCanvas.getContext('2d');
+                    tileCtx.drawImage(textureImg, 0, 0, tileW, tileH);
+
+                    const pattern = baseCtx.createPattern(tileCanvas, 'repeat');
+                    if (pattern) {
+                        baseCtx.save();
+                        baseCtx.globalAlpha = texOpacity;
+                        baseCtx.fillStyle = pattern;
+                        baseCtx.fillRect(0, 0, targetW, targetH);
+                        baseCtx.restore();
+                    }
+                }
+            } catch (texErr) {
+                console.warn('[Print Engine] Texture pattern load error for bake:', texErr);
+            }
+        }
+
+        // 3. Apply Saturation, Brightness, Contrast, and Hue Rotate via Canvas 2D filter
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = targetW;
+        finalCanvas.height = targetH;
+        const finalCtx = finalCanvas.getContext('2d');
+
+        finalCtx.save();
+        if ('filter' in finalCtx) {
+            finalCtx.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+        }
+        finalCtx.drawImage(baseCanvas, 0, 0);
+        finalCtx.restore();
+
+        // 4. Pixel-level fallback verification (ensures effect even if context filter was bypassed)
+        if (sat !== 100 || bri !== 100 || con !== 100 || hue !== 0) {
+            try {
+                const sample1 = baseCtx.getImageData(Math.round(targetW / 2), Math.round(targetH / 2), 1, 1).data;
+                const sample2 = finalCtx.getImageData(Math.round(targetW / 2), Math.round(targetH / 2), 1, 1).data;
+                const diff = Math.abs(sample1[0] - sample2[0]) + Math.abs(sample1[1] - sample2[1]) + Math.abs(sample1[2] - sample2[2]);
+                if (diff === 0) {
+                    const imgData = finalCtx.getImageData(0, 0, targetW, targetH);
+                    const d = imgData.data;
+                    const s = sat / 100;
+                    const b = bri / 100;
+                    const c = con / 100;
+                    const angle = (hue * Math.PI) / 180;
+                    const cosA = Math.cos(angle);
+                    const sinA = Math.sin(angle);
+                    const m00 = 0.213 + cosA * 0.787 - sinA * 0.213;
+                    const m01 = 0.715 - cosA * 0.715 - sinA * 0.715;
+                    const m02 = 0.072 - cosA * 0.072 + sinA * 0.928;
+                    const m10 = 0.213 - cosA * 0.213 + sinA * 0.143;
+                    const m11 = 0.715 + cosA * 0.285 + sinA * 0.140;
+                    const m12 = 0.072 - cosA * 0.072 - sinA * 0.283;
+                    const m20 = 0.213 - cosA * 0.213 - sinA * 0.787;
+                    const m21 = 0.715 - cosA * 0.715 + sinA * 0.715;
+                    const m22 = 0.072 + cosA * 0.928 + sinA * 0.072;
+
+                    const dLen = d.length;
+                    for (let px = 0; px < dLen; px += 4) {
+                        let r = d[px], g = d[px + 1], bl = d[px + 2];
+                        if (hue !== 0) {
+                            const nR = r * m00 + g * m01 + bl * m02;
+                            const nG = r * m10 + g * m11 + bl * m12;
+                            const nB = r * m20 + g * m21 + bl * m22;
+                            r = nR; g = nG; bl = nB;
+                        }
+                        if (s !== 1) {
+                            const lum = 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+                            r = lum + (r - lum) * s;
+                            g = lum + (g - lum) * s;
+                            bl = lum + (bl - lum) * s;
+                        }
+                        if (b !== 1) {
+                            r *= b; g *= b; bl *= b;
+                        }
+                        if (c !== 1) {
+                            r = 128 + (r - 128) * c;
+                            g = 128 + (g - 128) * c;
+                            bl = 128 + (bl - 128) * c;
+                        }
+                        d[px] = Math.max(0, Math.min(255, Math.round(r)));
+                        d[px + 1] = Math.max(0, Math.min(255, Math.round(g)));
+                        d[px + 2] = Math.max(0, Math.min(255, Math.round(bl)));
+                    }
+                    finalCtx.putImageData(imgData, 0, 0);
+                }
+            } catch (fallbackErr) {
+                console.warn('[Print Engine] Pixel fallback check skipped:', fallbackErr);
+            }
+        }
+
+        return finalCanvas.toDataURL('image/jpeg', 0.95);
+    };
+
     window.printFullDocument = async function(isBooklet = false) {
         if (!isBooklet) {
             window._isBookletPrinting = false;
@@ -534,29 +690,30 @@
             const statusEl = document.getElementById('pdf-print-status');
 
             const livePaper = document.getElementById('paper');
-            let themeHtml = ''; let borderHtml = '';
+            let borderHtml = '';
+            let masterThemeSettings = null;
             
+            if (livePaper && livePaper.getAttribute('data-theme-saved') === 'true') {
+                masterThemeSettings = {
+                    saved: true,
+                    id: livePaper.getAttribute('data-theme-id') || '',
+                    name: livePaper.getAttribute('data-theme-name') || '',
+                    type: livePaper.getAttribute('data-theme-type') || 'color',
+                    c1: livePaper.getAttribute('data-theme-c1') || '#ffffff',
+                    c2: livePaper.getAttribute('data-theme-c2') || '',
+                    url: livePaper.getAttribute('data-theme-url') || '',
+                    sat: livePaper.getAttribute('data-theme-sat') || '100',
+                    bri: livePaper.getAttribute('data-theme-bri') || '100',
+                    con: livePaper.getAttribute('data-theme-con') || '100',
+                    hue: livePaper.getAttribute('data-theme-hue') || '0',
+                    tex: livePaper.getAttribute('data-theme-tex') || '100',
+                    size: livePaper.getAttribute('data-theme-size') || '100'
+                };
+            } else if (state.pages && state.pages[0] && state.pages[0].themeSettings && state.pages[0].themeSettings.saved) {
+                masterThemeSettings = state.pages[0].themeSettings;
+            }
+
             if (livePaper) {
-                const isSaved = livePaper.getAttribute('data-theme-saved');
-                if (isSaved === 'true') {
-                    const tType = livePaper.getAttribute('data-theme-type') || 'color';
-                    const c1 = livePaper.getAttribute('data-theme-c1') || '#ffffff';
-                    const c2 = livePaper.getAttribute('data-theme-c2') || '';
-                    const url = livePaper.getAttribute('data-theme-url') || '';
-                    
-                    let bgCss = `background: ${c1};`;
-                    if (tType === 'gradient' && c2) bgCss = `background: linear-gradient(135deg, ${c1}, ${c2});`;
-                    
-                    let htmlStr = `<div class="op-theme-container" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; pointer-events:none; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; z-index:-10;">`;
-                    htmlStr += `<div class="op-theme-bg" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; ${bgCss}"></div>`;
-                    
-                    if (tType === 'texture' && url) {
-                        const safeUrl = url.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
-                        htmlStr += `<div class="op-theme-tex" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; background-repeat:repeat; opacity:1; background-image:url('${safeUrl}');"></div>`;
-                    }
-                    htmlStr += `</div>`;
-                    themeHtml = htmlStr;
-                }
                 const liveBorder = livePaper.querySelector('[data-is-border="true"], #native-blueprint-border');
                 if (liveBorder) borderHtml = liveBorder.outerHTML;
             }
@@ -608,7 +765,26 @@
                 pageWrapper.style.overflow = 'hidden';
                 pageWrapper.style.background = page.background || '#ffffff';
 
-                if (themeHtml && !page.ignoreBackground) pageWrapper.insertAdjacentHTML('afterbegin', themeHtml);
+                // Determine active theme settings for this page
+                let currentThemeSettings = null;
+                if (page.themeSettings && page.themeSettings.saved) {
+                    currentThemeSettings = page.themeSettings;
+                } else if (masterThemeSettings && masterThemeSettings.saved) {
+                    currentThemeSettings = masterThemeSettings;
+                }
+
+                // If theme is active and not ignored, bake it into a physical raster image so html2canvas renders exact adjusted colors
+                if (currentThemeSettings && !page.ignoreBackground) {
+                    const bakedDataUrl = await window.bakeThemeBackgroundForPrint(currentThemeSettings, pW, pH);
+                    if (bakedDataUrl) {
+                        const pageThemeHtml = `
+                            <div class="op-theme-container op-theme-baked-wrap" style="position:absolute; top:0; left:0; width:${pW}px; height:${pH}px; pointer-events:none; z-index:-10;">
+                                <img class="op-theme-baked-bg" src="${bakedDataUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:fill; display:block; border:none; outline:none; margin:0; padding:0; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;">
+                            </div>
+                        `;
+                        pageWrapper.insertAdjacentHTML('afterbegin', pageThemeHtml);
+                    }
+                }
 
                 let elementsToRender = page.elements || [];
                 let renderHeader = page.header || '';
@@ -622,10 +798,8 @@
                     renderFooter = state.pages[0].footer || '';
                 }
                 
-                // Final safety check: if this page has ignoreBackground=true, forcefully strip any residual theme wrappers
-                if (page.ignoreBackground) {
-                    elementsToRender = elementsToRender.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
-                }
+                // UNCONDITIONALLY filter out any raw unbaked theme wrappers from elementsToRender so they never occlude the baked background
+                elementsToRender = elementsToRender.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
 
                 for (let el of elementsToRender) {
                     let elDiv = document.createElement('div');
@@ -1148,7 +1322,14 @@
                 const fallbackScale = Math.max(1, targetScale - 1);
 
                 let h2cBg = page.background || '#ffffff';
-                if (h2cBg.includes('gradient')) h2cBg = null;
+                if (currentThemeSettings || h2cBg.includes('gradient')) h2cBg = null;
+
+                const bakedImgs = Array.from(pageWrapper.querySelectorAll('.op-theme-baked-bg'));
+                for (const bImg of bakedImgs) {
+                    if (!bImg.complete) {
+                        await new Promise(r => { bImg.onload = r; bImg.onerror = r; setTimeout(r, 200); });
+                    }
+                }
 
                 let canvas;
                 try {

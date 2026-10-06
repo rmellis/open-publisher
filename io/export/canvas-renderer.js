@@ -140,6 +140,45 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         }
     });
 
+    // Bake Theme Background (saturation, brightness, texture) for html2canvas export
+    const themeContainer = clone.querySelector('.op-theme-container');
+    if (themeContainer && typeof window.bakeThemeBackgroundForPrint === 'function') {
+        const curPage = (typeof state !== 'undefined' && state.pages && state.pages[state.currentPageIndex]) || {};
+        let tSettings = curPage.themeSettings;
+        if (!tSettings || !tSettings.saved) {
+            tSettings = {
+                saved: paper.getAttribute('data-theme-saved') === 'true',
+                id: paper.getAttribute('data-theme-id') || '',
+                type: paper.getAttribute('data-theme-type') || 'color',
+                c1: paper.getAttribute('data-theme-c1') || '#ffffff',
+                c2: paper.getAttribute('data-theme-c2') || '',
+                url: paper.getAttribute('data-theme-url') || '',
+                sat: paper.getAttribute('data-theme-sat') || '100',
+                bri: paper.getAttribute('data-theme-bri') || '100',
+                con: paper.getAttribute('data-theme-con') || '100',
+                hue: paper.getAttribute('data-theme-hue') || '0',
+                tex: paper.getAttribute('data-theme-tex') || '100',
+                size: paper.getAttribute('data-theme-size') || '100'
+            };
+        }
+        if (tSettings.saved && !curPage.ignoreBackground) {
+            const pW = parseFloat(paper.style.width) || paper.offsetWidth || 794;
+            const pH = parseFloat(paper.style.height) || paper.offsetHeight || 1123;
+            try {
+                const bakedUrl = await window.bakeThemeBackgroundForPrint(tSettings, pW, pH);
+                if (bakedUrl) {
+                    themeContainer.innerHTML = `<img class="op-theme-baked-bg" src="${bakedUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:fill; display:block; border:none; outline:none; margin:0; padding:0;">`;
+                    themeContainer.style.filter = 'none';
+                    themeContainer.style.webkitFilter = 'none';
+                }
+            } catch (err) {
+                console.warn('[Export] Failed to bake theme background for image export:', err);
+            }
+        } else if (curPage.ignoreBackground) {
+            themeContainer.remove();
+        }
+    }
+
     await window.bakeSVGFiltersForHtml2Canvas(clone, paper);
 
     const canvas = await html2canvas(clone, { 

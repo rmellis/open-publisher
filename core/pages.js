@@ -31,6 +31,22 @@ function renderPage(pageData) {
         paper.style.background = '#ffffff';
     } else {
         paper.style.background = pageData.background;
+        if (pageData.themeSettings && pageData.themeSettings.saved) {
+            const ts = pageData.themeSettings;
+            paper.setAttribute('data-theme-saved', 'true');
+            if (ts.id) paper.setAttribute('data-theme-id', ts.id);
+            if (ts.name) paper.setAttribute('data-theme-name', ts.name);
+            if (ts.type) paper.setAttribute('data-theme-type', ts.type);
+            if (ts.c1) paper.setAttribute('data-theme-c1', ts.c1);
+            if (ts.c2) paper.setAttribute('data-theme-c2', ts.c2);
+            if (ts.url) paper.setAttribute('data-theme-url', ts.url);
+            if (ts.sat) paper.setAttribute('data-theme-sat', ts.sat);
+            if (ts.bri) paper.setAttribute('data-theme-bri', ts.bri);
+            if (ts.tex) paper.setAttribute('data-theme-tex', ts.tex);
+            if (typeof window.restoreThemeFromSave === 'function') {
+                window.restoreThemeFromSave();
+            }
+        }
     }
     if (typeof window.setPageFormatIcon === 'function') {
         let w = parseFloat(pageData.width);

@@ -71,6 +71,21 @@ function serializeCurrentPage() {
         header: paper.querySelector('.page-header').innerHTML,
         footer: paper.querySelector('.page-footer').innerHTML,
         borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',
+        themeSettings: (paper.getAttribute('data-theme-saved') === 'true') ? {
+            saved: true,
+            id: paper.getAttribute('data-theme-id') || '',
+            name: paper.getAttribute('data-theme-name') || '',
+            type: paper.getAttribute('data-theme-type') || '',
+            c1: paper.getAttribute('data-theme-c1') || '',
+            c2: paper.getAttribute('data-theme-c2') || '',
+            url: paper.getAttribute('data-theme-url') || '',
+            sat: paper.getAttribute('data-theme-sat') || '100',
+            bri: paper.getAttribute('data-theme-bri') || '100',
+            con: paper.getAttribute('data-theme-con') || '100',
+            hue: paper.getAttribute('data-theme-hue') || '0',
+            tex: paper.getAttribute('data-theme-tex') || '100',
+            size: paper.getAttribute('data-theme-size') || '100'
+        } : (existingPage.themeSettings || null),
         elements: []
     };
 
