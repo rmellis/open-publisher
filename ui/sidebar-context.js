@@ -291,10 +291,12 @@ function createWrapper(htmlContent) {
     el.setAttribute('data-scaleY', "1");
     
     let inner = htmlContent || '';
-    if (state.spellCheck) {
-        inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="true" lang="en"');
-    } else {
-        inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="false"');
+    if (typeof state !== 'undefined' && state.spellCheck !== false) {
+        inner = inner.replace(/spellcheck="false"/g, 'spellcheck="true" lang="en"');
+        inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="true" lang="en"');
+    } else if (typeof state !== 'undefined' && !state.spellCheck) {
+        inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
+        inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
     }
     
     el.innerHTML = `

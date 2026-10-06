@@ -47,8 +47,12 @@ function restoreSnapshot(snap) {
     if (btn) btn.classList.toggle('active', state.isSpreadMode);
     
     renderPage(state.pages[state.currentPageIndex]);
+    if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
     setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
 }
+
+window.undo = undo;
+window.redo = redo;
 
 function serializeCurrentPage() {
     // FIXED: Preserve existing thumbnail if present so it doesn't blank out on page switch

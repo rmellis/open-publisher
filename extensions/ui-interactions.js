@@ -555,12 +555,29 @@
 
 
 (function installDragAndDrop() {
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        document.body.addEventListener(eventName, preventDefaults, false);
+    function isFileDrag(e) {
+        if (!e.dataTransfer) return false;
+        const types = e.dataTransfer.types;
+        return (types && (types.includes('Files') || types.includes('application/x-moz-file'))) || 
+               (e.dataTransfer.files && e.dataTransfer.files.length > 0);
+    }
+
+    ['dragenter', 'dragover', 'dragleave'].forEach(eventName => {
+        document.body.addEventListener(eventName, function(e) {
+            if (isFileDrag(e)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, false);
     });
 
-    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-    document.body.addEventListener('drop', handleDrop, false);
+    document.body.addEventListener('drop', function(e) {
+        if (isFileDrag(e)) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDrop(e);
+        }
+    }, false);
 
     function handleDrop(e) {
         const dt = e.dataTransfer;
@@ -1262,7 +1279,9 @@
                     if (!innerNode) return;
                     if (innerNode.tagName !== 'IMG' && innerNode.tagName !== 'CANVAS' && innerNode.tagName !== 'SVG' && !innerNode.style.clipPath && !innerNode.classList.contains('wa-wrapper')) {
                         innerNode.setAttribute('contenteditable', 'true');
-                        innerNode.setAttribute('spellcheck', 'false');
+                        const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
+                        innerNode.setAttribute('spellcheck', isSpell ? 'true' : 'false');
+                        if (isSpell) innerNode.setAttribute('lang', 'en');
                         contentContainer.style.pointerEvents = 'auto';
                     }
                 });

@@ -2,6 +2,11 @@
     
     // 1. Intercept the Mousedown to build the group
     window.addEventListener('mousedown', function(e) {
+        // v5.4.5: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
+        if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+            return;
+        }
+
         const el = e.target.closest('.pub-element');
         
         if ((e.ctrlKey || e.metaKey) && el) {
@@ -3664,6 +3669,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
         const el = e.target.closest('.pub-element');
         if(el) {
+            // --- v5.4.5: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
+            if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+                window.TextDragSystem.startDrag(e);
+                return;
+            }
+
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault(); e.stopImmediatePropagation(); 
                 state.multiSelected = state.multiSelected || [];
@@ -3703,7 +3714,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const rect = el.getBoundingClientRect(), edgeSize = 15;
             const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
             const activeEl = document.activeElement, isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
-            
+
             if (targetIsText && !nearEdge) {
                 // Clicking directly on the text: force focus for Firefox to allow native selection to start immediately
                 if (editable && document.activeElement !== editable) {
@@ -3733,7 +3744,13 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 const isShape = el.querySelector('img') || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
                 const rect = el.getBoundingClientRect();
                 if (isShape) { el.style.cursor = 'move'; } 
-                else { const edgeSize = 15; el.style.cursor = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text'; }
+                else { 
+                    const edgeSize = 15; 
+                    const cursorVal = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                    el.style.cursor = cursorVal;
+                    const editable = el.querySelector('[contenteditable="true"]');
+                    if (editable) editable.style.cursor = cursorVal;
+                }
             }
         }
         
@@ -4037,13 +4054,30 @@ const originalPushHistory = pushHistory;
 let historyTimer;
 let lastSavedHistoryState = "";
 
-pushHistory = function() {
+window.originalPushHistory = originalPushHistory;
+window.syncLastSavedHistory = function() {
+    lastSavedHistoryState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+};
+
+window.flushHistory = function() {
+    clearTimeout(historyTimer);
+    const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+    if (currentState !== lastSavedHistoryState) {
+        originalPushHistory();
+        lastSavedHistoryState = currentState;
+    }
+};
+
+pushHistory = function(immediate = false) {
+    if (immediate) {
+        window.flushHistory();
+        return;
+    }
     // 1. Clear the timer so dragging doesn't trigger 100 saves
     clearTimeout(historyTimer);
     
     // 2. Wait 250ms after the user finishes dragging/typing to save
     historyTimer = setTimeout(() => {
-        
         // 3. SPAM FILTER: Only save if the canvas HTML actually changed!
         const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
         
@@ -4053,6 +4087,7 @@ pushHistory = function() {
         }
     }, 250); 
 };
+window.pushHistory = pushHistory;
 
 // 3. Hijack the synchronous layout thrashing from typing
 const originalForceRepaint = forceRepaint;

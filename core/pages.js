@@ -203,10 +203,12 @@ function renderPage(pageData) {
         }
         
         // Force Chromium spellcheck on load
-        if (state.spellCheck) {
-            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="true" lang="en"');
+        if (state.spellCheck !== false) {
+            inner = inner.replace(/spellcheck="false"/g, 'spellcheck="true" lang="en"');
+            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="true" lang="en"');
         } else {
-            inner = inner.replace(/contenteditable="true"/g, 'contenteditable="true" spellcheck="false"');
+            inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
+            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
         }
         
         const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;

@@ -619,7 +619,10 @@
                     el.style.cursor = 'move'; 
                 } else { 
                     const edgeSize = 15; 
-                    el.style.cursor = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text'; 
+                    const cursorVal = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                    el.style.cursor = cursorVal; 
+                    const editable = el.querySelector('[contenteditable="true"]');
+                    if (editable) editable.style.cursor = cursorVal;
                 }
             }
         }

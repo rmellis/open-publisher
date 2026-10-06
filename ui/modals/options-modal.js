@@ -25,6 +25,16 @@ window.saveGlobalOptions = function(closeDialog = true) {
     const cbSpell = document.getElementById('opt-spellcheck');
     if (cbSpell) {
         localStorage.setItem('opub_spellcheck', cbSpell.checked ? 'true' : 'false');
+        if (typeof state !== 'undefined') {
+            state.spellCheck = cbSpell.checked;
+            document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+            document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
+                if (!el.classList.contains('wa-text')) {
+                    el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+                    if (state.spellCheck) el.setAttribute('lang', 'en');
+                }
+            });
+        }
     }
     
     const txtUser = document.getElementById('opt-username');

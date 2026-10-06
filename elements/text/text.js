@@ -251,8 +251,10 @@ function setTrueFontSize(val) {
 function addTextBox() { 
     const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
     const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
+    const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
+    const spellAttrs = isSpell ? ' spellcheck="true" lang="en"' : ' spellcheck="false"';
     
-    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;${hyphenStyle}" contenteditable="true">Click to edit text</div>`); 
+    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
     applySingleElementScheme(el, state.currentScheme);
     return el;
@@ -353,9 +355,10 @@ function execFloatCmd(cmd, val) {
 
 function toggleSpellCheck() {
     state.spellCheck = !state.spellCheck;
-    document.body.setAttribute('spellcheck', state.spellCheck);
+    try { localStorage.setItem('opub_spellcheck', state.spellCheck ? 'true' : 'false'); } catch(e) {}
+    document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
     
-    document.querySelectorAll('.pub-content [contenteditable="true"]').forEach(el => {
+    document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
         if (el.classList.contains('wa-text')) return;
         el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
         if (state.spellCheck) {

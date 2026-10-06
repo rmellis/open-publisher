@@ -94,6 +94,12 @@ function handleMouseDown(e) {
 
     const el = e.target.closest('.pub-element');
     if(el) {
+        // --- v5.4.5: Text Drag & Drop Check ---
+        if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+            window.TextDragSystem.startDrag(e);
+            return;
+        }
+
         // If not already selected, select it
         const isSelected = (state.selectedEl === el);
         if(!isSelected) selectElement(el);
@@ -134,7 +140,7 @@ function handleMouseDown(e) {
         // we should allow drag. 
         const activeEl = document.activeElement;
         const isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
-        
+
         if (nearEdge || !isEditingText) {
             state.dragMode = 'drag';
             state.dragData = {
@@ -164,7 +170,10 @@ function handleMouseMove(e) {
                 const x = e.clientX; const y = e.clientY;
                 const nearEdge = (x < rect.left + edgeSize) || (x > rect.right - edgeSize) || 
                                  (y < rect.top + edgeSize) || (y > rect.bottom - edgeSize);
-                el.style.cursor = nearEdge ? 'move' : 'text';
+                const cursorVal = nearEdge ? 'move' : 'text';
+                el.style.cursor = cursorVal;
+                const editable = el.querySelector('[contenteditable="true"]');
+                if (editable) editable.style.cursor = cursorVal;
             }
         }
     }

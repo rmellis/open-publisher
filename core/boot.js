@@ -88,6 +88,19 @@ document.addEventListener('selectionchange', () => {
     // Initialize Extended Modules
     setTimeout(() => {
         document.querySelectorAll('.wa-text').forEach(el => el.setAttribute('spellcheck', 'false'));
+        if (typeof state !== 'undefined') {
+            const savedSpell = localStorage.getItem('opub_spellcheck');
+            if (savedSpell !== null) {
+                state.spellCheck = savedSpell !== 'false';
+            }
+            document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+            document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
+                if (!el.classList.contains('wa-text')) {
+                    el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+                    if (state.spellCheck) el.setAttribute('lang', 'en');
+                }
+            });
+        }
         if(window.ContextRibbonSystem) window.ContextRibbonSystem.init();
 
         // Sync drawing size sliders to fill properly if browser restored previous values

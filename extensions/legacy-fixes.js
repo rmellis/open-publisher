@@ -1346,6 +1346,15 @@
         return TextHistory.get(el);
     }
 
+    window.clearTextHistory = function(el) {
+        if (el && TextHistory.has(el)) {
+            const hist = TextHistory.get(el);
+            hist.undo = [];
+            hist.redo = [];
+            hist.lastState = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerHTML;
+        }
+    };
+
     // Forces the cursor to the end of the text so it doesn't snap to the beginning
     function setCursorToEnd(el) {
         try {
@@ -1439,6 +1448,13 @@
                 // Release the lock
                 setTimeout(() => hist.isRestoring = false, 10);
             } 
+            else if (isUndo && hist.undo.length === 0) {
+                if (typeof window.undo === 'function') {
+                    window.undo();
+                } else if (typeof undo === 'function') {
+                    undo();
+                }
+            }
             else if (isRedo && hist.redo.length > 0) {
                 hist.isRestoring = true; 
                 
@@ -1457,6 +1473,13 @@
                 setCursorToEnd(el);
                 
                 setTimeout(() => hist.isRestoring = false, 10);
+            }
+            else if (isRedo && hist.redo.length === 0) {
+                if (typeof window.redo === 'function') {
+                    window.redo();
+                } else if (typeof redo === 'function') {
+                    redo();
+                }
             }
         }
     }, true);
@@ -2259,7 +2282,7 @@
 
 
 
-// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.4)
+// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.5)
 
 
 ;(function upgradeCropHandleSize() {

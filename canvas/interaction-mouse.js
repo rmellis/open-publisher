@@ -145,6 +145,12 @@ window.handleMouseDown = function(e) {
 
     const el = e.target.closest('.pub-element');
     if(el) {
+        // --- v5.4.5: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
+        if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+            window.TextDragSystem.startDrag(e);
+            return;
+        }
+
         // --- NATIVE CTRL+CLICK MULTI-SELECT ---
         if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -195,6 +201,7 @@ window.handleMouseDown = function(e) {
         const rect = el.getBoundingClientRect(), edgeSize = 15;
         const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
         const activeEl = document.activeElement, isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
+
         if (nearEdge || !isEditingText) {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
@@ -222,7 +229,10 @@ window.handleMouseMove = function(e) {
                 el.style.cursor = 'move';
             } else {
                 const edgeSize = 15;
-                el.style.cursor = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                const cursorVal = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                el.style.cursor = cursorVal;
+                const editable = el.querySelector('[contenteditable="true"]');
+                if (editable) editable.style.cursor = cursorVal;
             }
         }
     }
