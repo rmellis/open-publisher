@@ -3962,7 +3962,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.4.2) */
+        /* Modern Background Adjustments (v5.4.3) */
         .ts-sliders-container {
             display: flex;
             align-items: center;
