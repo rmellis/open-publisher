@@ -1403,15 +1403,22 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
-/* --- Modern Chromium / Edge Spellcheck Rendering Fix under Canvas Transform (v5.4.6) --- */
+/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.4.7) --- */
 ::highlight(spelling-error) {
     text-decoration: underline wavy #e74c3c !important;
     text-decoration-skip-ink: none !important;
     text-decoration-thickness: 2px !important;
     text-underline-offset: 3px !important;
 }
+::highlight(grammar-error) {
+    text-decoration: underline wavy #27ae60 !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
 @media print {
-    ::highlight(spelling-error) {
+    ::highlight(spelling-error),
+    ::highlight(grammar-error) {
         text-decoration: none !important;
     }
 }
@@ -1426,6 +1433,12 @@ td, th {
     text-decoration-thickness: 2px !important;
     text-underline-offset: 3px !important;
 }
+::grammar-error {
+    text-decoration: underline wavy #27ae60 !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
 [contenteditable="true"]::spelling-error,
 .element-content [contenteditable="true"]::spelling-error {
     text-decoration: underline wavy #e74c3c !important;
@@ -1433,8 +1446,17 @@ td, th {
     text-decoration-thickness: 2px !important;
     text-underline-offset: 3px !important;
 }
+[contenteditable="true"]::grammar-error,
+.element-content [contenteditable="true"]::grammar-error {
+    text-decoration: underline wavy #27ae60 !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
 [spellcheck="false"]::spelling-error,
-[contenteditable="true"][spellcheck="false"]::spelling-error {
+[contenteditable="true"][spellcheck="false"]::spelling-error,
+[spellcheck="false"]::grammar-error,
+[contenteditable="true"][spellcheck="false"]::grammar-error {
     text-decoration: none !important;
 }
 .element-content img, .element-content svg { 
@@ -3998,7 +4020,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.4.6) */
+        /* Modern Background Adjustments (v5.4.7) */
         .ts-sliders-container {
             display: flex;
             align-items: center;

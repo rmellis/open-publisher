@@ -1,5 +1,5 @@
 /**
- * Open Publisher - Canvas Text Drag & Drop Module (v5.4.6)
+ * Open Publisher - Canvas Text Drag & Drop Module (v5.4.7)
  * Allows users to highlight a chunk of text and drag it into another area
  * within the text box (or across text boxes), with visual drop caret indicator,
  * ghost drag badge, Ctrl-to-copy support, and full Undo/Redo integration.

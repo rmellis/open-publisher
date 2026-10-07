@@ -145,7 +145,7 @@ window.handleMouseDown = function(e) {
 
     const el = e.target.closest('.pub-element');
     if(el) {
-        // --- v5.4.6: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
+        // --- v5.4.7: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             window.TextDragSystem.startDrag(e);
             return;

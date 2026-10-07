@@ -1,5 +1,5 @@
 // ==========================================
-// APPLICATION BOOTSTRAPPER
+// APPLICATION BOOTSTRAPPER (v5.4.7)
 // ==========================================
 
 window.onload = function() {

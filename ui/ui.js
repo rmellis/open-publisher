@@ -652,10 +652,19 @@ window.ContextMenuActions = {
     applySpelling: function(suggestion) {
         const range = window._currentSpellCheckRange;
         if (range && range.startContainer) {
-            const text = range.startContainer.textContent;
-            const before = text.substring(0, range.startOffset);
-            const after = text.substring(range.endOffset);
-            range.startContainer.textContent = before + suggestion + after;
+            try {
+                if (range.startContainer === range.endContainer && range.startContainer.nodeType === 3) {
+                    const text = range.startContainer.textContent;
+                    const before = text.substring(0, range.startOffset);
+                    const after = text.substring(range.endOffset);
+                    range.startContainer.textContent = before + suggestion + after;
+                } else {
+                    range.deleteContents();
+                    range.insertNode(document.createTextNode(suggestion));
+                }
+            } catch(e) {
+                console.warn('applySpelling range error:', e);
+            }
             pushHistory();
             if (window.SpellCheckEngine) {
                 window.SpellCheckEngine.run();
@@ -664,6 +673,10 @@ window.ContextMenuActions = {
                 state.selectedEl.focus();
             }
         }
+    },
+
+    applyGrammar: function(suggestion) {
+        this.applySpelling(suggestion);
     },
 
     // -- Page Features --

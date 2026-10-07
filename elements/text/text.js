@@ -1,4 +1,4 @@
-
+// Open Publisher Text Engine (v5.4.7)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,

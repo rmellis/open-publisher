@@ -1,5 +1,5 @@
 /* =========================================================================
-   CANVAS RULER ENGINE (Hardware Accelerated, 100% Crisp, Zero Lag)
+   CANVAS RULER ENGINE (Hardware Accelerated, 100% Crisp, Zero Lag) (v5.4.7)
    ========================================================================= */
 window.initRulers = function() {
     const h = document.getElementById('ruler-h');

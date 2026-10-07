@@ -2,7 +2,7 @@
     
     // 1. Intercept the Mousedown to build the group
     window.addEventListener('mousedown', function(e) {
-        // v5.4.6: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
+        // v5.4.7: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             return;
         }
@@ -3669,7 +3669,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
         const el = e.target.closest('.pub-element');
         if(el) {
-            // --- v5.4.6: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
+            // --- v5.4.7: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
             if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
                 window.TextDragSystem.startDrag(e);
                 return;
