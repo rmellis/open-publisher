@@ -2,7 +2,7 @@
     
     // 1. Intercept the Mousedown to build the group
     window.addEventListener('mousedown', function(e) {
-        // v5.4.7: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
+        // v5.4.8: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             return;
         }
@@ -51,6 +51,9 @@
     // This stops the app from instantly firing its single-select logic a millisecond later.
     window.addEventListener('click', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.target.closest('.pub-element')) {
+            if (window._justFinishedTextDrag) {
+                window._justFinishedTextDrag = false;
+            }
             e.preventDefault();
             e.stopImmediatePropagation();
         }
@@ -59,6 +62,9 @@
     // 3. Destroy rogue mouseups!
     window.addEventListener('mouseup', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.target.closest('.pub-element')) {
+            if (window.TextDragSystem && typeof window.TextDragSystem.isDragging === 'function' && window.TextDragSystem.isDragging()) {
+                return;
+            }
             e.stopImmediatePropagation();
         }
     }, true);
@@ -3669,7 +3675,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
         const el = e.target.closest('.pub-element');
         if(el) {
-            // --- v5.4.7: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
+            // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
             if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
                 window.TextDragSystem.startDrag(e);
                 return;

@@ -1,4 +1,4 @@
-// --- SERIALIZER & RENDER (v5.4.7) ---
+// --- SERIALIZER & RENDER (v5.4.8) ---
 function renderPage(pageData) {
     deselect();
     const pageDpi = (pageData && pageData.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;

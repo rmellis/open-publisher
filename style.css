@@ -1403,7 +1403,7 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
-/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.4.7) --- */
+/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.4.8) --- */
 ::highlight(spelling-error) {
     text-decoration: underline wavy #e74c3c !important;
     text-decoration-skip-ink: none !important;
@@ -4020,7 +4020,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.4.7) */
+        /* Modern Background Adjustments (v5.4.8) */
         .ts-sliders-container {
             display: flex;
             align-items: center;

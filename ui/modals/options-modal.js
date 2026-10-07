@@ -1,4 +1,4 @@
-// Open Publisher Options Modal (v5.4.7)
+// Open Publisher Options Modal (v5.4.8)
 window.switchOptionsTab = function(activeId) {
     document.querySelectorAll('.opt-tab').forEach(el => {
         el.style.background = 'transparent';

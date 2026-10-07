@@ -1,5 +1,5 @@
 /**
- * Open Publisher - Canvas Text Drag & Drop Module (v5.4.7)
+ * Open Publisher - Canvas Text Drag & Drop Module (v5.4.8)
  * Allows users to highlight a chunk of text and drag it into another area
  * within the text box (or across text boxes), with visual drop caret indicator,
  * ghost drag badge, Ctrl-to-copy support, and full Undo/Redo integration.
@@ -108,18 +108,32 @@ window.TextDragSystem = (function() {
         return null;
     }
 
+    const MIN_DRAG_DISTANCE = 10; // Minimum distance (px) required to initiate an intentional text drag
+
     /**
      * Checks if a target insertion range falls strictly inside the source selection range.
      */
     function isTargetInsideSource(targetRange, sourceRange) {
         if (!targetRange || !sourceRange) return false;
         try {
+            if (typeof sourceRange.comparePoint === 'function') {
+                const pt = sourceRange.comparePoint(targetRange.startContainer, targetRange.startOffset);
+                if (pt === 0) return true;
+            }
             const startCmp = targetRange.compareBoundaryPoints(Range.START_TO_START, sourceRange);
-            const endCmp = targetRange.compareBoundaryPoints(Range.START_TO_END, sourceRange);
-            return startCmp >= 0 && endCmp <= 0;
-        } catch (e) {
-            return false;
-        }
+            const endCmp = targetRange.compareBoundaryPoints(Range.END_TO_START, sourceRange);
+            if (startCmp >= 0 && endCmp <= 0) return true;
+        } catch (e) {}
+
+        // Fallback: check offsets if within the same text container
+        try {
+            if (targetRange.startContainer === sourceRange.startContainer) {
+                const o = targetRange.startOffset;
+                return o >= sourceRange.startOffset && o <= sourceRange.endOffset;
+            }
+        } catch (e) {}
+
+        return false;
     }
 
     /**
@@ -140,7 +154,6 @@ window.TextDragSystem = (function() {
         session = {
             active: true,
             isDragging: false,
-            isHtml5Drag: false,
             startX: e.clientX,
             startY: e.clientY,
             sourceRange: sourceRange,
@@ -150,7 +163,7 @@ window.TextDragSystem = (function() {
             isCopy: e.ctrlKey || e.metaKey
         };
 
-        // Suppress element dragging
+        // Suppress canvas element dragging
         if (typeof state !== 'undefined' && state.dragMode === 'drag') {
             state.dragMode = null;
         }
@@ -160,142 +173,42 @@ window.TextDragSystem = (function() {
     }
 
     /**
-     * HTML5 DragStart handler: commits snapshot before drag mutation and sets drag payload.
+     * Blocks native HTML5 dragstart on contenteditable text selections so Chromium
+     * never initiates a conflicting native text drag or shows unwanted drag ghosts on click.
      */
     function onDragStart(e) {
         const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-        const str = sel.toString();
-        if (!str || str.length === 0) return;
-
-        const targetNode = e.target.nodeType === 3 ? e.target.parentNode : e.target;
-        const editable = targetNode ? targetNode.closest('[contenteditable="true"]') : null;
-        if (!editable) return;
-
-        // Snapshot pre-drag document state so Undo cleanly reverts
-        if (typeof pushHistory === 'function') pushHistory(true);
-
-        const sourceRange = sel.getRangeAt(0).cloneRange();
-        session = {
-            active: true,
-            isDragging: true,
-            isHtml5Drag: true,
-            startX: e.clientX,
-            startY: e.clientY,
-            sourceRange: sourceRange,
-            sourceText: str,
-            sourceEditable: editable,
-            sourceElement: editable.closest('.pub-element'),
-            isCopy: e.ctrlKey || e.metaKey
-        };
-
-        if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'copyMove';
-            try {
-                e.dataTransfer.setData('text/plain', str);
-            } catch (err) {}
-        }
-    }
-
-    /**
-     * HTML5 DragOver handler: updates drop caret, badge, and copy modifier.
-     */
-    function onDragOver(e) {
-        if (!session || !session.active) return;
-
-        const targetRange = getCaretRangeFromPoint(e.clientX, e.clientY);
-        const caret = getCaretElement();
-        const isCopy = e.ctrlKey || e.metaKey;
-        session.isCopy = isCopy;
-
-        if (targetRange) {
-            const startNode = targetRange.startContainer;
-            const targetEditable = startNode.nodeType === 1
-                ? startNode.closest('[contenteditable="true"]')
-                : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
-
-            if (targetEditable) {
+        if (sel && !sel.isCollapsed) {
+            const targetNode = e.target.nodeType === 3 ? e.target.parentNode : e.target;
+            if (targetNode && (targetNode.closest('[contenteditable="true"]') || isPointInSelection(e.clientX, e.clientY))) {
                 e.preventDefault();
-                if (e.dataTransfer) {
-                    e.dataTransfer.dropEffect = isCopy ? 'copy' : 'move';
-                }
-
-                const rects = targetRange.getClientRects();
-                const r = rects.length > 0 ? rects[0] : targetRange.getBoundingClientRect();
-
-                caret.style.display = 'block';
-                caret.style.left = Math.round(r.left) + 'px';
-                caret.style.top = Math.round(r.top) + 'px';
-                caret.style.height = Math.max(16, Math.round(r.height || 18)) + 'px';
-
-                const badge = getBadgeElement();
-                const iconClass = isCopy ? 'fas fa-copy' : 'fas fa-arrows-alt';
-                const displayLabel = session.sourceText.length > 20
-                    ? session.sourceText.slice(0, 18).trim() + '...'
-                    : session.sourceText.trim();
-                badge.innerHTML = `<i class="${iconClass}" style="font-size:10px; margin-right:4px;"></i><span>${escapeHtml(displayLabel)}</span>`;
-                badge.style.display = 'flex';
-                badge.style.left = e.clientX + 'px';
-                badge.style.top = e.clientY + 'px';
                 return;
             }
         }
-
-        caret.style.display = 'none';
-        if (badgeEl) badgeEl.style.display = 'none';
-    }
-
-    /**
-     * HTML5 Drop handler: intercepts drop on editable text and executes managed mutation.
-     */
-    function onDrop(e) {
-        if (!session || !session.active) return;
-
-        const targetRange = getCaretRangeFromPoint(e.clientX, e.clientY);
-        if (!targetRange) return;
-
-        const startNode = targetRange.startContainer;
-        const targetEditable = startNode.nodeType === 1
-            ? startNode.closest('[contenteditable="true"]')
-            : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
-
-        if (!targetEditable) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        executeDrop(targetRange, targetEditable, e);
-    }
-
-    /**
-     * HTML5 DragEnd handler: cleans up caret and badges.
-     */
-    function onDragEnd() {
-        if (caretEl) caretEl.style.display = 'none';
-        if (badgeEl) badgeEl.style.display = 'none';
-        document.body.style.userSelect = '';
-        session = null;
     }
 
     /**
      * Core execution engine for placing dropped text, updating selection, history, and status.
      */
-    function executeDrop(targetRange, targetEditable, e) {
-        const currentSession = session;
-        session = null;
-
+    function executeDrop(targetRange, targetEditable, e, currentSession) {
         if (caretEl) caretEl.style.display = 'none';
         if (badgeEl) badgeEl.style.display = 'none';
         document.body.style.userSelect = '';
 
+        if (!currentSession || !currentSession.sourceRange) return;
+
         // If target is inside the source selection itself, ignore (dropped on itself)
         if (isTargetInsideSource(targetRange, currentSession.sourceRange)) {
+            if (currentSession.sourceEditable) currentSession.sourceEditable.focus();
             return;
         }
 
         const isCopy = e.ctrlKey || e.metaKey || currentSession.isCopy;
 
         try {
+            // Snapshot pre-drag document state so Undo cleanly reverts
+            if (typeof pushHistory === 'function') pushHistory(true);
+
             // Anchor markers around insertion position before extracting source
             const mStart = document.createElement('span');
             mStart.setAttribute('data-drag-marker', 'start');
@@ -359,6 +272,8 @@ window.TextDragSystem = (function() {
             if (typeof pushHistory === 'function') pushHistory(true);
             if (typeof updateThumbnails === 'function') updateThumbnails();
 
+            window._justFinishedTextDrag = true;
+
             const statusMsg = document.getElementById('status-msg');
             if (statusMsg) {
                 statusMsg.innerText = isCopy ? 'Text Copied' : 'Text Moved';
@@ -385,21 +300,28 @@ window.TextDragSystem = (function() {
     }
 
     /**
-     * MouseMove fallback for non-native drag gestures.
+     * MouseMove handler for pointer-based text drag gestures.
      */
     function onMouseMove(e) {
-        if (!session || !session.active || session.isHtml5Drag) {
-            return;
-        }
+        if (!session || !session.active) return;
 
         const dist = Math.hypot(e.clientX - session.startX, e.clientY - session.startY);
-        if (dist > 4 && !session.isDragging) {
+        if (dist >= MIN_DRAG_DISTANCE && !session.isDragging) {
             session.isDragging = true;
             document.body.style.userSelect = 'none';
-            if (typeof pushHistory === 'function') pushHistory(true);
         }
 
         if (!session.isDragging) return;
+
+        const targetRange = getCaretRangeFromPoint(e.clientX, e.clientY);
+        const isInside = isTargetInsideSource(targetRange, session.sourceRange);
+
+        // Suppress caret/badge if hovering over the source selection itself or outside canvas
+        if (isInside || !targetRange) {
+            if (caretEl) caretEl.style.display = 'none';
+            if (badgeEl) badgeEl.style.display = 'none';
+            return;
+        }
 
         session.isCopy = e.ctrlKey || e.metaKey;
 
@@ -414,42 +336,45 @@ window.TextDragSystem = (function() {
         badge.style.top = e.clientY + 'px';
 
         const caret = getCaretElement();
-        const targetRange = getCaretRangeFromPoint(e.clientX, e.clientY);
+        const startNode = targetRange.startContainer;
+        const targetEditable = startNode.nodeType === 1
+            ? startNode.closest('[contenteditable="true"]')
+            : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
 
-        if (targetRange) {
-            const startNode = targetRange.startContainer;
-            const targetEditable = startNode.nodeType === 1
-                ? startNode.closest('[contenteditable="true"]')
-                : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
+        if (targetEditable) {
+            const rects = targetRange.getClientRects();
+            const r = rects.length > 0 ? rects[0] : targetRange.getBoundingClientRect();
 
-            if (targetEditable) {
-                const rects = targetRange.getClientRects();
-                const r = rects.length > 0 ? rects[0] : targetRange.getBoundingClientRect();
-
-                caret.style.display = 'block';
-                caret.style.left = Math.round(r.left) + 'px';
-                caret.style.top = Math.round(r.top) + 'px';
-                caret.style.height = Math.max(16, Math.round(r.height || 18)) + 'px';
-                return;
-            }
+            caret.style.display = 'block';
+            caret.style.left = Math.round(r.left) + 'px';
+            caret.style.top = Math.round(r.top) + 'px';
+            caret.style.height = Math.max(16, Math.round(r.height || 18)) + 'px';
+            return;
         }
 
         caret.style.display = 'none';
     }
 
     /**
-     * MouseUp handler: handles click-to-collapse or fallback drag completion.
+     * MouseUp handler: guarantees that a click simply collapses caret to the click point,
+     * while an intentional drag-and-drop executes the text relocation.
      */
     function onMouseUp(e) {
         if (!session || !session.active) return;
-        if (session.isHtml5Drag) return;
 
-        // Case A: User clicked on selected text without dragging -> collapse caret to click
-        if (!session.isDragging) {
+        const currentSession = session;
+        session = null;
+
+        if (caretEl) caretEl.style.display = 'none';
+        if (badgeEl) badgeEl.style.display = 'none';
+        document.body.style.userSelect = '';
+
+        const dist = Math.hypot(e.clientX - currentSession.startX, e.clientY - currentSession.startY);
+        const wasDragging = currentSession.isDragging && dist >= MIN_DRAG_DISTANCE;
+
+        // CASE A: User clicked on highlighted text without dragging -> collapse caret to click position, do NOT move text!
+        if (!wasDragging) {
             const clickRange = getCaretRangeFromPoint(e.clientX, e.clientY);
-            session = null;
-            if (caretEl) caretEl.style.display = 'none';
-            if (badgeEl) badgeEl.style.display = 'none';
             if (clickRange) {
                 const sel = window.getSelection();
                 sel.removeAllRanges();
@@ -458,27 +383,36 @@ window.TextDragSystem = (function() {
                     state.lastRange = clickRange.cloneRange();
                 }
             }
+            if (currentSession.sourceEditable) {
+                currentSession.sourceEditable.focus();
+            }
             return;
         }
 
-        // Case B: Fallback mouse drag drop
         const targetRange = getCaretRangeFromPoint(e.clientX, e.clientY);
-        if (targetRange) {
-            const startNode = targetRange.startContainer;
-            const targetEditable = startNode.nodeType === 1
-                ? startNode.closest('[contenteditable="true"]')
-                : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
 
-            if (targetEditable) {
-                executeDrop(targetRange, targetEditable, e);
-                return;
+        // CASE B: Deliberate drag drop to another area
+        if (!targetRange || isTargetInsideSource(targetRange, currentSession.sourceRange)) {
+            // Dropped on itself or outside valid drop target -> abort cleanly
+            if (currentSession.sourceEditable) {
+                currentSession.sourceEditable.focus();
             }
+            return;
         }
 
-        session = null;
-        if (caretEl) caretEl.style.display = 'none';
-        if (badgeEl) badgeEl.style.display = 'none';
-        document.body.style.userSelect = '';
+        const startNode = targetRange.startContainer;
+        const targetEditable = startNode.nodeType === 1
+            ? startNode.closest('[contenteditable="true"]')
+            : (startNode.parentElement ? startNode.parentElement.closest('[contenteditable="true"]') : null);
+
+        if (targetEditable) {
+            executeDrop(targetRange, targetEditable, e, currentSession);
+            return;
+        }
+
+        if (currentSession.sourceEditable) {
+            currentSession.sourceEditable.focus();
+        }
     }
 
     /**
@@ -503,15 +437,21 @@ window.TextDragSystem = (function() {
      * Initializes global event bindings for text drag & drop.
      */
     function init() {
-        // HTML5 drag listeners
+        // Prevent native HTML5 drag on editable selections
         window.addEventListener('dragstart', onDragStart, true);
-        window.addEventListener('dragover', onDragOver, true);
-        window.addEventListener('drop', onDrop, true);
-        window.addEventListener('dragend', onDragEnd, true);
 
-        // Pointer/mouse listeners
-        window.addEventListener('mousemove', onMouseMove, { passive: false });
-        window.addEventListener('mouseup', onMouseUp, { passive: false });
+        // Suppress click right after an intentional drag so it doesn't trigger element selection
+        window.addEventListener('click', function(e) {
+            if (window._justFinishedTextDrag) {
+                window._justFinishedTextDrag = false;
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+
+        // Pointer/mouse listeners (capture phase to ensure events are never swallowed)
+        window.addEventListener('mousemove', onMouseMove, true);
+        window.addEventListener('mouseup', onMouseUp, true);
         window.addEventListener('keydown', onKeyDown);
 
         // Auto-revert status message immediately if user starts typing
@@ -537,11 +477,16 @@ window.TextDragSystem = (function() {
         init();
     }
 
+    function isDragging() {
+        return !!(session && session.active);
+    }
+
     return {
         isPointInSelection,
         startDrag,
         onMouseMove,
         onMouseUp,
+        isDragging,
         getCaretElement,
         getBadgeElement
     };

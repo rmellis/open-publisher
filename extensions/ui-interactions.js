@@ -1,4 +1,4 @@
-// Open Publisher UI Interactions (v5.4.7)
+// Open Publisher UI Interactions (v5.4.8)
 (function installRulerHighlights() {
     console.log("🛠️ Ruler Highlight Script initializing (Boundary Clamped)...");
 

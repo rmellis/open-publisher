@@ -2282,7 +2282,7 @@
 
 
 
-// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.7)
+// NOTE: Modern Theme Studio Engine has been extracted to extensions/theme-studio.js (v5.4.8)
 
 
 ;(function upgradeCropHandleSize() {
