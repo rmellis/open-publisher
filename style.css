@@ -1403,7 +1403,7 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
-/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.5.1) --- */
+/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.5.2) --- */
 ::highlight(spelling-error) {
     text-decoration: underline wavy #e74c3c !important;
     text-decoration-skip-ink: none !important;
@@ -1721,9 +1721,10 @@ td, th {
     gap: 6px;
     margin-left: auto;
     padding-left: 15px;
+}
 .status-bar { color: white; position: relative; z-index: 100; }
 
-/* Protected Document Status Badge in Status Bar (v5.5.1) */
+/* Protected Document Status Badge in Status Bar (v5.5.2) */
 #protected-indicator {
     display: none;
     align-items: center;
@@ -4048,7 +4049,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.5.1) */
+        /* Modern Background Adjustments (v5.5.2) */
         .ts-sliders-container {
             display: flex;
             align-items: center;
