@@ -131,6 +131,69 @@
         }
     };
 
+    window.getElementTransformBasis = function(el) {
+        let u = { x: 1, y: 0 };
+        let v = { x: 0, y: 1 };
+        let rotRad = 0;
+        if (!el) return { u, v, rotRad };
+
+        const compStyle = window.getComputedStyle(el);
+        const tr = compStyle.transform || el.style.transform;
+        if (tr && tr !== 'none') {
+            const m = tr.match(/^matrix\(([^)]+)\)$/);
+            if (m) {
+                const vals = m[1].split(',').map(parseFloat);
+                const a = vals[0], b = vals[1], c = vals[2], d = vals[3];
+                const uLen = Math.hypot(a, b);
+                const vLen = Math.hypot(c, d);
+                if (uLen > 0.0001) u = { x: a / uLen, y: b / uLen };
+                if (vLen > 0.0001) v = { x: c / vLen, y: d / vLen };
+                rotRad = Math.atan2(b, a);
+            } else {
+                const m3d = tr.match(/^matrix3d\(([^)]+)\)$/);
+                if (m3d) {
+                    const vals = m3d[1].split(',').map(parseFloat);
+                    const a = vals[0], b = vals[1], c = vals[4], d = vals[5];
+                    const uLen = Math.hypot(a, b);
+                    const vLen = Math.hypot(c, d);
+                    if (uLen > 0.0001) u = { x: a / uLen, y: b / uLen };
+                    if (vLen > 0.0001) v = { x: c / vLen, y: d / vLen };
+                    rotRad = Math.atan2(b, a);
+                } else {
+                    const rMatch = tr.match(/rotate\(([-\d.]+)deg\)/);
+                    if (rMatch) {
+                        rotRad = parseFloat(rMatch[1]) * (Math.PI / 180);
+                        u = { x: Math.cos(rotRad), y: Math.sin(rotRad) };
+                        v = { x: -Math.sin(rotRad), y: Math.cos(rotRad) };
+                    }
+                    const sxMatch = tr.match(/scaleX\(([-\d.]+)\)/);
+                    if (sxMatch && parseFloat(sxMatch[1]) < 0) {
+                        u = { x: -u.x, y: -u.y };
+                    }
+                    const syMatch = tr.match(/scaleY\(([-\d.]+)\)/);
+                    if (syMatch && parseFloat(syMatch[1]) < 0) {
+                        v = { x: -v.x, y: -v.y };
+                    }
+                }
+            }
+        }
+        return { u, v, rotRad };
+    };
+
+    window.getRotatedHandleCursor = function(dir, rotDeg) {
+        const angleMap = { 'n': 0, 'ne': 45, 'e': 90, 'se': 135, 's': 180, 'sw': 225, 'w': 270, 'nw': 315 };
+        const baseAngle = angleMap[dir];
+        if (baseAngle === undefined) return 'pointer';
+        let totalAngle = Math.round((baseAngle + rotDeg) % 360);
+        if (totalAngle < 0) totalAngle += 360;
+        const index = Math.round(totalAngle / 45) % 8;
+        const cursors = [
+            'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize',
+            'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize'
+        ];
+        return cursors[index];
+    };
+
     window.renderSelectionOverlays = function() {
         const paper = document.getElementById('paper');
         if(!paper) return;
@@ -170,6 +233,8 @@
             overlay.appendChild(box);
 
             if (els.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+                const basis = window.getElementTransformBasis(el);
+                const rotDeg = Math.round(basis.rotRad * (180 / Math.PI));
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
                 dirs.forEach(dir => {
                     const h = document.createElement('div');
@@ -177,6 +242,7 @@
                     h.dataset.dir = dir;
                     h.style.pointerEvents = 'auto'; 
                     h.style.display = 'block';
+                    h.style.cursor = window.getRotatedHandleCursor(dir, rotDeg);
                     overlay.appendChild(h);
                 });
                 const rStick = document.createElement('div');
@@ -1502,6 +1568,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const originalSelect = window.selectElement;
             window.selectElement = function(el) {
                 originalSelect.apply(this, arguments);
+                if (window.healUncroppedImage) window.healUncroppedImage(el);
                 if (el && (el.querySelector('.wa-text') || el.classList.contains('wa-text'))) {
                     document.getElementById('op-image-sidebar')?.classList.remove('visible');
                 }
@@ -3528,6 +3595,30 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 ;(function installDefinitiveCropFix() {
     console.log("🛠️ V95.0 Definitive Crop Anchor Fix initializing...");
 
+    window.healUncroppedImage = function(el) {
+        if (!el) return;
+        const img = el.querySelector('img');
+        if (!img) return;
+        if (el.classList.contains('cropping') || (typeof state !== 'undefined' && state && state.cropMode)) return;
+
+        const leftVal = (img.style.left || '').trim();
+        const topVal = (img.style.top || '').trim();
+        const leftPx = parseFloat(leftVal) || 0;
+        const topPx = parseFloat(topVal) || 0;
+        const isZeroOffset = (leftPx === 0 && topPx === 0);
+        const wVal = (img.style.width || '').trim();
+        const hVal = (img.style.height || '').trim();
+
+        if (isZeroOffset && (wVal === '' || wVal === '100%' || wVal === '100px' || wVal === '100' ||
+                             hVal === '' || hVal === '100%' || hVal === '100px' || hVal === '100' ||
+                             (!wVal.endsWith('px') && !wVal.includes('%')))) {
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.left = '0px';
+            img.style.top = '0px';
+        }
+    };
+
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
         if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
@@ -3590,15 +3681,29 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 const img = state.selectedEl.querySelector('img');
                 const startImgLeft = img ? (parseFloat(img.style.left) || 0) : 0;
                 const startImgTop = img ? (parseFloat(img.style.top) || 0) : 0;
+                const basis = window.getElementTransformBasis(state.selectedEl);
+                const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
+                const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
+                const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
+                const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
 
                 state.dragData = {
                     dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                    w: parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth, 
-                    h: parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight,
-                    l: parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft, 
-                    t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
+                    w: curW, 
+                    h: curH,
+                    l: curL, 
+                    t: curT,
+                    cx: curL + curW / 2,
+                    cy: curT + curH / 2,
+                    u: basis.u,
+                    v: basis.v,
+                    rotRad: basis.rotRad,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                     scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                    minW: 10,
+                    minH: 10,
+                    imgW: img ? ((img.style.width && !img.style.width.includes('%')) ? parseFloat(img.style.width) : img.offsetWidth) : undefined,
+                    imgH: img ? ((img.style.height && !img.style.height.includes('%')) ? parseFloat(img.style.height) : img.offsetHeight) : undefined,
                     imgL: startImgLeft, // ✨ Saved to memory
                     imgT: startImgTop   // ✨ Saved to memory
                 };
@@ -3647,14 +3752,27 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 }
             } else {
                 state.dragMode = 'resize';
+                const basis = window.getElementTransformBasis(state.selectedEl);
+                const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
+                const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
+                const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
+                const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
+
                 state.dragData = {
                     dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                    w: parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth, 
-                    h: parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight,
-                    l: parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft, 
-                    t: parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop,
+                    w: curW, 
+                    h: curH,
+                    l: curL, 
+                    t: curT,
+                    cx: curL + curW / 2,
+                    cy: curT + curH / 2,
+                    u: basis.u,
+                    v: basis.v,
+                    rotRad: basis.rotRad,
                     scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
-                    scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1
+                    scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                    minW: 10,
+                    minH: 10
                 };
                 
                 const tbl = state.selectedEl.querySelector('table');
@@ -3668,6 +3786,29 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     document.body.removeChild(clone);
                     state.dragData.minW = Math.max(10, minW); 
                     state.dragData.minH = Math.max(10, minH);
+                }
+
+                const img = state.selectedEl.querySelector('img');
+                if (img) {
+                    if (window.healUncroppedImage) window.healUncroppedImage(state.selectedEl);
+                    const rawStyleW = (img.style.width || '').trim();
+                    const rawStyleH = (img.style.height || '').trim();
+                    const leftPx = parseFloat(img.style.left) || 0;
+                    const topPx = parseFloat(img.style.top) || 0;
+                    const isZeroOffset = (leftPx === 0 && topPx === 0);
+
+                    // Only true legacy pixel-based crops should scale via JavaScript
+                    if (rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%') && (!isZeroOffset || parseFloat(rawStyleW) !== 100)) {
+                        const pW = parseFloat(rawStyleW);
+                        const pH = parseFloat(rawStyleH);
+                        if (pW > 0 && pH > 0) {
+                            state.dragData.imgW = pW;
+                            state.dragData.imgH = pH;
+                            state.dragData.imgL = leftPx;
+                            state.dragData.imgT = topPx;
+                            state.dragData.isLegacyPixelCrop = true;
+                        }
+                    }
                 }
             }
             e.preventDefault(); return;
@@ -3895,80 +4036,106 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
         else if(state.dragMode === 'resize') {
             const d = state.dragData; 
+            const zoom = state.zoom || 1;
+            const dx = (e.clientX - d.startX) / zoom;
+            const dy = (e.clientY - d.startY) / zoom;
+
+            const u = d.u || { x: 1, y: 0 };
+            const v = d.v || { x: 0, y: 1 };
+
+            // Project screen deltas onto element's local basis axes
+            const localDx = dx * u.x + dy * u.y;
+            const localDy = dx * v.x + dy * v.y;
+
             const sX = Math.abs(d.scaleX) || 1;
             const sY = Math.abs(d.scaleY) || 1;
 
-            let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
-            let imgDx = 0, imgDy = 0;
-            
-            if (e.ctrlKey || e.metaKey) {
-                // Center Resize Shifts
-                if (d.dir.includes('e')) { rawW = d.w + 2 * dx; newL = d.l - dx; }
-                else if (d.dir.includes('w')) { rawW = d.w - 2 * dx; newL = d.l + dx; if (state.cropMode) imgDx = -(dx / sX); }
-                
-                if (d.dir.includes('s')) { rawH = d.h + 2 * dy; newT = d.t - dy; }
-                else if (d.dir.includes('n')) { rawH = d.h - 2 * dy; newT = d.t + dy; if (state.cropMode) imgDy = -(dy / sY); }
+            let deltaW = 0;
+            let deltaH = 0;
+
+            const isCenterResize = !!(e.ctrlKey || e.metaKey);
+
+            if (isCenterResize) {
+                if (d.dir.includes('e')) deltaW = 2 * localDx;
+                else if (d.dir.includes('w')) deltaW = -2 * localDx;
+
+                if (d.dir.includes('s')) deltaH = 2 * localDy;
+                else if (d.dir.includes('n')) deltaH = -2 * localDy;
             } else {
-                // Container Width & Left Origin Shifts
-                if (d.dir.includes('e')) {
-                    rawW = d.w + dx; 
-                } else if (d.dir.includes('w')) { 
-                    rawW = d.w - dx; 
-                    newL = d.l + dx; 
-                    // Divides the screen delta by the image's scale so it perfectly compensates
-                    if (state.cropMode) imgDx = -(dx / sX); 
-                }
-                
-                // Container Height & Top Origin Shifts
-                if (d.dir.includes('s')) {
-                    rawH = d.h + dy; 
-                } else if (d.dir.includes('n')) { 
-                    rawH = d.h - dy; 
-                    newT = d.t + dy; 
-                    if (state.cropMode) imgDy = -(dy / sY); 
-                }
+                if (d.dir.includes('e')) deltaW = localDx;
+                else if (d.dir.includes('w')) deltaW = -localDx;
+
+                if (d.dir.includes('s')) deltaH = localDy;
+                else if (d.dir.includes('n')) deltaH = -localDy;
             }
-            
-            // TABLE & MIN-BOUNDS CLAMPING
-            // Enforce minimum width/height so tables cannot be squished past their physical bounds
-            if (d.minW !== undefined && rawW < d.minW) {
-                if (d.dir.includes('w')) {
-                    const diff = d.minW - rawW;
-                    newL -= diff;
-                    if (state.cropMode) imgDx += (diff / sX);
-                }
-                rawW = d.minW;
-            }
-            if (d.minH !== undefined && rawH < d.minH) {
-                if (d.dir.includes('n')) {
-                    const diff = d.minH - rawH;
-                    newT -= diff;
-                    if (state.cropMode) imgDy += (diff / sY);
-                }
-                rawH = d.minH;
-            }
+
+            let rawW = d.w + deltaW;
+            let rawH = d.h + deltaH;
+
+            const minW = d.minW !== undefined ? d.minW : 10;
+            const minH = d.minH !== undefined ? d.minH : 10;
 
             // Aspect Ratio Lock (Standard Resize Only)
-            if ((e.shiftKey || state.selectedEl.getAttribute('data-aspect-lock') === 'true') && !state.cropMode) {
-                const safeW = d.w || 1; const safeH = d.h || 1;
-                const scaleX = Math.abs(rawW / safeW), scaleY = Math.abs(rawH / safeH);
+            const isAspectLocked = (e.shiftKey || state.selectedEl.getAttribute('data-aspect-lock') === 'true') && !state.cropMode;
+            if (isAspectLocked) {
+                const safeW = d.w || 1;
+                const safeH = d.h || 1;
+                const scaleFactorX = Math.abs(rawW / safeW);
+                const scaleFactorY = Math.abs(rawH / safeH);
                 let dominantScale = 1;
-                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleX;
-                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleY;
-                else dominantScale = Math.max(scaleX, scaleY);
-                rawW = (Math.sign(rawW) || 1) * Math.abs(safeW) * dominantScale;
-                rawH = (Math.sign(rawH) || 1) * Math.abs(safeH) * dominantScale;
-                
-                if (e.ctrlKey || e.metaKey) {
-                    newL = d.l + (d.w - rawW) / 2;
-                    newT = d.t + (d.h - rawH) / 2;
-                } else {
-                    if (d.dir.includes('w')) newL = (d.l + d.w) - rawW;
-                    if (d.dir.includes('n')) newT = (d.t + d.h) - rawH;
+                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleFactorX;
+                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
+                else dominantScale = Math.max(scaleFactorX, scaleFactorY);
+
+                rawW = Math.max(minW, safeW * dominantScale);
+                rawH = Math.max(minH, safeH * dominantScale);
+                deltaW = rawW - d.w;
+                deltaH = rawH - d.h;
+            } else {
+                if (rawW < minW) {
+                    rawW = minW;
+                    deltaW = rawW - d.w;
+                }
+                if (rawH < minH) {
+                    rawH = minH;
+                    deltaH = rawH - d.h;
                 }
             }
 
+            // Calculate center shift in local element coordinates
+            let deltaCenterLocalX = 0;
+            let deltaCenterLocalY = 0;
+
+            if (!isCenterResize) {
+                if (d.dir.includes('e')) deltaCenterLocalX = deltaW / 2;
+                else if (d.dir.includes('w')) deltaCenterLocalX = -deltaW / 2;
+
+                if (d.dir.includes('s')) deltaCenterLocalY = deltaH / 2;
+                else if (d.dir.includes('n')) deltaCenterLocalY = -deltaH / 2;
+            }
+
+            // Transform local center displacement back to paper coordinates
+            const deltaCenterPaperX = deltaCenterLocalX * u.x + deltaCenterLocalY * v.x;
+            const deltaCenterPaperY = deltaCenterLocalX * u.y + deltaCenterLocalY * v.y;
+
+            const curCx = (d.cx !== undefined) ? d.cx : (d.l + d.w / 2);
+            const curCy = (d.cy !== undefined) ? d.cy : (d.t + d.h / 2);
+            const newCx = curCx + deltaCenterPaperX;
+            const newCy = curCy + deltaCenterPaperY;
+
+            const newL = newCx - rawW / 2;
+            const newT = newCy - rawH / 2;
+
             if (state.cropMode) {
+                let imgDx = 0;
+                let imgDy = 0;
+                if (isCenterResize) {
+                    if (d.dir.includes('e') || d.dir.includes('w')) imgDx = (localDx / sX);
+                    if (d.dir.includes('s') || d.dir.includes('n')) imgDy = (localDy / sY);
+                } else {
+                    if (d.dir.includes('w')) imgDx = -(localDx / sX);
+                    if (d.dir.includes('n')) imgDy = -(localDy / sY);
+                }
                 const img = state.selectedEl.querySelector('img');
                 if (img) {
                     // ✨ THE FIX: We use the saved d.imgL so it adds the delta safely without returning NaN!
@@ -3980,14 +4147,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
             } else {
                 let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
-                if (rawW < 0) { rawW = Math.abs(rawW); if (d.dir.includes('e')) newL = d.l - rawW; finalScaleX = -1 * d.scaleX; } 
-                if (rawH < 0) { rawH = Math.abs(rawH); if (d.dir.includes('s')) newT = d.t - rawH; finalScaleY = -1 * d.scaleY; }
                 
                 if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
                 if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
 
                 const img = state.selectedEl.querySelector('img');
-                if (img && d.imgW !== undefined) {
+                if (img && d.isLegacyPixelCrop && d.imgW !== undefined) {
                     const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
                     img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
                     img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';

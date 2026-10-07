@@ -101,10 +101,20 @@ window.handleMouseDown = function(e) {
             }
         } else {
             state.dragMode = 'resize';
+            const basis = (typeof window.getElementTransformBasis === 'function')
+                ? window.getElementTransformBasis(state.selectedEl)
+                : { u: { x: 1, y: 0 }, v: { x: 0, y: 1 }, rotRad: 0 };
+            const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
+            const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
+            const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
+            const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
+
             state.dragData = {
                 dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                w: parseFloat(state.selectedEl.style.width), h: parseFloat(state.selectedEl.style.height),
-                l: parseFloat(state.selectedEl.style.left), t: parseFloat(state.selectedEl.style.top),
+                w: curW, h: curH,
+                l: curL, t: curT,
+                cx: curL + curW / 2, cy: curT + curH / 2,
+                u: basis.u, v: basis.v, rotRad: basis.rotRad,
                 scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
                 scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
                 minW: 10, minH: 10
@@ -133,10 +143,37 @@ window.handleMouseDown = function(e) {
             }
             const img = state.selectedEl.querySelector('img');
             if(img && state.cropMode) {
-                 state.dragData.imgW = parseFloat(img.style.width) || img.offsetWidth;
-                 state.dragData.imgH = parseFloat(img.style.height) || img.offsetHeight;
+                 const parseImgPx = (val, fallback) => {
+                     if (!val) return fallback;
+                     const s = val.toString().trim();
+                     if (s.includes('%')) return fallback;
+                     return parseFloat(s) || fallback;
+                 };
+                 state.dragData.imgW = parseImgPx(img.style.width, img.offsetWidth);
+                 state.dragData.imgH = parseImgPx(img.style.height, img.offsetHeight);
                  state.dragData.imgL = parseFloat(img.style.left) || 0;
                  state.dragData.imgT = parseFloat(img.style.top) || 0;
+            } else if (img) {
+                 if (typeof window.healUncroppedImage === 'function') {
+                     window.healUncroppedImage(state.selectedEl);
+                 }
+                 const rawStyleW = (img.style.width || '').trim();
+                 const rawStyleH = (img.style.height || '').trim();
+                 const leftPx = parseFloat(img.style.left) || 0;
+                 const topPx = parseFloat(img.style.top) || 0;
+                 const isZeroOffset = (leftPx === 0 && topPx === 0);
+
+                 if (rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%') && (!isZeroOffset || parseFloat(rawStyleW) !== 100)) {
+                     const pW = parseFloat(rawStyleW);
+                     const pH = parseFloat(rawStyleH);
+                     if (pW > 0 && pH > 0) {
+                         state.dragData.imgW = pW;
+                         state.dragData.imgH = pH;
+                         state.dragData.imgL = leftPx;
+                         state.dragData.imgT = topPx;
+                         state.dragData.isLegacyPixelCrop = true;
+                     }
+                 }
             }
         }
         e.preventDefault();
@@ -341,67 +378,120 @@ window.handleMouseMove = function(e) {
         }
     }
     else if(state.dragMode === 'resize') {
-        const dx = (e.clientX - state.dragData.startX) / zoom;
-        const dy = (e.clientY - state.dragData.startY) / zoom;
         const d = state.dragData;
-        let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
-        let imgDx = 0, imgDy = 0;
-        
-            if (d.dir.includes('e')) rawW = d.w + dx;
-            else if (d.dir.includes('w')) { rawW = d.w - dx; newL = d.l + dx; if(state.cropMode) imgDx = -dx; }
-            if (d.dir.includes('s')) rawH = d.h + dy;
-            else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
+        const dx = (e.clientX - d.startX) / zoom;
+        const dy = (e.clientY - d.startY) / zoom;
 
-            // PROPORTIONAL CORNER RESIZE (Shift key or data-aspect-lock)
-            const isAspectLocked = e.shiftKey || (state.selectedEl && state.selectedEl.getAttribute('data-aspect-lock') === 'true');
-            const isCorner = d.dir === 'nw' || d.dir === 'ne' || d.dir === 'se' || d.dir === 'sw';
-            if (isAspectLocked && isCorner && d.w > 0 && d.h > 0) {
-                const aspect = d.w / d.h;
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    const targetH = rawW / aspect;
-                    if (d.dir.includes('n')) newT = d.t + (d.h - targetH);
-                    rawH = targetH;
-                } else {
-                    const targetW = rawH * aspect;
-                    if (d.dir.includes('w')) newL = d.l + (d.w - targetW);
-                    rawW = targetW;
-                }
-            }
+        const u = d.u || { x: 1, y: 0 };
+        const v = d.v || { x: 0, y: 1 };
 
-            // TABLE & MIN-BOUNDS CLAMPING
-            // Enforce minimum width/height so tables cannot be squished past their physical bounds
-            if (d.minW !== undefined && rawW < d.minW) {
-                if (d.dir.includes('w')) {
-                    const diff = d.minW - rawW;
-                    newL -= diff;
-                    if (state.cropMode) imgDx += diff;
-                }
-                rawW = d.minW;
+        // Project screen deltas onto element's local basis axes
+        const localDx = dx * u.x + dy * u.y;
+        const localDy = dx * v.x + dy * v.y;
+
+        const sX = Math.abs(d.scaleX) || 1;
+        const sY = Math.abs(d.scaleY) || 1;
+
+        let deltaW = 0;
+        let deltaH = 0;
+
+        const isCenterResize = !!(e.ctrlKey || e.metaKey);
+
+        if (isCenterResize) {
+            if (d.dir.includes('e')) deltaW = 2 * localDx;
+            else if (d.dir.includes('w')) deltaW = -2 * localDx;
+
+            if (d.dir.includes('s')) deltaH = 2 * localDy;
+            else if (d.dir.includes('n')) deltaH = -2 * localDy;
+        } else {
+            if (d.dir.includes('e')) deltaW = localDx;
+            else if (d.dir.includes('w')) deltaW = -localDx;
+
+            if (d.dir.includes('s')) deltaH = localDy;
+            else if (d.dir.includes('n')) deltaH = -localDy;
+        }
+
+        let rawW = d.w + deltaW;
+        let rawH = d.h + deltaH;
+
+        const minW = d.minW !== undefined ? d.minW : 10;
+        const minH = d.minH !== undefined ? d.minH : 10;
+
+        // Aspect Ratio Lock (Standard Resize Only)
+        const isAspectLocked = (e.shiftKey || state.selectedEl.getAttribute('data-aspect-lock') === 'true') && !state.cropMode;
+        if (isAspectLocked) {
+            const safeW = d.w || 1;
+            const safeH = d.h || 1;
+            const scaleFactorX = Math.abs(rawW / safeW);
+            const scaleFactorY = Math.abs(rawH / safeH);
+            let dominantScale = 1;
+            if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleFactorX;
+            else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
+            else dominantScale = Math.max(scaleFactorX, scaleFactorY);
+
+            rawW = Math.max(minW, safeW * dominantScale);
+            rawH = Math.max(minH, safeH * dominantScale);
+            deltaW = rawW - d.w;
+            deltaH = rawH - d.h;
+        } else {
+            if (rawW < minW) {
+                rawW = minW;
+                deltaW = rawW - d.w;
             }
-            if (d.minH !== undefined && rawH < d.minH) {
-                if (d.dir.includes('n')) {
-                    const diff = d.minH - rawH;
-                    newT -= diff;
-                    if (state.cropMode) imgDy += diff;
-                }
-                rawH = d.minH;
+            if (rawH < minH) {
+                rawH = minH;
+                deltaH = rawH - d.h;
             }
-        
+        }
+
+        // Calculate center shift in local element coordinates
+        let deltaCenterLocalX = 0;
+        let deltaCenterLocalY = 0;
+
+        if (!isCenterResize) {
+            if (d.dir.includes('e')) deltaCenterLocalX = deltaW / 2;
+            else if (d.dir.includes('w')) deltaCenterLocalX = -deltaW / 2;
+
+            if (d.dir.includes('s')) deltaCenterLocalY = deltaH / 2;
+            else if (d.dir.includes('n')) deltaCenterLocalY = -deltaH / 2;
+        }
+
+        // Transform local center displacement back to paper coordinates
+        const deltaCenterPaperX = deltaCenterLocalX * u.x + deltaCenterLocalY * v.x;
+        const deltaCenterPaperY = deltaCenterLocalX * u.y + deltaCenterLocalY * v.y;
+
+        const curCx = (d.cx !== undefined) ? d.cx : (d.l + d.w / 2);
+        const curCy = (d.cy !== undefined) ? d.cy : (d.t + d.h / 2);
+        const newCx = curCx + deltaCenterPaperX;
+        const newCy = curCy + deltaCenterPaperY;
+
+        const newL = newCx - rawW / 2;
+        const newT = newCy - rawH / 2;
+
         if (state.cropMode) {
+            let imgDx = 0;
+            let imgDy = 0;
+            if (isCenterResize) {
+                if (d.dir.includes('e') || d.dir.includes('w')) imgDx = (localDx / sX);
+                if (d.dir.includes('s') || d.dir.includes('n')) imgDy = (localDy / sY);
+            } else {
+                if (d.dir.includes('w')) imgDx = -(localDx / sX);
+                if (d.dir.includes('n')) imgDy = -(localDy / sY);
+            }
             const img = state.selectedEl.querySelector('img');
-            if (imgDx !== 0) img.style.left = ((parseFloat(img.style.left) || 0) + imgDx) + 'px';
-            if (imgDy !== 0) img.style.top = ((parseFloat(img.style.top) || 0) + imgDy) + 'px';
+            if (img) {
+                if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
+                if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
+            }
             if(rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
             if(rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
         } else {
             let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
-            if (rawW < 0) { rawW = Math.abs(rawW); if (d.dir.includes('e')) newL = d.l - rawW; finalScaleX = -1 * d.scaleX; }
-            if (rawH < 0) { rawH = Math.abs(rawH); if (d.dir.includes('s')) newT = d.t - rawH; finalScaleY = -1 * d.scaleY; }
             if(rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
             if(rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
             
             const img = state.selectedEl.querySelector('img');
-            if (img && d.imgW !== undefined) {
+            if (img && d.isLegacyPixelCrop && d.imgW !== undefined) {
                 const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
                 img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
                 img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';

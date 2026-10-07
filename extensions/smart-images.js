@@ -680,81 +680,115 @@
         // 6. Resizing Engine
         else if(state.dragMode === 'resize') {
             const d = state.dragData; 
-            let rawW = d.w, rawH = d.h, newL = d.l, newT = d.t;
-            let imgDx = 0, imgDy = 0;
-            
-            // Standard Independent Math
-            if (d.dir.includes('e')) rawW = d.w + dx; 
-            else if (d.dir.includes('w')) { rawW = d.w - dx; newL = d.l + dx; if(state.cropMode) imgDx = -dx; }
-            
-            if (d.dir.includes('s')) rawH = d.h + dy; 
-            else if (d.dir.includes('n')) { rawH = d.h - dy; newT = d.t + dy; if(state.cropMode) imgDy = -dy; }
+            const u = d.u || { x: 1, y: 0 };
+            const v = d.v || { x: 0, y: 1 };
 
-            // TABLE & MIN-BOUNDS CLAMPING
-            // Enforce minimum width/height so tables cannot be squished past their physical bounds
-            if (d.minW !== undefined && rawW < d.minW) {
-                if (d.dir.includes('w')) {
-                    const diff = d.minW - rawW;
-                    newL -= diff;
-                    if (state.cropMode) imgDx += diff;
-                }
-                rawW = d.minW;
-            }
-            if (d.minH !== undefined && rawH < d.minH) {
-                if (d.dir.includes('n')) {
-                    const diff = d.minH - rawH;
-                    newT -= diff;
-                    if (state.cropMode) imgDy += diff;
-                }
-                rawH = d.minH;
+            // Project screen deltas onto element's local basis axes
+            const localDx = dx * u.x + dy * u.y;
+            const localDy = dx * v.x + dy * v.y;
+
+            const sX = Math.abs(d.scaleX) || 1;
+            const sY = Math.abs(d.scaleY) || 1;
+
+            let deltaW = 0;
+            let deltaH = 0;
+
+            const isCenterResize = !!(e.ctrlKey || e.metaKey);
+
+            if (isCenterResize) {
+                if (d.dir.includes('e')) deltaW = 2 * localDx;
+                else if (d.dir.includes('w')) deltaW = -2 * localDx;
+
+                if (d.dir.includes('s')) deltaH = 2 * localDy;
+                else if (d.dir.includes('n')) deltaH = -2 * localDy;
+            } else {
+                if (d.dir.includes('e')) deltaW = localDx;
+                else if (d.dir.includes('w')) deltaW = -localDx;
+
+                if (d.dir.includes('s')) deltaH = localDy;
+                else if (d.dir.includes('n')) deltaH = -localDy;
             }
 
-            // --- 🚨 THE NEW ASPECT RATIO LOCK 🚨 ---
-            if (e.shiftKey && !state.cropMode) {
-                // Determine scale relative to the starting dimensions (avoiding div by zero)
+            let rawW = d.w + deltaW;
+            let rawH = d.h + deltaH;
+
+            const minW = d.minW !== undefined ? d.minW : 10;
+            const minH = d.minH !== undefined ? d.minH : 10;
+
+            // --- Aspect Ratio Lock ---
+            if ((e.shiftKey || (state.selectedEl && state.selectedEl.getAttribute('data-aspect-lock') === 'true')) && !state.cropMode) {
                 const safeW = d.w || 1;
                 const safeH = d.h || 1;
-                const scaleX = Math.abs(rawW / safeW);
-                const scaleY = Math.abs(rawH / safeH);
-                
+                const scaleFactorX = Math.abs(rawW / safeW);
+                const scaleFactorY = Math.abs(rawH / safeH);
                 let dominantScale = 1;
-                
-                // Which handle is being pulled determines which axis drives the math
-                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleX;
-                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleY;
-                else dominantScale = Math.max(scaleX, scaleY); // Corners use max delta
+                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleFactorX;
+                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
+                else dominantScale = Math.max(scaleFactorX, scaleFactorY);
 
-                // Keep negative values intact for mirroring/flipping support
-                const signW = Math.sign(rawW) || 1;
-                const signH = Math.sign(rawH) || 1;
-                
-                rawW = signW * Math.abs(safeW) * dominantScale;
-                rawH = signH * Math.abs(safeH) * dominantScale;
-
-                // Mathematical anchor compensation (Keeps opposite edge glued in place)
-                if (d.dir.includes('w')) newL = (d.l + d.w) - rawW;
-                if (d.dir.includes('n')) newT = (d.t + d.h) - rawH;
+                rawW = Math.max(minW, safeW * dominantScale);
+                rawH = Math.max(minH, safeH * dominantScale);
+                deltaW = rawW - d.w;
+                deltaH = rawH - d.h;
+            } else {
+                if (rawW < minW) {
+                    rawW = minW;
+                    deltaW = rawW - d.w;
+                }
+                if (rawH < minH) {
+                    rawH = minH;
+                    deltaH = rawH - d.h;
+                }
             }
-            // ----------------------------------------
+
+            // Calculate center shift in local element coordinates
+            let deltaCenterLocalX = 0;
+            let deltaCenterLocalY = 0;
+
+            if (!isCenterResize) {
+                if (d.dir.includes('e')) deltaCenterLocalX = deltaW / 2;
+                else if (d.dir.includes('w')) deltaCenterLocalX = -deltaW / 2;
+
+                if (d.dir.includes('s')) deltaCenterLocalY = deltaH / 2;
+                else if (d.dir.includes('n')) deltaCenterLocalY = -deltaH / 2;
+            }
+
+            // Transform local center displacement back to paper coordinates
+            const deltaCenterPaperX = deltaCenterLocalX * u.x + deltaCenterLocalY * v.x;
+            const deltaCenterPaperY = deltaCenterLocalX * u.y + deltaCenterLocalY * v.y;
+
+            const curCx = (d.cx !== undefined) ? d.cx : (d.l + d.w / 2);
+            const curCy = (d.cy !== undefined) ? d.cy : (d.t + d.h / 2);
+            const newCx = curCx + deltaCenterPaperX;
+            const newCy = curCy + deltaCenterPaperY;
+
+            const newL = newCx - rawW / 2;
+            const newT = newCy - rawH / 2;
 
             if (state.cropMode) {
+                let imgDx = 0;
+                let imgDy = 0;
+                if (isCenterResize) {
+                    if (d.dir.includes('e') || d.dir.includes('w')) imgDx = (localDx / sX);
+                    if (d.dir.includes('s') || d.dir.includes('n')) imgDy = (localDy / sY);
+                } else {
+                    if (d.dir.includes('w')) imgDx = -(localDx / sX);
+                    if (d.dir.includes('n')) imgDy = -(localDy / sY);
+                }
                 const img = state.selectedEl.querySelector('img');
-                if (imgDx !== 0) img.style.left = ((parseFloat(img.style.left) || 0) + imgDx) + 'px';
-                if (imgDy !== 0) img.style.top = ((parseFloat(img.style.top) || 0) + imgDy) + 'px';
+                if (img) {
+                    if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
+                    if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
+                }
                 if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
                 if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
             } else {
                 let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
-                
-                // Handle mirroring if dragged past the zero axis
-                if (rawW < 0) { rawW = Math.abs(rawW); if (d.dir.includes('e')) newL = d.l - rawW; finalScaleX = -1 * d.scaleX; } 
-                if (rawH < 0) { rawH = Math.abs(rawH); if (d.dir.includes('s')) newT = d.t - rawH; finalScaleY = -1 * d.scaleY; }
-                
                 if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
                 if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
 
                 const img = state.selectedEl.querySelector('img');
-                if (img && d.imgW !== undefined) {
+                if (img && d.isLegacyPixelCrop && d.imgW !== undefined) {
                     const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
                     img.style.width = (d.imgW * ratioX) + 'px'; 
                     img.style.height = (d.imgH * ratioY) + 'px';

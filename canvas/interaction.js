@@ -423,6 +423,31 @@ function handleKeyUp(e) {
     }
 }
 
+window.healUncroppedImage = function(el) {
+    if (!el) return;
+    const img = el.querySelector('img');
+    if (!img) return;
+    if (el.classList.contains('cropping') || (typeof state !== 'undefined' && state && state.cropMode)) return;
+
+    const leftVal = (img.style.left || '').trim();
+    const topVal = (img.style.top || '').trim();
+    const leftPx = parseFloat(leftVal) || 0;
+    const topPx = parseFloat(topVal) || 0;
+    const isZeroOffset = (leftPx === 0 && topPx === 0);
+    const wVal = (img.style.width || '').trim();
+    const hVal = (img.style.height || '').trim();
+
+    // If uncropped, or corrupted to 100px/100 by the previous resize bug
+    if (isZeroOffset && (wVal === '' || wVal === '100%' || wVal === '100px' || wVal === '100' ||
+                         hVal === '' || hVal === '100%' || hVal === '100px' || hVal === '100' ||
+                         (!wVal.endsWith('px') && !wVal.includes('%')))) {
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.left = '0px';
+        img.style.top = '0px';
+    }
+};
+
 function selectElement(el) {
     if (window.isLinkingTextBox) {
         window.isLinkingTextBox = false;
@@ -465,6 +490,7 @@ function selectElement(el) {
     if(state.selectedEl && state.selectedEl !== el) deselect();
     state.selectedEl = el;
     el.classList.add('selected');
+    if (window.healUncroppedImage) window.healUncroppedImage(el);
     document.getElementById('status-msg').innerText = "Element Selected";
     
     if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
