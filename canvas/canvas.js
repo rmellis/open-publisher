@@ -722,6 +722,9 @@ window.setZoom = function(z) {
         const overlay = document.querySelector('.selected-overlay');
         if (overlay) window.updateArrowTipOverlay(overlay, state.selectedEl);
     }
+    if (typeof window.SpellCheckEngine !== 'undefined') {
+        window.SpellCheckEngine.trigger(100);
+    }
 };
 
 window.zoomStepOut = function() {

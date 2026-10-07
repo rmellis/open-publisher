@@ -94,7 +94,7 @@ function handleMouseDown(e) {
 
     const el = e.target.closest('.pub-element');
     if(el) {
-        // --- v5.4.5: Text Drag & Drop Check ---
+        // --- v5.4.6: Text Drag & Drop Check ---
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             window.TextDragSystem.startDrag(e);
             return;
@@ -471,6 +471,7 @@ function selectElement(el) {
         window.parseShadowToSliders();
     }
     showFloatToolbar();
+    if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
 }
 
 function deselect() {
@@ -491,6 +492,7 @@ function deselect() {
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     const waToolbar = document.getElementById('wa-float-toolbar');
     if (waToolbar) waToolbar.style.display = 'none';
+    if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
 }
 
 

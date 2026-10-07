@@ -1,5 +1,5 @@
 /**
- * Open Publisher - Canvas Text Drag & Drop Module (v5.4.5)
+ * Open Publisher - Canvas Text Drag & Drop Module (v5.4.6)
  * Allows users to highlight a chunk of text and drag it into another area
  * within the text box (or across text boxes), with visual drop caret indicator,
  * ghost drag badge, Ctrl-to-copy support, and full Undo/Redo integration.
@@ -362,6 +362,22 @@ window.TextDragSystem = (function() {
             const statusMsg = document.getElementById('status-msg');
             if (statusMsg) {
                 statusMsg.innerText = isCopy ? 'Text Copied' : 'Text Moved';
+                if (window._textDragStatusTimer) {
+                    clearTimeout(window._textDragStatusTimer);
+                }
+                window._textDragStatusTimer = setTimeout(() => {
+                    const curStatus = document.getElementById('status-msg');
+                    if (curStatus && (curStatus.innerText === 'Text Moved' || curStatus.innerText === 'Text Copied')) {
+                        if (typeof state !== 'undefined' && state.multiSelected && state.multiSelected.length > 1) {
+                            curStatus.innerText = state.multiSelected.length + ' Elements Selected';
+                        } else if (typeof state !== 'undefined' && state.selectedEl) {
+                            curStatus.innerText = 'Element Selected';
+                        } else {
+                            curStatus.innerText = 'Ready';
+                        }
+                    }
+                    window._textDragStatusTimer = null;
+                }, 2500);
             }
         } catch (err) {
             console.error('Error during text drag and drop execution:', err);
@@ -497,6 +513,22 @@ window.TextDragSystem = (function() {
         window.addEventListener('mousemove', onMouseMove, { passive: false });
         window.addEventListener('mouseup', onMouseUp, { passive: false });
         window.addEventListener('keydown', onKeyDown);
+
+        // Auto-revert status message immediately if user starts typing
+        document.addEventListener('input', function() {
+            if (window._textDragStatusTimer) {
+                clearTimeout(window._textDragStatusTimer);
+                window._textDragStatusTimer = null;
+                const curStatus = document.getElementById('status-msg');
+                if (curStatus && (curStatus.innerText === 'Text Moved' || curStatus.innerText === 'Text Copied')) {
+                    if (typeof state !== 'undefined' && state.selectedEl) {
+                        curStatus.innerText = 'Element Selected';
+                    } else {
+                        curStatus.innerText = 'Ready';
+                    }
+                }
+            }
+        }, true);
     }
 
     if (document.readyState === 'loading') {

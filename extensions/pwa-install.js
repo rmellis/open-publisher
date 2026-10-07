@@ -1,4 +1,4 @@
-// Open Publisher PWA & Mobile Installation Engine (v5.4.5)
+// Open Publisher PWA & Mobile Installation Engine (v5.4.6)
 (function() {
     'use strict';
 

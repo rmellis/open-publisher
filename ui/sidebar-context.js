@@ -291,9 +291,10 @@ function createWrapper(htmlContent) {
     el.setAttribute('data-scaleY', "1");
     
     let inner = htmlContent || '';
+    const userLang = navigator.language || 'en';
     if (typeof state !== 'undefined' && state.spellCheck !== false) {
-        inner = inner.replace(/spellcheck="false"/g, 'spellcheck="true" lang="en"');
-        inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="true" lang="en"');
+        inner = inner.replace(/spellcheck="false"/g, `spellcheck="true" lang="${userLang}"`);
+        inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, `contenteditable="true" spellcheck="true" lang="${userLang}"`);
     } else if (typeof state !== 'undefined' && !state.spellCheck) {
         inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
         inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');

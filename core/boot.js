@@ -92,12 +92,16 @@ document.addEventListener('selectionchange', () => {
             const savedSpell = localStorage.getItem('opub_spellcheck');
             if (savedSpell !== null) {
                 state.spellCheck = savedSpell !== 'false';
+            } else {
+                state.spellCheck = true;
+                try { localStorage.setItem('opub_spellcheck', 'true'); } catch(e) {}
             }
             document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+            const userLang = navigator.language || 'en';
             document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
                 if (!el.classList.contains('wa-text')) {
                     el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-                    if (state.spellCheck) el.setAttribute('lang', 'en');
+                    if (state.spellCheck) el.setAttribute('lang', userLang);
                 }
             });
         }

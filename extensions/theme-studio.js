@@ -1,8 +1,8 @@
-// Open Publisher Dedicated Theme Studio Engine (v5.4.5)
+// Open Publisher Dedicated Theme Studio Engine (v5.4.6)
 // Autonomous modern theme design suite with 700 curated themes, 6-slider dual-column adjustment suite, and Canvas 2D print pre-baking.
 
 ;(function installPerfectedThemeStudio() {
-    console.log("🛠️ Theme Studio initializing (v5.4.5 Modernized Background Controls & 700 Themes)...");
+    console.log("🛠️ Theme Studio initializing (v5.4.6 Modernized Background Controls & 700 Themes)...");
 
     // ==========================================
     // 1. CLEANUP & PREPARATION

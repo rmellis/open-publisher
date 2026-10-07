@@ -31,9 +31,12 @@ window.saveGlobalOptions = function(closeDialog = true) {
             document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
                 if (!el.classList.contains('wa-text')) {
                     el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-                    if (state.spellCheck) el.setAttribute('lang', 'en');
+                    if (state.spellCheck) el.setAttribute('lang', navigator.language || 'en');
                 }
             });
+            if (window.SpellCheckEngine) {
+                window.SpellCheckEngine.run();
+            }
         }
     }
     

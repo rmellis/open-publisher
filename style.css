@@ -1403,6 +1403,40 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
+/* --- Modern Chromium / Edge Spellcheck Rendering Fix under Canvas Transform (v5.4.6) --- */
+::highlight(spelling-error) {
+    text-decoration: underline wavy #e74c3c !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
+@media print {
+    ::highlight(spelling-error) {
+        text-decoration: none !important;
+    }
+}
+[contenteditable="true"],
+.element-content,
+.element-content [contenteditable="true"] {
+    text-decoration-skip-ink: none !important;
+}
+::spelling-error {
+    text-decoration: underline wavy #e74c3c !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
+[contenteditable="true"]::spelling-error,
+.element-content [contenteditable="true"]::spelling-error {
+    text-decoration: underline wavy #e74c3c !important;
+    text-decoration-skip-ink: none !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+}
+[spellcheck="false"]::spelling-error,
+[contenteditable="true"][spellcheck="false"]::spelling-error {
+    text-decoration: none !important;
+}
 .element-content img, .element-content svg { 
     width: 100%; height: 100%; object-fit: fill; 
     pointer-events: none; display: block; position: absolute; top:0; left:0;
@@ -3964,7 +3998,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.4.5) */
+        /* Modern Background Adjustments (v5.4.6) */
         .ts-sliders-container {
             display: flex;
             align-items: center;

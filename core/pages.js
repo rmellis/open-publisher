@@ -103,8 +103,9 @@ function renderPage(pageData) {
         headerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
         footerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
         if (state.spellCheck) {
-            headerEl.setAttribute('lang', 'en');
-            footerEl.setAttribute('lang', 'en');
+            const userLang = navigator.language || 'en';
+            headerEl.setAttribute('lang', userLang);
+            footerEl.setAttribute('lang', userLang);
         }
     }
     
@@ -204,8 +205,9 @@ function renderPage(pageData) {
         
         // Force Chromium spellcheck on load
         if (state.spellCheck !== false) {
-            inner = inner.replace(/spellcheck="false"/g, 'spellcheck="true" lang="en"');
-            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="true" lang="en"');
+            const userLang = navigator.language || 'en';
+            inner = inner.replace(/spellcheck="false"/g, `spellcheck="true" lang="${userLang}"`);
+            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, `contenteditable="true" spellcheck="true" lang="${userLang}"`);
         } else {
             inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
             inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
@@ -254,6 +256,7 @@ function renderPage(pageData) {
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
     if (typeof window.upgradeAllCanvasWordArt === 'function') window.upgradeAllCanvasWordArt(paper);
     if (typeof window.updateIgnoreThemeButtonUI === 'function') window.updateIgnoreThemeButtonUI();
+    if (typeof window.SpellCheckEngine !== 'undefined') window.SpellCheckEngine.trigger(100);
 }
 
 // --- HISTORY MANAGEMENT ---

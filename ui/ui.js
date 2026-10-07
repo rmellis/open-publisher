@@ -657,6 +657,9 @@ window.ContextMenuActions = {
             const after = text.substring(range.endOffset);
             range.startContainer.textContent = before + suggestion + after;
             pushHistory();
+            if (window.SpellCheckEngine) {
+                window.SpellCheckEngine.run();
+            }
             if (state.selectedEl) {
                 state.selectedEl.focus();
             }

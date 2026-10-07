@@ -252,7 +252,8 @@ function addTextBox() {
     const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
     const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
     const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
-    const spellAttrs = isSpell ? ' spellcheck="true" lang="en"' : ' spellcheck="false"';
+    const userLang = navigator.language || 'en';
+    const spellAttrs = isSpell ? ` spellcheck="true" lang="${userLang}"` : ' spellcheck="false"';
     
     const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
@@ -357,14 +358,19 @@ function toggleSpellCheck() {
     state.spellCheck = !state.spellCheck;
     try { localStorage.setItem('opub_spellcheck', state.spellCheck ? 'true' : 'false'); } catch(e) {}
     document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+    const userLang = navigator.language || 'en';
     
     document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
         if (el.classList.contains('wa-text')) return;
         el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
         if (state.spellCheck) {
-            el.setAttribute('lang', 'en');
+            el.setAttribute('lang', userLang);
         }
     });
+
+    if (window.SpellCheckEngine) {
+        window.SpellCheckEngine.run();
+    }
     
     const status = state.spellCheck ? "ON" : "OFF";
     DialogSystem.alert('Spell Check', "Spell check toggled " + status);

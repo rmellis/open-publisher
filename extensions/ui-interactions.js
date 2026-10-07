@@ -1281,7 +1281,7 @@
                         innerNode.setAttribute('contenteditable', 'true');
                         const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
                         innerNode.setAttribute('spellcheck', isSpell ? 'true' : 'false');
-                        if (isSpell) innerNode.setAttribute('lang', 'en');
+                        if (isSpell) innerNode.setAttribute('lang', navigator.language || 'en');
                         contentContainer.style.pointerEvents = 'auto';
                     }
                 });

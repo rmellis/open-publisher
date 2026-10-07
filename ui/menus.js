@@ -397,38 +397,76 @@ const ContextMenuSystem = {
         if (window._currentSpellCheckWord) {
             const spellDiv = document.getElementById('spell-check-results');
             if (spellDiv) {
-                spellDiv.innerHTML = `<div class="pub-context-item" style="color:#777; font-style:italic; font-size:12px; pointer-events:none;"><i class="fas fa-spinner fa-spin"></i> Checking spelling...</div><div class="pub-context-divider"></div>`;
-                
-                fetch(`https://api.languagetool.org/v2/check`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `language=en-US&text=${encodeURIComponent(window._currentSpellCheckWord)}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    const spellDiv2 = document.getElementById('spell-check-results');
-                    if (!spellDiv2) return;
-                    if (data.matches && data.matches.length > 0) {
-                        const match = data.matches[0];
-                        if (match.replacements && match.replacements.length > 0) {
+                const wordToCheck = window._currentSpellCheckWord;
+                window._lastSpellCheckedWord = wordToCheck;
+                const cleanWord = (wordToCheck || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
+                const cleanWordEscaped = (wordToCheck || '').replace(/'/g, "\\'");
+
+                const cachedSuggestions = (window.SpellCheckEngine && window.SpellCheckEngine.getSuggestions)
+                    ? window.SpellCheckEngine.getSuggestions(cleanWord)
+                    : [];
+
+                if (cachedSuggestions && cachedSuggestions.length > 0) {
+                    let newHtml = '';
+                    const limit = Math.min(3, cachedSuggestions.length);
+                    for(let i=0; i<limit; i++) {
+                        const suggestion = cachedSuggestions[i].replace(/'/g, "\\'");
+                        newHtml += this.buildItem(`<b>${suggestion}</b>`, 'fa-magic', `ContextMenuActions.applySpelling('${suggestion}')`);
+                    }
+                    if (cleanWordEscaped) {
+                        newHtml += this.buildItem('Add to Dictionary', 'fa-plus-circle', `if (window.SpellCheckEngine) window.SpellCheckEngine.addToDictionary('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                        newHtml += this.buildItem('Ignore All', 'fa-eye-slash', `if (window.SpellCheckEngine) window.SpellCheckEngine.ignoreWord('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                    }
+                    newHtml += this.buildDivider();
+                    spellDiv.innerHTML = newHtml;
+                } else {
+                    spellDiv.innerHTML = `<div class="pub-context-item" style="color:#777; font-style:italic; font-size:12px; pointer-events:none;"><i class="fas fa-spinner fa-spin"></i> Checking spelling...</div><div class="pub-context-divider"></div>`;
+                    
+                    fetch(`https://api.languagetool.org/v2/check`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `language=en-US&text=${encodeURIComponent(wordToCheck)}`
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        const spellDiv2 = document.getElementById('spell-check-results');
+                        if (!spellDiv2) return;
+                        const match = (data.matches && Array.isArray(data.matches))
+                            ? data.matches.find(m => m.rule && (m.rule.issueType === 'misspelling' || (m.rule.category && m.rule.category.id === 'TYPOS') || (m.shortMessage && m.shortMessage.toLowerCase().includes('spelling'))))
+                            : null;
+
+                        if (match && match.replacements && match.replacements.length > 0) {
+                            if (window.SpellCheckEngine) {
+                                window.SpellCheckEngine.recordMisspelledWord(wordToCheck, match.replacements.map(r => r.value));
+                            }
                             let newHtml = '';
                             const limit = Math.min(3, match.replacements.length);
                             for(let i=0; i<limit; i++) {
                                 const suggestion = match.replacements[i].value.replace(/'/g, "\\'");
                                 newHtml += this.buildItem(`<b>${suggestion}</b>`, 'fa-magic', `ContextMenuActions.applySpelling('${suggestion}')`);
                             }
+                            if (cleanWordEscaped) {
+                                newHtml += this.buildItem('Add to Dictionary', 'fa-plus-circle', `if (window.SpellCheckEngine) window.SpellCheckEngine.addToDictionary('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                                newHtml += this.buildItem('Ignore All', 'fa-eye-slash', `if (window.SpellCheckEngine) window.SpellCheckEngine.ignoreWord('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                            }
                             newHtml += this.buildDivider();
                             spellDiv2.innerHTML = newHtml;
                             return;
                         }
-                    }
-                    // No matches
-                    spellDiv2.innerHTML = `<div class="pub-context-item" style="color:#777; font-size:12px; pointer-events:none;"><i class="fas fa-check"></i> No spelling suggestions</div><div class="pub-context-divider"></div>`;
-                }).catch(e => {
-                    const spellDiv2 = document.getElementById('spell-check-results');
-                    if (spellDiv2) spellDiv2.innerHTML = `<div class="pub-context-item" style="color:#e74c3c; font-size:12px; pointer-events:none;"><i class="fas fa-exclamation-triangle"></i> Spellcheck failed</div><div class="pub-context-divider"></div>`;
-                    console.error("Spellcheck error:", e);
-                });
+                        // No misspelling matches
+                        let noMatchHtml = `<div class="pub-context-item" style="color:#777; font-size:12px; pointer-events:none;"><i class="fas fa-check"></i> No spelling suggestions</div>`;
+                        if (cleanWordEscaped && window.SpellCheckEngine && window.SpellCheckEngine.isWordMisspelled(cleanWordEscaped)) {
+                            noMatchHtml += this.buildItem('Add to Dictionary', 'fa-plus-circle', `if (window.SpellCheckEngine) window.SpellCheckEngine.addToDictionary('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                            noMatchHtml += this.buildItem('Ignore All', 'fa-eye-slash', `if (window.SpellCheckEngine) window.SpellCheckEngine.ignoreWord('${cleanWordEscaped}'); ContextMenuSystem.hide();`);
+                        }
+                        noMatchHtml += this.buildDivider();
+                        spellDiv2.innerHTML = noMatchHtml;
+                    }).catch(e => {
+                        const spellDiv2 = document.getElementById('spell-check-results');
+                        if (spellDiv2) spellDiv2.innerHTML = `<div class="pub-context-item" style="color:#e74c3c; font-size:12px; pointer-events:none;"><i class="fas fa-exclamation-triangle"></i> Spellcheck failed</div><div class="pub-context-divider"></div>`;
+                        console.error("Spellcheck error:", e);
+                    });
+                }
             }
             window._currentSpellCheckWord = "";
         }
