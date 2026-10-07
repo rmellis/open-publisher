@@ -89,7 +89,7 @@ function serializeCurrentPage() {
             hue: paper.getAttribute('data-theme-hue') || '0',
             tex: paper.getAttribute('data-theme-tex') || '100',
             size: paper.getAttribute('data-theme-size') || '100'
-        } : (existingPage.themeSettings || null),
+        } : null,
         elements: []
     };
 

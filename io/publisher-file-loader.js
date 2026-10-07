@@ -16,6 +16,7 @@ window.handlePublisherFileLoad = (evt) => {
             }
             
             state.pages = data.pages;
+            state.currentPageIndex = 0;
             state.hasMasterPage = data.hasMasterPage || false;
             state.rulerOriginX = data.rulerOriginX || 0;
             state.rulerOriginY = data.rulerOriginY || 0;
@@ -121,25 +122,8 @@ window.handlePublisherFileLoad = (evt) => {
             state.history = [];
             state.historyIndex = -1;
             if (data.themeSettings && data.themeSettings.saved) {
-                const ts = data.themeSettings;
-                const p = document.getElementById('paper');
-                if (p) {
-                    p.setAttribute('data-theme-saved', 'true');
-                    if (ts.id) p.setAttribute('data-theme-id', ts.id);
-                    if (ts.name) p.setAttribute('data-theme-name', ts.name);
-                    if (ts.type) p.setAttribute('data-theme-type', ts.type);
-                    if (ts.c1) p.setAttribute('data-theme-c1', ts.c1);
-                    if (ts.c2) p.setAttribute('data-theme-c2', ts.c2);
-                    if (ts.url) p.setAttribute('data-theme-url', ts.url);
-                    if (ts.sat) p.setAttribute('data-theme-sat', ts.sat);
-                    if (ts.bri) p.setAttribute('data-theme-bri', ts.bri);
-                    if (ts.con) p.setAttribute('data-theme-con', ts.con);
-                    if (ts.hue) p.setAttribute('data-theme-hue', ts.hue);
-                    if (ts.tex) p.setAttribute('data-theme-tex', ts.tex);
-                    if (ts.size) p.setAttribute('data-theme-size', ts.size);
-                }
-                if (state.pages && state.pages[0]) {
-                    state.pages[0].themeSettings = Object.assign({}, ts);
+                if (state.pages && state.pages[0] && !state.pages[0].themeSettings) {
+                    state.pages[0].themeSettings = Object.assign({}, data.themeSettings);
                 }
             }
             renderPage(state.pages[0]);

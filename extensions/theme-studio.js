@@ -6890,21 +6890,23 @@
 
         // Also save to active page model so switching pages retains adjustments
         if (state.pages && state.pages[state.currentPageIndex]) {
-            state.pages[state.currentPageIndex].themeSettings = {
-                saved: paper.getAttribute('data-theme-saved') === 'true',
-                id: paper.getAttribute('data-theme-id') || '',
-                name: paper.getAttribute('data-theme-name') || '',
-                type: paper.getAttribute('data-theme-type') || '',
-                c1: paper.getAttribute('data-theme-c1') || '',
-                c2: paper.getAttribute('data-theme-c2') || '',
-                url: paper.getAttribute('data-theme-url') || '',
-                sat: String(sat),
-                bri: String(bri),
-                con: String(con),
-                hue: String(hue),
-                tex: String(texVal),
-                size: String(sizeVal)
-            };
+            if (paper.getAttribute('data-theme-saved') === 'true') {
+                state.pages[state.currentPageIndex].themeSettings = {
+                    saved: true,
+                    id: paper.getAttribute('data-theme-id') || '',
+                    name: paper.getAttribute('data-theme-name') || '',
+                    type: paper.getAttribute('data-theme-type') || '',
+                    c1: paper.getAttribute('data-theme-c1') || '',
+                    c2: paper.getAttribute('data-theme-c2') || '',
+                    url: paper.getAttribute('data-theme-url') || '',
+                    sat: String(sat),
+                    bri: String(bri),
+                    con: String(con),
+                    hue: String(hue),
+                    tex: String(texVal),
+                    size: String(sizeVal)
+                };
+            }
         }
 
         // Update numeric badges
@@ -7184,6 +7186,44 @@
     // ==========================================
     // 9. THE SELF-HEALING ENGINE & Z-INDEX
     // ==========================================
+    window.resetThemeStudioUI = function() {
+        const satSlider = document.getElementById('ts-sat-slider');
+        const briSlider = document.getElementById('ts-bri-slider');
+        const conSlider = document.getElementById('ts-con-slider');
+        const hueSlider = document.getElementById('ts-hue-slider');
+        const texSlider = document.getElementById('ts-tex-slider');
+        const sizeSlider = document.getElementById('ts-size-slider');
+        const satBadge = document.getElementById('ts-sat-badge');
+        const briBadge = document.getElementById('ts-bri-badge');
+        const conBadge = document.getElementById('ts-con-badge');
+        const hueBadge = document.getElementById('ts-hue-badge');
+        const texBadge = document.getElementById('ts-tex-badge');
+        const sizeBadge = document.getElementById('ts-size-badge');
+
+        if (satSlider) satSlider.value = 100;
+        if (briSlider) briSlider.value = 100;
+        if (conSlider) conSlider.value = 100;
+        if (hueSlider) hueSlider.value = 0;
+        if (texSlider) texSlider.value = 100;
+        if (sizeSlider) sizeSlider.value = 100;
+
+        if (satBadge) satBadge.textContent = '100%';
+        if (briBadge) briBadge.textContent = '100%';
+        if (conBadge) conBadge.textContent = '100%';
+        if (hueBadge) hueBadge.textContent = '0°';
+        if (texBadge) { texBadge.textContent = 'None'; texBadge.classList.add('ts-badge-disabled'); }
+        if (sizeBadge) { sizeBadge.textContent = 'None'; sizeBadge.classList.add('ts-badge-disabled'); }
+
+        if (satSlider) updateSliderTrackFill(satSlider, 0, 200, 100);
+        if (briSlider) updateSliderTrackFill(briSlider, 50, 150, 100);
+        if (conSlider) updateSliderTrackFill(conSlider, 50, 150, 100);
+        if (hueSlider) updateSliderTrackFill(hueSlider, 0, 360, 0);
+        if (texSlider) updateSliderTrackFill(texSlider, 0, 100, 100);
+        if (sizeSlider) updateSliderTrackFill(sizeSlider, 25, 300, 100);
+
+        document.querySelectorAll('.ts-swatch').forEach(s => s.classList.remove('active'));
+    };
+
     window.restoreThemeFromSave = function() {
         const paper = document.getElementById('paper');
         if (!paper) return;
@@ -7199,12 +7239,12 @@
                 if (ts.c1) paper.setAttribute('data-theme-c1', ts.c1);
                 if (ts.c2) paper.setAttribute('data-theme-c2', ts.c2);
                 if (ts.url) paper.setAttribute('data-theme-url', ts.url);
-                if (ts.sat) paper.setAttribute('data-theme-sat', ts.sat);
-                if (ts.bri) paper.setAttribute('data-theme-bri', ts.bri);
-                if (ts.con) paper.setAttribute('data-theme-con', ts.con);
-                if (ts.hue) paper.setAttribute('data-theme-hue', ts.hue);
-                if (ts.tex) paper.setAttribute('data-theme-tex', ts.tex);
-                if (ts.size) paper.setAttribute('data-theme-size', ts.size);
+                if (ts.sat !== undefined) paper.setAttribute('data-theme-sat', ts.sat);
+                if (ts.bri !== undefined) paper.setAttribute('data-theme-bri', ts.bri);
+                if (ts.con !== undefined) paper.setAttribute('data-theme-con', ts.con);
+                if (ts.hue !== undefined) paper.setAttribute('data-theme-hue', ts.hue);
+                if (ts.tex !== undefined) paper.setAttribute('data-theme-tex', ts.tex);
+                if (ts.size !== undefined) paper.setAttribute('data-theme-size', ts.size);
             }
         }
 
@@ -7245,7 +7285,7 @@
             }
         }
 
-        // Heal Scenario 2: Wrapper exists, but inner visuals were stripped during Save/Load
+        // Heal Scenario 2: Wrapper exists, but inner visuals were stripped during Save/Load/Page Switch
         if (theme && !theme.querySelector('.op-theme-bg')) {
             console.log("🛠️ Theme Studio: Restoring background visuals from save state...");
             
@@ -7281,32 +7321,35 @@
                 theme.appendChild(container);
 
                 // Restore UI Sliders
-                const sat = paper.getAttribute('data-theme-sat');
-                const bri = paper.getAttribute('data-theme-bri');
-                const con = paper.getAttribute('data-theme-con');
-                const hue = paper.getAttribute('data-theme-hue');
-                const tex = paper.getAttribute('data-theme-tex');
-                const size = paper.getAttribute('data-theme-size');
+                const sat = paper.getAttribute('data-theme-sat') || '100';
+                const bri = paper.getAttribute('data-theme-bri') || '100';
+                const con = paper.getAttribute('data-theme-con') || '100';
+                const hue = paper.getAttribute('data-theme-hue') || '0';
+                const tex = paper.getAttribute('data-theme-tex') || '100';
+                const size = paper.getAttribute('data-theme-size') || '100';
                 
-                if (sat && document.getElementById('ts-sat-slider')) document.getElementById('ts-sat-slider').value = sat;
-                if (bri && document.getElementById('ts-bri-slider')) document.getElementById('ts-bri-slider').value = bri;
-                if (con && document.getElementById('ts-con-slider')) document.getElementById('ts-con-slider').value = con;
-                if (hue && document.getElementById('ts-hue-slider')) document.getElementById('ts-hue-slider').value = hue;
-                if (tex && document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = tex;
-                if (size && document.getElementById('ts-size-slider')) document.getElementById('ts-size-slider').value = size;
+                if (document.getElementById('ts-sat-slider')) document.getElementById('ts-sat-slider').value = sat;
+                if (document.getElementById('ts-bri-slider')) document.getElementById('ts-bri-slider').value = bri;
+                if (document.getElementById('ts-con-slider')) document.getElementById('ts-con-slider').value = con;
+                if (document.getElementById('ts-hue-slider')) document.getElementById('ts-hue-slider').value = hue;
+                if (document.getElementById('ts-tex-slider')) document.getElementById('ts-tex-slider').value = tex;
+                if (document.getElementById('ts-size-slider')) document.getElementById('ts-size-slider').value = size;
 
                 // Restore UI Swatch highlight
                 const savedId = paper.getAttribute('data-theme-id');
                 highlightActiveSwatch(savedId, c1);
 
+                // Synchronize live filters and badges immediately onto new container
+                updateLiveFilters();
+
             }
         } else if (theme && theme.querySelector('.op-theme-bg')) {
-            const sat = paper.getAttribute('data-theme-sat');
-            const bri = paper.getAttribute('data-theme-bri');
-            const con = paper.getAttribute('data-theme-con');
-            const hue = paper.getAttribute('data-theme-hue');
-            const tex = paper.getAttribute('data-theme-tex');
-            const size = paper.getAttribute('data-theme-size');
+            const sat = paper.getAttribute('data-theme-sat') || '100';
+            const bri = paper.getAttribute('data-theme-bri') || '100';
+            const con = paper.getAttribute('data-theme-con') || '100';
+            const hue = paper.getAttribute('data-theme-hue') || '0';
+            const tex = paper.getAttribute('data-theme-tex') || '100';
+            const size = paper.getAttribute('data-theme-size') || '100';
             const satEl = document.getElementById('ts-sat-slider');
             const briEl = document.getElementById('ts-bri-slider');
             const conEl = document.getElementById('ts-con-slider');
@@ -7314,13 +7357,23 @@
             const texEl = document.getElementById('ts-tex-slider');
             const sizeEl = document.getElementById('ts-size-slider');
             let needsUpdate = false;
-            if (sat && satEl && satEl.value !== sat) { satEl.value = sat; needsUpdate = true; }
-            if (bri && briEl && briEl.value !== bri) { briEl.value = bri; needsUpdate = true; }
-            if (con && conEl && conEl.value !== con) { conEl.value = con; needsUpdate = true; }
-            if (hue && hueEl && hueEl.value !== hue) { hueEl.value = hue; needsUpdate = true; }
-            if (tex && texEl && texEl.value !== tex) { texEl.value = tex; needsUpdate = true; }
-            if (size && sizeEl && sizeEl.value !== size) { sizeEl.value = size; needsUpdate = true; }
+            if (satEl && satEl.value !== sat) { satEl.value = sat; needsUpdate = true; }
+            if (briEl && briEl.value !== bri) { briEl.value = bri; needsUpdate = true; }
+            if (conEl && conEl.value !== con) { conEl.value = con; needsUpdate = true; }
+            if (hueEl && hueEl.value !== hue) { hueEl.value = hue; needsUpdate = true; }
+            if (texEl && texEl.value !== tex) { texEl.value = tex; needsUpdate = true; }
+            if (sizeEl && sizeEl.value !== size) { sizeEl.value = size; needsUpdate = true; }
+
+            const container = theme.querySelector('.op-theme-container');
+            const expectedFilter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+            if (container && (!container.style.filter || container.style.filter !== expectedFilter)) {
+                needsUpdate = true;
+            }
             if (needsUpdate) updateLiveFilters();
+
+            const savedId = paper.getAttribute('data-theme-id');
+            const c1 = paper.getAttribute('data-theme-c1');
+            highlightActiveSwatch(savedId, c1);
         }
 
         // Maintain Stacking Order

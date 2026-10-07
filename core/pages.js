@@ -29,6 +29,15 @@ function renderPage(pageData) {
     paper.style.height = pageData.height;
     if (pageData.ignoreBackground) {
         paper.style.background = '#ffffff';
+        paper.removeAttribute('data-theme-saved');
+        ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'con', 'hue', 'tex', 'size'].forEach(attr => {
+            paper.removeAttribute(`data-theme-${attr}`);
+        });
+        const existingTheme = paper.querySelector('[data-is-theme="true"]');
+        if (existingTheme) existingTheme.remove();
+        if (typeof window.resetThemeStudioUI === 'function') {
+            window.resetThemeStudioUI();
+        }
     } else {
         paper.style.background = pageData.background;
         if (pageData.themeSettings && pageData.themeSettings.saved) {
@@ -40,11 +49,21 @@ function renderPage(pageData) {
             if (ts.c1) paper.setAttribute('data-theme-c1', ts.c1);
             if (ts.c2) paper.setAttribute('data-theme-c2', ts.c2);
             if (ts.url) paper.setAttribute('data-theme-url', ts.url);
-            if (ts.sat) paper.setAttribute('data-theme-sat', ts.sat);
-            if (ts.bri) paper.setAttribute('data-theme-bri', ts.bri);
-            if (ts.tex) paper.setAttribute('data-theme-tex', ts.tex);
-            if (typeof window.restoreThemeFromSave === 'function') {
-                window.restoreThemeFromSave();
+            if (ts.sat !== undefined) paper.setAttribute('data-theme-sat', ts.sat);
+            if (ts.bri !== undefined) paper.setAttribute('data-theme-bri', ts.bri);
+            if (ts.con !== undefined) paper.setAttribute('data-theme-con', ts.con);
+            if (ts.hue !== undefined) paper.setAttribute('data-theme-hue', ts.hue);
+            if (ts.tex !== undefined) paper.setAttribute('data-theme-tex', ts.tex);
+            if (ts.size !== undefined) paper.setAttribute('data-theme-size', ts.size);
+        } else {
+            paper.removeAttribute('data-theme-saved');
+            ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'con', 'hue', 'tex', 'size'].forEach(attr => {
+                paper.removeAttribute(`data-theme-${attr}`);
+            });
+            const existingTheme = paper.querySelector('[data-is-theme="true"]');
+            if (existingTheme) existingTheme.remove();
+            if (typeof window.resetThemeStudioUI === 'function') {
+                window.resetThemeStudioUI();
             }
         }
     }
@@ -256,6 +275,11 @@ function renderPage(pageData) {
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
     if (typeof window.upgradeAllCanvasWordArt === 'function') window.upgradeAllCanvasWordArt(paper);
     if (typeof window.updateIgnoreThemeButtonUI === 'function') window.updateIgnoreThemeButtonUI();
+    if (pageData.themeSettings && pageData.themeSettings.saved && !pageData.ignoreBackground) {
+        if (typeof window.restoreThemeFromSave === 'function') {
+            window.restoreThemeFromSave();
+        }
+    }
     if (typeof window.SpellCheckEngine !== 'undefined') window.SpellCheckEngine.trigger(100);
 }
 
