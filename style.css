@@ -1403,7 +1403,7 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
-/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.5.0) --- */
+/* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.5.1) --- */
 ::highlight(spelling-error) {
     text-decoration: underline wavy #e74c3c !important;
     text-decoration-skip-ink: none !important;
@@ -1721,8 +1721,36 @@ td, th {
     gap: 6px;
     margin-left: auto;
     padding-left: 15px;
-}
 .status-bar { color: white; position: relative; z-index: 100; }
+
+/* Protected Document Status Badge in Status Bar (v5.5.1) */
+#protected-indicator {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    margin-right: 6px;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+#protected-indicator:hover {
+    background: rgba(255, 255, 255, 0.32);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+#protected-indicator:active {
+    transform: scale(0.97);
+}
+#protected-indicator i {
+    font-size: 10px;
+}
 
 /* DPI Status Badge in Bottom Status Bar */
 #dpi-status-display {
@@ -4020,7 +4048,7 @@ svg .shape-path, svg .shape-path * {
             background: var(--ui-theme-dark);
         }
 
-        /* Modern Background Adjustments (v5.5.0) */
+        /* Modern Background Adjustments (v5.5.1) */
         .ts-sliders-container {
             display: flex;
             align-items: center;

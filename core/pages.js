@@ -583,6 +583,8 @@ function handleNewDocument() {
 
             state.pages.push(newPage);
             state.currentPageIndex = 0;
+            state.documentPassword = null;
+            if (typeof window.updateProtectionIndicator === 'function') window.updateProtectionIndicator();
             renderPage(newPage);
             updateSidebar();
             if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();

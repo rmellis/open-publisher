@@ -733,7 +733,7 @@
 window.updateProtectionIndicator = function() {
     const indicator = document.getElementById('protected-indicator');
     if (indicator) {
-        indicator.style.display = state.documentPassword ? 'flex' : 'none';
+        indicator.style.display = state.documentPassword ? 'inline-flex' : 'none';
     }
 };
 
