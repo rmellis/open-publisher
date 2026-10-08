@@ -6961,11 +6961,12 @@
             }
         }
 
-        document.querySelectorAll('.op-theme-container').forEach(container => {
+        // Apply live filter adjustments strictly to active canvas #paper
+        paper.querySelectorAll('.op-theme-container').forEach(container => {
             container.style.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
             container.style.webkitFilter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
         });
-        document.querySelectorAll('.op-theme-tex').forEach(texLayer => {
+        paper.querySelectorAll('.op-theme-tex').forEach(texLayer => {
             texLayer.style.opacity = texStr;
             const baseW = parseFloat(texLayer.getAttribute('data-base-w')) || 100;
             if (sizeVal === 100) {
@@ -6975,6 +6976,20 @@
                 texLayer.style.backgroundSize = `${scaledW}px auto`;
             }
         });
+
+        // Live-update strictly the active page thumbnail (never touching other pages' thumbnails)
+        if (typeof state !== 'undefined' && typeof state.currentPageIndex === 'number') {
+            const activeThumb = document.getElementById('thumb-' + state.currentPageIndex);
+            if (activeThumb) {
+                activeThumb.querySelectorAll('.op-theme-container').forEach(container => {
+                    container.style.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+                    container.style.webkitFilter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+                });
+                activeThumb.querySelectorAll('.op-theme-tex').forEach(texLayer => {
+                    texLayer.style.opacity = texStr;
+                });
+            }
+        }
     };
 
     // Wire up adjustment listeners
@@ -7256,6 +7271,22 @@
         }
 
         let theme = paper.querySelector('[data-is-theme="true"]');
+        if (!theme) {
+            const existingContainer = paper.querySelector('.op-theme-container');
+            if (existingContainer) {
+                theme = existingContainer.closest('.pub-element') || existingContainer;
+                theme.setAttribute('data-is-theme', 'true');
+            }
+        }
+
+        // Deduplicate any redundant theme layers
+        const allThemes = paper.querySelectorAll('[data-is-theme="true"], .op-theme-container');
+        if (allThemes.length > 1) {
+            for (let i = 1; i < allThemes.length; i++) {
+                const el = allThemes[i].closest('.pub-element') || allThemes[i];
+                if (el !== theme && el.parentNode) el.remove();
+            }
+        }
 
         // Heal Scenario 1: Document loaded, theme was enabled, but wrapper was wiped out
         if (!theme) {

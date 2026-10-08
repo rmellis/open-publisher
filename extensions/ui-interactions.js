@@ -545,8 +545,11 @@
                 window.updateThumbnails();
                 return;
             }
+            if (typeof serializeCurrentPage === 'function' && state.pages && state.pages[state.currentPageIndex]) {
+                state.pages[state.currentPageIndex] = serializeCurrentPage();
+            }
             if (typeof generateThumbnail === 'function') generateThumbnail(state.currentPageIndex);
-        }, 300); 
+        }, 200); 
     };
 
     console.log("✅ Anti-Lag successfully applied.");

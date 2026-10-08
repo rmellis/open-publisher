@@ -173,6 +173,13 @@ function renderPage(pageData) {
     }
     elementsToRender = elementsToRender.concat(pageData.elements.map(e => Object.assign({}, e, { _isMaster: false })));
 
+    // Filter out legacy orphaned theme containers or empty ghost boxes
+    elementsToRender = elementsToRender.filter(data => {
+        const isTheme = data.type === 'box' && data.innerHTML && data.innerHTML.includes('op-theme-container');
+        const isGhost = data.type === 'box' && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
+        return !isTheme && !isGhost;
+    });
+
     elementsToRender.forEach(data => {
         const el = document.createElement('div');
         el.className = 'pub-element';
@@ -762,8 +769,57 @@ function renderThumbnailHTML(pageData, pageIndex) {
     const innerWrapper = document.createElement('div');
     innerWrapper.style.cssText = `position: relative; width: ${pW}px; height: ${pH}px; background: ${pageData.background || '#ffffff'}; overflow: hidden; transform-origin: top left; pointer-events: none;`;
 
+    // 1. Natively render Theme Background if present on this page
+    if (pageData.themeSettings && pageData.themeSettings.saved && !pageData.ignoreBackground) {
+        const ts = pageData.themeSettings;
+        const themeContainer = document.createElement('div');
+        themeContainer.className = 'op-theme-container';
+        themeContainer.style.cssText = 'position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;';
+
+        const bgDiv = document.createElement('div');
+        bgDiv.className = 'op-theme-bg';
+        bgDiv.style.cssText = 'position: absolute; inset: 0; width: 100%; height: 100%;';
+
+        if (ts.type === 'gradient' && ts.c1 && ts.c2) {
+            bgDiv.style.background = `linear-gradient(135deg, ${ts.c1}, ${ts.c2})`;
+        } else if (ts.c1) {
+            bgDiv.style.backgroundColor = ts.c1;
+        }
+        themeContainer.appendChild(bgDiv);
+
+        if (ts.type === 'texture' && ts.url) {
+            const texDiv = document.createElement('div');
+            texDiv.className = 'op-theme-tex';
+            texDiv.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; background-repeat: repeat; opacity: ${(parseFloat(ts.tex) || 100) / 100};`;
+            texDiv.style.backgroundImage = `url('${ts.url}')`;
+            themeContainer.appendChild(texDiv);
+        }
+
+        const sat = ts.sat !== undefined ? ts.sat : 100;
+        const bri = ts.bri !== undefined ? ts.bri : 100;
+        const con = ts.con !== undefined ? ts.con : 100;
+        const hue = ts.hue !== undefined ? ts.hue : 0;
+        themeContainer.style.filter = `saturate(${sat}%) brightness(${bri}%) contrast(${con}%) hue-rotate(${hue}deg)`;
+
+        innerWrapper.appendChild(themeContainer);
+    }
+
+    // 2. Render Page Elements (including master page elements if applicable)
+    let elementsToRender = [];
+    if (state.hasMasterPage && pageIndex !== 0 && state.pages && state.pages[0] && !pageData.ignoreMasterPage) {
+        elementsToRender = (state.pages[0].elements || []).map(e => Object.assign({}, e, { _isMaster: true }));
+    }
     if (pageData.elements && pageData.elements.length > 0) {
-        pageData.elements.forEach(data => {
+        elementsToRender = elementsToRender.concat(pageData.elements);
+    }
+
+    if (elementsToRender.length > 0) {
+        elementsToRender.forEach(data => {
+            // Skip orphaned theme containers or empty ghost boxes
+            if (data.type === 'box' && (!data.innerHTML || data.innerHTML.includes('op-theme-container')) && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath) {
+                return;
+            }
+
             const sX = data.scaleX || "1";
             const sY = data.scaleY || "1";
             
@@ -915,8 +971,10 @@ function updateSidebar() {
 }
 
 function updateThumbnails() {
-    // Keep it fast: just serialize the current page and update its thumbnail HTML directly
-    state.pages[state.currentPageIndex] = serializeCurrentPage();
+    // Keep it fast: serialize the current page and update its thumbnail HTML directly
+    if (typeof serializeCurrentPage === 'function' && state.pages && state.pages[state.currentPageIndex]) {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
     generateThumbnail(state.currentPageIndex);
 }
 

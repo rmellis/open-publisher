@@ -13,6 +13,10 @@ function pushHistory() {
 
     state.history.push(snapshot);
     state.historyIndex++;
+
+    if (typeof generateThumbnail === 'function') {
+        generateThumbnail(state.currentPageIndex);
+    }
 }
 
 function undo() {
@@ -89,12 +93,16 @@ function serializeCurrentPage() {
             hue: paper.getAttribute('data-theme-hue') || '0',
             tex: paper.getAttribute('data-theme-tex') || '100',
             size: paper.getAttribute('data-theme-size') || '100'
-        } : null,
+        } : (existingPage.themeSettings || null),
         elements: []
     };
 
     const els = paper.querySelectorAll('.pub-element:not(.master-page-element)');
     els.forEach(el => {
+        // Theme elements are managed strictly via pageData.themeSettings - do not serialize them into elements
+        if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container') || el.classList.contains('op-theme-container')) {
+            return;
+        }
         const data = {
             left: el.style.left,
             top: el.style.top,
@@ -174,7 +182,10 @@ function serializeCurrentPage() {
             }
         }
 
-        p.elements.push(data);
+        const isGhost = data.type === 'box' && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
+        if (!isGhost) {
+            p.elements.push(data);
+        }
     });
     return p;
 }
