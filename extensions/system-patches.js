@@ -120,7 +120,9 @@
         if (state.multiSelected && state.multiSelected.length > 0) els = state.multiSelected;
 
         if (els.length > 0) {
-            window._selectionObserver = new MutationObserver(() => window.renderSelectionOverlays());
+            window._selectionObserver = new MutationObserver(() => {
+                if (state.dragMode !== 'resize' && state.dragMode !== 'rotate') window.renderSelectionOverlays();
+            });
             els.forEach(el => {
                 window._selectionObserver.observe(el, { attributes: true, attributeFilter: ['style', 'class', 'data-scaleX', 'data-scaleY'] });
             });
@@ -207,8 +209,6 @@
             container.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999;';
             paper.appendChild(container);
         }
-        container.innerHTML = '';
-
         let els = [];
         if (state.multiSelected && state.multiSelected.length > 0) {
             els = state.multiSelected;
@@ -216,9 +216,35 @@
             els.push(state.selectedEl);
         }
 
-        els.forEach(el => {
+        if (els.length === 1 && (!state.multiSelected || state.multiSelected.length === 0)) {
+            const el = els[0];
+            const existing = container.firstElementChild;
+            const isTransforming = !!state.dragMode;
+            if (existing && existing.classList.contains('selected-overlay') && existing._boundEl === el && container.children.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+                existing.style.left = el.style.left;
+                existing.style.top = el.style.top;
+                existing.style.width = el.style.width;
+                existing.style.height = el.style.height;
+                existing.style.transform = el.style.transform;
+                if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg')) {
+                    if (typeof window.renderSmartArrowTipControls === 'function') {
+                        window.renderSmartArrowTipControls(existing, el);
+                    }
+                }
+                if (isTransforming || existing._lastRot === el.style.transform) {
+                    return;
+                }
+            }
+        }
+
+        container.innerHTML = '';
+
+        if (els.length === 1) {
+            const el = els[0];
             const overlay = document.createElement('div');
             overlay.className = 'selected-overlay'; 
+            overlay._boundEl = el;
+            overlay._lastRot = el.style.transform; 
             overlay.style.cssText = `
                 position: absolute;
                 left: ${el.style.left}; top: ${el.style.top};
@@ -232,7 +258,7 @@
             box.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: var(--handle-border-width, 1px) dashed var(--selection); pointer-events: none; box-sizing: border-box;';
             overlay.appendChild(box);
 
-            if (els.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+            if (!el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 const basis = window.getElementTransformBasis(el);
                 const rotDeg = Math.round(basis.rotRad * (180 / Math.PI));
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -266,7 +292,97 @@
             }
 
             container.appendChild(overlay);
-        });
+        }
+
+        if (els.length > 1) {
+            let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+            els.forEach(el => {
+                const l = parseFloat(el.style.left) || el.offsetLeft;
+                const t = parseFloat(el.style.top) || el.offsetTop;
+                const w = el.offsetWidth || parseFloat(el.style.width) || 0;
+                const h = el.offsetHeight || parseFloat(el.style.height) || 0;
+
+                let basis = { rotRad: 0 };
+                if (typeof window.getElementTransformBasis === 'function') {
+                    basis = window.getElementTransformBasis(el);
+                }
+                const rotRad = basis.rotRad || 0;
+
+                if (Math.abs(rotRad) > 0.001) {
+                    const cx = l + w / 2;
+                    const cy = t + h / 2;
+                    const cos = Math.cos(rotRad);
+                    const sin = Math.sin(rotRad);
+                    const hw = w / 2;
+                    const hh = h / 2;
+                    const corners = [
+                        { x: -hw, y: -hh },
+                        { x: hw, y: -hh },
+                        { x: hw, y: hh },
+                        { x: -hw, y: hh }
+                    ];
+                    corners.forEach(pt => {
+                        const rx = cx + pt.x * cos - pt.y * sin;
+                        const ry = cy + pt.x * sin + pt.y * cos;
+                        if (rx < minL) minL = rx;
+                        if (rx > maxR) maxR = rx;
+                        if (ry < minT) minT = ry;
+                        if (ry > maxB) maxB = ry;
+                    });
+                } else {
+                    if (l < minL) minL = l;
+                    if (t < minT) minT = t;
+                    if (l + w > maxR) maxR = l + w;
+                    if (t + h > maxB) maxB = t + h;
+                }
+            });
+
+            if (minL !== Infinity && maxR > minL && maxB > minT) {
+                const groupW = maxR - minL;
+                const groupH = maxB - minT;
+                const groupOverlay = document.createElement('div');
+                groupOverlay.id = 'group-selection-overlay';
+                groupOverlay.className = 'selected-overlay group-selection-overlay';
+                groupOverlay.style.cssText = `
+                    position: absolute;
+                    left: ${minL}px; top: ${minT}px;
+                    width: ${groupW}px; height: ${groupH}px;
+                    pointer-events: none;
+                    z-index: 1000000;
+                `;
+
+                const groupBox = document.createElement('div');
+                groupBox.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: var(--handle-border-width, 1.5px) solid var(--selection); pointer-events: none; box-sizing: border-box;';
+                groupOverlay.appendChild(groupBox);
+
+                const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+                dirs.forEach(dir => {
+                    const h = document.createElement('div');
+                    h.className = `resize-handle rh-${dir}`;
+                    h.dataset.dir = dir;
+                    h.dataset.isGroup = 'true';
+                    h.style.pointerEvents = 'auto';
+                    h.style.display = 'block';
+                    h.style.cursor = dir + '-resize';
+                    groupOverlay.appendChild(h);
+                });
+
+                const rStick = document.createElement('div');
+                rStick.className = 'rotate-stick';
+                rStick.style.display = 'block';
+
+                const rHandle = document.createElement('div');
+                rHandle.className = 'rotate-handle';
+                rHandle.dataset.isGroup = 'true';
+                rHandle.style.pointerEvents = 'auto';
+                rHandle.style.display = 'block';
+
+                groupOverlay.appendChild(rStick);
+                groupOverlay.appendChild(rHandle);
+
+                container.appendChild(groupOverlay);
+            }
+        }
     };
 
     /**
@@ -3773,8 +3889,13 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                         cx: cx, cy: cy, screenCx: screenCx, screenCy: screenCy,
                         startAngle: Math.atan2(hr.top + hr.height/2 - screenCy, hr.left + hr.width/2 - screenCx),
                         items: state.multiSelected.map(el => {
-                            const style = window.getComputedStyle(el);
-                            const rot = style.transform !== 'none' ? Math.atan2(style.transform.split('(')[1].split(')')[0].split(',')[1], style.transform.split('(')[1].split(')')[0].split(',')[0]) * (180/Math.PI) : 0;
+                            let rot = 0;
+                            if (typeof window.getElementTransformBasis === 'function') {
+                                rot = Math.round(window.getElementTransformBasis(el).rotRad * (180 / Math.PI));
+                            } else {
+                                const style = window.getComputedStyle(el);
+                                rot = style.transform !== 'none' ? Math.atan2(style.transform.split('(')[1].split(')')[0].split(',')[1], style.transform.split('(')[1].split(')')[0].split(',')[0]) * (180/Math.PI) : 0;
+                            }
                             return { el: el, w: el.offsetWidth, h: el.offsetHeight, dx: ((parseFloat(el.style.left) || el.offsetLeft) + el.offsetWidth/2) - cx, dy: ((parseFloat(el.style.top) || el.offsetTop) + el.offsetHeight/2) - cy, origRot: rot };
                         })
                     };
@@ -3784,61 +3905,119 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 }
             } else {
                 state.dragMode = 'resize';
-                const basis = window.getElementTransformBasis(state.selectedEl);
-                const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
-                const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
-                const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
-                const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
+                if (state.multiSelected && state.multiSelected.length > 1) {
+                    let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+                    state.multiSelected.forEach(el => {
+                        const l = parseFloat(el.style.left) || el.offsetLeft;
+                        const t = parseFloat(el.style.top) || el.offsetTop;
+                        const w = parseFloat(el.style.width) || el.offsetWidth;
+                        const h = parseFloat(el.style.height) || el.offsetHeight;
+                        if(l < minL) minL = l;
+                        if(t < minT) minT = t;
+                        if(l + w > maxR) maxR = l + w;
+                        if(t + h > maxB) maxB = t + h;
+                    });
+                    const groupW = maxR - minL;
+                    const groupH = maxB - minT;
 
-                state.dragData = {
-                    dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
-                    w: curW, 
-                    h: curH,
-                    l: curL, 
-                    t: curT,
-                    cx: curL + curW / 2,
-                    cy: curT + curH / 2,
-                    u: basis.u,
-                    v: basis.v,
-                    rotRad: basis.rotRad,
-                    scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
-                    scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
-                    minW: 10,
-                    minH: 10
-                };
-                
-                const tbl = state.selectedEl.querySelector('table');
-                if (tbl) {
-                    const clone = tbl.cloneNode(true);
-                    clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
-                    clone.style.width = 'max-content'; clone.style.height = 'max-content';
-                    clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
-                    document.body.appendChild(clone);
-                    const minW = clone.offsetWidth; const minH = clone.offsetHeight;
-                    document.body.removeChild(clone);
-                    state.dragData.minW = Math.max(10, minW); 
-                    state.dragData.minH = Math.max(10, minH);
-                }
+                    state.dragData = {
+                        isGroup: true,
+                        dir: e.target.dataset.dir,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        groupL: minL,
+                        groupT: minT,
+                        groupW: groupW,
+                        groupH: groupH,
+                        items: state.multiSelected.map(el => {
+                            const l = parseFloat(el.style.left) || el.offsetLeft;
+                            const t = parseFloat(el.style.top) || el.offsetTop;
+                            const w = parseFloat(el.style.width) || el.offsetWidth;
+                            const h = parseFloat(el.style.height) || el.offsetHeight;
+                            const img = el.querySelector('img');
+                            let imgData = null;
+                            if (img) {
+                                const rawStyleW = (img.style.width || '').trim();
+                                const rawStyleH = (img.style.height || '').trim();
+                                const leftPx = parseFloat(img.style.left) || 0;
+                                const topPx = parseFloat(img.style.top) || 0;
+                                imgData = {
+                                    left: leftPx,
+                                    top: topPx,
+                                    w: parseFloat(rawStyleW) || img.offsetWidth,
+                                    h: parseFloat(rawStyleH) || img.offsetHeight,
+                                    isLegacyPixelCrop: rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%')
+                                };
+                            }
+                            return {
+                                el: el,
+                                l: l,
+                                t: t,
+                                w: w,
+                                h: h,
+                                scaleX: parseFloat(el.getAttribute('data-scaleX')) || 1,
+                                scaleY: parseFloat(el.getAttribute('data-scaleY')) || 1,
+                                imgData: imgData
+                            };
+                        })
+                    };
+                } else {
+                    const basis = window.getElementTransformBasis(state.selectedEl);
+                    const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
+                    const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
+                    const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
+                    const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
 
-                const img = state.selectedEl.querySelector('img');
-                if (img) {
-                    if (window.healUncroppedImage) window.healUncroppedImage(state.selectedEl);
-                    const rawStyleW = (img.style.width || '').trim();
-                    const rawStyleH = (img.style.height || '').trim();
-                    const leftPx = parseFloat(img.style.left) || 0;
-                    const topPx = parseFloat(img.style.top) || 0;
-                    const isZeroOffset = (leftPx === 0 && topPx === 0);
+                    state.dragData = {
+                        dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
+                        w: curW, 
+                        h: curH,
+                        l: curL, 
+                        t: curT,
+                        cx: curL + curW / 2,
+                        cy: curT + curH / 2,
+                        u: basis.u,
+                        v: basis.v,
+                        rotRad: basis.rotRad,
+                        scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
+                        scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                        minW: 10,
+                        minH: 10
+                    };
+                    
+                    const tbl = state.selectedEl.querySelector('table');
+                    if (tbl) {
+                        const clone = tbl.cloneNode(true);
+                        clone.style.position = 'absolute'; clone.style.visibility = 'hidden';
+                        clone.style.width = 'max-content'; clone.style.height = 'max-content';
+                        clone.style.maxWidth = 'none'; clone.style.maxHeight = 'none';
+                        document.body.appendChild(clone);
+                        const minW = clone.offsetWidth; const minH = clone.offsetHeight;
+                        document.body.removeChild(clone);
+                        state.dragData.minW = Math.max(10, minW); 
+                        state.dragData.minH = Math.max(10, minH);
+                    }
 
-                    // Only true legacy pixel-based crops should scale via JavaScript
-                    if (rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%') && (!isZeroOffset || parseFloat(rawStyleW) !== 100)) {
-                        const pW = parseFloat(rawStyleW);
-                        const pH = parseFloat(rawStyleH);
-                        if (pW > 0 && pH > 0) {
-                            state.dragData.imgW = pW;
-                            state.dragData.imgH = pH;
-                            state.dragData.imgL = leftPx;
-                            state.dragData.imgT = topPx;
-                            state.dragData.isLegacyPixelCrop = true;
+                    const img = state.selectedEl.querySelector('img');
+                    if (img) {
+                        if (window.healUncroppedImage) window.healUncroppedImage(state.selectedEl);
+                        const rawStyleW = (img.style.width || '').trim();
+                        const rawStyleH = (img.style.height || '').trim();
+                        const leftPx = parseFloat(img.style.left) || 0;
+                        const topPx = parseFloat(img.style.top) || 0;
+                        const isZeroOffset = (leftPx === 0 && topPx === 0);
+
+                        // Only true legacy pixel-based crops should scale via JavaScript
+                        if (rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%') && (!isZeroOffset || parseFloat(rawStyleW) !== 100)) {
+                            const pW = parseFloat(rawStyleW);
+                            const pH = parseFloat(rawStyleH);
+                            if (pW > 0 && pH > 0) {
+                                state.dragData.imgW = pW;
+                                state.dragData.imgH = pH;
+                                state.dragData.imgL = leftPx;
+                                state.dragData.imgT = topPx;
+                                state.dragData.isLegacyPixelCrop = true;
+                            }
                         }
                     }
                 }
@@ -3871,6 +4050,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     if(document.getElementById('status-msg')) document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
                     if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
                 }
+                if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+                else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
                 return;
             }
 
@@ -4036,9 +4217,15 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     const s = window.applySnapping(item.l + dx, item.t + dy, item.el.offsetWidth, item.el.offsetHeight, item.el, e);
                     item.el.style.left = s.x + 'px'; item.el.style.top = s.y + 'px'; 
                 }); 
+                if (typeof window.renderSelectionOverlays === 'function') {
+                    window.renderSelectionOverlays();
+                }
             } else { 
                 const s = window.applySnapping(state.dragData.l + dx, state.dragData.t + dy, state.selectedEl.offsetWidth, state.selectedEl.offsetHeight, state.selectedEl, e);
                 state.selectedEl.style.left = s.x + 'px'; state.selectedEl.style.top = s.y + 'px'; 
+                if (typeof window.renderSelectionOverlays === 'function') {
+                    window.renderSelectionOverlays();
+                }
             }
             if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
@@ -4061,9 +4248,18 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     item.el.style.top = (d.cy + new_dy - item.h/2) + 'px';
                     item.el.style.transform = `rotate(${item.origRot + deltaDeg}deg)`;
                 });
+
+                const groupOverlay = document.getElementById('group-selection-overlay');
+                if (groupOverlay) {
+                    groupOverlay.style.transformOrigin = 'center center';
+                    groupOverlay.style.transform = `rotate(${deltaDeg}deg)`;
+                }
             } else {
                 const angle = Math.atan2(e.clientY - state.dragData.cy, e.clientX - state.dragData.cx) * (180/Math.PI);
                 state.selectedEl.style.transform = `rotate(${angle + 90}deg)`;
+                if (typeof window.renderSelectionOverlays === 'function') {
+                    window.renderSelectionOverlays();
+                }
             }
         }
         else if(state.dragMode === 'resize') {
@@ -4071,6 +4267,117 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const zoom = state.zoom || 1;
             const dx = (e.clientX - d.startX) / zoom;
             const dy = (e.clientY - d.startY) / zoom;
+
+            if (d.isGroup) {
+                let deltaW = 0;
+                let deltaH = 0;
+                const isCenterResize = !!(e.ctrlKey || e.metaKey);
+
+                if (isCenterResize) {
+                    if (d.dir.includes('e')) deltaW = 2 * dx;
+                    else if (d.dir.includes('w')) deltaW = -2 * dx;
+
+                    if (d.dir.includes('s')) deltaH = 2 * dy;
+                    else if (d.dir.includes('n')) deltaH = -2 * dy;
+                } else {
+                    if (d.dir.includes('e')) deltaW = dx;
+                    else if (d.dir.includes('w')) deltaW = -dx;
+
+                    if (d.dir.includes('s')) deltaH = dy;
+                    else if (d.dir.includes('n')) deltaH = -dy;
+                }
+
+                let newGroupW = d.groupW + deltaW;
+                let newGroupH = d.groupH + deltaH;
+                const minGroupW = 20;
+                const minGroupH = 20;
+
+                const isAspectLocked = e.shiftKey;
+                if (isAspectLocked) {
+                    const safeW = d.groupW || 1;
+                    const safeH = d.groupH || 1;
+                    const scaleFactorX = Math.abs(newGroupW / safeW);
+                    const scaleFactorY = Math.abs(newGroupH / safeH);
+                    let dominantScale = 1;
+                    if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleFactorX;
+                    else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
+                    else dominantScale = Math.max(scaleFactorX, scaleFactorY);
+
+                    newGroupW = Math.max(minGroupW, safeW * dominantScale);
+                    newGroupH = Math.max(minGroupH, safeH * dominantScale);
+                    deltaW = newGroupW - d.groupW;
+                    deltaH = newGroupH - d.groupH;
+                } else {
+                    if (newGroupW < minGroupW) {
+                        newGroupW = minGroupW;
+                        deltaW = newGroupW - d.groupW;
+                    }
+                    if (newGroupH < minGroupH) {
+                        newGroupH = minGroupH;
+                        deltaH = newGroupH - d.groupH;
+                    }
+                }
+
+                let newGroupL = d.groupL;
+                let newGroupT = d.groupT;
+
+                if (isCenterResize) {
+                    newGroupL = (d.groupL + d.groupW / 2) - newGroupW / 2;
+                    newGroupT = (d.groupT + d.groupH / 2) - newGroupH / 2;
+                } else {
+                    if (d.dir.includes('w')) newGroupL = d.groupL + (d.groupW - newGroupW);
+                    if (d.dir.includes('n')) newGroupT = d.groupT + (d.groupH - newGroupH);
+                }
+
+                const factorX = (d.groupW > 0) ? (newGroupW / d.groupW) : 1;
+                const factorY = (d.groupH > 0) ? (newGroupH / d.groupH) : 1;
+
+                d.items.forEach(item => {
+                    const relX = item.l - d.groupL;
+                    const relY = item.t - d.groupT;
+
+                    const itemNewL = newGroupL + relX * factorX;
+                    const itemNewT = newGroupT + relY * factorY;
+                    const itemNewW = Math.max(10, item.w * factorX);
+                    const itemNewH = Math.max(10, item.h * factorY);
+
+                    item.el.style.left = itemNewL + 'px';
+                    item.el.style.top = itemNewT + 'px';
+                    item.el.style.width = itemNewW + 'px';
+                    item.el.style.height = itemNewH + 'px';
+
+                    if (item.imgData && item.imgData.isLegacyPixelCrop) {
+                        const img = item.el.querySelector('img');
+                        if (img) {
+                            const ratioX = itemNewW / item.w;
+                            const ratioY = itemNewH / item.h;
+                            img.style.width = (item.imgData.w * ratioX) + 'px';
+                            img.style.height = (item.imgData.h * ratioY) + 'px';
+                            img.style.left = (item.imgData.left * ratioX) + 'px';
+                            img.style.top = (item.imgData.top * ratioY) + 'px';
+                        }
+                    }
+
+                    if (typeof syncWordArt === 'function' && item.el.querySelector('.wa-text')) syncWordArt(item.el);
+                    if (item.el.querySelector('.beta-wa-img') && typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(item.el);
+                    }
+                    if ((item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                        window.refreshSmartArrow(item.el, itemNewW, itemNewH);
+                    }
+                });
+
+                if (typeof window.renderSelectionOverlays === 'function') {
+                    window.renderSelectionOverlays();
+                }
+
+                if (typeof floatToolbar !== 'undefined' && floatToolbar) { 
+                    floatToolbar.style.display = 'none'; 
+                    const _wa = document.getElementById('wa-float-toolbar'); 
+                    if(_wa) _wa.style.display = 'none'; 
+                }
+                return;
+            }
 
             const u = d.u || { x: 1, y: 0 };
             const v = d.v || { x: 0, y: 1 };
@@ -4219,6 +4526,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                         window.updateArrowTipOverlay(overlay, state.selectedEl);
                     }
                 }
+            }
+            if (typeof window.renderSelectionOverlays === 'function') {
+                window.renderSelectionOverlays();
             }
             if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }

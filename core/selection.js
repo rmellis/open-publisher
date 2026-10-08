@@ -15,6 +15,7 @@ function deselect() {
     document.getElementById('status-msg').innerText = "Ready";
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
+    if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
 
 function deleteSelected() { 
@@ -24,12 +25,14 @@ function deleteSelected() {
         updateThumbnails();
         pushHistory();
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+        if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
     } else if(state.selectedEl) { 
         state.selectedEl.remove(); 
         state.selectedEl=null; 
         updateThumbnails();
         pushHistory();
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+        if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
     } 
 }
 

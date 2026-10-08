@@ -101,15 +101,72 @@ window.handleMouseDown = function(e) {
             }
         } else {
             state.dragMode = 'resize';
-            const basis = (typeof window.getElementTransformBasis === 'function')
-                ? window.getElementTransformBasis(state.selectedEl)
-                : { u: { x: 1, y: 0 }, v: { x: 0, y: 1 }, rotRad: 0 };
-            const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
-            const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
-            const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
-            const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
+            if (state.multiSelected && state.multiSelected.length > 1) {
+                let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+                state.multiSelected.forEach(el => {
+                    const l = parseFloat(el.style.left) || el.offsetLeft;
+                    const t = parseFloat(el.style.top) || el.offsetTop;
+                    const w = parseFloat(el.style.width) || el.offsetWidth;
+                    const h = parseFloat(el.style.height) || el.offsetHeight;
+                    if(l < minL) minL = l;
+                    if(t < minT) minT = t;
+                    if(l + w > maxR) maxR = l + w;
+                    if(t + h > maxB) maxB = t + h;
+                });
+                const groupW = maxR - minL;
+                const groupH = maxB - minT;
 
-            state.dragData = {
+                state.dragData = {
+                    isGroup: true,
+                    dir: e.target.dataset.dir,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    groupL: minL,
+                    groupT: minT,
+                    groupW: groupW,
+                    groupH: groupH,
+                    items: state.multiSelected.map(el => {
+                        const l = parseFloat(el.style.left) || el.offsetLeft;
+                        const t = parseFloat(el.style.top) || el.offsetTop;
+                        const w = parseFloat(el.style.width) || el.offsetWidth;
+                        const h = parseFloat(el.style.height) || el.offsetHeight;
+                        const img = el.querySelector('img');
+                        let imgData = null;
+                        if (img) {
+                            const rawStyleW = (img.style.width || '').trim();
+                            const rawStyleH = (img.style.height || '').trim();
+                            const leftPx = parseFloat(img.style.left) || 0;
+                            const topPx = parseFloat(img.style.top) || 0;
+                            imgData = {
+                                left: leftPx,
+                                top: topPx,
+                                w: parseFloat(rawStyleW) || img.offsetWidth,
+                                h: parseFloat(rawStyleH) || img.offsetHeight,
+                                isLegacyPixelCrop: rawStyleW.endsWith('px') && rawStyleH.endsWith('px') && !rawStyleW.includes('%')
+                            };
+                        }
+                        return {
+                            el: el,
+                            l: l,
+                            t: t,
+                            w: w,
+                            h: h,
+                            scaleX: parseFloat(el.getAttribute('data-scaleX')) || 1,
+                            scaleY: parseFloat(el.getAttribute('data-scaleY')) || 1,
+                            imgData: imgData
+                        };
+                    })
+                };
+            } else {
+                const basis = (typeof window.getElementTransformBasis === 'function')
+                    ? window.getElementTransformBasis(state.selectedEl)
+                    : { u: { x: 1, y: 0 }, v: { x: 0, y: 1 }, rotRad: 0 };
+                const curW = parseFloat(state.selectedEl.style.width) || state.selectedEl.offsetWidth;
+                const curH = parseFloat(state.selectedEl.style.height) || state.selectedEl.offsetHeight;
+                const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
+                const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
+
+                state.dragData = {
                 dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
                 w: curW, h: curH,
                 l: curL, t: curT,
@@ -176,6 +233,7 @@ window.handleMouseDown = function(e) {
                  }
             }
         }
+        }
         e.preventDefault();
         return;
     }
@@ -215,6 +273,8 @@ window.handleMouseDown = function(e) {
                  document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
                  if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
             }
+            if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+            else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
             return;
         }
 
@@ -299,8 +359,10 @@ window.handleMouseMove = function(e) {
             state.dragData.multi.forEach(item => {
                 item.el.style.left = (item.l + dx) + 'px'; item.el.style.top = (item.t + dy) + 'px';
             });
+            if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
         } else {
             state.selectedEl.style.left = (state.dragData.l + dx) + 'px'; state.selectedEl.style.top = (state.dragData.t + dy) + 'px';
+            if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
         }
         if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     } 
@@ -329,9 +391,18 @@ window.handleMouseMove = function(e) {
                 item.el.style.top = (d.cy + new_dy - item.h/2) + 'px';
                 item.el.style.transform = `rotate(${item.origRot + deltaDeg}deg)`;
             });
+
+            const groupOverlay = document.getElementById('group-selection-overlay');
+            if (groupOverlay) {
+                groupOverlay.style.transformOrigin = 'center center';
+                groupOverlay.style.transform = `rotate(${deltaDeg}deg)`;
+            }
             
         } else {
             state.selectedEl.style.transform = `rotate(${(Math.atan2(e.clientY - state.dragData.cy, e.clientX - state.dragData.cx) * (180/Math.PI)) + 90}deg)`;
+            if (typeof window.renderSelectionOverlays === 'function') {
+                window.renderSelectionOverlays();
+            }
         }
     } 
     else if(state.dragMode === 'arrow-tip') {
@@ -382,6 +453,117 @@ window.handleMouseMove = function(e) {
         const d = state.dragData;
         const dx = (e.clientX - d.startX) / zoom;
         const dy = (e.clientY - d.startY) / zoom;
+
+        if (d.isGroup) {
+            let deltaW = 0;
+            let deltaH = 0;
+            const isCenterResize = !!(e.ctrlKey || e.metaKey);
+
+            if (isCenterResize) {
+                if (d.dir.includes('e')) deltaW = 2 * dx;
+                else if (d.dir.includes('w')) deltaW = -2 * dx;
+
+                if (d.dir.includes('s')) deltaH = 2 * dy;
+                else if (d.dir.includes('n')) deltaH = -2 * dy;
+            } else {
+                if (d.dir.includes('e')) deltaW = dx;
+                else if (d.dir.includes('w')) deltaW = -dx;
+
+                if (d.dir.includes('s')) deltaH = dy;
+                else if (d.dir.includes('n')) deltaH = -dy;
+            }
+
+            let newGroupW = d.groupW + deltaW;
+            let newGroupH = d.groupH + deltaH;
+            const minGroupW = 20;
+            const minGroupH = 20;
+
+            const isAspectLocked = e.shiftKey;
+            if (isAspectLocked) {
+                const safeW = d.groupW || 1;
+                const safeH = d.groupH || 1;
+                const scaleFactorX = Math.abs(newGroupW / safeW);
+                const scaleFactorY = Math.abs(newGroupH / safeH);
+                let dominantScale = 1;
+                if (d.dir === 'e' || d.dir === 'w') dominantScale = scaleFactorX;
+                else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
+                else dominantScale = Math.max(scaleFactorX, scaleFactorY);
+
+                newGroupW = Math.max(minGroupW, safeW * dominantScale);
+                newGroupH = Math.max(minGroupH, safeH * dominantScale);
+                deltaW = newGroupW - d.groupW;
+                deltaH = newGroupH - d.groupH;
+            } else {
+                if (newGroupW < minGroupW) {
+                    newGroupW = minGroupW;
+                    deltaW = newGroupW - d.groupW;
+                }
+                if (newGroupH < minGroupH) {
+                    newGroupH = minGroupH;
+                    deltaH = newGroupH - d.groupH;
+                }
+            }
+
+            let newGroupL = d.groupL;
+            let newGroupT = d.groupT;
+
+            if (isCenterResize) {
+                newGroupL = (d.groupL + d.groupW / 2) - newGroupW / 2;
+                newGroupT = (d.groupT + d.groupH / 2) - newGroupH / 2;
+            } else {
+                if (d.dir.includes('w')) newGroupL = d.groupL + (d.groupW - newGroupW);
+                if (d.dir.includes('n')) newGroupT = d.groupT + (d.groupH - newGroupH);
+            }
+
+            const factorX = (d.groupW > 0) ? (newGroupW / d.groupW) : 1;
+            const factorY = (d.groupH > 0) ? (newGroupH / d.groupH) : 1;
+
+            d.items.forEach(item => {
+                const relX = item.l - d.groupL;
+                const relY = item.t - d.groupT;
+
+                const itemNewL = newGroupL + relX * factorX;
+                const itemNewT = newGroupT + relY * factorY;
+                const itemNewW = Math.max(10, item.w * factorX);
+                const itemNewH = Math.max(10, item.h * factorY);
+
+                item.el.style.left = itemNewL + 'px';
+                item.el.style.top = itemNewT + 'px';
+                item.el.style.width = itemNewW + 'px';
+                item.el.style.height = itemNewH + 'px';
+
+                if (item.imgData && item.imgData.isLegacyPixelCrop) {
+                    const img = item.el.querySelector('img');
+                    if (img) {
+                        const ratioX = itemNewW / item.w;
+                        const ratioY = itemNewH / item.h;
+                        img.style.width = (item.imgData.w * ratioX) + 'px';
+                        img.style.height = (item.imgData.h * ratioY) + 'px';
+                        img.style.left = (item.imgData.left * ratioX) + 'px';
+                        img.style.top = (item.imgData.top * ratioY) + 'px';
+                    }
+                }
+
+                if (typeof syncWordArt === 'function' && item.el.querySelector('.wa-text')) syncWordArt(item.el);
+                if (item.el.querySelector('.beta-wa-img') && typeof window.refreshBetaWordArt === 'function') {
+                    window.refreshBetaWordArt(item.el);
+                }
+                if ((item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                    window.refreshSmartArrow(item.el, itemNewW, itemNewH);
+                }
+            });
+
+            if (typeof window.renderSelectionOverlays === 'function') {
+                window.renderSelectionOverlays();
+            }
+
+            if (typeof floatToolbar !== 'undefined' && floatToolbar) { 
+                floatToolbar.style.display = 'none'; 
+                const _wa = document.getElementById('wa-float-toolbar'); 
+                if(_wa) _wa.style.display = 'none'; 
+            }
+            return;
+        }
 
         const u = d.u || { x: 1, y: 0 };
         const v = d.v || { x: 0, y: 1 };
@@ -523,6 +705,9 @@ window.handleMouseMove = function(e) {
                 }
             }
         }
+        if (typeof window.renderSelectionOverlays === 'function') {
+            window.renderSelectionOverlays();
+        }
         if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     }
     if (state.dragMode && typeof window.syncRealtimeThumbnailDrag === 'function') {
@@ -552,6 +737,8 @@ window.handleMouseUp = function() {
                 document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
                 if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
             }
+            if(typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+            else if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
         }
     } else if(state.dragMode) {
         if (state.dragMode === 'arrow-tip') {
@@ -585,10 +772,22 @@ window.handleMouseUp = function() {
                     }
                 });
             }
+            if (state.dragData && state.dragData.items) {
+                state.dragData.items.forEach(item => {
+                    if (item.el && typeof window.refreshBetaWordArt === 'function') {
+                        window.refreshBetaWordArt(item.el);
+                    }
+                    if (item.el && (item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
+                        window.refreshSmartArrow(item.el);
+                    }
+                });
+            }
         }
         setTimeout(() => { if(typeof updateThumbnails === 'function') updateThumbnails(); }, 50);
         if(typeof pushHistory === 'function') pushHistory();
         if(state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0) && typeof showFloatToolbar === 'function') showFloatToolbar();
+        if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
     }
     state.dragMode = null;
+    if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 };

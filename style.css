@@ -3507,7 +3507,7 @@ svg .shape-path, svg .shape-path * {
         }
 
 /* Extracted Block 20 */
-/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.3) === */ 
+/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.4) === */ 
         @media screen { 
             .page-thumb > img {  
                 opacity: 1;  
@@ -3521,7 +3521,7 @@ svg .shape-path, svg .shape-path * {
             } 
         } 
 
-        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.3) === */ 
+        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.4) === */ 
         #ts-overlay-wrapper, .ts-glass-panel { 
             display: none !important; 
             visibility: hidden !important; 
@@ -4828,6 +4828,15 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
 .pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape).selected::after { display: none !important; }
 
 .selected-overlay .resize-handle, .selected-overlay .rotate-handle, .selected-overlay .rotate-stick { display: block !important; pointer-events: auto; }
+
+.group-selection-overlay {
+    z-index: 1000000 !important;
+}
+.group-selection-overlay .resize-handle {
+    border-color: var(--selection, #007670) !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 
 /* Reset default margins for headings and paragraphs inside elements */
 .element-content h1, .element-content h2, .element-content h3, .element-content h4, .element-content h5, .element-content h6, .element-content p { margin-top: 0; margin-bottom: 0; }

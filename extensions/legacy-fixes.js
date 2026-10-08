@@ -766,6 +766,8 @@
                 const ft = document.getElementById('float-toolbar');
                 if (ft) ft.style.display = 'none';
             }
+            if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+            else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
         }
     }, true);
 
@@ -1821,7 +1823,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.6.3: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.6.4: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 

@@ -499,6 +499,8 @@ function selectElement(el) {
     }
     showFloatToolbar();
     if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
+    if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+    else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
 
 function deselect() {
