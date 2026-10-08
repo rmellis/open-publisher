@@ -1212,7 +1212,19 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             // Sync slider values
             document.querySelectorAll('.op-sidebar-slider').forEach(s => {
                 const f = s.dataset.filter;
-                const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
+                let v = el.getAttribute(`data-filter-${f}`);
+                if (v === null || v === undefined) {
+                    if (f === 'transparency') {
+                        const img = el.querySelector('img');
+                        if (img && img.style.opacity !== '' && img.style.opacity !== undefined) {
+                            v = Math.round((1 - parseFloat(img.style.opacity)) * 100);
+                        } else {
+                            v = 0;
+                        }
+                    } else {
+                        v = (['brightness','contrast','saturate'].includes(f)?100:0);
+                    }
+                }
                 s.value = v; 
                 const txt = document.getElementById(`val-${f}`);
                 if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
@@ -1229,6 +1241,19 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         const get = (f, d) => el.getAttribute(`data-filter-${f}`) || d;
         img.style.filter = `brightness(${get('brightness',100)}%) contrast(${get('contrast',100)}%) saturate(${get('saturate',100)}%) hue-rotate(${get('hue-rotate',0)}deg) blur(${get('blur',0)}px) sepia(${get('sepia',0)}%) grayscale(${get('grayscale',0)}%) invert(${get('invert',0)}%)`;
         img.style.opacity = 1 - (get('transparency',0) / 100);
+
+        const curIdx = (typeof state !== 'undefined' && state.currentPageIndex !== undefined) ? state.currentPageIndex : 0;
+        const activeThumb = document.getElementById('thumb-' + curIdx);
+        if (activeThumb && el.id) {
+            const tEl = activeThumb.querySelector(`[data-target-id="${el.id}"]`);
+            if (tEl) {
+                const tImg = tEl.querySelector('img');
+                if (tImg) {
+                    tImg.style.filter = img.style.filter;
+                    tImg.style.opacity = img.style.opacity;
+                }
+            }
+        }
     };
 
     document.querySelectorAll('.op-sidebar-slider').forEach(s => {
@@ -1253,6 +1278,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
+        if(window.pushHistory) pushHistory();
     });
 
     document.getElementById('filter-close-btn').addEventListener('click', () => { 
@@ -1265,23 +1291,29 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         refreshVisibility(state.selectedEl);
     });
 
-    setTimeout(() => {
-        if(window.selectElement) {
+    const hookSelection = () => {
+        if(window.selectElement && !window.selectElement._filterHookedSys) {
             const oldSel = window.selectElement;
             window.selectElement = (el) => {
                 oldSel(el);
-                // 10ms delay prevents selection race conditions/flicker
+                try { refreshVisibility(el); } catch(e){}
                 setTimeout(() => refreshVisibility(el), 10);
             };
+            window.selectElement._filterHookedSys = true;
         }
-        if(window.deselect) {
+        if(window.deselect && !window.deselect._filterHookedSys) {
             const oldDes = window.deselect;
             window.deselect = () => { 
                 oldDes(); 
+                try { refreshVisibility(null); } catch(e){}
                 setTimeout(() => refreshVisibility(null), 10);
             };
+            window.deselect._filterHookedSys = true;
         }
-    }, 1000);
+    };
+    hookSelection();
+    setTimeout(hookSelection, 500);
+    setTimeout(hookSelection, 1000);
 })();
 
 

@@ -133,6 +133,23 @@ function serializeCurrentPage() {
 
         const content = el.querySelector('.element-content');
         
+        // Extract all filter, styling, and configuration attributes from el
+        const filterAttrs = {};
+        for (let aIdx = 0; aIdx < el.attributes.length; aIdx++) {
+            const attr = el.attributes[aIdx];
+            if (attr.name.startsWith('data-filter-') || 
+                attr.name.startsWith('data-waf-') || 
+                attr.name.startsWith('data-shadow-') || 
+                attr.name.startsWith('data-border-') ||
+                attr.name === 'data-aspect-lock' || 
+                attr.name === 'data-aspect-ratio') {
+                filterAttrs[attr.name] = attr.value;
+            }
+        }
+        if (Object.keys(filterAttrs).length > 0) {
+            data.filterAttributes = filterAttrs;
+        }
+
         data.contentCssText = content ? content.style.cssText : '';
         data.rx3d = content ? content.getAttribute('data-3d-rx') : null;
         data.ry3d = content ? content.getAttribute('data-3d-ry') : null;
@@ -152,6 +169,7 @@ function serializeCurrentPage() {
             data.imgSrc = img.src;
             data.altText = img.alt || '';
             const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
+            const imgOpacity = (img.style.opacity !== undefined && img.style.opacity !== '') ? img.style.opacity : '';
             data.imgStyle = {
                 width: img.style.width,
                 height: img.style.height,
@@ -159,15 +177,23 @@ function serializeCurrentPage() {
                 left: img.style.left,
                 position: img.style.position,
                 filter: img.style.filter,
+                opacity: imgOpacity,
                 maxWidth: img.style.maxWidth,
-                maxHeight: img.style.maxHeight
+                maxHeight: img.style.maxHeight,
+                transform: img.style.transform || '',
+                objectFit: img.style.objectFit || ''
             };
+            if (imgOpacity !== '' && !filterAttrs['data-filter-transparency']) {
+                filterAttrs['data-filter-transparency'] = String(Math.round((1 - parseFloat(imgOpacity)) * 100));
+                data.filterAttributes = filterAttrs;
+            }
             if (imgClipPath && imgClipPath !== 'none') {
                 data.imgStyle.clipPath = imgClipPath;
             }
             const imgObjectFit = img.style.objectFit;
             if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
             data.isImage = true;
+            data.innerHTML = content ? content.innerHTML : '';
         } else if (shapeDiv && shapeDiv.style.clipPath) {
             data.clipPath = shapeDiv.style.clipPath;
             data.bg = shapeDiv.style.background;

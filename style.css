@@ -3507,12 +3507,12 @@ svg .shape-path, svg .shape-path * {
         }
 
 /* Extracted Block 20 */
-/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.1) === */ 
+/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.2) === */ 
         @media screen { 
-            .page-thumb img {  
-                opacity: 1 !important;  
-                visibility: visible !important;  
-                pointer-events: none !important;  
+            .page-thumb > img {  
+                opacity: 1;  
+                visibility: visible;  
+                pointer-events: none;  
             } 
             .page-thumb {  
                 background-color: #ffffff;  
@@ -3521,7 +3521,7 @@ svg .shape-path, svg .shape-path * {
             } 
         } 
 
-        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.1) === */ 
+        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.2) === */ 
         #ts-overlay-wrapper, .ts-glass-panel { 
             display: none !important; 
             visibility: hidden !important; 

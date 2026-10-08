@@ -209,6 +209,13 @@ function renderPage(pageData) {
         }
         if (data.arrowStrokeWidth) el.setAttribute('data-arrow-stroke-width', data.arrowStrokeWidth);
         
+        // Restore all filter and configuration attributes onto el
+        if (data.filterAttributes) {
+            for (const [attrName, attrVal] of Object.entries(data.filterAttributes)) {
+                el.setAttribute(attrName, attrVal);
+            }
+        }
+
         // Restore scale attributes
         const sX = data.scaleX || "1";
         const sY = data.scaleY || "1";
@@ -219,7 +226,35 @@ function renderPage(pageData) {
         let inner = '';
         if (data.imgSrc) {
             const s = data.imgStyle || {};
-            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${s.filter||'none'}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            let finalFilter = s.filter || 'none';
+            if ((!finalFilter || finalFilter === 'none') && data.filterAttributes) {
+                const fa = data.filterAttributes;
+                const b = fa['data-filter-brightness'] || 100;
+                const c = fa['data-filter-contrast'] || 100;
+                const sat = fa['data-filter-saturate'] || 100;
+                const h = fa['data-filter-hue-rotate'] || 0;
+                const bl = fa['data-filter-blur'] || 0;
+                const sep = fa['data-filter-sepia'] || 0;
+                const g = fa['data-filter-grayscale'] || 0;
+                const inv = fa['data-filter-invert'] || 0;
+                if (b != 100 || c != 100 || sat != 100 || h != 0 || bl != 0 || sep != 0 || g != 0 || inv != 0) {
+                    finalFilter = `brightness(${b}%) contrast(${c}%) saturate(${sat}%) hue-rotate(${h}deg) blur(${bl}px) sepia(${sep}%) grayscale(${g}%) invert(${inv}%)`;
+                }
+            }
+
+            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${finalFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            
+            // Restore opacity: prioritize s.opacity, fallback to data-filter-transparency
+            if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
+                styleStr += ` opacity:${s.opacity};`;
+            } else if (data.filterAttributes && data.filterAttributes['data-filter-transparency']) {
+                const tVal = parseFloat(data.filterAttributes['data-filter-transparency']) || 0;
+                styleStr += ` opacity:${1 - (tVal / 100)};`;
+            }
+
+            if (s.transform) {
+                styleStr += ` transform:${s.transform};`;
+            }
             if (s.clipPath && s.clipPath !== 'none') {
                 styleStr += ` clip-path:${s.clipPath}; -webkit-clip-path:${s.clipPath};`;
             }
@@ -839,6 +874,14 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 const thumbImg = document.createElement('img');
                 const s = data.imgStyle || {};
                 let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'fill') ? 'fill' : (s.objectFit || 'contain')};`;
+                
+                if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
+                    thumbImgCss += ` opacity: ${s.opacity} !important;`;
+                } else if (data.filterAttributes && data.filterAttributes['data-filter-transparency']) {
+                    const tVal = parseFloat(data.filterAttributes['data-filter-transparency']) || 0;
+                    thumbImgCss += ` opacity: ${1 - (tVal / 100)} !important;`;
+                }
+
                 if (s.clipPath && s.clipPath !== 'none') {
                     thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
                 }

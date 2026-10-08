@@ -154,7 +154,19 @@
             }
             panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
                 const f = s.dataset.filter;
-                const v = el.getAttribute(`data-filter-${f}`) || (['brightness','contrast','saturate'].includes(f)?100:0);
+                let v = el.getAttribute(`data-filter-${f}`);
+                if (v === null || v === undefined) {
+                    if (f === 'transparency') {
+                        const img = el.querySelector('img');
+                        if (img && img.style.opacity !== '' && img.style.opacity !== undefined) {
+                            v = Math.round((1 - parseFloat(img.style.opacity)) * 100);
+                        } else {
+                            v = 0;
+                        }
+                    } else {
+                        v = (['brightness','contrast','saturate'].includes(f)?100:0);
+                    }
+                }
                 s.value = v; 
                 const txt = panel.querySelector(`#val-${f}`);
                 if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
@@ -169,6 +181,19 @@
         const get = (f, d) => el.getAttribute(`data-filter-${f}`) || d;
         img.style.filter = `brightness(${get('brightness',100)}%) contrast(${get('contrast',100)}%) saturate(${get('saturate',100)}%) hue-rotate(${get('hue-rotate',0)}deg) blur(${get('blur',0)}px) sepia(${get('sepia',0)}%) grayscale(${get('grayscale',0)}%) invert(${get('invert',0)}%)`;
         img.style.opacity = 1 - (get('transparency',0) / 100);
+
+        const curIdx = (typeof state !== 'undefined' && state.currentPageIndex !== undefined) ? state.currentPageIndex : 0;
+        const activeThumb = document.getElementById('thumb-' + curIdx);
+        if (activeThumb && el.id) {
+            const tEl = activeThumb.querySelector(`[data-target-id="${el.id}"]`);
+            if (tEl) {
+                const tImg = tEl.querySelector('img');
+                if (tImg) {
+                    tImg.style.filter = img.style.filter;
+                    tImg.style.opacity = img.style.opacity;
+                }
+            }
+        }
     };
 
     panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
@@ -193,22 +218,36 @@
             if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
         });
         apply(state.selectedEl);
+        if(window.pushHistory) pushHistory();
     });
 
     panel.querySelector('#filter-close-btn').addEventListener('click', () => { userCollapsed = true; refreshVisibility(state.selectedEl); });
     
     expander.addEventListener('click', () => { userCollapsed = false; refreshVisibility(state.selectedEl); });
 
-    setTimeout(() => {
-        if(window.selectElement) {
+    const hookSelection = () => {
+        if(window.selectElement && !window.selectElement._filterHookedLegacy) {
             const oldSel = window.selectElement;
-            window.selectElement = (el) => { oldSel(el); setTimeout(() => refreshVisibility(el), 10); };
+            window.selectElement = (el) => {
+                oldSel(el);
+                try { refreshVisibility(el); } catch(e){}
+                setTimeout(() => refreshVisibility(el), 10);
+            };
+            window.selectElement._filterHookedLegacy = true;
         }
-        if(window.deselect) {
+        if(window.deselect && !window.deselect._filterHookedLegacy) {
             const oldDes = window.deselect;
-            window.deselect = () => { oldDes(); setTimeout(() => refreshVisibility(null), 10); };
+            window.deselect = () => {
+                oldDes();
+                try { refreshVisibility(null); } catch(e){}
+                setTimeout(() => refreshVisibility(null), 10);
+            };
+            window.deselect._filterHookedLegacy = true;
         }
-    }, 1000);
+    };
+    hookSelection();
+    setTimeout(hookSelection, 500);
+    setTimeout(hookSelection, 1000);
 })();
 
 
@@ -1782,7 +1821,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.6.1: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.6.2: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 
