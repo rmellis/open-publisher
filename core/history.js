@@ -103,7 +103,11 @@ function serializeCurrentPage() {
         if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container') || el.classList.contains('op-theme-container')) {
             return;
         }
+        if (!el.id) {
+            el.id = 'pub-el-' + Math.random().toString(36).substr(2, 9);
+        }
         const data = {
+            id: el.id,
             left: el.style.left,
             top: el.style.top,
             width: el.style.width,

@@ -255,6 +255,7 @@ window.handleMouseDown = function(e) {
 
 
 window.handleMouseMove = function(e) {
+    console.log('[DEBUG handleMouseMove entry] dragMode:', state.dragMode);
     const cd = document.getElementById('coord-display');
     if(cd) cd.innerText = `X: ${e.clientX} | Y: ${e.clientY}`;
 
@@ -523,6 +524,9 @@ window.handleMouseMove = function(e) {
             }
         }
         if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+    }
+    if (state.dragMode && typeof window.syncRealtimeThumbnailDrag === 'function') {
+        window.syncRealtimeThumbnailDrag();
     }
 };
 

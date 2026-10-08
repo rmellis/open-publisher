@@ -183,6 +183,8 @@ function renderPage(pageData) {
     elementsToRender.forEach(data => {
         const el = document.createElement('div');
         el.className = 'pub-element';
+        if (data.id) el.id = data.id;
+        else el.id = 'pub-el-' + Math.random().toString(36).substr(2, 9);
         if (data._isMaster) {
             el.classList.add('master-page-element');
             el.style.pointerEvents = 'none';
@@ -824,31 +826,26 @@ function renderThumbnailHTML(pageData, pageIndex) {
             const sY = data.scaleY || "1";
             
             const elBox = document.createElement('div');
+            elBox.className = 'pub-thumb-element';
+            if (data.id) elBox.setAttribute('data-target-id', data.id);
             elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
             
             const scaleBox = document.createElement('div');
+            scaleBox.className = 'pub-thumb-scalebox';
             scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
             if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
 
-            if (data.imgSrc && data.imgSrc !== '') {
-                const imgDiv = document.createElement('div');
+            if (data.type !== 'beta-wordart' && data.imgSrc && data.imgSrc !== '') {
+                const thumbImg = document.createElement('img');
                 const s = data.imgStyle || {};
-                
-                // Use a div with background-image instead of an img tag to bypass any weird img rendering bugs
-                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
+                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'fill') ? 'fill' : (s.objectFit || 'contain')};`;
                 if (s.clipPath && s.clipPath !== 'none') {
                     thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
                 }
-                imgDiv.style.cssText = thumbImgCss;
-                
-                // Add the image overlay
-                let objFit = s.objectFit || '100% 100%';
-                if (objFit === 'fill') objFit = '100% 100%';
-                if (objFit === 'contain') objFit = 'contain';
-                
-                imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
-                
-                scaleBox.appendChild(imgDiv);
+                thumbImg.style.cssText = thumbImgCss;
+                thumbImg.src = data.imgSrc;
+                if (data.altText) thumbImg.alt = data.altText;
+                scaleBox.appendChild(thumbImg);
 
             } else if (data.clipPath) {
                 const clipDiv = document.createElement('div');

@@ -373,6 +373,7 @@ function handleMouseMove(e) {
         }
 
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+        if(typeof window.syncRealtimeThumbnailDrag === 'function') window.syncRealtimeThumbnailDrag();
     }
 }
 

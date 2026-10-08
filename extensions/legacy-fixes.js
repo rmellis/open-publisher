@@ -1781,10 +1781,94 @@
 })();
 
 
-;(function decommissionGlassVaultMinimap() { 
-    console.log("⚡ v5.6.0: Glass Vault Minimap decommissioned in favor of native DOM thumbnail rendering engine.");
+;(function installRealtimeThumbnailDragEngine() { 
+    console.log("⚡ v5.6.1: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
+
+    let isTracking = false;
+    let rafId = null;
+
+    window.syncRealtimeThumbnailDrag = function() {
+        const curIdx = (typeof state !== 'undefined' && state.currentPageIndex !== undefined) ? state.currentPageIndex : 0;
+        const activeThumb = document.getElementById('thumb-' + curIdx);
+        if (!activeThumb) return;
+
+        let elements = [];
+        if (state.multiSelected && state.multiSelected.length > 0) {
+            elements = state.multiSelected;
+        } else if (state.selectedEl) {
+            elements = [state.selectedEl];
+        }
+        if (elements.length === 0) return;
+
+        const paper = document.getElementById('paper');
+        if (!paper) return;
+
+        for (let i = 0; i < elements.length; i++) {
+            const cEl = elements[i];
+            if (!cEl || !cEl.closest || !cEl.closest('#paper')) continue;
+
+            if (!cEl.id) {
+                cEl.id = 'pub-el-' + Math.random().toString(36).substr(2, 9);
+            }
+
+            let tEl = activeThumb.querySelector(`[data-target-id="${cEl.id}"]`);
+            if (!tEl) {
+                const allPaperEls = Array.from(paper.querySelectorAll('.pub-element:not(.master-page-element)'));
+                const idx = allPaperEls.indexOf(cEl);
+                if (idx !== -1) {
+                    const allThumbEls = activeThumb.querySelectorAll('.pub-thumb-element');
+                    tEl = allThumbEls[idx];
+                    if (tEl) tEl.setAttribute('data-target-id', cEl.id);
+                }
+            }
+
+            if (tEl) {
+                tEl.style.left = cEl.style.left;
+                tEl.style.top = cEl.style.top;
+                tEl.style.width = cEl.style.width;
+                tEl.style.height = cEl.style.height;
+                tEl.style.transform = cEl.style.transform || 'none';
+                tEl.style.zIndex = cEl.style.zIndex || '10';
+
+                const content = cEl.querySelector('.element-content');
+                const thumbScaleBox = tEl.querySelector('.pub-thumb-scalebox') || tEl.firstElementChild;
+                if (content && thumbScaleBox && content.style.transform) {
+                    thumbScaleBox.style.transform = content.style.transform;
+                }
+            }
+        }
+    };
+
+    const loop = () => {
+        if (!isTracking) return;
+        window.syncRealtimeThumbnailDrag();
+        rafId = requestAnimationFrame(loop);
+    };
+
+    window.addEventListener('mousedown', (e) => {
+        const el = e.target.closest ? e.target.closest('.pub-element, .resize-handle, .rotate-handle') : null;
+        if (el) {
+            isTracking = true;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(loop);
+        }
+    }, true);
+
+    window.addEventListener('mousemove', () => {
+        if (isTracking || (typeof state !== 'undefined' && state.dragMode)) {
+            window.syncRealtimeThumbnailDrag();
+        }
+    }, true);
+
+    window.addEventListener('mouseup', () => {
+        if (isTracking || (typeof state !== 'undefined' && state.dragMode)) {
+            isTracking = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            window.syncRealtimeThumbnailDrag();
+        }
+    }, true);
 })();
 
 

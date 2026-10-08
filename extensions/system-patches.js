@@ -4190,6 +4190,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
             if(typeof floatToolbar !== 'undefined' && floatToolbar) { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
         }
+        if (state.dragMode && typeof window.syncRealtimeThumbnailDrag === 'function') {
+            window.syncRealtimeThumbnailDrag();
+        }
     };
 
     console.log("✅ Definitive Crop Anchor Fix installed.");
