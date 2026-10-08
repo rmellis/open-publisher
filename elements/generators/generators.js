@@ -11,6 +11,12 @@ function saveBusinessInfo(data) {
     localStorage.setItem('op_business_info', JSON.stringify(data));
 }
 
+function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+}
+
 function showBusinessInfoModal() {
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     const info = getBusinessInfo();
@@ -19,31 +25,31 @@ function showBusinessInfoModal() {
             <p style="margin-bottom: 15px; font-size: 13px;">Save your business details here to easily insert them into any document.</p>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Individual Name</label>
-                <input type="text" id="bi-name" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.name || ''}" placeholder="e.g. John Smith">
+                <input type="text" id="bi-name" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${escapeHtml(info.name)}" placeholder="e.g. John Smith">
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Job Title</label>
-                <input type="text" id="bi-title" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.title || ''}" placeholder="e.g. Manager">
+                <input type="text" id="bi-title" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${escapeHtml(info.title)}" placeholder="e.g. Manager">
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Organization Name</label>
-                <input type="text" id="bi-organization" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.organization || ''}" placeholder="e.g. Acme Corp">
+                <input type="text" id="bi-organization" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${escapeHtml(info.organization)}" placeholder="e.g. Acme Corp">
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Address</label>
-                <textarea id="bi-address" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="123 Main St.">${info.address || ''}</textarea>
+                <textarea id="bi-address" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="123 Main St.">${escapeHtml(info.address)}</textarea>
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Contact Details (Phone/Fax/E-mail)</label>
-                <textarea id="bi-contact" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="Phone: 555-1234">${info.contact || ''}</textarea>
+                <textarea id="bi-contact" style="width: 100%; height: 50px; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; font-family: inherit; resize: vertical;" placeholder="Phone: 555-1234">${escapeHtml(info.contact)}</textarea>
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Tagline or Motto</label>
-                <input type="text" id="bi-tagline" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.tagline || ''}" placeholder="e.g. Quality First">
+                <input type="text" id="bi-tagline" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${escapeHtml(info.tagline)}" placeholder="e.g. Quality First">
             </div>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Logo (Base64 string or URL)</label>
-                <input type="text" id="bi-logo" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${info.logo || ''}" placeholder="Paste image URL here">
+                <input type="text" id="bi-logo" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc;" value="${escapeHtml(info.logo)}" placeholder="Paste image URL here">
                 <input type="file" id="bi-logo-file" accept="image/*" style="display:none;" onchange="
                     const file = this.files[0];
                     if(file) {
