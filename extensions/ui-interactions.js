@@ -777,12 +777,51 @@
                 }
                 .about-footer-link:hover { color: #0f172a; text-decoration: none; }
                 .about-footer-link i { font-size: 16px; }
+
+                /* Project Contributors Section */
+                .about-contributors-section { text-align: left; margin-top: 8px; margin-bottom: 4px; }
+                .about-contributors-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; padding: 0 2px; }
+                .about-contributors-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+                .about-contributors-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 4px;
+                    max-height: 110px;
+                    overflow-y: auto;
+                    padding: 2px;
+                    box-sizing: border-box;
+                }
+                .about-contributors-grid::-webkit-scrollbar { width: 4px; }
+                .about-contributors-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                .contributor-badge {
+                    display: flex; align-items: center; gap: 6px; padding: 3px 8px; height: 26px; box-sizing: border-box;
+                    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px;
+                    text-decoration: none; color: inherit; transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; min-width: 0;
+                    position: relative;
+                }
+                .contributor-badge:hover {
+                    background: #f1f5f9; border-color: #94a3b8; text-decoration: none;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.06); z-index: 2;
+                }
+                .contributor-avatar { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; color: #334155; }
+                .contributor-meta { display: flex; align-items: baseline; gap: 4px; min-width: 0; overflow: hidden; white-space: nowrap; }
+                .contributor-name { font-size: 11px; font-weight: 600; color: #0f172a; flex-shrink: 0; }
+                .contributor-sep { font-size: 8px; color: #94a3b8; flex-shrink: 0; }
+                .contributor-role { font-size: 10px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+                body.dark-mode .contributor-badge { background: var(--ui-bg, #1e293b) !important; border-color: var(--ui-border, #334155) !important; }
+                body.dark-mode .contributor-badge:hover { background: color-mix(in srgb, var(--ui-bg, #1e293b) 80%, white) !important; border-color: color-mix(in srgb, var(--ui-border, #334155) 70%, white) !important; }
+                body.dark-mode .contributor-name { color: var(--ui-text, #f1f5f9) !important; }
+                body.dark-mode .contributor-role { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 70%, transparent) !important; }
+                body.dark-mode .contributor-avatar { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 80%, transparent) !important; }
+                body.dark-mode .contributor-sep { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 40%, transparent) !important; }
+                body.dark-mode .about-contributors-label { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 70%, transparent) !important; }
             </style>
 
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.6.5</div>
                 </div>
                 
                 <div class="about-desc">
@@ -802,6 +841,65 @@
                         <div class="ywa-desc">
                             Find Open Publisher and explore a network of fast, secure, and zero-install web applications at <a href="https://ywa.app" target="_blank" class="ywa-link">ywa.app</a>.
                         </div>
+                    </div>
+                </div>
+
+                <div class="about-contributors-section">
+                    <div class="about-contributors-header">
+                        <span class="about-contributors-label"><i class="fas fa-users" style="margin-right: 4px;"></i> Project Contributors</span>
+                    </div>
+                    <div class="about-contributors-grid">
+                        <a href="https://github.com/rmellis" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@rmellis - Main Developer">
+                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-meta">
+                                <span class="contributor-name">@rmellis</span>
+                                <span class="contributor-sep">•</span>
+                                <span class="contributor-role">Main Developer</span>
+                            </div>
+                        </a>
+                        <a href="https://github.com/Tallulah95" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@tallulah95 - Main Designer & Tester">
+                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-meta">
+                                <span class="contributor-name">@tallulah95</span>
+                                <span class="contributor-sep">•</span>
+                                <span class="contributor-role">Main Designer &amp; Tester</span>
+                            </div>
+                        </a>
+                        <a href="https://github.com/anupamme" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@anupamme - Security Fix">
+                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-meta">
+                                <span class="contributor-name">@anupamme</span>
+                                <span class="contributor-sep">•</span>
+                                <span class="contributor-role">Security Fix</span>
+                            </div>
+                        </a>
+                        <a href="https://github.com/lucastucious" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@lucastucious - DPI Feature Suggestion">
+                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-meta">
+                                <span class="contributor-name">@lucastucious</span>
+                                <span class="contributor-sep">•</span>
+                                <span class="contributor-role">DPI Feature Suggestion</span>
+                            </div>
+                        </a>
+                        <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="Gemini - Complex Problem Solver">
+                            <div class="contributor-avatar">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="url(#gemini-sparkle-grad)" style="flex-shrink:0;">
+                                    <defs>
+                                        <linearGradient id="gemini-sparkle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#4285F4"/>
+                                            <stop offset="50%" stop-color="#9B72CB"/>
+                                            <stop offset="100%" stop-color="#D96570"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M12 0C12 6.627 6.627 12 0 12c6.627 0 12 5.373 12 12 0-6.627 5.373-12 12-12-6.627 0-12-5.373-12-12z"/>
+                                </svg>
+                            </div>
+                            <div class="contributor-meta">
+                                <span class="contributor-name">Gemini</span>
+                                <span class="contributor-sep">•</span>
+                                <span class="contributor-role">Complex Problem Solver</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -843,7 +941,7 @@
 
             if (donateBtn && centerLinks && actionRow && dialogBox) {
                 // Lock the width so the text wraps beautifully and buttons fit
-                dialogBox.style.setProperty('width', '520px', 'important');
+                dialogBox.style.setProperty('width', '540px', 'important');
                 dialogBox.style.setProperty('max-width', '95vw', 'important');
 
                 // Adjust footer to perfectly split 3 elements: Left, Center Block, Right

@@ -1823,7 +1823,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.6.4: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.6.5: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 
