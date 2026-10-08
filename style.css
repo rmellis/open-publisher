@@ -3507,7 +3507,7 @@ svg .shape-path, svg .shape-path * {
         }
 
 /* Extracted Block 20 */
-/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.2) === */ 
+/* === NATIVE SCALED THUMBNAIL VIEW (v5.6.3) === */ 
         @media screen { 
             .page-thumb > img {  
                 opacity: 1;  
@@ -3521,7 +3521,7 @@ svg .shape-path, svg .shape-path * {
             } 
         } 
 
-        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.2) === */ 
+        /* === DECOMMISSIONED GLASS VAULT MINIMAP (v5.6.3) === */ 
         #ts-overlay-wrapper, .ts-glass-panel { 
             display: none !important; 
             visibility: hidden !important; 

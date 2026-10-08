@@ -538,3 +538,291 @@ body.dashboard-open #float-toolbar,
 body.dashboard-open #wa-float-toolbar {
     display: none !important;
 }
+
+.dashboard-skip-short {
+    display: none;
+}
+
+.dashboard-skip-full {
+    display: inline;
+}
+
+/* ==========================================
+   MOBILE & NARROW VIEWPORT RESPONSIVE STYLES (v5.6.3)
+   ========================================== */
+@media screen and (max-width: 768px) {
+    /* 1. Fullscreen Overlay with Safe Areas */
+    #dashboard-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding-top: env(safe-area-inset-top, 0);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* 2. Responsive Header */
+    .dashboard-header {
+        height: auto !important;
+        min-height: auto !important;
+        padding: 10px 14px 12px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        row-gap: 8px !important;
+        column-gap: 8px !important;
+    }
+
+    .dashboard-logo {
+        order: 1;
+        font-size: 1.1rem;
+        gap: 8px;
+    }
+
+    .dashboard-logo i {
+        font-size: 1.25rem;
+    }
+
+    .dashboard-header-actions,
+    .dashboard-header > div:last-child {
+        order: 2;
+        gap: 8px !important;
+    }
+
+    .dashboard-skip-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 16px;
+        gap: 6px;
+    }
+
+    .dashboard-skip-full {
+        display: none !important;
+    }
+
+    .dashboard-skip-short {
+        display: inline !important;
+    }
+
+    .dashboard-header .custom-dialog-close {
+        width: 32px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 0.85rem !important;
+    }
+
+    .dashboard-search {
+        order: 3;
+        width: 100% !important;
+        margin-top: 2px;
+    }
+
+    .dashboard-search input {
+        height: 38px;
+        font-size: 0.9rem;
+        padding: 8px 12px 8px 34px;
+        border-radius: 19px;
+    }
+
+    .dashboard-search i {
+        font-size: 0.9rem;
+        left: 12px;
+    }
+
+    /* 3. Horizontal Scrollable Navigation Bar */
+    .dashboard-body {
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    .dashboard-nav {
+        width: 100% !important;
+        max-height: 52px !important;
+        min-height: 46px !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        padding: 6px 10px !important;
+        gap: 6px !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .dashboard-nav::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    #dashboard-nav-categories {
+        display: flex !important;
+        gap: 6px !important;
+        align-items: center !important;
+    }
+
+    .dashboard-nav-item {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        font-size: 0.82rem !important;
+        border-radius: 20px !important;
+        flex-shrink: 0 !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        user-select: none !important;
+    }
+
+    .dashboard-nav-item i {
+        font-size: 0.85rem !important;
+        width: auto !important;
+    }
+
+    .dashboard-nav-item.active {
+        background-color: var(--ui-theme-color) !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    body.dark-mode .dashboard-nav-item {
+        background-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    body.dark-mode .dashboard-nav-item.active {
+        background-color: var(--ui-theme-color) !important;
+    }
+
+    .dashboard-nav-divider {
+        width: 1px !important;
+        height: 20px !important;
+        margin: 0 4px !important;
+        flex-shrink: 0 !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .dashboard-nav-label,
+    .dashboard-nav-item.disabled {
+        display: none !important;
+    }
+
+    /* 4. Mobile Content Area & Responsive Typography */
+    .dashboard-content {
+        padding: 16px 12px 32px !important;
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .dashboard-tab-pane {
+        gap: 22px !important;
+    }
+
+    .dashboard-section-title {
+        font-size: 1.15rem !important;
+        margin-bottom: 10px !important;
+    }
+
+    .dashboard-section-title a {
+        font-size: 0.85rem !important;
+    }
+
+    /* 5. Mobile Blank Documents Carousel */
+    .dashboard-blank-grid {
+        gap: 12px !important;
+        padding: 4px 2px 10px !important;
+        margin: -4px -2px -6px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .dashboard-blank-grid::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .blank-card {
+        flex-shrink: 0 !important;
+    }
+
+    .blank-card-title {
+        font-size: 0.85rem !important;
+    }
+
+    .blank-card-desc {
+        font-size: 0.72rem !important;
+    }
+
+    /* 6. Mobile Template Carousel (Featured & Categories) */
+    .dashboard-template-grid {
+        gap: 12px !important;
+        padding: 4px 2px 12px !important;
+        margin: -4px -2px -6px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .dashboard-template-grid::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .dashboard-template-card {
+        width: 155px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .dashboard-template-title {
+        font-size: 0.85rem !important;
+        margin-top: 4px !important;
+    }
+
+    /* 7. Hide Carousel Desktop Arrow Buttons on Touch Devices */
+    .dashboard-scroll-btn {
+        display: none !important;
+    }
+
+    /* 8. 2-Column Responsive Grid for Category View & Search Results */
+    .dashboard-expanded-grid,
+    .dashboard-recent-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .dashboard-expanded-grid .dashboard-template-card,
+    .dashboard-recent-grid .dashboard-template-card {
+        width: 100% !important;
+    }
+
+    /* 9. Mobile File Dropzone in Open Tab */
+    .dashboard-dropzone {
+        height: 170px !important;
+        max-width: 100% !important;
+        padding: 16px !important;
+    }
+
+    .dashboard-dropzone i {
+        font-size: 2.8rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    .dashboard-dropzone p {
+        font-size: 1.05rem !important;
+    }
+
+    .dashboard-dropzone span {
+        font-size: 0.8rem !important;
+    }
+}

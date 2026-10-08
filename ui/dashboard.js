@@ -51,6 +51,7 @@ window.DashboardSystem = {
             dashboardHeader.style.cursor = 'grab';
             
             dashboardHeader.addEventListener('mousedown', (e) => {
+                if (window.innerWidth <= 768) return;
                 if (e.target.closest('button, input, .dashboard-search')) return;
                 isDraggingDashboard = true;
                 dashboardHeader.style.cursor = 'grabbing';
@@ -105,6 +106,11 @@ window.DashboardSystem = {
 
         const overlay = document.getElementById('dashboard-overlay');
         overlay.style.display = 'flex';
+        if (window.innerWidth <= 768) {
+            overlay.style.left = '0px';
+            overlay.style.top = '0px';
+            overlay.style.margin = '0px';
+        }
         // Small delay to allow display:flex to apply before setting opacity for transition
         setTimeout(() => {
             overlay.style.opacity = '1';
@@ -151,7 +157,7 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=5.6.2')
+        fetch('elements/templates/template-index.json?v=5.6.3')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -168,7 +174,7 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=5.6.2`)
+        fetch(`elements/templates/files/${t.file}?v=5.6.3`)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];
@@ -179,7 +185,11 @@ window.DashboardSystem = {
                 
                 const w = parseInt(page.width) || 794;
                 const h = parseInt(page.height) || 1123;
-                const scale = 200 / w; // scale for dashboard card (200px width)
+                const isMobile = window.innerWidth <= 768;
+                const baseCardW = isMobile 
+                    ? (isExpanded ? Math.max(130, Math.floor((Math.min(window.innerWidth, 500) - 36) / 2)) : 155)
+                    : 200;
+                const scale = baseCardW / w;
                 
                 let sizeLabel = '';
                 if (typeof window.getPageSizeLabel === 'function') {
