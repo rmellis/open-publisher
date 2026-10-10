@@ -22,11 +22,12 @@ window.onload = function() {
     // Set Default Zoom to 60%
     setZoom(0.6);
     
-    // Show Dashboard on startup
-    if (window.DashboardSystem) {
+    // Create initial page
+    addNewPage();
+    
+    // Show Dashboard on startup if enabled
+    if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
         DashboardSystem.show();
-    } else {
-        addNewPage();
     }
     
     // Events
@@ -97,13 +98,37 @@ document.addEventListener('selectionchange', () => {
                 try { localStorage.setItem('opub_spellcheck', 'true'); } catch(e) {}
             }
             document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-            const userLang = navigator.language || 'en';
+            // Load saved proofing language
+            const savedProofLang = localStorage.getItem('opub_proofing_lang');
+            const proofLang = savedProofLang || (navigator.language || 'en');
             document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
                 if (!el.classList.contains('wa-text')) {
                     el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-                    if (state.spellCheck) el.setAttribute('lang', userLang);
+                    if (state.spellCheck) el.setAttribute('lang', proofLang);
                 }
             });
+
+            // Load saved ruler unit preference
+            const savedRulerUnit = localStorage.getItem('opub_ruler_unit');
+            if (savedRulerUnit && typeof setRulerUnit === 'function') {
+                setRulerUnit(savedRulerUnit);
+            } else if (savedRulerUnit && typeof state !== 'undefined') {
+                state.rulerUnit = savedRulerUnit;
+                state._userExplicitRulerUnit = true;
+            }
+
+            // Apply customized ribbon tab visibility and custom layout order
+            if (typeof window.applyRibbonTabVisibility === 'function') {
+                window.applyRibbonTabVisibility();
+            }
+            if (typeof window.applyRibbonCustomOrder === 'function') {
+                window.applyRibbonCustomOrder();
+            }
+
+            // Start AutoRecover background loop
+            if (typeof window.scheduleAutoRecover === 'function') {
+                window.scheduleAutoRecover();
+            }
         }
         if(window.ContextRibbonSystem) window.ContextRibbonSystem.init();
 

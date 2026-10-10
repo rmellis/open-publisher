@@ -52,7 +52,7 @@ window.DashboardSystem = {
             
             dashboardHeader.addEventListener('mousedown', (e) => {
                 if (window.innerWidth <= 768) return;
-                if (e.target.closest('button, input, .dashboard-search')) return;
+                if (e.target.closest('button, input, .dashboard-search, .custom-dialog-close, .dashboard-skip-btn')) return;
                 isDraggingDashboard = true;
                 dashboardHeader.style.cursor = 'grabbing';
                 dragStartX = e.clientX;
@@ -129,10 +129,19 @@ window.DashboardSystem = {
     },
     
     close: function() {
-        if (typeof state !== 'undefined' && (!state.pages || state.pages.length === 0)) {
+        this.hide();
+        if (typeof state === 'undefined' || !state.pages || state.pages.length === 0) {
             this.startBlank('A4');
         } else {
-            this.hide();
+            if (typeof renderPage === 'function' && state.pages[state.currentPageIndex || 0]) {
+                renderPage(state.pages[state.currentPageIndex || 0]);
+            }
+            if (typeof updateSidebar === 'function') {
+                updateSidebar();
+            }
+            if (typeof updateThumbnails === 'function') {
+                updateThumbnails();
+            }
         }
     },
     
@@ -157,7 +166,7 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=5.6.6')
+        fetch('elements/templates/template-index.json?v=5.6.7')
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -174,7 +183,7 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=5.6.6`)
+        fetch(`elements/templates/files/${t.file}?v=5.6.7`)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];

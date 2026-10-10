@@ -55,6 +55,16 @@
     loadPreferences();
 
     /**
+     * Checks if grammar error marking is globally enabled.
+     */
+    function isGrammarEnabled() {
+        if (typeof state !== 'undefined' && state.grammarCheck !== undefined) {
+            return !!state.grammarCheck;
+        }
+        return localStorage.getItem('opub_grammarcheck') !== 'false';
+    }
+
+    /**
      * Checks if a word token is eligible for spell checking.
      */
     function isCheckableWord(rawWord) {
@@ -62,8 +72,13 @@
         const clean = rawWord.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
         if (!clean) return false;
         if (clean.length === 1 && clean !== 'a' && clean !== 'i') return false; // Single letters ignored except a/i
-        if (/[0-9_]/.test(rawWord)) return false; // Numbers/symbols ignored
-        if (rawWord === rawWord.toUpperCase() && rawWord.length >= 2 && rawWord.length <= 5) return false; // Acronyms (PDF, PNG, SVG)
+        
+        const ignoreNumbers = localStorage.getItem('opub_ignore_numbers') !== 'false';
+        if (ignoreNumbers && /[0-9_]/.test(rawWord)) return false; // Numbers/symbols ignored
+        
+        const ignoreUppercase = localStorage.getItem('opub_ignore_uppercase') !== 'false';
+        if (ignoreUppercase && rawWord === rawWord.toUpperCase() && rawWord.length >= 2 && rawWord.length <= 5) return false; // Acronyms (PDF, PNG, SVG)
+        
         if (_customDictSet.has(clean) || _ignoredWordsSet.has(clean)) return false;
         return true;
     }
@@ -154,6 +169,11 @@
             return;
         }
 
+        const grammarEnabled = isGrammarEnabled();
+        if (!grammarEnabled) {
+            try { CSS.highlights.delete('grammar-error'); } catch(e) {}
+        }
+
         const paper = document.getElementById('paper');
         if (!paper) return;
 
@@ -187,7 +207,7 @@
                 }
 
                 // 2. Paint cached grammar matches
-                if (cached.grammarMatches && cached.grammarMatches.length > 0) {
+                if (grammarEnabled && cached.grammarMatches && cached.grammarMatches.length > 0) {
                     cached.grammarMatches.forEach(m => {
                         if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
                         const cleanText = (m.text || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
@@ -247,7 +267,7 @@
                 CSS.highlights.delete('spelling-error');
             }
 
-            if (grammarRanges.length > 0) {
+            if (grammarEnabled && grammarRanges.length > 0) {
                 CSS.highlights.set('grammar-error', new Highlight(...grammarRanges));
             } else {
                 CSS.highlights.delete('grammar-error');
@@ -278,9 +298,16 @@
             return;
         }
 
-        const userLang = (typeof navigator !== 'undefined' && navigator.language && navigator.language.startsWith('en'))
+        const savedLang = localStorage.getItem('opub_proofing_lang');
+        const userLang = savedLang || ((typeof navigator !== 'undefined' && navigator.language && navigator.language.startsWith('en'))
             ? (navigator.language.toLowerCase() === 'en-gb' ? 'en-GB' : 'en-US')
-            : 'en-US';
+            : 'en-US');
+
+        // Check if online proofing is permitted by user privacy settings
+        if (localStorage.getItem('opub_online_proofing_enabled') === 'false') {
+            paintHighlights();
+            return;
+        }
 
         // Abort any prior in-flight fetch for this editable
         if (_activeFetches.has(editable)) {
@@ -484,8 +511,8 @@
         const cached = editable ? _editableCache.get(editable) : null;
 
         if (cached) {
-            // Check grammar issues first
-            if (cached.grammarMatches && cached.grammarMatches.length > 0) {
+            // Check grammar issues first (if grammar checking is enabled)
+            if (isGrammarEnabled() && cached.grammarMatches && cached.grammarMatches.length > 0) {
                 for (const gm of cached.grammarMatches) {
                     if (gm.ruleId && _ignoredRulesSet.has(gm.ruleId)) continue;
                     if (!gm.range && editable) {
@@ -564,10 +591,74 @@
         return null;
     }
 
+    const DEFAULT_AUTOCORRECT = {
+        '(c)': '©',
+        '(r)': '®',
+        '(tm)': '™',
+        '(p)': '§',
+        '-->': '→',
+        '<--': '←',
+        '<->': '↔',
+        '==>': '⇒',
+        '<==': '⇐',
+        '<=>': '⇔',
+        '1/2': '½',
+        '1/4': '¼',
+        '3/4': '¾',
+        '+-': '±',
+        ':)': '😊',
+        ':(': '🙁',
+        ';)': '😉'
+    };
+
+    function getAutoCorrectMap() {
+        try {
+            const saved = localStorage.getItem('opub_custom_autocorrect');
+            if (saved) {
+                const custom = JSON.parse(saved);
+                return Object.assign({}, DEFAULT_AUTOCORRECT, custom);
+            }
+        } catch(e) {}
+        return Object.assign({}, DEFAULT_AUTOCORRECT);
+    }
+
+    function applyAutoCorrect(editable) {
+        if (!editable || localStorage.getItem('opub_autocorrect_enabled') === 'false') return;
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return;
+
+        const range = sel.getRangeAt(0);
+        const node = range.startContainer;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return;
+
+        const textBefore = node.textContent.substring(0, range.startOffset);
+        const acMap = getAutoCorrectMap();
+
+        for (const shortcut in acMap) {
+            if (textBefore.endsWith(shortcut)) {
+                const repl = acMap[shortcut];
+                const startPos = range.startOffset - shortcut.length;
+                node.textContent = node.textContent.substring(0, startPos) + repl + node.textContent.substring(range.startOffset);
+                const newRange = document.createRange();
+                newRange.setStart(node, startPos + repl.length);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                break;
+            }
+        }
+    }
+
     function init() {
         document.addEventListener('input', function(e) {
             if (e.target && e.target.isContentEditable) {
                 triggerDebounced(350);
+            }
+        }, true);
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.key === ' ' || e.key === 'Enter') && e.target && e.target.isContentEditable) {
+                applyAutoCorrect(e.target);
             }
         }, true);
 
@@ -594,6 +685,57 @@
         run: run,
         trigger: triggerDebounced,
         isWordMisspelled: isWordMisspelled,
+        isGrammarEnabled: isGrammarEnabled,
+        setGrammarEnabled: function(val) {
+            if (typeof state !== 'undefined') state.grammarCheck = !!val;
+            localStorage.setItem('opub_grammarcheck', val ? 'true' : 'false');
+            paintHighlights();
+        },
+        getCustomDictionary: function() {
+            return Array.from(_customDictSet);
+        },
+        removeFromDictionary: function(word) {
+            if (!word) return;
+            const clean = word.toLowerCase().trim();
+            _customDictSet.delete(clean);
+            try {
+                localStorage.setItem('opub_custom_dictionary', JSON.stringify(Array.from(_customDictSet)));
+            } catch(e) {}
+            _knownBadWords.add(clean);
+            _knownGoodWords.delete(clean);
+            run();
+        },
+        resetIgnoredRules: function() {
+            _ignoredRulesSet.clear();
+            _ignoredWordsSet.clear();
+            try {
+                localStorage.removeItem('opub_ignored_grammar_rules');
+                localStorage.removeItem('opub_ignored_words');
+            } catch(e) {}
+            run();
+        },
+        getAutoCorrectMap: getAutoCorrectMap,
+        addAutoCorrectRule: function(shortcut, replacement) {
+            if (!shortcut || !replacement) return;
+            try {
+                const custom = JSON.parse(localStorage.getItem('opub_custom_autocorrect') || '{}');
+                custom[shortcut] = replacement;
+                localStorage.setItem('opub_custom_autocorrect', JSON.stringify(custom));
+            } catch(e) {}
+        },
+        removeAutoCorrectRule: function(shortcut) {
+            if (!shortcut) return;
+            try {
+                const custom = JSON.parse(localStorage.getItem('opub_custom_autocorrect') || '{}');
+                delete custom[shortcut];
+                localStorage.setItem('opub_custom_autocorrect', JSON.stringify(custom));
+            } catch(e) {}
+        },
+        resetAutoCorrect: function() {
+            try {
+                localStorage.removeItem('opub_custom_autocorrect');
+            } catch(e) {}
+        },
         getSuggestions: getSuggestions,
         getIssueAt: getIssueAt,
         createRangeForOffsets: createRangeForOffsets,

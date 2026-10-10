@@ -1026,14 +1026,17 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     function isDesktopEnvironment() {
         return _desktopBridgeActive || 
+               !!window._desktopBridgeActive ||
                !!(window.desktopIPC && window.desktopIPC.isDesktop) || 
                !!window._opBridgeActive || 
                (typeof navigator !== 'undefined' && (
                    navigator.userAgent.includes('OpenPublisher') || 
                    navigator.userAgent.includes('nwjs') || 
                    navigator.userAgent.includes('Electron')
-               ));
+               )) ||
+               (typeof window !== 'undefined' && !!(window.process && (window.process.type || (window.process.versions && window.process.versions.electron))));
     }
+    window.isDesktopApp = isDesktopEnvironment;
 
     async function masterSaveDocument(isTemplate = false) {
         // 1. Serialize the current page before saving
@@ -1216,6 +1219,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 // We intercept the assignment, record that the desktop bridge is active,
                 // and retain our secure masterSaveDocument with AES-GCM encryption & full metadata.
                 _desktopBridgeActive = true;
+                window._desktopBridgeActive = true;
                 console.log("OpenPublisher: Desktop save bridge connected securely with encryption support.");
             },
             configurable: true,
@@ -1232,6 +1236,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             },
             set: function(newFn) {
                 _desktopBridgeActive = true;
+                window._desktopBridgeActive = true;
             },
             configurable: true,
             enumerable: true

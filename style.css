@@ -45,6 +45,13 @@
     --shape-handle-size: 14.167px;
 }
 
+/* Signature UI Accent Color for Form Controls */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+    accent-color: var(--ui-theme-color, #007670);
+}
+
 body.dark-mode {
     --ribbon-bg: #2d2d2d;
     --ribbon-border: #444444;
