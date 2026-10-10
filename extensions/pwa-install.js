@@ -1,15 +1,19 @@
-// Open Publisher PWA & Mobile Installation Engine (v5.4.8)
+// Open Publisher PWA & Desktop Download Engine (v5.6.8)
 (function() {
     'use strict';
 
     function isDesktopApp() {
+        if (typeof window.isDesktopApp === 'function') {
+            return window.isDesktopApp();
+        }
         return !!(window.desktopIPC && window.desktopIPC.isDesktop) || 
                !!window._opBridgeActive || 
                (typeof navigator !== 'undefined' && (
                    navigator.userAgent.includes('OpenPublisher') || 
                    navigator.userAgent.includes('nwjs') || 
                    navigator.userAgent.includes('Electron')
-               ));
+               )) ||
+               (typeof window !== 'undefined' && !!(window.process && (window.process.type || (window.process.versions && window.process.versions.electron))));
     }
 
     function isStandaloneMode() {
@@ -19,66 +23,93 @@
     }
 
     function isIOSDevice() {
-        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        return (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ||
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    function isMobileBrowser() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    function isMobileOrTabletBrowser() {
+        const ua = navigator.userAgent || '';
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet|Silk/i.test(ua)) {
+            return true;
+        }
+        if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) {
+            return true;
+        }
+        return false;
+    }
+
+    function isDesktopComputer() {
+        return !isMobileOrTabletBrowser();
     }
 
     const PwaInstallSystem = {
         deferredPrompt: null,
         isIOS: false,
-        isMobile: false,
+        isMobileOrTablet: false,
+        isDesktop: false,
+        downloadUrl: 'https://download.openpublisher.app',
+
         init: function() {
+            // If already running inside installed native desktop app or standalone PWA, hide install/download buttons
             if (isDesktopApp() || isStandaloneMode()) {
+                this.hideInstallButtons();
                 return;
             }
 
             this.isIOS = isIOSDevice();
-            this.isMobile = isMobileBrowser();
+            this.isMobileOrTablet = isMobileOrTabletBrowser();
+            this.isDesktop = isDesktopComputer();
 
             // 1. Register Service Worker for PWA installability criteria
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js?v=5.4.8').catch(err => {
+                    navigator.serviceWorker.register('sw.js?v=5.6.8').catch(err => {
                         console.log('OpenPublisher PWA: Service worker registration note:', err);
                     });
                 });
             }
 
-            // 2. Listen for Chromium beforeinstallprompt event
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                this.deferredPrompt = e;
+            if (this.isDesktop) {
+                // On desktop computers in web mode, display download desktop button pointing to download.openpublisher.app
                 this.showInstallButtons();
-                if (this.isMobile) {
+
+                // Prevent Chromium default mini-infobar on desktop since we redirect to native download
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    this.showInstallButtons();
+                });
+            } else {
+                // On Mobile and Tablets:
+                // 2. Listen for Chromium beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    this.showInstallButtons();
                     this.showMobileBanner();
-                }
-            });
+                });
 
-            // 3. Listen for appinstalled event
-            window.addEventListener('appinstalled', () => {
-                this.deferredPrompt = null;
-                this.hideInstallButtons();
-                this.removeMobileBanner();
-                if (typeof DialogSystem !== 'undefined') {
-                    DialogSystem.alert('App Installed', 'Open Publisher has been installed successfully!');
-                }
-            });
+                // 3. Listen for appinstalled event
+                window.addEventListener('appinstalled', () => {
+                    this.deferredPrompt = null;
+                    this.hideInstallButtons();
+                    this.removeMobileBanner();
+                    if (typeof DialogSystem !== 'undefined') {
+                        DialogSystem.alert('App Installed', 'Open Publisher has been installed successfully!');
+                    }
+                });
 
-            // 4. On iOS Safari, beforeinstallprompt never fires; make install accessible immediately
-            if (this.isIOS) {
-                this.showInstallButtons();
-                // Check if user recently dismissed the banner
-                const dismissed = localStorage.getItem('op_pwa_ios_dismissed');
-                const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
-                const oneWeek = 7 * 24 * 60 * 60 * 1000;
-                if (!dismissed || (Date.now() - lastDismissed > oneWeek)) {
-                    // Slight delay after load to avoid jarring animation
-                    setTimeout(() => {
-                        this.showMobileBanner();
-                    }, 2500);
+                // 4. On iOS Safari, beforeinstallprompt never fires; make install accessible immediately
+                if (this.isIOS) {
+                    this.showInstallButtons();
+                    const dismissed = localStorage.getItem('op_pwa_ios_dismissed');
+                    const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
+                    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+                    if (!dismissed || (Date.now() - lastDismissed > oneWeek)) {
+                        setTimeout(() => {
+                            this.showMobileBanner();
+                        }, 2500);
+                    }
                 }
             }
         },
@@ -87,10 +118,24 @@
             const titleBtn = document.getElementById('pwa-install-btn');
             if (titleBtn) {
                 titleBtn.style.display = 'inline-flex';
+                if (this.isDesktop) {
+                    titleBtn.setAttribute('title', 'Download Open Publisher Desktop App for Windows, macOS, Linux & FreeBSD (download.openpublisher.app)');
+                    titleBtn.setAttribute('aria-label', 'Download Open Publisher Desktop App');
+                } else {
+                    titleBtn.setAttribute('title', 'Install Open Publisher Web App');
+                    titleBtn.setAttribute('aria-label', 'Install Open Publisher Web App');
+                }
             }
             const ribbonBtn = document.getElementById('pwa-install-ribbon-btn');
             if (ribbonBtn) {
                 ribbonBtn.style.display = 'inline-flex';
+                if (this.isDesktop) {
+                    ribbonBtn.innerHTML = '<i class="fas fa-desktop"></i>Download App';
+                    ribbonBtn.setAttribute('title', 'Download Open Publisher for Windows, macOS, Linux & FreeBSD (download.openpublisher.app)');
+                } else {
+                    ribbonBtn.innerHTML = '<i class="fas fa-mobile-alt"></i>Install App';
+                    ribbonBtn.setAttribute('title', 'Install Open Publisher as a Web App on your Home Screen');
+                }
             }
         },
 
@@ -102,8 +147,10 @@
         },
 
         promptInstall: function() {
-            if (this.deferredPrompt) {
-                // Chromium native prompt
+            if (this.isDesktop) {
+                this.openDesktopDownload();
+            } else if (this.deferredPrompt) {
+                // Chromium native prompt for mobile/tablet
                 this.deferredPrompt.prompt();
                 this.deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
@@ -116,6 +163,63 @@
                 this.showIOSModal();
             } else {
                 this.showGenericInstallModal();
+            }
+        },
+
+        openDesktopDownload: function() {
+            this.showDesktopDownloadModal();
+        },
+
+        showDesktopDownloadModal: function() {
+            const baseUrl = this.downloadUrl || 'https://download.openpublisher.app';
+            const url = baseUrl.includes('?') ? `${baseUrl}&in_app=true` : `${baseUrl}?in_app=true`;
+            const dlHtml = `<iframe src="${url}" style="width:100%; height:100%; min-height:500px; border:none; display:block;" title="Download Open Publisher Desktop App"></iframe>`;
+            
+            if (typeof DialogSystem !== 'undefined') {
+                DialogSystem.show('Download Open Publisher Desktop App', dlHtml, null, true);
+                
+                const dialogBox = document.getElementById('custom-dialog-box');
+                if (dialogBox) {
+                    // Decouple from flex centering so CSS resize works naturally from the top-left anchor
+                    const w = Math.min(1200, Math.floor(window.innerWidth * 0.92));
+                    const h = Math.floor(window.innerHeight * 0.85);
+                    const left = Math.max(0, (window.innerWidth - w) / 2);
+                    const top = Math.max(0, (window.innerHeight - h) / 2);
+                    
+                    dialogBox.style.position = 'absolute';
+                    dialogBox.style.left = left + 'px';
+                    dialogBox.style.top = top + 'px';
+                    
+                    // Set dimensions and enable native resizing
+                    dialogBox.style.width = w + 'px';
+                    dialogBox.style.height = '85vh';
+                    dialogBox.style.maxWidth = '95vw';
+                    dialogBox.style.maxHeight = '95vh';
+                    dialogBox.style.resize = 'both';
+                    dialogBox.style.overflow = 'hidden'; // Required for CSS resize property to work
+                    
+                    const body = dialogBox.querySelector('.custom-dialog-body');
+                    if (body) { 
+                        body.style.padding = '0'; 
+                        body.style.height = 'calc(100% - 40px)'; // Account for header
+                        body.style.overflow = 'hidden'; 
+                    }
+                    
+                    // Hide the OK/Cancel footer entirely
+                    const footer = dialogBox.querySelector('.custom-dialog-footer');
+                    if (footer) {
+                        footer.style.display = 'none';
+                    }
+                }
+            } else {
+                // Fallback in case DialogSystem is not loaded
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => { if (link.parentNode) link.parentNode.removeChild(link); }, 100);
             }
         },
 
@@ -143,23 +247,28 @@
             const html = `
                 <div style="text-align: center; padding: 10px 5px; font-family: sans-serif;">
                     <img src="apple-touch-icon.png" alt="Open Publisher Icon" style="width: 72px; height: 72px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px; display: inline-block;">
-                    <h3 style="margin: 0 0 8px 0; color: var(--ui-theme-color, #007670);">Install Open Publisher</h3>
+                    <h3 style="margin: 0 0 8px 0; color: var(--ui-theme-color, #007670);">Open Publisher Downloads & Apps</h3>
                     <p style="margin: 0 0 16px 0; font-size: 0.88rem; color: #555; line-height: 1.5;">
-                        To install Open Publisher as a desktop or mobile application:
+                        Native desktop applications are available for <strong>Windows</strong>, <strong>macOS</strong>, <strong>Linux</strong>, and <strong>FreeBSD</strong>:
                     </p>
+                    <div style="margin-bottom: 16px;">
+                        <button onclick="if(window.PwaInstallSystem) window.PwaInstallSystem.showDesktopDownloadModal();" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--ui-theme-color, #007670); color: #fff; border: none; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
+                            <i class="fas fa-download"></i> Open Downloads Window
+                        </button>
+                    </div>
                     <div style="text-align: left; background: #f4f6f8; border-radius: 10px; padding: 12px 16px; font-size: 0.85rem; color: #333; line-height: 1.8;">
-                        <div>• In <strong>Chrome / Edge</strong>: Click the <strong>Install</strong> icon in the address bar (or Menu &gt; Install Open Publisher).</div>
-                        <div>• In <strong>Safari (Mac)</strong>: File &gt; <strong>Add to Dock...</strong></div>
-                        <div>• In <strong>Mobile Browsers</strong>: Open the browser menu and select <strong>Add to Home screen</strong>.</div>
+                        <div>• <strong>Desktop</strong>: Download standalone native packages from <strong>download.openpublisher.app</strong>.</div>
+                        <div>• <strong>Mobile / Tablet</strong>: Open your browser menu and select <strong>Add to Home screen</strong>.</div>
                     </div>
                 </div>
             `;
             if (typeof DialogSystem !== 'undefined') {
-                DialogSystem.show('Install Web App', html, null, true);
+                DialogSystem.show('Download & Install', html, null, true);
             }
         },
 
         showMobileBanner: function() {
+            if (this.isDesktop) return;
             if (document.getElementById('op-pwa-mobile-banner')) return;
 
             const banner = document.createElement('div');
@@ -231,6 +340,11 @@
     };
 
     window.PwaInstallSystem = PwaInstallSystem;
+    window.showDownloadModal = function() {
+        if (window.PwaInstallSystem) {
+            window.PwaInstallSystem.showDesktopDownloadModal();
+        }
+    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => PwaInstallSystem.init());

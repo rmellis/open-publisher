@@ -1,4 +1,4 @@
-// Open Publisher Options Modal (v5.6.7)
+// Open Publisher Options Modal (v5.6.8)
 
 // Escape helper for safe innerHTML injection
 function _optEscapeHtml(str) {

@@ -850,7 +850,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.6.7</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.6.8</div>
                 </div>
                 
                 <div class="about-desc">
