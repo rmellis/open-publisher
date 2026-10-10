@@ -1445,16 +1445,23 @@
     /**
      * Compute tip handle position and inner selection sub-boxes for active editing.
      */
-    function getArrowTipInfo(el) {
+    function getArrowTipInfo(el, forcedHead) {
         if (!el) return null;
-        const styleId = el.getAttribute('data-arrow-style') || 'block-right';
+        const svg = el.querySelector('svg.smart-arrow-svg') || el.querySelector('svg');
+        const styleId = el.getAttribute('data-arrow-style') || (svg && svg.getAttribute('data-arrow-style')) || 'block-right';
         const w = Math.round(parseFloat(el.style.width)) || el.offsetWidth || 100;
         const h = Math.round(parseFloat(el.style.height)) || el.offsetHeight || 50;
 
-        let headLength = parseFloat(el.getAttribute('data-arrow-head-length')) || parseFloat(el.getAttribute('data-arrow-head-px')) || parseFloat(el.getAttribute('data-arrow-head'));
-        if (!headLength || isNaN(headLength)) {
-            const pathInfo = buildArrowPath(styleId, w, h, null);
-            headLength = pathInfo.headLength;
+        let headLength = forcedHead;
+        if (headLength === undefined || headLength === null || isNaN(headLength)) {
+            headLength = parseFloat(el.getAttribute('data-arrow-head-length')) ||
+                         parseFloat(el.getAttribute('data-arrow-head-px')) ||
+                         parseFloat(el.getAttribute('data-arrow-head')) ||
+                         (svg && (parseFloat(svg.getAttribute('data-arrow-head-length')) || parseFloat(svg.getAttribute('data-arrow-head-px')) || parseFloat(svg.getAttribute('data-arrow-head'))));
+            if (!headLength || isNaN(headLength)) {
+                const pathInfo = buildArrowPath(styleId, w, h, null);
+                headLength = pathInfo.headLength;
+            }
         }
 
         const isDoubleH = styleId.includes('left-right') || styleId.includes('double-right-left') || styleId === 'open-barb-double' || styleId === 'dimension-arrow' || styleId === 'dimension-dual-right';
@@ -1553,6 +1560,7 @@
             minHead,
             maxHead,
             orientation,
+            styleId,
             subBoxes,
             handles
         };

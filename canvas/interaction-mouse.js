@@ -38,11 +38,12 @@ window.handleMouseDown = function(e) {
         if(arrowEl) {
             const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
             const h = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
-            const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7);
+            const tipInfo = (typeof window.getArrowTipInfo === 'function') ? window.getArrowTipInfo(arrowEl) : null;
+            const headLength = tipInfo ? tipInfo.headLength : (parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7));
             state.dragData = {
                 startX: e.clientX,
                 startY: e.clientY,
-                dir: e.target.dataset.arrowTipHandle || 'right',
+                dir: e.target.dataset.arrowTipHandle || (tipInfo && tipInfo.handles[0] && tipInfo.handles[0].dir) || 'right',
                 startHead: headLength,
                 w: w,
                 h: h,
@@ -419,6 +420,14 @@ window.handleMouseMove = function(e) {
                 curDx = dx * cos + dy * sin;
                 curDy = -dx * sin + dy * cos;
             }
+        }
+        if (d.el) {
+            const sxAttr = d.el.getAttribute('data-scaleX');
+            const syAttr = d.el.getAttribute('data-scaleY');
+            const isFlipX = (sxAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleX(-1)') || d.el.style.transform.includes('scale(-1')));
+            const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
+            if (isFlipX) curDx = -curDx;
+            if (isFlipY) curDy = -curDy;
         }
 
         let newHead = d.startHead;

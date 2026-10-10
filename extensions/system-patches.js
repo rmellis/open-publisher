@@ -227,7 +227,13 @@
                 existing.style.height = el.style.height;
                 existing.style.transform = el.style.transform;
                 if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg')) {
-                    if (typeof window.renderSmartArrowTipControls === 'function') {
+                    const svg = el.querySelector('svg.smart-arrow-svg') || el.querySelector('svg');
+                    const curStyle = el.getAttribute('data-arrow-style') || (svg && svg.getAttribute('data-arrow-style')) || 'block-right';
+                    if (existing.querySelector('.arrow-tip-container') && existing._boundArrowStyle === curStyle) {
+                        if (typeof window.updateArrowTipOverlay === 'function') {
+                            window.updateArrowTipOverlay(existing, el);
+                        }
+                    } else if (typeof window.renderSmartArrowTipControls === 'function') {
                         window.renderSmartArrowTipControls(existing, el);
                     }
                 }
@@ -393,6 +399,8 @@
         const info = window.getArrowTipInfo(el);
         if (!info) return;
 
+        overlay._boundArrowStyle = info.styleId;
+
         const oldCont = overlay.querySelector('.arrow-tip-container');
         if (oldCont) oldCont.remove();
 
@@ -435,11 +443,12 @@
                 if (arrowEl) {
                     const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
                     const hDim = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
-                    const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(hDim * 0.7);
+                    const tipInfo = (typeof window.getArrowTipInfo === 'function') ? window.getArrowTipInfo(arrowEl) : null;
+                    const headLength = tipInfo ? tipInfo.headLength : (parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(hDim * 0.7));
                     state.dragData = {
                         startX: e.clientX,
                         startY: e.clientY,
-                        dir: h.dir,
+                        dir: handle.dataset.arrowTipHandle || h.dir,
                         startHead: headLength,
                         w: w,
                         h: hDim,
@@ -520,6 +529,7 @@
         const incBtn = sliderPill.querySelector('.arrow-thickness-inc');
 
         sliderPill.addEventListener('mousedown', e => e.stopPropagation());
+        sliderPill.addEventListener('mouseup', e => e.stopPropagation());
         if (rangeInput) rangeInput.addEventListener('mousedown', e => e.stopPropagation());
 
         if (rangeInput) {
@@ -621,6 +631,7 @@
         // Fill button handlers
         if (fillBtn) {
             fillBtn.addEventListener('mousedown', e => e.stopPropagation());
+            fillBtn.addEventListener('mouseup', e => e.stopPropagation());
             fillBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -675,6 +686,7 @@
         // Outline button handlers
         if (strokeBtn) {
             strokeBtn.addEventListener('mousedown', e => e.stopPropagation());
+            strokeBtn.addEventListener('mouseup', e => e.stopPropagation());
             strokeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -758,8 +770,11 @@
             if (info.handles[idx]) {
                 hEl.style.left = info.handles[idx].x + 'px';
                 hEl.style.top = info.handles[idx].y + 'px';
+                hEl.dataset.arrowTipHandle = info.handles[idx].dir;
+                hEl.style.cursor = info.handles[idx].cursor;
             }
         });
+        targetOverlay._boundArrowStyle = info.styleId;
 
         const rangeInput = targetOverlay.querySelector('.arrow-tip-range-input');
         const rangeVal = targetOverlay.querySelector('.arrow-tip-range-val');
@@ -3804,11 +3819,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             if (arrowEl) {
                 const w = parseFloat(arrowEl.style.width) || arrowEl.offsetWidth;
                 const h = parseFloat(arrowEl.style.height) || arrowEl.offsetHeight;
-                const headLength = parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7);
+                const tipInfo = (typeof window.getArrowTipInfo === 'function') ? window.getArrowTipInfo(arrowEl) : null;
+                const headLength = tipInfo ? tipInfo.headLength : (parseFloat(arrowEl.getAttribute('data-arrow-head-px')) || parseFloat(arrowEl.getAttribute('data-arrow-head')) || Math.round(h * 0.7));
                 state.dragData = {
                     startX: e.clientX,
                     startY: e.clientY,
-                    dir: e.target.dataset.arrowTipHandle || 'right',
+                    dir: e.target.dataset.arrowTipHandle || (tipInfo && tipInfo.handles[0] && tipInfo.handles[0].dir) || 'right',
                     startHead: headLength,
                     w: w,
                     h: h,
@@ -4151,6 +4167,14 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     curDx = dx * cos + dy * sin;
                     curDy = -dx * sin + dy * cos;
                 }
+            }
+            if (d.el) {
+                const sxAttr = d.el.getAttribute('data-scaleX');
+                const syAttr = d.el.getAttribute('data-scaleY');
+                const isFlipX = (sxAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleX(-1)') || d.el.style.transform.includes('scale(-1')));
+                const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
+                if (isFlipX) curDx = -curDx;
+                if (isFlipY) curDy = -curDy;
             }
 
             let newHead = d.startHead;
