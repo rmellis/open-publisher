@@ -155,6 +155,21 @@
                         img.src = el.imgSrc;
                         if (el.altText) img.alt = el.altText;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        elDiv.style.overflow = 'visible';
+                        let fStr = (el.imgStyle && el.imgStyle.filter) ? el.imgStyle.filter : (el.filter || '');
+                        if (!fStr && el.contentCssText) {
+                            const m = el.contentCssText.match(/filter:\s*([^;]+)/i);
+                            if (m) fStr = m[1];
+                        }
+                        if (!fStr && el.innerHTML) {
+                            const m = el.innerHTML.match(/filter:\s*([^;"']+)/i);
+                            if (m) fStr = m[1];
+                        }
+                        fStr = (fStr || '').replace(/\bnone\b/g, '').trim();
+                        if (fStr) {
+                            img.style.filter = fStr;
+                            img.style.WebkitFilter = fStr;
+                        }
                         const effectiveClip = (el.imgStyle && el.imgStyle.clipPath) || el.clipPath;
                         if (effectiveClip && effectiveClip !== 'none') {
                             img.style.clipPath = effectiveClip;
@@ -292,6 +307,7 @@
         }
     }
 
+    window.buildPrintDOM = buildPrintDOM;
     window.addEventListener('beforeprint', buildPrintDOM);
     window.addEventListener('afterprint', () => {
         const spooler = document.getElementById('op-print-spooler');
@@ -331,7 +347,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.7.2...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.7.3...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -607,7 +623,7 @@
                 if (isSettled) return;
                 const scale = 2;
                 
-                let finalFilter = filter;
+                let finalFilter = (filter || '').replace(/\bnone\b/g, '').trim();
                 let padX = 0, padY = 0, padW = 0, padH = 0;
                 
                 if (finalFilter && finalFilter.includes('blur')) {
@@ -615,20 +631,24 @@
                 }
                 
                 if (finalFilter && finalFilter.includes('drop-shadow')) {
-                    const match = finalFilter.match(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px/);
-                    if (match) {
-                        const sx = parseFloat(match[1]) * scale;
-                        const sy = parseFloat(match[2]) * scale;
-                        const blur = parseFloat(match[3]) * scale;
-                        const spread = blur * 2;
-                        padX = Math.max(0, sx < 0 ? Math.abs(sx) + spread : spread);
-                        padY = Math.max(0, sy < 0 ? Math.abs(sy) + spread : spread);
-                        padW = Math.abs(sx) + spread * 2;
-                        padH = Math.abs(sy) + spread * 2;
-                        
-                        finalFilter = finalFilter.replace(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px/g, 
-                            (m, p1, p2, p3) => `${parseFloat(p1)*scale}px ${parseFloat(p2)*scale}px ${parseFloat(p3)*scale}px`);
-                    }
+                    finalFilter = finalFilter.replace(/drop-shadow\(((?:[^)(]+|\([^)(]*\))*)\)/g, (dsMatch, dsInner) => {
+                        const match = dsInner.match(/([-\d.]+)px\s+([-\d.]+)px(?:\s+([-\d.]+)px)?/);
+                        if (match) {
+                            const sx = parseFloat(match[1]) * scale;
+                            const sy = parseFloat(match[2]) * scale;
+                            const blur = (match[3] ? parseFloat(match[3]) : 0) * scale;
+                            const spread = Math.max(blur * 2, 20 * scale);
+                            padX = Math.max(padX, sx < 0 ? Math.abs(sx) + spread : spread);
+                            padY = Math.max(padY, sy < 0 ? Math.abs(sy) + spread : spread);
+                            padW = Math.max(padW, Math.abs(sx) + spread * 2);
+                            padH = Math.max(padH, Math.abs(sy) + spread * 2);
+                            
+                            const scaledInner = dsInner.replace(/([-\d.]+)px\s+([-\d.]+)px(?:\s+([-\d.]+)px)?/, 
+                                (m, p1, p2, p3) => p3 ? `${parseFloat(p1)*scale}px ${parseFloat(p2)*scale}px ${parseFloat(p3)*scale}px` : `${parseFloat(p1)*scale}px ${parseFloat(p2)*scale}px`);
+                            return `drop-shadow(${scaledInner})`;
+                        }
+                        return dsMatch;
+                    });
                 }
 
                 const c = document.createElement('canvas');
@@ -1068,6 +1088,13 @@
                     }
 
                     if (el.imgSrc) {
+                        elDiv.style.overflow = 'visible';
+                        elDiv.style.contain = 'none';
+                        hueFilter = '';
+                        if (elDiv.hasAttribute('data-target-filter')) {
+                            elDiv.removeAttribute('data-target-filter');
+                        }
+
                         let finalSrc = el.imgSrc;
 
                         try {
@@ -1101,15 +1128,18 @@
                         cropDiv.style.width = '100%';
                         cropDiv.style.height = '100%';
                         cropDiv.style.position = 'relative';
-                        cropDiv.style.overflow = 'hidden';
-                        cropDiv.style.contain = 'paint';
 
                         const shapeClipPath = getImageShapeClipPath(el, page, livePaper);
                         if (shapeClipPath) {
                             cropDiv.style.clipPath = shapeClipPath;
                             cropDiv.style.webkitClipPath = shapeClipPath;
+                            cropDiv.style.overflow = 'hidden';
+                            cropDiv.style.contain = 'paint';
                         } else {
-                            cropDiv.style.clipPath = 'inset(0)';
+                            cropDiv.style.clipPath = 'none';
+                            cropDiv.style.webkitClipPath = 'none';
+                            cropDiv.style.overflow = 'visible';
+                            cropDiv.style.contain = 'none';
                         }
 
                         const sX = el.scaleX || "1";
@@ -1140,38 +1170,64 @@
                             if (el.imgStyle.opacity !== undefined) currentOpacity = el.imgStyle.opacity;
                             if (el.imgStyle.filter) currentFilter = el.imgStyle.filter;
                         }
+                        if (!currentFilter && el.filter) {
+                            currentFilter = el.filter;
+                        }
+                        if (!currentFilter && el.contentCssText) {
+                            const m = el.contentCssText.match(/filter:\s*([^;]+)/i);
+                            if (m) currentFilter = m[1].trim();
+                        }
+                        if (!currentFilter && el.innerHTML) {
+                            const m = el.innerHTML.match(/filter:\s*([^;"]+)/i);
+                            if (m) currentFilter = m[1].trim();
+                        }
+                        currentFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
 
                         if (page === state.pages[state.currentPageIndex] && livePaper) {
                             const l1 = parseFloat(el.left) || 0;
                             const t1 = parseFloat(el.top) || 0;
                             const liveEls = Array.from(livePaper.querySelectorAll('.pub-element'));
-                            const activeEl = liveEls.find(e => Math.abs((parseFloat(e.style.left)||0) - l1) < 2 && Math.abs((parseFloat(e.style.top)||0) - t1) < 2);
+                            const activeEl = (el.id ? livePaper.querySelector('#' + CSS.escape(el.id)) : null) ||
+                                liveEls.find(e => Math.abs((parseFloat(e.style.left)||0) - l1) < 2 && Math.abs((parseFloat(e.style.top)||0) - t1) < 2);
                             
                             if (activeEl) {
+                                let liveFilter = '';
                                 const activeImg = activeEl.querySelector('img');
                                 if (activeImg) {
                                     const comp = window.getComputedStyle(activeImg);
-                                    currentFilter = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || currentFilter);
+                                    const f1 = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || '');
+                                    if (f1 && f1 !== 'none') liveFilter = (liveFilter + ' ' + f1).trim();
                                     currentOpacity = (comp.opacity && comp.opacity !== '1') ? comp.opacity : (activeImg.style.opacity || currentOpacity);
                                 }
                                 
                                 const activeContent = activeEl.querySelector('.element-content');
                                 if (activeContent) {
                                     const cComp = window.getComputedStyle(activeContent);
-                                    if (cComp.filter && cComp.filter !== 'none') {
-                                        currentFilter = (currentFilter + ' ' + cComp.filter).trim();
-                                    } else if (activeContent.style.filter && activeContent.style.filter !== 'none') {
-                                        currentFilter = (currentFilter + ' ' + activeContent.style.filter).trim();
+                                    const f2 = (cComp.filter && cComp.filter !== 'none') ? cComp.filter : (activeContent.style.filter || '');
+                                    if (f2 && f2 !== 'none') {
+                                        if (f2.includes('drop-shadow') && liveFilter.includes('drop-shadow')) {
+                                            liveFilter = liveFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                                        }
+                                        liveFilter = (liveFilter + ' ' + f2).trim();
                                     }
                                 }
-                            }
-                            
-                            // Prevent html2canvas from double-processing this element!
-                            hueFilter = '';
-                            if (elDiv.hasAttribute('data-target-filter')) {
-                                elDiv.removeAttribute('data-target-filter');
+
+                                const elComp = window.getComputedStyle(activeEl);
+                                const f3 = (elComp.filter && elComp.filter !== 'none') ? elComp.filter : (activeEl.style.filter || '');
+                                if (f3 && f3 !== 'none') {
+                                    if (f3.includes('drop-shadow') && liveFilter.includes('drop-shadow')) {
+                                        liveFilter = liveFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                                    }
+                                    liveFilter = (liveFilter + ' ' + f3).trim();
+                                }
+
+                                liveFilter = liveFilter.replace(/\bnone\b/g, '').trim();
+                                if (liveFilter) {
+                                    currentFilter = liveFilter;
+                                }
                             }
                         }
+                        currentFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
 
                         const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || 400;
                         const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
@@ -1197,6 +1253,8 @@
                                     img.style.maxHeight = 'none';
                                     cropDiv.style.overflow = 'visible'; // ALLOW SHADOW TO BE SEEN
                                     cropDiv.style.contain = 'none'; // ALLOW SHADOW TO BE SEEN
+                                    elDiv.style.overflow = 'visible';
+                                    elDiv.style.contain = 'none';
                                 }
                                 
                                 img.style.filter = 'none';
@@ -1204,18 +1262,19 @@
                                 img.style.opacity = '1';
                                 cropDiv.style.clipPath = 'none';
                                 cropDiv.style.webkitClipPath = 'none';
-                                const rMatch = shapeClipPath.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i);
+                                const rMatch = shapeClipPath ? shapeClipPath.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i) : null;
                                 if (rMatch && (!baked || !baked.padW)) {
                                     cropDiv.style.borderRadius = rMatch[1];
                                 }
                             } catch(e) {
                                 await loadImageStrict(img, finalSrc);
-                                let safeFilter = currentFilter || '';
-                                if (safeFilter.includes('drop-shadow')) {
-                                    safeFilter = safeFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
-                                }
+                                let safeFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
                                 img.style.filter = safeFilter || 'none';
                                 img.style.opacity = currentOpacity;
+                                cropDiv.style.overflow = 'visible';
+                                cropDiv.style.contain = 'none';
+                                elDiv.style.overflow = 'visible';
+                                elDiv.style.contain = 'none';
                                 if (shapeClipPath) {
                                     cropDiv.style.clipPath = shapeClipPath;
                                     cropDiv.style.webkitClipPath = shapeClipPath;
@@ -1224,6 +1283,9 @@
                                         cropDiv.style.borderRadius = rMatch[1];
                                         img.style.borderRadius = rMatch[1];
                                     }
+                                } else {
+                                    cropDiv.style.clipPath = 'none';
+                                    cropDiv.style.webkitClipPath = 'none';
                                 }
                             }
                         } else {

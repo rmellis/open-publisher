@@ -175,13 +175,33 @@ function serializeCurrentPage() {
             const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
             const imgBorderRadius = img.style.borderRadius || el.getAttribute('data-rounded-corners') || '';
             const imgOpacity = (img.style.opacity !== undefined && img.style.opacity !== '') ? img.style.opacity : '';
+            
+            // Extract filter from both img and .element-content wrapper (Picture Tools shadow/glow applies to .element-content)
+            let combinedFilter = (img.style.filter || '').replace(/\bnone\b/g, '').trim();
+            if (content && content.style.filter) {
+                const cFilter = content.style.filter.replace(/\bnone\b/g, '').trim();
+                if (cFilter) {
+                    if (cFilter.includes('drop-shadow') && combinedFilter.includes('drop-shadow')) {
+                        combinedFilter = combinedFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                    }
+                    combinedFilter = (combinedFilter + ' ' + cFilter).trim();
+                }
+            }
+            if (el.style && el.style.filter) {
+                const eFilter = el.style.filter.replace(/\bnone\b/g, '').trim();
+                if (eFilter && !combinedFilter.includes(eFilter)) {
+                    combinedFilter = (combinedFilter + ' ' + eFilter).trim();
+                }
+            }
+            
+            data.filter = combinedFilter || '';
             data.imgStyle = {
                 width: img.style.width,
                 height: img.style.height,
                 top: img.style.top,
                 left: img.style.left,
                 position: img.style.position,
-                filter: img.style.filter,
+                filter: combinedFilter || '',
                 opacity: imgOpacity,
                 maxWidth: img.style.maxWidth,
                 maxHeight: img.style.maxHeight,

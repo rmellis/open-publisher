@@ -1659,15 +1659,17 @@ window.ContextRibbonActions = {
         if(state.selectedEl) { 
             const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
             if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
-                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
             }
             const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
-            const currentFilter = inner.style.filter || '';
+            const currentFilter = (inner.style.filter || '').replace(/\bnone\b/g, '').trim();
             if (currentFilter.includes('drop-shadow')) {
-                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(false);
             } else {
                 inner.style.filter = (currentFilter + ' drop-shadow(5px 5px 10px rgba(0,0,0,0.6))').trim();
+                state.selectedEl.style.overflow = 'visible';
+                inner.style.overflow = 'visible';
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
             }
             if (typeof pushHistory === 'function') pushHistory(); 
@@ -1677,15 +1679,17 @@ window.ContextRibbonActions = {
         if(state.selectedEl) { 
             const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
             if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
-                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
             }
             const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
-            const currentFilter = inner.style.filter || '';
+            const currentFilter = (inner.style.filter || '').replace(/\bnone\b/g, '').trim();
             if (currentFilter.includes('drop-shadow')) {
-                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(false);
             } else {
                 inner.style.filter = (currentFilter + ' drop-shadow(0px 0px 15px rgba(0,191,255,0.8))').trim();
+                state.selectedEl.style.overflow = 'visible';
+                inner.style.overflow = 'visible';
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
             }
             if (typeof pushHistory === 'function') pushHistory(); 

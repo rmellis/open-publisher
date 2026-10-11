@@ -240,8 +240,12 @@ function renderPage(pageData) {
         let inner = '';
         if (data.imgSrc) {
             const s = data.imgStyle || {};
-            let finalFilter = s.filter || 'none';
-            if ((!finalFilter || finalFilter === 'none') && data.filterAttributes) {
+            let finalFilter = (s.filter || data.filter || '').replace(/\bnone\b/g, '').trim();
+            if (!finalFilter && data.contentCssText) {
+                const fMatch = data.contentCssText.match(/filter:\s*([^;]+)/i);
+                if (fMatch) finalFilter = fMatch[1].replace(/\bnone\b/g, '').trim();
+            }
+            if (!finalFilter && data.filterAttributes) {
                 const fa = data.filterAttributes;
                 const b = fa['data-filter-brightness'] || 100;
                 const c = fa['data-filter-contrast'] || 100;
@@ -254,6 +258,10 @@ function renderPage(pageData) {
                 if (b != 100 || c != 100 || sat != 100 || h != 0 || bl != 0 || sep != 0 || g != 0 || inv != 0) {
                     finalFilter = `brightness(${b}%) contrast(${c}%) saturate(${sat}%) hue-rotate(${h}deg) blur(${bl}px) sepia(${sep}%) grayscale(${g}%) invert(${inv}%)`;
                 }
+            }
+            if (!finalFilter) finalFilter = 'none';
+            if (finalFilter.includes('drop-shadow')) {
+                el.style.overflow = 'visible';
             }
 
             let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${finalFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
@@ -318,6 +326,12 @@ function renderPage(pageData) {
             <div class="rotate-stick"></div>
             <div class="rotate-handle"></div>
         `;
+
+        if ((data.contentCssText && data.contentCssText.includes('drop-shadow')) || (data.filter && data.filter.includes('drop-shadow')) || (data.imgStyle && data.imgStyle.filter && data.imgStyle.filter.includes('drop-shadow'))) {
+            el.style.overflow = 'visible';
+            const cEl = el.querySelector('.element-content');
+            if (cEl) cEl.style.overflow = 'visible';
+        }
 
         if (data.cropMode) el.classList.add('cropping');
         if (data.shrinkOverflow) applyShrinkOverflow(el);

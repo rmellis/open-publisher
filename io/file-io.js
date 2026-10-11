@@ -146,6 +146,7 @@ window.printFullDocument = async function(isBooklet = false) {
             elDiv.style.height = el.height;
             elDiv.style.zIndex = el.zIndex;
             elDiv.style.transform = el.transform || 'none';
+            elDiv.style.overflow = 'visible';
             
             // If it's a background image layer, rebuild the image
             if (el.imgSrc) {
@@ -155,6 +156,20 @@ window.printFullDocument = async function(isBooklet = false) {
                  // Apply the exact styles (like opacity) from the state
                  if (el.imgStyle) {
                      Object.assign(img.style, el.imgStyle);
+                 }
+                 let fStr = (el.imgStyle && el.imgStyle.filter) ? el.imgStyle.filter : (el.filter || '');
+                 if (!fStr && el.contentCssText) {
+                     const m = el.contentCssText.match(/filter:\s*([^;]+)/i);
+                     if (m) fStr = m[1];
+                 }
+                 if (!fStr && el.innerHTML) {
+                     const m = el.innerHTML.match(/filter:\s*([^;"']+)/i);
+                     if (m) fStr = m[1];
+                 }
+                 fStr = (fStr || '').replace(/\bnone\b/g, '').trim();
+                 if (fStr) {
+                     img.style.filter = fStr;
+                     img.style.WebkitFilter = fStr;
                  }
                  const effectiveClip = (el.imgStyle && el.imgStyle.clipPath) || el.clipPath;
                  if (effectiveClip && effectiveClip !== 'none') {
