@@ -370,6 +370,9 @@ function handleMouseMove(e) {
                     window.refreshSmartArrow(state.selectedEl, rawW, rawH);
                 }
             }
+            if(state.selectedEl && state.selectedEl.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                window.BorderArtEngine.refreshElement(state.selectedEl, rawW, rawH);
+            }
         }
 
         { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }

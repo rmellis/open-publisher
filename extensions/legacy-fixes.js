@@ -1823,7 +1823,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.6.9: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.7.0: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 
@@ -1932,7 +1932,7 @@
             if (el.getAttribute('data-is-theme') === 'true' || el.querySelector('.op-theme-container')) return;
 
             // Check if it's a freshly clicked native border
-            if (el.id === 'native-blueprint-border' || el.querySelector('#native-blueprint-border') || el.querySelector('.page-border-wrapper')) {
+            if (el.id === 'native-blueprint-border' || el.id === 'native-border-art-border' || el.querySelector('#native-blueprint-border') || el.querySelector('#native-border-art-border') || el.querySelector('.page-border-wrapper')) {
                 el.setAttribute('data-is-border', 'true');
                 return;
             }
@@ -2094,13 +2094,20 @@
         eraserBtn.addEventListener('click', () => {
             console.log("🧹 Executing Border Purge...");
             let purged = false;
-            const borders = document.querySelectorAll('#native-blueprint-border, [data-is-border="true"], .page-border-wrapper');
+            const borders = document.querySelectorAll('#native-blueprint-border, #native-border-art-border, [data-is-border="true"], .page-border-wrapper');
             
             borders.forEach(border => {
                 let wrapper = border;
                 while (wrapper.parentElement && wrapper.parentElement.id !== 'paper') wrapper = wrapper.parentElement;
                 if (wrapper) { wrapper.remove(); purged = true; }
             });
+
+            const pageBorder = document.getElementById('page-border');
+            if (pageBorder && (pageBorder.getAttribute('data-style') || pageBorder.innerHTML.trim() !== '')) {
+                pageBorder.removeAttribute('data-style');
+                pageBorder.innerHTML = '';
+                purged = true;
+            }
 
             if (purged && typeof pushHistory === 'function') pushHistory();
         });

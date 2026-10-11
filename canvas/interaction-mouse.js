@@ -560,6 +560,9 @@ window.handleMouseMove = function(e) {
                 if ((item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
                     window.refreshSmartArrow(item.el, itemNewW, itemNewH);
                 }
+                if (item.el.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                    window.BorderArtEngine.refreshElement(item.el, itemNewW, itemNewH);
+                }
             });
 
             if (typeof window.renderSelectionOverlays === 'function') {
@@ -713,6 +716,9 @@ window.handleMouseMove = function(e) {
                     window.refreshSmartArrow(state.selectedEl, rawW, rawH);
                 }
             }
+            if(state.selectedEl && state.selectedEl.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                window.BorderArtEngine.refreshElement(state.selectedEl, rawW, rawH);
+            }
         }
         if (typeof window.renderSelectionOverlays === 'function') {
             window.renderSelectionOverlays();
@@ -789,7 +795,13 @@ window.handleMouseUp = function() {
                     if (item.el && (item.el.getAttribute('data-type') === 'smart-arrow' || item.el.querySelector('.smart-arrow-svg')) && typeof window.refreshSmartArrow === 'function') {
                         window.refreshSmartArrow(item.el);
                     }
+                    if (item.el && item.el.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                        window.BorderArtEngine.refreshElement(item.el);
+                    }
                 });
+            }
+            if (state.selectedEl && state.selectedEl.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                window.BorderArtEngine.refreshElement(state.selectedEl);
             }
         }
         setTimeout(() => { if(typeof updateThumbnails === 'function') updateThumbnails(); }, 50);

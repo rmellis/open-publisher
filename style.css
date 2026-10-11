@@ -1591,6 +1591,38 @@ td, th {
     border: 1px solid var(--ui-theme-color);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-theme-color) 15%, transparent);
 }
+#border-art-dropdown {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+}
+#border-art-scroll-container {
+    box-sizing: border-box;
+    overscroll-behavior: contain;
+}
+#border-art-scroll-container::-webkit-scrollbar {
+    width: 8px !important;
+}
+#border-art-scroll-container::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--ui-text) 6%, transparent) !important;
+    border-radius: 4px !important;
+}
+#border-art-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--ui-theme-color, #0d9488) !important;
+    border-radius: 4px !important;
+}
+#border-art-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-theme-dark, #0f766e) !important;
+}
+[data-is-border="true"] .resize-handle,
+[data-is-border="true"] .rotate-handle,
+[data-is-border="true"] .rotate-stick {
+    display: none !important;
+}
 .dropdown-category-header {
     padding: 6px 10px;
     background: color-mix(in srgb, var(--ui-text) 5%, transparent);
@@ -4545,6 +4577,31 @@ body.dark-mode #border-grid > div > div > div {
 }
 body.dark-mode #border-grid svg * {
     stroke: var(--ui-text) !important;
+}
+
+/* Border Art Dropdown Menu */
+#border-art-dropdown {
+    border-radius: 8px;
+    z-index: 999999;
+}
+body.dark-mode #border-art-scroll-container {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .border-art-card {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
+}
+body.dark-mode .border-art-card:hover {
+    background: var(--ui-hover-bg) !important;
+    border-color: var(--ui-theme-color) !important;
+}
+body.dark-mode #border-art-none-btn {
+    background: var(--ui-panel-bg) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text) !important;
 }
 
 /* Coupon Dialog Overrides */

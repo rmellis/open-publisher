@@ -333,6 +333,12 @@ window.initShapes = function() {
     // 2. FIX BUG 1: Format Text Box router (handles SVG fills + Hollow stripping)
     // We rewrite the format tool to understand the difference between text boxes and vector shapes
     if (typeof ContextMenuActions !== 'undefined') {
+        ContextMenuActions.openBorderArt = function() {
+            if (!state.selectedEl) return;
+            if (window.BorderArtEngine) {
+                BorderArtEngine.openForElement(state.selectedEl);
+            }
+        };
         ContextMenuActions.formatTextBox = function() {
             if (!state.selectedEl) return;
             
@@ -615,6 +621,16 @@ window.initShapes = function() {
                 </div>
                 <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
                     Tip: Set thickness to 0 to remove the border.
+                </div>
+                
+                <div style="margin-top:12px; margin-bottom:12px; padding:10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:12px; display:block; color:#1e293b;">Clipart Border Art</strong>
+                        <span style="font-size:10px; color:#64748b;">Add decorative picture borders to this box</span>
+                    </div>
+                    <button type="button" class="btn" style="padding:6px 12px; font-size:11px; font-weight:600; background:var(--ui-theme-color); border:none; color:#ffffff; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:opacity 0.15s;" onclick="DialogSystem.close(); if(window.BorderArtEngine) window.BorderArtEngine.openForElement(state.selectedEl);">
+                        <i class="fas fa-palette"></i> Border Art...
+                    </button>
                 </div>
                 
                 <hr style="margin:15px 0; border:none; border-top:1px solid #ddd;">

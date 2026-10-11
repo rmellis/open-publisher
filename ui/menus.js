@@ -320,6 +320,7 @@ const ContextMenuSystem = {
                     }
                     html += this.buildDivider();
                     html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
+                    html += this.buildItem('Border Art...', 'fa-palette', 'if(window.ContextMenuActions && ContextMenuActions.openBorderArt) ContextMenuActions.openBorderArt(); else if(window.BorderArtEngine) BorderArtEngine.openForElement(state.selectedEl);');
                 }
                 // 3.5. TABLE CONTEXT MENU
                 else if (isTable) {
@@ -372,6 +373,9 @@ const ContextMenuSystem = {
                     html += this.buildItem('Edit Points', 'fa-draw-polygon', 'if(window.toggleShapeEditPoints) window.toggleShapeEditPoints()');
                     html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
                     html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
+                    html += this.buildDivider();
+                    html += this.buildItem('Format AutoShape', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
+                    html += this.buildItem('Border Art...', 'fa-palette', 'if(window.ContextMenuActions && ContextMenuActions.openBorderArt) ContextMenuActions.openBorderArt(); else if(window.BorderArtEngine) BorderArtEngine.openForElement(state.selectedEl);');
                 }
 
                 // 5. UNIVERSAL OBJECT FUNCTIONS

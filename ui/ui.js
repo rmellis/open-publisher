@@ -953,6 +953,12 @@ window.ContextMenuActions = {
         content.insertAdjacentHTML('afterbegin', `<span class="drop-cap" style="float:left; font-size:3.5em; line-height:0.8; padding-right:8px; padding-top:4px; font-weight:bold; color:var(--ui-theme-color);">${firstChar}</span>`);
         pushHistory();
     },
+    openBorderArt: function() {
+        if (!state.selectedEl) return;
+        if (window.BorderArtEngine) {
+            BorderArtEngine.openForElement(state.selectedEl);
+        }
+    },
     formatTextBox: function() {
         if(!state.selectedEl) return;
         const form = `
@@ -963,6 +969,9 @@ window.ContextMenuActions = {
                 <input type="hidden" id="ctx-box-bc" value="#000000"><div style="background-color:#000000; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; display:inline-block; vertical-align:middle;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; this.style.backgroundColor = c; })"></div>
             </div>
             <div class="input-group"><label>Border Thickness (px):</label><div class="modern-spinner"><input type="text" id="ctx-box-bt" value="0" onchange="this.value = Math.max(0, Math.min(20, parseInt(this.value)||0))"><div class="spin-btns"><div onclick="document.getElementById('ctx-box-bt').value=Math.min(20, parseInt(document.getElementById('ctx-box-bt').value||0)+1)"><i class="fas fa-chevron-up"></i></div><div onclick="document.getElementById('ctx-box-bt').value=Math.max(0, parseInt(document.getElementById('ctx-box-bt').value||0)-1)"><i class="fas fa-chevron-down"></i></div></div></div></div>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn" style="padding:6px 12px; font-size:12px; font-weight:600; background:var(--ui-bg, #f8fafc); border:1px solid var(--ui-theme-color); color:var(--ui-theme-color); border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" onclick="DialogSystem.close(); if(window.BorderArtEngine) window.BorderArtEngine.openForElement(state.selectedEl);"><i class="fas fa-palette"></i> Border Art...</button>
+            </div>
         `;
         DialogSystem.show('Format Text Box', form, () => {
             const bg = document.getElementById('ctx-box-bg').value;

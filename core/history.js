@@ -128,7 +128,8 @@ function serializeCurrentPage() {
             growFit: el.getAttribute('data-grow-fit') === 'true',
             arrowStyle: el.getAttribute('data-arrow-style') || null,
             arrowHead: el.getAttribute('data-arrow-head') || null,
-            arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null
+            arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null,
+            isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border'
         };
 
         const content = el.querySelector('.element-content');
@@ -141,6 +142,8 @@ function serializeCurrentPage() {
                 attr.name.startsWith('data-waf-') || 
                 attr.name.startsWith('data-shadow-') || 
                 attr.name.startsWith('data-border-') ||
+                attr.name.startsWith('data-is-') ||
+                attr.name === 'data-is-border' ||
                 attr.name === 'data-aspect-lock' || 
                 attr.name === 'data-aspect-ratio' ||
                 attr.name === 'data-rounded-corners') {

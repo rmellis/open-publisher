@@ -1,4 +1,4 @@
-// --- SERIALIZER & RENDER (v5.6.9) ---
+// --- SERIALIZER & RENDER (v5.7.0) ---
 function renderPage(pageData) {
     if (typeof pageData === 'number' && typeof state !== 'undefined' && state.pages && state.pages[pageData]) {
         pageData = state.pages[pageData];
@@ -191,6 +191,14 @@ function renderPage(pageData) {
         el.className = 'pub-element';
         if (data.id) el.id = data.id;
         else el.id = 'pub-el-' + Math.random().toString(36).substr(2, 9);
+        if (data.id === 'native-border-art-border') {
+            const existingBorder = paper.querySelector('#native-border-art-border');
+            if (existingBorder) existingBorder.remove();
+        }
+        if (data.id === 'native-border-art-border' || data.id === 'native-blueprint-border' || data.isBorder || (data.filterAttributes && data.filterAttributes['data-is-border'] === 'true')) {
+            el.setAttribute('data-is-border', 'true');
+            el.style.pointerEvents = 'none';
+        }
         if (data._isMaster) {
             el.classList.add('master-page-element');
             el.style.pointerEvents = 'none';

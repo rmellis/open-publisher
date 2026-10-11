@@ -244,11 +244,31 @@ function applySingleElementScheme(el, schemeName) {
 function setPageBorder(type, doPush = true) {
     if (!type) type = 'none';
     const div = document.getElementById('page-border');
+    if (!div) return;
     div.setAttribute('data-style', type);
     div.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box;';
     div.innerHTML = '';
 
-    if (type === 'none') { if (doPush) pushHistory(); return; }
+    if (type === 'none') { 
+        if (window.BorderArtEngine) window.BorderArtEngine.updateActiveUI(null);
+        const ba = document.getElementById('native-border-art-border');
+        if (ba) ba.remove();
+        if (doPush) pushHistory(); 
+        return; 
+    }
+
+    const oldBa = document.getElementById('native-border-art-border');
+    if (oldBa && !type.startsWith('borderart:')) oldBa.remove();
+
+    if (type.startsWith('borderart:')) {
+        if (window.BorderArtEngine && typeof window.BorderArtEngine.renderPageBorder === 'function') {
+            window.BorderArtEngine.renderPageBorder(div, type);
+        }
+        const b = document.getElementById('native-blueprint-border');
+        if (b) b.remove();
+        if (doPush) pushHistory();
+        return;
+    }
 
     if (type.startsWith('fancy-')) {
         if (type === 'fancy-deco') {

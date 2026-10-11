@@ -132,6 +132,7 @@
                 elementsToRender.forEach(el => {
                     let elDiv = document.createElement('div');
                     elDiv.className = 'pub-element';
+                    if (el.id) elDiv.id = el.id;
                     if (el.type) elDiv.setAttribute('data-type', el.type);
                     if (el.arrowStyle) elDiv.setAttribute('data-arrow-style', el.arrowStyle);
                     if (el.arrowHead) {
@@ -186,6 +187,71 @@
                     }
                     scaler.appendChild(elDiv);
                 });
+
+                // ✨ HIGH-RES BORDER ART & PAGE BORDER PRINT RENDERING ✨
+                const hasBorderArtInScaler = scaler.querySelector('#native-border-art-border, .border-art-wrapper');
+                if (!hasBorderArtInScaler && page.borderStyle && page.borderStyle.startsWith('borderart:')) {
+                    const parts = page.borderStyle.split(':');
+                    const artId = parts[1] || 'santas';
+                    const preset = window.BorderArtEngine ? window.BorderArtEngine.getPresetById(artId) : null;
+                    if (preset && window.BorderArtEngine) {
+                        const pW = parseFloat(page.width) || 794;
+                        const pH = parseFloat(page.height) || 1123;
+                        const size = parseInt(parts[2]) || 32;
+                        const inset = parts[3] !== undefined ? parseInt(parts[3]) : 15;
+                        const bDiv = document.createElement('div');
+                        bDiv.id = 'native-border-art-border';
+                        bDiv.className = 'pub-element';
+                        bDiv.setAttribute('data-type', 'shape');
+                        bDiv.setAttribute('data-is-border', 'true');
+                        bDiv.style.cssText = `position: absolute; left: 0px; top: 0px; width: ${pW}px; height: ${pH}px; z-index: 1; pointer-events: none; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
+                        bDiv.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${window.BorderArtEngine.generateTilesHTML(preset, pW, pH, size, inset)}</div>`;
+                        scaler.appendChild(bDiv);
+                    }
+                }
+
+                const hasStandardBorderInScaler = scaler.querySelector('.page-border-container, #native-blueprint-border');
+                if (!hasStandardBorderInScaler && page.borderStyle && page.borderStyle !== 'none' && !page.borderStyle.startsWith('borderart:')) {
+                    const bDiv = document.createElement('div');
+                    bDiv.className = 'page-border-container';
+                    bDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;';
+                    const type = page.borderStyle;
+                    if (type.startsWith('fancy-')) {
+                        if (type === 'fancy-deco') {
+                            bDiv.style.border = '15px solid #333';
+                            bDiv.style.outline = '2px dashed #333';
+                            bDiv.style.outlineOffset = '-20px';
+                        } else if (type === 'fancy-cert') {
+                            bDiv.style.border = '20px solid #d4af37';
+                            bDiv.style.borderImage = 'linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1';
+                            const inner = document.createElement('div');
+                            inner.style.position = 'absolute'; inner.style.inset = '5px'; inner.style.border = '2px solid #b8860b';
+                            bDiv.appendChild(inner);
+                        } else if (type === 'fancy-double') {
+                            bDiv.style.border = 'double 10px #000';
+                            bDiv.style.outline = 'double 4px #000';
+                            bDiv.style.outlineOffset = '-15px';
+                        } else if (type === 'fancy-antique') {
+                            bDiv.style.border = '10px double #5d4037';
+                            const c = document.createElement('div');
+                            c.style.cssText = 'position:absolute; inset:5px; border: 2px solid #5d4037; border-radius: 10px;';
+                            bDiv.appendChild(c);
+                        } else if (type === 'fancy-modern') {
+                            bDiv.style.border = '20px solid #2c3e50';
+                            bDiv.style.borderBottom = '40px solid #2c3e50';
+                        } else if (type === 'fancy-floral') {
+                            bDiv.style.border = '5px solid green';
+                            const tl = document.createElement('div'); tl.innerText = '🌿'; tl.style.cssText = 'position:absolute; top:-15px; left:-15px; font-size:40px;';
+                            const tr = document.createElement('div'); tr.innerText = '🌿'; tr.style.cssText = 'position:absolute; top:-15px; right:-15px; font-size:40px; transform:scaleX(-1);';
+                            const bl = document.createElement('div'); bl.innerText = '🌿'; bl.style.cssText = 'position:absolute; bottom:-15px; left:-15px; font-size:40px; transform:scaleY(-1);';
+                            const br = document.createElement('div'); br.innerText = '🌿'; br.style.cssText = 'position:absolute; bottom:-15px; right:-15px; font-size:40px; transform:scale(-1);';
+                            bDiv.appendChild(tl); bDiv.appendChild(tr); bDiv.appendChild(bl); bDiv.appendChild(br);
+                        }
+                    } else {
+                        bDiv.style.border = '2px ' + type + ' #333';
+                    }
+                    scaler.appendChild(bDiv);
+                }
 
                 // ✨ HIGH-RES WORDART PRINT BAKING (Native Browser Print Spooler) ✨
                 const betaWordArts = Array.from(scaler.querySelectorAll('.beta-wa-img'));
@@ -265,7 +331,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.6.9...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.7.0...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -857,7 +923,7 @@
             }
 
             if (livePaper) {
-                const liveBorder = livePaper.querySelector('[data-is-border="true"], #native-blueprint-border');
+                const liveBorder = livePaper.querySelector('[data-is-border="true"], #native-blueprint-border, #native-border-art-border');
                 if (liveBorder) borderHtml = liveBorder.outerHTML;
             }
 
@@ -1209,7 +1275,27 @@
                     pageWrapper.appendChild(elDiv);
                 }
 
-                if (borderHtml) pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
+                if (borderHtml && !pageWrapper.querySelector('#native-border-art-border, [data-is-border="true"]')) {
+                    pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
+                } else if (!pageWrapper.querySelector('#native-border-art-border, .border-art-wrapper') && page.borderStyle && page.borderStyle.startsWith('borderart:')) {
+                    const parts = page.borderStyle.split(':');
+                    const artId = parts[1] || 'santas';
+                    const preset = window.BorderArtEngine ? window.BorderArtEngine.getPresetById(artId) : null;
+                    if (preset && window.BorderArtEngine) {
+                        const pW = parseFloat(page.width) || 794;
+                        const pH = parseFloat(page.height) || 1123;
+                        const size = parseInt(parts[2]) || 32;
+                        const inset = parts[3] !== undefined ? parseInt(parts[3]) : 15;
+                        const bDiv = document.createElement('div');
+                        bDiv.id = 'native-border-art-border';
+                        bDiv.className = 'pub-element';
+                        bDiv.setAttribute('data-type', 'shape');
+                        bDiv.setAttribute('data-is-border', 'true');
+                        bDiv.style.cssText = `position: absolute; left: 0px; top: 0px; width: ${pW}px; height: ${pH}px; z-index: 1; pointer-events: none;`;
+                        bDiv.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${window.BorderArtEngine.generateTilesHTML(preset, pW, pH, size, inset)}</div>`;
+                        pageWrapper.appendChild(bDiv);
+                    }
+                }
                 
                 if (state.headersVisible) {
                     if (renderHeader) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-header visible" style="pointer-events:none; z-index:0;">${renderHeader}</div>`);
@@ -1481,6 +1567,28 @@
                     if (!bImg.complete) {
                         await new Promise(r => { bImg.onload = r; bImg.onerror = r; setTimeout(r, 200); });
                     }
+                }
+
+                // Ensure all Border Art tiles preserve 1:1 aspect ratio and are fully preloaded for html2canvas
+                const borderArtImgs = Array.from(pageWrapper.querySelectorAll('.border-art-wrapper img, .element-border-art img'));
+                if (borderArtImgs.length > 0) {
+                    borderArtImgs.forEach(img => {
+                        if (img.src && img.src.includes('acr.floydcraft') && !img.src.includes('fit=contain')) {
+                            img.src = img.src + '&w=128&h=128&fit=contain';
+                        }
+                    });
+                    if (statusEl) statusEl.innerText = `Preparing Border Art tiles on page ${i + 1}...`;
+                    await Promise.all(borderArtImgs.map(img => {
+                        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                        return new Promise(resolve => {
+                            let settled = false;
+                            const done = () => { if (!settled) { settled = true; resolve(); } };
+                            img.onload = done;
+                            img.onerror = done;
+                            if (img.complete && img.naturalWidth > 0) done();
+                            setTimeout(done, 2500);
+                        });
+                    }));
                 }
 
                 let canvas;
