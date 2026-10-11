@@ -156,6 +156,19 @@ window.printFullDocument = async function(isBooklet = false) {
                  if (el.imgStyle) {
                      Object.assign(img.style, el.imgStyle);
                  }
+                 const effectiveClip = (el.imgStyle && el.imgStyle.clipPath) || el.clipPath;
+                 if (effectiveClip && effectiveClip !== 'none') {
+                     img.style.clipPath = effectiveClip;
+                     img.style.webkitClipPath = effectiveClip;
+                     const rMatch = effectiveClip.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i);
+                     if (rMatch) {
+                         img.style.borderRadius = rMatch[1];
+                     }
+                 }
+                 const effectiveRadius = (el.imgStyle && el.imgStyle.borderRadius) || el.borderRadius;
+                 if (effectiveRadius && effectiveRadius !== 'none') {
+                     img.style.borderRadius = effectiveRadius;
+                 }
                  elDiv.appendChild(img);
             } else {
                  // Otherwise, it's text. Just dump the exact HTML inside!

@@ -152,7 +152,21 @@
                     if (el.imgSrc) {
                         let img = document.createElement('img');
                         img.src = el.imgSrc;
+                        if (el.altText) img.alt = el.altText;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        const effectiveClip = (el.imgStyle && el.imgStyle.clipPath) || el.clipPath;
+                        if (effectiveClip && effectiveClip !== 'none') {
+                            img.style.clipPath = effectiveClip;
+                            img.style.webkitClipPath = effectiveClip;
+                            const rMatch = effectiveClip.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i);
+                            if (rMatch) {
+                                img.style.borderRadius = rMatch[1];
+                            }
+                        }
+                        const effectiveRadius = (el.imgStyle && el.imgStyle.borderRadius) || el.borderRadius;
+                        if (effectiveRadius && effectiveRadius !== 'none') {
+                            img.style.borderRadius = effectiveRadius;
+                        }
                         elDiv.appendChild(img);
                     } else {
                         const sX = el.scaleX || "1";
@@ -251,7 +265,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v4.6.2...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.6.9...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -305,7 +319,11 @@
     };
 
     const getImageShapeClipPath = (el, page, livePaper) => {
-        let shapeClip = (el.imgStyle && el.imgStyle.clipPath) ? el.imgStyle.clipPath : '';
+        let shapeClip = (el.imgStyle && el.imgStyle.clipPath) ? el.imgStyle.clipPath : (el.clipPath || '');
+        if ((!shapeClip || shapeClip === 'none') && (el.borderRadius || (el.imgStyle && el.imgStyle.borderRadius))) {
+            const r = el.borderRadius || el.imgStyle.borderRadius;
+            if (r && r !== 'none' && r !== '0px') shapeClip = `inset(0 round ${r})`;
+        }
         if ((!shapeClip || shapeClip === 'none') && page === state.pages[state.currentPageIndex] && livePaper) {
             const l1 = parseFloat(el.left) || 0;
             const t1 = parseFloat(el.top) || 0;
@@ -317,34 +335,153 @@
                     const comp = window.getComputedStyle(activeImg);
                     if (comp.clipPath && comp.clipPath !== 'none') shapeClip = comp.clipPath;
                     else if (activeImg.style.clipPath && activeImg.style.clipPath !== 'none') shapeClip = activeImg.style.clipPath;
+                    else if (activeImg.style.webkitClipPath && activeImg.style.webkitClipPath !== 'none') shapeClip = activeImg.style.webkitClipPath;
+                    else if (activeImg.style.borderRadius && activeImg.style.borderRadius !== 'none' && activeImg.style.borderRadius !== '0px') {
+                        shapeClip = `inset(0 round ${activeImg.style.borderRadius})`;
+                    } else if (comp.borderRadius && comp.borderRadius !== '0px' && comp.borderRadius !== 'none') {
+                        shapeClip = `inset(0 round ${comp.borderRadius})`;
+                    }
                 }
             }
         }
         return (shapeClip && shapeClip !== 'none') ? shapeClip : '';
     };
 
-    const applyClipPathRegion = (ctx, clipPath, w, h) => {
+    const applyClipPathRegion = (ctx, clipPath, w, h, scale = 1, offsetX = 0, offsetY = 0) => {
         const normalized = (clipPath || '').trim();
         if (!normalized || normalized === 'none') return;
-        if (/^circle\(/i.test(normalized)) {
+
+        // 1. Inset / Rounded Corners: inset(...) or inset(... round ...)
+        const insetMatch = normalized.match(/^inset\(\s*(.*?)\s*\)$/i);
+        if (insetMatch) {
+            const rawBody = insetMatch[1].trim();
+            const roundParts = rawBody.split(/\s+round\s+/i);
+            const insetsStr = roundParts[0].trim();
+            const radiiStr = roundParts[1] ? roundParts[1].trim() : '';
+
+            const parseDist = (val, total) => {
+                if (!val || val === '0' || val === '0px' || val === '0%') return 0;
+                const s = val.trim();
+                if (s.endsWith('%')) return (parseFloat(s) / 100) * total;
+                if (s.endsWith('px')) return parseFloat(s) * scale;
+                return parseFloat(s) * scale;
+            };
+
+            let top = 0, right = 0, bottom = 0, left = 0;
+            if (insetsStr) {
+                const iTokens = insetsStr.split(/\s+/).filter(Boolean);
+                if (iTokens.length === 1) {
+                    top = parseDist(iTokens[0], h);
+                    right = parseDist(iTokens[0], w);
+                    bottom = top;
+                    left = right;
+                } else if (iTokens.length === 2) {
+                    top = bottom = parseDist(iTokens[0], h);
+                    right = left = parseDist(iTokens[1], w);
+                } else if (iTokens.length === 3) {
+                    top = parseDist(iTokens[0], h);
+                    right = left = parseDist(iTokens[1], w);
+                    bottom = parseDist(iTokens[2], h);
+                } else if (iTokens.length >= 4) {
+                    top = parseDist(iTokens[0], h);
+                    right = parseDist(iTokens[1], w);
+                    bottom = parseDist(iTokens[2], h);
+                    left = parseDist(iTokens[3], w);
+                }
+            }
+
+            const rectX = offsetX + left;
+            const rectY = offsetY + top;
+            const rectW = Math.max(0, w - left - right);
+            const rectH = Math.max(0, h - top - bottom);
+
+            let rTL = 0, rTR = 0, rBR = 0, rBL = 0;
+            if (radiiStr) {
+                const horizRadii = radiiStr.split('/')[0].trim();
+                const rTokens = horizRadii.split(/\s+/).filter(Boolean);
+                const parseR = (val) => parseDist(val, Math.min(rectW, rectH));
+
+                if (rTokens.length === 1) {
+                    rTL = rTR = rBR = rBL = parseR(rTokens[0]);
+                } else if (rTokens.length === 2) {
+                    rTL = rBR = parseR(rTokens[0]);
+                    rTR = rBL = parseR(rTokens[1]);
+                } else if (rTokens.length === 3) {
+                    rTL = parseR(rTokens[0]);
+                    rTR = rBL = parseR(rTokens[1]);
+                    rBR = parseR(rTokens[2]);
+                } else if (rTokens.length >= 4) {
+                    rTL = parseR(rTokens[0]);
+                    rTR = parseR(rTokens[1]);
+                    rBR = parseR(rTokens[2]);
+                    rBL = parseR(rTokens[3]);
+                }
+            }
+
             ctx.beginPath();
-            ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            const maxR = Math.min(rectW / 2, rectH / 2);
+            rTL = Math.min(rTL, maxR);
+            rTR = Math.min(rTR, maxR);
+            rBR = Math.min(rBR, maxR);
+            rBL = Math.min(rBL, maxR);
+
+            if (rTL > 0 || rTR > 0 || rBR > 0 || rBL > 0) {
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(rectX, rectY, rectW, rectH, [rTL, rTR, rBR, rBL]);
+                } else {
+                    ctx.moveTo(rectX + rTL, rectY);
+                    ctx.lineTo(rectX + rectW - rTR, rectY);
+                    ctx.arcTo(rectX + rectW, rectY, rectX + rectW, rectY + rTR, rTR);
+                    ctx.lineTo(rectX + rectW, rectY + rectH - rBR);
+                    ctx.arcTo(rectX + rectW, rectY + rectH, rectX, rectY + rectH, rBR);
+                    ctx.lineTo(rectX + rBL, rectY + rectH);
+                    ctx.arcTo(rectX, rectY + rectH, rectX, rectY, rBL);
+                    ctx.lineTo(rectX, rectY + rTL);
+                    ctx.arcTo(rectX, rectY, rectX + rTL, rectY, rTL);
+                }
+            } else {
+                ctx.rect(rectX, rectY, rectW, rectH);
+            }
+            ctx.closePath();
             ctx.clip();
             return;
         }
+
+        // 2. Circle or Ellipse: circle(...) or ellipse(...)
+        if (/^circle\(/i.test(normalized) || /^ellipse\(/i.test(normalized)) {
+            ctx.beginPath();
+            ctx.ellipse(offsetX + w / 2, offsetY + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            return;
+        }
+
+        // 3. Polygon: polygon(...)
         const polyMatch = normalized.match(/^polygon\(\s*([^)]+)\)/i);
         if (polyMatch) {
             const coords = polyMatch[1].split(/\s*,\s*/);
             ctx.beginPath();
             coords.forEach((pair, i) => {
-                const nums = pair.trim().split(/\s+/);
-                const x = (parseFloat(nums[0]) / 100) * w;
-                const y = (parseFloat(nums[1]) / 100) * h;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                const nums = pair.trim().split(/\s+/).filter(Boolean);
+                if (nums.length >= 2) {
+                    let xVal = 0, yVal = 0;
+                    if (nums[0].endsWith('%')) xVal = (parseFloat(nums[0]) / 100) * w;
+                    else if (nums[0].endsWith('px')) xVal = parseFloat(nums[0]) * scale;
+                    else xVal = (parseFloat(nums[0]) / 100) * w;
+
+                    if (nums[1].endsWith('%')) yVal = (parseFloat(nums[1]) / 100) * h;
+                    else if (nums[1].endsWith('px')) yVal = parseFloat(nums[1]) * scale;
+                    else yVal = (parseFloat(nums[1]) / 100) * h;
+
+                    const finalX = offsetX + xVal;
+                    const finalY = offsetY + yVal;
+                    if (i === 0) ctx.moveTo(finalX, finalY);
+                    else ctx.lineTo(finalX, finalY);
+                }
             });
             ctx.closePath();
             ctx.clip();
+            return;
         }
     };
 
@@ -438,6 +575,9 @@
                 rasterCanvas.height = displayH * scale;
                 const rasterCtx = rasterCanvas.getContext('2d');
                 
+                rasterCtx.save();
+                if (clipPath) applyClipPathRegion(rasterCtx, clipPath, rasterCanvas.width, rasterCanvas.height, scale, 0, 0);
+
                 if (isDefaultFillImageLayout(imgStyle)) {
                     rasterCtx.drawImage(tempImg, 0, 0, rasterCanvas.width, rasterCanvas.height);
                 } else {
@@ -447,9 +587,12 @@
                     const imgT = parseImageLayoutValue(imgStyle.top, displayH) * scale;
                     rasterCtx.drawImage(tempImg, imgL, imgT, imgW, imgH);
                 }
+                rasterCtx.restore();
 
                 ctx.save();
-                if (clipPath) applyClipPathRegion(ctx, clipPath, c.width, c.height);
+                if (clipPath && padW === 0 && padH === 0) {
+                    applyClipPathRegion(ctx, clipPath, c.width, c.height, scale, 0, 0);
+                }
                 if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
                 ctx.globalAlpha = parseFloat(opacity);
                 
@@ -995,6 +1138,10 @@
                                 img.style.opacity = '1';
                                 cropDiv.style.clipPath = 'none';
                                 cropDiv.style.webkitClipPath = 'none';
+                                const rMatch = shapeClipPath.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i);
+                                if (rMatch && (!baked || !baked.padW)) {
+                                    cropDiv.style.borderRadius = rMatch[1];
+                                }
                             } catch(e) {
                                 await loadImageStrict(img, finalSrc);
                                 let safeFilter = currentFilter || '';
@@ -1006,6 +1153,11 @@
                                 if (shapeClipPath) {
                                     cropDiv.style.clipPath = shapeClipPath;
                                     cropDiv.style.webkitClipPath = shapeClipPath;
+                                    const rMatch = shapeClipPath.match(/round\s+([0-9]+(?:\.[0-9]+)?(?:px|%))/i);
+                                    if (rMatch) {
+                                        cropDiv.style.borderRadius = rMatch[1];
+                                        img.style.borderRadius = rMatch[1];
+                                    }
                                 }
                             }
                         } else {

@@ -291,12 +291,13 @@ const ContextMenuSystem = {
                         ${this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()')}
                     `);
                     html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
+                    html += this.buildItem('Crop to Shape', 'fa-shapes', 'if(window.ContextRibbonActions && ContextRibbonActions.cropToShape) ContextRibbonActions.cropToShape();');
                     html += this.buildFlyoutItem('Rounded Corners', 'fa-border-style', `
-                        ${this.buildItem('None', 'fa-square', "state.selectedEl.querySelector('img').style.clipPath='none'; state.selectedEl.querySelector('img').style.webkitClipPath='none'; pushHistory();")}
-                        ${this.buildItem('8px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 8px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 8px)'; pushHistory();")}
-                        ${this.buildItem('16px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 16px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 16px)'; pushHistory();")}
-                        ${this.buildItem('24px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 24px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 24px)'; pushHistory();")}
-                        ${this.buildItem('32px', 'fa-circle-notch', "state.selectedEl.querySelector('img').style.clipPath='inset(0 round 32px)'; state.selectedEl.querySelector('img').style.webkitClipPath='inset(0 round 32px)'; pushHistory();")}
+                        ${this.buildItem('None', 'fa-square', "if(window.ContextMenuActions && ContextMenuActions.setRoundedCorners) ContextMenuActions.setRoundedCorners('none'); else { const img=state.selectedEl.querySelector('img'); if(img){ img.style.clipPath='none'; img.style.webkitClipPath='none'; img.style.borderRadius=''; img.removeAttribute('data-rounded-corners'); state.selectedEl.removeAttribute('data-rounded-corners'); } pushHistory(); }")}
+                        ${this.buildItem('8px', 'fa-circle-notch', "if(window.ContextMenuActions && ContextMenuActions.setRoundedCorners) ContextMenuActions.setRoundedCorners('8px'); else { const img=state.selectedEl.querySelector('img'); if(img){ img.style.clipPath='inset(0 round 8px)'; img.style.webkitClipPath='inset(0 round 8px)'; img.style.borderRadius='8px'; img.setAttribute('data-rounded-corners', '8px'); state.selectedEl.setAttribute('data-rounded-corners', '8px'); } pushHistory(); }")}
+                        ${this.buildItem('16px', 'fa-circle-notch', "if(window.ContextMenuActions && ContextMenuActions.setRoundedCorners) ContextMenuActions.setRoundedCorners('16px'); else { const img=state.selectedEl.querySelector('img'); if(img){ img.style.clipPath='inset(0 round 16px)'; img.style.webkitClipPath='inset(0 round 16px)'; img.style.borderRadius='16px'; img.setAttribute('data-rounded-corners', '16px'); state.selectedEl.setAttribute('data-rounded-corners', '16px'); } pushHistory(); }")}
+                        ${this.buildItem('24px', 'fa-circle-notch', "if(window.ContextMenuActions && ContextMenuActions.setRoundedCorners) ContextMenuActions.setRoundedCorners('24px'); else { const img=state.selectedEl.querySelector('img'); if(img){ img.style.clipPath='inset(0 round 24px)'; img.style.webkitClipPath='inset(0 round 24px)'; img.style.borderRadius='24px'; img.setAttribute('data-rounded-corners', '24px'); state.selectedEl.setAttribute('data-rounded-corners', '24px'); } pushHistory(); }")}
+                        ${this.buildItem('32px', 'fa-circle-notch', "if(window.ContextMenuActions && ContextMenuActions.setRoundedCorners) ContextMenuActions.setRoundedCorners('32px'); else { const img=state.selectedEl.querySelector('img'); if(img){ img.style.clipPath='inset(0 round 32px)'; img.style.webkitClipPath='inset(0 round 32px)'; img.style.borderRadius='32px'; img.setAttribute('data-rounded-corners', '32px'); state.selectedEl.setAttribute('data-rounded-corners', '32px'); } pushHistory(); }")}
                     `);
                     html += this.buildItem('Insert Caption', 'fa-comment-alt', 'ContextMenuActions.insertCaption()');
                 }
@@ -570,7 +571,7 @@ const ContextMenuSystem = {
     }
 };
 
-// --- ACTION LOGIC FOR NEW CONTEXT FEATURES ---
+window.ContextMenuSystem = ContextMenuSystem;
 
 // Initialize the menu system on load
 setTimeout(() => ContextMenuSystem.init(), 500);

@@ -1072,8 +1072,13 @@ function enterMultiPageView(z) {
                     const imgDiv = document.createElement('div');
                     const s = data.imgStyle || {};
                     let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
-                    if (s.clipPath && s.clipPath !== 'none') {
-                        thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                    const effectiveClip = s.clipPath || data.clipPath;
+                    if (effectiveClip && effectiveClip !== 'none') {
+                        thumbImgCss += ` clip-path: ${effectiveClip}; -webkit-clip-path: ${effectiveClip};`;
+                    }
+                    const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
+                    if (effectiveRadius && effectiveRadius !== 'none') {
+                        thumbImgCss += ` border-radius: ${effectiveRadius};`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
                     let objFit = s.objectFit || '100% 100%';
@@ -1110,8 +1115,13 @@ function enterMultiPageView(z) {
                     const imgDiv = document.createElement('div');
                     const s = data.imgStyle || {};
                     let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block;`;
-                    if (s.clipPath && s.clipPath !== 'none') {
-                        thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                    const effectiveClip = s.clipPath || data.clipPath;
+                    if (effectiveClip && effectiveClip !== 'none') {
+                        thumbImgCss += ` clip-path: ${effectiveClip}; -webkit-clip-path: ${effectiveClip};`;
+                    }
+                    const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
+                    if (effectiveRadius && effectiveRadius !== 'none') {
+                        thumbImgCss += ` border-radius: ${effectiveRadius};`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
                     let objFit = s.objectFit || '100% 100%';

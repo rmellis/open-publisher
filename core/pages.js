@@ -1,5 +1,11 @@
-// --- SERIALIZER & RENDER (v5.4.8) ---
+// --- SERIALIZER & RENDER (v5.6.9) ---
 function renderPage(pageData) {
+    if (typeof pageData === 'number' && typeof state !== 'undefined' && state.pages && state.pages[pageData]) {
+        pageData = state.pages[pageData];
+    } else if (!pageData && typeof state !== 'undefined' && state.pages && state.pages[state.currentPageIndex || 0]) {
+        pageData = state.pages[state.currentPageIndex || 0];
+    }
+    if (!pageData) return;
     deselect();
     const pageDpi = (pageData && pageData.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;
     if (typeof state !== 'undefined') state.dpi = pageDpi;
@@ -255,11 +261,19 @@ function renderPage(pageData) {
             if (s.transform) {
                 styleStr += ` transform:${s.transform};`;
             }
-            if (s.clipPath && s.clipPath !== 'none') {
-                styleStr += ` clip-path:${s.clipPath}; -webkit-clip-path:${s.clipPath};`;
+            const effectiveClipPath = s.clipPath || data.clipPath;
+            if (effectiveClipPath && effectiveClipPath !== 'none') {
+                styleStr += ` clip-path:${effectiveClipPath}; -webkit-clip-path:${effectiveClipPath};`;
+            }
+            const effectiveBorderRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
+            let roundedAttr = '';
+            if (effectiveBorderRadius && effectiveBorderRadius !== 'none') {
+                styleStr += ` border-radius:${effectiveBorderRadius};`;
+                el.setAttribute('data-rounded-corners', effectiveBorderRadius);
+                roundedAttr = ` data-rounded-corners="${effectiveBorderRadius}"`;
             }
             const altAttr = data.altText ? ` alt="${data.altText.replace(/"/g, '&quot;')}"` : ' alt=""';
-            inner = `<img src="${data.imgSrc}" style="${styleStr}"${altAttr}>`;
+            inner = `<img src="${data.imgSrc}" style="${styleStr}"${altAttr}${roundedAttr}>`;
         } else if (data.clipPath) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
         } else {
@@ -882,8 +896,13 @@ function renderThumbnailHTML(pageData, pageIndex) {
                     thumbImgCss += ` opacity: ${1 - (tVal / 100)} !important;`;
                 }
 
-                if (s.clipPath && s.clipPath !== 'none') {
-                    thumbImgCss += ` clip-path: ${s.clipPath}; -webkit-clip-path: ${s.clipPath};`;
+                const effectiveClip = s.clipPath || data.clipPath;
+                if (effectiveClip && effectiveClip !== 'none') {
+                    thumbImgCss += ` clip-path: ${effectiveClip}; -webkit-clip-path: ${effectiveClip};`;
+                }
+                const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
+                if (effectiveRadius && effectiveRadius !== 'none') {
+                    thumbImgCss += ` border-radius: ${effectiveRadius};`;
                 }
                 thumbImg.style.cssText = thumbImgCss;
                 thumbImg.src = data.imgSrc;

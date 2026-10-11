@@ -18,8 +18,12 @@ window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
                 if (iComp.filter && iComp.filter !== 'none') filter = iComp.filter;
             }
         }
+        let clipPath = (comp.clipPath && comp.clipPath !== 'none') ? comp.clipPath : (oImg.style.clipPath || oImg.style.webkitClipPath || '');
+        if (!clipPath && (comp.borderRadius && comp.borderRadius !== '0px' && comp.borderRadius !== 'none')) {
+            clipPath = `inset(0 round ${comp.borderRadius})`;
+        }
         
-        if ((filter && filter !== 'none') || (opacity && opacity !== '1')) {
+        if ((filter && filter !== 'none') || (opacity && opacity !== '1') || (clipPath && clipPath !== 'none')) {
             let finalSrc = oImg.src;
             try {
                 let isSvg = false;
@@ -80,7 +84,7 @@ window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
                 const baked = await window.bakeImageForPrint(finalSrc, displayW, displayH, {
                     filter: filter !== 'none' ? filter : '',
                     opacity: opacity !== '1' ? opacity : '1',
-                    clipPath: '',
+                    clipPath: clipPath || '',
                     imgStyle: { width: '100%', height: '100%', objectFit: 'fill' }
                 });
                 
@@ -94,6 +98,9 @@ window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
                 
                 cImg.style.filter = 'none';
                 cImg.style.opacity = '1';
+                cImg.style.clipPath = 'none';
+                cImg.style.webkitClipPath = 'none';
+                cImg.style.borderRadius = '0px';
             } catch (e) {
                 console.warn('Export bake failed, fallback to style', e);
                 cImg.src = finalSrc;

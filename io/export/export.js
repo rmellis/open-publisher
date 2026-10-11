@@ -157,6 +157,15 @@ window.exportAsHTML = async function(opts = {}) {
                         img.src = src;
                         img.alt = data.altText || '';
                         Object.assign(img.style, data.imgStyle || { width:'100%', height:'100%' });
+                        const effectiveClip = (data.imgStyle && data.imgStyle.clipPath) || data.clipPath || '';
+                        const effectiveRadius = (data.imgStyle && data.imgStyle.borderRadius) || data.borderRadius || '';
+                        if (effectiveClip && effectiveClip !== 'none') {
+                            img.style.clipPath = effectiveClip;
+                            img.style.webkitClipPath = effectiveClip;
+                        }
+                        if (effectiveRadius && effectiveRadius !== 'none' && effectiveRadius !== '0px') {
+                            img.style.borderRadius = effectiveRadius;
+                        }
                         contentDiv.appendChild(img);
                     } else if (data.clipPath) {
                         let bgDiv = document.createElement('div');
