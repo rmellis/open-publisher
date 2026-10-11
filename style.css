@@ -5205,5 +5205,14 @@ body.dark-mode .arrow-stroke-width-val {
     color: #38bdf8 !important;
 }
 
+/* Hide download/install buttons in native desktop client apps (NW.js, Electron, etc.) */
+html.is-desktop-app #pwa-install-btn,
+html.is-desktop-app #pwa-install-ribbon-btn,
+body.is-desktop-app #pwa-install-btn,
+body.is-desktop-app #pwa-install-ribbon-btn {
+    display: none !important;
+}
+
+
 
 

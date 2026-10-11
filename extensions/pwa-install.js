@@ -1,19 +1,54 @@
-// Open Publisher PWA & Desktop Download Engine (v5.7.0)
+// Open Publisher PWA & Desktop Download Engine (v5.7.1)
 (function() {
     'use strict';
 
     function isDesktopApp() {
-        if (typeof window.isDesktopApp === 'function') {
-            return window.isDesktopApp();
+        if (typeof window !== 'undefined' && typeof window.isDesktopApp === 'function' && window.isDesktopApp !== isDesktopApp) {
+            try {
+                if (window.isDesktopApp()) return true;
+            } catch(e) {}
         }
-        return !!(window.desktopIPC && window.desktopIPC.isDesktop) || 
-               !!window._opBridgeActive || 
-               (typeof navigator !== 'undefined' && (
-                   navigator.userAgent.includes('OpenPublisher') || 
-                   navigator.userAgent.includes('nwjs') || 
-                   navigator.userAgent.includes('Electron')
-               )) ||
-               (typeof window !== 'undefined' && !!(window.process && (window.process.type || (window.process.versions && window.process.versions.electron))));
+
+        // 1. NW.js environment detection across all platforms (Windows, macOS, Linux, FreeBSD)
+        if (typeof nw !== 'undefined' && nw !== null) return true;
+        if (typeof window !== 'undefined' && typeof window.nw !== 'undefined' && window.nw !== null) return true;
+        if (typeof globalThis !== 'undefined' && typeof globalThis.nw !== 'undefined' && globalThis.nw !== null) return true;
+        if (typeof global !== 'undefined' && typeof global.nw !== 'undefined' && global.nw !== null) return true;
+
+        // 2. NW.js Node process versions
+        if (typeof process !== 'undefined' && process && process.versions && !!(process.versions.nw || process.versions['node-webkit'] || process.versions['nw-flavor'])) return true;
+        if (typeof window !== 'undefined' && window.process && window.process.versions && !!(window.process.versions.nw || window.process.versions['node-webkit'] || window.process.versions['nw-flavor'])) return true;
+        if (typeof global !== 'undefined' && global.process && global.process.versions && !!(global.process.versions.nw || global.process.versions['node-webkit'])) return true;
+
+        // 3. Electron runtime & FreeBSD standalone package
+        if (typeof process !== 'undefined' && process && process.versions && !!process.versions.electron) return true;
+        if (typeof window !== 'undefined' && window.process && (window.process.type || (window.process.versions && window.process.versions.electron))) return true;
+
+        // 4. Desktop IPC bridges & window flags
+        if (typeof window !== 'undefined') {
+            if (window._desktopBridgeActive || (window.desktopIPC && window.desktopIPC.isDesktop) || window._opBridgeActive || window._isDesktopClient) {
+                return true;
+            }
+        }
+
+        // 5. User Agent inspection (case-insensitive for OpenPublisher, nwjs, nw.js, node-webkit, Electron)
+        if (typeof navigator !== 'undefined' && navigator.userAgent) {
+            if (/OpenPublisher|nwjs|nw\.js|node-webkit|Electron/i.test(navigator.userAgent)) {
+                return true;
+            }
+        }
+
+        // 6. NW.js application protocol
+        if (typeof location !== 'undefined' && location.protocol === 'chrome-extension:') {
+            if (typeof chrome !== 'undefined' && (chrome.app || chrome.runtime)) return true;
+        }
+
+        // 7. NW.js GUI module
+        try {
+            if (typeof require === 'function' && require('nw.gui')) return true;
+        } catch(e) {}
+
+        return false;
     }
 
     function isStandaloneMode() {
@@ -63,7 +98,7 @@
             // 1. Register Service Worker for PWA installability criteria
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js?v=5.7.0').catch(err => {
+                    navigator.serviceWorker.register('sw.js?v=5.7.1').catch(err => {
                         console.log('OpenPublisher PWA: Service worker registration note:', err);
                     });
                 });
@@ -115,6 +150,12 @@
         },
 
         showInstallButtons: function() {
+            // Guard: Never display download or install buttons inside native desktop client apps (NW.js, Electron, etc.)
+            if (isDesktopApp() || isStandaloneMode()) {
+                this.hideInstallButtons();
+                return;
+            }
+
             const titleBtn = document.getElementById('pwa-install-btn');
             if (titleBtn) {
                 titleBtn.style.display = 'inline-flex';
@@ -141,9 +182,15 @@
 
         hideInstallButtons: function() {
             const titleBtn = document.getElementById('pwa-install-btn');
-            if (titleBtn) titleBtn.style.display = 'none';
+            if (titleBtn) {
+                titleBtn.style.display = 'none';
+                titleBtn.style.setProperty('display', 'none', 'important');
+            }
             const ribbonBtn = document.getElementById('pwa-install-ribbon-btn');
-            if (ribbonBtn) ribbonBtn.style.display = 'none';
+            if (ribbonBtn) {
+                ribbonBtn.style.display = 'none';
+                ribbonBtn.style.setProperty('display', 'none', 'important');
+            }
         },
 
         promptInstall: function() {

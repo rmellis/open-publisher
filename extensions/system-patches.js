@@ -1025,16 +1025,45 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     let _desktopBridgeActive = false;
 
     function isDesktopEnvironment() {
-        return _desktopBridgeActive || 
-               !!window._desktopBridgeActive ||
-               !!(window.desktopIPC && window.desktopIPC.isDesktop) || 
-               !!window._opBridgeActive || 
-               (typeof navigator !== 'undefined' && (
-                   navigator.userAgent.includes('OpenPublisher') || 
-                   navigator.userAgent.includes('nwjs') || 
-                   navigator.userAgent.includes('Electron')
-               )) ||
-               (typeof window !== 'undefined' && !!(window.process && (window.process.type || (window.process.versions && window.process.versions.electron))));
+        // 1. NW.js environment detection across all platforms (Windows, macOS, Linux, FreeBSD)
+        if (typeof nw !== 'undefined' && nw !== null) return true;
+        if (typeof window !== 'undefined' && typeof window.nw !== 'undefined' && window.nw !== null) return true;
+        if (typeof globalThis !== 'undefined' && typeof globalThis.nw !== 'undefined' && globalThis.nw !== null) return true;
+        if (typeof global !== 'undefined' && typeof global.nw !== 'undefined' && global.nw !== null) return true;
+
+        // 2. NW.js Node process versions
+        if (typeof process !== 'undefined' && process && process.versions && !!(process.versions.nw || process.versions['node-webkit'] || process.versions['nw-flavor'])) return true;
+        if (typeof window !== 'undefined' && window.process && window.process.versions && !!(window.process.versions.nw || window.process.versions['node-webkit'] || window.process.versions['nw-flavor'])) return true;
+        if (typeof global !== 'undefined' && global.process && global.process.versions && !!(global.process.versions.nw || global.process.versions['node-webkit'])) return true;
+
+        // 3. Electron runtime & FreeBSD standalone package
+        if (typeof process !== 'undefined' && process && process.versions && !!process.versions.electron) return true;
+        if (typeof window !== 'undefined' && window.process && (window.process.type || (window.process.versions && window.process.versions.electron))) return true;
+
+        // 4. Desktop IPC bridges & window flags
+        if (_desktopBridgeActive || 
+            (typeof window !== 'undefined' && (window._desktopBridgeActive || (window.desktopIPC && window.desktopIPC.isDesktop) || window._opBridgeActive || window._isDesktopClient))) {
+            return true;
+        }
+
+        // 5. User Agent inspection (case-insensitive for OpenPublisher, nwjs, nw.js, node-webkit, Electron)
+        if (typeof navigator !== 'undefined' && navigator.userAgent) {
+            if (/OpenPublisher|nwjs|nw\.js|node-webkit|Electron/i.test(navigator.userAgent)) {
+                return true;
+            }
+        }
+
+        // 6. NW.js application protocol
+        if (typeof location !== 'undefined' && location.protocol === 'chrome-extension:') {
+            if (typeof chrome !== 'undefined' && (chrome.app || chrome.runtime)) return true;
+        }
+
+        // 7. NW.js GUI module
+        try {
+            if (typeof require === 'function' && require('nw.gui')) return true;
+        } catch(e) {}
+
+        return false;
     }
     window.isDesktopApp = isDesktopEnvironment;
 
