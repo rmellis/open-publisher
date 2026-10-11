@@ -1,4 +1,4 @@
-// Open Publisher Options Modal (v5.7.1)
+// Open Publisher Options Modal (v5.7.2)
 
 // Escape helper for safe innerHTML injection
 function _optEscapeHtml(str) {
@@ -18,41 +18,58 @@ function _optEscapeJs(str) {
 
 // Global Desktop Environment Detector (Windows, macOS, Linux, FreeBSD native apps)
 window.isDesktopApp = function() {
-    // 1. NW.js environment detection across all platforms
-    if (typeof nw !== 'undefined' && nw !== null) return true;
-    if (typeof window !== 'undefined' && typeof window.nw !== 'undefined' && window.nw !== null) return true;
-    if (typeof globalThis !== 'undefined' && typeof globalThis.nw !== 'undefined' && globalThis.nw !== null) return true;
-    if (typeof global !== 'undefined' && typeof global.nw !== 'undefined' && global.nw !== null) return true;
+    // 1. Root and body class tagging
+    if (typeof document !== 'undefined') {
+        if (document.documentElement && document.documentElement.classList.contains('is-desktop-app')) return true;
+        if (document.body && (document.body.classList.contains('is-desktop-app') || document.body.classList.contains('mac-theme'))) return true;
+    }
 
-    // 2. NW.js Node process versions
-    if (typeof process !== 'undefined' && process && process.versions && !!(process.versions.nw || process.versions['node-webkit'] || process.versions['nw-flavor'])) return true;
-    if (typeof window !== 'undefined' && window.process && window.process.versions && !!(window.process.versions.nw || window.process.versions['node-webkit'] || window.process.versions['nw-flavor'])) return true;
-    if (typeof global !== 'undefined' && global.process && global.process.versions && !!(global.process.versions.nw || global.process.versions['node-webkit'])) return true;
-
-    // 3. Electron runtime & FreeBSD standalone package
-    if (typeof process !== 'undefined' && process && process.versions && !!process.versions.electron) return true;
-    if (typeof window !== 'undefined' && window.process && (window.process.type || (window.process.versions && window.process.versions.electron))) return true;
-
-    // 4. Desktop IPC bridges & window flags
+    // 2. Desktop IPC bridges & window flags
     if (typeof window !== 'undefined') {
         if (window._desktopBridgeActive || (window.desktopIPC && window.desktopIPC.isDesktop) || window._opBridgeActive || window._isDesktopClient) {
             return true;
         }
     }
 
-    // 5. User Agent inspection (case-insensitive for OpenPublisher, nwjs, nw.js, node-webkit, Electron)
+    // 3. Wrapper-injected styles check (#coord-display altered by wrapper.html webview.insertCSS)
+    if (typeof document !== 'undefined') {
+        const coord = document.getElementById('coord-display');
+        if (coord) {
+            const cs = window.getComputedStyle(coord);
+            if (cs && (cs.zIndex === '999999' || (cs.transform && cs.transform.includes('-15')))) {
+                return true;
+            }
+        }
+    }
+
+    // 4. NW.js environment detection across all platforms
+    if (typeof nw !== 'undefined' && nw !== null) return true;
+    if (typeof window !== 'undefined' && typeof window.nw !== 'undefined' && window.nw !== null) return true;
+    if (typeof globalThis !== 'undefined' && typeof globalThis.nw !== 'undefined' && globalThis.nw !== null) return true;
+    if (typeof global !== 'undefined' && typeof global.nw !== 'undefined' && global.nw !== null) return true;
+
+    // 5. NW.js Node process versions
+    if (typeof process !== 'undefined' && process && process.versions && !!(process.versions.nw || process.versions['node-webkit'] || process.versions['nw-flavor'])) return true;
+    if (typeof window !== 'undefined' && window.process && window.process.versions && !!(window.process.versions.nw || window.process.versions['node-webkit'] || window.process.versions['nw-flavor'])) return true;
+    if (typeof global !== 'undefined' && global.process && global.process.versions && !!(global.process.versions.nw || global.process.versions['node-webkit'])) return true;
+
+    // 6. Electron runtime & FreeBSD standalone package
+    if (typeof process !== 'undefined' && process && process.versions && !!process.versions.electron) return true;
+    if (typeof window !== 'undefined' && window.process && (window.process.type || (window.process.versions && window.process.versions.electron))) return true;
+
+    // 7. User Agent inspection (case-insensitive for OpenPublisher, nwjs, nw.js, node-webkit, Electron)
     if (typeof navigator !== 'undefined' && navigator.userAgent) {
         if (/OpenPublisher|nwjs|nw\.js|node-webkit|Electron/i.test(navigator.userAgent)) {
             return true;
         }
     }
 
-    // 6. NW.js application protocol
+    // 8. NW.js application protocol
     if (typeof location !== 'undefined' && location.protocol === 'chrome-extension:') {
         if (typeof chrome !== 'undefined' && (chrome.app || chrome.runtime)) return true;
     }
 
-    // 7. NW.js GUI module
+    // 9. NW.js GUI module
     try {
         if (typeof require === 'function' && require('nw.gui')) return true;
     } catch(e) {}
