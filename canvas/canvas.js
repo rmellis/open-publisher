@@ -669,14 +669,22 @@ window.updateCanvasScrollBounds = function() {
         const scaledW = paperW * z;
         const scaledH = paperH * z;
 
+        const hasCustomMargin = !!(paper.style.marginLeft && paper.style.marginLeft !== '' && paper.style.marginLeft !== '0px');
         const naturalLeft = (vpW - scaledW) / 2;
         const shiftNeeded = pad - naturalLeft;
 
-        if (shiftNeeded > 0) {
-            if (!paper.dataset.customPanOffset) {
-                paper.style.left = shiftNeeded + 'px';
+        if (!hasCustomMargin) {
+            if (shiftNeeded > 0) {
+                if (!paper.dataset.customPanOffset) {
+                    paper.style.left = shiftNeeded + 'px';
+                }
+            } else {
+                if (!paper.dataset.customPanOffset && paper.style.left) {
+                    paper.style.left = '';
+                }
             }
         } else {
+            // When custom margins (e.g. NW.js pasteboard) are active, do not force paper.style.left
             if (!paper.dataset.customPanOffset && paper.style.left) {
                 paper.style.left = '';
             }
@@ -686,12 +694,20 @@ window.updateCanvasScrollBounds = function() {
         const bottomScratch = Math.max(vpH * 0.25, scaledH * 0.15, 200) + extraBottom;
         const rightScratch = Math.max(pad, vpW * 0.15, scaledW * 0.1) + extraRight;
 
-        const baseLeft = shiftNeeded > 0 ? shiftNeeded : 0;
+        const baseLeft = (!hasCustomMargin && shiftNeeded > 0) ? shiftNeeded : 0;
         const currentPaperLeft = parseFloat(paper.style.left) || baseLeft;
-        const effectivePaperRight = (shiftNeeded > 0 ? currentPaperLeft : (naturalLeft + currentPaperLeft)) + scaledW;
-        const calculatedRightEdge = shiftNeeded > 0
-            ? (pad + scaledW + rightScratch)
-            : Math.max(vpW, (naturalLeft + scaledW + rightScratch));
+
+        let actualLeftEdge = 0;
+        if (hasCustomMargin) {
+            actualLeftEdge = paper.offsetLeft + (paper.dataset.customPanOffset ? (parseFloat(paper.style.left) || 0) : 0);
+        } else {
+            actualLeftEdge = (shiftNeeded > 0 ? currentPaperLeft : (naturalLeft + currentPaperLeft));
+        }
+
+        const effectivePaperRight = actualLeftEdge + scaledW;
+        const calculatedRightEdge = hasCustomMargin
+            ? Math.max(vpW, effectivePaperRight + rightScratch, (paper.offsetLeft + scaledW + (parseFloat(paper.style.marginRight) || 0)))
+            : (shiftNeeded > 0 ? (pad + scaledW + rightScratch) : Math.max(vpW, (naturalLeft + scaledW + rightScratch)));
         rightEdge = Math.max(calculatedRightEdge, effectivePaperRight + rightScratch);
 
         const paperTopPos = Math.max(0, currentPaperTop);
@@ -765,6 +781,7 @@ window.returnToPage = function() {
     const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
     if (!vp) return;
 
+    // 1. Reset any scratch/pan displacement offsets on the canvas elements
     if (paper) {
         delete paper.dataset.customPanOffset;
         paper.style.top = '';
@@ -778,31 +795,33 @@ window.returnToPage = function() {
     window._extraBottomScratch = 0;
     window._extraRightScratch = 0;
 
+    // 2. Synchronize scroll bounds immediately
     if (typeof window.updateCanvasScrollBounds === 'function') {
         window.updateCanvasScrollBounds();
     }
 
+    const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+    const vpW = vp.clientWidth;
+    const vpH = vp.clientHeight;
+
+    // 3. Compute the exact resting target to center the page in the viewport
     if (isMulti && wrapper) {
-        vp.scrollTo({
-            left: 0,
-            top: 0,
-            behavior: 'smooth'
-        });
-    } else if (paper) {
-        const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
-        const paperW = paper.offsetWidth || 794;
-        const scaledW = paperW * z;
-        const vpW = vp.clientWidth;
-
-        let targetLeft = 0;
-        const shiftNeeded = 50 - (vpW - scaledW) / 2;
-        if (shiftNeeded > 0) {
-            targetLeft = Math.max(0, (50 + scaledW + 50 - vpW) / 2);
+        const activeIdx = (typeof state !== 'undefined' && typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
+        if (typeof window.highlightAndCenterMultiPageSlot === 'function') {
+            window.highlightAndCenterMultiPageSlot(activeIdx);
+        } else {
+            vp.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
         }
+    } else if (paper) {
+        const paperW = paper.offsetWidth || 794;
+        const paperVisualCenter = paper.offsetLeft + (paperW / 2);
+        const paperVisualTop = paper.offsetTop || 50;
+        const targetScrollLeft = Math.max(0, Math.min(vp.scrollWidth - vpW, Math.round(paperVisualCenter - (vpW / 2))));
+        const targetScrollTop = paperVisualTop <= 60 ? 0 : Math.max(0, Math.min(vp.scrollHeight - vpH, Math.round(paperVisualTop - 50)));
 
         vp.scrollTo({
-            left: targetLeft,
-            top: 0,
+            left: targetScrollLeft,
+            top: targetScrollTop,
             behavior: 'smooth'
         });
     }
@@ -857,8 +876,9 @@ window.initCanvasScrollEnhancements = function() {
         const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
         let baseLeft = 0;
         let shiftNeeded = 0;
+        const hasCustomMargin = !isMulti && !!(targetEl.style.marginLeft && targetEl.style.marginLeft !== '' && targetEl.style.marginLeft !== '0px');
 
-        if (!isMulti) {
+        if (!isMulti && !hasCustomMargin) {
             const pad = 50;
             const paperW = targetEl.offsetWidth || 794;
             const scaledW = paperW * z;
@@ -930,7 +950,7 @@ window.initCanvasScrollEnhancements = function() {
                     // Target was previously panned leftwards past baseLeft: restore right towards baseLeft
                     const stepX = Math.max(15, Math.round(Math.abs(dx) * 0.8));
                     const newLeft = Math.min(baseLeft, currentLeft + stepX);
-                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
+                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && !hasCustomMargin && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
                     if (newLeft === baseLeft && (parseFloat(targetEl.style.top) || 0) === 0) {
                         delete targetEl.dataset.customPanOffset;
                     }
@@ -951,7 +971,7 @@ window.initCanvasScrollEnhancements = function() {
                     // Target was shifted right into left scratch: restore it left towards baseLeft first
                     const stepX = Math.max(15, Math.round(dx * 0.8));
                     const newLeft = Math.max(baseLeft, currentLeft - stepX);
-                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
+                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && !hasCustomMargin && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
                     if (newLeft === baseLeft && (parseFloat(targetEl.style.top) || 0) === 0) {
                         delete targetEl.dataset.customPanOffset;
                     }
@@ -1252,11 +1272,12 @@ window.highlightAndCenterMultiPageSlot = function(index) {
 
     const targetSlot = slots[index];
     if (targetSlot) {
-        const z = state.zoom || 1;
-        const slotCenter = (targetSlot.offsetLeft + targetSlot.offsetWidth / 2) * z;
+        const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+        const wrapperLeft = wrapper.offsetLeft || 0;
+        const slotCenter = wrapperLeft + ((targetSlot.offsetLeft + targetSlot.offsetWidth / 2) * z);
         const vpCenter = viewport.clientWidth / 2;
-        const scrollTarget = Math.max(0, slotCenter - vpCenter);
-        viewport.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        const scrollTarget = Math.max(0, Math.min(viewport.scrollWidth - viewport.clientWidth, Math.round(slotCenter - vpCenter)));
+        viewport.scrollTo({ left: scrollTarget, top: 0, behavior: 'smooth' });
     }
 };
 
@@ -1291,6 +1312,8 @@ function enterMultiPageView(z) {
     window._multiPageActive = true;
     state.viewMode = 'multipage';
     viewport.classList.add('multi-page-mode');
+    viewport.style.justifyContent = 'flex-start';
+    viewport.style.alignItems = 'flex-start';
 
     const canvasArea = document.getElementById('canvas-area');
     if (canvasArea) canvasArea.classList.add('multi-page-canvas');
@@ -1519,6 +1542,9 @@ function exitMultiPageView() {
     window._multiPageActive = false;
     state.viewMode = 'single';
     viewport.classList.remove('multi-page-mode');
+    const hasCustomMargin = !!(paperEl.style.marginLeft && paperEl.style.marginLeft !== '' && paperEl.style.marginLeft !== '0px');
+    viewport.style.justifyContent = hasCustomMargin ? 'flex-start' : '';
+    viewport.style.alignItems = '';
 
     const canvasArea = document.getElementById('canvas-area');
     if (canvasArea) canvasArea.classList.remove('multi-page-canvas');
@@ -1583,7 +1609,11 @@ window.fitToPage = function() {
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, z)));
     viewport.scrollTop = 0;
-    viewport.scrollLeft = Math.max(0, (paperW * z - vpW) / 2);
+    if (paperEl.style.marginLeft && viewport.scrollWidth > vpW) {
+        viewport.scrollLeft = Math.round((viewport.scrollWidth - vpW) / 2);
+    } else {
+        viewport.scrollLeft = Math.max(0, (paperW * z - vpW) / 2);
+    }
 };
 
 window.fitToWidth = function() {
@@ -1600,7 +1630,11 @@ window.fitToWidth = function() {
         || 96;
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, scaleX)));
-    viewport.scrollLeft = Math.max(0, (paperW * scaleX - vpW) / 2);
+    if (paperEl.style.marginLeft && viewport.scrollWidth > vpW) {
+        viewport.scrollLeft = Math.round((viewport.scrollWidth - vpW) / 2);
+    } else {
+        viewport.scrollLeft = Math.max(0, (paperW * scaleX - vpW) / 2);
+    }
 };
 
 window.focusPage = function(pageIndex = null) {

@@ -1146,7 +1146,7 @@ body.dark-mode .tab.active {
     outline: none !important;
 }
 
-/* Floating Return to Page Button (v5.7.7) */
+/* Floating Return to Page Button (v5.7.8) */
 .floating-return-btn {
     position: absolute;
     bottom: 24px;
@@ -1297,8 +1297,8 @@ body.dark-mode .multipage-dialog-warning {
 }
 
 .viewport.multi-page-mode {
-    align-items: flex-start;
-    justify-content: flex-start;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
 }
 #multi-page-wrapper {
     display: flex;
@@ -1490,7 +1490,7 @@ td, th {
 .element-content [contenteditable="true"] {
     text-decoration-skip-ink: none !important;
 }
-/* --- Disable Native Browser Underlining (v5.7.7) --- */
+/* --- Disable Native Browser Underlining (v5.7.8) --- */
 ::spelling-error,
 ::grammar-error,
 *::spelling-error,
