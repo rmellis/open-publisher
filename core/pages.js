@@ -125,8 +125,8 @@ function renderPage(pageData) {
     headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
     footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
     if (isHeaderEditable) {
-        headerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
-        footerEl.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+        headerEl.setAttribute('spellcheck', 'false');
+        footerEl.setAttribute('spellcheck', 'false');
         if (state.spellCheck) {
             const userLang = navigator.language || 'en';
             headerEl.setAttribute('lang', userLang);
@@ -296,15 +296,9 @@ function renderPage(pageData) {
             inner = data.innerHTML || '';
         }
         
-        // Force Chromium spellcheck on load
-        if (state.spellCheck !== false) {
-            const userLang = navigator.language || 'en';
-            inner = inner.replace(/spellcheck="false"/g, `spellcheck="true" lang="${userLang}"`);
-            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, `contenteditable="true" spellcheck="true" lang="${userLang}"`);
-        } else {
-            inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
-            inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
-        }
+        // Disable browser native spellcheck on load so only in-app proofing renders
+        inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
+        inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
         
         const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
         let d3d = '';

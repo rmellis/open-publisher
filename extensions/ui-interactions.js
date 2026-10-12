@@ -850,7 +850,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.5</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.6</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1407,7 +1407,7 @@
                     if (innerNode.tagName !== 'IMG' && innerNode.tagName !== 'CANVAS' && innerNode.tagName !== 'SVG' && !innerNode.style.clipPath && !innerNode.classList.contains('wa-wrapper')) {
                         innerNode.setAttribute('contenteditable', 'true');
                         const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
-                        innerNode.setAttribute('spellcheck', isSpell ? 'true' : 'false');
+                        innerNode.setAttribute('spellcheck', 'false');
                         if (isSpell) innerNode.setAttribute('lang', navigator.language || 'en');
                         contentContainer.style.pointerEvents = 'auto';
                     }

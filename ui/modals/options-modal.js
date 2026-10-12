@@ -1,4 +1,4 @@
-// Open Publisher Options Modal (v5.7.5)
+// Open Publisher Options Modal (v5.7.6)
 
 // Escape helper for safe innerHTML injection
 function _optEscapeHtml(str) {
@@ -641,11 +641,11 @@ window.saveGlobalOptions = function(closeDialog = true) {
         localStorage.setItem('opub_spellcheck', isSpell ? 'true' : 'false');
         if (typeof state !== 'undefined') {
             state.spellCheck = isSpell;
-            document.body.setAttribute('spellcheck', isSpell ? 'true' : 'false');
+            document.body.setAttribute('spellcheck', 'false');
             const proofLang = localStorage.getItem('opub_proofing_lang') || navigator.language || 'en';
             document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
                 if (!el.classList.contains('wa-text')) {
-                    el.setAttribute('spellcheck', isSpell ? 'true' : 'false');
+                    el.setAttribute('spellcheck', 'false');
                     if (isSpell) el.setAttribute('lang', proofLang);
                 }
             });

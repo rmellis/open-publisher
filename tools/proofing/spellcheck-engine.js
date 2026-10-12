@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.6.0)
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.7.6)
  * Real-time visual spellcheck and grammar proofing using modern CSS Custom Highlight API
  * integrated with OpenPublisher's existing LanguageTool online proofing service.
  * Renders:
@@ -183,7 +183,7 @@
         const wordRegex = /[A-Za-z]+(?:['’][A-Za-z]+)?/g;
 
         editables.forEach(editable => {
-            if (editable.classList.contains('wa-text') || editable.getAttribute('spellcheck') === 'false') {
+            if (editable.classList.contains('wa-text') || editable.getAttribute('data-spellcheck') === 'false') {
                 return;
             }
 
@@ -283,7 +283,7 @@
     function checkEditableWithLanguageTool(editable) {
         if (!editable) return;
         if (typeof state !== 'undefined' && state.spellCheck === false) return;
-        if (editable.classList.contains('wa-text') || editable.getAttribute('spellcheck') === 'false') return;
+        if (editable.classList.contains('wa-text') || editable.getAttribute('data-spellcheck') === 'false') return;
 
         const text = editable.innerText || '';
         if (!text || text.trim() === '') {

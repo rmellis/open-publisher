@@ -97,13 +97,13 @@ document.addEventListener('selectionchange', () => {
                 state.spellCheck = true;
                 try { localStorage.setItem('opub_spellcheck', 'true'); } catch(e) {}
             }
-            document.body.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+            document.body.setAttribute('spellcheck', 'false');
             // Load saved proofing language
             const savedProofLang = localStorage.getItem('opub_proofing_lang');
             const proofLang = savedProofLang || (navigator.language || 'en');
             document.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]').forEach(el => {
                 if (!el.classList.contains('wa-text')) {
-                    el.setAttribute('spellcheck', state.spellCheck ? 'true' : 'false');
+                    el.setAttribute('spellcheck', 'false');
                     if (state.spellCheck) el.setAttribute('lang', proofLang);
                 }
             });
