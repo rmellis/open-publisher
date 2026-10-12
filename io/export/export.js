@@ -224,7 +224,10 @@ window.exportAsHTML = async function(opts = {}) {
                         window.bakeSmartArrowForPrint(arrowEl, 3.0);
                     }
                 });
-                const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: page.background || '#ffffff' });
+                const emailBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
+                    ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!(page.themeSettings?.saved))
+                    : null;
+                const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: emailBg });
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
                 const tbl = `
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: ${opts.seamless ? '0 auto' : '0 auto 30px auto'};">

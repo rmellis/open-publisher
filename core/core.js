@@ -63,3 +63,21 @@ const colorSchemes = {
 
 const paper = document.getElementById('paper');
 const floatToolbar = document.getElementById('float-toolbar');
+
+/**
+ * Validates and sanitizes a CSS background string for html2canvas backgroundColor option.
+ * html2canvas requires a single valid CSS color string or null (transparent).
+ * Passing image URLs, gradients, or compound background shorthand throws SyntaxError.
+ */
+window.sanitizeH2cBackgroundColor = function(bg, hasActiveTheme) {
+    if (hasActiveTheme) return null;
+    if (!bg || typeof bg !== 'string') return '#ffffff';
+    const trimmed = bg.trim();
+    if (!trimmed) return '#ffffff';
+    if (trimmed.includes('url(') || trimmed.includes('gradient')) return null;
+    if (/^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(trimmed)) return trimmed;
+    if (/^(rgba?|hsla?)\s*\([^)]+\)$/i.test(trimmed)) return trimmed;
+    if (/^[a-zA-Z]+$/.test(trimmed)) return trimmed;
+    return null;
+};
+

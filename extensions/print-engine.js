@@ -347,7 +347,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.7.3...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.7.4...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -1621,8 +1621,9 @@
                 const targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
                 const fallbackScale = Math.max(1, targetScale - 1);
 
-                let h2cBg = page.background || '#ffffff';
-                if (currentThemeSettings || h2cBg.includes('gradient')) h2cBg = null;
+                let h2cBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
+                    ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!currentThemeSettings)
+                    : (currentThemeSettings || (page.background && (page.background.includes('gradient') || page.background.includes('url('))) ? null : '#ffffff');
 
                 const bakedImgs = Array.from(pageWrapper.querySelectorAll('.op-theme-baked-bg'));
                 for (const bImg of bakedImgs) {
@@ -1662,9 +1663,16 @@
                     canvas = await Promise.race([h2cPromise, timeoutPromise]);
                 } catch (h2cErr) {
                     console.warn(`[Print Engine] html2canvas scale ${targetScale} failed or timed out, falling back to scale ${fallbackScale}:`, h2cErr);
-                    canvas = await html2canvas(pageWrapper, { 
-                        scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000
-                    });
+                    try {
+                        canvas = await html2canvas(pageWrapper, { 
+                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000
+                        });
+                    } catch (fallbackErr) {
+                        console.warn(`[Print Engine] html2canvas fallback scale ${fallbackScale} with bg failed, retrying with transparent background:`, fallbackErr);
+                        canvas = await html2canvas(pageWrapper, { 
+                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 3000
+                        });
+                    }
                 }
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);

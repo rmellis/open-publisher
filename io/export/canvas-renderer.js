@@ -188,10 +188,15 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
 
     await window.bakeSVGFiltersForHtml2Canvas(clone, paper);
 
+    const curPageForExport = state.pages[state.currentPageIndex];
+    const exportBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
+        ? window.sanitizeH2cBackgroundColor(curPageForExport?.background || '#ffffff', !!(curPageForExport?.themeSettings?.saved))
+        : null;
+
     const canvas = await html2canvas(clone, { 
         scale: scaleMultiplier, 
         useCORS: true, 
-        backgroundColor: state.pages[state.currentPageIndex]?.background || '#ffffff',
+        backgroundColor: exportBg,
         logging: false
     });
     
