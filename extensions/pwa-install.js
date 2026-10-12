@@ -1,4 +1,4 @@
-// Open Publisher PWA & Desktop Download Engine (v5.7.8)
+// Open Publisher PWA & Desktop Download Engine (v5.7.9)
 (function() {
     'use strict';
 
@@ -116,7 +116,7 @@
             // 1. Register Service Worker for PWA installability criteria
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js?v=5.7.8').catch(err => {
+                    navigator.serviceWorker.register('sw.js?v=5.7.9').catch(err => {
                         console.log('OpenPublisher PWA: Service worker registration note:', err);
                     });
                 });

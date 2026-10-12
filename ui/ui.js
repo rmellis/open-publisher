@@ -20,7 +20,12 @@ const DialogSystem = {
         }
     },
     show: function(title, contentHtml, onConfirm, isAlert = false, confirmText = 'OK', onApply = null) {
-        const overlay = document.getElementById('custom-dialog-overlay');
+        let overlay = document.getElementById('custom-dialog-overlay');
+        if (!overlay) {
+            this.init();
+            overlay = document.getElementById('custom-dialog-overlay');
+        }
+        if (!overlay) return;
         
         // Build the HTML structure
         overlay.innerHTML = `

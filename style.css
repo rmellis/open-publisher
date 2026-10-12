@@ -1146,7 +1146,7 @@ body.dark-mode .tab.active {
     outline: none !important;
 }
 
-/* Floating Return to Page Button (v5.7.8) */
+/* Floating Return to Page Button (v5.7.9) */
 .floating-return-btn {
     position: absolute;
     bottom: 24px;
@@ -1490,7 +1490,7 @@ td, th {
 .element-content [contenteditable="true"] {
     text-decoration-skip-ink: none !important;
 }
-/* --- Disable Native Browser Underlining (v5.7.8) --- */
+/* --- Disable Native Browser Underlining (v5.7.9) --- */
 ::spelling-error,
 ::grammar-error,
 *::spelling-error,

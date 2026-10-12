@@ -774,7 +774,7 @@ window.checkPageVisibility = function() {
     }
 };
 
-window.returnToPage = function() {
+window.returnToPage = function(instant = false) {
     const vp = document.getElementById('viewport');
     const paper = document.getElementById('paper');
     const wrapper = document.getElementById('multi-page-wrapper');
@@ -803,6 +803,7 @@ window.returnToPage = function() {
     const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
     const vpW = vp.clientWidth;
     const vpH = vp.clientHeight;
+    const scrollBehavior = instant ? 'auto' : 'smooth';
 
     // 3. Compute the exact resting target to center the page in the viewport
     if (isMulti && wrapper) {
@@ -810,7 +811,7 @@ window.returnToPage = function() {
         if (typeof window.highlightAndCenterMultiPageSlot === 'function') {
             window.highlightAndCenterMultiPageSlot(activeIdx);
         } else {
-            vp.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+            vp.scrollTo({ left: 0, top: 0, behavior: scrollBehavior });
         }
     } else if (paper) {
         const paperW = paper.offsetWidth || 794;
@@ -822,7 +823,7 @@ window.returnToPage = function() {
         vp.scrollTo({
             left: targetScrollLeft,
             top: targetScrollTop,
-            behavior: 'smooth'
+            behavior: scrollBehavior
         });
     }
 
@@ -1283,12 +1284,16 @@ window.highlightAndCenterMultiPageSlot = function(index) {
 
 window.openPageInSingleMode = function(index) {
     if (typeof state === 'undefined') return;
-    state.currentPageIndex = index;
+    if (typeof switchPage === 'function' && state.currentPageIndex !== index) {
+        switchPage(index);
+    } else {
+        state.currentPageIndex = index;
+    }
     window.setViewMode('single');
-    if (typeof switchPage === 'function') switchPage(index);
     setTimeout(() => {
-        if (typeof fitToPage === 'function') fitToPage();
-    }, 50);
+        if (typeof window.returnToPage === 'function') window.returnToPage(true);
+        else if (typeof fitToPage === 'function') fitToPage();
+    }, 30);
 };
 
 function updateMultiPageView(z) {
@@ -1471,6 +1476,11 @@ function enterMultiPageView(z) {
         wrapper.appendChild(slot);
     });
 
+    // Save pre-overview zoom so single page editing zoom can be restored on exit
+    if (typeof window._preMultiPageZoom !== 'number') {
+        window._preMultiPageZoom = (state && typeof state.zoom === 'number') ? state.zoom : 1.0;
+    }
+
     // Calculate a comfortable zoom level for overview if current zoom is too large
     let targetZoom = z || state.zoom || 0.35;
     if (targetZoom > 0.4) {
@@ -1552,6 +1562,24 @@ function exitMultiPageView() {
     const wrapper = document.getElementById('multi-page-wrapper');
     if (wrapper) wrapper.remove();
 
+    // Restore zoom level saved prior to entering multi-page overview
+    let restoredZoom = 1.0;
+    if (typeof window._preMultiPageZoom === 'number' && window._preMultiPageZoom >= 0.2) {
+        restoredZoom = window._preMultiPageZoom;
+        delete window._preMultiPageZoom;
+    } else if (typeof state.zoom === 'number' && state.zoom > 0.4) {
+        restoredZoom = state.zoom;
+    }
+    state.zoom = restoredZoom;
+
+    const zoomSlider = document.getElementById('zoom-slider');
+    if (zoomSlider) {
+        zoomSlider.value = Math.round(restoredZoom * 100);
+        zoomSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    const zoomDisplay = document.getElementById('zoom-level-display');
+    if (zoomDisplay) zoomDisplay.textContent = Math.round(restoredZoom * 100) + '%';
+
     // Restore paper display and zoom
     paperEl.style.display = '';
     paperEl.style.transform = `scale(${state.zoom})`;
@@ -1569,6 +1597,35 @@ function exitMultiPageView() {
     if (typeof window.updateCanvasScrollBounds === 'function') {
         window.updateCanvasScrollBounds();
     }
+
+    // Immediately center viewport directly on the page without smooth glide lag
+    if (typeof window.returnToPage === 'function') {
+        window.returnToPage(true);
+    } else {
+        viewport.scrollTop = 0;
+        if (hasCustomMargin && viewport.scrollWidth > viewport.clientWidth) {
+            const paperVisualCenter = paperEl.offsetLeft + (paperEl.offsetWidth / 2);
+            viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollWidth - viewport.clientWidth, Math.round(paperVisualCenter - (viewport.clientWidth / 2))));
+        } else {
+            viewport.scrollLeft = 0;
+        }
+    }
+
+    // Schedule secondary syncs to absorb NW.js custom margin recalculations and reflows
+    setTimeout(() => {
+        if (state && state.viewMode === 'single' && typeof window.returnToPage === 'function') {
+            window.returnToPage(true);
+        }
+    }, 30);
+    setTimeout(() => {
+        if (state && state.viewMode === 'single' && typeof window.returnToPage === 'function') {
+            window.returnToPage(true);
+        }
+    }, 100);
+
+    const returnBtn = document.getElementById('floating-return-to-page-btn');
+    if (returnBtn) returnBtn.classList.remove('visible');
+
     if (window.syncRulers) window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     window.updateViewModeUI();
@@ -1609,8 +1666,10 @@ window.fitToPage = function() {
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, z)));
     viewport.scrollTop = 0;
-    if (paperEl.style.marginLeft && viewport.scrollWidth > vpW) {
-        viewport.scrollLeft = Math.round((viewport.scrollWidth - vpW) / 2);
+    const hasCustomMargin = !!(paperEl.style.marginLeft && paperEl.style.marginLeft !== '' && paperEl.style.marginLeft !== '0px');
+    if (hasCustomMargin && viewport.scrollWidth > vpW) {
+        const paperVisualCenter = paperEl.offsetLeft + (paperW / 2);
+        viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollWidth - vpW, Math.round(paperVisualCenter - (vpW / 2))));
     } else {
         viewport.scrollLeft = Math.max(0, (paperW * z - vpW) / 2);
     }
@@ -1630,8 +1689,10 @@ window.fitToWidth = function() {
         || 96;
     const minZoom = Math.max(0.02, Math.min(0.2, 0.2 * (96 / pageDpi)));
     setZoom(Math.max(minZoom, Math.min(3.0, scaleX)));
-    if (paperEl.style.marginLeft && viewport.scrollWidth > vpW) {
-        viewport.scrollLeft = Math.round((viewport.scrollWidth - vpW) / 2);
+    const hasCustomMargin = !!(paperEl.style.marginLeft && paperEl.style.marginLeft !== '' && paperEl.style.marginLeft !== '0px');
+    if (hasCustomMargin && viewport.scrollWidth > vpW) {
+        const paperVisualCenter = paperEl.offsetLeft + (paperW / 2);
+        viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollWidth - vpW, Math.round(paperVisualCenter - (vpW / 2))));
     } else {
         viewport.scrollLeft = Math.max(0, (paperW * scaleX - vpW) / 2);
     }
@@ -1688,6 +1749,10 @@ window.focusPage = function(pageIndex = null) {
         window.updateCanvasScrollBounds();
     }
     viewport.scrollTop = 0;
+
+    if (typeof window.returnToPage === 'function') {
+        window.returnToPage(true);
+    }
 
     // Synchronize all canvas overlays, rulers, and tools
     if (typeof window.syncRulers === 'function') window.syncRulers();
