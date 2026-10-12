@@ -3564,18 +3564,22 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const unscrollableX = dx + (viewport.scrollLeft - oldScrollLeft);
             const unscrollableY = dy + (viewport.scrollTop - oldScrollTop);
             
-            // Apply the leftover movement directly to the paper to create an infinite canvas feel
-            const paper = document.getElementById('paper');
-            if (paper && (unscrollableX !== 0 || unscrollableY !== 0)) {
-                const currentLeft = parseFloat(paper.style.left) || 0;
-                const currentTop = parseFloat(paper.style.top) || 0;
+            // Apply the leftover movement directly to the paper or multi-page wrapper to create an infinite canvas feel
+            const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
+            const targetEl = isMulti ? document.getElementById('multi-page-wrapper') : document.getElementById('paper');
+            if (targetEl && (unscrollableX !== 0 || unscrollableY !== 0)) {
+                const currentLeft = parseFloat(targetEl.style.left) || 0;
+                const currentTop = parseFloat(targetEl.style.top) || 0;
                 
-                paper.style.left = (currentLeft + unscrollableX) + 'px';
-                paper.style.top = (currentTop + unscrollableY) + 'px';
+                targetEl.style.left = (currentLeft + unscrollableX) + 'px';
+                targetEl.style.top = (currentTop + unscrollableY) + 'px';
+                targetEl.dataset.customPanOffset = "true";
             }
             
             // Keep rulers perfectly glued to the moving paper
             if (typeof window.syncRulers === 'function') window.syncRulers();
+            if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+            if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
         });
     });
 
@@ -3585,6 +3589,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             isPanning = false;
             viewport.classList.remove('panning');
             if (typeof window.syncRulers === 'function') window.syncRulers();
+            if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+            if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
+            if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
         }
     });
     
@@ -3592,6 +3599,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         if (isPanning) {
             isPanning = false;
             viewport.classList.remove('panning');
+            if (typeof window.syncRulers === 'function') window.syncRulers();
+            if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
+            if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
         }
     });
 

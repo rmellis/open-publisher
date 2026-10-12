@@ -44,6 +44,7 @@ window.initRulers = function() {
 
     window.initIndentMarkersLogic();
     if (window.initRulerOriginLogic) window.initRulerOriginLogic();
+    if (typeof window.initCanvasScrollEnhancements === 'function') window.initCanvasScrollEnhancements();
 
     // Force the first draw
     setTimeout(window.syncRulers, 50);
@@ -627,63 +628,354 @@ window.syncHandleScaling = function(z) {
 
 window.updateCanvasScrollBounds = function() {
     const vp = document.getElementById('viewport');
-    const paper = document.getElementById('paper');
-    if (!vp || !paper) return;
+    if (!vp) return;
     if (vp.classList.contains('panning')) return;
 
+    const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
+    const wrapper = document.getElementById('multi-page-wrapper');
+    const paper = document.getElementById('paper');
+
     const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
-    const pad = 50;
-    const paperW = paper.offsetWidth || 794;
-    const paperH = paper.offsetHeight || 1123;
-    const scaledW = paperW * z;
-    const scaledH = paperH * z;
     const vpW = vp.clientWidth;
     const vpH = vp.clientHeight;
+    const extraBottom = window._extraBottomScratch || 0;
+    const extraRight = window._extraRightScratch || 0;
 
-    // With justify-content:center, paper's natural left edge (in viewport coords) is:
-    //   naturalLeft = (vpW - scaledW) / 2
-    // We need naturalLeft >= pad (50px) so the left side is scrollable to.
-    // If naturalLeft < pad, shift paper right by the deficit.
-    const naturalLeft = (vpW - scaledW) / 2;
-    const shiftNeeded = pad - naturalLeft;
+    let rightEdge, bottomEdge;
 
-    if (shiftNeeded > 0) {
-        // Paper overflows viewport - shift right so left edge has minimum padding
-        paper.style.left = shiftNeeded + 'px';
+    if (isMulti && wrapper) {
+        const unscaledW = wrapper._totalUnscaledWidth || wrapper.offsetWidth || 2000;
+        const unscaledH = wrapper._totalUnscaledHeight || wrapper.offsetHeight || 1200;
+        const scaledW = unscaledW * z;
+        const scaledH = unscaledH * z;
+        const pad = 40;
+
+        const currentWrapperTop = parseFloat(wrapper.style.top) || 0;
+        const currentWrapperLeft = parseFloat(wrapper.style.left) || 0;
+
+        const bottomScratch = Math.max(vpH * 0.25, scaledH * 0.15, 200) + extraBottom;
+        const rightScratch = Math.max(pad, vpW * 0.15, scaledW * 0.1) + extraRight;
+
+        const wrapperTopPos = Math.max(0, currentWrapperTop);
+        const wrapperLeftPos = Math.max(0, currentWrapperLeft);
+
+        rightEdge = pad + wrapperLeftPos + scaledW + rightScratch;
+        bottomEdge = pad + wrapperTopPos + scaledH + bottomScratch;
     } else {
-        // Paper fits - no shift needed
-        paper.style.left = '';
-    }
+        if (!paper) return;
+        const pad = 50;
+        const paperW = paper.offsetWidth || 794;
+        const paperH = paper.offsetHeight || 1123;
+        const scaledW = paperW * z;
+        const scaledH = paperH * z;
 
-    // Place a 1px sizer div at the right edge of the scaled content + pad.
-    // This forces scrollWidth to accommodate the full scaled width.
-    // Only needed when content overflows the viewport.
-    const rightEdge = shiftNeeded > 0
-        ? pad + scaledW + pad          // shifted: left(pad) + scaledW + right pad
-        : vpW;                         // fits: no extra scroll needed
+        const naturalLeft = (vpW - scaledW) / 2;
+        const shiftNeeded = pad - naturalLeft;
+
+        if (shiftNeeded > 0) {
+            if (!paper.dataset.customPanOffset) {
+                paper.style.left = shiftNeeded + 'px';
+            }
+        } else {
+            if (!paper.dataset.customPanOffset && paper.style.left) {
+                paper.style.left = '';
+            }
+        }
+
+        const currentPaperTop = parseFloat(paper.style.top) || 0;
+        const bottomScratch = Math.max(vpH * 0.25, scaledH * 0.15, 200) + extraBottom;
+        const rightScratch = Math.max(pad, vpW * 0.15, scaledW * 0.1) + extraRight;
+
+        const baseLeft = shiftNeeded > 0 ? shiftNeeded : 0;
+        const currentPaperLeft = parseFloat(paper.style.left) || baseLeft;
+        const effectivePaperRight = (shiftNeeded > 0 ? currentPaperLeft : (naturalLeft + currentPaperLeft)) + scaledW;
+        const calculatedRightEdge = shiftNeeded > 0
+            ? (pad + scaledW + rightScratch)
+            : Math.max(vpW, (naturalLeft + scaledW + rightScratch));
+        rightEdge = Math.max(calculatedRightEdge, effectivePaperRight + rightScratch);
+
+        const paperTopPos = Math.max(0, currentPaperTop);
+        bottomEdge = pad + paperTopPos + scaledH + bottomScratch;
+    }
 
     let sizer = document.getElementById('canvas-scroll-sizer');
-    if (rightEdge > vpW) {
-        // Need horizontal scroll space
-        if (!sizer) {
-            sizer = document.createElement('div');
-            sizer.id = 'canvas-scroll-sizer';
-            sizer.style.position = 'absolute';
-            sizer.style.pointerEvents = 'none';
-            sizer.style.visibility = 'hidden';
-            sizer.style.width = '1px';
-            sizer.style.height = '1px';
-            vp.appendChild(sizer);
-        }
-        sizer.style.left = (rightEdge - 1) + 'px';
-        sizer.style.top = (pad + scaledH + pad - 1) + 'px';
-    } else {
-        // Page fits - remove sizer so there's no spurious scrollbar
-        if (sizer) sizer.remove();
+    if (!sizer) {
+        sizer = document.createElement('div');
+        sizer.id = 'canvas-scroll-sizer';
+        sizer.style.position = 'absolute';
+        sizer.style.pointerEvents = 'none';
+        sizer.style.visibility = 'hidden';
+        sizer.style.width = '1px';
+        sizer.style.height = '1px';
+        vp.appendChild(sizer);
     }
+    sizer.style.left = Math.max(1, Math.round(rightEdge - 1)) + 'px';
+    sizer.style.top = Math.max(1, Math.round(bottomEdge - 1)) + 'px';
 
     if (window.syncRulers) window.syncRulers();
     if (window.syncMarginGuideOverlay) window.syncMarginGuideOverlay();
+    if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
+};
+
+window.checkPageVisibility = function() {
+    const vp = document.getElementById('viewport');
+    const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
+    const target = isMulti ? document.getElementById('multi-page-wrapper') : document.getElementById('paper');
+    const btn = document.getElementById('floating-return-to-page-btn');
+    if (!vp || !target || !btn) return;
+
+    const vpRect = vp.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    // Check if any portion of target is visible within viewport rectangle
+    const isVisible = (
+        targetRect.right > vpRect.left &&
+        targetRect.left < vpRect.right &&
+        targetRect.bottom > vpRect.top &&
+        targetRect.top < vpRect.bottom
+    );
+
+    if (!isVisible) {
+        const iconEl = btn.querySelector('.return-btn-icon');
+        let iconClass = 'fa-crosshairs';
+
+        if (targetRect.bottom <= vpRect.top) {
+            iconClass = 'fa-arrow-up';
+        } else if (targetRect.top >= vpRect.bottom) {
+            iconClass = 'fa-arrow-down';
+        } else if (targetRect.right <= vpRect.left) {
+            iconClass = 'fa-arrow-left';
+        } else if (targetRect.left >= vpRect.right) {
+            iconClass = 'fa-arrow-right';
+        }
+
+        if (iconEl) {
+            iconEl.className = `fas ${iconClass} return-btn-icon`;
+        }
+        btn.classList.add('visible');
+    } else {
+        btn.classList.remove('visible');
+    }
+};
+
+window.returnToPage = function() {
+    const vp = document.getElementById('viewport');
+    const paper = document.getElementById('paper');
+    const wrapper = document.getElementById('multi-page-wrapper');
+    const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
+    if (!vp) return;
+
+    if (paper) {
+        delete paper.dataset.customPanOffset;
+        paper.style.top = '';
+        paper.style.left = '';
+    }
+    if (wrapper) {
+        delete wrapper.dataset.customPanOffset;
+        wrapper.style.top = '';
+        wrapper.style.left = '';
+    }
+    window._extraBottomScratch = 0;
+    window._extraRightScratch = 0;
+
+    if (typeof window.updateCanvasScrollBounds === 'function') {
+        window.updateCanvasScrollBounds();
+    }
+
+    if (isMulti && wrapper) {
+        vp.scrollTo({
+            left: 0,
+            top: 0,
+            behavior: 'smooth'
+        });
+    } else if (paper) {
+        const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+        const paperW = paper.offsetWidth || 794;
+        const scaledW = paperW * z;
+        const vpW = vp.clientWidth;
+
+        let targetLeft = 0;
+        const shiftNeeded = 50 - (vpW - scaledW) / 2;
+        if (shiftNeeded > 0) {
+            targetLeft = Math.max(0, (50 + scaledW + 50 - vpW) / 2);
+        }
+
+        vp.scrollTo({
+            left: targetLeft,
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    const btn = document.getElementById('floating-return-to-page-btn');
+    if (btn) btn.classList.remove('visible');
+
+    if (typeof window.syncRulers === 'function') window.syncRulers();
+    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+};
+
+window.initCanvasScrollEnhancements = function() {
+    const vp = document.getElementById('viewport');
+    if (!vp || vp._hasScrollEnhancements) return;
+    vp._hasScrollEnhancements = true;
+
+    vp.addEventListener('scroll', () => {
+        if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
+    }, { passive: true });
+
+    vp.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) return;
+        if (vp.classList.contains('panning')) return;
+
+        const isMulti = window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage');
+        const targetEl = isMulti ? document.getElementById('multi-page-wrapper') : document.getElementById('paper');
+        if (!targetEl) return;
+
+        const target = e.target;
+        if (target && (target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+            return;
+        }
+
+        // Normalize deltas across browsers:
+        // In Firefox, e.deltaMode === 1 (DOM_DELTA_LINE), deltaY is ~3 lines instead of ~100px
+        let dy = e.deltaY;
+        let dx = e.deltaX;
+        if (e.deltaMode === 1) {
+            dy *= 25;
+            dx *= 25;
+        } else if (e.deltaMode === 2) {
+            dy *= 400;
+            dx *= 400;
+        }
+
+        // Shift-wheel maps vertical mouse wheel to horizontal scrolling
+        if (e.shiftKey && !dx && dy) {
+            dx = dy;
+            dy = 0;
+        }
+
+        const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+        let baseLeft = 0;
+        let shiftNeeded = 0;
+
+        if (!isMulti) {
+            const pad = 50;
+            const paperW = targetEl.offsetWidth || 794;
+            const scaledW = paperW * z;
+            const vpW = vp.clientWidth;
+            const naturalLeft = (vpW - scaledW) / 2;
+            shiftNeeded = pad - naturalLeft;
+            baseLeft = shiftNeeded > 0 ? shiftNeeded : 0;
+        } else {
+            baseLeft = 0;
+        }
+
+        const currentLeft = parseFloat(targetEl.style.left) || baseLeft;
+        const currentTop = parseFloat(targetEl.style.top) || 0;
+
+        let handled = false;
+
+        // --- VERTICAL WHEEL SCROLLING (UP / DOWN) ---
+        if (dy !== 0) {
+            if (dy < 0) {
+                // User wants to scroll UP
+                if (currentTop < 0) {
+                    // Target was previously panned upwards: restore downwards towards 0
+                    const stepY = Math.max(15, Math.round(Math.abs(dy) * 0.8));
+                    const newTop = Math.min(0, currentTop + stepY);
+                    targetEl.style.top = (newTop === 0 ? '' : newTop + 'px');
+                    if (newTop === 0 && (parseFloat(targetEl.style.left) || baseLeft) === baseLeft) {
+                        delete targetEl.dataset.customPanOffset;
+                    }
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                } else if (vp.scrollTop <= 2) {
+                    // At top boundary: push target downwards to reveal scratch area above
+                    const stepY = Math.max(15, Math.round(Math.abs(dy) * 0.8));
+                    targetEl.style.top = (currentTop + stepY) + 'px';
+                    targetEl.dataset.customPanOffset = "true";
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                }
+                // Otherwise vp.scrollTop > 2: allow native upward scrolling through document
+            } else {
+                // User wants to scroll DOWN (dy > 0)
+                if (currentTop > 0) {
+                    // Target was shifted down into top scratch: restore it upwards towards 0 first
+                    const stepY = Math.max(15, Math.round(dy * 0.8));
+                    const newTop = Math.max(0, currentTop - stepY);
+                    targetEl.style.top = (newTop === 0 ? '' : newTop + 'px');
+                    if (newTop === 0 && (parseFloat(targetEl.style.left) || baseLeft) === baseLeft) {
+                        delete targetEl.dataset.customPanOffset;
+                    }
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                } else {
+                    // Native downward scroll: if at bottom boundary, extend bottom scratch
+                    const atBottom = (vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 15);
+                    if (atBottom) {
+                        const inc = Math.max(100, Math.round(Math.abs(dy) * 2));
+                        window._extraBottomScratch = (window._extraBottomScratch || 0) + inc;
+                        handled = true;
+                    }
+                }
+            }
+        }
+
+        // --- HORIZONTAL WHEEL SCROLLING (LEFT / RIGHT) ---
+        if (dx !== 0) {
+            if (dx < 0) {
+                // User wants to scroll LEFT
+                if (currentLeft < baseLeft) {
+                    // Target was previously panned leftwards past baseLeft: restore right towards baseLeft
+                    const stepX = Math.max(15, Math.round(Math.abs(dx) * 0.8));
+                    const newLeft = Math.min(baseLeft, currentLeft + stepX);
+                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
+                    if (newLeft === baseLeft && (parseFloat(targetEl.style.top) || 0) === 0) {
+                        delete targetEl.dataset.customPanOffset;
+                    }
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                } else if (vp.scrollLeft <= 2) {
+                    // At left boundary: push target right to reveal scratch area to the left
+                    const stepX = Math.max(15, Math.round(Math.abs(dx) * 0.8));
+                    targetEl.style.left = (currentLeft + stepX) + 'px';
+                    targetEl.dataset.customPanOffset = "true";
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                }
+                // Otherwise vp.scrollLeft > 2: allow native leftward scrolling
+            } else {
+                // User wants to scroll RIGHT (dx > 0)
+                if (currentLeft > baseLeft) {
+                    // Target was shifted right into left scratch: restore it left towards baseLeft first
+                    const stepX = Math.max(15, Math.round(dx * 0.8));
+                    const newLeft = Math.max(baseLeft, currentLeft - stepX);
+                    targetEl.style.left = (newLeft === baseLeft ? (!isMulti && shiftNeeded > 0 ? shiftNeeded + 'px' : '') : newLeft + 'px');
+                    if (newLeft === baseLeft && (parseFloat(targetEl.style.top) || 0) === 0) {
+                        delete targetEl.dataset.customPanOffset;
+                    }
+                    if (e.cancelable) e.preventDefault();
+                    handled = true;
+                } else {
+                    // Native rightward scroll: if at right boundary, extend right scratch
+                    const atRight = (vp.scrollLeft + vp.clientWidth >= vp.scrollWidth - 15);
+                    if (atRight) {
+                        const inc = Math.max(100, Math.round(Math.abs(dx) * 2));
+                        window._extraRightScratch = (window._extraRightScratch || 0) + inc;
+                        handled = true;
+                    }
+                }
+            }
+        }
+
+        if (handled) {
+            if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
+            if (typeof window.syncRulers === 'function') window.syncRulers();
+            if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+            if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
+        }
+    }, { passive: false });
 };
 
 window.setZoom = function(z) {
@@ -1174,6 +1466,9 @@ function enterMultiPageView(z) {
     if (display) display.textContent = Math.round(targetZoom * 100) + '%';
 
     refreshMultiPageZoom(targetZoom);
+    window._extraBottomScratch = 0;
+    window._extraRightScratch = 0;
+    if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
     window.updateViewModeUI();
 
     // Center active page in viewport
@@ -1211,6 +1506,9 @@ function refreshMultiPageZoom(z) {
     wrapper.style.width = totalWidth + 'px';
     wrapper.style.minWidth = totalWidth + 'px';
     wrapper.style.transform = `scale(${z})`;
+    if (typeof window.updateCanvasScrollBounds === 'function') {
+        window.updateCanvasScrollBounds();
+    }
 }
 
 function exitMultiPageView() {
@@ -1231,12 +1529,20 @@ function exitMultiPageView() {
     // Restore paper display and zoom
     paperEl.style.display = '';
     paperEl.style.transform = `scale(${state.zoom})`;
+    paperEl.style.top = '';
+    paperEl.style.left = '';
+    delete paperEl.dataset.customPanOffset;
+    window._extraBottomScratch = 0;
+    window._extraRightScratch = 0;
 
     // Re-render active page into paper
     if (typeof renderPage === 'function' && state.pages && state.pages[state.currentPageIndex]) {
         renderPage(state.pages[state.currentPageIndex]);
     }
 
+    if (typeof window.updateCanvasScrollBounds === 'function') {
+        window.updateCanvasScrollBounds();
+    }
     if (window.syncRulers) window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
     window.updateViewModeUI();
@@ -1361,6 +1667,10 @@ window.focusPage = function(pageIndex = null) {
 // Initialize handle scaling
 if (typeof window.syncHandleScaling === 'function') {
     window.syncHandleScaling(0.6);
+}
+
+if (typeof window.initCanvasScrollEnhancements === 'function') {
+    window.initCanvasScrollEnhancements();
 }
 
 

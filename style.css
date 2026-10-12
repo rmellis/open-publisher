@@ -1146,6 +1146,61 @@ body.dark-mode .tab.active {
     outline: none !important;
 }
 
+/* Floating Return to Page Button (v5.7.7) */
+.floating-return-btn {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: #ffffff;
+    color: var(--ui-theme-color, #007670);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s, color 0.15s, border-color 0.15s;
+    user-select: none;
+}
+.floating-return-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+.floating-return-btn:hover {
+    background: var(--ui-theme-color, #007670);
+    color: #ffffff;
+    border-color: var(--ui-theme-color, #007670);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+.floating-return-btn .return-btn-icon {
+    font-size: 13px;
+    transition: transform 0.2s ease;
+}
+.floating-return-btn:hover .return-btn-icon {
+    transform: scale(1.15);
+}
+body.dark-mode .floating-return-btn {
+    background: #252525;
+    color: #4dd0e1;
+    border-color: #444444;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode .floating-return-btn:hover {
+    background: #007670;
+    color: #ffffff;
+    border-color: #007670;
+}
+
 /* --- MULTI-PAGE VIEW --- */
 .canvas-area.multi-page-canvas {
     grid-template-columns: 1fr !important;
@@ -1253,6 +1308,7 @@ body.dark-mode .multipage-dialog-warning {
     transform-origin: top left;
     align-items: flex-start;
     justify-content: flex-start;
+    position: relative;
 }
 .multi-page-slot {
     background: white;
@@ -1434,7 +1490,7 @@ td, th {
 .element-content [contenteditable="true"] {
     text-decoration-skip-ink: none !important;
 }
-/* --- Disable Native Browser Underlining (v5.7.6) --- */
+/* --- Disable Native Browser Underlining (v5.7.7) --- */
 ::spelling-error,
 ::grammar-error,
 *::spelling-error,
