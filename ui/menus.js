@@ -224,11 +224,12 @@ const ContextMenuSystem = {
                 html += this.buildItem('Format Background', 'fa-fill-drip', 'if(window.ContextMenuActions) ContextMenuActions.formatBackground()');
             } else {
                 // --- ELEMENT MENUS ---
-                const isImage = el.querySelector('img');
+                const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+                const isTable = el.querySelector('table') !== null;
                 const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
-                const isWordArt = el.querySelector('.wa-text');
-                const isTable = el.querySelector('table');
-                const isText = !isImage && !isShape && !isWordArt && !isTable;
+                const isWordArt = el.querySelector('.wa-text') !== null;
+                const isText = (el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable);
+                const isImage = !isText && !!contentImg;
 
                 let clickedWord = "";
                 let clickedWordRange = null;

@@ -85,10 +85,11 @@ window.refreshSelectionPane = function() {
 
     els.forEach((el, index) => {
         let defaultName = "Element";
-        if (el.querySelector('img')) defaultName = "Picture";
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        if (contentImg) defaultName = "Picture";
         else if (el.querySelector('svg')) defaultName = "Shape";
         else if (el.querySelector('table')) defaultName = "Table";
-        else if (el.querySelector('.element-content')) defaultName = "Text Box";
+        else if (el.querySelector('[contenteditable="true"]') || el.querySelector('.element-content')) defaultName = "Text Box";
         else if (el.querySelector('.wa-text')) defaultName = "WordArt";
         
         const name = el.getAttribute('data-element-name') || `${defaultName} ${originalEls.indexOf(el) + 1}`;

@@ -2038,7 +2038,12 @@ window.ContextRibbonSystem = {
     },
     updateTabs: function(el) {
         this.hideAllTabs(false); if (!el) return;
-        const isImage = el.querySelector('img') || el.getAttribute('data-type') === 'emoji', isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow', isWordArt = el.querySelector('.wa-text'), isTable = el.querySelector('table'), isText = !isImage && !isShape && !isWordArt && !isTable;
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        const isTable = el.querySelector('table') !== null;
+        const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
+        const isWordArt = el.querySelector('.wa-text') !== null;
+        const isText = (el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable);
+        const isImage = !isText && (!!contentImg || el.getAttribute('data-type') === 'emoji');
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
         else if (isTable) { 

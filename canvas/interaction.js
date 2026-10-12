@@ -111,7 +111,8 @@ function handleMouseDown(e) {
 
         // --- EDGE DRAG LOGIC (Robust) ---
         const isClipart = el.querySelector('svg');
-        const isImage = el.querySelector('img');
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        const isImage = !!contentImg;
         const isShape = el.getAttribute('data-type') === 'shape';
         
         // 1. NON-TEXT ITEMS: Always drag immediately
@@ -159,7 +160,8 @@ function handleMouseMove(e) {
     if(!state.dragMode && !state.cropMode) {
         const el = e.target.closest('.pub-element');
         if(el) {
-            const isShape = el.querySelector('img') || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
+            const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+            const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
             const rect = el.getBoundingClientRect();
             
             if (isShape) {

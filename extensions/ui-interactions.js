@@ -593,8 +593,8 @@
         if (imageFiles.length > 0) {
             let selectedTargets = [];
             if (state.multiSelected && state.multiSelected.length > 0) {
-                selectedTargets = state.multiSelected.filter(el => el.getAttribute('data-type') === 'image' || el.querySelector('img'));
-            } else if (state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'image' || state.selectedEl.querySelector('img'))) {
+                selectedTargets = state.multiSelected.filter(el => el.getAttribute('data-type') === 'image' || (window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'))));
+            } else if (state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'image' || (window.getElementContentImage ? window.getElementContentImage(state.selectedEl) : Array.from(state.selectedEl.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'))))) {
                 selectedTargets = [state.selectedEl];
             }
 
@@ -850,7 +850,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.4</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.5</div>
                 </div>
                 
                 <div class="about-desc">

@@ -393,9 +393,11 @@
                 return;
             }
 
-            this.currentArtId = artId;
-            this.currentSize = size;
-            this.currentInset = inset;
+            if (this.currentTarget === 'page') {
+                this.currentArtId = artId;
+                this.currentSize = size;
+                this.currentInset = inset;
+            }
 
             const w = paper.offsetWidth || parseFloat(paper.style.width) || 794;
             const h = paper.offsetHeight || parseFloat(paper.style.height) || 1123;
@@ -423,7 +425,9 @@
             borderEl.style.cssText = `position: absolute; left: 0px; top: 0px; width: ${w}px; height: ${h}px; z-index: 1; pointer-events: none !important; user-select: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
             borderEl.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${tilesHTML}</div>`;
 
-            this.updateActiveUI(artId);
+            if (this.currentTarget === 'page') {
+                this.updateActiveUI(artId);
+            }
         },
 
         /* Renders border art on a selected canvas element */
@@ -431,12 +435,21 @@
             if (!el) return;
             const content = el.querySelector('.element-content') || el;
             const oldOverlay = el.querySelector('.element-border-art');
+            const textDiv = (el.querySelector && !el.querySelector('table')) ? el.querySelector('[contenteditable="true"]') : null;
 
             if (!artId || artId === 'none') {
                 if (oldOverlay) oldOverlay.remove();
                 el.removeAttribute('data-border-art');
                 if (this._elementObserver) {
                     try { this._elementObserver.unobserve(el); } catch(e) {}
+                }
+                if (textDiv) {
+                    if (textDiv.hasAttribute('data-original-padding')) {
+                        textDiv.style.padding = textDiv.getAttribute('data-original-padding');
+                        textDiv.removeAttribute('data-original-padding');
+                    } else {
+                        textDiv.style.padding = '10px';
+                    }
                 }
                 return;
             }
@@ -447,8 +460,8 @@
             const w = explicitW !== undefined ? explicitW : (el.offsetWidth || parseFloat(el.style.width) || 300);
             const h = explicitH !== undefined ? explicitH : (el.offsetHeight || parseFloat(el.style.height) || 200);
 
-            const safeSize = Math.max(12, Math.min(size || 32, Math.floor(Math.min(w, h) / 3)));
-            const safeInset = Math.max(0, Math.min(inset !== undefined ? inset : 0, Math.floor((Math.min(w, h) - safeSize) / 4)));
+            const safeSize = Math.max(12, Math.min(size || 32, Math.max(16, Math.floor(Math.min(w, h) / 2 - 2))));
+            const safeInset = Math.max(0, Math.min(inset !== undefined ? inset : 0, Math.max(0, Math.floor((Math.min(w, h) - safeSize) / 2 - 2))));
 
             const tilesHTML = this.generateTilesHTML(preset, w, h, safeSize, safeInset);
 
@@ -462,9 +475,21 @@
             overlay.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;';
             overlay.innerHTML = tilesHTML;
 
-            el.setAttribute('data-border-art', `${artId}:${safeSize}:${safeInset}`);
+            el.setAttribute('data-border-art', `${artId}:${size || safeSize}:${inset !== undefined ? inset : safeInset}`);
             el._lastBorderArtW = Math.round(w);
             el._lastBorderArtH = Math.round(h);
+
+            // Dynamic padding for text boxes matching border reach + buffer
+            if (textDiv) {
+                if (!textDiv.hasAttribute('data-original-padding')) {
+                    textDiv.setAttribute('data-original-padding', textDiv.style.padding || '10px');
+                }
+                const borderReach = safeInset + safeSize;
+                const maxPad = Math.max(10, Math.floor(Math.min(w, h) / 2 - 4));
+                const targetPad = Math.min(maxPad, Math.round(borderReach + 6));
+                textDiv.style.padding = targetPad + 'px';
+                textDiv.style.boxSizing = 'border-box';
+            }
 
             this.observeElement(el);
         },
@@ -508,20 +533,26 @@
 
         /* Apply chosen border art */
         apply: function(artId) {
-            const size = parseInt(document.getElementById('border-art-size-slider')?.value) || this.currentSize;
-            const inset = parseInt(document.getElementById('border-art-inset-slider')?.value) || this.currentInset;
+            const size = this.currentSize || 32;
+            const inset = (this.currentInset !== undefined && this.currentInset !== null) ? this.currentInset : 0;
+
+            this.currentSize = size;
+            this.currentInset = inset;
+            this.currentArtId = (artId && artId !== 'none') ? artId : null;
 
             if (this.currentTarget === 'elem') {
                 const targetEl = (window.state && window.state.selectedEl) ? window.state.selectedEl : (this._targetElement || document.querySelector('.pub-element.selected'));
                 if (targetEl) {
                     this._targetElement = targetEl;
                     this.renderElementBorder(targetEl, artId, size, inset);
+                    this.updateActiveUI(this.currentArtId);
                     if (typeof window.pushHistory === 'function') window.pushHistory();
                     if (typeof window.updatePageThumbnails === 'function') window.updatePageThumbnails();
                     return;
                 }
             }
             this.applyToPage(artId, size, inset);
+            this.updateActiveUI(this.currentArtId);
         },
 
         applyToPage: function(artId, size, inset) {
@@ -687,54 +718,135 @@
             }
         },
 
+        syncStateWithTarget: function() {
+            let artId = null;
+            let size = 32;
+            let inset = (this.currentTarget === 'elem') ? 0 : 15;
+
+            if (this.currentTarget === 'elem') {
+                const target = (window.state && window.state.selectedEl) ? window.state.selectedEl : (this._targetElement || document.querySelector('.pub-element.selected'));
+                if (target) {
+                    this._targetElement = target;
+                    const attr = target.getAttribute('data-border-art');
+                    if (attr && attr !== 'none') {
+                        const parts = attr.split(':');
+                        artId = parts[0];
+                        if (parts[1]) size = parseInt(parts[1]) || 32;
+                        if (parts[2] !== undefined) inset = parseInt(parts[2]) || 0;
+                    }
+                }
+            } else {
+                const pageBorder = document.getElementById('page-border');
+                if (pageBorder) {
+                    const st = pageBorder.getAttribute('data-style');
+                    if (st && st.startsWith('borderart:')) {
+                        const parts = st.split(':');
+                        artId = parts[1];
+                        if (parts[2]) size = parseInt(parts[2]) || 32;
+                        if (parts[3] !== undefined) inset = parseInt(parts[3]) || 15;
+                    }
+                }
+            }
+
+            this.currentArtId = artId;
+            this.currentSize = size;
+            this.currentInset = inset;
+
+            this.updateActiveUI(artId);
+
+            const sSlider = document.getElementById('border-art-size-slider');
+            const sVal = document.getElementById('border-art-size-val');
+            if (sSlider) sSlider.value = size;
+            if (sVal) sVal.innerText = size + 'px';
+
+            const iSlider = document.getElementById('border-art-inset-slider');
+            const iVal = document.getElementById('border-art-inset-val');
+            if (iSlider) iSlider.value = inset;
+            if (iVal) iVal.innerText = inset + 'px';
+        },
+
+        getActiveArtId: function() {
+            if (this.currentArtId && this.currentArtId !== 'none') {
+                return this.currentArtId;
+            }
+            if (this.currentTarget === 'elem') {
+                const targetEl = (window.state && window.state.selectedEl) ? window.state.selectedEl : (this._targetElement || document.querySelector('.pub-element.selected'));
+                if (targetEl) {
+                    const attr = targetEl.getAttribute('data-border-art');
+                    if (attr && attr !== 'none') {
+                        return attr.split(':')[0];
+                    }
+                }
+            } else {
+                const pageBorder = document.getElementById('page-border');
+                if (pageBorder) {
+                    const st = pageBorder.getAttribute('data-style');
+                    if (st && st.startsWith('borderart:')) {
+                        return st.split(':')[1];
+                    }
+                }
+            }
+            return null;
+        },
+
         setTarget: function(target) {
             this.currentTarget = target;
             const btnPage = document.getElementById('border-art-target-page');
             const btnElem = document.getElementById('border-art-target-elem');
-            if (!btnPage || !btnElem) return;
+            if (btnPage && btnElem) {
+                if (target === 'page') {
+                    btnPage.classList.add('active');
+                    btnPage.style.background = 'var(--ui-theme-color)';
+                    btnPage.style.color = '#ffffff';
+                    btnPage.style.borderColor = 'var(--ui-theme-color)';
 
-            if (target === 'page') {
-                btnPage.classList.add('active');
-                btnPage.style.background = 'var(--ui-theme-color)';
-                btnPage.style.color = '#ffffff';
-                btnPage.style.borderColor = 'var(--ui-theme-color)';
+                    btnElem.classList.remove('active');
+                    btnElem.style.background = 'var(--ui-bg, #f8fafc)';
+                    btnElem.style.color = 'var(--ui-text, #475569)';
+                    btnElem.style.borderColor = 'var(--ui-border, #cbd5e1)';
+                } else {
+                    btnElem.classList.add('active');
+                    btnElem.style.background = 'var(--ui-theme-color)';
+                    btnElem.style.color = '#ffffff';
+                    btnElem.style.borderColor = 'var(--ui-theme-color)';
 
-                btnElem.classList.remove('active');
-                btnElem.style.background = 'var(--ui-bg, #f8fafc)';
-                btnElem.style.color = 'var(--ui-text, #475569)';
-                btnElem.style.borderColor = 'var(--ui-border, #cbd5e1)';
-            } else {
-                btnElem.classList.add('active');
-                btnElem.style.background = 'var(--ui-theme-color)';
-                btnElem.style.color = '#ffffff';
-                btnElem.style.borderColor = 'var(--ui-theme-color)';
-
-                btnPage.classList.remove('active');
-                btnPage.style.background = 'var(--ui-bg, #f8fafc)';
-                btnPage.style.color = 'var(--ui-text, #475569)';
-                btnPage.style.borderColor = 'var(--ui-border, #cbd5e1)';
+                    btnPage.classList.remove('active');
+                    btnPage.style.background = 'var(--ui-bg, #f8fafc)';
+                    btnPage.style.color = 'var(--ui-text, #475569)';
+                    btnPage.style.borderColor = 'var(--ui-border, #cbd5e1)';
+                }
             }
+
+            this.syncStateWithTarget();
         },
 
         onSizeChange: function(val) {
             const v = parseInt(val) || 32;
             this.currentSize = v;
+            const slider = document.getElementById('border-art-size-slider');
+            if (slider && String(slider.value) !== String(v)) slider.value = v;
             const lbl = document.getElementById('border-art-size-val');
             if (lbl) lbl.innerText = v + 'px';
 
-            if (this.currentArtId && this.currentArtId !== 'none') {
-                this.apply(this.currentArtId);
+            const artId = this.getActiveArtId();
+            if (artId) {
+                this.currentArtId = artId;
+                this.apply(artId);
             }
         },
 
         onInsetChange: function(val) {
-            const v = parseInt(val) || 15;
+            const v = parseInt(val) || 0;
             this.currentInset = v;
+            const slider = document.getElementById('border-art-inset-slider');
+            if (slider && String(slider.value) !== String(v)) slider.value = v;
             const lbl = document.getElementById('border-art-inset-val');
             if (lbl) lbl.innerText = v + 'px';
 
-            if (this.currentArtId && this.currentArtId !== 'none') {
-                this.apply(this.currentArtId);
+            const artId = this.getActiveArtId();
+            if (artId) {
+                this.currentArtId = artId;
+                this.apply(artId);
             }
         },
 
@@ -783,18 +895,6 @@
                 const scrollContainer = document.getElementById('border-art-scroll-container');
                 if (scrollContainer) {
                     scrollContainer.scrollTop = 0;
-                }
-
-                // Check active page border style
-                const pageBorder = document.getElementById('page-border');
-                if (pageBorder) {
-                    const st = pageBorder.getAttribute('data-style');
-                    if (st && st.startsWith('borderart:')) {
-                        const parts = st.split(':');
-                        this.updateActiveUI(parts[1]);
-                    } else {
-                        this.updateActiveUI(null);
-                    }
                 }
             }
         },
@@ -853,30 +953,6 @@
                 scrollContainer.style.overflowY = 'auto';
                 scrollContainer.style.overflowX = 'hidden';
                 scrollContainer.scrollTop = 0;
-            }
-
-            if (target) {
-                const attr = target.getAttribute('data-border-art');
-                if (attr && attr !== 'none') {
-                    const parts = attr.split(':');
-                    this.updateActiveUI(parts[0]);
-                    if (parts[1]) {
-                        const sSlider = document.getElementById('border-art-size-slider');
-                        const sVal = document.getElementById('border-art-size-val');
-                        if (sSlider) sSlider.value = parts[1];
-                        if (sVal) sVal.innerText = parts[1] + 'px';
-                        this.currentSize = parseInt(parts[1]) || 32;
-                    }
-                    if (parts[2]) {
-                        const iSlider = document.getElementById('border-art-inset-slider');
-                        const iVal = document.getElementById('border-art-inset-val');
-                        if (iSlider) iSlider.value = parts[2];
-                        if (iVal) iVal.innerText = parts[2] + 'px';
-                        this.currentInset = parseInt(parts[2]) || 0;
-                    }
-                } else {
-                    this.updateActiveUI(null);
-                }
             }
 
             setTimeout(() => {

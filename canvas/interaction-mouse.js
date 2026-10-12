@@ -288,7 +288,8 @@ window.handleMouseDown = function(e) {
             }
         }
 
-        if(el.querySelector('svg') || el.querySelector('img') || el.getAttribute('data-type') === 'shape') {
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        if(el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -323,7 +324,8 @@ window.handleMouseMove = function(e) {
     if(!state.dragMode && !state.cropMode) {
         const el = e.target.closest('.pub-element');
         if(el) {
-            const isShape = el.querySelector('img') || el.querySelector('svg') || el.getAttribute('data-type') === 'shape', rect = el.getBoundingClientRect();
+            const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+            const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape', rect = el.getBoundingClientRect();
             if (isShape) {
                 el.style.cursor = 'move';
             } else {

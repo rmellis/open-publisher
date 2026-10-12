@@ -1398,7 +1398,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     // Helper to sync visibility based on selection and user preference
     const refreshVisibility = (el) => {
-        if (el && (el.querySelector('img') || el.getAttribute('data-type') === 'emoji')) {
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        if (el && (contentImg || el.getAttribute('data-type') === 'emoji')) {
             const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
             const titleEl = panel.querySelector('.op-sidebar-title');
             if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
@@ -1417,7 +1418,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 let v = el.getAttribute(`data-filter-${f}`);
                 if (v === null || v === undefined) {
                     if (f === 'transparency') {
-                        const img = el.querySelector('img');
+                        const img = contentImg;
                         if (img && img.style.opacity !== '' && img.style.opacity !== undefined) {
                             v = Math.round((1 - parseFloat(img.style.opacity)) * 100);
                         } else {
@@ -1439,7 +1440,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     };
 
     const apply = (el) => {
-        const img = el.querySelector('img') || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null); if(!img) return;
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        const img = contentImg || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null); if(!img) return;
         const get = (f, d) => el.getAttribute(`data-filter-${f}`) || d;
         img.style.filter = `brightness(${get('brightness',100)}%) contrast(${get('contrast',100)}%) saturate(${get('saturate',100)}%) hue-rotate(${get('hue-rotate',0)}deg) blur(${get('blur',0)}px) sepia(${get('sepia',0)}%) grayscale(${get('grayscale',0)}%) invert(${get('invert',0)}%)`;
         img.style.opacity = 1 - (get('transparency',0) / 100);
@@ -4148,7 +4150,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 if(state.multiSelected && state.multiSelected.length > 0) { state.multiSelected.forEach(m => m.classList.remove('selected')); state.multiSelected = []; }
             }
 
-            if(el.querySelector('svg') || el.querySelector('img') || el.getAttribute('data-type') === 'shape') {
+            const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+            if(el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') {
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -4188,7 +4191,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         if(!state.dragMode && !state.cropMode) {
             const el = e.target.closest('.pub-element');
             if(el) {
-                const isShape = el.querySelector('img') || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
+                const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+                const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
                 const rect = el.getBoundingClientRect();
                 if (isShape) { el.style.cursor = 'move'; } 
                 else { 

@@ -143,7 +143,8 @@
     const vp = document.getElementById('viewport') || document.getElementById('workspace');
 
     const refreshVisibility = (el) => {
-        if (el && (el.querySelector('img') || el.getAttribute('data-type') === 'emoji')) {
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        if (el && (contentImg || el.getAttribute('data-type') === 'emoji')) {
             const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
             const titleEl = panel.querySelector('.op-sidebar-title');
             if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
@@ -157,7 +158,7 @@
                 let v = el.getAttribute(`data-filter-${f}`);
                 if (v === null || v === undefined) {
                     if (f === 'transparency') {
-                        const img = el.querySelector('img');
+                        const img = contentImg;
                         if (img && img.style.opacity !== '' && img.style.opacity !== undefined) {
                             v = Math.round((1 - parseFloat(img.style.opacity)) * 100);
                         } else {
@@ -177,7 +178,8 @@
     };
 
     const apply = (el) => {
-        const img = el.querySelector('img') || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null); if(!img) return;
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        const img = contentImg || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null); if(!img) return;
         const get = (f, d) => el.getAttribute(`data-filter-${f}`) || d;
         img.style.filter = `brightness(${get('brightness',100)}%) contrast(${get('contrast',100)}%) saturate(${get('saturate',100)}%) hue-rotate(${get('hue-rotate',0)}deg) blur(${get('blur',0)}px) sepia(${get('sepia',0)}%) grayscale(${get('grayscale',0)}%) invert(${get('invert',0)}%)`;
         img.style.opacity = 1 - (get('transparency',0) / 100);
@@ -1823,7 +1825,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.7.4: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.7.5: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 

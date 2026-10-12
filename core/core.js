@@ -81,3 +81,20 @@ window.sanitizeH2cBackgroundColor = function(bg, hasActiveTheme) {
     return null;
 };
 
+/**
+ * Safely finds an image element belonging directly to the content of an element,
+ * ignoring any internal border-art decoration thumbnail images.
+ */
+window.getElementContentImage = function(el) {
+    if (!el || typeof el.querySelectorAll !== 'function') return null;
+    const imgs = el.querySelectorAll('img');
+    for (let i = 0; i < imgs.length; i++) {
+        const img = imgs[i];
+        if (!img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border')) {
+            return img;
+        }
+    }
+    return null;
+};
+
+

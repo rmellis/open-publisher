@@ -451,7 +451,8 @@ function showFloatToolbar() {
     if(!state.selectedEl) return;
     
     const el = state.selectedEl;
-    const isImage = el.querySelector('img');
+    const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+    const isImage = !!contentImg;
     const isBetaWordArt = el.querySelector('.beta-wa-img');
     const isSvg = el.querySelector('svg');
     const isShape = el.getAttribute('data-type') === 'shape';
