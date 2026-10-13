@@ -26,6 +26,8 @@ window.clearAllGuides = function() {
 
 window.createNewGuide = function(dir, e) {
     if (state.isGuidesLocked) return;
+    // Right/middle click on a ruler (unit menu etc.) must never spawn a guide or start a drag
+    if (e && e.button !== undefined && e.button !== 0) return;
     
     const paperRect = paper.getBoundingClientRect();
     const zoom = state.zoom || 1.0;
@@ -93,26 +95,25 @@ window.addEventListener('mouseup', function(e) {
     if (state.dragMode === 'drag-guide' && state.dragData.guide) {
         const paperRect = paper.getBoundingClientRect();
         const guideRect = state.dragData.guide.getBoundingClientRect();
+        const rulerH = document.getElementById('ruler-h');
+        const rulerV = document.getElementById('ruler-v');
         let remove = false;
         
-        // If they drop it significantly outside the bounds of the canvas, we delete it
+        // Dropping a guide back onto its ruler (or beyond it) deletes it, exactly like dragging it out of the ruler in reverse.
+        // A guide dropped well outside the paper is also deleted. There is no snap-to-paper-edge any more.
         if (state.dragData.dir === 'h') {
+            const r = rulerH ? rulerH.getBoundingClientRect() : null;
+            if (r && e.clientY <= r.bottom) remove = true;
             if (guideRect.top < paperRect.top - 20 || guideRect.top > paperRect.bottom + 20) remove = true;
-            // If they just clicked and didn't move it far enough onto the page, snap it to the edge instead of deleting
-            if (remove && guideRect.top < paperRect.top - 20 && Math.abs(state.dragData.startY - e.clientY) < 10) {
-                remove = false;
-                state.dragData.guide.style.top = '0px';
-            }
         } else {
+            const r = rulerV ? rulerV.getBoundingClientRect() : null;
+            if (r && e.clientX <= r.right) remove = true;
             if (guideRect.left < paperRect.left - 20 || guideRect.left > paperRect.right + 20) remove = true;
-            if (remove && guideRect.left < paperRect.left - 20 && Math.abs(state.dragData.startX - e.clientX) < 10) {
-                remove = false;
-                state.dragData.guide.style.left = '0px';
-            }
         }
         
         if (remove) state.dragData.guide.remove();
         state.dragMode = null;
+        state.dragData = {};
         e.stopImmediatePropagation();
     }
 }, true);

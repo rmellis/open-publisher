@@ -9,13 +9,19 @@ window.initRulers = function() {
     // Inject raw hardware canvases instead of thousands of HTML divs!
     h.innerHTML = `
         <canvas id="ruler-h-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+        <div id="ruler-h-selection-marker" class="ruler-selection-marker-h op-ruler-highlight-h" style="display:none;"></div>
+        <div id="ruler-h-cursor-marker" class="ruler-cursor-marker-h" style="display:none;"></div>
         <div id="indent-markers" class="indent-marker-container">
             <div id="im-first-line" class="indent-marker im-first-line" title="First Line Indent"></div>
             <div id="im-hanging" class="indent-marker im-hanging" title="Hanging Indent"></div>
             <div id="im-left" class="indent-marker im-left" title="Left Indent"></div>
         </div>
     `;
-    v.innerHTML = '<canvas id="ruler-v-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>';
+    v.innerHTML = `
+        <canvas id="ruler-v-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+        <div id="ruler-v-selection-marker" class="ruler-selection-marker-v op-ruler-highlight-v" style="display:none;"></div>
+        <div id="ruler-v-cursor-marker" class="ruler-cursor-marker-v" style="display:none;"></div>
+    `;
 
     const vp = document.getElementById('viewport');
     if(vp) vp.addEventListener('scroll', window.syncRulers);

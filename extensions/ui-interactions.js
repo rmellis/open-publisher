@@ -1,89 +1,262 @@
-// Open Publisher UI Interactions (v5.4.8)
-(function installRulerHighlights() {
-    console.log("🛠️ Ruler Highlight Script initializing (Boundary Clamped)...");
-
-    // 1. Inject styling
-    const style = document.createElement('style');
-    // CSS extracted to style.css
-    document.head.appendChild(style);
-
-    // 2. Attach overlays to body
-    const hlH = document.createElement('div');
-    hlH.className = 'op-ruler-highlight-h';
-    document.body.appendChild(hlH);
-
-    const hlV = document.createElement('div');
-    hlV.className = 'op-ruler-highlight-v';
-    document.body.appendChild(hlV);
+// Open Publisher UI Interactions (v5.7.10)
+(function installRulerTrackingEngine() {
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.7.10)...");
 
     let rulerH = null;
     let rulerV = null;
+    let selMarkerH = null;
+    let curMarkerH = null;
+    let selMarkerV = null;
+    let curMarkerV = null;
 
-    // 3. The high-speed tracking loop
-    function trackSelection() {
+    function ensureRulerMarkers() {
         if (!rulerH) rulerH = document.getElementById('ruler-h');
         if (!rulerV) rulerV = document.getElementById('ruler-v');
+        if (!rulerH || !rulerV) return false;
 
-        if (!rulerH || !rulerV) {
+        if (!selMarkerH || !selMarkerH.parentNode) {
+            selMarkerH = document.getElementById('ruler-h-selection-marker');
+            if (!selMarkerH) {
+                selMarkerH = document.createElement('div');
+                selMarkerH.id = 'ruler-h-selection-marker';
+                selMarkerH.className = 'ruler-selection-marker-h op-ruler-highlight-h';
+                rulerH.appendChild(selMarkerH);
+            }
+        }
+        if (!curMarkerH || !curMarkerH.parentNode) {
+            curMarkerH = document.getElementById('ruler-h-cursor-marker');
+            if (!curMarkerH) {
+                curMarkerH = document.createElement('div');
+                curMarkerH.id = 'ruler-h-cursor-marker';
+                curMarkerH.className = 'ruler-cursor-marker-h';
+                rulerH.appendChild(curMarkerH);
+            }
+        }
+        if (!selMarkerV || !selMarkerV.parentNode) {
+            selMarkerV = document.getElementById('ruler-v-selection-marker');
+            if (!selMarkerV) {
+                selMarkerV = document.createElement('div');
+                selMarkerV.id = 'ruler-v-selection-marker';
+                selMarkerV.className = 'ruler-selection-marker-v op-ruler-highlight-v';
+                rulerV.appendChild(selMarkerV);
+            }
+        }
+        if (!curMarkerV || !curMarkerV.parentNode) {
+            curMarkerV = document.getElementById('ruler-v-cursor-marker');
+            if (!curMarkerV) {
+                curMarkerV = document.createElement('div');
+                curMarkerV.id = 'ruler-v-cursor-marker';
+                curMarkerV.className = 'ruler-cursor-marker-v';
+                rulerV.appendChild(curMarkerV);
+            }
+        }
+        return true;
+    }
+
+    // --- Cached geometry (refreshed once per frame, never inside mouse events) ---
+    let hRectCache = null;
+    let vRectCache = null;
+    let vpRectCache = null;
+    let rulersActive = false;
+
+    // --- Last written values (skip redundant style writes) ---
+    let lastSel = { hl: NaN, hw: NaN, vt: NaN, vh: NaN, marquee: null, shownH: null, shownV: null };
+    let lastCur = { x: NaN, y: NaN, hShown: null, vShown: null };
+
+    // --- Latest mouse position ---
+    let mouseX = -1;
+    let mouseY = -1;
+    let mouseSeen = false;
+
+    function setDisplay(el, show, key, store) {
+        if (store[key] !== show) {
+            el.style.display = show ? 'block' : 'none';
+            store[key] = show;
+        }
+    }
+
+    // Writes the cursor hairlines using cached geometry only (no layout reads).
+    // Uses transforms so the move is handled by the compositor, not by layout.
+    function applyCursor() {
+        if (!rulersActive || !mouseSeen || !hRectCache || !vRectCache || !vpRectCache) {
+            if (curMarkerH) setDisplay(curMarkerH, false, 'hShown', lastCur);
+            if (curMarkerV) setDisplay(curMarkerV, false, 'vShown', lastCur);
+            return;
+        }
+
+        const inH = mouseX >= hRectCache.left && mouseX <= vpRectCache.right &&
+                    mouseY >= hRectCache.top && mouseY <= vpRectCache.bottom;
+        const inV = mouseY >= vRectCache.top && mouseY <= vpRectCache.bottom &&
+                    mouseX >= vRectCache.left && mouseX <= vpRectCache.right;
+
+        if (inH) {
+            const x = Math.round(mouseX - hRectCache.left);
+            if (x !== lastCur.x) {
+                curMarkerH.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+                lastCur.x = x;
+            }
+        }
+        setDisplay(curMarkerH, inH, 'hShown', lastCur);
+
+        if (inV) {
+            const y = Math.round(mouseY - vRectCache.top);
+            if (y !== lastCur.y) {
+                curMarkerV.style.transform = 'translate3d(0, ' + y + 'px, 0)';
+                lastCur.y = y;
+            }
+        }
+        setDisplay(curMarkerV, inV, 'vShown', lastCur);
+    }
+
+    function hideSelection() {
+        setDisplay(selMarkerH, false, 'shownH', lastSel);
+        setDisplay(selMarkerV, false, 'shownV', lastSel);
+    }
+
+    // 1. Per-frame loop: refresh geometry, update selection spans, then place the cursor
+    function trackSelection() {
+        if (!ensureRulerMarkers()) {
             requestAnimationFrame(trackSelection);
             return;
         }
 
-        const selectedEl = document.querySelector('.pub-element.selected');
+        const canvasArea = document.querySelector('.canvas-area');
+        const isMultiPage = (canvasArea && canvasArea.classList.contains('multi-page-canvas')) ||
+                            (typeof state !== 'undefined' && state.isMultiPageMode);
+        rulersActive = !isMultiPage && rulerH.offsetParent !== null;
 
-        if (selectedEl) {
-            const elRect = selectedEl.getBoundingClientRect();
-            const hRect = rulerH.getBoundingClientRect();
-            const vRect = rulerV.getBoundingClientRect();
-
-            // --- MATH: Clamp Horizontal Boundaries ---
-            // Don't let the left edge go past the ruler's left edge
-            const clampedHLeft = Math.max(elRect.left, hRect.left);
-            // Don't let the right edge go past the ruler's right edge
-            const clampedHRight = Math.min(elRect.right, hRect.right);
-            // Calculate new width after clamping
-            const clampedHWidth = clampedHRight - clampedHLeft;
-
-            // Only show if it's actually over the ruler
-            if (clampedHWidth > 0) {
-                hlH.style.display = 'block';
-                hlH.style.left = clampedHLeft + 'px';
-                hlH.style.width = clampedHWidth + 'px';
-                hlH.style.top = hRect.top + 'px';
-                hlH.style.height = hRect.height + 'px';
-            } else {
-                hlH.style.display = 'none';
-            }
-
-            // --- MATH: Clamp Vertical Boundaries ---
-            // Don't let the top edge go past the ruler's top edge
-            const clampedVTop = Math.max(elRect.top, vRect.top);
-            // Don't let the bottom edge go past the ruler's bottom edge
-            const clampedVBottom = Math.min(elRect.bottom, vRect.bottom);
-            // Calculate new height after clamping
-            const clampedVHeight = clampedVBottom - clampedVTop;
-
-            // Only show if it's actually over the ruler
-            if (clampedVHeight > 0) {
-                hlV.style.display = 'block';
-                hlV.style.top = clampedVTop + 'px';
-                hlV.style.height = clampedVHeight + 'px';
-                hlV.style.left = vRect.left + 'px';
-                hlV.style.width = vRect.width + 'px';
-            } else {
-                hlV.style.display = 'none';
-            }
-
-        } else {
-            hlH.style.display = 'none';
-            hlV.style.display = 'none';
+        if (!rulersActive) {
+            hideSelection();
+            applyCursor();
+            requestAnimationFrame(trackSelection);
+            return;
         }
+
+        // Refresh geometry once per frame so mouse events never touch layout
+        hRectCache = rulerH.getBoundingClientRect();
+        vRectCache = rulerV.getBoundingClientRect();
+        const vp = document.getElementById('viewport');
+        vpRectCache = vp ? vp.getBoundingClientRect() : (canvasArea ? canvasArea.getBoundingClientRect() : null);
+
+        let targetRect = null;
+        let isMarquee = false;
+
+        // Priority 1: Active Marquee Box drag
+        if (typeof state !== 'undefined' && state.dragMode === 'marquee') {
+            const marqueeBox = document.getElementById('marquee-box');
+            if (marqueeBox && marqueeBox.style.display !== 'none') {
+                targetRect = marqueeBox.getBoundingClientRect();
+                isMarquee = true;
+            }
+        }
+
+        // Priority 2: Multi-selection bounding box union
+        if (!targetRect && typeof state !== 'undefined' && state.multiSelected && state.multiSelected.length > 0) {
+            let minLeft = Infinity, minTop = Infinity, maxRight = -Infinity, maxBottom = -Infinity;
+            let count = 0;
+            state.multiSelected.forEach(el => {
+                if (el && el.getBoundingClientRect) {
+                    const r = el.getBoundingClientRect();
+                    if (r.width > 0 || r.height > 0) {
+                        minLeft = Math.min(minLeft, r.left);
+                        minTop = Math.min(minTop, r.top);
+                        maxRight = Math.max(maxRight, r.right);
+                        maxBottom = Math.max(maxBottom, r.bottom);
+                        count++;
+                    }
+                }
+            });
+            if (count > 0 && maxRight > minLeft && maxBottom > minTop) {
+                targetRect = {
+                    left: minLeft,
+                    top: minTop,
+                    right: maxRight,
+                    bottom: maxBottom,
+                    width: maxRight - minLeft,
+                    height: maxBottom - minTop
+                };
+            }
+        }
+
+        // Priority 3: Single selected element
+        if (!targetRect && typeof state !== 'undefined' && state.selectedEl) {
+            targetRect = state.selectedEl.getBoundingClientRect();
+        }
+
+        // Priority 4: Fallback DOM query
+        if (!targetRect) {
+            const fallbackEl = document.querySelector('.pub-element.selected');
+            if (fallbackEl) {
+                targetRect = fallbackEl.getBoundingClientRect();
+            }
+        }
+
+        if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
+            const hl = targetRect.left - hRectCache.left;
+            const hw = targetRect.width;
+            const vt = targetRect.top - vRectCache.top;
+            const vh = targetRect.height;
+
+            // Marquee drags use a lighter, airier tint than object selections
+            if (lastSel.marquee !== isMarquee) {
+                selMarkerH.classList.toggle('is-marquee', isMarquee);
+                selMarkerV.classList.toggle('is-marquee', isMarquee);
+                lastSel.marquee = isMarquee;
+            }
+            if (hl !== lastSel.hl || hw !== lastSel.hw) {
+                selMarkerH.style.left = hl + 'px';
+                selMarkerH.style.width = hw + 'px';
+                lastSel.hl = hl; lastSel.hw = hw;
+            }
+            if (vt !== lastSel.vt || vh !== lastSel.vh) {
+                selMarkerV.style.top = vt + 'px';
+                selMarkerV.style.height = vh + 'px';
+                lastSel.vt = vt; lastSel.vh = vh;
+            }
+            setDisplay(selMarkerH, true, 'shownH', lastSel);
+            setDisplay(selMarkerV, true, 'shownV', lastSel);
+        } else {
+            hideSelection();
+        }
+
+        // Re-place the cursor against fresh geometry (covers scrolling / zooming under a still mouse)
+        applyCursor();
 
         requestAnimationFrame(trackSelection);
     }
 
+    // 2. Real-time cursor tracking: capture phase so no other handler can swallow the event,
+    //    and the markers are moved immediately with cached geometry (zero layout reads).
+    function onMouseMove(e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        mouseSeen = true;
+        if (!ensureRulerMarkers()) return;
+        // One-time priming: if no animation frame has populated the cache yet, do it now
+        if (!hRectCache || !vRectCache || !vpRectCache) {
+            const canvasArea = document.querySelector('.canvas-area');
+            const isMultiPage = (canvasArea && canvasArea.classList.contains('multi-page-canvas')) ||
+                                (typeof state !== 'undefined' && state.isMultiPageMode);
+            rulersActive = !isMultiPage && rulerH.offsetParent !== null;
+            hRectCache = rulerH.getBoundingClientRect();
+            vRectCache = rulerV.getBoundingClientRect();
+            const vp = document.getElementById('viewport');
+            vpRectCache = vp ? vp.getBoundingClientRect() : (canvasArea ? canvasArea.getBoundingClientRect() : null);
+        }
+        applyCursor();
+    }
+
+    function onMouseLeave() {
+        mouseSeen = false;
+        applyCursor();
+    }
+
+    document.addEventListener('mousemove', onMouseMove, { passive: true, capture: true });
+    document.addEventListener('mouseleave', onMouseLeave, { passive: true });
+    window.addEventListener('blur', onMouseLeave);
+
     requestAnimationFrame(trackSelection);
-    console.log("✅ Ruler Highlight Loop started successfully.");
+    console.log("✅ Ruler Tracking Engine started successfully.");
 })();
 
 
@@ -850,7 +1023,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.9</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.7.10</div>
                 </div>
                 
                 <div class="about-desc">
