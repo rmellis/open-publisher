@@ -291,6 +291,7 @@ function renderPage(pageData) {
             if (effectiveBorderRadius && effectiveBorderRadius !== 'none') {
                 styleStr += ` border-radius:${effectiveBorderRadius};`;
                 el.setAttribute('data-rounded-corners', effectiveBorderRadius);
+                el.style.borderRadius = effectiveBorderRadius;
                 roundedAttr = ` data-rounded-corners="${effectiveBorderRadius}"`;
             }
             const altAttr = data.altText ? ` alt="${data.altText.replace(/"/g, '&quot;')}"` : ' alt=""';
@@ -325,6 +326,28 @@ function renderPage(pageData) {
             <div class="rotate-stick"></div>
             <div class="rotate-handle"></div>
         `;
+
+        if (data.imgSrc) {
+            const effectiveRadius = (data.imgStyle && data.imgStyle.borderRadius) || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
+            const effectiveClip = (data.imgStyle && data.imgStyle.clipPath) || data.clipPath;
+            const cEl = el.querySelector('.element-content');
+            if (effectiveRadius && effectiveRadius !== 'none') {
+                el.style.borderRadius = effectiveRadius;
+                if (cEl) {
+                    cEl.style.borderRadius = effectiveRadius;
+                    const clip = `inset(0 round ${effectiveRadius})`;
+                    cEl.style.clipPath = clip;
+                    cEl.style.webkitClipPath = clip;
+                    cEl.style.overflow = 'hidden';
+                }
+            } else if (effectiveClip && effectiveClip !== 'none') {
+                if (cEl) {
+                    cEl.style.clipPath = effectiveClip;
+                    cEl.style.webkitClipPath = effectiveClip;
+                    cEl.style.overflow = 'hidden';
+                }
+            }
+        }
 
         if ((data.contentCssText && data.contentCssText.includes('drop-shadow')) || (data.filter && data.filter.includes('drop-shadow')) || (data.imgStyle && data.imgStyle.filter && data.imgStyle.filter.includes('drop-shadow'))) {
             el.style.overflow = 'visible';
@@ -927,6 +950,9 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
                 if (effectiveRadius && effectiveRadius !== 'none') {
                     thumbImgCss += ` border-radius: ${effectiveRadius};`;
+                    scaleBox.style.borderRadius = effectiveRadius;
+                    scaleBox.style.overflow = 'hidden';
+                    scaleBox.style.clipPath = `inset(0 round ${effectiveRadius})`;
                 }
                 thumbImg.style.cssText = thumbImgCss;
                 thumbImg.src = data.imgSrc;

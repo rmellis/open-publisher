@@ -16,40 +16,8 @@ document.getElementById('img-upload').addEventListener('change', (e) => {
 });
 
 function toggleCrop() {
-    if(!state.selectedEl) {
-        DialogSystem.alert('Notice', "Please select an image to crop first.");
-        return;
-    }
-    const el = state.selectedEl;
-    const img = el.querySelector('.element-content img');
-    
-    if(!img) {
-        DialogSystem.alert('Notice', "Only images can be cropped.");
-        return;
-    }
-
-    state.cropMode = !state.cropMode;
-    
-    if(state.cropMode) {
-        el.classList.add('cropping');
-        document.getElementById('crop-btn').classList.add('active-tool');
-        document.getElementById('status-msg').innerText = "Crop Mode: Drag handles to clip. Drag image to pan.";
-        
-        const w = img.offsetWidth;
-        const h = img.offsetHeight;
-        
-        img.style.width = w + 'px';
-        img.style.height = h + 'px';
-        img.style.maxWidth = 'none';
-        img.style.maxHeight = 'none';
-        img.style.position = 'absolute';
-        if(!img.style.left) img.style.left = '0px';
-        if(!img.style.top) img.style.top = '0px';
-        
-    } else {
-        el.classList.remove('cropping');
-        document.getElementById('crop-btn').classList.remove('active-tool');
-        document.getElementById('status-msg').innerText = "Element Selected";
+    if (typeof window.toggleCrop === 'function') {
+        return window.toggleCrop.apply(this, arguments);
     }
 }
 
@@ -128,10 +96,8 @@ window.toggleCrop = function() {
         if (statusMsg) statusMsg.innerText = "Element Selected";
 
         // Restore overflow to defaults now that we are out of crop mode.
-        // The wrapper clips elements to the page boundary; the content div goes back to visible
-        // so that things like WordArt shadows and text can bleed outside their box as intended.
         el.style.overflow = 'hidden';
-        if (contentDiv) contentDiv.style.overflow = 'visible';
+        if (contentDiv) contentDiv.style.overflow = 'hidden';
         
         // Convert fixed pixels back into percentages.
         // This restores the browser's ability to stretch the image when the box is resized.
@@ -146,6 +112,25 @@ window.toggleCrop = function() {
         img.style.height = ((imgH / wrapperH) * 100) + '%';
         img.style.left = ((imgL / wrapperW) * 100) + '%';
         img.style.top = ((imgT / wrapperH) * 100) + '%';
+
+        // Re-apply rounded corners or shape clip if present
+        const savedRadius = el.getAttribute('data-rounded-corners') || (img ? img.getAttribute('data-rounded-corners') : null) || (img ? img.style.borderRadius : null);
+        const savedClip = (img && img.style.clipPath && img.style.clipPath !== 'none') ? img.style.clipPath : (savedRadius ? `inset(0 round ${savedRadius})` : '');
+        if (savedRadius && savedRadius !== 'none') {
+            el.style.borderRadius = savedRadius;
+            if (contentDiv) {
+                contentDiv.style.borderRadius = savedRadius;
+                contentDiv.style.clipPath = `inset(0 round ${savedRadius})`;
+                contentDiv.style.webkitClipPath = `inset(0 round ${savedRadius})`;
+                contentDiv.style.overflow = 'hidden';
+            }
+        } else if (savedClip && savedClip !== 'none') {
+            if (contentDiv) {
+                contentDiv.style.clipPath = savedClip;
+                contentDiv.style.webkitClipPath = savedClip;
+                contentDiv.style.overflow = 'hidden';
+            }
+        }
     }
 };
 

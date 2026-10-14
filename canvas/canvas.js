@@ -1406,6 +1406,9 @@ function enterMultiPageView(z) {
                     const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
                     if (effectiveRadius && effectiveRadius !== 'none') {
                         thumbImgCss += ` border-radius: ${effectiveRadius};`;
+                        scaleBox.style.borderRadius = effectiveRadius;
+                        scaleBox.style.overflow = 'hidden';
+                        scaleBox.style.clipPath = `inset(0 round ${effectiveRadius})`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
                     let objFit = s.objectFit || '100% 100%';
@@ -1449,6 +1452,9 @@ function enterMultiPageView(z) {
                     const effectiveRadius = s.borderRadius || data.borderRadius || (data.filterAttributes && data.filterAttributes['data-rounded-corners']);
                     if (effectiveRadius && effectiveRadius !== 'none') {
                         thumbImgCss += ` border-radius: ${effectiveRadius};`;
+                        scaleBox.style.borderRadius = effectiveRadius;
+                        scaleBox.style.overflow = 'hidden';
+                        scaleBox.style.clipPath = `inset(0 round ${effectiveRadius})`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
                     let objFit = s.objectFit || '100% 100%';

@@ -365,7 +365,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.1...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.2...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -691,8 +691,10 @@
                 if (isDefaultFillImageLayout(imgStyle)) {
                     rasterCtx.drawImage(tempImg, 0, 0, rasterCanvas.width, rasterCanvas.height);
                 } else {
-                    const imgW = parseImageLayoutValue(imgStyle.width, displayW) * scale;
-                    const imgH = parseImageLayoutValue(imgStyle.height, displayH) * scale;
+                    let wVal = parseImageLayoutValue(imgStyle.width, displayW);
+                    let hVal = parseImageLayoutValue(imgStyle.height, displayH);
+                    const imgW = (wVal > 0 ? wVal : displayW) * scale;
+                    const imgH = (hVal > 0 ? hVal : displayH) * scale;
                     const imgL = parseImageLayoutValue(imgStyle.left, displayW) * scale;
                     const imgT = parseImageLayoutValue(imgStyle.top, displayH) * scale;
                     rasterCtx.drawImage(tempImg, imgL, imgT, imgW, imgH);
@@ -1206,8 +1208,8 @@
                         } else {
                             cropDiv.style.clipPath = 'none';
                             cropDiv.style.webkitClipPath = 'none';
-                            cropDiv.style.overflow = 'visible';
-                            cropDiv.style.contain = 'none';
+                            cropDiv.style.overflow = 'hidden';
+                            cropDiv.style.contain = 'paint';
                         }
 
                         const sX = el.scaleX || "1";
@@ -1275,6 +1277,19 @@
                                 let liveFilter = '';
                                 const activeImg = activeEl.querySelector('img');
                                 if (activeImg) {
+                                    if (isDefaultFillImageLayout(savedImgStyle)) {
+                                        const liveW = activeImg.style.width;
+                                        const liveH = activeImg.style.height;
+                                        const liveL = activeImg.style.left;
+                                        const liveT = activeImg.style.top;
+                                        if (liveW && liveW !== '100%' && liveW !== 'auto') {
+                                            savedImgStyle.width = liveW;
+                                            savedImgStyle.height = liveH;
+                                            savedImgStyle.left = liveL;
+                                            savedImgStyle.top = liveT;
+                                            savedImgStyle.position = activeImg.style.position || 'absolute';
+                                        }
+                                    }
                                     const comp = window.getComputedStyle(activeImg);
                                     const f1 = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || '');
                                     if (f1 && f1 !== 'none') liveFilter = (liveFilter + ' ' + f1).trim();
@@ -1314,7 +1329,8 @@
                         const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || 400;
                         const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
                         const hasOpacityChange = (currentOpacity !== '' && currentOpacity !== '1' && !isNaN(parseFloat(currentOpacity)) && parseFloat(currentOpacity) < 0.999);
-                        const needsBake = !!(shapeClipPath || (currentFilter && currentFilter !== 'none') || hasOpacityChange);
+                        const isCropped = !isDefaultFillImageLayout(savedImgStyle);
+                        const needsBake = !!(isCropped || shapeClipPath || (currentFilter && currentFilter !== 'none') || hasOpacityChange);
 
                         if (needsBake) {
                             try {
@@ -1328,6 +1344,9 @@
                                 await loadImageStrict(img, bakedSrc);
                                 
                                 if (baked && baked.padW) {
+                                    img.style.position = 'absolute';
+                                    img.style.left = '0px';
+                                    img.style.top = '0px';
                                     img.style.width = `calc(100% + ${baked.padW/2}px)`;
                                     img.style.height = `calc(100% + ${baked.padH/2}px)`;
                                     img.style.marginLeft = `-${baked.padX/2}px`;
@@ -1338,6 +1357,19 @@
                                     cropDiv.style.contain = 'none'; // ALLOW SHADOW TO BE SEEN
                                     elDiv.style.overflow = 'visible';
                                     elDiv.style.contain = 'none';
+                                } else {
+                                    img.style.position = 'absolute';
+                                    img.style.left = '0px';
+                                    img.style.top = '0px';
+                                    img.style.width = '100%';
+                                    img.style.height = '100%';
+                                    img.style.marginLeft = '0px';
+                                    img.style.marginTop = '0px';
+                                    img.style.maxWidth = 'none';
+                                    img.style.maxHeight = 'none';
+                                    img.style.objectFit = 'fill';
+                                    cropDiv.style.overflow = 'hidden';
+                                    cropDiv.style.contain = 'paint';
                                 }
                                 
                                 img.style.filter = 'none';
@@ -1350,12 +1382,18 @@
                                     cropDiv.style.borderRadius = rMatch[1];
                                 }
                             } catch(e) {
+                                console.warn('[Print Engine] Image bake failed, falling back to CSS clipping:', e);
                                 await loadImageStrict(img, finalSrc);
                                 let safeFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
                                 img.style.filter = safeFilter || 'none';
                                 img.style.opacity = hasOpacityChange ? currentOpacity : '1';
-                                cropDiv.style.overflow = 'visible';
-                                cropDiv.style.contain = 'none';
+                                if (isCropped || shapeClipPath) {
+                                    cropDiv.style.overflow = 'hidden';
+                                    cropDiv.style.contain = 'paint';
+                                } else {
+                                    cropDiv.style.overflow = 'visible';
+                                    cropDiv.style.contain = 'none';
+                                }
                                 elDiv.style.overflow = 'visible';
                                 elDiv.style.contain = 'none';
                                 if (shapeClipPath) {
@@ -1374,6 +1412,10 @@
                         } else {
                             await loadImageStrict(img, finalSrc);
                             img.style.opacity = '1';
+                            if (isCropped || shapeClipPath) {
+                                cropDiv.style.overflow = 'hidden';
+                                cropDiv.style.contain = 'paint';
+                            }
                         }
                         
                         cropDiv.appendChild(img);

@@ -240,19 +240,34 @@ window.ContextMenuActions = {
         if (!state.selectedEl) return;
         const img = state.selectedEl.querySelector('img');
         if (!img) return;
+        const el = state.selectedEl;
+        const content = el.querySelector('.element-content');
         if (!radius || radius === 'none') {
             img.style.clipPath = 'none';
             img.style.webkitClipPath = 'none';
             img.style.borderRadius = '';
             img.removeAttribute('data-rounded-corners');
-            state.selectedEl.removeAttribute('data-rounded-corners');
+            el.removeAttribute('data-rounded-corners');
+            el.style.borderRadius = '';
+            if (content) {
+                content.style.clipPath = '';
+                content.style.webkitClipPath = '';
+                content.style.borderRadius = '';
+            }
         } else {
             const clip = `inset(0 round ${radius})`;
             img.style.clipPath = clip;
             img.style.webkitClipPath = clip;
             img.style.borderRadius = radius;
             img.setAttribute('data-rounded-corners', radius);
-            state.selectedEl.setAttribute('data-rounded-corners', radius);
+            el.setAttribute('data-rounded-corners', radius);
+            el.style.borderRadius = radius;
+            if (content) {
+                content.style.clipPath = clip;
+                content.style.webkitClipPath = clip;
+                content.style.borderRadius = radius;
+                content.style.overflow = 'hidden';
+            }
         }
         if (typeof updateThumbnails === 'function') updateThumbnails();
         if (typeof pushHistory === 'function') pushHistory();
@@ -1711,6 +1726,8 @@ window.ContextRibbonActions = {
                 if (!state.selectedEl) return;
                 const img = state.selectedEl.querySelector('img');
                 if (!img) return;
+                const el = state.selectedEl;
+                const content = el.querySelector('.element-content');
                 const clip = (!shape || shape === 'none') ? 'none' : shape;
                 img.style.clipPath = clip;
                 img.style.webkitClipPath = clip;
@@ -1718,11 +1735,35 @@ window.ContextRibbonActions = {
                 if (rMatch) {
                     img.style.borderRadius = rMatch[1];
                     img.setAttribute('data-rounded-corners', rMatch[1]);
-                    state.selectedEl.setAttribute('data-rounded-corners', rMatch[1]);
+                    el.setAttribute('data-rounded-corners', rMatch[1]);
+                    el.style.borderRadius = rMatch[1];
+                    if (content) {
+                        content.style.clipPath = clip;
+                        content.style.webkitClipPath = clip;
+                        content.style.borderRadius = rMatch[1];
+                        content.style.overflow = 'hidden';
+                    }
+                } else if (clip !== 'none') {
+                    img.style.borderRadius = '';
+                    img.removeAttribute('data-rounded-corners');
+                    el.removeAttribute('data-rounded-corners');
+                    el.style.borderRadius = '';
+                    if (content) {
+                        content.style.clipPath = clip;
+                        content.style.webkitClipPath = clip;
+                        content.style.borderRadius = '';
+                        content.style.overflow = 'hidden';
+                    }
                 } else {
                     img.style.borderRadius = '';
                     img.removeAttribute('data-rounded-corners');
-                    state.selectedEl.removeAttribute('data-rounded-corners');
+                    el.removeAttribute('data-rounded-corners');
+                    el.style.borderRadius = '';
+                    if (content) {
+                        content.style.clipPath = '';
+                        content.style.webkitClipPath = '';
+                        content.style.borderRadius = '';
+                    }
                 }
                 if (typeof updateThumbnails === 'function') updateThumbnails();
                 if (typeof pushHistory === 'function') pushHistory();
