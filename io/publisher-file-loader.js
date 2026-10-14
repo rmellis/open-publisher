@@ -22,8 +22,10 @@ window.handlePublisherFileLoad = (evt) => {
             state.rulerOriginY = data.rulerOriginY || 0;
             state.dpi = data.dpi || (data.pages && data.pages[0] && data.pages[0].dpi) || 96;
             const docDpi = state.dpi;
-            state.format = data.format || (data.pages && data.pages[0] && data.pages[0].format) || null;
-            const loadedMargins = data.margins || { top: Math.round(0.5 * docDpi), right: Math.round(0.5 * docDpi), bottom: Math.round(0.5 * docDpi), left: Math.round(0.5 * docDpi) };
+            const firstP = data.pages && data.pages[0];
+            const isCardFile = data.format === 'BusinessCard' || (firstP && (firstP.format === 'BusinessCard' || (parseFloat(firstP.width) <= 360 && parseFloat(firstP.height) <= 260)));
+            const defaultMInches = isCardFile ? 0.125 : 0.5;
+            const loadedMargins = data.margins || { top: Math.round(defaultMInches * docDpi), right: Math.round(defaultMInches * docDpi), bottom: Math.round(defaultMInches * docDpi), left: Math.round(defaultMInches * docDpi) };
             const loadedMarginsDpi = data.marginsDpi || (data.dpi ? data.dpi : 96);
 
             if (data.marginsDpi && data.marginsDpi !== docDpi && data.marginsDpi > 0) {

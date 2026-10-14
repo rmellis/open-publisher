@@ -434,11 +434,14 @@ function loadTemplate(opubData) {
         state.historyIndex = -1;
         state.dpi = opubData.dpi || (opubData.pages && opubData.pages[0] && opubData.pages[0].dpi) || 96;
         state.format = opubData.format || (opubData.pages && opubData.pages[0] && opubData.pages[0].format) || null;
+        const firstP = opubData.pages && opubData.pages[0];
+        const isCardTmpl = opubData.format === 'BusinessCard' || (firstP && (firstP.format === 'BusinessCard' || (parseFloat(firstP.width) <= 360 && parseFloat(firstP.height) <= 260)));
+        const defaultMarginInches = isCardTmpl ? 0.125 : 0.5;
         state.margins = opubData.margins || {
-            top: Math.round(0.5 * state.dpi),
-            right: Math.round(0.5 * state.dpi),
-            bottom: Math.round(0.5 * state.dpi),
-            left: Math.round(0.5 * state.dpi)
+            top: Math.round(defaultMarginInches * state.dpi),
+            right: Math.round(defaultMarginInches * state.dpi),
+            bottom: Math.round(defaultMarginInches * state.dpi),
+            left: Math.round(defaultMarginInches * state.dpi)
         };
         state.marginsDpi = opubData.marginsDpi || state.dpi;
         

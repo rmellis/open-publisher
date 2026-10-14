@@ -1104,7 +1104,8 @@ window.syncMarginGuideOverlay = function() {
 
     // Read the current margin values from state (paper-coordinate pixels)
     const curDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
-    const defaultM = Math.round(0.5 * curDpi);
+    const isCard = (typeof state !== 'undefined') && (state.format === 'BusinessCard' || (state.pages && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].format === 'BusinessCard'));
+    const defaultM = Math.round((isCard ? 0.125 : 0.5) * curDpi);
     const m = (typeof state !== 'undefined' && state.margins) ? state.margins : { top: defaultM, right: defaultM, bottom: defaultM, left: defaultM };
 
     ov.style.left   = (pr.left   + m.left   * z) + 'px';

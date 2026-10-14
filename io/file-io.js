@@ -102,7 +102,24 @@ window.saveDocumentAs = function() {
 function openDocument() { document.getElementById('file-open').click(); }
 
 window.printFullDocument = async function(isBooklet = false) {
-    if (!isBooklet && typeof serializeCurrentPage === 'function') {
+    if (!isBooklet && !window._isMultiUpPrinting && typeof serializeCurrentPage === 'function') {
+        state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
+
+    // Smart pre-flight detection for business-card sized documents
+    if (!isBooklet && !window._isMultiUpPrinting && state.pages && state.pages.length > 0) {
+        const firstPage = state.pages[0];
+        if (typeof window.isCardSizedPage === 'function' && window.isCardSizedPage(firstPage) && typeof window.showCardSheetPromptModal === 'function') {
+            window.showCardSheetPromptModal();
+            return;
+        }
+    }
+
+    return window.printFullDocumentDirect(isBooklet || window._isMultiUpPrinting);
+};
+
+window.printFullDocumentDirect = async function(isImposed = false) {
+    if (!isImposed && !window._isBookletPrinting && !window._isMultiUpPrinting && typeof serializeCurrentPage === 'function') {
         state.pages[state.currentPageIndex] = serializeCurrentPage();
     }
     // 1. Create or find our secret print container
@@ -116,8 +133,12 @@ window.printFullDocument = async function(isBooklet = false) {
     // Clear out any old print jobs
     printSpooler.innerHTML = ''; 
 
-    // 2. Loop through every page saved in the state memory
-    state.pages.forEach((page, pageIndex) => {
+    // 2. Loop through every page saved in the state memory or imposed spreads
+    const pagesToRender = (window._imposedSpreads && (isImposed || window._isBookletPrinting || window._isMultiUpPrinting)) 
+        ? window._imposedSpreads 
+        : state.pages;
+
+    pagesToRender.forEach((page, pageIndex) => {
         // Create a blank piece of paper for this page
         let pageWrapper = document.createElement('div');
         pageWrapper.className = 'op-print-page';
@@ -128,7 +149,7 @@ window.printFullDocument = async function(isBooklet = false) {
 
         // 3. Reconstruct every element on this specific page
         let elementsToRender = page.elements || [];
-        if (state.hasMasterPage && pageIndex > 0 && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
+        if (!isImposed && !window._isBookletPrinting && !window._isMultiUpPrinting && state.hasMasterPage && pageIndex > 0 && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
              elementsToRender = state.pages[0].elements.concat(elementsToRender);
         }
         
@@ -151,12 +172,15 @@ window.printFullDocument = async function(isBooklet = false) {
             // If it's a background image layer, rebuild the image
             if (el.imgSrc) {
                  let img = document.createElement('img');
+                 img.crossOrigin = 'anonymous';
+                 img.setAttribute('crossorigin', 'anonymous');
                  img.src = el.imgSrc;
                  if (el.altText) img.alt = el.altText;
                  // Apply the exact styles (like opacity) from the state
                  if (el.imgStyle) {
                      Object.assign(img.style, el.imgStyle);
                  }
+                 img.style.display = 'block';
                  let fStr = (el.imgStyle && el.imgStyle.filter) ? el.imgStyle.filter : (el.filter || '');
                  if (!fStr && el.contentCssText) {
                      const m = el.contentCssText.match(/filter:\s*([^;]+)/i);
@@ -375,6 +399,12 @@ function printBooklet() {
         executeBookletPrint();
     }
 }
+
+window.printCardSheet = function() {
+    if (typeof showCardSheetModal === 'function') {
+        showCardSheetModal();
+    }
+};
 
 function uploadAndConvertDoc(file) {
     

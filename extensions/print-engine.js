@@ -2,12 +2,12 @@
 
     function buildPrintDOM() {
         let pagesToPrint = state && state.pages ? state.pages : [];
-        if (window._isBookletPrinting && window._imposedSpreads) {
+        if ((window._isBookletPrinting || window._isMultiUpPrinting) && window._imposedSpreads) {
             pagesToPrint = window._imposedSpreads;
         }
 
         if (pagesToPrint && pagesToPrint.length > 0) {
-            if (!window._isBookletPrinting && typeof serializeCurrentPage === 'function') {
+            if (!window._isBookletPrinting && !window._isMultiUpPrinting && typeof serializeCurrentPage === 'function') {
                 pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
             }
         }
@@ -152,9 +152,12 @@
 
                     if (el.imgSrc) {
                         let img = document.createElement('img');
+                        img.crossOrigin = 'anonymous';
+                        img.setAttribute('crossorigin', 'anonymous');
                         img.src = el.imgSrc;
                         if (el.altText) img.alt = el.altText;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
+                        img.style.display = 'block';
                         elDiv.style.overflow = 'visible';
                         let fStr = (el.imgStyle && el.imgStyle.filter) ? el.imgStyle.filter : (el.filter || '');
                         if (!fStr && el.contentCssText) {
@@ -317,18 +320,18 @@
         }
     });
 
-    // Safari fires afterprint early and beforeprint multiple times. 
-    // Maintain the booklet state until the user physically interacts with the app again.
-    const clearBookletState = () => {
+    // Maintain imposition state until user interaction
+    const clearImpositionState = () => {
         window._isBookletPrinting = false;
+        window._isMultiUpPrinting = false;
         window._imposedSpreads = null;
     };
-    window.addEventListener('mousedown', clearBookletState);
-    window.addEventListener('keydown', clearBookletState);
-    window.addEventListener('touchstart', clearBookletState);
+    window.addEventListener('mousedown', clearImpositionState);
+    window.addEventListener('keydown', clearImpositionState);
+    window.addEventListener('touchstart', clearImpositionState);
 
-    window.printFullDocument = async (isBooklet = false) => {
-        if (!isBooklet) clearBookletState();
+    window.printFullDocumentDirect = async (isImposed = false) => {
+        if (!isImposed) clearImpositionState();
         
         if (window.OP_Desktop_API) {
             // Need to manually build and cleanup if we bypass the browser's native beforeprint/afterprint events
@@ -343,11 +346,26 @@
             window.print();
         }
     };
+
+    window.printFullDocument = async (isBooklet = false) => {
+        if (!isBooklet && !window._isMultiUpPrinting) clearImpositionState();
+
+        // Smart pre-flight detection for business-card sized documents
+        if (!isBooklet && !window._isMultiUpPrinting && typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
+            const firstPage = state.pages[0];
+            if (typeof window.isCardSizedPage === 'function' && window.isCardSizedPage(firstPage) && typeof window.showCardSheetPromptModal === 'function') {
+                window.showCardSheetPromptModal();
+                return;
+            }
+        }
+
+        return window.printFullDocumentDirect(isBooklet || window._isMultiUpPrinting);
+    };
 })();
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.0...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.1...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -366,6 +384,10 @@
         };
         imgEl.onload = done;
         imgEl.onerror = done;
+        if (src && !src.startsWith('data:')) {
+            imgEl.crossOrigin = 'anonymous';
+            imgEl.setAttribute('crossorigin', 'anonymous');
+        }
         if (imgEl.complete && imgEl.naturalWidth !== undefined && imgEl.naturalWidth > 0 && imgEl.src === src) {
             done();
             return;
@@ -377,7 +399,7 @@
             done();
             return;
         }
-        setTimeout(done, 2500); // 2.5s safety timeout ensures print never hangs
+        setTimeout(done, 4000); // 4s safety timeout ensures print never hangs while giving adequate time for network images
     });
 
     const PRINT_MATH_SPACE = '\u205F';
@@ -575,13 +597,16 @@
     };
 
     const isDefaultFillImageLayout = (imgStyle = {}) => {
+        if (!imgStyle || Object.keys(imgStyle).length === 0) return true;
         const w = (imgStyle.width || '100%').toString().trim();
         const h = (imgStyle.height || '100%').toString().trim();
-        const l = (imgStyle.left ?? '0').toString().trim();
-        const t = (imgStyle.top ?? '0').toString().trim();
-        const leftZero = l === '0' || l === '0px' || l === '0%';
-        const topZero = t === '0' || t === '0px' || t === '0%';
-        return w === '100%' && h === '100%' && leftZero && topZero;
+        const l = (imgStyle.left || '0').toString().trim();
+        const t = (imgStyle.top || '0').toString().trim();
+        const leftZero = !l || l === '0' || l === '0px' || l === '0%';
+        const topZero = !t || t === '0' || t === '0px' || t === '0%';
+        const isWidth100 = !w || w === '100%' || w === 'auto';
+        const isHeight100 = !h || h === '100%' || h === 'auto';
+        return isWidth100 && isHeight100 && leftZero && topZero;
     };
 
     window.bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
@@ -591,7 +616,7 @@
                 isSettled = true;
                 reject(new Error("bakeImageForPrint timeout"));
             }
-        }, 3000);
+        }, 5000);
 
         const safeResolve = (val) => {
             if (!isSettled) {
@@ -613,10 +638,9 @@
             const tempImg = new Image();
             let loadSrc = src;
             if (!loadSrc.startsWith('data:')) {
-                const isSameOrigin = loadSrc.startsWith('/') || loadSrc.startsWith('./') || loadSrc.startsWith(window.location.origin);
-                if (useCORS && !isSameOrigin) tempImg.crossOrigin = 'Anonymous';
-                if (!isSameOrigin) {
-                    loadSrc += (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
+                const isSameOrigin = loadSrc.startsWith('/') || loadSrc.startsWith('./') || (typeof window !== 'undefined' && window.location && loadSrc.startsWith(window.location.origin));
+                if (useCORS && !isSameOrigin) {
+                    tempImg.crossOrigin = 'anonymous';
                 }
             }
             tempImg.onload = () => {
@@ -680,7 +704,8 @@
                     applyClipPathRegion(ctx, clipPath, c.width, c.height, scale, 0, 0);
                 }
                 if (finalFilter && finalFilter !== 'none') ctx.filter = finalFilter;
-                ctx.globalAlpha = parseFloat(opacity);
+                const parsedAlpha = (!opacity || isNaN(parseFloat(opacity))) ? 1.0 : parseFloat(opacity);
+                ctx.globalAlpha = Math.max(0, Math.min(1, parsedAlpha));
                 
                 ctx.drawImage(rasterCanvas, padX, padY, displayW * scale, displayH * scale);
                 ctx.restore();
@@ -693,8 +718,21 @@
             };
             tempImg.onerror = (e) => {
                 if (isSettled) return;
-                if (useCORS) attemptLoad(false);
-                else safeReject(e);
+                // If standard CORS load failed, retry once with cache-busting to bypass any stale opaque cache
+                if (useCORS && !loadSrc.includes('corsbuster=') && !loadSrc.startsWith('data:')) {
+                    const busterSrc = loadSrc + (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
+                    const busterImg = new Image();
+                    busterImg.crossOrigin = 'anonymous';
+                    busterImg.onload = () => {
+                        tempImg.onload.call(busterImg);
+                    };
+                    busterImg.onerror = (err) => {
+                        safeReject(err);
+                    };
+                    busterImg.src = busterSrc;
+                    return;
+                }
+                safeReject(e);
             };
             tempImg.src = loadSrc;
             if (tempImg.complete && tempImg.naturalWidth > 0) {
@@ -861,13 +899,26 @@
     };
 
     window.printFullDocument = async function(isBooklet = false) {
-        if (!isBooklet) {
+        // Smart pre-flight detection for business card sized pages
+        if (!isBooklet && !window._isMultiUpPrinting && typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
+            const firstPage = state.pages[0];
+            if (typeof window.isCardSizedPage === 'function' && window.isCardSizedPage(firstPage) && typeof window.showCardSheetPromptModal === 'function') {
+                window.showCardSheetPromptModal();
+                return;
+            }
+        }
+        return window.printFullDocumentDirect(isBooklet || window._isMultiUpPrinting);
+    };
+
+    window.printFullDocumentDirect = async function(isImposed = false) {
+        if (!isImposed) {
             window._isBookletPrinting = false;
+            window._isMultiUpPrinting = false;
             window._imposedSpreads = null;
         }
         
         let pagesToPrint = typeof state !== 'undefined' && state.pages ? state.pages : [];
-        if (window._isBookletPrinting && window._imposedSpreads) {
+        if ((window._isBookletPrinting || window._isMultiUpPrinting) && window._imposedSpreads) {
             pagesToPrint = window._imposedSpreads;
         }
 
@@ -877,7 +928,7 @@
 
         if (pagesToPrint && pagesToPrint.length > 0) {
             if (state && state.cropMode && typeof window.toggleCrop === 'function') window.toggleCrop();
-            if (!window._isBookletPrinting && typeof serializeCurrentPage === 'function') pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
+            if (!window._isBookletPrinting && !window._isMultiUpPrinting && typeof serializeCurrentPage === 'function') pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
             pagesToPrint.forEach((page) => {
                 page.elements.forEach((el) => {
                     if (el.innerHTML) el.innerHTML = fixWordArtSpacesInHtml(el.innerHTML);
@@ -885,25 +936,38 @@
             });
         }
 
+        const isMultiUp = !!(window._isMultiUpPrinting && window._imposedSpreads);
+        const multiUpNote = isMultiUp 
+            ? `<div id="pdf-print-subnote" style="margin-top: 15px; font-size: 12px; color: #475569; line-height: 1.45; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: left; box-sizing: border-box; max-width: 100%;">
+                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                    <i class="fas fa-th-large" style="color: var(--ui-theme-dark, #007670); margin-top: 2px; flex-shrink: 0;"></i>
+                    <span style="flex: 1;"><b>Arranging Cards for Print:</b> Open Publisher is tiling your design across the sheet with high-resolution graphics and crop guidelines. This takes a little longer than a standard print, but is actively working...</span>
+                </div>
+               </div>`
+            : '';
+
         if (typeof DialogSystem !== 'undefined') {
-            DialogSystem.show('Preparing Print Job...', `
-                <div style="text-align:center; padding: 20px 10px; font-family: 'Comfortaa', 'Afacad Flux', sans-serif;">
+            DialogSystem.show(isMultiUp ? 'Preparing Card Sheet...' : 'Preparing Print Job...', `
+                <div style="text-align:center; padding: 20px 10px; font-family: 'Comfortaa', 'Afacad Flux', sans-serif; width: 380px; max-width: 90vw; margin: 0 auto; box-sizing: border-box;">
                     <div style="margin-bottom: 20px; display: flex; justify-content: center;">
                         <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/ZtZYk3e.png" class="print-anim-icon" style="width: 80px; height: auto;" alt="Print Icon" />
                     </div>
                     <p id="pdf-print-status" style="margin-bottom:20px; font-size:18px; color: var(--ui-text, #000); font-weight: 400;">
-                        Assembling Publication...
+                        ${isMultiUp ? 'Arranging Card Sheet...' : 'Assembling Publication...'}
                     </p>
                     <div style="width: 100%; height: 20px; border: 2px solid var(--ui-theme-dark); border-radius: 20px; padding: 2px; background: transparent; overflow: hidden; box-sizing: border-box;">
                         <div id="pdf-print-progress" style="width: 0%; height: 100%; background: var(--ui-theme-color); border-radius: 20px; transition: width 0.3s ease;"></div>
                     </div>
+                    ${multiUpNote}
                 </div>
                 <style>
+                    #custom-dialog-box:has(#pdf-print-status) { width: 420px !important; max-width: 92vw !important; }
                     #custom-dialog-header { background-color: var(--ui-theme-dark) !important; color: white !important; font-size: 20px !important; font-family: 'Comfortaa', 'Afacad Flux', sans-serif !important; }
                     #custom-dialog-close { color: white !important; opacity: 0.8; }
                     #custom-dialog-confirm { display: none !important; }
                     .print-anim-icon { mix-blend-mode: multiply; }
                     body.dark-mode .print-anim-icon { filter: invert(1) grayscale(1) contrast(100); mix-blend-mode: screen; }
+                    body.dark-mode #pdf-print-subnote { background: #1e293b !important; color: #cbd5e1 !important; border-color: #334155 !important; }
                 </style>
             `, null, true);
         }
@@ -981,7 +1045,11 @@
 
             for (let i = 0; i < totalPages; i++) {
                 const page = pagesToPrint[i];
-                if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
+                if (statusEl) {
+                    statusEl.innerText = isMultiUp 
+                        ? `Arranging & rendering card sheet ${i + 1} of ${totalPages}...` 
+                        : `Rendering page ${i + 1} of ${totalPages}...`;
+                }
                 if (progressEl) progressEl.style.width = `${((i) / totalPages) * 100}%`;
 
                 const pW = parseFloat(page.width) || 794;
@@ -1148,6 +1216,8 @@
                         cropDiv.style.transformOrigin = 'center center';
 
                         let img = document.createElement('img');
+                        img.crossOrigin = 'anonymous';
+                        img.setAttribute('crossorigin', 'anonymous');
                         // Note: do not prematurely set img.src here so loadImageStrict can manage onload/onerror/src and prevent event swallowed bugs
                         const savedImgStyle = { ...(el.imgStyle || {}) };
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
@@ -1157,17 +1227,28 @@
                         if (isDefaultFillImageLayout(savedImgStyle)) {
                             img.style.width = '100%';
                             img.style.height = '100%';
-                            img.style.objectFit = 'fill';
+                            img.style.objectFit = savedImgStyle.objectFit || 'fill';
+                            img.style.display = 'block';
+                            img.style.position = 'absolute';
+                            img.style.top = '0';
+                            img.style.left = '0';
                         } else {
                             img.style.position = savedImgStyle.position || 'absolute';
+                            img.style.width = savedImgStyle.width || '100%';
+                            img.style.height = savedImgStyle.height || '100%';
+                            img.style.top = savedImgStyle.top || '0';
+                            img.style.left = savedImgStyle.left || '0';
                             img.style.maxWidth = savedImgStyle.maxWidth || 'none';
                             img.style.maxHeight = savedImgStyle.maxHeight || 'none';
+                            img.style.display = 'block';
                             if (savedImgStyle.objectFit) img.style.objectFit = savedImgStyle.objectFit;
                         }
 
                         let currentFilter = ''; let currentOpacity = '1';
                         if (el.imgStyle) {
-                            if (el.imgStyle.opacity !== undefined) currentOpacity = el.imgStyle.opacity;
+                            if (el.imgStyle.opacity !== undefined && el.imgStyle.opacity !== '' && el.imgStyle.opacity !== null) {
+                                currentOpacity = String(el.imgStyle.opacity);
+                            }
                             if (el.imgStyle.filter) currentFilter = el.imgStyle.filter;
                         }
                         if (!currentFilter && el.filter) {
@@ -1197,7 +1278,8 @@
                                     const comp = window.getComputedStyle(activeImg);
                                     const f1 = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || '');
                                     if (f1 && f1 !== 'none') liveFilter = (liveFilter + ' ' + f1).trim();
-                                    currentOpacity = (comp.opacity && comp.opacity !== '1') ? comp.opacity : (activeImg.style.opacity || currentOpacity);
+                                    if (activeImg.style.opacity) currentOpacity = activeImg.style.opacity;
+                                    else if (comp.opacity && comp.opacity !== '1') currentOpacity = comp.opacity;
                                 }
                                 
                                 const activeContent = activeEl.querySelector('.element-content');
@@ -1231,7 +1313,8 @@
 
                         const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || 400;
                         const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
-                        const needsBake = shapeClipPath || (currentFilter && currentFilter !== 'none') || currentOpacity !== '1';
+                        const hasOpacityChange = (currentOpacity !== '' && currentOpacity !== '1' && !isNaN(parseFloat(currentOpacity)) && parseFloat(currentOpacity) < 0.999);
+                        const needsBake = !!(shapeClipPath || (currentFilter && currentFilter !== 'none') || hasOpacityChange);
 
                         if (needsBake) {
                             try {
@@ -1270,7 +1353,7 @@
                                 await loadImageStrict(img, finalSrc);
                                 let safeFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
                                 img.style.filter = safeFilter || 'none';
-                                img.style.opacity = currentOpacity;
+                                img.style.opacity = hasOpacityChange ? currentOpacity : '1';
                                 cropDiv.style.overflow = 'visible';
                                 cropDiv.style.contain = 'none';
                                 elDiv.style.overflow = 'visible';
@@ -1290,7 +1373,7 @@
                             }
                         } else {
                             await loadImageStrict(img, finalSrc);
-                            img.style.opacity = currentOpacity;
+                            img.style.opacity = '1';
                         }
                         
                         cropDiv.appendChild(img);
@@ -1613,7 +1696,11 @@
                     }));
                 }
 
-                if (statusEl) statusEl.innerText = `Rendering page ${i + 1} of ${totalPages}...`;
+                if (statusEl) {
+                    statusEl.innerText = isMultiUp 
+                        ? `Rendering high-res card sheet ${i + 1} of ${totalPages}...` 
+                        : `Rendering page ${i + 1} of ${totalPages}...`;
+                }
                 await sleep(100); 
                 
                 // Calculate optimal html2canvas scale based on page DPI (target print density is ~300 DPI)
@@ -1632,10 +1719,12 @@
                     }
                 }
 
-                // Ensure all Border Art tiles preserve 1:1 aspect ratio and are fully preloaded for html2canvas
+                // Ensure all Border Art tiles preserve 1:1 aspect ratio, have CORS credentials, and are fully preloaded for html2canvas
                 const borderArtImgs = Array.from(pageWrapper.querySelectorAll('.border-art-wrapper img, .element-border-art img'));
                 if (borderArtImgs.length > 0) {
                     borderArtImgs.forEach(img => {
+                        img.crossOrigin = 'anonymous';
+                        img.setAttribute('crossorigin', 'anonymous');
                         if (img.src && img.src.includes('acr.floydcraft') && !img.src.includes('fit=contain')) {
                             img.src = img.src + '&w=128&h=128&fit=contain';
                         }
@@ -1653,6 +1742,14 @@
                         });
                     }));
                 }
+
+                // Universal pre-flight: verify all <img> elements in pageWrapper have crossOrigin set for html2canvas
+                pageWrapper.querySelectorAll('img').forEach(pImg => {
+                    if (pImg.src && !pImg.src.startsWith('data:')) {
+                        pImg.crossOrigin = 'anonymous';
+                        pImg.setAttribute('crossorigin', 'anonymous');
+                    }
+                });
 
                 let canvas;
                 try {

@@ -140,6 +140,8 @@ window.exportAsHTML = async function(opts = {}) {
                     
                     if (data.imgSrc) {
                         let img = document.createElement('img');
+                        img.crossOrigin = 'anonymous';
+                        img.setAttribute('crossorigin', 'anonymous');
                         let src = data.imgSrc;
                         if (opts.base64 && !src.startsWith('data:')) {
                             try {

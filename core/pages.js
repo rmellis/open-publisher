@@ -101,6 +101,9 @@ function renderPage(pageData) {
         
         window.setPageFormatIcon(fmt);
     }
+    if (typeof window.updateCardSheetRibbonVisibility === 'function') {
+        window.updateCardSheetRibbonVisibility();
+    }
     
     if (typeof state !== 'undefined' && state.isSpreadMode) {
         paper.classList.add('is-spread');
@@ -145,11 +148,13 @@ function renderPage(pageData) {
     const marginGuides = paper.querySelector('.margin-guides');
     if (marginGuides) {
         if (!state.margins) {
+            const isCard = (page && (page.format === 'BusinessCard' || (parseFloat(page.width) <= 360 && parseFloat(page.height) <= 260))) || (typeof state !== 'undefined' && state.format === 'BusinessCard');
+            const defaultMarginInches = isCard ? 0.125 : 0.5;
             state.margins = {
-                top: Math.round(0.5 * pageDpi),
-                right: Math.round(0.5 * pageDpi),
-                bottom: Math.round(0.5 * pageDpi),
-                left: Math.round(0.5 * pageDpi)
+                top: Math.round(defaultMarginInches * pageDpi),
+                right: Math.round(defaultMarginInches * pageDpi),
+                bottom: Math.round(defaultMarginInches * pageDpi),
+                left: Math.round(defaultMarginInches * pageDpi)
             };
             state.marginsDpi = pageDpi;
         } else if (state.marginsDpi && state.marginsDpi !== pageDpi && state.marginsDpi > 0) {
@@ -645,13 +650,6 @@ function handleNewDocument() {
             state.historyIndex = -1;
             state.dpi = d;
             state.unit = u;
-            state.margins = {
-                top: Math.round(0.5 * d),
-                right: Math.round(0.5 * d),
-                bottom: Math.round(0.5 * d),
-                left: Math.round(0.5 * d)
-            };
-            state.marginsDpi = d;
 
             let pageW = finalW + 'px';
             let pageH = finalH + 'px';
@@ -664,6 +662,16 @@ function handleNewDocument() {
                 : (currentPreset || 'A4');
             const chosenFmt = currentPreset || detectedFmt;
             state.format = chosenFmt;
+
+            const isCard = chosenFmt === 'BusinessCard' || (finalW <= 360 && finalH <= 260);
+            const defaultMarginInches = isCard ? 0.125 : 0.5;
+            state.margins = {
+                top: Math.round(defaultMarginInches * d),
+                right: Math.round(defaultMarginInches * d),
+                bottom: Math.round(defaultMarginInches * d),
+                left: Math.round(defaultMarginInches * d)
+            };
+            state.marginsDpi = d;
 
             const newPage = {
                 id: Date.now(),

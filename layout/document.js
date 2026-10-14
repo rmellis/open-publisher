@@ -38,6 +38,62 @@ function setPageSize(format) {
     // Auto-update the UI format icon immediately
     if (typeof state !== 'undefined') state.format = format;
     if (typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(format);
+
+    // Smart margin adaptation for Business Cards / small label formats:
+    // If margins are currently at the standard full-page default (0.5" / 48px), adapt to the 1/8" (0.125" / 12px) safe zone for business cards.
+    // If switching back from a card to a full-size sheet (A4, Letter, etc.) and margins were at 1/8", restore the 0.5" default.
+    const isCard = format === 'BusinessCard';
+    if (typeof state !== 'undefined') {
+        const curDpi = state.dpi || dpi || 96;
+        const curM = state.margins;
+        const mDpi = state.marginsDpi || curDpi;
+        if (curM) {
+            const isHalfInch = Math.abs(curM.top - Math.round(0.5 * mDpi)) <= 1 &&
+                               Math.abs(curM.bottom - Math.round(0.5 * mDpi)) <= 1 &&
+                               Math.abs(curM.left - Math.round(0.5 * mDpi)) <= 1 &&
+                               Math.abs(curM.right - Math.round(0.5 * mDpi)) <= 1;
+            const isEighthInch = Math.abs(curM.top - Math.round(0.125 * mDpi)) <= 1 &&
+                                 Math.abs(curM.bottom - Math.round(0.125 * mDpi)) <= 1 &&
+                                 Math.abs(curM.left - Math.round(0.125 * mDpi)) <= 1 &&
+                                 Math.abs(curM.right - Math.round(0.125 * mDpi)) <= 1;
+            
+            if (isCard && isHalfInch) {
+                state.margins = {
+                    top: Math.round(0.125 * curDpi),
+                    right: Math.round(0.125 * curDpi),
+                    bottom: Math.round(0.125 * curDpi),
+                    left: Math.round(0.125 * curDpi)
+                };
+                state.marginsDpi = curDpi;
+            } else if (!isCard && isEighthInch) {
+                state.margins = {
+                    top: Math.round(0.5 * curDpi),
+                    right: Math.round(0.5 * curDpi),
+                    bottom: Math.round(0.5 * curDpi),
+                    left: Math.round(0.5 * curDpi)
+                };
+                state.marginsDpi = curDpi;
+            }
+        } else {
+            const defaultInches = isCard ? 0.125 : 0.5;
+            state.margins = {
+                top: Math.round(defaultInches * curDpi),
+                right: Math.round(defaultInches * curDpi),
+                bottom: Math.round(defaultInches * curDpi),
+                left: Math.round(defaultInches * curDpi)
+            };
+            state.marginsDpi = curDpi;
+        }
+
+        const marginGuides = paper.querySelector('.margin-guides');
+        if (marginGuides && state.margins) {
+            marginGuides.style.inset = 'auto';
+            marginGuides.style.top = state.margins.top + 'px';
+            marginGuides.style.right = state.margins.right + 'px';
+            marginGuides.style.bottom = state.margins.bottom + 'px';
+            marginGuides.style.left = state.margins.left + 'px';
+        }
+    }
     
     if (typeof state !== 'undefined' && state.pages && state.pages.length > 0 && state.pages[state.currentPageIndex]) {
         const isLand = parseFloat(w) >= parseFloat(h);
@@ -61,6 +117,7 @@ function setPageSize(format) {
     
     const sizeDrop = document.getElementById('size-dropdown');
     if(sizeDrop) sizeDrop.style.display = 'none';
+    if (typeof window.updateCardSheetRibbonVisibility === 'function') window.updateCardSheetRibbonVisibility();
 }
 
 // --- HELPER: Scale CSS Pixel Values ---
