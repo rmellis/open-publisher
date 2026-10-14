@@ -59,7 +59,8 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_windows_installer.png" width="48" height="48" alt="Windows"/><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows.exe"><strong>Installer (.exe)</strong></a><br/>
-    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows-portable.exe">Portable (.zip)</a>
+    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows-portable.exe">Portable (.zip)</a><br/>
+    <a href="https://github.com/rmellis/open-publisher/releases/download/5.8.0/OpenPublisher5-i386-windowsXP.exe"><strong>Windows XP</strong> (.exe)</a>
   </td>
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_macos_dmg.png" width="48" height="48" alt="macOS"/><br/>
@@ -313,10 +314,11 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 ### Windows
 
-Open Publisher ships in two primary distribution formats for Windows:
+Open Publisher ships in three primary distribution formats for Windows:
 
 - **Standard Installer (`.exe`)** - Full installer with Start Menu and Desktop shortcuts, multi-resolution 10-frame high-DPI icon embedding (up to 256x256), and `.opub` registry file association.
 - **Portable Version (`.exe`)** - Self-contained zero-install executable. Ideal for USB drives, restricted workstations, or running without administrator rights.
+- **Windows XP Client (`.exe`)** - Dedicated standalone client for Windows XP SP3, featuring a customized chromeless runtime, integrated window controls, and full native branding.
 - **Safe Mode Startup** - Launch with `--safe-mode` or `--reset` from the command line to purge cached data, reset layout bounds, and troubleshoot faulty extensions.
 - MyDockFinder native menu bar integration support.
 
