@@ -1,13 +1,13 @@
 /**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.8.4)
- * Real-time visual spellcheck and grammar proofing using modern CSS Custom Highlight API
- * integrated with OpenPublisher's existing LanguageTool online proofing service.
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.8.5)
+ * Comprehensive offline spellcheck and online grammar proofing using modern CSS Custom Highlight API.
+ * Powered by OpenPublisher's comprehensive 280,000+ word offline dictionary (SCOWL + ENABLE1 + DTP)
+ * with instant O(1) text-node token scanning and intelligent local phonetic/Levenshtein suggestion engine.
  * Renders:
  *  - Crisp RED wavy underlines for spelling mistakes (::highlight(spelling-error))
- *  - Crisp GREEN wavy underlines for grammar, contextual spelling, formatting,
- *    typography, and duplication mistakes (::highlight(grammar-error))
+ *  - Crisp GREEN wavy underlines for grammar, duplication, casing, and style mistakes (::highlight(grammar-error))
  * Across all zoom levels with continuous descender coverage (text-decoration-skip-ink: none)
- * without requiring bundled offline dictionary files or mutating DOM text nodes.
+ * without mutating DOM text nodes or suffering offset drift.
  */
 
 (function initProofingEngine() {
@@ -19,9 +19,39 @@
     const _knownBadWords = new Set();
     const _knownGoodWords = new Set();
     const _suggestionsMap = new Map();
-    const _editableCache = new Map(); // editable element -> { text, spellingMatches, grammarMatches }
+    const _editableCache = new Map(); // editable element -> { text, grammarMatches }
     let _debounceTimer = null;
     let _activeFetches = new Map();
+
+    const WORD_REGEX = /[A-Za-z]+(?:['’][A-Za-z]+)?/g;
+    const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
+    const PHONETIC_RULES = [
+        ['ite', 'ight'], ['ight', 'ite'],
+        ['ph', 'f'], ['f', 'ph'],
+        ['c', 'k'], ['k', 'c'],
+        ['c', 's'], ['s', 'c'],
+        ['sc', 's'], ['s', 'sc'],
+        ['ie', 'ei'], ['ei', 'ie'],
+        ['tion', 'sion'], ['sion', 'tion'],
+        ['able', 'ible'], ['ible', 'able'],
+        ['ant', 'ent'], ['ent', 'ant'],
+        ['ance', 'ence'], ['ence', 'ance'],
+        ['dg', 'g'], ['g', 'dg'],
+        ['qu', 'kw'], ['kw', 'qu'],
+        ['x', 'cks'], ['cks', 'x'],
+        ['ll', 'l'], ['l', 'll'],
+        ['cc', 'c'], ['c', 'cc'],
+        ['mm', 'm'], ['m', 'mm'],
+        ['ss', 's'], ['s', 'ss'],
+        ['pp', 'p'], ['p', 'pp'],
+        ['rr', 'r'], ['r', 'rr'],
+        ['tt', 't'], ['t', 'tt'],
+        ['ff', 'f'], ['f', 'ff'],
+        ['nn', 'n'], ['n', 'nn'],
+        ['dd', 'd'], ['d', 'dd'],
+        ['bb', 'b'], ['b', 'bb'],
+        ['gg', 'g'], ['g', 'gg']
+    ];
 
     // Load custom dictionaries and ignored rules from localStorage
     function loadPreferences() {
@@ -71,7 +101,7 @@
         if (!rawWord) return false;
         const clean = rawWord.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
         if (!clean) return false;
-        if (clean.length === 1 && clean !== 'a' && clean !== 'i') return false; // Single letters ignored except a/i
+        if (clean.length === 1 && clean !== 'a' && clean !== 'i' && clean !== 'o') return false; // Single letters ignored except a/i/o
         
         const ignoreNumbers = localStorage.getItem('opub_ignore_numbers') !== 'false';
         if (ignoreNumbers && /[0-9_]/.test(rawWord)) return false; // Numbers/symbols ignored
@@ -84,17 +114,58 @@
     }
 
     /**
+     * Checks if a word exists in the dictionary, custom dictionary, or ignored words.
+     */
+    function isWordInDictionary(word) {
+        if (!word) return true;
+        const clean = word.toLowerCase().trim();
+        if (!clean) return true;
+
+        if (_customDictSet.has(clean) || _ignoredWordsSet.has(clean) || _knownGoodWords.has(clean)) {
+            return true;
+        }
+
+        if (window.OPUB_DICTIONARY) {
+            if (window.OPUB_DICTIONARY.has(clean)) return true;
+
+            const straightApos = clean.replace(/’/g, "'");
+            if (window.OPUB_DICTIONARY.has(straightApos)) return true;
+
+            const noApos = straightApos.replace(/'/g, '');
+            if (window.OPUB_DICTIONARY.has(noApos)) return true;
+
+            // Possessive form check: e.g. "publisher's" -> "publisher"
+            if (straightApos.endsWith("'s")) {
+                const base = straightApos.slice(0, -2);
+                if (window.OPUB_DICTIONARY.has(base)) return true;
+            }
+            // Plural possessive form check: e.g. "publishers'" -> "publishers"
+            if (straightApos.endsWith("s'")) {
+                const base = straightApos.slice(0, -1);
+                if (window.OPUB_DICTIONARY.has(base)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Synchronously checks if a word is currently known to be misspelled.
      */
     function isWordMisspelled(word) {
         if (!word) return false;
         if (typeof state !== 'undefined' && state.spellCheck === false) return false;
+        if (!isCheckableWord(word)) return false;
+
         const clean = word.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
         if (!clean) return false;
-        if (!isCheckableWord(word)) return false;
-        if (_customDictSet.has(clean) || _ignoredWordsSet.has(clean)) return false;
-        if (_knownGoodWords.has(clean)) return false;
+
+        if (isWordInDictionary(word)) return false;
         if (_knownBadWords.has(clean)) return true;
+
+        // If offline dictionary is loaded, word is definitely misspelled
+        if (window.OPUB_DICTIONARY) return true;
+
         return false;
     }
 
@@ -158,7 +229,140 @@
     }
 
     /**
+     * Applies original word casing (lowercase, capitalized, or all-caps) to a suggestion.
+     */
+    function applyCasing(str, isAllUpper, isCapitalized) {
+        if (!str) return str;
+        if (isAllUpper) return str.toUpperCase();
+        if (isCapitalized) return str.charAt(0).toUpperCase() + str.slice(1);
+        return str;
+    }
+
+    /**
+     * Generates intelligent, context-aware spelling suggestions using phonetic patterns,
+     * Damerau-Levenshtein distance, and common frequency weighting.
+     */
+    function getSuggestions(rawWord) {
+        if (!rawWord) return [];
+        const isAllUpper = (rawWord === rawWord.toUpperCase() && rawWord.length > 1);
+        const isCapitalized = (!isAllUpper && rawWord.charAt(0) === rawWord.charAt(0).toUpperCase());
+
+        const word = rawWord.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
+        if (!word || word.length < 2) return [];
+
+        if (_suggestionsMap.has(word)) {
+            return _suggestionsMap.get(word).map(w => applyCasing(w, isAllUpper, isCapitalized));
+        }
+
+        if (!window.OPUB_DICTIONARY) return [];
+
+        const candidates = new Map(); // candidate -> score
+
+        function addCandidate(cand, baseScore) {
+            if (!cand || cand === word) return;
+            if (!window.OPUB_DICTIONARY.has(cand)) return;
+
+            let score = baseScore;
+            // Frequency rank bonus (Google / SCOWL top common words)
+            if (window.OPUB_COMMON_MAP && window.OPUB_COMMON_MAP.has(cand)) {
+                const rank = window.OPUB_COMMON_MAP.get(cand);
+                score += Math.max(0, 50 - (rank / 400));
+            }
+            // Same first letter bonus
+            if (cand[0] === word[0]) score += 15;
+            // Length proximity penalty
+            score -= Math.abs(cand.length - word.length) * 4;
+
+            if (!candidates.has(cand) || candidates.get(cand) < score) {
+                candidates.set(cand, score);
+            }
+        }
+
+        // 1. Phonetic transformations (high priority)
+        for (let i = 0; i < PHONETIC_RULES.length; i++) {
+            const [from, to] = PHONETIC_RULES[i];
+            if (word.includes(from)) {
+                const cand = word.replace(from, to);
+                addCandidate(cand, 100);
+            }
+        }
+
+        // 2. Damerau-Levenshtein Edit Distance 1
+        const len = word.length;
+        // Deletions
+        for (let i = 0; i < len; i++) {
+            addCandidate(word.slice(0, i) + word.slice(i + 1), 85);
+        }
+        // Transpositions
+        for (let i = 0; i < len - 1; i++) {
+            if (word[i] !== word[i + 1]) {
+                addCandidate(word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2), 90);
+            }
+        }
+        // Replacements
+        for (let i = 0; i < len; i++) {
+            const prefix = word.slice(0, i);
+            const suffix = word.slice(i + 1);
+            for (let j = 0; j < 26; j++) {
+                const ch = ALPHABET[j];
+                if (ch !== word[i]) {
+                    addCandidate(prefix + ch + suffix, 80);
+                }
+            }
+        }
+        // Insertions
+        for (let i = 0; i <= len; i++) {
+            const prefix = word.slice(0, i);
+            const suffix = word.slice(i);
+            for (let j = 0; j < 26; j++) {
+                addCandidate(prefix + ALPHABET[j] + suffix, 80);
+            }
+        }
+
+        // 3. Edit Distance 2 if fewer than 4 candidates
+        if (candidates.size < 4 && len <= 12) {
+            const e1List = [];
+            for (let i = 0; i < len; i++) e1List.push(word.slice(0, i) + word.slice(i + 1));
+            for (let i = 0; i < len - 1; i++) e1List.push(word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2));
+            for (let i = 0; i < len; i++) {
+                for (let j = 0; j < 26; j += 2) e1List.push(word.slice(0, i) + ALPHABET[j] + word.slice(i + 1));
+            }
+
+            for (let k = 0; k < e1List.length; k++) {
+                const e1 = e1List[k];
+                if (e1.length < 3) continue;
+                const e1Len = e1.length;
+                for (let i = 0; i < e1Len; i++) {
+                    const c2 = e1.slice(0, i) + e1.slice(i + 1);
+                    if (window.OPUB_COMMON_MAP && window.OPUB_COMMON_MAP.has(c2)) addCandidate(c2, 45);
+                }
+                for (let i = 0; i < e1Len - 1; i++) {
+                    const c2 = e1.slice(0, i) + e1[i + 1] + e1[i] + e1.slice(i + 2);
+                    if (window.OPUB_COMMON_MAP && window.OPUB_COMMON_MAP.has(c2)) addCandidate(c2, 50);
+                }
+                for (let i = 0; i < e1Len; i++) {
+                    for (let j = 0; j < 26; j += 3) {
+                        const c2 = e1.slice(0, i) + ALPHABET[j] + e1.slice(i + 1);
+                        if (window.OPUB_COMMON_MAP && window.OPUB_COMMON_MAP.has(c2)) addCandidate(c2, 40);
+                    }
+                }
+                if (candidates.size >= 10) break;
+            }
+        }
+
+        const sorted = Array.from(candidates.entries())
+            .sort((a, b) => b[1] - a[1])
+            .map(entry => entry[0]);
+
+        const result = sorted.slice(0, 5).map(s => applyCasing(s, isAllUpper, isCapitalized));
+        _suggestionsMap.set(word, result);
+        return result;
+    }
+
+    /**
      * Paints both red (spelling) and green (grammar) squiggly underlines.
+     * Uses direct text-node token scanning so spelling error ranges NEVER drift,
+     * never underline half-words, and never span across block elements.
      */
     function paintHighlights() {
         if (typeof CSS === 'undefined' || !('highlights' in CSS)) return;
@@ -180,73 +384,28 @@
         const editables = paper.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]');
         const spellingRanges = [];
         const grammarRanges = [];
-        const wordRegex = /[A-Za-z]+(?:['’][A-Za-z]+)?/g;
 
         editables.forEach(editable => {
             if (editable.classList.contains('wa-text') || editable.getAttribute('data-spellcheck') === 'false') {
                 return;
             }
 
-            const cached = _editableCache.get(editable);
-            const coveredSpellingSpans = [];
-
-            if (cached) {
-                // 1. Paint cached spelling matches
-                if (cached.spellingMatches && cached.spellingMatches.length > 0) {
-                    cached.spellingMatches.forEach(m => {
-                        const cleanWord = (m.word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-                        if (_customDictSet.has(cleanWord) || _ignoredWordsSet.has(cleanWord)) return;
-
-                        const range = createRangeForOffsets(editable, m.offset, m.length);
-                        if (range) {
-                            spellingRanges.push(range);
-                            m.range = range;
-                            coveredSpellingSpans.push({ start: m.offset, end: m.offset + m.length });
-                        }
-                    });
-                }
-
-                // 2. Paint cached grammar matches
-                if (grammarEnabled && cached.grammarMatches && cached.grammarMatches.length > 0) {
-                    cached.grammarMatches.forEach(m => {
-                        if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
-                        const cleanText = (m.text || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-                        if (_customDictSet.has(cleanText) || _ignoredWordsSet.has(cleanText)) return;
-
-                        const range = createRangeForOffsets(editable, m.offset, m.length);
-                        if (range) {
-                            grammarRanges.push(range);
-                            m.range = range;
-                        }
-                    });
-                }
-            }
-
-            // 3. Fallback: highlight any known bad words from previous checks not yet in cached matches
+            // 1. Direct text node token scanning for spelling errors
+            // Walks DOM text nodes directly; attaches Range strictly to (textNode, match.index, match.index + len)
             const walker = document.createTreeWalker(editable, NodeFilter.SHOW_TEXT);
             let textNode;
-            let currentOffset = 0;
 
             while ((textNode = walker.nextNode())) {
                 const text = textNode.textContent;
-                if (!text || text.trim() === '') {
-                    currentOffset += text.length;
-                    continue;
-                }
+                if (!text || !text.trim()) continue;
 
-                wordRegex.lastIndex = 0;
+                WORD_REGEX.lastIndex = 0;
                 let match;
-
-                while ((match = wordRegex.exec(text)) !== null) {
+                while ((match = WORD_REGEX.exec(text)) !== null) {
                     const rawWord = match[0];
-                    const clean = rawWord.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-                    const wordStart = currentOffset + match.index;
-                    const wordEnd = wordStart + rawWord.length;
+                    if (!isCheckableWord(rawWord)) continue;
 
-                    // Avoid duplicate range if already covered by an online spelling match
-                    const alreadyCovered = coveredSpellingSpans.some(s => s.start <= wordStart && s.end >= wordEnd);
-
-                    if (!alreadyCovered && _knownBadWords.has(clean) && !_customDictSet.has(clean) && !_ignoredWordsSet.has(clean)) {
+                    if (isWordMisspelled(rawWord)) {
                         try {
                             const range = new Range();
                             range.setStart(textNode, match.index);
@@ -255,11 +414,29 @@
                         } catch(err) {}
                     }
                 }
-                currentOffset += text.length;
+            }
+
+            // 2. Grammar matches from background proofing (if enabled)
+            if (grammarEnabled) {
+                const cached = _editableCache.get(editable);
+                if (cached && cached.grammarMatches && cached.grammarMatches.length > 0) {
+                    cached.grammarMatches.forEach(m => {
+                        if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
+                        if (m.range) {
+                            grammarRanges.push(m.range);
+                        } else {
+                            const range = createRangeForOffsets(editable, m.offset, m.length);
+                            if (range) {
+                                m.range = range;
+                                grammarRanges.push(range);
+                            }
+                        }
+                    });
+                }
             }
         });
 
-        // Register both Highlights in CSS.highlights
+        // Register highlights in CSS.highlights
         try {
             if (spellingRanges.length > 0) {
                 CSS.highlights.set('spelling-error', new Highlight(...spellingRanges));
@@ -278,11 +455,12 @@
     }
 
     /**
-     * Checks an editable element with LanguageTool
+     * Checks an editable element with LanguageTool for grammar, punctuation, and style rules
      */
     function checkEditableWithLanguageTool(editable) {
         if (!editable) return;
         if (typeof state !== 'undefined' && state.spellCheck === false) return;
+        if (!isGrammarEnabled()) return;
         if (editable.classList.contains('wa-text') || editable.getAttribute('data-spellcheck') === 'false') return;
 
         const text = editable.innerText || '';
@@ -303,13 +481,11 @@
             ? (navigator.language.toLowerCase() === 'en-gb' ? 'en-GB' : 'en-US')
             : 'en-US');
 
-        // Check if online proofing is permitted by user privacy settings
         if (localStorage.getItem('opub_online_proofing_enabled') === 'false') {
             paintHighlights();
             return;
         }
 
-        // Abort any prior in-flight fetch for this editable
         if (_activeFetches.has(editable)) {
             try { _activeFetches.get(editable).abort(); } catch(e) {}
         }
@@ -325,67 +501,36 @@
         .then(res => res.json())
         .then(data => {
             _activeFetches.delete(editable);
-            const spellingMatches = [];
             const grammarMatches = [];
-            const flaggedWordsInText = new Set();
 
             if (data.matches && Array.isArray(data.matches)) {
                 data.matches.forEach(m => {
                     const matchedStr = text.substring(m.offset, m.offset + m.length);
-                    const cleanWord = matchedStr.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
                     const classification = classifyMatch(m);
                     const ruleId = (m.rule && m.rule.id) ? m.rule.id : '';
                     const replacements = (m.replacements && Array.isArray(m.replacements))
                         ? m.replacements.map(r => r.value)
                         : [];
 
-                    if (classification === 'spelling') {
-                        if (isCheckableWord(matchedStr)) {
-                            flaggedWordsInText.add(cleanWord);
-                            _knownBadWords.add(cleanWord);
-                            if (replacements.length > 0) {
-                                _suggestionsMap.set(cleanWord, replacements);
-                            }
-                            spellingMatches.push({
-                                offset: m.offset,
-                                length: m.length,
-                                word: matchedStr,
-                                replacements: replacements,
-                                ruleId: ruleId
-                            });
-                        }
-                    } else {
-                        // Grammar, contextual spelling, formatting, casing, repetition
-                        if (!_ignoredRulesSet.has(ruleId)) {
-                            grammarMatches.push({
-                                offset: m.offset,
-                                length: m.length,
-                                text: matchedStr,
-                                ruleId: ruleId,
-                                catId: (m.rule && m.rule.category) ? m.rule.category.id : '',
-                                message: m.message,
-                                shortMessage: m.shortMessage,
-                                replacements: replacements
-                            });
-                        }
+                    // LanguageTool is used exclusively for grammar, repetition, punctuation, and style
+                    // Spelling is 100% managed by our comprehensive offline dictionary
+                    if (classification !== 'spelling' && !_ignoredRulesSet.has(ruleId)) {
+                        grammarMatches.push({
+                            offset: m.offset,
+                            length: m.length,
+                            text: matchedStr,
+                            ruleId: ruleId,
+                            catId: (m.rule && m.rule.category) ? m.rule.category.id : '',
+                            message: m.message,
+                            shortMessage: m.shortMessage,
+                            replacements: replacements
+                        });
                     }
                 });
             }
 
-            // Mark words in text not flagged as typos as good
-            const wordRegex = /[A-Za-z]+(?:['’][A-Za-z]+)?/g;
-            let wMatch;
-            while ((wMatch = wordRegex.exec(text)) !== null) {
-                const w = wMatch[0];
-                const clean = w.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-                if (isCheckableWord(w) && !flaggedWordsInText.has(clean)) {
-                    _knownGoodWords.add(clean);
-                }
-            }
-
             _editableCache.set(editable, {
                 text: text,
-                spellingMatches: spellingMatches,
                 grammarMatches: grammarMatches
             });
 
@@ -400,7 +545,7 @@
     }
 
     /**
-     * Scans and verifies visible editable elements
+     * Scans and verifies visible editable elements immediately
      */
     function run() {
         if (typeof state !== 'undefined' && state.spellCheck === false) {
@@ -411,20 +556,22 @@
             return;
         }
 
-        // 1. Immediately paint from existing cache
+        // 1. Immediately paint highlights from local dictionary
         paintHighlights();
 
-        // 2. Query LanguageTool for any unverified or modified editable text boxes
-        const paper = document.getElementById('paper');
-        if (!paper) return;
+        // 2. If grammar check is enabled, query LanguageTool in background
+        if (isGrammarEnabled()) {
+            const paper = document.getElementById('paper');
+            if (!paper) return;
 
-        const editables = paper.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]');
-        editables.forEach(editable => {
-            checkEditableWithLanguageTool(editable);
-        });
+            const editables = paper.querySelectorAll('.pub-element [contenteditable="true"], [contenteditable="true"]');
+            editables.forEach(editable => {
+                checkEditableWithLanguageTool(editable);
+            });
+        }
     }
 
-    function triggerDebounced(delay = 350) {
+    function triggerDebounced(delay = 250) {
         if (_debounceTimer) clearTimeout(_debounceTimer);
         _debounceTimer = setTimeout(run, delay);
     }
@@ -469,7 +616,6 @@
             localStorage.setItem('opub_ignored_grammar_rules', JSON.stringify(Array.from(_ignoredRulesSet)));
         } catch(e) {}
 
-        // Remove from all editable caches
         _editableCache.forEach(cached => {
             if (cached.grammarMatches) {
                 cached.grammarMatches = cached.grammarMatches.filter(m => m.ruleId !== ruleId);
@@ -495,95 +641,53 @@
     }
 
     /**
-     * Returns spelling suggestions for a word
-     */
-    function getSuggestions(word) {
-        if (!word) return [];
-        const clean = word.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-        return _suggestionsMap.get(clean) || [];
-    }
-
-    /**
      * Retrieves any active proofing issue (grammar or spelling) at the given editable/word/range
      */
     function getIssueAt(editable, word, wordRange) {
         const cleanWord = (word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
         const cached = editable ? _editableCache.get(editable) : null;
 
-        if (cached) {
-            // Check grammar issues first (if grammar checking is enabled)
-            if (isGrammarEnabled() && cached.grammarMatches && cached.grammarMatches.length > 0) {
-                for (const gm of cached.grammarMatches) {
-                    if (gm.ruleId && _ignoredRulesSet.has(gm.ruleId)) continue;
-                    if (!gm.range && editable) {
-                        gm.range = createRangeForOffsets(editable, gm.offset, gm.length);
-                    }
-
-                    let matches = false;
-                    if (wordRange && gm.range) {
-                        try {
-                            matches = (wordRange.compareBoundaryPoints(Range.END_TO_START, gm.range) <= 0 &&
-                                       wordRange.compareBoundaryPoints(Range.START_TO_END, gm.range) >= 0);
-                        } catch(e) {}
-                    }
-
-                    const gmText = (gm.text || '').toLowerCase().trim();
-                    if (!matches && cleanWord && (gmText === cleanWord || gmText.includes(cleanWord) || cleanWord.includes(gmText))) {
-                        matches = true;
-                    }
-
-                    if (matches) {
-                        return {
-                            type: 'grammar',
-                            ruleId: gm.ruleId,
-                            message: gm.message,
-                            shortMessage: gm.shortMessage,
-                            text: gm.text,
-                            replacements: gm.replacements || [],
-                            range: gm.range || wordRange
-                        };
-                    }
+        // 1. Check grammar issues first
+        if (isGrammarEnabled() && cached && cached.grammarMatches && cached.grammarMatches.length > 0) {
+            for (const gm of cached.grammarMatches) {
+                if (gm.ruleId && _ignoredRulesSet.has(gm.ruleId)) continue;
+                if (!gm.range && editable) {
+                    gm.range = createRangeForOffsets(editable, gm.offset, gm.length);
                 }
-            }
 
-            // Check spelling issues
-            if (cached.spellingMatches && cached.spellingMatches.length > 0) {
-                for (const sm of cached.spellingMatches) {
-                    if (!sm.range && editable) {
-                        sm.range = createRangeForOffsets(editable, sm.offset, sm.length);
-                    }
+                let matches = false;
+                if (wordRange && gm.range) {
+                    try {
+                        matches = (wordRange.compareBoundaryPoints(Range.END_TO_START, gm.range) <= 0 &&
+                                   wordRange.compareBoundaryPoints(Range.START_TO_END, gm.range) >= 0);
+                    } catch(e) {}
+                }
 
-                    let matches = false;
-                    if (wordRange && sm.range) {
-                        try {
-                            matches = (wordRange.compareBoundaryPoints(Range.END_TO_START, sm.range) <= 0 &&
-                                       wordRange.compareBoundaryPoints(Range.START_TO_END, sm.range) >= 0);
-                        } catch(e) {}
-                    }
+                const gmText = (gm.text || '').toLowerCase().trim();
+                if (!matches && cleanWord && (gmText === cleanWord || gmText.includes(cleanWord) || cleanWord.includes(gmText))) {
+                    matches = true;
+                }
 
-                    const smWord = (sm.word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-                    if (!matches && (smWord === cleanWord || cleanWord === smWord)) {
-                        matches = true;
-                    }
-
-                    if (matches) {
-                        return {
-                            type: 'spelling',
-                            word: sm.word,
-                            replacements: sm.replacements || [],
-                            range: sm.range || wordRange
-                        };
-                    }
+                if (matches) {
+                    return {
+                        type: 'grammar',
+                        ruleId: gm.ruleId,
+                        message: gm.message,
+                        shortMessage: gm.shortMessage,
+                        text: gm.text,
+                        replacements: gm.replacements || [],
+                        range: gm.range || wordRange
+                    };
                 }
             }
         }
 
-        // Check fallback known bad words
-        if (cleanWord && _knownBadWords.has(cleanWord) && !_customDictSet.has(cleanWord) && !_ignoredWordsSet.has(cleanWord)) {
+        // 2. Check spelling issues
+        if (isWordMisspelled(word)) {
             return {
                 type: 'spelling',
                 word: word,
-                replacements: _suggestionsMap.get(cleanWord) || [],
+                replacements: getSuggestions(word),
                 range: wordRange
             };
         }
@@ -652,7 +756,7 @@
     function init() {
         document.addEventListener('input', function(e) {
             if (e.target && e.target.isContentEditable) {
-                triggerDebounced(350);
+                triggerDebounced(250);
             }
         }, true);
 
@@ -664,15 +768,15 @@
 
         document.addEventListener('selectionchange', function() {
             if (document.activeElement && document.activeElement.isContentEditable) {
-                triggerDebounced(400);
+                triggerDebounced(300);
             }
         });
 
         window.addEventListener('mouseup', function() {
-            triggerDebounced(200);
+            triggerDebounced(150);
         });
 
-        setTimeout(run, 400);
+        setTimeout(run, 300);
     }
 
     if (document.readyState === 'loading') {
@@ -685,6 +789,7 @@
         run: run,
         trigger: triggerDebounced,
         isWordMisspelled: isWordMisspelled,
+        isWordInDictionary: isWordInDictionary,
         isGrammarEnabled: isGrammarEnabled,
         setGrammarEnabled: function(val) {
             if (typeof state !== 'undefined') state.grammarCheck = !!val;
