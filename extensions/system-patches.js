@@ -4067,6 +4067,21 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     const curL = parseFloat(state.selectedEl.style.left) || state.selectedEl.offsetLeft;
                     const curT = parseFloat(state.selectedEl.style.top) || state.selectedEl.offsetTop;
 
+                    let initScaleX = parseFloat(state.selectedEl.getAttribute('data-scaleX'));
+                    if (isNaN(initScaleX)) initScaleX = 1;
+                    if (state.selectedEl.style && state.selectedEl.style.transform) {
+                        if (state.selectedEl.style.transform.includes('scaleX(-1)') || state.selectedEl.style.transform.includes('scale(-1')) {
+                            initScaleX = -1 * Math.abs(initScaleX);
+                        }
+                    }
+                    let initScaleY = parseFloat(state.selectedEl.getAttribute('data-scaleY'));
+                    if (isNaN(initScaleY)) initScaleY = 1;
+                    if (state.selectedEl.style && state.selectedEl.style.transform) {
+                        if (state.selectedEl.style.transform.includes('scaleY(-1)') || state.selectedEl.style.transform.includes(', -1)')) {
+                            initScaleY = -1 * Math.abs(initScaleY);
+                        }
+                    }
+
                     state.dragData = {
                         dir: e.target.dataset.dir, startX: e.clientX, startY: e.clientY,
                         w: curW, 
@@ -4078,8 +4093,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                         u: basis.u,
                         v: basis.v,
                         rotRad: basis.rotRad,
-                        scaleX: parseFloat(state.selectedEl.getAttribute('data-scaleX')) || 1,
-                        scaleY: parseFloat(state.selectedEl.getAttribute('data-scaleY')) || 1,
+                        scaleX: initScaleX,
+                        scaleY: initScaleY,
                         minW: 10,
                         minH: 10
                     };
@@ -4541,6 +4556,15 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             let rawW = d.w + deltaW;
             let rawH = d.h + deltaH;
 
+            const isTable = !!(state.selectedEl && (state.selectedEl.querySelector('table') || (d.minW && d.minW > 10)));
+            const isArrow = !!(state.selectedEl && (
+                state.selectedEl.getAttribute('data-type') === 'smart-arrow' ||
+                state.selectedEl.getAttribute('data-type') === 'arrow' ||
+                state.selectedEl.querySelector('.smart-arrow-svg') ||
+                state.selectedEl.querySelector('.smart-arrow-baked-img') ||
+                state.selectedEl.hasAttribute('data-arrow-style')
+            ));
+            const canMirror = !state.cropMode && !isTable && !isArrow;
             const minW = d.minW !== undefined ? d.minW : 10;
             const minH = d.minH !== undefined ? d.minH : 10;
 
@@ -4556,18 +4580,29 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
                 else dominantScale = Math.max(scaleFactorX, scaleFactorY);
 
-                rawW = Math.max(minW, safeW * dominantScale);
-                rawH = Math.max(minH, safeH * dominantScale);
+                if (canMirror) {
+                    const signX = rawW < 0 ? -1 : 1;
+                    const signY = rawH < 0 ? -1 : 1;
+                    const magW = Math.max(minW, safeW * dominantScale);
+                    const magH = Math.max(minH, safeH * dominantScale);
+                    rawW = signX * magW;
+                    rawH = signY * magH;
+                } else {
+                    rawW = Math.max(minW, safeW * dominantScale);
+                    rawH = Math.max(minH, safeH * dominantScale);
+                }
                 deltaW = rawW - d.w;
                 deltaH = rawH - d.h;
             } else {
-                if (rawW < minW) {
-                    rawW = minW;
-                    deltaW = rawW - d.w;
-                }
-                if (rawH < minH) {
-                    rawH = minH;
-                    deltaH = rawH - d.h;
+                if (!canMirror) {
+                    if (rawW < minW) {
+                        rawW = minW;
+                        deltaW = rawW - d.w;
+                    }
+                    if (rawH < minH) {
+                        rawH = minH;
+                        deltaH = rawH - d.h;
+                    }
                 }
             }
 
@@ -4592,8 +4627,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const newCx = curCx + deltaCenterPaperX;
             const newCy = curCy + deltaCenterPaperY;
 
-            const newL = newCx - rawW / 2;
-            const newT = newCy - rawH / 2;
+            const finalW = Math.max(minW, Math.abs(rawW));
+            const finalH = Math.max(minH, Math.abs(rawH));
+
+            const newL = newCx - finalW / 2;
+            const newT = newCy - finalH / 2;
 
             if (state.cropMode) {
                 let imgDx = 0;
@@ -4612,31 +4650,35 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
                 }
                 
-                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
-                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+                if (finalW >= minW) { state.selectedEl.style.width = finalW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (finalH >= minH) { state.selectedEl.style.height = finalH + 'px'; state.selectedEl.style.top = newT + 'px'; }
             } else {
                 let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
+                if (canMirror) {
+                    if (rawW < 0) finalScaleX = -1 * d.scaleX;
+                    if (rawH < 0) finalScaleY = -1 * d.scaleY;
+                }
                 
-                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
-                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+                if (finalW >= minW) { state.selectedEl.style.width = finalW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (finalH >= minH) { state.selectedEl.style.height = finalH + 'px'; state.selectedEl.style.top = newT + 'px'; }
 
                 const img = state.selectedEl.querySelector('img');
                 if (img && d.isLegacyPixelCrop && d.imgW !== undefined) {
-                    const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
+                    const ratioX = finalW / Math.abs(d.w), ratioY = finalH / Math.abs(d.h);
                     img.style.width = (d.imgW * ratioX) + 'px'; img.style.height = (d.imgH * ratioY) + 'px';
                     img.style.left = (d.imgL * ratioX) + 'px'; img.style.top = (d.imgT * ratioY) + 'px';
                 }
                 
                 const _contentEl = state.selectedEl.querySelector('.element-content');
-            let _t3d = '';
-            if (_contentEl) {
-                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
-                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
-                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
-                const p = _contentEl.getAttribute('data-3d-p') || 800;
-                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
-                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
-            }
+                let _t3d = '';
+                if (_contentEl) {
+                    const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                    const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                    const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                    const p = _contentEl.getAttribute('data-3d-p') || 800;
+                    if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                    _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+                }
                 state.selectedEl.setAttribute('data-scaleX', finalScaleX); state.selectedEl.setAttribute('data-scaleY', finalScaleY);
                 if(typeof syncWordArt === 'function' && state.selectedEl.querySelector('.wa-text')) syncWordArt(state.selectedEl);
                 if(state.selectedEl && state.selectedEl.querySelector('.beta-wa-img')) {
@@ -4649,12 +4691,15 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 }
                 if(state.selectedEl && (state.selectedEl.getAttribute('data-type') === 'smart-arrow' || state.selectedEl.querySelector('.smart-arrow-svg'))) {
                     if (typeof window.refreshSmartArrow === 'function') {
-                        window.refreshSmartArrow(state.selectedEl, rawW, rawH);
+                        window.refreshSmartArrow(state.selectedEl, finalW, finalH);
                     }
                     const overlay = document.querySelector('.selected-overlay');
                     if (overlay && typeof window.updateArrowTipOverlay === 'function') {
                         window.updateArrowTipOverlay(overlay, state.selectedEl);
                     }
+                }
+                if(state.selectedEl && state.selectedEl.hasAttribute('data-border-art') && window.BorderArtEngine) {
+                    window.BorderArtEngine.refreshElement(state.selectedEl, finalW, finalH);
                 }
             }
             if (typeof window.renderSelectionOverlays === 'function') {
@@ -4860,6 +4905,7 @@ if (!window._thumbObserverRunning) {
 
             const innerElements = thumbNode.querySelectorAll('canvas, img');
             innerElements.forEach(el => {
+                if (el.closest('.pub-thumb-element')) return;
                 if (el.style.objectFit !== "contain") {
                     el.style.width = "100%";
                     el.style.height = "100%";
@@ -4951,6 +4997,7 @@ if (!window._thumbObserverRunning) {
 
             const innerElements = thumbNode.querySelectorAll('canvas, img');
             innerElements.forEach(el => {
+                if (el.closest('.pub-thumb-element')) return;
                 if (el.style.objectFit !== "contain") {
                     el.style.width = "100%";
                     el.style.height = "100%";

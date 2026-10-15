@@ -327,18 +327,33 @@ function handleMouseMove(e) {
         } else {
             // --- NORMAL RESIZE WITH MIRRORING ---
             // Handle Mirroring (Negative Scale)
+            const isTable = !!(state.selectedEl && (state.selectedEl.querySelector('table') || (d.minW && d.minW > 10)));
+            const isArrow = !!(state.selectedEl && (
+                state.selectedEl.getAttribute('data-type') === 'smart-arrow' ||
+                state.selectedEl.getAttribute('data-type') === 'arrow' ||
+                state.selectedEl.querySelector('.smart-arrow-svg') ||
+                state.selectedEl.querySelector('.smart-arrow-baked-img') ||
+                state.selectedEl.hasAttribute('data-arrow-style')
+            ));
+            const canMirror = !isTable && !isArrow;
             let finalScaleX = d.scaleX;
             let finalScaleY = d.scaleY;
             
-            if (rawW < 0) {
+            if (canMirror && rawW < 0) {
                 rawW = Math.abs(rawW);
                 if (d.dir.includes('e')) newL = d.l - rawW;
+                else if (d.dir.includes('w')) newL = d.l + d.w;
                 finalScaleX = -1 * d.scaleX;
-            } 
-            if (rawH < 0) {
+            } else if (!canMirror) {
+                rawW = Math.max(10, rawW);
+            }
+            if (canMirror && rawH < 0) {
                 rawH = Math.abs(rawH);
                 if (d.dir.includes('s')) newT = d.t - rawH;
+                else if (d.dir.includes('n')) newT = d.t + d.h;
                 finalScaleY = -1 * d.scaleY;
+            } else if (!canMirror) {
+                rawH = Math.max(10, rawH);
             }
 
             // Apply

@@ -1572,15 +1572,33 @@ window.ContextRibbonActions = {
     },
     flipScale: function(axis) {
         if (!state.selectedEl) return;
-        let trans = state.selectedEl.style.transform || '';
-        const scaleRegex = new RegExp(`scale${axis}\\(([-1]+)\\)`);
-        const match = trans.match(scaleRegex);
-        if (match) {
-            trans = trans.replace(scaleRegex, `scale${axis}(${match[1] === '-1' ? '1' : '-1'})`);
-        } else {
-            trans += ` scale${axis}(-1)`;
+        const attr = 'data-scale' + axis;
+        let cur = parseFloat(state.selectedEl.getAttribute(attr));
+        if (isNaN(cur)) {
+            let trans = state.selectedEl.style.transform || '';
+            cur = (trans.includes(`scale${axis}(-1)`)) ? -1 : 1;
         }
+        const next = cur === -1 ? 1 : -1;
+        state.selectedEl.setAttribute(attr, next);
+
+        let trans = state.selectedEl.style.transform || '';
+        const scaleRegex = new RegExp(`\\s*scale${axis}\\(([-1]+)\\)`, 'g');
+        trans = trans.replace(scaleRegex, '');
         state.selectedEl.style.transform = trans;
+
+        const curX = state.selectedEl.getAttribute('data-scaleX') === '-1' ? -1 : 1;
+        const curY = state.selectedEl.getAttribute('data-scaleY') === '-1' ? -1 : 1;
+        const _contentEl = state.selectedEl.querySelector('.element-content');
+        if (_contentEl) {
+            const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+            const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+            const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+            const p = _contentEl.getAttribute('data-3d-p') || 800;
+            let _t3d = '';
+            if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+            _contentEl.style.transform = `scale(${curX}, ${curY})${_t3d}`;
+        }
+        if (typeof updateThumbnails === 'function') updateThumbnails();
         pushHistory();
     },
     toggleAspectLock: function(locked) {

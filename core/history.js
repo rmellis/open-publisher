@@ -220,7 +220,7 @@ function serializeCurrentPage() {
                 data.imgStyle.borderRadius = imgBorderRadius;
                 data.borderRadius = imgBorderRadius;
             }
-            const imgObjectFit = img.style.objectFit;
+            const imgObjectFit = img.style.objectFit || (window.getComputedStyle ? window.getComputedStyle(img).objectFit : '');
             if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
             data.type = 'image';
             data.isImage = true;

@@ -900,7 +900,8 @@ body.dark-mode .tab.active {
     overflow: hidden;
     transition: all 0.2s;
 }
-.page-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.page-thumb > img, .page-thumb > canvas { width: 100%; height: 100%; object-fit: contain; }
+.pub-thumb-scalebox img { object-fit: fill; }
 
 /* Thumbnail Loading Spinner */
 .thumb-spinner {
@@ -2918,7 +2919,7 @@ svg .shape-path, svg .shape-path * {
     border-bottom: 1px solid color-mix(in srgb, var(--ui-theme-color, #007670) 55%, #ffffff) !important;
 }
 
-/* Multi-Select Canvas Marquee Box (v5.8.3) */
+/* Multi-Select Canvas Marquee Box (v5.8.4) */
 #marquee-box {
     position: fixed !important;
     border: 1px solid rgba(0, 118, 112, 0.85) !important;

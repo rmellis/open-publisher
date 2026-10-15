@@ -732,6 +732,15 @@
             let rawW = d.w + deltaW;
             let rawH = d.h + deltaH;
 
+            const isTable = !!(state.selectedEl && (state.selectedEl.querySelector('table') || (d.minW && d.minW > 10)));
+            const isArrow = !!(state.selectedEl && (
+                state.selectedEl.getAttribute('data-type') === 'smart-arrow' ||
+                state.selectedEl.getAttribute('data-type') === 'arrow' ||
+                state.selectedEl.querySelector('.smart-arrow-svg') ||
+                state.selectedEl.querySelector('.smart-arrow-baked-img') ||
+                state.selectedEl.hasAttribute('data-arrow-style')
+            ));
+            const canMirror = !state.cropMode && !isTable && !isArrow;
             const minW = d.minW !== undefined ? d.minW : 10;
             const minH = d.minH !== undefined ? d.minH : 10;
 
@@ -746,18 +755,29 @@
                 else if (d.dir === 'n' || d.dir === 's') dominantScale = scaleFactorY;
                 else dominantScale = Math.max(scaleFactorX, scaleFactorY);
 
-                rawW = Math.max(minW, safeW * dominantScale);
-                rawH = Math.max(minH, safeH * dominantScale);
+                if (canMirror) {
+                    const signX = rawW < 0 ? -1 : 1;
+                    const signY = rawH < 0 ? -1 : 1;
+                    const magW = Math.max(minW, safeW * dominantScale);
+                    const magH = Math.max(minH, safeH * dominantScale);
+                    rawW = signX * magW;
+                    rawH = signY * magH;
+                } else {
+                    rawW = Math.max(minW, safeW * dominantScale);
+                    rawH = Math.max(minH, safeH * dominantScale);
+                }
                 deltaW = rawW - d.w;
                 deltaH = rawH - d.h;
             } else {
-                if (rawW < minW) {
-                    rawW = minW;
-                    deltaW = rawW - d.w;
-                }
-                if (rawH < minH) {
-                    rawH = minH;
-                    deltaH = rawH - d.h;
+                if (!canMirror) {
+                    if (rawW < minW) {
+                        rawW = minW;
+                        deltaW = rawW - d.w;
+                    }
+                    if (rawH < minH) {
+                        rawH = minH;
+                        deltaH = rawH - d.h;
+                    }
                 }
             }
 
@@ -782,8 +802,11 @@
             const newCx = curCx + deltaCenterPaperX;
             const newCy = curCy + deltaCenterPaperY;
 
-            const newL = newCx - rawW / 2;
-            const newT = newCy - rawH / 2;
+            const finalW = Math.max(minW, Math.abs(rawW));
+            const finalH = Math.max(minH, Math.abs(rawH));
+
+            const newL = newCx - finalW / 2;
+            const newT = newCy - finalH / 2;
 
             if (state.cropMode) {
                 let imgDx = 0;
@@ -800,16 +823,20 @@
                     if (imgDx !== 0 && d.imgL !== undefined) img.style.left = (d.imgL + imgDx) + 'px';
                     if (imgDy !== 0 && d.imgT !== undefined) img.style.top = (d.imgT + imgDy) + 'px';
                 }
-                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
-                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+                if (finalW >= minW) { state.selectedEl.style.width = finalW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (finalH >= minH) { state.selectedEl.style.height = finalH + 'px'; state.selectedEl.style.top = newT + 'px'; }
             } else {
                 let finalScaleX = d.scaleX, finalScaleY = d.scaleY;
-                if (rawW > 10) { state.selectedEl.style.width = rawW + 'px'; state.selectedEl.style.left = newL + 'px'; }
-                if (rawH > 10) { state.selectedEl.style.height = rawH + 'px'; state.selectedEl.style.top = newT + 'px'; }
+                if (canMirror) {
+                    if (rawW < 0) finalScaleX = -1 * d.scaleX;
+                    if (rawH < 0) finalScaleY = -1 * d.scaleY;
+                }
+                if (finalW >= minW) { state.selectedEl.style.width = finalW + 'px'; state.selectedEl.style.left = newL + 'px'; }
+                if (finalH >= minH) { state.selectedEl.style.height = finalH + 'px'; state.selectedEl.style.top = newT + 'px'; }
 
                 const img = state.selectedEl.querySelector('img');
                 if (img && d.isLegacyPixelCrop && d.imgW !== undefined) {
-                    const ratioX = rawW / Math.abs(d.w), ratioY = rawH / Math.abs(d.h);
+                    const ratioX = finalW / Math.abs(d.w), ratioY = finalH / Math.abs(d.h);
                     img.style.width = (d.imgW * ratioX) + 'px'; 
                     img.style.height = (d.imgH * ratioY) + 'px';
                     img.style.left = (d.imgL * ratioX) + 'px'; 
@@ -817,15 +844,15 @@
                 }
                 
                 const _contentEl = state.selectedEl.querySelector('.element-content');
-            let _t3d = '';
-            if (_contentEl) {
-                const rx = _contentEl.getAttribute('data-3d-rx') || 0;
-                const ry = _contentEl.getAttribute('data-3d-ry') || 0;
-                const rz = _contentEl.getAttribute('data-3d-rz') || 0;
-                const p = _contentEl.getAttribute('data-3d-p') || 800;
-                if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
-                _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
-            }
+                let _t3d = '';
+                if (_contentEl) {
+                    const rx = _contentEl.getAttribute('data-3d-rx') || 0;
+                    const ry = _contentEl.getAttribute('data-3d-ry') || 0;
+                    const rz = _contentEl.getAttribute('data-3d-rz') || 0;
+                    const p = _contentEl.getAttribute('data-3d-p') || 800;
+                    if (rx != 0 || ry != 0 || rz != 0) _t3d = ` perspective(${p}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                    _contentEl.style.transform = `scale(${finalScaleX}, ${finalScaleY})${_t3d}`;
+                }
                 state.selectedEl.setAttribute('data-scaleX', finalScaleX); 
                 state.selectedEl.setAttribute('data-scaleY', finalScaleY);
                 

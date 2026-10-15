@@ -1825,7 +1825,7 @@
 
 
 ;(function installRealtimeThumbnailDragEngine() { 
-    console.log("⚡ v5.8.3: Real-Time Thumbnail Drag Engine initialized.");
+    console.log("⚡ v5.8.4: Real-Time Thumbnail Drag Engine initialized.");
     const overlayWrapper = document.getElementById('ts-overlay-wrapper'); 
     if (overlayWrapper) overlayWrapper.remove(); 
 
@@ -1877,8 +1877,21 @@
 
                 const content = cEl.querySelector('.element-content');
                 const thumbScaleBox = tEl.querySelector('.pub-thumb-scalebox') || tEl.firstElementChild;
-                if (content && thumbScaleBox && content.style.transform) {
-                    thumbScaleBox.style.transform = content.style.transform;
+                if (content && thumbScaleBox) {
+                    thumbScaleBox.style.transformOrigin = 'center center';
+                    if (content.style.transform) {
+                        thumbScaleBox.style.transform = content.style.transform;
+                    }
+                    const cImg = cEl.querySelector('img');
+                    const tImg = thumbScaleBox.querySelector('img');
+                    if (cImg && tImg) {
+                        const compFit = window.getComputedStyle ? window.getComputedStyle(cImg).objectFit : '';
+                        tImg.style.objectFit = cImg.style.objectFit || compFit || 'fill';
+                        if (cImg.style.width) tImg.style.width = cImg.style.width;
+                        if (cImg.style.height) tImg.style.height = cImg.style.height;
+                        if (cImg.style.left) tImg.style.left = cImg.style.left;
+                        if (cImg.style.top) tImg.style.top = cImg.style.top;
+                    }
                 }
             }
         }

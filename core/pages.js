@@ -928,13 +928,13 @@ function renderThumbnailHTML(pageData, pageIndex) {
             
             const scaleBox = document.createElement('div');
             scaleBox.className = 'pub-thumb-scalebox';
-            scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+            scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: center center; outline: none; border: none;`;
             if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
 
             if (data.type !== 'beta-wordart' && data.imgSrc && data.imgSrc !== '') {
                 const thumbImg = document.createElement('img');
                 const s = data.imgStyle || {};
-                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'fill') ? 'fill' : (s.objectFit || 'contain')};`;
+                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'contain') ? 'contain' : (s.objectFit || 'fill')};`;
                 
                 if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
                     thumbImgCss += ` opacity: ${s.opacity} !important;`;

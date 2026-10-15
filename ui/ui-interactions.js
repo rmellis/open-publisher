@@ -844,6 +844,7 @@ if (!window._thumbObserverRunning) {
 
             const innerElements = thumbNode.querySelectorAll('canvas, img');
             innerElements.forEach(el => {
+                if (el.closest('.pub-thumb-element')) return;
                 if (el.style.objectFit !== "contain") {
                     el.style.width = "100%";
                     el.style.height = "100%";
@@ -932,6 +933,7 @@ if (!window._thumbObserverRunning) {
 
             const innerElements = thumbNode.querySelectorAll('canvas, img');
             innerElements.forEach(el => {
+                if (el.closest('.pub-thumb-element')) return;
                 if (el.style.objectFit !== "contain") {
                     el.style.width = "100%";
                     el.style.height = "100%";

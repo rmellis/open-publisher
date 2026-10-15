@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.8.3)
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.8.4)
  * Real-time visual spellcheck and grammar proofing using modern CSS Custom Highlight API
  * integrated with OpenPublisher's existing LanguageTool online proofing service.
  * Renders:

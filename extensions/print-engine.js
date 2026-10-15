@@ -186,13 +186,19 @@
                         if (effectiveRadius && effectiveRadius !== 'none') {
                             img.style.borderRadius = effectiveRadius;
                         }
+                        const sX = el.scaleX || "1";
+                        const sY = el.scaleY || "1";
+                        if (sX !== "1" || sY !== "1") {
+                            img.style.transform = `scale(${sX}, ${sY})`;
+                            img.style.transformOrigin = 'center center';
+                        }
                         elDiv.appendChild(img);
                     } else {
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
                         
-                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;`;
+                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: center center; outline: none; border: none;`;
                         
                         let pVal = null;
                         css = css.replace(/perspective\s*\(\s*([^)]+)\s*\)/i, (match, p1) => { pVal = p1; return ''; });
@@ -365,7 +371,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.3...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.4...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -1439,7 +1445,7 @@
                         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
                         cleanHTML = fixWordArtSpacesInHtml(cleanHTML);
                         
-                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: top left; outline: none; border: none;`;
+                        let css = el.contentCssText || `transform: scale(${sX}, ${sY}); width:100%; height:100%; transform-origin: center center; outline: none; border: none;`;
                         css += " overflow: visible !important;";
                         
                         let pVal = null;

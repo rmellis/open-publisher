@@ -1393,7 +1393,7 @@ function enterMultiPageView(z) {
                 const elBox = document.createElement('div');
                 elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 5}; opacity: 0.9;`;
                 const scaleBox = document.createElement('div');
-                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: center center; outline: none; border: none;`;
                 if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
                 if (data.imgSrc && data.imgSrc !== '') {
                     const imgDiv = document.createElement('div');
@@ -1438,7 +1438,7 @@ function enterMultiPageView(z) {
                 elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
 
                 const scaleBox = document.createElement('div');
-                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: top left; outline: none; border: none;`;
+                scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: center center; outline: none; border: none;`;
                 if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
 
                 if (data.imgSrc && data.imgSrc !== '') {
