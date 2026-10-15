@@ -6,7 +6,7 @@ window.handleMouseDown = function(e) {
         if(!document.getElementById('marquee-box')) {
             const box = document.createElement('div');
             box.id = 'marquee-box';
-            box.style.cssText = 'position:fixed; border:1px solid rgba(0,118,112,0.8); background:rgba(0,118,112,0.2); z-index:9999; pointer-events:none;';
+            box.style.cssText = 'position:fixed; border:1px solid rgba(0,118,112,0.8); background:rgba(0,118,112,0.2); z-index:45; pointer-events:none; box-sizing:border-box; display:none;';
             document.body.appendChild(box);
         }
         return;
@@ -344,10 +344,34 @@ window.handleMouseMove = function(e) {
         const box = document.getElementById('marquee-box');
         if(box) {
             const paperRect = paper.getBoundingClientRect();
-            const clampedX = Math.max(paperRect.left, Math.min(e.clientX, paperRect.right)), clampedY = Math.max(paperRect.top, Math.min(e.clientY, paperRect.bottom));
-            const startX = Math.max(paperRect.left, Math.min(state.dragData.startX, paperRect.right)), startY = Math.max(paperRect.top, Math.min(state.dragData.startY, paperRect.bottom));
-            box.style.left = Math.min(clampedX, startX) + 'px'; box.style.top = Math.min(clampedY, startY) + 'px';
-            box.style.width = Math.abs(clampedX - startX) + 'px'; box.style.height = Math.abs(clampedY - startY) + 'px';
+            const viewport = document.getElementById('viewport');
+            const viewRect = viewport ? viewport.getBoundingClientRect() : null;
+
+            let minX = viewRect ? Math.max(paperRect.left, viewRect.left) : paperRect.left;
+            let maxX = viewRect ? Math.min(paperRect.right, viewRect.right) : paperRect.right;
+            let minY = viewRect ? Math.max(paperRect.top, viewRect.top) : paperRect.top;
+            let maxY = viewRect ? Math.min(paperRect.bottom, viewRect.bottom) : paperRect.bottom;
+
+            const visibleSidebar = document.querySelector('#op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-table-sidebar.visible, #op-wordart-sidebar.visible, #op-a11y-sidebar.visible, #op-graphics-sidebar.visible, #op-thesaurus-sidebar.visible, .sidebar-panel.visible');
+            if (visibleSidebar) {
+                const sbRect = visibleSidebar.getBoundingClientRect();
+                if (sbRect.left > 0 && sbRect.left < maxX) {
+                    maxX = sbRect.left;
+                }
+            }
+
+            if (minX <= maxX && minY <= maxY) {
+                const clampedX = Math.max(minX, Math.min(e.clientX, maxX));
+                const clampedY = Math.max(minY, Math.min(e.clientY, maxY));
+                const startX = Math.max(minX, Math.min(state.dragData.startX, maxX));
+                const startY = Math.max(minY, Math.min(state.dragData.startY, maxY));
+
+                box.style.left = Math.min(clampedX, startX) + 'px';
+                box.style.top = Math.min(clampedY, startY) + 'px';
+                box.style.width = Math.abs(clampedX - startX) + 'px';
+                box.style.height = Math.abs(clampedY - startY) + 'px';
+                box.style.display = 'block';
+            }
         }
         return;
     }
@@ -740,22 +764,24 @@ window.handleMouseUp = function() {
             const rect = box.getBoundingClientRect();
             box.remove();
             state.multiSelected = [];
-            paper.querySelectorAll('.pub-element').forEach(el => {
-                const elRect = el.getBoundingClientRect();
-                if (!(rect.right < elRect.left || rect.left > elRect.right || rect.bottom < elRect.top || rect.top > elRect.bottom)) {
-                    state.multiSelected.push(el);
-                    el.classList.add('selected');
+            if (rect.width > 3 || rect.height > 3) {
+                paper.querySelectorAll('.pub-element').forEach(el => {
+                    const elRect = el.getBoundingClientRect();
+                    if (!(rect.right < elRect.left || rect.left > elRect.right || rect.bottom < elRect.top || rect.top > elRect.bottom)) {
+                        state.multiSelected.push(el);
+                        el.classList.add('selected');
+                    }
+                });
+                if(state.multiSelected.length === 1) {
+                    window.selectElement(state.multiSelected[0]);
+                    state.multiSelected = [];
+                } else if(state.multiSelected.length > 1) {
+                    document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
+                    if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
                 }
-            });
-            if(state.multiSelected.length === 1) {
-                window.selectElement(state.multiSelected[0]);
-                state.multiSelected = [];
-            } else if(state.multiSelected.length > 1) {
-                document.getElementById('status-msg').innerText = state.multiSelected.length + " Elements Selected";
-                if(typeof floatToolbar !== 'undefined') { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
+                if(typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+                else if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
             }
-            if(typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
-            else if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
         }
     } else if(state.dragMode) {
         if (state.dragMode === 'arrow-tip') {

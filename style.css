@@ -2918,6 +2918,20 @@ svg .shape-path, svg .shape-path * {
     border-bottom: 1px solid color-mix(in srgb, var(--ui-theme-color, #007670) 55%, #ffffff) !important;
 }
 
+/* Multi-Select Canvas Marquee Box (v5.8.3) */
+#marquee-box {
+    position: fixed !important;
+    border: 1px solid rgba(0, 118, 112, 0.85) !important;
+    background: rgba(0, 118, 112, 0.18) !important;
+    z-index: 45 !important;
+    pointer-events: none !important;
+    box-sizing: border-box !important;
+}
+body.dark-mode #marquee-box {
+    border-color: rgba(0, 191, 165, 0.85) !important;
+    background: rgba(0, 191, 165, 0.2) !important;
+}
+
 /* Ruler Real-Time Cursor Position Indicators (v5.8.1) */
 .ruler-cursor-marker-h {
     position: absolute !important;
