@@ -263,7 +263,7 @@ function initAds() {
         grid.appendChild(div);
     });
 
-    console.log(`âœ… Loaded ${ads.length} Clean-Editing SVG Ads successfully.`);
+    console.log(`✅ Loaded ${ads.length} Clean-Editing SVG Ads successfully.`);
 }
 
 function initTemplates() {
