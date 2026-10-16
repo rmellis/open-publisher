@@ -1,4 +1,4 @@
-// OpenPublisher - A free desktop publishing tool
+// OpenPublisher Core Engine (v5.8.7)
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {

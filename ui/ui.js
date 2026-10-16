@@ -697,7 +697,11 @@ window.ContextMenuActions = {
     },
 
     applySpelling: function(suggestion) {
-        const range = window._currentSpellCheckRange;
+        let range = window._currentSpellCheckRange;
+        if (!range || !range.startContainer || !range.startContainer.isConnected) {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) range = sel.getRangeAt(0);
+        }
         if (range && range.startContainer) {
             try {
                 if (range.startContainer === range.endContainer && range.startContainer.nodeType === 3) {

@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.8.6)
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.8.7)
  * Comprehensive offline spellcheck and online grammar proofing using modern CSS Custom Highlight API.
  * Powered by OpenPublisher's comprehensive 280,000+ word offline dictionary (SCOWL + ENABLE1 + DTP)
  * with instant O(1) text-node token scanning and intelligent local phonetic/Levenshtein suggestion engine.
@@ -171,30 +171,126 @@
 
     /**
      * Maps character offsets within a root element's text to a DOM Range.
+     * Robust against offset drift and DOM TreeWalker/innerText whitespace divergence
+     * by anchoring to expectedText and snapping cleanly to token boundaries.
      */
-    function createRangeForOffsets(root, startOffset, length) {
+    function createRangeForOffsets(root, startOffset, length, expectedText) {
         if (!root || length <= 0) return null;
-        const endOffset = startOffset + length;
+
+        // Collect all text nodes with their cumulative offsets
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        let currentOffset = 0;
+        const textEntries = [];
+        let fullText = '';
         let node;
+
+        while ((node = walker.nextNode())) {
+            const str = node.textContent;
+            const start = fullText.length;
+            fullText += str;
+            textEntries.push({
+                node: node,
+                text: str,
+                start: start,
+                end: fullText.length
+            });
+        }
+
+        if (textEntries.length === 0 || fullText.length === 0) return null;
+
+        let targetStart = startOffset;
+        let targetEnd = startOffset + length;
+
+        // If expectedText is provided, find the exact or closest occurrence in fullText to avoid offset drift
+        if (expectedText && typeof expectedText === 'string') {
+            const exp = expectedText.trim();
+            if (exp.length > 0) {
+                let matchIndex = -1;
+                // 1. Exact match at startOffset?
+                if (fullText.substring(startOffset, startOffset + exp.length) === exp) {
+                    matchIndex = startOffset;
+                } else {
+                    // 2. Search for closest exact occurrence
+                    let closestDist = Infinity;
+                    let idx = fullText.indexOf(exp);
+                    while (idx !== -1) {
+                        const dist = Math.abs(idx - startOffset);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            matchIndex = idx;
+                        }
+                        idx = fullText.indexOf(exp, idx + 1);
+                    }
+
+                    // 3. Case-insensitive search fallback
+                    if (matchIndex === -1) {
+                        const lowerFull = fullText.toLowerCase();
+                        const lowerExp = exp.toLowerCase();
+                        let lidx = lowerFull.indexOf(lowerExp);
+                        closestDist = Infinity;
+                        while (lidx !== -1) {
+                            const dist = Math.abs(lidx - startOffset);
+                            if (dist < closestDist) {
+                                closestDist = dist;
+                                matchIndex = lidx;
+                            }
+                            lidx = lowerFull.indexOf(lowerExp, lidx + 1);
+                        }
+                    }
+
+                    // 4. Apostrophe normalization fallback (' vs ’)
+                    if (matchIndex === -1) {
+                        const normFull = fullText.replace(/’/g, "'").toLowerCase();
+                        const normExp = exp.replace(/’/g, "'").toLowerCase();
+                        let nidx = normFull.indexOf(normExp);
+                        closestDist = Infinity;
+                        while (nidx !== -1) {
+                            const dist = Math.abs(nidx - startOffset);
+                            if (dist < closestDist) {
+                                closestDist = dist;
+                                matchIndex = nidx;
+                            }
+                            nidx = normFull.indexOf(normExp, nidx + 1);
+                        }
+                    }
+                }
+
+                if (matchIndex !== -1) {
+                    targetStart = matchIndex;
+                    targetEnd = matchIndex + exp.length;
+                }
+            }
+        }
+
+        // Clamp to fullText bounds
+        targetStart = Math.max(0, Math.min(targetStart, fullText.length));
+        targetEnd = Math.max(targetStart, Math.min(targetEnd, fullText.length));
+
+        // Trim any leading or trailing whitespace so squiggles never underline blank spaces or bleed into whitespace
+        while (targetStart < targetEnd && /\s/.test(fullText[targetStart])) targetStart++;
+        while (targetEnd > targetStart && /\s/.test(fullText[targetEnd - 1])) targetEnd--;
+        if (targetStart >= targetEnd) return null;
+
+        // Locate startNode and startOffsetInNode
         let startNode = null, startNodeOffset = 0;
         let endNode = null, endNodeOffset = 0;
 
-        while ((node = walker.nextNode())) {
-            const text = node.textContent;
-            const nodeLen = text.length;
-
-            if (!startNode && currentOffset + nodeLen > startOffset) {
-                startNode = node;
-                startNodeOffset = startOffset - currentOffset;
+        for (const entry of textEntries) {
+            if (!startNode && targetStart >= entry.start && targetStart <= entry.end) {
+                startNode = entry.node;
+                startNodeOffset = targetStart - entry.start;
             }
-            if (startNode && currentOffset + nodeLen >= endOffset) {
-                endNode = node;
-                endNodeOffset = endOffset - currentOffset;
+            if (targetEnd >= entry.start && targetEnd <= entry.end) {
+                endNode = entry.node;
+                endNodeOffset = targetEnd - entry.start;
                 break;
             }
-            currentOffset += nodeLen;
+        }
+
+        // Fallback for endNode if targetEnd is at the very end
+        if (!endNode && textEntries.length > 0) {
+            const last = textEntries[textEntries.length - 1];
+            endNode = last.node;
+            endNodeOffset = last.text.length;
         }
 
         if (startNode && endNode) {
@@ -418,14 +514,15 @@
 
             // 2. Grammar matches from background proofing (if enabled)
             if (grammarEnabled) {
-                const cached = _editableCache.get(editable);
+                const rootEditable = (editable.closest ? (editable.closest('[contenteditable="true"]') || editable) : editable);
+                const cached = _editableCache.get(rootEditable);
                 if (cached && cached.grammarMatches && cached.grammarMatches.length > 0) {
                     cached.grammarMatches.forEach(m => {
                         if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
-                        if (m.range) {
+                        if (m.range && m.range.startContainer && m.range.startContainer.isConnected) {
                             grammarRanges.push(m.range);
                         } else {
-                            const range = createRangeForOffsets(editable, m.offset, m.length);
+                            const range = createRangeForOffsets(rootEditable, m.offset, m.length, m.text);
                             if (range) {
                                 m.range = range;
                                 grammarRanges.push(range);
@@ -463,14 +560,15 @@
         if (!isGrammarEnabled()) return;
         if (editable.classList.contains('wa-text') || editable.getAttribute('data-spellcheck') === 'false') return;
 
-        const text = editable.innerText || '';
+        const rootEditable = (editable.closest ? (editable.closest('[contenteditable="true"]') || editable) : editable);
+        const text = rootEditable.innerText || '';
         if (!text || text.trim() === '') {
-            _editableCache.delete(editable);
+            _editableCache.delete(rootEditable);
             paintHighlights();
             return;
         }
 
-        const cached = _editableCache.get(editable);
+        const cached = _editableCache.get(rootEditable);
         if (cached && cached.text === text) {
             paintHighlights();
             return;
@@ -486,11 +584,11 @@
             return;
         }
 
-        if (_activeFetches.has(editable)) {
-            try { _activeFetches.get(editable).abort(); } catch(e) {}
+        if (_activeFetches.has(rootEditable)) {
+            try { _activeFetches.get(rootEditable).abort(); } catch(e) {}
         }
         const abortCtrl = new AbortController();
-        _activeFetches.set(editable, abortCtrl);
+        _activeFetches.set(rootEditable, abortCtrl);
 
         fetch('https://api.languagetool.org/v2/check', {
             method: 'POST',
@@ -500,24 +598,42 @@
         })
         .then(res => res.json())
         .then(data => {
-            _activeFetches.delete(editable);
+            _activeFetches.delete(rootEditable);
             const grammarMatches = [];
 
             if (data.matches && Array.isArray(data.matches)) {
                 data.matches.forEach(m => {
-                    const matchedStr = text.substring(m.offset, m.offset + m.length);
+                    let matchOffset = m.offset;
+                    let matchLength = m.length;
+                    let matchedStr = text.substring(matchOffset, matchOffset + matchLength);
+
+                    // Skip matches that are only whitespace (e.g. WHITESPACE_RULE flagging double spaces)
+                    // Highlighting whitespace creates detached squiggles that clip or float awkwardly
+                    if (matchedStr.trim().length === 0) return;
+
                     const classification = classifyMatch(m);
                     const ruleId = (m.rule && m.rule.id) ? m.rule.id : '';
-                    const replacements = (m.replacements && Array.isArray(m.replacements))
+                    let replacements = (m.replacements && Array.isArray(m.replacements))
                         ? m.replacements.map(r => r.value)
                         : [];
+
+                    // LanguageTool tokenizes contractions like "it's" as "it" and "'s".
+                    // If the match only covers the start of a contraction (e.g. UPPERCASE_SENTENCE_START flagging "it"),
+                    // expand matchLength and replacements to cover the full contraction so the entire word is highlighted and replaced properly.
+                    const restOfWordMatch = text.substring(matchOffset + matchLength).match(/^(['’][A-Za-z]+)/);
+                    if (restOfWordMatch && (ruleId === 'UPPERCASE_SENTENCE_START' || (m.rule && m.rule.category && m.rule.category.id === 'CASING'))) {
+                        const suffix = restOfWordMatch[1];
+                        matchLength += suffix.length;
+                        matchedStr += suffix;
+                        replacements = replacements.map(r => r + suffix);
+                    }
 
                     // LanguageTool is used exclusively for grammar, repetition, punctuation, and style
                     // Spelling is 100% managed by our comprehensive offline dictionary
                     if (classification !== 'spelling' && !_ignoredRulesSet.has(ruleId)) {
                         grammarMatches.push({
-                            offset: m.offset,
-                            length: m.length,
+                            offset: matchOffset,
+                            length: matchLength,
                             text: matchedStr,
                             ruleId: ruleId,
                             catId: (m.rule && m.rule.category) ? m.rule.category.id : '',
@@ -529,7 +645,7 @@
                 });
             }
 
-            _editableCache.set(editable, {
+            _editableCache.set(rootEditable, {
                 text: text,
                 grammarMatches: grammarMatches
             });
@@ -537,7 +653,7 @@
             paintHighlights();
         })
         .catch(err => {
-            _activeFetches.delete(editable);
+            _activeFetches.delete(rootEditable);
             if (err.name !== 'AbortError') {
                 console.warn('LanguageTool proofing fetch failed:', err);
             }
@@ -641,49 +757,96 @@
     }
 
     /**
-     * Retrieves any active proofing issue (grammar or spelling) at the given editable/word/range
+     * Retrieves any active proofing issue (grammar or spelling) at the given editable/word/range.
+     * Supports both word ranges and collapsed caret point ranges.
      */
-    function getIssueAt(editable, word, wordRange) {
+    function getIssueAt(editable, word, wordRange, pointRange) {
         const cleanWord = (word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
-        const cached = editable ? _editableCache.get(editable) : null;
+        let rootEditable = editable ? (editable.closest ? (editable.closest('[contenteditable="true"]') || editable) : editable) : null;
+        if (!rootEditable && wordRange && wordRange.startContainer) {
+            const sc = wordRange.startContainer;
+            rootEditable = sc.nodeType === 1 ? sc.closest('[contenteditable="true"]') : sc.parentElement?.closest('[contenteditable="true"]');
+        }
+        if (!rootEditable && pointRange && pointRange.startContainer) {
+            const sc = pointRange.startContainer;
+            rootEditable = sc.nodeType === 1 ? sc.closest('[contenteditable="true"]') : sc.parentElement?.closest('[contenteditable="true"]');
+        }
+        if (!rootEditable && typeof state !== 'undefined' && state.selectedEl) {
+            rootEditable = state.selectedEl.isContentEditable ? state.selectedEl : (state.selectedEl.querySelector ? state.selectedEl.querySelector('[contenteditable="true"]') : null);
+        }
 
         // 1. Check grammar issues first
-        if (isGrammarEnabled() && cached && cached.grammarMatches && cached.grammarMatches.length > 0) {
-            for (const gm of cached.grammarMatches) {
-                if (gm.ruleId && _ignoredRulesSet.has(gm.ruleId)) continue;
-                if (!gm.range && editable) {
-                    gm.range = createRangeForOffsets(editable, gm.offset, gm.length);
+        if (isGrammarEnabled()) {
+            const candidateCaches = [];
+            if (rootEditable && _editableCache.has(rootEditable)) {
+                candidateCaches.push({ ed: rootEditable, cache: _editableCache.get(rootEditable) });
+            } else {
+                for (const [ed, c] of _editableCache.entries()) {
+                    candidateCaches.push({ ed, cache: c });
                 }
+            }
 
-                let matches = false;
-                if (wordRange && gm.range) {
-                    try {
-                        matches = (wordRange.compareBoundaryPoints(Range.END_TO_START, gm.range) <= 0 &&
-                                   wordRange.compareBoundaryPoints(Range.START_TO_END, gm.range) >= 0);
-                    } catch(e) {}
-                }
+            for (const { ed, cache } of candidateCaches) {
+                if (!cache || !cache.grammarMatches || cache.grammarMatches.length === 0) continue;
+                for (const gm of cache.grammarMatches) {
+                    if (gm.ruleId && _ignoredRulesSet.has(gm.ruleId)) continue;
+                    // Re-create range if missing, or if text nodes were mutated and detached the range
+                    if ((!gm.range || !gm.range.startContainer || !gm.range.startContainer.isConnected) && ed) {
+                        gm.range = createRangeForOffsets(ed, gm.offset, gm.length, gm.text);
+                    }
+                    if (!gm.range) continue;
 
-                const gmText = (gm.text || '').toLowerCase().trim();
-                if (!matches && cleanWord && (gmText === cleanWord || gmText.includes(cleanWord) || cleanWord.includes(gmText))) {
-                    matches = true;
-                }
+                    let matches = false;
+                    const testRange = wordRange || pointRange;
+                    if (testRange && gm.range) {
+                        try {
+                            const endsAfterStart = testRange.compareBoundaryPoints(Range.END_TO_START, gm.range) > 0;
+                            const startsBeforeEnd = testRange.compareBoundaryPoints(Range.START_TO_END, gm.range) < 0;
+                            if (endsAfterStart && startsBeforeEnd) {
+                                matches = true;
+                            }
+                        } catch(e) {}
+                    }
 
-                if (matches) {
-                    return {
-                        type: 'grammar',
-                        ruleId: gm.ruleId,
-                        message: gm.message,
-                        shortMessage: gm.shortMessage,
-                        text: gm.text,
-                        replacements: gm.replacements || [],
-                        range: gm.range || wordRange
-                    };
+                    if (!matches && pointRange && gm.range) {
+                        try {
+                            const afterStart = pointRange.compareBoundaryPoints(Range.START_TO_START, gm.range) >= 0;
+                            const beforeEnd = pointRange.compareBoundaryPoints(Range.END_TO_END, gm.range) <= 0;
+                            if (afterStart && beforeEnd) {
+                                matches = true;
+                            }
+                        } catch(e) {}
+                    }
+
+                    const gmText = (gm.text || '').toLowerCase().trim();
+                    if (!matches && cleanWord) {
+                        const gmTokens = gmText.split(/[^a-z0-9'’]+/).filter(Boolean);
+                        const cleanNorm = cleanWord.replace(/’/g, "'");
+                        const cleanNoApos = cleanNorm.replace(/'/g, '');
+                        const allTokens = [...gmTokens, ...gmTokens.map(t => t.replace(/['’]/g, ''))];
+                        if (gmText === cleanWord || gmText.includes(cleanWord) || cleanWord.includes(gmText) ||
+                            allTokens.some(t => t === cleanNorm || t === cleanNoApos || cleanNorm.includes(t) || t.includes(cleanNorm))) {
+                            matches = true;
+                        }
+                    }
+
+                    if (matches) {
+                        return {
+                            type: 'grammar',
+                            ruleId: gm.ruleId,
+                            message: gm.message,
+                            shortMessage: gm.shortMessage,
+                            text: gm.text,
+                            replacements: gm.replacements || [],
+                            range: gm.range || testRange
+                        };
+                    }
                 }
             }
         }
 
         // 2. Check spelling issues
-        if (isWordMisspelled(word)) {
+        if (word && isWordMisspelled(word)) {
             return {
                 type: 'spelling',
                 word: word,

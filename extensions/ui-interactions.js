@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.8.6)
+// Open Publisher UI Interactions (v5.8.7)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.8.6)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.8.7)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1023,7 +1023,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.8.5</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.8.7</div>
                 </div>
                 
                 <div class="about-desc">

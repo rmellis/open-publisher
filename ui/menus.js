@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM)
+   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.8.7)
 ========================================================================= */
 
 const ContextMenuSystem = {
@@ -233,18 +233,69 @@ const ContextMenuSystem = {
 
                 let clickedWord = "";
                 let clickedWordRange = null;
+                let clickedPointRange = null;
+
+                if (document.caretRangeFromPoint) {
+                    clickedPointRange = document.caretRangeFromPoint(e.clientX, e.clientY);
+                } else if (document.caretPositionFromPoint) {
+                    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                    if (pos && pos.offsetNode) {
+                        try {
+                            clickedPointRange = document.createRange();
+                            clickedPointRange.setStart(pos.offsetNode, pos.offset);
+                            clickedPointRange.collapse(true);
+                        } catch(err) {}
+                    }
+                }
+
+                const getEditableFromContext = (target, container) => {
+                    if (target) {
+                        if (target.isContentEditable) return target;
+                        if (target.closest) {
+                            const ed = target.closest('[contenteditable="true"]');
+                            if (ed) return ed;
+                        }
+                    }
+                    if (container) {
+                        if (container.isContentEditable) return container;
+                        const ed = container.querySelector ? container.querySelector('[contenteditable="true"]') : null;
+                        if (ed) return ed;
+                    }
+                    if (clickedPointRange && clickedPointRange.startContainer) {
+                        const sc = clickedPointRange.startContainer;
+                        const ed = sc.nodeType === 1 ? sc.closest('[contenteditable="true"]') : sc.parentElement?.closest('[contenteditable="true"]');
+                        if (ed) return ed;
+                    }
+                    if (typeof state !== 'undefined' && state.selectedEl) {
+                        if (state.selectedEl.isContentEditable) return state.selectedEl;
+                        const ed = state.selectedEl.querySelector ? state.selectedEl.querySelector('[contenteditable="true"]') : null;
+                        if (ed) return ed;
+                    }
+                    return null;
+                };
 
                 const extractWordFromRange = (r, offset) => {
-                    if (r && r.startContainer.nodeType === 3) {
-                        const text = r.startContainer.textContent;
-                        let start = offset, end = offset;
+                    if (!r || !r.startContainer) return null;
+                    let node = r.startContainer;
+                    let o = offset;
+                    if (node.nodeType === 1 && node.childNodes.length > 0) {
+                        const idx = Math.min(o, node.childNodes.length - 1);
+                        node = node.childNodes[idx];
+                        while (node && node.nodeType === 1 && node.firstChild) {
+                            node = node.firstChild;
+                        }
+                        o = 0;
+                    }
+                    if (node && node.nodeType === 3) {
+                        const text = node.textContent;
+                        let start = Math.min(o, text.length), end = Math.min(o, text.length);
                         while (start > 0 && /[A-Za-z0-9_'’]/.test(text[start - 1])) start--;
                         while (end < text.length && /[A-Za-z0-9_'’]/.test(text[end])) end++;
                         const w = text.substring(start, end).trim();
                         if (w) {
                             const newRange = document.createRange();
-                            newRange.setStart(r.startContainer, start);
-                            newRange.setEnd(r.startContainer, end);
+                            newRange.setStart(node, start);
+                            newRange.setEnd(node, end);
                             return { word: w, range: newRange };
                         }
                     }
@@ -261,19 +312,9 @@ const ContextMenuSystem = {
                     }
                 }
 
-                if (!clickedWord && document.caretRangeFromPoint) {
-                    const r = document.caretRangeFromPoint(e.clientX, e.clientY);
-                    if (r) {
-                        const res = extractWordFromRange(r, r.startOffset);
-                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                    }
-                } 
-                else if (!clickedWord && document.caretPositionFromPoint) {
-                    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-                    if (pos) {
-                        const res = extractWordFromRange({startContainer: pos.offsetNode}, pos.offset);
-                        if (res) { clickedWord = res.word; clickedWordRange = res.range; }
-                    }
+                if (!clickedWord && clickedPointRange) {
+                    const res = extractWordFromRange(clickedPointRange, clickedPointRange.startOffset);
+                    if (res) { clickedWord = res.word; clickedWordRange = res.range; }
                 }
 
                 if (!clickedWord && sel && sel.rangeCount > 0 && sel.isCollapsed) {
@@ -304,10 +345,12 @@ const ContextMenuSystem = {
                 }
                 // 3. TEXT BOX CONTEXT MENU
                 else if (isText || isWordArt) {
-                    if (clickedWord && clickedWordRange) {
-                        window._currentSpellCheckWord = clickedWord;
-                        window._currentSpellCheckRange = clickedWordRange;
-                        window._currentSpellCheckEditable = (e.target && e.target.isContentEditable) ? e.target : (el ? el.querySelector('[contenteditable="true"]') : null);
+                    const resolvedEditable = getEditableFromContext(e.target, el);
+                    if (clickedWord || clickedPointRange || resolvedEditable) {
+                        window._currentSpellCheckWord = clickedWord || "";
+                        window._currentSpellCheckRange = clickedWordRange || clickedPointRange;
+                        window._currentSpellCheckPointRange = clickedPointRange;
+                        window._currentSpellCheckEditable = resolvedEditable;
                         html += '<div id="spell-check-results"></div>';
                     }
 
@@ -325,10 +368,12 @@ const ContextMenuSystem = {
                 }
                 // 3.5. TABLE CONTEXT MENU
                 else if (isTable) {
-                    if (clickedWord && clickedWordRange) {
-                        window._currentSpellCheckWord = clickedWord;
-                        window._currentSpellCheckRange = clickedWordRange;
-                        window._currentSpellCheckEditable = (e.target && e.target.isContentEditable) ? e.target : (el ? el.querySelector('[contenteditable="true"]') : null);
+                    const resolvedEditable = getEditableFromContext(e.target, el);
+                    if (clickedWord || clickedPointRange || resolvedEditable) {
+                        window._currentSpellCheckWord = clickedWord || "";
+                        window._currentSpellCheckRange = clickedWordRange || clickedPointRange;
+                        window._currentSpellCheckPointRange = clickedPointRange;
+                        window._currentSpellCheckEditable = resolvedEditable;
                         html += '<div id="spell-check-results"></div>';
                     }
                     html += this.buildItem('Insert Row Above', 'fa-arrow-up', 'if(window.ContextRibbonActions) ContextRibbonActions.insertRowAbove()');
@@ -402,17 +447,17 @@ const ContextMenuSystem = {
         this.menuEl.style.display = 'block';
 
         // Proofing (Spell & Grammar) Async Fetch
-        if (window._currentSpellCheckWord) {
+        if (window._currentSpellCheckWord || window._currentSpellCheckRange || window._currentSpellCheckPointRange || window._currentSpellCheckEditable) {
             const spellDiv = document.getElementById('spell-check-results');
             if (spellDiv) {
-                const wordToCheck = window._currentSpellCheckWord;
+                const wordToCheck = window._currentSpellCheckWord || "";
                 window._lastSpellCheckedWord = wordToCheck;
                 const cleanWord = (wordToCheck || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/gi, '');
                 const cleanWordEscaped = (wordToCheck || '').replace(/'/g, "\\'");
                 const editable = window._currentSpellCheckEditable;
 
                 const activeIssue = (window.SpellCheckEngine && window.SpellCheckEngine.getIssueAt)
-                    ? window.SpellCheckEngine.getIssueAt(editable, wordToCheck, window._currentSpellCheckRange)
+                    ? window.SpellCheckEngine.getIssueAt(editable, wordToCheck, window._currentSpellCheckRange, window._currentSpellCheckPointRange)
                     : null;
 
                 if (activeIssue && activeIssue.type === 'grammar') {
@@ -453,7 +498,7 @@ const ContextMenuSystem = {
                     }
                     newHtml += this.buildDivider();
                     spellDiv.innerHTML = newHtml;
-                } else if (window.SpellCheckEngine && window.SpellCheckEngine.isWordMisspelled && window.SpellCheckEngine.isWordMisspelled(cleanWord)) {
+                } else if (cleanWord && window.SpellCheckEngine && window.SpellCheckEngine.isWordMisspelled && window.SpellCheckEngine.isWordMisspelled(cleanWord)) {
                     // Misspelled word: instant local suggestions from comprehensive dictionary
                     const suggestions = (window.SpellCheckEngine.getSuggestions)
                         ? window.SpellCheckEngine.getSuggestions(wordToCheck || cleanWord)
@@ -475,7 +520,6 @@ const ContextMenuSystem = {
                     spellDiv.innerHTML = '';
                 }
             }
-            window._currentSpellCheckWord = "";
         }
 
         // Keep menu on screen (Clamp to viewport)
@@ -518,6 +562,10 @@ const ContextMenuSystem = {
 
     hide: function() {
         if(this.menuEl) this.menuEl.style.display = 'none';
+        window._currentSpellCheckWord = "";
+        window._currentSpellCheckRange = null;
+        window._currentSpellCheckPointRange = null;
+        window._currentSpellCheckEditable = null;
     }
 };
 
