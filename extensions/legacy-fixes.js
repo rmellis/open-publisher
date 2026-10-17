@@ -1,4 +1,4 @@
-// OpenPublisher Legacy Fixes & Compatibility (v5.9.10)
+// OpenPublisher Legacy Fixes & Compatibility (v5.10.0)
 (function lockGlobalWorkspaceAnimation() {
     const viewport = document.getElementById('viewport');
     if (!viewport) return;

@@ -1,5 +1,5 @@
 // ==========================================
-// APPLICATION BOOTSTRAPPER (v5.9.10)
+// APPLICATION BOOTSTRAPPER (v5.10.0)
 // ==========================================
 
 window.onload = function() {
@@ -16,6 +16,7 @@ window.onload = function() {
     initTemplates();
     initTablePicker();
     initFontPickers(); 
+    if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.renderRibbonStrip === 'function') window.TextBoxStylesSystem.renderRibbonStrip();
     if(window.CustomColorPicker) window.CustomColorPicker.init();
     setupZoomControls();
     

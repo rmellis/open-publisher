@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.9.10)
+// Open Publisher Text Engine (v5.10.0)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -793,3 +793,1346 @@ const fontList = [
     "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Mono", "Teko", "Titillium Web",
     "Ubuntu", "Varela Round", "Vollkorn", "Work Sans", "Yanone Kaffeesatz", "Zilla Slab"
 ];
+
+/* =========================================================================
+   STYLED TEXT BOX SYSTEM (v5.10.0)
+   Dual-Mode Architecture: Creation Templates + Contextual Ribbon Styling
+   ========================================================================= */
+
+window.TextBoxStylesSystem = {
+    presets: [
+        {
+            id: 'quote-teal',
+            name: 'Pull Quote (Teal)',
+            cat: 'quotes',
+            desc: 'Editorial pull quote with teal left accent stripe',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: 'rgba(0, 118, 112, 0.05)',
+                border: 'none',
+                borderLeft: '4px solid var(--ui-theme-color, #007670)',
+                borderRadius: '0 8px 8px 0',
+                boxShadow: 'none',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '15px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:rgba(0,118,112,0.08); border-left:3px solid #007670; border-radius:0 4px 4px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-gold',
+            name: 'Quote (Warm Amber)',
+            cat: 'quotes',
+            desc: 'Warm amber quote with elegant gold border',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fffbeb',
+                border: 'none',
+                borderLeft: '4px solid #f59e0b',
+                borderRadius: '4px',
+                boxShadow: 'none',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border-left:3px solid #f59e0b; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-soft',
+            name: 'Soft Notice Box',
+            cat: 'quotes',
+            desc: 'Gentle pastel fill with rounded border',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                padding: '12px 14px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f0f9ff; border:1px solid #bae6fd; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-tip',
+            name: 'Pro Tip Callout',
+            cat: 'quotes',
+            desc: 'Amber tip box with subtle accent',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                padding: '12px 14px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border:1px solid #fde68a; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-dark',
+            name: 'Modern Dark Card',
+            cat: 'cards',
+            desc: 'Deep slate card with high contrast light typography',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(145deg, #1e293b, #0f172a)',
+                border: '1px solid #334155',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.25)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#f8fafc',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(145deg, #1e293b, #0f172a); border:1px solid #334155; border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-elevated',
+            name: 'Elevated Soft Card',
+            cat: 'cards',
+            desc: 'Crisp white card with gentle elevation drop shadow',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                boxShadow: '0 8px 20px -4px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-radius:5px; box-shadow:0 2px 6px rgba(0,0,0,0.1);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-frosted',
+            name: 'Frosted Glass Panel',
+            cat: 'cards',
+            desc: 'Translucent glassmorphic panel with soft blurred background',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'rgba(255, 255, 255, 0.75)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.8)',
+                borderRadius: '10px',
+                boxShadow: '0 6px 20px 0 rgba(31, 38, 135, 0.12)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.9); border-radius:5px; box-shadow:0 2px 6px rgba(0,0,0,0.08);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-header',
+            name: 'Accent Header Card',
+            cat: 'cards',
+            desc: 'Structured card featuring a top colored theme banner border',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #ccfbf1',
+                borderTop: '5px solid var(--ui-theme-color, #007670)',
+                borderRadius: '8px',
+                boxShadow: '0 4px 10px rgba(0, 118, 112, 0.08)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#334155',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #ccfbf1; border-top:5px solid #007670; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-highlight',
+            name: 'Metric / KPI Counter',
+            cat: 'metrics',
+            desc: 'Bold numeric stat callout box',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderTop: '4px solid var(--ui-theme-color, #007670)',
+                borderRadius: '6px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: 'var(--ui-theme-color, #007670)',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#f8fafc; border:1px solid #e2e8f0; border-top:3px solid #007670; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-vibrant',
+            name: 'Vibrant Ribbon Pill',
+            cat: 'metrics',
+            desc: 'Smooth theme-colored pill banner for prominent alerts',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, var(--ui-theme-color, #007670), var(--ui-theme-dark, #004d40))',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(0, 118, 112, 0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #007670, #004d40); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-dark',
+            name: 'Dark Badge Pill',
+            cat: 'metrics',
+            desc: 'Compact dark pill with vibrant cyan badge text',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: '#0f172a',
+                border: '1px solid #334155',
+                borderRadius: '999px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                padding: '10px 18px'
+            },
+            textStyle: {
+                color: '#38bdf8',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#0f172a; border:1px solid #334155; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-coupon',
+            name: 'Dashed Voucher / Ticket',
+            cat: 'borders',
+            desc: 'Dashed coupon card with promo styling',
+            defaultWidth: 240,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#fefce8',
+                border: '2px dashed #ca8a04',
+                borderRadius: '8px',
+                boxShadow: 'none',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#854d0e',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#fefce8; border:2px dashed #ca8a04; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-classic',
+            name: 'Classic Editorial Frame',
+            cat: 'borders',
+            desc: 'Vintage double frame with classic serif typography',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#faf8f5',
+                border: '1px solid #78350f',
+                outline: '1px solid #78350f',
+                outlineOffset: '-4px',
+                borderRadius: '0px',
+                boxShadow: 'none',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                fontStyle: 'italic',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#faf8f5; border:1px solid #78350f; outline:1px solid #78350f; outline-offset:-2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-top',
+            name: 'Minimal Top-Accent',
+            cat: 'borders',
+            desc: 'Modern card with prominent top color line',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderTop: '4px solid var(--ui-theme-color, #007670)',
+                borderRadius: '0 0 6px 6px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                padding: '12px 14px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-top:3px solid #007670; border-radius:0 0 3px 3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'solid-theme',
+            name: 'Solid Theme Callout',
+            cat: 'cards',
+            desc: 'Full theme fill with white text matching UI color',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: 'var(--ui-theme-color, #007670)',
+                border: 'none',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#007670; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-modern',
+            name: 'Modern Indigo Quote',
+            cat: 'quotes',
+            desc: 'Contemporary blockquote with bold indigo border and slate tint',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                border: 'none',
+                borderLeft: '4px solid #6366f1',
+                borderRadius: '0 6px 6px 0',
+                boxShadow: 'none',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#334155',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border-left:3px solid #6366f1; border-radius:0 4px 4px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-warning',
+            name: 'Caution / Warning Box',
+            cat: 'quotes',
+            desc: 'High-visibility amber alert box for notices and caveats',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '1px solid #fcd34d',
+                borderLeft: '5px solid #d97706',
+                borderRadius: '6px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#92400e',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border:1px solid #fcd34d; border-left:4px solid #d97706; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-success',
+            name: 'Success / Tip Box',
+            cat: 'quotes',
+            desc: 'Gentle mint green callout for key takeaways and approvals',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderLeft: '5px solid #16a34a',
+                borderRadius: '6px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#166534',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-sunset',
+            name: 'Sunset Gradient Card',
+            cat: 'cards',
+            desc: 'Warm sunset orange-rose gradient with radiant white text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #f97316, #e11d48)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(249, 115, 22, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #f97316, #e11d48); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-ocean',
+            name: 'Deep Ocean Gradient Card',
+            cat: 'cards',
+            desc: 'Rich oceanic teal-to-blue gradient panel with crisp white text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #0ea5e9, #1e40af)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(14, 165, 233, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #0ea5e9, #1e40af); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-neon-cyber',
+            name: 'Cyber Neon Card',
+            cat: 'cards',
+            desc: 'Dark tech container with luminous cyan glowing border',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#090d16',
+                border: '1px solid #06b6d4',
+                borderRadius: '8px',
+                boxShadow: '0 0 12px rgba(6, 182, 212, 0.35)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#e0f2fe',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#090d16; border:1px solid #06b6d4; border-radius:4px; box-shadow:0 0 6px rgba(6,182,212,0.4);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-gold',
+            name: 'Gold Foil Pill',
+            cat: 'metrics',
+            desc: 'Warm amber gold metallic pill badge with dark contrast lettering',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #fef08a, #d97706)',
+                border: '1px solid #b45309',
+                borderRadius: '999px',
+                boxShadow: '0 3px 10px rgba(217, 119, 6, 0.25)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #fef08a, #d97706); border:1px solid #b45309; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-glass',
+            name: 'Glassmorphic Metric Card',
+            cat: 'metrics',
+            desc: 'Translucent frosted stat counter box with dark accent text',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: 'rgba(255, 255, 255, 0.82)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                borderRadius: '12px',
+                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.06)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:rgba(255,255,255,0.85); border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.06);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-retro',
+            name: 'Antique / Perforated Ticket',
+            cat: 'borders',
+            desc: 'Classic vintage coupon with dotted outline and aged sepia tone',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '2px dotted #92400e',
+                borderRadius: '4px',
+                boxShadow: 'none',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#fffbeb; border:2px dotted #92400e; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-certificate',
+            name: 'Formal Certificate Border',
+            cat: 'borders',
+            desc: 'Double gold line formal diploma / award certificate style frame',
+            defaultWidth: 270,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '3px double #d97706',
+                borderRadius: '0px',
+                boxShadow: 'none',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:3px double #d97706;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-left-bold',
+            name: 'Editorial Lead Deck',
+            cat: 'borders',
+            desc: 'Clean white panel with heavy dark slate left band',
+            defaultWidth: 270,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderLeft: '6px solid #1e293b',
+                borderRadius: '0 6px 6px 0',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e293b; border-radius:0 3px 3px 0;',
+            starterHTML: 'Click to edit text'
+        }
+    ],
+
+    // 4 quick styles shown directly in the ribbon gallery strip
+    quickStyleIds: ['quote-teal', 'callout-soft', 'card-dark', 'stat-highlight'],
+
+    // Solid & Gradient Palettes for Quick Fill Picker
+    fillSolidPalette: [
+        '#ffffff', '#000000', 'var(--ui-theme-color, #007670)', '#0284c7', '#2563eb', '#7c3aed', '#db2777', '#dc2626',
+        '#ea580c', '#d97706', '#ca8a04', '#16a34a', '#059669', '#0d9488', '#0891b2', '#475569',
+        '#f8fafc', '#f1f5f9', '#e2e8f0', '#f0fdf4', '#f0f9ff', '#fefce8', '#fff1f2', '#faf5ff',
+        '#0f172a', '#1e293b', '#334155', '#14532d', '#0c4a6e', '#713f12', '#881337', '#3b0764'
+    ],
+
+    fillGradientPresets: [
+        { name: 'Theme Gradient', val: 'linear-gradient(135deg, var(--ui-theme-color, #007670), var(--ui-theme-dark, #004d40))' },
+        { name: 'Dark Slate', val: 'linear-gradient(145deg, #1e293b, #0f172a)' },
+        { name: 'Sunset Glow', val: 'linear-gradient(135deg, #f97316, #ef4444)' },
+        { name: 'Ocean Blue', val: 'linear-gradient(135deg, #06b6d4, #0284c7)' },
+        { name: 'Emerald Mint', val: 'linear-gradient(135deg, #10b981, #047857)' },
+        { name: 'Purple Dusk', val: 'linear-gradient(135deg, #8b5cf6, #6366f1)' },
+        { name: 'Golden Amber', val: 'linear-gradient(135deg, #fbbf24, #d97706)' },
+        { name: 'Rose Wine', val: 'linear-gradient(135deg, #f43f5e, #9f1239)' }
+    ],
+
+    borderPalette: [
+        '#000000', '#ffffff', 'var(--ui-theme-color, #007670)', '#0284c7', '#2563eb', '#7c3aed', '#db2777', '#dc2626',
+        '#ea580c', '#d97706', '#ca8a04', '#16a34a', '#059669', '#334155', '#64748b', '#cbd5e1'
+    ],
+
+    getPreset: function(id) {
+        return this.presets.find(p => p.id === id);
+    },
+
+    applyStyle: function(el, styleId) {
+        if (!el && typeof state !== 'undefined') el = state.selectedEl;
+        if (!el) return;
+        const content = el.querySelector('.element-content');
+        if (!content) return;
+        const editable = el.querySelector('[contenteditable="true"]');
+
+        const preset = this.getPreset(styleId);
+        if (!preset) return;
+
+        // Reset previous container styling
+        this.clearContainerStyles(content);
+
+        // Apply new container styling
+        const s = preset.containerStyle;
+        if (s.background) content.style.background = s.background;
+        if (s.border) content.style.border = s.border;
+        if (s.borderLeft) content.style.borderLeft = s.borderLeft;
+        if (s.borderTop) content.style.borderTop = s.borderTop;
+        if (s.borderRight) content.style.borderRight = s.borderRight;
+        if (s.borderBottom) content.style.borderBottom = s.borderBottom;
+        if (s.borderRadius) content.style.borderRadius = s.borderRadius;
+        if (s.boxShadow) content.style.boxShadow = s.boxShadow;
+        if (s.outline) content.style.outline = s.outline;
+        if (s.outlineOffset) content.style.outlineOffset = s.outlineOffset;
+        if (s.backdropFilter) {
+            content.style.backdropFilter = s.backdropFilter;
+            content.style.webkitBackdropFilter = s.backdropFilter;
+        }
+        content.style.boxSizing = 'border-box';
+
+        // Apply padding to editable
+        if (editable && s.padding) {
+            editable.style.padding = s.padding;
+        }
+
+        // Apply textStyle if text needs contrast adjustment or preset mandates it
+        if (editable && preset.textStyle) {
+            if (preset.textStyle.color) {
+                if (['card-dark', 'pill-dark', 'solid-theme', 'pill-vibrant'].includes(preset.id) || !editable.style.color || editable.style.color === 'rgb(0, 0, 0)' || editable.style.color === '#000000') {
+                    editable.style.color = preset.textStyle.color;
+                }
+            }
+            if (preset.textStyle.fontFamily && (!editable.style.fontFamily || editable.style.fontFamily === 'Arial, sans-serif')) {
+                editable.style.fontFamily = preset.textStyle.fontFamily;
+            }
+            if (preset.textStyle.textAlign) {
+                editable.style.textAlign = preset.textStyle.textAlign;
+            }
+        }
+
+        el.setAttribute('data-textbox-style', preset.id);
+
+        this.updateRibbonIndicators(el);
+
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    applyPlain: function(el) {
+        if (!el && typeof state !== 'undefined') el = state.selectedEl;
+        if (!el) return;
+        const content = el.querySelector('.element-content');
+        if (!content) return;
+        const editable = el.querySelector('[contenteditable="true"]');
+
+        this.clearContainerStyles(content);
+        if (editable) {
+            editable.style.padding = '10px';
+            editable.style.color = '#000000';
+        }
+        el.removeAttribute('data-textbox-style');
+
+        this.updateRibbonIndicators(el);
+
+        const menu = document.getElementById('styled-textbox-dropdown');
+        if (menu) menu.style.display = 'none';
+
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    clearContainerStyles: function(content) {
+        if (!content) return;
+        content.style.background = '';
+        content.style.backgroundColor = '';
+        content.style.backgroundImage = '';
+        content.style.border = 'none';
+        content.style.borderLeft = '';
+        content.style.borderTop = '';
+        content.style.borderRight = '';
+        content.style.borderBottom = '';
+        content.style.borderRadius = '';
+        content.style.boxShadow = '';
+        content.style.outline = '';
+        content.style.outlineOffset = '';
+        content.style.backdropFilter = '';
+        content.style.webkitBackdropFilter = '';
+    },
+
+    insertStyled: function(styleId) {
+        const preset = this.getPreset(styleId);
+        if (!preset) return;
+
+        const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
+        const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
+        const userLang = navigator.language || 'en';
+        const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
+        const pad = (preset.containerStyle && preset.containerStyle.padding) ? preset.containerStyle.padding : '12px';
+
+        // Clean typography styles applied directly to the contenteditable root
+        let textStyleStr = '';
+        if (preset.textStyle) {
+            if (preset.textStyle.color) textStyleStr += `color:${preset.textStyle.color}; `;
+            if (preset.textStyle.fontFamily) textStyleStr += `font-family:${preset.textStyle.fontFamily}; `;
+            if (preset.textStyle.fontSize) textStyleStr += `font-size:${preset.textStyle.fontSize}; `;
+            if (preset.textStyle.fontStyle) textStyleStr += `font-style:${preset.textStyle.fontStyle}; `;
+            if (preset.textStyle.fontWeight) textStyleStr += `font-weight:${preset.textStyle.fontWeight}; `;
+            if (preset.textStyle.textAlign) textStyleStr += `text-align:${preset.textStyle.textAlign}; `;
+            if (preset.textStyle.lineHeight) textStyleStr += `line-height:${preset.textStyle.lineHeight}; `;
+        }
+
+        const html = `<div style="padding:${pad}; height:100%; word-wrap:break-word; outline:none;${hyphenStyle} ${textStyleStr}" contenteditable="true"${spellAttrs}>Click to edit text</div>`;
+
+        if (typeof createWrapper !== 'function') return;
+        const el = createWrapper(html);
+        if (!el) return;
+
+        // Size appropriately
+        const w = preset.defaultWidth || 260;
+        const h = preset.defaultHeight || 100;
+        el.style.width = w + 'px';
+        el.style.height = h + 'px';
+
+        // Position neatly on the current paper page
+        const paperEl = document.getElementById('paper');
+        if (paperEl) {
+            const pw = parseInt(paperEl.style.width || 794);
+            const ph = parseInt(paperEl.style.height || 1123);
+            el.style.left = Math.max(40, Math.round((pw - w) / 2)) + 'px';
+            el.style.top = Math.max(60, Math.round((ph - h) / 3)) + 'px';
+        }
+
+        // Apply container styles
+        const content = el.querySelector('.element-content');
+        if (content) {
+            const s = preset.containerStyle;
+            if (s.background) content.style.background = s.background;
+            if (s.border) content.style.border = s.border;
+            if (s.borderLeft) content.style.borderLeft = s.borderLeft;
+            if (s.borderTop) content.style.borderTop = s.borderTop;
+            if (s.borderRight) content.style.borderRight = s.borderRight;
+            if (s.borderBottom) content.style.borderBottom = s.borderBottom;
+            if (s.borderRadius) content.style.borderRadius = s.borderRadius;
+            if (s.boxShadow) content.style.boxShadow = s.boxShadow;
+            if (s.outline) content.style.outline = s.outline;
+            if (s.outlineOffset) content.style.outlineOffset = s.outlineOffset;
+            if (s.backdropFilter) {
+                content.style.backdropFilter = s.backdropFilter;
+                content.style.webkitBackdropFilter = s.backdropFilter;
+            }
+            content.style.boxSizing = 'border-box';
+        }
+
+        el.setAttribute('data-textbox-style', preset.id);
+
+        // Close dropdown
+        const menu = document.getElementById('styled-textbox-dropdown');
+        if (menu) menu.style.display = 'none';
+
+        if (typeof selectElement === 'function') selectElement(el);
+        if (typeof switchTab === 'function') switchTab('format-text');
+        this.updateRibbonIndicators(el);
+
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+
+        return el;
+    },
+
+    // --- COLOR ADJUSTMENT & CONTROL METHODS ---
+
+    applyFill: function(fillVal) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el) return;
+        let content = el.querySelector('.element-content');
+        if (!content) return;
+        let editable = el.querySelector('[contenteditable="true"]');
+
+        if (fillVal === 'transparent' || fillVal === 'none') {
+            content.style.background = 'transparent';
+            content.style.backgroundImage = 'none';
+            content.style.backgroundColor = 'transparent';
+            if (editable && (editable.style.color === 'rgb(255, 255, 255)' || editable.style.color === '#ffffff')) {
+                editable.style.color = '#000000';
+            }
+        } else {
+            content.style.background = fillVal;
+            // Contrast check for solid dark fills
+            if (editable && fillVal.startsWith('#')) {
+                const isDark = this.isDarkHex(fillVal);
+                if (isDark && (!editable.style.color || editable.style.color === '#000000' || editable.style.color === 'rgb(0, 0, 0)')) {
+                    editable.style.color = '#ffffff';
+                } else if (!isDark && (editable.style.color === '#ffffff' || editable.style.color === 'rgb(255, 255, 255)')) {
+                    editable.style.color = '#0f172a';
+                }
+            } else if (editable && fillVal.includes('gradient')) {
+                // Ensure text readability on dark gradients
+                if (fillVal.includes('#1e293b') || fillVal.includes('#0f172a') || fillVal.includes('#1a0533') || fillVal.includes('#004d40') || fillVal.includes('#9f1239')) {
+                    if (!editable.style.color || editable.style.color === '#000000' || editable.style.color === 'rgb(0, 0, 0)') {
+                        editable.style.color = '#ffffff';
+                    }
+                }
+            }
+        }
+
+        this.updateRibbonIndicators(el);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    isDarkHex: function(hex) {
+        if (!hex || !hex.startsWith('#')) return false;
+        let c = hex.substring(1);
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        if (isNaN(num)) return false;
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+        return luma < 128;
+    },
+
+    applyBorderColor: function(color) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el) return;
+        let content = el.querySelector('.element-content');
+        if (!content) return;
+
+        let currentW = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
+        if (currentW <= 0) currentW = 1;
+        let currentS = content.style.borderStyle || 'solid';
+        content.style.border = `${currentW}px ${currentS} ${color}`;
+
+        this.updateRibbonIndicators(el);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    applyBorderWidth: function(px) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el) return;
+        let content = el.querySelector('.element-content');
+        if (!content) return;
+
+        if (px <= 0) {
+            content.style.border = 'none';
+        } else {
+            let currentC = content.style.borderColor || content.style.borderTopColor || '#000000';
+            let currentS = content.style.borderStyle || 'solid';
+            content.style.border = `${px}px ${currentS} ${currentC}`;
+        }
+
+        this.updateRibbonIndicators(el);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    applyBorderStyle: function(style) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el) return;
+        let content = el.querySelector('.element-content');
+        if (!content) return;
+
+        let currentW = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
+        if (currentW <= 0) currentW = 1;
+        let currentC = content.style.borderColor || content.style.borderTopColor || '#000000';
+        content.style.border = `${currentW}px ${style} ${currentC}`;
+
+        this.updateRibbonIndicators(el);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    applyBorderRadius: function(px) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el) return;
+        let content = el.querySelector('.element-content');
+        if (!content) return;
+
+        content.style.borderRadius = px > 0 ? (px >= 900 ? '999px' : `${px}px`) : '0px';
+
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    },
+
+    openFormatDialog: function() {
+        const fillMenu = document.getElementById('textbox-fill-dropdown');
+        if (fillMenu) fillMenu.style.display = 'none';
+        const borderMenu = document.getElementById('textbox-border-dropdown');
+        if (borderMenu) borderMenu.style.display = 'none';
+        const styleMenu = document.getElementById('styled-textbox-dropdown');
+        if (styleMenu) styleMenu.style.display = 'none';
+
+        if (typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
+            ContextMenuActions.formatTextBox();
+        }
+    },
+
+    pickCustomSolidFill: function(btn) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el || !window.CustomColorPicker) return;
+        let content = el.querySelector('.element-content');
+        let initialHex = '#007670';
+        if (content && content.style.backgroundColor && content.style.backgroundColor.startsWith('#')) {
+            initialHex = content.style.backgroundColor;
+        }
+
+        const fillMenu = document.getElementById('textbox-fill-dropdown');
+        const isFromDropdown = btn && fillMenu && fillMenu.contains(btn);
+        if (fillMenu) fillMenu.style.display = 'none';
+
+        const ribbonBtn = document.getElementById('btn-textbox-fill');
+        const anchor = (isFromDropdown && ribbonBtn) ? ribbonBtn : (btn || ribbonBtn);
+
+        window.CustomColorPicker.open(anchor, initialHex, (chosen) => {
+            TextBoxStylesSystem.applyFill(chosen);
+        });
+    },
+
+    pickCustomBorderColor: function(btn) {
+        let el = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (!el || !window.CustomColorPicker) return;
+        let content = el.querySelector('.element-content');
+        let initialHex = '#000000';
+        if (content && content.style.borderColor && content.style.borderColor.startsWith('#')) {
+            initialHex = content.style.borderColor;
+        }
+
+        const borderMenu = document.getElementById('textbox-border-dropdown');
+        const isFromDropdown = btn && borderMenu && borderMenu.contains(btn);
+        if (borderMenu) borderMenu.style.display = 'none';
+
+        const ribbonBtn = document.getElementById('btn-textbox-border');
+        const anchor = (isFromDropdown && ribbonBtn) ? ribbonBtn : (btn || ribbonBtn);
+
+        window.CustomColorPicker.open(anchor, initialHex, (chosen) => {
+            TextBoxStylesSystem.applyBorderColor(chosen);
+        });
+    },
+
+    updateRibbonIndicators: function(el) {
+        if (!el && typeof state !== 'undefined') el = state.selectedEl;
+        const fillBar = document.getElementById('ribbon-box-fill-indicator');
+        const borderBar = document.getElementById('ribbon-box-border-indicator');
+        if (!el) return;
+
+        const content = el.querySelector('.element-content');
+        if (!content) return;
+
+        if (fillBar) {
+            const bg = content.style.background || content.style.backgroundColor;
+            if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+                fillBar.style.background = bg;
+            } else {
+                fillBar.style.background = 'var(--ui-theme-color, #007670)';
+            }
+        }
+
+        if (borderBar) {
+            const bc = content.style.borderColor || content.style.borderTopColor || content.style.borderLeftColor;
+            const bw = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
+            if (bw > 0 && bc && bc !== 'transparent') {
+                borderBar.style.background = bc;
+            } else {
+                borderBar.style.background = '#334155';
+            }
+        }
+    },
+
+    toggleFillMenu: function(btn) {
+        this.initColorDropdowns();
+        const menu = document.getElementById('textbox-fill-dropdown');
+        if (!menu) return;
+
+        const isCurrentlyOpen = menu.style.display === 'block';
+        document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+
+        if (!isCurrentlyOpen) {
+            menu.style.display = 'block';
+            if (btn) {
+                const r = btn.getBoundingClientRect();
+                let left = r.left;
+                if (left + menu.offsetWidth > window.innerWidth) {
+                    left = Math.max(10, r.right - menu.offsetWidth);
+                }
+                menu.style.left = left + 'px';
+                menu.style.top = (r.bottom + 4) + 'px';
+            }
+        }
+    },
+
+    toggleBorderMenu: function(btn) {
+        this.initColorDropdowns();
+        const menu = document.getElementById('textbox-border-dropdown');
+        if (!menu) return;
+
+        const isCurrentlyOpen = menu.style.display === 'block';
+        document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+
+        if (!isCurrentlyOpen) {
+            menu.style.display = 'block';
+            if (btn) {
+                const r = btn.getBoundingClientRect();
+                let left = r.left;
+                if (left + menu.offsetWidth > window.innerWidth) {
+                    left = Math.max(10, r.right - menu.offsetWidth);
+                }
+                menu.style.left = left + 'px';
+                menu.style.top = (r.bottom + 4) + 'px';
+            }
+        }
+    },
+
+    initColorDropdowns: function() {
+        if (!document.getElementById('textbox-fill-dropdown')) {
+            const fillMenu = document.createElement('div');
+            fillMenu.id = 'textbox-fill-dropdown';
+            fillMenu.className = 'dropdown-menu styled-textbox-menu';
+            fillMenu.style.cssText = 'display:none; width:300px; padding:12px; z-index:100000; box-sizing:border-box;';
+
+            fillMenu.innerHTML = `
+                <div class="styled-dropdown-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:6px;">
+                    <div style="font-weight:700; font-size:12px; display:flex; align-items:center; gap:6px; color:var(--ui-text);">
+                        <i class="fas fa-fill-drip" style="color:var(--ui-theme-color);"></i> Box Fill
+                    </div>
+                    <button type="button" class="styled-opt-chip" onclick="TextBoxStylesSystem.applyFill('transparent'); document.getElementById('textbox-fill-dropdown').style.display='none'; event.stopPropagation();" title="Remove Fill">
+                        <i class="fas fa-ban" style="color:#ef4444; margin-right:4px;"></i> No Fill
+                    </button>
+                </div>
+
+                <div class="styled-section-label">Theme & Solid Colors</div>
+                <div class="fill-palette-grid">
+                    ${this.fillSolidPalette.map(c => `
+                        <div class="fill-color-chip" style="background:${c};" onclick="TextBoxStylesSystem.applyFill('${c}'); document.getElementById('textbox-fill-dropdown').style.display='none'; event.stopPropagation();" title="${c}"></div>
+                    `).join('')}
+                </div>
+
+                <div class="styled-section-label">Gradient Presets</div>
+                <div class="fill-gradient-grid">
+                    ${this.fillGradientPresets.map(g => `
+                        <div class="fill-gradient-chip" style="background:${g.val};" onclick="TextBoxStylesSystem.applyFill('${g.val}'); document.getElementById('textbox-fill-dropdown').style.display='none'; event.stopPropagation();" title="${g.name}">
+                            <span class="fill-grad-name">${g.name}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="styled-dropdown-footer" style="display:flex; flex-direction:column; gap:6px; padding-top:8px;">
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.pickCustomSolidFill(this); event.stopPropagation();">
+                        <i class="fas fa-eye-dropper" style="color:var(--ui-theme-color); margin-right:6px;"></i> More Fill Colors... (Color Picker)
+                    </button>
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.openFormatDialog(); event.stopPropagation();">
+                        <i class="fas fa-sliders-h" style="color:var(--ui-theme-color); margin-right:6px;"></i> Advanced Fill & Gradients (Format Box)...
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(fillMenu);
+        }
+
+        if (!document.getElementById('textbox-border-dropdown')) {
+            const borderMenu = document.createElement('div');
+            borderMenu.id = 'textbox-border-dropdown';
+            borderMenu.className = 'dropdown-menu styled-textbox-menu';
+            borderMenu.style.cssText = 'display:none; width:290px; padding:12px; z-index:100000; box-sizing:border-box;';
+
+            borderMenu.innerHTML = `
+                <div class="styled-dropdown-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:6px;">
+                    <div style="font-weight:700; font-size:12px; display:flex; align-items:center; gap:6px; color:var(--ui-text);">
+                        <i class="fas fa-border-style" style="color:var(--ui-theme-color);"></i> Box Outline
+                    </div>
+                    <button type="button" class="styled-opt-chip" onclick="TextBoxStylesSystem.applyBorderWidth(0); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();" title="Remove Border">
+                        <i class="fas fa-ban" style="color:#ef4444; margin-right:4px;"></i> No Outline
+                    </button>
+                </div>
+
+                <div class="styled-section-label">Outline Color</div>
+                <div class="fill-palette-grid">
+                    ${this.borderPalette.map(c => `
+                        <div class="fill-color-chip" style="background:${c};" onclick="TextBoxStylesSystem.applyBorderColor('${c}'); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();" title="${c}"></div>
+                    `).join('')}
+                </div>
+
+                <div class="styled-section-label">Border Weight</div>
+                <div class="border-opt-grid">
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderWidth(1); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">1px</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderWidth(2); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">2px</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderWidth(3); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">3px</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderWidth(5); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">5px</button>
+                </div>
+
+                <div class="styled-section-label">Border Style</div>
+                <div class="border-opt-grid">
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderStyle('solid'); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Solid</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderStyle('dashed'); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Dashed</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderStyle('dotted'); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Dotted</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderStyle('double'); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Double</button>
+                </div>
+
+                <div class="styled-section-label">Corner Radius</div>
+                <div class="border-opt-grid">
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderRadius(0); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Square (0)</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderRadius(6); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Rounded (6px)</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderRadius(12); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Card (12px)</button>
+                    <button type="button" class="border-opt-btn" onclick="TextBoxStylesSystem.applyBorderRadius(999); document.getElementById('textbox-border-dropdown').style.display='none'; event.stopPropagation();">Pill</button>
+                </div>
+
+                <div class="styled-dropdown-footer" style="display:flex; flex-direction:column; gap:6px; padding-top:8px;">
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.pickCustomBorderColor(this); event.stopPropagation();">
+                        <i class="fas fa-eye-dropper" style="color:var(--ui-theme-color); margin-right:6px;"></i> More Outline Colors... (Color Picker)
+                    </button>
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.openFormatDialog(); event.stopPropagation();">
+                        <i class="fas fa-sliders-h" style="color:var(--ui-theme-color); margin-right:6px;"></i> Advanced Borders & Corners (Format Box)...
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(borderMenu);
+        }
+    },
+
+    renderRibbonStrip: function() {
+        const strip = document.getElementById('textbox-quick-styles-strip');
+        if (!strip) return;
+        strip.innerHTML = '';
+
+        this.quickStyleIds.forEach(id => {
+            const p = this.getPreset(id);
+            if (!p) return;
+            const btn = document.createElement('div');
+            btn.className = 'styled-textbox-quick-swatch';
+            btn.title = `Apply Style: ${p.name}`;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (typeof state !== 'undefined' && state.selectedEl) {
+                    this.applyStyle(state.selectedEl, p.id);
+                }
+            };
+
+            // Mini visual representation
+            btn.innerHTML = `
+                <div class="swatch-mini-preview" style="${p.previewCSS || ''}">
+                    <div style="width:70%; height:2px; background:currentColor; opacity:0.5; margin:1px 0;"></div>
+                    <div style="width:90%; height:2px; background:currentColor; opacity:0.3; margin:1px 0;"></div>
+                </div>
+            `;
+            strip.appendChild(btn);
+        });
+    },
+
+    toggleMenu: function(btn, mode) {
+        const menu = document.getElementById('styled-textbox-dropdown');
+        if (!menu) return;
+
+        const isCurrentlyOpen = menu.style.display === 'block' && menu.getAttribute('data-mode') === mode;
+        document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+
+        if (!isCurrentlyOpen) {
+            menu.setAttribute('data-mode', mode);
+            this.renderMenu(mode, 'all');
+            menu.style.display = 'block';
+
+            if (btn) {
+                const r = btn.getBoundingClientRect();
+                let left = r.left;
+                if (left + menu.offsetWidth > window.innerWidth) {
+                    left = Math.max(10, r.right - menu.offsetWidth);
+                }
+                menu.style.left = left + 'px';
+                menu.style.top = (r.bottom + 4) + 'px';
+            }
+        }
+    },
+
+    renderMenu: function(mode, filterCat = 'all') {
+        const menu = document.getElementById('styled-textbox-dropdown');
+        if (!menu) return;
+
+        const isInsert = mode === 'insert';
+        const titleText = isInsert ? 'Insert Styled Text Box' : 'Apply Text Box Style';
+        const subText = isInsert ? 'Choose a pre-styled template to insert onto your page' : 'Select a style to apply to the selected text box';
+
+        const categories = [
+            { id: 'all', label: 'All Styles' },
+            { id: 'quotes', label: 'Quotes & Callouts' },
+            { id: 'cards', label: 'Cards & Panels' },
+            { id: 'metrics', label: 'Badges & Stats' },
+            { id: 'borders', label: 'Borders & Tickets' }
+        ];
+
+        const filtered = filterCat === 'all' ? this.presets : this.presets.filter(p => p.cat === filterCat);
+
+        let html = `
+            <div class="styled-dropdown-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-swatchbook" style="color:var(--ui-theme-color); font-size:16px;"></i>
+                    <div>
+                        <div style="font-weight:700; font-size:13px; color:var(--ui-text);">${titleText}</div>
+                        <div style="font-size:11px; color:var(--ui-text-muted, #64748b);">${subText}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="styled-cat-pills">
+                ${categories.map(c => `
+                    <div class="styled-cat-pill ${c.id === filterCat ? 'active' : ''}" onclick="TextBoxStylesSystem.renderMenu('${mode}', '${c.id}'); event.stopPropagation();">
+                        ${c.label}
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="styled-box-grid">
+                ${filtered.map(p => `
+                    <div class="styled-box-card" onclick="TextBoxStylesSystem.${isInsert ? 'insertStyled' : 'applyStyle'}(${isInsert ? `'${p.id}'` : `state.selectedEl, '${p.id}'`}); if(!${isInsert}) document.getElementById('styled-textbox-dropdown').style.display='none'; event.stopPropagation();" title="${p.desc}">
+                        <div class="styled-box-preview-box" style="${p.previewCSS || ''}">
+                            <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                <div style="width:65%; height:3px; background:currentColor; opacity:0.6; border-radius:1px;"></div>
+                                <div style="width:85%; height:2px; background:currentColor; opacity:0.35; border-radius:1px;"></div>
+                            </div>
+                        </div>
+                        <div class="styled-box-card-meta">
+                            <span class="styled-box-name">${p.name}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="styled-dropdown-footer">
+                ${!isInsert ? `
+                    <button type="button" class="styled-dropdown-footer-btn" style="margin-bottom:6px;" onclick="TextBoxStylesSystem.openFormatDialog(); document.getElementById('styled-textbox-dropdown').style.display='none'; event.stopPropagation();">
+                        <i class="fas fa-palette" style="color:var(--ui-theme-color); margin-right:6px;"></i> Customize Box Colors & Borders (Format Box...)
+                    </button>
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.applyPlain(state.selectedEl); event.stopPropagation();">
+                        <i class="fas fa-ban" style="color:#ef4444; margin-right:6px;"></i> Clear Box Styling (Revert to Plain)
+                    </button>
+                ` : `
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="addTextBox(); document.getElementById('styled-textbox-dropdown').style.display='none'; event.stopPropagation();">
+                        <i class="fas fa-font" style="color:var(--ui-theme-color); margin-right:6px;"></i> Insert Standard Blank Text Box
+                    </button>
+                `}
+            </div>
+        `;
+
+        menu.innerHTML = html;
+    }
+};
+
+// Ensure dropdowns close when clicking outside
+document.addEventListener('click', (e) => {
+    const fillMenu = document.getElementById('textbox-fill-dropdown');
+    if (fillMenu && fillMenu.style.display === 'block') {
+        if (!fillMenu.contains(e.target) && !e.target.closest('#btn-textbox-fill')) {
+            fillMenu.style.display = 'none';
+        }
+    }
+    const borderMenu = document.getElementById('textbox-border-dropdown');
+    if (borderMenu && borderMenu.style.display === 'block') {
+        if (!borderMenu.contains(e.target) && !e.target.closest('#btn-textbox-border')) {
+            borderMenu.style.display = 'none';
+        }
+    }
+    const styleMenu = document.getElementById('styled-textbox-dropdown');
+    if (styleMenu && styleMenu.style.display === 'block') {
+        if (!styleMenu.contains(e.target) && !e.target.closest('#btn-styled-textbox') && !e.target.closest('[onclick*="TextBoxStylesSystem.toggleMenu"]')) {
+            styleMenu.style.display = 'none';
+        }
+    }
+});
+
+

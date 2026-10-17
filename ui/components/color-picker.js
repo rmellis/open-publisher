@@ -173,7 +173,7 @@ window.CustomColorPicker = class CustomColorPicker {
         
         // Click outside to close
         document.addEventListener('mousedown', (e) => {
-            if (this.isOpen && !this.el.contains(e.target) && this.anchor && !this.anchor.contains(e.target)) {
+            if (this.isOpen && !this.el.contains(e.target) && (!this.anchor || typeof this.anchor.contains !== 'function' || !this.anchor.contains(e.target))) {
                 this.close();
             }
         });
@@ -341,7 +341,26 @@ window.CustomColorPicker = class CustomColorPicker {
         this.el.style.display = 'block';
         this.isOpen = true;
         
-        const rect = anchorElement.getBoundingClientRect();
+        let rect = (anchorElement && typeof anchorElement.getBoundingClientRect === 'function') 
+            ? anchorElement.getBoundingClientRect() 
+            : null;
+
+        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
+            const fallbackEl = document.getElementById('btn-textbox-fill') || document.getElementById('btn-textbox-border');
+            if (fallbackEl && fallbackEl.getBoundingClientRect().width > 0) {
+                rect = fallbackEl.getBoundingClientRect();
+            } else {
+                rect = {
+                    left: Math.max(10, Math.round((window.innerWidth - 300) / 2)),
+                    top: 120,
+                    bottom: 120,
+                    right: Math.max(10, Math.round((window.innerWidth - 300) / 2)),
+                    width: 0,
+                    height: 0
+                };
+            }
+        }
+
         let top = rect.bottom + window.scrollY + 5;
         let left = rect.left + window.scrollX;
         
@@ -349,8 +368,10 @@ window.CustomColorPicker = class CustomColorPicker {
             left = window.innerWidth - this.el.offsetWidth - 10;
         }
         if (top + this.el.offsetHeight > window.innerHeight) {
-            top = rect.top + window.scrollY - this.el.offsetHeight - 5;
+            top = Math.max(10, rect.top + window.scrollY - this.el.offsetHeight - 5);
         }
+        if (left < 10) left = 10;
+        if (top < 10) top = 10;
         
         this.el.style.top = top + 'px';
         this.el.style.left = left + 'px';
