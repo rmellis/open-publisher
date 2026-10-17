@@ -961,29 +961,105 @@
         return false;
     };
 
-    const splitInlineBackgroundAtBr = (bgEl) => {
-        if (!bgEl || !bgEl.parentNode) return;
-        if (bgEl.hasAttribute('data-op-line-split')) return;
-
-        const parent = bgEl.parentNode;
-        let textAlign = 'left';
-        let parentLineHeight = 0;
-        let fontSize = 14;
+    const measureInlineBgMetrics = (bgEl) => {
+        let scaleX = 1;
+        let scaleY = 1;
         try {
-            const parentComp = window.getComputedStyle(parent);
-            textAlign = parentComp.textAlign || 'left';
-            parentLineHeight = parseFloat(parentComp.lineHeight) || 0;
+            const contentEl = bgEl.closest('.element-content');
+            if (contentEl && contentEl.offsetWidth > 0 && contentEl.offsetHeight > 0) {
+                const cRect = contentEl.getBoundingClientRect();
+                if (cRect.width > 0) scaleX = cRect.width / contentEl.offsetWidth;
+                if (cRect.height > 0) scaleY = cRect.height / contentEl.offsetHeight;
+            }
         } catch (e) {}
 
-        let origRadius = '2px';
-        let padLeft = 3;
-        let padRight = 3;
+        let fontSize = 14;
+        let computedLineHeight = 0;
         try {
             const bgComp = window.getComputedStyle(bgEl);
             fontSize = parseFloat(bgComp.fontSize) || 14;
-            if (!parentLineHeight) {
-                parentLineHeight = parseFloat(bgComp.lineHeight) || (fontSize * 1.25);
+            computedLineHeight = parseFloat(bgComp.lineHeight) || 0;
+            if (!computedLineHeight && bgEl.parentNode && bgEl.parentNode.nodeType === 1) {
+                const parentComp = window.getComputedStyle(bgEl.parentNode);
+                computedLineHeight = parseFloat(parentComp.lineHeight) || 0;
             }
+        } catch (e) {}
+
+        const lineGroups = [];
+        try {
+            const rects = Array.from(bgEl.getClientRects());
+            for (const r of rects) {
+                const w = r.width / scaleX;
+                const h = r.height / scaleY;
+                const t = r.top / scaleY;
+                if (w <= 0.5 || h <= 0.5) continue;
+                let group = lineGroups.find(g => Math.abs(g.top - t) <= 2.5);
+                if (!group) {
+                    lineGroups.push({ top: t, height: h });
+                } else if (h > group.height) {
+                    group.height = h;
+                }
+            }
+            lineGroups.sort((a, b) => a.top - b.top);
+        } catch (e) {}
+
+        let inlineHeight = 0;
+        if (lineGroups.length > 0) {
+            inlineHeight = lineGroups.reduce((sum, g) => sum + g.height, 0) / lineGroups.length;
+        } else {
+            inlineHeight = fontSize * 1.12;
+        }
+
+        let lineStride = 0;
+        if (lineGroups.length >= 2) {
+            const validSteps = [];
+            for (let i = 0; i < lineGroups.length - 1; i++) {
+                const step = lineGroups[i + 1].top - lineGroups[i].top;
+                if (step >= inlineHeight * 0.6 && step <= inlineHeight * 1.75) {
+                    validSteps.push(step);
+                }
+            }
+            if (validSteps.length > 0) {
+                lineStride = validSteps.reduce((sum, s) => sum + s, 0) / validSteps.length;
+            } else {
+                lineStride = (lineGroups[lineGroups.length - 1].top - lineGroups[0].top) / (lineGroups.length - 1);
+            }
+        }
+        if (!lineStride || lineStride <= 0) {
+            lineStride = computedLineHeight > 0 ? computedLineHeight : (inlineHeight + 1.5);
+        }
+
+        const rawGap = lineStride - inlineHeight;
+        const lineGap = Math.max(1.25, Math.min(2.0, rawGap > 0.5 ? rawGap : 1.5));
+
+        return {
+            scaleX,
+            scaleY,
+            inlineHeight,
+            lineStride,
+            lineGap
+        };
+    };
+
+    const splitInlineBackgroundAtBr = (bgEl, preMeasuredMetrics = null) => {
+        if (!bgEl || !bgEl.parentNode) return;
+        if (bgEl.hasAttribute('data-op-line-split')) return;
+
+        const metrics = preMeasuredMetrics || measureInlineBgMetrics(bgEl);
+        const { scaleX, scaleY, lineStride, lineGap } = metrics;
+
+        const parent = bgEl.parentNode;
+        let textAlign = 'left';
+        try {
+            const parentComp = window.getComputedStyle(parent);
+            textAlign = parentComp.textAlign || 'left';
+        } catch (e) {}
+
+        let origRadius = '0px';
+        let padLeft = 0;
+        let padRight = 0;
+        try {
+            const bgComp = window.getComputedStyle(bgEl);
             if (bgComp.borderRadius && bgComp.borderRadius !== '0px') {
                 origRadius = bgComp.borderRadius;
             }
@@ -992,10 +1068,6 @@
             if (!isNaN(pL) && pL > 0) padLeft = pL;
             if (!isNaN(pR) && pR > 0) padRight = pR;
         } catch (e) {}
-
-        // Calculate the natural inter-line gap observed in the editor.
-        // In Chromium, inline backgrounds naturally exhibit a ~2px to 3px gap due to the difference between line-height and font height.
-        const lineGap = Math.max(2, Math.min(5, Math.round(parentLineHeight ? (parentLineHeight - fontSize) : (fontSize * 0.18))));
 
         const linesCreated = [];
 
@@ -1007,8 +1079,8 @@
             el.style.boxSizing = 'border-box';
             el.style.marginTop = '0px';
             el.style.marginBottom = '0px';
-            el.style.paddingTop = '1px';
-            el.style.paddingBottom = '1px';
+            el.style.paddingTop = '0px';
+            el.style.paddingBottom = '0px';
             el.style.paddingLeft = padLeft + 'px';
             el.style.paddingRight = padRight + 'px';
             el.style.borderRadius = origRadius;
@@ -1060,7 +1132,7 @@
                     parent.insertBefore(fragment, bgEl);
                 } else {
                     const spacer = document.createElement('div');
-                    spacer.style.cssText = 'height: 1.2em; display: block; margin: 0; padding: 0; width: 100%;';
+                    spacer.style.cssText = `height: ${lineStride.toFixed(2)}px; display: block; margin: 0; padding: 0; width: 100%;`;
                     spacer.setAttribute('data-op-line-split', 'true');
                     parent.insertBefore(spacer, bgEl);
                 }
@@ -1076,23 +1148,27 @@
             formatLineElement(bgEl);
         }
 
-        // Apply editor-matching inter-line gap and lock exact computed pixel widths onto each line element
+        // Enforce exact sub-pixel vertical stride parity (stripHeight + lineGap === lineStride)
+        // and lock exact shrink-wrapped pixel widths onto each line element
         for (let k = 0; k < linesCreated.length; k++) {
             const line = linesCreated[k];
             if (!line.parentNode) continue;
 
-            // Apply the inter-line separation between strips, but leave 0px margin after the final row
-            if (k < linesCreated.length - 1) {
-                line.style.marginBottom = lineGap + 'px';
-            } else {
-                line.style.marginBottom = '0px';
-            }
-
             try {
+                const lineRect = line.getBoundingClientRect();
+                const naturalBlockH = (lineRect.height / scaleY) || lineStride;
+                const targetStride = lineStride > 0 ? lineStride : naturalBlockH;
+                const stripHeight = Math.max(1, targetStride - lineGap);
+
+                line.style.height = stripHeight.toFixed(2) + 'px';
+                line.style.lineHeight = stripHeight.toFixed(2) + 'px';
+                line.style.marginTop = '0px';
+                line.style.marginBottom = lineGap.toFixed(2) + 'px';
+
                 const textRange = document.createRange();
                 textRange.selectNodeContents(line);
                 const textRect = textRange.getBoundingClientRect();
-                const textW = Math.ceil(textRect.width || 0);
+                const textW = (textRect.width || 0) / scaleX;
 
                 const compL = window.getComputedStyle(line);
                 const pL = parseFloat(compL.paddingLeft) || padLeft;
@@ -1101,12 +1177,10 @@
                 const borderR = parseFloat(compL.borderRightWidth) || 0;
                 const totalW = textW + pL + pR + borderL + borderR;
 
-                const lineRect = line.getBoundingClientRect();
-                const rectW = Math.ceil(lineRect.width || line.offsetWidth || 0);
-
-                const finalW = (rectW > 0 && rectW <= totalW + 4) ? rectW : Math.ceil(totalW);
+                const rectW = (lineRect.width / scaleX) || line.offsetWidth || 0;
+                const finalW = (rectW > 0 && rectW <= totalW + 2) ? rectW : totalW;
                 if (finalW > 0) {
-                    line.style.width = finalW + 'px';
+                    line.style.width = finalW.toFixed(2) + 'px';
                 }
             } catch (e) {
                 line.style.width = 'fit-content';
@@ -1124,6 +1198,8 @@
             return;
         }
         if (!rects || rects.length <= 1) return;
+
+        const preMeasuredMetrics = measureInlineBgMetrics(bgEl);
 
         const walker = document.createTreeWalker(bgEl, NodeFilter.SHOW_TEXT, null, false);
         const textNodes = [];
@@ -1162,12 +1238,15 @@
             const bp = breakPoints[j];
             try {
                 const rightText = bp.node.splitText(bp.offset);
+                if (bp.node.nodeValue) {
+                    bp.node.nodeValue = bp.node.nodeValue.replace(/[ \t\r\n]+$/, '');
+                }
                 const br = document.createElement('br');
                 bp.node.parentNode.insertBefore(br, rightText);
             } catch (e) {}
         }
 
-        splitInlineBackgroundAtBr(bgEl);
+        splitInlineBackgroundAtBr(bgEl, preMeasuredMetrics);
     };
 
     const normalizeTextBackgroundsForPrint = (container) => {
