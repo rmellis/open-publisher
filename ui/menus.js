@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.9.8)
+   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.9.9)
 ========================================================================= */
 
 const ContextMenuSystem = {
@@ -328,10 +328,8 @@ const ContextMenuSystem = {
                     html += this.buildItem('Change Picture...', 'fa-exchange-alt', 'ContextMenuActions.changePicture()');
                     html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
                     html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
-                    html += this.buildDivider();
-                    html += this.buildFlyoutItem('Format Picture', 'fa-paint-brush', `
-                        ${this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()')}
-                    `);
+                    html += this.buildItem('Format Picture...', 'fa-paint-brush', 'ContextMenuActions.formatTextBox()');
+                    html += this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()');
                     html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
                     html += this.buildItem('Crop to Shape', 'fa-shapes', 'if(window.ContextRibbonActions && ContextRibbonActions.cropToShape) ContextRibbonActions.cropToShape();');
                     html += this.buildFlyoutItem('Rounded Corners', 'fa-border-style', `

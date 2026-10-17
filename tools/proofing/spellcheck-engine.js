@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.9.8)
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.9.9)
  * Comprehensive offline spellcheck and online grammar proofing using modern CSS Custom Highlight API.
  * Powered by OpenPublisher's comprehensive 280,000+ word offline dictionary (SCOWL + ENABLE1 + DTP)
  * with instant O(1) text-node token scanning and intelligent local phonetic/Levenshtein suggestion engine.

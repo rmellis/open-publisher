@@ -357,10 +357,12 @@ window.initShapes = function() {
             let currentPatBg = '#0000ff';
             let currentPatScale = 1.0;
             let currentOpacity = 1.0;
+            let currentRadius = 0;
             
             const isShape = state.selectedEl.getAttribute('data-type') === 'shape';
-            const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g');
+            const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g') || state.selectedEl.querySelector('svg rect') || state.selectedEl.querySelector('svg polygon') || state.selectedEl.querySelector('svg path');
             const content = state.selectedEl.querySelector('.element-content');
+            const imgEl = state.selectedEl.querySelector('img');
             
             if (isShape && svgOuter) {
                 const fillAttr = svgOuter.getAttribute('fill');
@@ -368,6 +370,7 @@ window.initShapes = function() {
             }
             if (content) {
                 if (content.style.opacity) currentOpacity = parseFloat(content.style.opacity);
+                if (content.style.borderRadius) currentRadius = parseInt(content.style.borderRadius) || 0;
                 const configAttr = content.getAttribute('data-format-config');
                 if (configAttr) {
                     try {
@@ -381,11 +384,19 @@ window.initShapes = function() {
                         if (config.patBg) currentPatBg = config.patBg;
                         if (config.patScale) currentPatScale = parseFloat(config.patScale);
                         if (config.opacity !== undefined) currentOpacity = parseFloat(config.opacity);
+                        if (config.borderRadius !== undefined) currentRadius = parseInt(config.borderRadius) || 0;
                     } catch(e) {}
                 }
             }
+            if (!currentRadius && state.selectedEl.getAttribute('data-rounded-corners')) {
+                currentRadius = parseInt(state.selectedEl.getAttribute('data-rounded-corners')) || 0;
+            } else if (!currentRadius && state.selectedEl.style.borderRadius) {
+                currentRadius = parseInt(state.selectedEl.style.borderRadius) || 0;
+            } else if (!currentRadius && imgEl && imgEl.style.borderRadius) {
+                currentRadius = parseInt(imgEl.style.borderRadius) || 0;
+            }
 
-            // Populate the dialog with the existing colors
+            // Populate existing colors & borders
             if (isShape && svgOuter) {
                 const fill = svgOuter.getAttribute('fill');
                 if (fill === 'none' || fill === 'transparent') currentFillType = 'none';
@@ -406,8 +417,12 @@ window.initShapes = function() {
                 } else if (bg && bg.includes('gradient')) {
                     if (bg.includes('repeating') || bg.includes('conic')) currentFillType = 'pattern';
                     else currentFillType = 'gradient';
+                } else if (bg) {
+                    currentBg = bg;
                 }
-                else if (bg) currentBg = bg;
+                
+                if (content.style.borderWidth) currentBt = parseInt(content.style.borderWidth) || 0;
+                if (content.style.borderColor) currentBc = content.style.borderColor;
             }
             
             let current3dRx = 0; let current3dRy = 0; let current3dRz = 0; let current3dP = 800;
@@ -426,8 +441,22 @@ window.initShapes = function() {
             let originalCssOpacity = '';
             let originalDataSchemeFill = '';
             let originalDataSchemeStroke = '';
+            let originalBorderRadius = content ? (content.style.borderRadius || '') : '';
+            let originalOverflow = content ? (content.style.overflow || '') : '';
+            let originalImgRadius = '';
+            let originalImgClipPath = '';
+            let originalImgDataCorners = '';
+            let originalElDataCorners = state.selectedEl.getAttribute('data-rounded-corners') || '';
+            let originalSvgRx = (svgOuter && svgOuter.tagName && svgOuter.tagName.toLowerCase() === 'rect') ? svgOuter.getAttribute('rx') : null;
+            let originalSvgRy = (svgOuter && svgOuter.tagName && svgOuter.tagName.toLowerCase() === 'rect') ? svgOuter.getAttribute('ry') : null;
 
-            // Universal 3D Capture (Now applied to content for all elements)
+            if (imgEl) {
+                originalImgRadius = imgEl.style.borderRadius || '';
+                originalImgClipPath = imgEl.style.clipPath || imgEl.style.webkitClipPath || '';
+                originalImgDataCorners = imgEl.getAttribute('data-rounded-corners') || '';
+            }
+
+            // Universal 3D Capture
             if (content) {
                 current3dRx = content.getAttribute('data-3d-rx') || 0;
                 current3dRy = content.getAttribute('data-3d-ry') || 0;
@@ -461,6 +490,26 @@ window.initShapes = function() {
                     content.setAttribute('data-3d-ry', current3dRy);
                     content.setAttribute('data-3d-rz', current3dRz);
                     content.setAttribute('data-3d-p', current3dP);
+                    content.style.borderRadius = originalBorderRadius;
+                    content.style.overflow = originalOverflow;
+                }
+                
+                if (imgEl) {
+                    imgEl.style.borderRadius = originalImgRadius;
+                    imgEl.style.clipPath = originalImgClipPath;
+                    imgEl.style.webkitClipPath = originalImgClipPath;
+                    if (originalImgDataCorners) imgEl.setAttribute('data-rounded-corners', originalImgDataCorners);
+                    else imgEl.removeAttribute('data-rounded-corners');
+                }
+                
+                if (originalElDataCorners) state.selectedEl.setAttribute('data-rounded-corners', originalElDataCorners);
+                else state.selectedEl.removeAttribute('data-rounded-corners');
+
+                if (svgOuter && svgOuter.tagName && svgOuter.tagName.toLowerCase() === 'rect') {
+                    if (originalSvgRx !== null) svgOuter.setAttribute('rx', originalSvgRx);
+                    else svgOuter.removeAttribute('rx');
+                    if (originalSvgRy !== null) svgOuter.setAttribute('ry', originalSvgRy);
+                    else svgOuter.removeAttribute('ry');
                 }
                 
                 if (isShape && svgOuter) {
@@ -473,7 +522,6 @@ window.initShapes = function() {
                     if (originalSvgStroke) svgOuter.setAttribute('stroke', originalSvgStroke); else svgOuter.removeAttribute('stroke');
                     if (originalSvgStrokeWidth) svgOuter.setAttribute('stroke-width', originalSvgStrokeWidth); else svgOuter.removeAttribute('stroke-width');
                     
-                    // Cleanup legacy transform on svg if user had an old save
                     svgOuter.style.transform = '';
                 } else if (content) {
                     content.style.background = originalCssBackground;
@@ -492,194 +540,273 @@ window.initShapes = function() {
             };
 
             const form = `
-                <div class="input-group" style="margin-bottom:10px;">
-                    <label>Fill Type:</label>
-                    <select id="ctx-box-fill-type" onchange="
-                        document.getElementById('ctx-box-solid-panel').style.display = this.value==='solid' ? 'block' : 'none';
-                        document.getElementById('ctx-box-gradient-panel').style.display = this.value==='gradient' ? 'block' : 'none';
-                        document.getElementById('ctx-box-pattern-panel').style.display = this.value==='pattern' ? 'block' : 'none';
-                        window._applyFormatPreview();
-                    ">
-                        <option value="none" ${currentFillType==='none'?'selected':''}>No Fill (Transparent)</option>
-                        <option value="solid" ${currentFillType==='solid'?'selected':''}>Solid Color</option>
-                        <option value="gradient" ${currentFillType==='gradient'?'selected':''}>Gradient Fill</option>
-                        <option value="pattern" ${currentFillType==='pattern'?'selected':''}>Pattern Fill</option>
-                    </select>
-                </div>
-                
-                <div id="ctx-box-solid-panel" style="display:${currentFillType==='solid'?'block':'none'};">
-                    <div class="input-group" style="margin-bottom:10px;">
-                        <label>Fill Color:</label>
-                        <div>
-                            <input type="hidden" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}">
-                            <div style="background-color:${currentBg.startsWith('#') ? currentBg : '#ffffff'}; width:100%; height:30px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bg').value, (c) => { document.getElementById('ctx-box-bg').value = c; document.getElementById('ctx-box-bg').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
-                            <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
-                                ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bg').value='${c}'; document.getElementById('ctx-box-bg').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
+                <div class="fp-container">
+                    <!-- Left Column -->
+                    <div class="fp-left-col">
+                        <!-- Fill Type -->
+                        <div class="fp-row">
+                            <label class="fp-label">Fill Type:</label>
+                            <div class="fp-select-box" style="width:180px;">
+                                <select id="ctx-box-fill-type" class="fp-select" data-no-custom="true" onchange="
+                                    document.getElementById('ctx-box-solid-panel').style.display = this.value==='solid' ? 'block' : 'none';
+                                    document.getElementById('ctx-box-gradient-panel').style.display = this.value==='gradient' ? 'flex' : 'none';
+                                    document.getElementById('ctx-box-pattern-panel').style.display = this.value==='pattern' ? 'flex' : 'none';
+                                    window._applyFormatPreview();
+                                ">
+                                    <option value="none" ${currentFillType==='none'?'selected':''}>No Fill (Transparent)</option>
+                                    <option value="solid" ${currentFillType==='solid'?'selected':''}>Solid Color</option>
+                                    <option value="gradient" ${currentFillType==='gradient'?'selected':''}>Gradient Fill</option>
+                                    <option value="pattern" ${currentFillType==='pattern'?'selected':''}>Pattern Fill</option>
+                                </select>
+                                <div class="arrow-box"><i class="fas fa-chevron-down"></i></div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div id="ctx-box-gradient-panel" style="display:${currentFillType==='gradient'?'block':'none'}; padding:10px; background:#f9f9f9; border:1px solid #ddd; margin-bottom:10px; border-radius:4px;">
-                    <div class="input-group" style="margin-bottom:10px;">
-                        <label>Gradient Preset:</label>
-                        <select id="ctx-box-grad-preset" onchange="document.getElementById('ctx-custom-grad').style.display = this.value==='custom' ? 'block' : 'none';">
-                            <option value="custom" ${currentGradPreset==='custom'?'selected':''}>Custom 2-Color</option>
-                            <option value="gold" ${currentGradPreset==='gold'?'selected':''}>Metallic Gold</option>
-                            <option value="silver" ${currentGradPreset==='silver'?'selected':''}>Metallic Silver</option>
-                            <option value="chrome" ${currentGradPreset==='chrome'?'selected':''}>Metallic Chrome</option>
-                            <option value="bronze" ${currentGradPreset==='bronze'?'selected':''}>Metallic Bronze</option>
-                            <option value="sunset" ${currentGradPreset==='sunset'?'selected':''}>Sunset Glow</option>
-                            <option value="ocean" ${currentGradPreset==='ocean'?'selected':''}>Ocean Blue</option>
-                        </select>
-                    </div>
-                    
-                    <div id="ctx-custom-grad" style="display:block; margin-bottom:10px;">
-                        <label style="display:block; font-size:12px; margin-bottom:4px;">Custom Colors:</label>
-                        <div style="display:flex; gap:10px;">
-                            <input type="hidden" id="ctx-box-grad-1" value="${currentGradC1}">
-                            <div style="background-color:${currentGradC1}; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-1').value, (c) => { document.getElementById('ctx-box-grad-1').value = c; this.style.backgroundColor = c; })"></div>
-                            
-                            <input type="hidden" id="ctx-box-grad-2" value="${currentGradC2}">
-                            <div style="background-color:${currentGradC2}; width:40px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-left:10px;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-2').value, (c) => { document.getElementById('ctx-box-grad-2').value = c; this.style.backgroundColor = c; })"></div>
+                        <!-- Fill Color (Solid) -->
+                        <div id="ctx-box-solid-panel" style="display:${currentFillType==='solid'?'block':'none'};">
+                            <div class="fp-row-top">
+                                <label class="fp-label" style="margin-top:4px;">Fill Color:</label>
+                                <div class="fp-swatch-group">
+                                    <input type="hidden" id="ctx-box-bg" value="${currentBg.startsWith('#') ? currentBg : '#ffffff'}">
+                                    <div id="ctx-box-bg-preview" class="fp-color-swatch" style="background-color:${currentBg.startsWith('#') ? currentBg : '#ffffff'};" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bg').value, (c) => { document.getElementById('ctx-box-bg').value = c; document.getElementById('ctx-box-bg').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
+                                    <div class="fp-scheme-swatches" title="Scheme Colors">
+                                        ${colorSchemes[state.currentScheme].map((c, i) => `<div class="fp-scheme-chip" style="background:${c};" onclick="document.getElementById('ctx-box-bg').value='${c}'; document.getElementById('ctx-box-bg').setAttribute('data-scheme-index', '${i}'); document.getElementById('ctx-box-bg-preview').style.backgroundColor = '${c}'; window._applyFormatPreview();"></div>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gradient Fill Panel -->
+                        <div id="ctx-box-gradient-panel" style="display:${currentFillType==='gradient'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.65); border:1px solid #c4dcd9; border-radius:8px;">
+                            <div class="fp-row">
+                                <label class="fp-label" style="font-size:12.5px;">Gradient Preset:</label>
+                                <div class="fp-select-box" style="width:140px;">
+                                    <select id="ctx-box-grad-preset" class="fp-select" data-no-custom="true" onchange="document.getElementById('ctx-custom-grad').style.display = this.value==='custom' ? 'block' : 'none'; window._applyFormatPreview();">
+                                        <option value="custom" ${currentGradPreset==='custom'?'selected':''}>Custom 2-Color</option>
+                                        <option value="gold" ${currentGradPreset==='gold'?'selected':''}>Metallic Gold</option>
+                                        <option value="silver" ${currentGradPreset==='silver'?'selected':''}>Metallic Silver</option>
+                                        <option value="chrome" ${currentGradPreset==='chrome'?'selected':''}>Metallic Chrome</option>
+                                        <option value="bronze" ${currentGradPreset==='bronze'?'selected':''}>Metallic Bronze</option>
+                                        <option value="sunset" ${currentGradPreset==='sunset'?'selected':''}>Sunset Glow</option>
+                                        <option value="ocean" ${currentGradPreset==='ocean'?'selected':''}>Ocean Blue</option>
+                                    </select>
+                                    <div class="arrow-box"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                            </div>
+                            <div id="ctx-custom-grad" style="display:${currentGradPreset==='custom'?'block':'none'};">
+                                <div class="fp-row">
+                                    <label class="fp-label" style="font-size:12px;">Colors:</label>
+                                    <div style="display:flex; gap:8px;">
+                                        <input type="hidden" id="ctx-box-grad-1" value="${currentGradC1}">
+                                        <div style="background-color:${currentGradC1}; width:34px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-1').value, (c) => { document.getElementById('ctx-box-grad-1').value = c; this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
+                                        <input type="hidden" id="ctx-box-grad-2" value="${currentGradC2}">
+                                        <div style="background-color:${currentGradC2}; width:34px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-grad-2').value, (c) => { document.getElementById('ctx-box-grad-2').value = c; this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fp-row">
+                                <label class="fp-label" style="font-size:12.5px;">Gradient Style:</label>
+                                <div class="fp-select-box" style="width:140px;">
+                                    <select id="ctx-box-grad-style" class="fp-select" data-no-custom="true" onchange="window._applyFormatPreview();">
+                                        <option value="linear_90" ${currentGradStyle==='linear_90'?'selected':''}>Linear (Left-Right)</option>
+                                        <option value="linear_180" ${currentGradStyle==='linear_180'?'selected':''}>Linear (Top-Down)</option>
+                                        <option value="linear_45" ${currentGradStyle==='linear_45'?'selected':''}>Linear (Diagonal)</option>
+                                        <option value="radial" ${currentGradStyle==='radial'?'selected':''}>Radial (Center Out)</option>
+                                    </select>
+                                    <div class="arrow-box"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pattern Fill Panel -->
+                        <div id="ctx-box-pattern-panel" style="display:${currentFillType==='pattern'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.65); border:1px solid #c4dcd9; border-radius:8px;">
+                            <div class="fp-row">
+                                <label class="fp-label" style="font-size:12.5px;">Pattern Style:</label>
+                                <div class="fp-select-box" style="width:140px;">
+                                    <select id="ctx-box-pat-style" class="fp-select" data-no-custom="true" onchange="window._applyFormatPreview();">
+                                        <option value="dots" ${currentPatStyle==='dots'?'selected':''}>Tiny Dots</option>
+                                        <option value="lines_diag" ${currentPatStyle==='lines_diag'?'selected':''}>Diagonal Lines</option>
+                                        <option value="crosshatch" ${currentPatStyle==='crosshatch'?'selected':''}>Crosshatch</option>
+                                        <option value="checker" ${currentPatStyle==='checker'?'selected':''}>Checkerboard</option>
+                                        <option value="lines_v" ${currentPatStyle==='lines_v'?'selected':''}>Vertical Lines</option>
+                                        <option value="lines_h" ${currentPatStyle==='lines_h'?'selected':''}>Horizontal Lines</option>
+                                        <option value="grid" ${currentPatStyle==='grid'?'selected':''}>Square Grid</option>
+                                        <option value="polka" ${currentPatStyle==='polka'?'selected':''}>Polka Dots</option>
+                                    </select>
+                                    <div class="arrow-box"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                            </div>
+                            <div class="fp-row">
+                                <label class="fp-label" style="font-size:12px;">Pattern / BG:</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="hidden" id="ctx-box-pat-fg" value="${currentPatFg}">
+                                    <div style="background-color:${currentPatFg}; width:34px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-fg').value, (c) => { document.getElementById('ctx-box-pat-fg').value = c; this.style.backgroundColor = c; window._applyFormatPreview(); })" title="Pattern Color"></div>
+                                    <input type="hidden" id="ctx-box-pat-bg" value="${currentPatBg}">
+                                    <div style="background-color:${currentPatBg}; width:34px; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-bg').value, (c) => { document.getElementById('ctx-box-pat-bg').value = c; this.style.backgroundColor = c; window._applyFormatPreview(); })" title="Background Color"></div>
+                                </div>
+                            </div>
+                            <div class="fp-row">
+                                <label class="fp-label" style="font-size:12px;">Scale:</label>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="range" class="fp-slider" style="width:90px;" id="ctx-box-pat-scale" min="0.2" max="3" step="0.1" value="${currentPatScale}" oninput="document.getElementById('ctx-box-pat-scale-val').innerText = this.value + 'x'; window._applyFormatPreview();">
+                                    <span id="ctx-box-pat-scale-val" class="fp-readout" style="min-width:30px;">${currentPatScale}x</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Object Opacity -->
+                        <div class="fp-row">
+                            <label class="fp-label">Object Opacity:</label>
+                            <div class="fp-slider-group">
+                                <input type="range" class="fp-slider" id="ctx-box-opacity" min="0" max="100" step="1" value="${Math.round(currentOpacity * 100)}" oninput="document.getElementById('ctx-box-opacity-val').innerText = this.value + '%'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-box-opacity-val" class="fp-readout">${Math.round(currentOpacity * 100)}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Border / Stroke Color -->
+                        <div class="fp-row-top">
+                            <label class="fp-label" style="margin-top:4px;">Border / Stroke Color:</label>
+                            <div class="fp-swatch-group">
+                                <input type="hidden" id="ctx-box-bc" value="${currentBc}">
+                                <div id="ctx-box-bc-preview" class="fp-color-swatch" style="background-color:${currentBc};" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; document.getElementById('ctx-box-bc').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
+                                <div class="fp-scheme-swatches" title="Scheme Colors">
+                                    ${colorSchemes[state.currentScheme].map((c, i) => `<div class="fp-scheme-chip" style="background:${c};" onclick="document.getElementById('ctx-box-bc').value='${c}'; document.getElementById('ctx-box-bc').setAttribute('data-scheme-index', '${i}'); document.getElementById('ctx-box-bc-preview').style.backgroundColor = '${c}'; window._applyFormatPreview();"></div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Border Thickness -->
+                        <div class="fp-row">
+                            <label class="fp-label">Border Thickness (px):</label>
+                            <div class="fp-spinner">
+                                <input type="text" id="ctx-box-bt" value="${currentBt}" onchange="this.value = Math.max(0, Math.min(20, parseInt(this.value)||0)); window._applyFormatPreview && window._applyFormatPreview();">
+                                <div class="spin-btns">
+                                    <div onclick="document.getElementById('ctx-box-bt').value=Math.min(20, parseInt(document.getElementById('ctx-box-bt').value||0)+1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-up"></i></div>
+                                    <div onclick="document.getElementById('ctx-box-bt').value=Math.max(0, parseInt(document.getElementById('ctx-box-bt').value||0)-1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fp-tip">Tip: Set thickness to 0 to remove the border.</div>
+
+                        <!-- Rounded Corners (NEW) -->
+                        <div class="fp-row">
+                            <label class="fp-label">Rounded Corners:</label>
+                            <div class="fp-slider-group">
+                                <div class="fp-corner-icon" title="Corner Radius"></div>
+                                <input type="range" class="fp-slider" id="ctx-box-radius" min="0" max="100" step="1" value="${currentRadius}" oninput="document.getElementById('ctx-box-radius-val').innerText = this.value + 'px'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-box-radius-val" class="fp-readout">${currentRadius}px</span>
+                            </div>
+                        </div>
+
+                        <!-- Clipart Border Art Card -->
+                        <div class="fp-border-art-box">
+                            <div>
+                                <div class="fp-border-art-title">Clipart Border Art</div>
+                                <div class="fp-border-art-sub">Add decorative picture borders to this box</div>
+                            </div>
+                            <button type="button" class="fp-btn-border-art" onclick="DialogSystem.close(); if(window.BorderArtEngine) window.BorderArtEngine.openForElement(state.selectedEl);">
+                                <i class="fas fa-palette"></i> Border Art...
+                            </button>
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>Gradient Style:</label>
-                        <select id="ctx-box-grad-style">
-                            <option value="linear_90" ${currentGradStyle==='linear_90'?'selected':''}>Linear (Left to Right)</option>
-                            <option value="linear_180" ${currentGradStyle==='linear_180'?'selected':''}>Linear (Top to Bottom)</option>
-                            <option value="linear_45" ${currentGradStyle==='linear_45'?'selected':''}>Linear (Diagonal)</option>
-                            <option value="radial" ${currentGradStyle==='radial'?'selected':''}>Radial (Center Out)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div id="ctx-box-pattern-panel" style="display:${currentFillType==='pattern'?'block':'none'}; padding:10px; background:#f9f9f9; border:1px solid #ddd; margin-bottom:10px; border-radius:4px;">
-                    <div class="input-group" style="margin-bottom:10px;">
-                        <label>Pattern Style:</label>
-                        <select id="ctx-box-pat-style">
-                            <option value="dots" ${currentPatStyle==='dots'?'selected':''}>Tiny Dots</option>
-                            <option value="lines_diag" ${currentPatStyle==='lines_diag'?'selected':''}>Diagonal Lines</option>
-                            <option value="crosshatch" ${currentPatStyle==='crosshatch'?'selected':''}>Crosshatch</option>
-                            <option value="checker" ${currentPatStyle==='checker'?'selected':''}>Checkerboard</option>
-                            <option value="lines_v" ${currentPatStyle==='lines_v'?'selected':''}>Vertical Lines</option>
-                            <option value="lines_h" ${currentPatStyle==='lines_h'?'selected':''}>Horizontal Lines</option>
-                            <option value="grid" ${currentPatStyle==='grid'?'selected':''}>Square Grid</option>
-                            <option value="polka" ${currentPatStyle==='polka'?'selected':''}>Polka Dots</option>
-                        </select>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <div style="display:flex; flex-direction:column; align-items:center;">
-                            <label style="font-size:12px;">Pattern</label>
-                            <input type="hidden" id="ctx-box-pat-fg" value="${currentPatFg}">
-                            <div style="background-color:${currentPatFg}; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-fg').value, (c) => { document.getElementById('ctx-box-pat-fg').value = c; this.style.backgroundColor = c; })"></div>
+                    <!-- Right Column: 3D Rotation & Depth -->
+                    <div class="fp-right-col">
+                        <div class="fp-3d-title">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                                <span>3D Rotation &amp; Depth</span>
+                            </div>
+                            <button type="button" class="fp-btn-reset-3d" onclick="window._reset3DValues && window._reset3DValues();" title="Reset 3D rotation and depth">
+                                <i class="fas fa-undo-alt"></i> Reset
+                            </button>
                         </div>
-                        <div style="display:flex; flex-direction:column; align-items:center;">
-                            <label style="font-size:12px;">Background</label>
-                            <input type="hidden" id="ctx-box-pat-bg" value="${currentPatBg}">
-                            <div style="background-color:${currentPatBg}; width:100%; height:24px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-pat-bg').value, (c) => { document.getElementById('ctx-box-pat-bg').value = c; this.style.backgroundColor = c; })"></div>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Pattern Scale:</label>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="range" id="ctx-box-pat-scale" min="0.2" max="3" step="0.1" value="${currentPatScale}" oninput="document.getElementById('ctx-box-pat-scale-val').innerText = this.value + 'x'">
-                            <span id="ctx-box-pat-scale-val" style="font-size:12px; width:30px;">${currentPatScale}x</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="input-group" style="margin-bottom:15px; margin-top:10px;">
-                    <label>Object Opacity:</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="range" id="ctx-box-opacity" min="0" max="100" step="1" value="${Math.round(currentOpacity * 100)}" oninput="document.getElementById('ctx-box-opacity-val').innerText = this.value + '%'">
-                        <span id="ctx-box-opacity-val" style="font-size:12px; width:40px;">${Math.round(currentOpacity * 100)}%</span>
-                    </div>
-                </div>
+                        <div class="fp-row">
+                            <label class="fp-label-3d">Perspective (Depth):</label>
+                            <div class="fp-slider-group">
+                                <input type="range" class="fp-slider" id="ctx-box-3d-p" min="100" max="2000" step="50" value="${current3dP}" oninput="document.getElementById('ctx-val-3d-p').innerText = this.value + 'px'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-val-3d-p" class="fp-readout">${current3dP}px</span>
+                            </div>
+                        </div>
 
-                <div class="input-group" style="margin-bottom:10px;">
-                    <label>Border / Stroke Color:</label>
-                    <div>
-                        <input type="hidden" id="ctx-box-bc" value="${currentBc}">
-                        <div style="background-color:${currentBc}; width:100%; height:30px; border:1px solid #ccc; border-radius:4px; cursor:pointer;" onclick="CustomColorPicker.open(this, document.getElementById('ctx-box-bc').value, (c) => { document.getElementById('ctx-box-bc').value = c; document.getElementById('ctx-box-bc').removeAttribute('data-scheme-index'); this.style.backgroundColor = c; window._applyFormatPreview(); })"></div>
-                        <div style="display:flex; gap:3px; margin-top:5px;" title="Scheme Colors">
-                            ${colorSchemes[state.currentScheme].map((c, i) => `<div style="width:16px;height:16px;background:${c};border:1px solid #aaa;cursor:pointer;" onclick="document.getElementById('ctx-box-bc').value='${c}'; document.getElementById('ctx-box-bc').setAttribute('data-scheme-index', '${i}'); window._applyFormatPreview();"></div>`).join('')}
+                        <div class="fp-row">
+                            <label class="fp-label-3d">X Rotation (Pitch):</label>
+                            <div class="fp-slider-group">
+                                <input type="range" class="fp-slider" id="ctx-box-3d-rx" min="-180" max="180" step="1" value="${current3dRx}" oninput="document.getElementById('ctx-val-3d-rx').innerText = this.value + '°'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-val-3d-rx" class="fp-readout">${current3dRx}°</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Border Thickness (px):</label>
-                    <div class="modern-spinner">
-                        <input type="text" id="ctx-box-bt" value="${currentBt}" onchange="this.value = Math.max(0, Math.min(20, parseInt(this.value)||0))">
-                        <div class="spin-btns">
-                            <div onclick="document.getElementById('ctx-box-bt').value=Math.min(20, parseInt(document.getElementById('ctx-box-bt').value||0)+1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-up"></i></div>
-                            <div onclick="document.getElementById('ctx-box-bt').value=Math.max(0, parseInt(document.getElementById('ctx-box-bt').value||0)-1); window._applyFormatPreview && window._applyFormatPreview();"><i class="fas fa-chevron-down"></i></div>
+
+                        <div class="fp-row">
+                            <label class="fp-label-3d">Y Rotation (Yaw):</label>
+                            <div class="fp-slider-group">
+                                <input type="range" class="fp-slider" id="ctx-box-3d-ry" min="-180" max="180" step="1" value="${current3dRy}" oninput="document.getElementById('ctx-val-3d-ry').innerText = this.value + '°'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-val-3d-ry" class="fp-readout">${current3dRy}°</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
-                    Tip: Set thickness to 0 to remove the border.
-                </div>
-                
-                <div style="margin-top:12px; margin-bottom:12px; padding:10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong style="font-size:12px; display:block; color:#1e293b;">Clipart Border Art</strong>
-                        <span style="font-size:10px; color:#64748b;">Add decorative picture borders to this box</span>
-                    </div>
-                    <button type="button" class="btn" style="padding:6px 12px; font-size:11px; font-weight:600; background:var(--ui-theme-color); border:none; color:#ffffff; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:opacity 0.15s;" onclick="DialogSystem.close(); if(window.BorderArtEngine) window.BorderArtEngine.openForElement(state.selectedEl);">
-                        <i class="fas fa-palette"></i> Border Art...
-                    </button>
-                </div>
-                
-                <hr style="margin:15px 0; border:none; border-top:1px solid #ddd;">
-                <div style="font-weight:bold; margin-bottom:10px;">3D Rotation & Depth</div>
-                
-                <div class="input-group">
-                    <label>Perspective (Depth):</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="range" id="ctx-box-3d-p" min="100" max="2000" step="50" value="${current3dP}" oninput="document.getElementById('ctx-val-3d-p').innerText = this.value + 'px'">
-                        <span id="ctx-val-3d-p" style="font-size:12px; width:40px;">${current3dP}px</span>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>X Rotation (Pitch):</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="range" id="ctx-box-3d-rx" min="-180" max="180" step="1" value="${current3dRx}" oninput="document.getElementById('ctx-val-3d-rx').innerText = this.value + '°'">
-                        <span id="ctx-val-3d-rx" style="font-size:12px; width:30px;">${current3dRx}°</span>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Y Rotation (Yaw):</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="range" id="ctx-box-3d-ry" min="-180" max="180" step="1" value="${current3dRy}" oninput="document.getElementById('ctx-val-3d-ry').innerText = this.value + '°'">
-                        <span id="ctx-val-3d-ry" style="font-size:12px; width:30px;">${current3dRy}°</span>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Z Rotation (Roll):</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="range" id="ctx-box-3d-rz" min="-180" max="180" step="1" value="${current3dRz}" oninput="document.getElementById('ctx-val-3d-rz').innerText = this.value + '°'">
-                        <span id="ctx-val-3d-rz" style="font-size:12px; width:30px;">${current3dRz}°</span>
+
+                        <div class="fp-row">
+                            <label class="fp-label-3d">Z Rotation (Roll):</label>
+                            <div class="fp-slider-group">
+                                <input type="range" class="fp-slider" id="ctx-box-3d-rz" min="-180" max="180" step="1" value="${current3dRz}" oninput="document.getElementById('ctx-val-3d-rz').innerText = this.value + '°'; window._applyFormatPreview && window._applyFormatPreview();">
+                                <span id="ctx-val-3d-rz" class="fp-readout">${current3dRz}°</span>
+                            </div>
+                        </div>
+
+                        <div class="fp-divider"></div>
+
+                        <div class="fp-actions">
+                            <button type="button" class="fp-btn-cancel" onclick="DialogSystem.close();">Cancel</button>
+                            <button type="button" class="fp-btn-ok" onclick="const cf = document.getElementById('custom-dialog-confirm'); if (cf) cf.click(); else DialogSystem.close();">OK</button>
+                        </div>
                     </div>
                 </div>
             `;
+
+            window._reset3DValues = () => {
+                const rx = document.getElementById('ctx-box-3d-rx');
+                const ry = document.getElementById('ctx-box-3d-ry');
+                const rz = document.getElementById('ctx-box-3d-rz');
+                const p = document.getElementById('ctx-box-3d-p');
+                if (rx) rx.value = 0;
+                if (ry) ry.value = 0;
+                if (rz) rz.value = 0;
+                if (p) p.value = 800;
+
+                const valRx = document.getElementById('ctx-val-3d-rx');
+                const valRy = document.getElementById('ctx-val-3d-ry');
+                const valRz = document.getElementById('ctx-val-3d-rz');
+                const valP = document.getElementById('ctx-val-3d-p');
+                if (valRx) valRx.innerText = '0°';
+                if (valRy) valRy.innerText = '0°';
+                if (valRz) valRz.innerText = '0°';
+                if (valP) valP.innerText = '800px';
+
+                if (typeof window._applyFormatPreview === 'function') {
+                    window._applyFormatPreview();
+                }
+            };
 
             window._applyFormatPreview = () => {
                 if (!document.getElementById('ctx-box-fill-type')) return;
                 const fillType = document.getElementById('ctx-box-fill-type').value;
                 const bgInput = document.getElementById('ctx-box-bg');
                 const bcInput = document.getElementById('ctx-box-bc');
-                const bg = bgInput.value;
-                const bc = bcInput.value;
-                const bt = document.getElementById('ctx-box-bt').value;
+                const bg = bgInput ? bgInput.value : '#ffffff';
+                const bc = bcInput ? bcInput.value : '#000000';
+                const btInput = document.getElementById('ctx-box-bt');
+                const bt = btInput ? (parseInt(btInput.value) || 0) : 0;
                 
-                const schemeFill = bgInput.getAttribute('data-scheme-index');
+                const schemeFill = bgInput ? bgInput.getAttribute('data-scheme-index') : null;
                 if (schemeFill !== null && fillType === 'solid') state.selectedEl.setAttribute('data-scheme-fill', schemeFill);
                 else state.selectedEl.removeAttribute('data-scheme-fill');
                 
-                const schemeStroke = bcInput.getAttribute('data-scheme-index');
+                const schemeStroke = bcInput ? bcInput.getAttribute('data-scheme-index') : null;
                 if (schemeStroke !== null) state.selectedEl.setAttribute('data-scheme-stroke', schemeStroke);
                 else state.selectedEl.removeAttribute('data-scheme-stroke');
                 
@@ -693,14 +820,18 @@ window.initShapes = function() {
                 const patBg = document.getElementById('ctx-box-pat-bg') ? document.getElementById('ctx-box-pat-bg').value : '#0000ff';
                 const patScale = document.getElementById('ctx-box-pat-scale') ? parseFloat(document.getElementById('ctx-box-pat-scale').value) : 1.0;
                 
-                const val3dRx = document.getElementById('ctx-box-3d-rx') ? document.getElementById('ctx-box-3d-rx').value : 0;
-                const val3dRy = document.getElementById('ctx-box-3d-ry') ? document.getElementById('ctx-box-3d-ry').value : 0;
-                const val3dRz = document.getElementById('ctx-box-3d-rz') ? document.getElementById('ctx-box-3d-rz').value : 0;
-                const val3dP = document.getElementById('ctx-box-3d-p') ? document.getElementById('ctx-box-3d-p').value : 800;
+                const val3dRx = document.getElementById('ctx-box-3d-rx') ? parseFloat(document.getElementById('ctx-box-3d-rx').value) || 0 : 0;
+                const val3dRy = document.getElementById('ctx-box-3d-ry') ? parseFloat(document.getElementById('ctx-box-3d-ry').value) || 0 : 0;
+                const val3dRz = document.getElementById('ctx-box-3d-rz') ? parseFloat(document.getElementById('ctx-box-3d-rz').value) || 0 : 0;
+                const val3dP = document.getElementById('ctx-box-3d-p') ? parseFloat(document.getElementById('ctx-box-3d-p').value) || 800 : 800;
                 
                 const opacityVal = document.getElementById('ctx-box-opacity') ? parseFloat(document.getElementById('ctx-box-opacity').value) / 100 : 1.0;
+                const radiusVal = document.getElementById('ctx-box-radius') ? (parseInt(document.getElementById('ctx-box-radius').value) || 0) : 0;
                 
-                const transform3DStr = `perspective(${val3dP}px) rotateX(${val3dRx}deg) rotateY(${val3dRy}deg) rotateZ(${val3dRz}deg)`;
+                const has3D = (val3dRx !== 0 || val3dRy !== 0 || val3dRz !== 0);
+                const transform3DStr = has3D
+                    ? `perspective(${val3dP}px) rotateX(${val3dRx}deg) rotateY(${val3dRy}deg) rotateZ(${val3dRz}deg)`
+                    : 'none';
                 
                 // Define Presets
                 const presets = {
@@ -866,7 +997,7 @@ window.initShapes = function() {
                         content.style.border = 'none';
                     }
                 } else if (content) {
-                    // Standard HTML Text Box Formatting
+                    // Standard HTML Text Box / Image Container Formatting
                     if (fillType === 'none') {
                         content.style.background = 'transparent';
                     } else if (fillType === 'solid') {
@@ -911,25 +1042,81 @@ window.initShapes = function() {
                     }
                     content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
                 }
+
+                // Rounded Corners Handling
+                const radiusStr = radiusVal > 0 ? `${radiusVal}px` : '';
+                if (content) {
+                    content.style.borderRadius = radiusStr;
+                    if (radiusVal > 0) {
+                        content.style.overflow = 'hidden';
+                    } else {
+                        content.style.overflow = '';
+                    }
+                }
+
+                const currentImg = state.selectedEl ? state.selectedEl.querySelector('img') : null;
+                if (currentImg) {
+                    if (radiusVal > 0) {
+                        const clip = `inset(0 round ${radiusVal}px)`;
+                        currentImg.style.clipPath = clip;
+                        currentImg.style.webkitClipPath = clip;
+                        currentImg.style.borderRadius = `${radiusVal}px`;
+                        currentImg.setAttribute('data-rounded-corners', `${radiusVal}px`);
+                        state.selectedEl.setAttribute('data-rounded-corners', `${radiusVal}px`);
+                    } else {
+                        currentImg.style.clipPath = 'none';
+                        currentImg.style.webkitClipPath = 'none';
+                        currentImg.style.borderRadius = '';
+                        currentImg.removeAttribute('data-rounded-corners');
+                        state.selectedEl.removeAttribute('data-rounded-corners');
+                    }
+                } else {
+                    if (radiusVal > 0) {
+                        state.selectedEl.setAttribute('data-rounded-corners', `${radiusVal}px`);
+                    } else {
+                        state.selectedEl.removeAttribute('data-rounded-corners');
+                    }
+                }
+
+                if (isShape && svgOuter && svgOuter.tagName && svgOuter.tagName.toLowerCase() === 'rect') {
+                    if (radiusVal > 0) {
+                        svgOuter.setAttribute('rx', radiusVal);
+                        svgOuter.setAttribute('ry', radiusVal);
+                    } else {
+                        svgOuter.removeAttribute('rx');
+                        svgOuter.removeAttribute('ry');
+                    }
+                }
                 
                 // Universal 3D Formatting
                 if (content) {
-                    content.setAttribute('data-3d-rx', val3dRx);
-                    content.setAttribute('data-3d-ry', val3dRy);
-                    content.setAttribute('data-3d-rz', val3dRz);
-                    content.setAttribute('data-3d-p', val3dP);
-                    content.style.transform = transform3DStr;
-                    content.style.transformOrigin = 'center';
-                    // Fix blurriness on SVG rendering during 3D transform
-                    content.style.transformStyle = 'preserve-3d';
-                    content.style.backfaceVisibility = 'hidden'; 
+                    if (has3D) {
+                        content.setAttribute('data-3d-rx', val3dRx);
+                        content.setAttribute('data-3d-ry', val3dRy);
+                        content.setAttribute('data-3d-rz', val3dRz);
+                        content.setAttribute('data-3d-p', val3dP);
+                        content.style.transform = transform3DStr;
+                        content.style.transformOrigin = 'center';
+                        content.style.transformStyle = 'preserve-3d';
+                        content.style.backfaceVisibility = 'hidden'; 
+                    } else {
+                        content.removeAttribute('data-3d-rx');
+                        content.removeAttribute('data-3d-ry');
+                        content.removeAttribute('data-3d-rz');
+                        content.removeAttribute('data-3d-p');
+                        content.style.transform = 'none';
+                        content.style.transformOrigin = '';
+                        content.style.transformStyle = '';
+                        content.style.backfaceVisibility = '';
+                    }
                     content.style.opacity = opacityVal;
                     
                     // Save formatting state for next open
                     const formatConfig = {
                         gradPreset, gradC1, gradC2, gradStyle,
                         patStyle, patFg, patBg, patScale,
-                        opacity: opacityVal
+                        opacity: opacityVal,
+                        borderRadius: radiusVal
                     };
                     content.setAttribute('data-format-config', encodeURIComponent(JSON.stringify(formatConfig)));
                 }
@@ -945,6 +1132,8 @@ window.initShapes = function() {
                 
                 window._dialogCancelHook = null;
                 
+                if (typeof updateThumbnails === 'function') updateThumbnails();
+
                 if (has3D && typeof ContextMenuActions !== 'undefined' && ContextMenuActions.flattenToImage) {
                     setTimeout(() => {
                         ContextMenuActions.flattenToImage();
@@ -953,6 +1142,12 @@ window.initShapes = function() {
                     if (typeof pushHistory === 'function') pushHistory();
                 }
             });
+
+            // Mark modal for customized wide landscape styling
+            const dlgBox = document.getElementById('custom-dialog-box');
+            if (dlgBox) {
+                dlgBox.classList.add('format-properties-modal');
+            }
             
             // Attach live preview listeners
             setTimeout(() => {

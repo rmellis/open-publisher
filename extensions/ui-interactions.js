@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.9.8)
+// Open Publisher UI Interactions (v5.9.9)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.9.8)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.9.9)...");
 
     let rulerH = null;
     let rulerV = null;

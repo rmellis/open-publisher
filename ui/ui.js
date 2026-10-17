@@ -78,6 +78,7 @@ const DialogSystem = {
         if(!container) return;
         const selects = container.querySelectorAll('select');
         selects.forEach(sel => {
+            if (sel.dataset.noCustom === 'true' || sel.classList.contains('no-custom-select') || sel.closest('.format-properties-modal')) return;
             const wrapper = document.createElement('div');
             wrapper.className = 'custom-dom-select';
             
@@ -984,6 +985,9 @@ window.ContextMenuActions = {
         }
     },
     formatTextBox: function() {
+        if (typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function' && ContextMenuActions.formatTextBox !== this.formatTextBox) {
+            return ContextMenuActions.formatTextBox();
+        }
         if(!state.selectedEl) return;
         const form = `
             <div class="input-group" style="margin-bottom:10px;"><label>Fill Color:</label>
