@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.9.4)
+// OpenPublisher Print Engine (v5.9.5)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -1021,8 +1021,6 @@
             }
             if (validSteps.length > 0) {
                 lineStride = validSteps.reduce((sum, s) => sum + s, 0) / validSteps.length;
-            } else {
-                lineStride = (lineGroups[lineGroups.length - 1].top - lineGroups[0].top) / (lineGroups.length - 1);
             }
         }
         if (!lineStride || lineStride <= 0) {
@@ -1037,8 +1035,80 @@
             scaleY,
             inlineHeight,
             lineStride,
-            lineGap
+            lineGap,
+            lineGroups
         };
+    };
+
+    const convertPreservedNewlinesToBr = (rootEl) => {
+        if (!rootEl) return;
+        try {
+            const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+            let tNode;
+            while ((tNode = walker.nextNode())) {
+                if (tNode.nodeValue && /[\r\n]/.test(tNode.nodeValue)) {
+                    textNodes.push(tNode);
+                }
+            }
+            for (const node of textNodes) {
+                const parentEl = node.parentElement || rootEl;
+                let ws = 'normal';
+                try {
+                    ws = window.getComputedStyle(parentEl).whiteSpace || 'normal';
+                } catch (e) {}
+                if (ws === 'pre' || ws === 'pre-wrap' || ws === 'pre-line' || ws === 'break-spaces') {
+                    const normalized = node.nodeValue.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                    const parts = normalized.split('\n');
+                    if (parts.length > 1 && node.parentNode) {
+                        const frag = document.createDocumentFragment();
+                        for (let i = 0; i < parts.length; i++) {
+                            if (parts[i].length > 0) {
+                                frag.appendChild(document.createTextNode(parts[i]));
+                            }
+                            if (i < parts.length - 1) {
+                                frag.appendChild(document.createElement('br'));
+                            }
+                        }
+                        node.parentNode.replaceChild(frag, node);
+                    }
+                }
+            }
+        } catch (e) {}
+    };
+
+    const unwrapNestedBlocksToBr = (rootEl) => {
+        if (!rootEl) return;
+        try {
+            const blockSelector = 'div, p';
+            let blockEl;
+            let guard = 200;
+            while ((blockEl = rootEl.querySelector(blockSelector)) && guard-- > 0) {
+                if (blockEl.hasAttribute('data-op-line-split')) break;
+                const p = blockEl.parentNode;
+                if (!p) break;
+
+                const prev = blockEl.previousSibling;
+                const hasPrevContent = prev && !(prev.nodeType === 1 && prev.tagName.toUpperCase() === 'BR') &&
+                    ((prev.nodeType === 3 && prev.nodeValue && prev.nodeValue.replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]+/g, '').length > 0) ||
+                     (prev.nodeType === 1 && (prev.textContent.replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]+/g, '').length > 0 || prev.querySelector('br, img, svg'))));
+                if (hasPrevContent) {
+                    p.insertBefore(document.createElement('br'), blockEl);
+                }
+
+                const lastChild = blockEl.lastChild;
+                const endsWithBr = lastChild && lastChild.nodeType === 1 && lastChild.tagName.toUpperCase() === 'BR';
+                const hasNextSibling = !!blockEl.nextSibling;
+
+                while (blockEl.firstChild) {
+                    p.insertBefore(blockEl.firstChild, blockEl);
+                }
+                if (!endsWithBr && hasNextSibling) {
+                    p.insertBefore(document.createElement('br'), blockEl);
+                }
+                blockEl.remove();
+            }
+        } catch (e) {}
     };
 
     const splitInlineBackgroundAtBr = (bgEl, preMeasuredMetrics = null) => {
@@ -1046,7 +1116,7 @@
         if (bgEl.hasAttribute('data-op-line-split')) return;
 
         const metrics = preMeasuredMetrics || measureInlineBgMetrics(bgEl);
-        const { scaleX, scaleY, lineStride, lineGap } = metrics;
+        const { scaleX, scaleY, lineStride, lineGap, lineGroups } = metrics;
 
         const parent = bgEl.parentNode;
         let textAlign = 'left';
@@ -1093,6 +1163,12 @@
             el.style.lineHeight = 'inherit';
             el.setAttribute('data-op-line-split', 'true');
 
+            try {
+                el.querySelectorAll('*').forEach(child => {
+                    child.setAttribute('data-op-line-split', 'true');
+                });
+            } catch (e) {}
+
             if (textAlign === 'center') {
                 el.style.marginLeft = 'auto';
                 el.style.marginRight = 'auto';
@@ -1131,15 +1207,20 @@
                 const parent = bgEl.parentNode;
                 if (!parent) break;
 
-                const hasContent = fragment.textContent.trim().length > 0 || fragment.querySelector('img, svg');
+                const cleanText = (fragment.textContent || '').replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]+/g, '');
+                const hasContent = cleanText.length > 0 || !!fragment.querySelector('img, svg');
                 if (hasContent) {
                     const lineEl = fragment.firstElementChild || fragment;
                     formatLineElement(lineEl);
                     parent.insertBefore(fragment, bgEl);
                 } else {
                     const spacer = document.createElement('div');
-                    spacer.style.cssText = `height: ${lineStride.toFixed(2)}px; display: block; margin: 0; padding: 0; width: 100%;`;
+                    spacer.style.cssText = `height: ${lineStride.toFixed(2)}px; min-height: ${lineStride.toFixed(2)}px; line-height: ${lineStride.toFixed(2)}px; display: block; margin: 0; padding: 0; width: 100%; background: transparent !important; border: none !important; pointer-events: none;`;
+                    spacer.innerHTML = '&nbsp;';
+                    spacer.style.color = 'transparent';
+                    spacer.style.fontSize = '1px';
                     spacer.setAttribute('data-op-line-split', 'true');
+                    spacer.setAttribute('data-op-line-spacer', 'true');
                     parent.insertBefore(spacer, bgEl);
                 }
             } catch (err) {
@@ -1148,7 +1229,8 @@
             }
         }
 
-        if (bgEl.textContent.trim().length === 0 && !bgEl.querySelector('img, svg')) {
+        const remainingClean = (bgEl.textContent || '').replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]+/g, '');
+        if (remainingClean.length === 0 && !bgEl.querySelector('img, svg')) {
             bgEl.remove();
         } else {
             formatLineElement(bgEl);
@@ -1192,9 +1274,29 @@
                 line.style.width = 'fit-content';
             }
         }
+
+        // Verify that every empty-line gap from the unsplit editor layout is preserved between linesCreated
+        if (lineGroups && lineGroups.length === linesCreated.length && linesCreated.length >= 2) {
+            for (let k = 0; k < linesCreated.length - 1; k++) {
+                const lineK = linesCreated[k];
+                const lineNext = linesCreated[k + 1];
+                if (!lineK.parentNode || !lineNext.parentNode) continue;
+                try {
+                    const editorStep = lineGroups[k + 1].top - lineGroups[k].top;
+                    const curTopK = lineK.getBoundingClientRect().top / scaleY;
+                    const curTopNext = lineNext.getBoundingClientRect().top / scaleY;
+                    const currentStep = curTopNext - curTopK;
+                    const missingStep = editorStep - currentStep;
+                    if (missingStep >= lineStride * 0.5) {
+                        const curMb = parseFloat(lineK.style.marginBottom) || lineGap;
+                        lineK.style.marginBottom = (curMb + missingStep).toFixed(2) + 'px';
+                    }
+                } catch (e) {}
+            }
+        }
     };
 
-    const splitSoftWrappedInlineBackground = (bgEl) => {
+    const splitSoftWrappedInlineBackground = (bgEl, existingMetrics = null) => {
         if (!bgEl || !bgEl.parentNode) return;
         if (bgEl.hasAttribute('data-op-line-split')) return;
         let rects;
@@ -1205,22 +1307,31 @@
         }
         if (!rects || rects.length <= 1) return;
 
-        const preMeasuredMetrics = measureInlineBgMetrics(bgEl);
+        const preMeasuredMetrics = existingMetrics || measureInlineBgMetrics(bgEl);
+        const { scaleY, lineStride } = preMeasuredMetrics;
 
-        const walker = document.createTreeWalker(bgEl, NodeFilter.SHOW_TEXT, null, false);
-        const textNodes = [];
-        let tNode;
-        while ((tNode = walker.nextNode())) {
-            if (tNode.nodeValue && tNode.nodeValue.length > 0) {
-                textNodes.push(tNode);
+        convertPreservedNewlinesToBr(bgEl);
+        unwrapNestedBlocksToBr(bgEl);
+
+        const walker = document.createTreeWalker(bgEl, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, false);
+        const nodes = [];
+        let wNode;
+        while ((wNode = walker.nextNode())) {
+            if (wNode.nodeType === 3 && wNode.nodeValue && wNode.nodeValue.length > 0) {
+                nodes.push(wNode);
+            } else if (wNode.nodeType === 1 && wNode.tagName && wNode.tagName.toUpperCase() === 'BR') {
+                nodes.push(wNode);
             }
         }
-        if (textNodes.length === 0) return;
 
         let currentLineTop = null;
         const breakPoints = [];
 
-        for (const node of textNodes) {
+        for (const node of nodes) {
+            if (node.nodeType === 1) {
+                currentLineTop = null;
+                continue;
+            }
             const textLen = node.nodeValue.length;
             for (let i = 0; i < textLen; i++) {
                 const range = document.createRange();
@@ -1232,23 +1343,28 @@
                 if (currentLineTop === null) {
                     currentLineTop = r.top;
                 } else if (r.top > currentLineTop + 3) {
-                    breakPoints.push({ node: node, offset: i });
+                    const stepPx = (r.top - currentLineTop) / (scaleY || 1);
+                    const brCount = (lineStride > 0) ? Math.max(1, Math.round(stepPx / lineStride)) : 1;
+                    breakPoints.push({ node: node, offset: i, count: brCount });
                     currentLineTop = r.top;
                 }
             }
         }
 
-        if (breakPoints.length === 0) return;
+        if (breakPoints.length === 0 && !bgEl.querySelector('br')) return;
 
         for (let j = breakPoints.length - 1; j >= 0; j--) {
             const bp = breakPoints[j];
             try {
                 const rightText = bp.node.splitText(bp.offset);
                 if (bp.node.nodeValue) {
-                    bp.node.nodeValue = bp.node.nodeValue.replace(/[ \t\r\n]+$/, '');
+                    bp.node.nodeValue = bp.node.nodeValue.replace(/[ \t]+$/, '');
                 }
-                const br = document.createElement('br');
-                bp.node.parentNode.insertBefore(br, rightText);
+                const count = bp.count || 1;
+                for (let c = 0; c < count; c++) {
+                    const br = document.createElement('br');
+                    bp.node.parentNode.insertBefore(br, rightText);
+                }
             } catch (e) {}
         }
 
@@ -1266,6 +1382,14 @@
                 return;
             }
 
+            let cScaleY = 1;
+            try {
+                if (contentEl.offsetHeight > 0) {
+                    const cRect = contentEl.getBoundingClientRect();
+                    if (cRect.height > 0) cScaleY = cRect.height / contentEl.offsetHeight;
+                }
+            } catch (e) {}
+
             const allDescendants = Array.from(contentEl.querySelectorAll('*'));
             const bgElements = allDescendants.filter(isInlineTextBgCandidate);
 
@@ -1277,20 +1401,68 @@
                 return depthA - depthB;
             });
 
-            // Pass 1: Split at explicit <br> tags (e.g. pasted multi-line address from Discord)
+            // Pre-measure all candidate line groups and metrics before mutating the DOM
+            const preMetricsMap = new Map();
+            const preContentLineGroups = [];
             for (const bgEl of bgElements) {
-                if (!bgEl.parentNode) continue;
+                const m = measureInlineBgMetrics(bgEl);
+                preMetricsMap.set(bgEl, m);
+                if (m.lineGroups) {
+                    for (const g of m.lineGroups) {
+                        const existing = preContentLineGroups.find(cg => Math.abs(cg.top - g.top) <= 2.5);
+                        if (!existing) {
+                            preContentLineGroups.push({ top: g.top, height: g.height });
+                        } else if (g.height > existing.height) {
+                            existing.height = g.height;
+                        }
+                    }
+                }
+            }
+            preContentLineGroups.sort((a, b) => a.top - b.top);
+
+            // Pass 1: Normalize preserved newlines & nested block boundaries into <br> and split
+            for (const bgEl of bgElements) {
+                if (!bgEl.parentNode || bgEl.hasAttribute('data-op-line-split')) continue;
+                const preMetrics = preMetricsMap.get(bgEl);
+                convertPreservedNewlinesToBr(bgEl);
+                unwrapNestedBlocksToBr(bgEl);
                 if (bgEl.querySelector('br')) {
-                    splitInlineBackgroundAtBr(bgEl);
+                    splitInlineBackgroundAtBr(bgEl, preMetrics);
                 }
             }
 
             // Pass 2: Split any remaining soft-wrapped multi-line text backgrounds
             const remainingDescendants = Array.from(contentEl.querySelectorAll('*'));
             for (const el of remainingDescendants) {
-                if (!el.parentNode) continue;
+                if (!el.parentNode || el.hasAttribute('data-op-line-split')) continue;
                 if (isInlineTextBgCandidate(el)) {
-                    splitSoftWrappedInlineBackground(el);
+                    splitSoftWrappedInlineBackground(el, preMetricsMap.get(el) || null);
+                }
+            }
+
+            // Pass 3: Container-wide pre-split vertical step verification across all split/background lines
+            if (preContentLineGroups.length >= 2) {
+                const postLineEls = Array.from(contentEl.querySelectorAll('[data-op-line-split="true"]:not([data-op-line-spacer="true"])')).filter(el => {
+                    return !el.parentElement || !el.parentElement.closest('[data-op-line-split="true"]');
+                });
+                if (postLineEls.length === preContentLineGroups.length) {
+                    for (let k = 0; k < postLineEls.length - 1; k++) {
+                        const lineK = postLineEls[k];
+                        const lineNext = postLineEls[k + 1];
+                        if (!lineK.parentNode || !lineNext.parentNode) continue;
+                        try {
+                            const editorStep = preContentLineGroups[k + 1].top - preContentLineGroups[k].top;
+                            const curTopK = lineK.getBoundingClientRect().top / cScaleY;
+                            const curTopNext = lineNext.getBoundingClientRect().top / cScaleY;
+                            const currentStep = curTopNext - curTopK;
+                            const missingStep = editorStep - currentStep;
+                            const avgH = preContentLineGroups[k].height || 14;
+                            if (missingStep >= avgH * 0.5) {
+                                const curMb = parseFloat(lineK.style.marginBottom) || 0;
+                                lineK.style.marginBottom = (curMb + missingStep).toFixed(2) + 'px';
+                            }
+                        } catch (e) {}
+                    }
                 }
             }
         });
