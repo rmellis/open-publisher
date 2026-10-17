@@ -1,5 +1,5 @@
 ﻿/**
- * OpenPublisher Professional Proofing & Grammar Engine (v5.9.6)
+ * OpenPublisher Professional Proofing & Grammar Engine (v5.9.7)
  * Comprehensive offline spellcheck and online grammar proofing using modern CSS Custom Highlight API.
  * Powered by OpenPublisher's comprehensive 280,000+ word offline dictionary (SCOWL + ENABLE1 + DTP)
  * with instant O(1) text-node token scanning and intelligent local phonetic/Levenshtein suggestion engine.
@@ -56,6 +56,296 @@
         ['bb', 'b'], ['b', 'bb'],
         ['gg', 'g'], ['g', 'gg']
     ];
+
+    const TITLE_SPECS = {
+        'mr': { replacements: ['Mr.', 'Mr'] },
+        'mrs': { replacements: ['Mrs.', 'Mrs'] },
+        'ms': { replacements: ['Ms.', 'Ms'] },
+        'miss': { replacements: ['Miss'], contextCheck: true },
+        'dr': { replacements: ['Dr.', 'Dr'] },
+        'prof': { replacements: ['Prof.', 'Prof'] },
+        'cllr': { replacements: ['Cllr.', 'Cllr'] },
+        'rev': { replacements: ['Rev.', 'Rev'] },
+        'fr': { replacements: ['Fr.', 'Fr'], contextCheck: true },
+        'capt': { replacements: ['Capt.', 'Capt'] },
+        'col': { replacements: ['Col.', 'Col'] },
+        'gen': { replacements: ['Gen.', 'Gen'], contextCheck: true },
+        'maj': { replacements: ['Maj.', 'Maj'], contextCheck: true },
+        'lt': { replacements: ['Lt.', 'Lt'] },
+        'lieut': { replacements: ['Lieut.', 'Lieut'] },
+        'sgt': { replacements: ['Sgt.', 'Sgt'] },
+        'cpl': { replacements: ['Cpl.', 'Cpl'] },
+        'pvt': { replacements: ['Pvt.', 'Pvt'], contextCheck: true },
+        'sen': { replacements: ['Sen.', 'Sen'] },
+        'rep': { replacements: ['Rep.', 'Rep'], contextCheck: true },
+        'sir': { replacements: ['Sir'], contextCheck: true },
+        'lady': { replacements: ['Lady'], contextCheck: true },
+        'lord': { replacements: ['Lord'], contextCheck: true },
+        'dame': { replacements: ['Dame'], contextCheck: true },
+        'pastor': { replacements: ['Pastor'], contextCheck: true },
+        'rabbi': { replacements: ['Rabbi'], contextCheck: true },
+        'imam': { replacements: ['Imam'], contextCheck: true },
+        'sheikh': { replacements: ['Sheikh'], contextCheck: true },
+        'alderman': { replacements: ['Alderman'], contextCheck: true },
+        'mayor': { replacements: ['Mayor'], contextCheck: true },
+        'doctor': { replacements: ['Doctor'], contextCheck: true },
+        'professor': { replacements: ['Professor'], contextCheck: true },
+        'reverend': { replacements: ['Reverend'], contextCheck: true },
+        'detective': { replacements: ['Detective'], contextCheck: true },
+        'inspector': { replacements: ['Inspector'], contextCheck: true },
+        'constable': { replacements: ['Constable'], contextCheck: true },
+        'officer': { replacements: ['Officer'], contextCheck: true },
+        'governor': { replacements: ['Governor'], contextCheck: true },
+        'president': { replacements: ['President'], contextCheck: true }
+    };
+
+    const CAPITALIZED_TITLES = new Set([
+        'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Cllr', 'Rev', 'Fr',
+        'Capt', 'Col', 'Gen', 'Maj', 'Lt', 'Lieut', 'Sgt', 'Cpl', 'Pvt',
+        'Sen', 'Rep', 'Sir', 'Lady', 'Lord', 'Dame', 'Pastor', 'Rabbi',
+        'Imam', 'Sheikh', 'Alderman', 'Mayor', 'Judge', 'Justice', 'Father', 'Sister',
+        'Doctor', 'Professor', 'Reverend', 'Detective', 'Inspector', 'Constable',
+        'Officer', 'Governor', 'President'
+    ]);
+
+    const NON_NAME_FOLLOWERS = new Set([
+        'and', 'or', 'but', 'nor', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for',
+        'with', 'by', 'from', 'of', 'is', 'was', 'are', 'were', 'be', 'been',
+        'has', 'have', 'had', 'do', 'does', 'did', 'will', 'would', 'shall',
+        'should', 'can', 'could', 'may', 'might', 'must', 'that', 'this',
+        'these', 'those', 'it', 'its', 'you', 'your', 'we', 'our', 'they',
+        'their', 'he', 'his', 'she', 'her', 'them', 'me', 'my', 'him', 'who',
+        'whom', 'whose', 'which', 'what', 'where', 'when', 'why', 'how', 'not',
+        'so', 'if', 'then', 'as', 'than', 'too', 'very', 'just', 'also'
+    ]);
+
+    const CALENDAR_WORDS = {
+        'monday': 'Monday', 'tuesday': 'Tuesday', 'wednesday': 'Wednesday',
+        'thursday': 'Thursday', 'friday': 'Friday', 'saturday': 'Saturday', 'sunday': 'Sunday',
+        'january': 'January', 'february': 'February', 'april': 'April',
+        'june': 'June', 'july': 'July', 'august': 'August', 'september': 'September',
+        'october': 'October', 'november': 'November', 'december': 'December'
+    };
+
+    /**
+     * Scans an editable element for fast, local grammatical, title, and proper-noun casing rules.
+     */
+    function scanLocalGrammarRules(rootEditable) {
+        if (!rootEditable || !isGrammarEnabled()) return [];
+        if (typeof state !== 'undefined' && state.spellCheck === false) return [];
+        if (rootEditable.classList.contains('wa-text') || rootEditable.getAttribute('data-spellcheck') === 'false') return [];
+
+        const walker = document.createTreeWalker(rootEditable, NodeFilter.SHOW_TEXT);
+        const tokens = [];
+        let textNode;
+
+        while ((textNode = walker.nextNode())) {
+            const text = textNode.textContent;
+            if (!text) continue;
+
+            WORD_REGEX.lastIndex = 0;
+            let match;
+            while ((match = WORD_REGEX.exec(text)) !== null) {
+                const raw = match[0];
+                const start = match.index;
+                const end = start + raw.length;
+
+                // Check trailing dot (e.g. "mr." or "Mr.")
+                const hasTrailingDot = (text[end] === '.');
+
+                // Check preceding non-whitespace character in textNode
+                let charBefore = '';
+                for (let i = start - 1; i >= 0; i--) {
+                    if (!/\s/.test(text[i])) { charBefore = text[i]; break; }
+                }
+
+                // Check preceding sibling for line/block break if start of node
+                let isAfterBlockBreak = false;
+                if (start === 0 || !charBefore) {
+                    let prevNode = textNode.previousSibling;
+                    while (prevNode && prevNode.nodeType === 3 && !prevNode.textContent.trim()) {
+                        prevNode = prevNode.previousSibling;
+                    }
+                    if (!prevNode || prevNode.nodeName === 'BR' || prevNode.nodeName === 'DIV' || prevNode.nodeName === 'P') {
+                        isAfterBlockBreak = true;
+                    }
+                }
+
+                tokens.push({
+                    raw: raw,
+                    lower: raw.toLowerCase(),
+                    hasTrailingDot: hasTrailingDot,
+                    textNode: textNode,
+                    startOffset: start,
+                    endOffset: hasTrailingDot ? end + 1 : end, // include period in range if it was "mr." so replacement is clean
+                    wordEndOffset: end,
+                    isAfterBlockBreak: isAfterBlockBreak,
+                    charBefore: charBefore
+                });
+            }
+        }
+
+        // Link prev and next tokens
+        for (let i = 0; i < tokens.length; i++) {
+            tokens[i].prev = (i > 0) ? tokens[i - 1] : null;
+            tokens[i].next = (i < tokens.length - 1) ? tokens[i + 1] : null;
+        }
+
+        const matches = [];
+
+        function addMatch(token, ruleId, message, replacements, customRange) {
+            if (_ignoredRulesSet.has(ruleId)) return;
+            let range = customRange;
+            if (!range) {
+                try {
+                    range = new Range();
+                    range.setStart(token.textNode, token.startOffset);
+                    range.setEnd(token.textNode, token.endOffset);
+                } catch(e) {
+                    return;
+                }
+            }
+
+            matches.push({
+                text: token.raw,
+                ruleId: ruleId,
+                message: message,
+                shortMessage: 'Capitalization',
+                replacements: replacements,
+                range: range,
+                offset: token.startOffset,
+                length: token.endOffset - token.startOffset
+            });
+        }
+
+        for (let i = 0; i < tokens.length; i++) {
+            const t = tokens[i];
+            const lower = t.lower;
+            const isAllLower = (t.raw === lower);
+
+            // Skip pure spelling mistakes (they receive red squiggly underlines)
+            if (isWordMisspelled(t.raw)) continue;
+
+            // 1. Check TITLE_CAPITALIZATION
+            let isTitleToken = false;
+            let titleSpec = TITLE_SPECS[lower] || null;
+
+            if (titleSpec) {
+                if (titleSpec.contextCheck) {
+                    if (t.next && !NON_NAME_FOLLOWERS.has(t.next.lower)) {
+                        isTitleToken = true;
+                    } else if (t.isAfterBlockBreak && t.next) {
+                        isTitleToken = true;
+                    }
+                } else {
+                    isTitleToken = true;
+                }
+            } else if (CAPITALIZED_TITLES.has(t.raw)) {
+                isTitleToken = true;
+            }
+
+            if (isTitleToken && titleSpec && isAllLower) {
+                // Lowercase title error
+                addMatch(
+                    t,
+                    'TITLE_CAPITALIZATION',
+                    'Honorific titles should be capitalized (e.g. ' + titleSpec.replacements[0] + ' or ' + titleSpec.replacements[1] + ').',
+                    titleSpec.replacements
+                );
+                t._handled = true;
+            }
+
+            // 2. Check TITLE_NAME_CAPITALIZATION (words following a title)
+            if (isTitleToken) {
+                let curr = t.next;
+                while (curr && !curr.isAfterBlockBreak && !NON_NAME_FOLLOWERS.has(curr.lower) && curr.raw === curr.lower) {
+                    if (!isWordMisspelled(curr.raw)) {
+                        const capName = curr.raw.charAt(0).toUpperCase() + curr.raw.slice(1);
+                        let nameRange;
+                        try {
+                            nameRange = new Range();
+                            nameRange.setStart(curr.textNode, curr.startOffset);
+                            nameRange.setEnd(curr.textNode, curr.wordEndOffset);
+                        } catch(e) {}
+
+                        addMatch(
+                            curr,
+                            'TITLE_NAME_CAPITALIZATION',
+                            'Names and surnames following a title should be capitalized.',
+                            [capName],
+                            nameRange
+                        );
+                        curr._handled = true;
+                    }
+                    if (curr.hasTrailingDot || (curr.textNode.textContent[curr.wordEndOffset] === ',')) {
+                        break;
+                    }
+                    curr = curr.next;
+                }
+            }
+
+            // 3. Pronoun 'i'
+            if (lower === 'i' && t.raw === 'i' && !t._handled) {
+                addMatch(
+                    t,
+                    'PRONOUN_I',
+                    'The pronoun \'I\' should always be capitalized.',
+                    ['I']
+                );
+                t._handled = true;
+            }
+
+            // 4. Days and Months
+            if (CALENDAR_WORDS[lower] && isAllLower && !t._handled) {
+                addMatch(
+                    t,
+                    'PROPER_NOUN_CALENDAR',
+                    'Days of the week and months should be capitalized.',
+                    [CALENDAR_WORDS[lower]]
+                );
+                t._handled = true;
+            }
+
+            // 5. Repeated words (e.g. "the the", "in in", "and and")
+            if (t.prev && t.prev.lower === lower && !t.isAfterBlockBreak && !t._handled && lower.length > 1 && lower !== 'that' && lower !== 'had') {
+                addMatch(
+                    t,
+                    'WORD_REPEAT_RULE',
+                    'Possible repeated word found.',
+                    ['']
+                );
+                t._handled = true;
+            }
+        }
+
+        return matches;
+    }
+
+    function mergeGrammarMatches(localMatches, remoteMatches) {
+        if (!remoteMatches || remoteMatches.length === 0) return localMatches || [];
+        if (!localMatches || localMatches.length === 0) return remoteMatches;
+
+        const result = [...localMatches];
+        for (const rm of remoteMatches) {
+            const rmText = (rm.text || '').toLowerCase().trim();
+            const overlaps = localMatches.some(lm => {
+                const lmText = (lm.text || '').toLowerCase().trim();
+                if (lmText === rmText || lmText.includes(rmText) || rmText.includes(lmText)) return true;
+                if (lm.range && rm.range) {
+                    try {
+                        const endsAfterStart = lm.range.compareBoundaryPoints(Range.END_TO_START, rm.range) > 0;
+                        const startsBeforeEnd = lm.range.compareBoundaryPoints(Range.START_TO_END, rm.range) < 0;
+                        if (endsAfterStart && startsBeforeEnd) return true;
+                    } catch(e) {}
+                }
+                return false;
+            });
+            if (!overlaps) {
+                result.push(rm);
+            }
+        }
+        return result;
+    }
 
     // Load custom dictionaries and ignored rules from localStorage
     function loadPreferences() {
@@ -524,24 +814,32 @@
                 }
             }
 
-            // 2. Grammar matches from background proofing (if enabled)
+            // 2. Grammar matches from local rules and background proofing (if enabled)
             if (grammarEnabled) {
                 const rootEditable = (editable.closest ? (editable.closest('[contenteditable="true"]') || editable) : editable);
+                const localMatches = scanLocalGrammarRules(rootEditable);
                 const cached = _editableCache.get(rootEditable);
-                if (cached && cached.grammarMatches && cached.grammarMatches.length > 0) {
-                    cached.grammarMatches.forEach(m => {
-                        if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
-                        if (m.range && m.range.startContainer && m.range.startContainer.isConnected) {
-                            grammarRanges.push(m.range);
-                        } else {
-                            const range = createRangeForOffsets(rootEditable, m.offset, m.length, m.text);
-                            if (range) {
-                                m.range = range;
-                                grammarRanges.push(range);
-                            }
+                const remoteMatches = (cached && cached.remoteGrammarMatches) ? cached.remoteGrammarMatches : [];
+                const allMatches = mergeGrammarMatches(localMatches, remoteMatches);
+
+                _editableCache.set(rootEditable, {
+                    text: rootEditable.innerText || '',
+                    grammarMatches: allMatches,
+                    remoteGrammarMatches: remoteMatches
+                });
+
+                allMatches.forEach(m => {
+                    if (m.ruleId && _ignoredRulesSet.has(m.ruleId)) return;
+                    if (m.range && m.range.startContainer && m.range.startContainer.isConnected) {
+                        grammarRanges.push(m.range);
+                    } else {
+                        const range = createRangeForOffsets(rootEditable, m.offset, m.length, m.text);
+                        if (range) {
+                            m.range = range;
+                            grammarRanges.push(range);
                         }
-                    });
-                }
+                    }
+                });
             }
         });
 
@@ -657,9 +955,12 @@
                 });
             }
 
+            const localMatches = scanLocalGrammarRules(rootEditable);
+            const allMatches = mergeGrammarMatches(localMatches, grammarMatches);
             _editableCache.set(rootEditable, {
                 text: text,
-                grammarMatches: grammarMatches
+                grammarMatches: allMatches,
+                remoteGrammarMatches: grammarMatches
             });
 
             paintHighlights();
@@ -789,6 +1090,14 @@
 
         // 1. Check grammar issues first
         if (isGrammarEnabled()) {
+            if (rootEditable && !_editableCache.has(rootEditable)) {
+                const localMatches = scanLocalGrammarRules(rootEditable);
+                _editableCache.set(rootEditable, {
+                    text: rootEditable.innerText || '',
+                    grammarMatches: localMatches,
+                    remoteGrammarMatches: []
+                });
+            }
             const candidateCaches = [];
             if (rootEditable && _editableCache.has(rootEditable)) {
                 candidateCaches.push({ ed: rootEditable, cache: _editableCache.get(rootEditable) });
@@ -836,8 +1145,8 @@
                         const cleanNorm = cleanWord.replace(/’/g, "'");
                         const cleanNoApos = cleanNorm.replace(/'/g, '');
                         const allTokens = [...gmTokens, ...gmTokens.map(t => t.replace(/['’]/g, ''))];
-                        if (gmText === cleanWord || gmText.includes(cleanWord) || cleanWord.includes(gmText) ||
-                            allTokens.some(t => t === cleanNorm || t === cleanNoApos || cleanNorm.includes(t) || t.includes(cleanNorm))) {
+                        if (gmText === cleanNorm || gmText === cleanNoApos ||
+                            allTokens.some(t => t === cleanNorm || t === cleanNoApos)) {
                             matches = true;
                         }
                     }
