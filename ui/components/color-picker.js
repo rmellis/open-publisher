@@ -323,6 +323,17 @@ window.CustomColorPicker = class CustomColorPicker {
     static open(anchorElement, initialColor, callback) {
         this.anchor = anchorElement;
         this.callback = callback;
+
+        if (typeof state !== 'undefined' && window.getSelection) {
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                const paperEl = document.getElementById('paper');
+                if (paperEl && paperEl.contains(range.commonAncestorContainer)) {
+                    state.lastRange = range.cloneRange();
+                }
+            }
+        }
         
         let validInitial = initialColor && /^#[0-9A-Fa-f]{6}$/i.test(initialColor) ? initialColor : '#000000';
         this.setFromHex(validInitial, true);

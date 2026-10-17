@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.4.8)
+// Open Publisher Text Engine (v5.9.0)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -261,6 +261,237 @@ function addTextBox() {
 }
 
 
+function stripCssBackgroundProps(el, isRootEditable) {
+    if (!el || el.nodeType !== 1) return;
+    el.removeAttribute('bgcolor');
+    if (el.style) {
+        el.style.removeProperty('background');
+        el.style.removeProperty('background-color');
+        el.style.removeProperty('background-image');
+        el.style.removeProperty('background-clip');
+        el.style.removeProperty('-webkit-background-clip');
+        if (!isRootEditable) {
+            el.style.removeProperty('box-shadow');
+        }
+        const styleAttr = el.getAttribute('style');
+        if (styleAttr !== null && !styleAttr.trim()) {
+            el.removeAttribute('style');
+        }
+    }
+}
+
+function isElementTextFullyInRange(el, range) {
+    if (!el || !range || !range.intersectsNode(el)) return false;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    let firstText = null;
+    let lastText = null;
+    let node;
+    while ((node = walker.nextNode())) {
+        if (node.nodeValue && node.nodeValue.length > 0) {
+            if (!firstText) firstText = node;
+            lastText = node;
+        }
+    }
+    if (!firstText || !lastText) return true;
+    try {
+        return range.isPointInRange(firstText, 0) && range.isPointInRange(lastText, lastText.nodeValue.length);
+    } catch (e) {
+        return false;
+    }
+}
+
+function applySeamlessHighlight(editableRoot, val) {
+    if (!editableRoot) return;
+
+    // 1. Remove any pasted <style> tags inside the editable container that could enforce background rules
+    editableRoot.querySelectorAll('style').forEach(s => s.remove());
+
+    // 2. Strip pasted CSS backgrounds merged onto the editable root itself (preserve table cells and .element-content)
+    const rootTag = editableRoot.tagName ? editableRoot.tagName.toUpperCase() : '';
+    if (rootTag !== 'TD' && rootTag !== 'TH' && !editableRoot.classList.contains('element-content')) {
+        stripCssBackgroundProps(editableRoot, true);
+    }
+
+    // 3. Ensure focus and a valid non-collapsed selection inside editableRoot
+    const sel = window.getSelection();
+    let range = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+    const hasValidRange = range && editableRoot.contains(range.commonAncestorContainer) && !range.collapsed;
+
+    try { editableRoot.focus({ preventScroll: true }); } catch (e) { editableRoot.focus(); }
+
+    if (!hasValidRange) {
+        range = document.createRange();
+        range.selectNodeContents(editableRoot);
+    }
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // 4. Strip conflicting pasted CSS backgrounds from block elements, non-highlight pasted elements,
+    // and any existing highlight spans whose text is fully covered by the active selection.
+    const blockTags = new Set([
+        'DIV', 'P', 'PRE', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'UL', 'OL', 'LI', 'DL', 'DT', 'DD', 'SECTION', 'ARTICLE', 'HEADER',
+        'FOOTER', 'MAIN', 'ASIDE', 'FIGURE', 'FIGCAPTION'
+    ]);
+    const tableStructuralTags = new Set(['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TD', 'TH']);
+
+    editableRoot.querySelectorAll('*').forEach(el => {
+        const tag = el.tagName ? el.tagName.toUpperCase() : '';
+        if (tableStructuralTags.has(tag)) return;
+
+        const isPastedOrBlock = blockTags.has(tag) || !el.hasAttribute('data-opub-hilite');
+        const isFullySelected = isElementTextFullyInRange(el, range);
+
+        if (isPastedOrBlock || isFullySelected) {
+            stripCssBackgroundProps(el, false);
+            if (isFullySelected) {
+                el.removeAttribute('data-opub-hilite');
+            }
+        }
+
+        // Prevent user-agent default yellow background on pasted <mark> elements
+        if (tag === 'MARK' && !el.style.backgroundColor) {
+            el.style.backgroundColor = 'transparent';
+        }
+    });
+
+    // Re-assert the selection range prior to execCommand
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // 5. Apply the highlight color via execCommand
+    let applied = false;
+    try {
+        applied = document.execCommand('hiliteColor', false, val);
+    } catch (e) {}
+    if (!applied) {
+        try {
+            document.execCommand('backColor', false, val);
+        } catch (e) {}
+    }
+
+    if (rootTag !== 'TD' && rootTag !== 'TH' && !editableRoot.classList.contains('element-content')) {
+        stripCssBackgroundProps(editableRoot, true);
+    }
+
+    // 6. Post-pass: verify all selected text nodes have the highlight color and tag highlight spans
+    const postRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0) : range;
+
+    editableRoot.querySelectorAll('*').forEach(el => {
+        const tag = el.tagName ? el.tagName.toUpperCase() : '';
+        if (tableStructuralTags.has(tag) || blockTags.has(tag)) {
+            if (blockTags.has(tag)) {
+                stripCssBackgroundProps(el, false);
+            }
+            return;
+        }
+        if (el.style && el.style.backgroundColor && el.style.backgroundColor !== 'transparent' && el.style.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            try {
+                if (postRange && postRange.intersectsNode(el)) {
+                    el.setAttribute('data-opub-hilite', 'true');
+                }
+            } catch (e) {
+                el.setAttribute('data-opub-hilite', 'true');
+            }
+        }
+    });
+
+    // Ensure any selected text nodes missed by execCommand (e.g. inside <pre>/<code> or display:inline-block) receive the highlight
+    if (postRange && val && val !== 'transparent' && val !== 'none') {
+        const textNodesToFix = [];
+        const walker = document.createTreeWalker(editableRoot, NodeFilter.SHOW_TEXT, null, false);
+        let tNode;
+        while ((tNode = walker.nextNode())) {
+            if (!tNode.nodeValue || !tNode.nodeValue.trim()) continue;
+            let intersects = false;
+            try { intersects = postRange.intersectsNode(tNode); } catch (e) {}
+            if (!intersects) continue;
+
+            let curr = tNode.parentElement;
+            let hasHiliteAncestor = false;
+            while (curr && curr !== editableRoot && editableRoot.contains(curr)) {
+                const cTag = curr.tagName ? curr.tagName.toUpperCase() : '';
+                if (!blockTags.has(cTag) && !tableStructuralTags.has(cTag)) {
+                    if (curr.style && curr.style.backgroundColor && curr.style.backgroundColor !== 'transparent' && curr.style.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                        if (isElementTextFullyInRange(curr, postRange)) {
+                            curr.style.backgroundColor = val;
+                            curr.setAttribute('data-opub-hilite', 'true');
+                            hasHiliteAncestor = true;
+                            break;
+                        }
+                    }
+                }
+                curr = curr.parentElement;
+            }
+            if (!hasHiliteAncestor) {
+                const start = (tNode === postRange.startContainer) ? postRange.startOffset : 0;
+                const end = (tNode === postRange.endContainer) ? postRange.endOffset : tNode.nodeValue.length;
+                if (start < end) {
+                    textNodesToFix.push({ tNode, start, end });
+                }
+            }
+        }
+
+        if (textNodesToFix.length > 0) {
+            let firstSpan = null;
+            let lastSpan = null;
+            textNodesToFix.forEach(({ tNode, start, end }) => {
+                if (start >= end || !tNode.nodeValue) return;
+                let targetText = tNode;
+                if (end < targetText.nodeValue.length) {
+                    targetText.splitText(end);
+                }
+                if (start > 0) {
+                    targetText = targetText.splitText(start);
+                }
+
+                const parent = targetText.parentElement;
+                const pTag = parent && parent.tagName ? parent.tagName.toUpperCase() : '';
+                if (parent && parent !== editableRoot && !blockTags.has(pTag) && !tableStructuralTags.has(pTag) && parent.childNodes.length === 1) {
+                    parent.style.backgroundColor = val;
+                    parent.setAttribute('data-opub-hilite', 'true');
+                    if (!firstSpan) firstSpan = parent;
+                    lastSpan = parent;
+                } else if (targetText.parentNode) {
+                    const span = document.createElement('span');
+                    span.style.backgroundColor = val;
+                    span.setAttribute('data-opub-hilite', 'true');
+                    targetText.parentNode.insertBefore(span, targetText);
+                    span.appendChild(targetText);
+                    if (!firstSpan) firstSpan = span;
+                    lastSpan = span;
+                }
+            });
+
+            if (firstSpan && lastSpan) {
+                const newRange = document.createRange();
+                newRange.setStartBefore(firstSpan);
+                newRange.setEndAfter(lastSpan);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+            }
+        }
+    }
+}
+
+document.addEventListener('paste', (e) => {
+    const target = e.target && e.target.closest ? e.target.closest('[contenteditable="true"]') : null;
+    if (!target) return;
+    const existingHilites = new Set(target.querySelectorAll('[data-opub-hilite="true"]'));
+    setTimeout(() => {
+        target.querySelectorAll('[data-opub-hilite]').forEach(el => {
+            if (!existingHilites.has(el)) {
+                el.removeAttribute('data-opub-hilite');
+            }
+        });
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && target.contains(sel.getRangeAt(0).commonAncestorContainer) && typeof state !== 'undefined') {
+            state.lastRange = sel.getRangeAt(0).cloneRange();
+        }
+    }, 0);
+}, true);
+
+
 function execCmd(cmd, val) { 
     if(cmd === 'foreColor' && state.selectedEl && state.selectedEl.getAttribute('data-type') === 'shape') {
         const shapeDiv = state.selectedEl.querySelector('.element-content div');
@@ -283,9 +514,8 @@ function execCmd(cmd, val) {
             editable.focus();
             sel.selectAllChildren(editable);
             
-            if (cmd === 'hiliteColor') {
-                document.execCommand('hiliteColor', false, val);
-                document.execCommand('backColor', false, val);
+            if (cmd === 'hiliteColor' || cmd === 'backColor') {
+                applySeamlessHighlight(editable, val);
             } else {
                 document.execCommand(cmd, false, val);
             }
@@ -306,7 +536,7 @@ function execCmd(cmd, val) {
     // Crucial fix: The native OS color picker (<input type="color">) steals focus when opened.
     // If we don't restore the selection before executing the command, it fails because
     // the text box is no longer the active selection.
-    if (state.lastRange) {
+    if (state.lastRange && state.lastRange.commonAncestorContainer && state.lastRange.commonAncestorContainer.isConnected) {
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(state.lastRange);
@@ -316,10 +546,25 @@ function execCmd(cmd, val) {
     // Legacy <font> tags notoriously fail to apply when the selection includes <br> tags or spans across complex nodes.
     try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
     
-    if (cmd === 'hiliteColor') {
-        // Different browsers use different commands for text background color.
-        document.execCommand('hiliteColor', false, val);
-        document.execCommand('backColor', false, val);
+    if (cmd === 'hiliteColor' || cmd === 'backColor') {
+        const sel = window.getSelection();
+        let editableRoot = null;
+        if (sel && sel.rangeCount > 0 && sel.anchorNode) {
+            const anchorEl = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+            if (anchorEl && anchorEl.closest) {
+                editableRoot = anchorEl.closest('[contenteditable="true"]');
+            }
+        }
+        if (!editableRoot && state.selectedEl) {
+            editableRoot = state.selectedEl.querySelector('[contenteditable="true"]') ||
+                           (state.selectedEl.getAttribute('contenteditable') === 'true' ? state.selectedEl : null);
+        }
+        if (editableRoot) {
+            applySeamlessHighlight(editableRoot, val);
+        } else {
+            document.execCommand('hiliteColor', false, val);
+            document.execCommand('backColor', false, val);
+        }
     } else {
         document.execCommand(cmd, false, val); 
     }
@@ -338,12 +583,13 @@ function execCmd(cmd, val) {
     if(sel.rangeCount > 0) state.lastRange = sel.getRangeAt(0).cloneRange();
     
     if(!state.isProgrammaticUpdate) updateFloatToolbarValues();
+    if (typeof updateThumbnails === 'function') updateThumbnails();
 }
 
 
 function execFloatCmd(cmd, val) {
     state.isProgrammaticUpdate = true;
-    if (state.lastRange) {
+    if (state.lastRange && state.lastRange.commonAncestorContainer && state.lastRange.commonAncestorContainer.isConnected) {
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(state.lastRange);

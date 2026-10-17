@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.8.7)
+// Open Publisher UI Interactions (v5.9.0)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.8.7)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.9.0)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -684,6 +684,9 @@
         else {
             const clickedToolbar = e.target.closest('.title-bar') || 
                                    e.target.closest('#ribbon-container') || 
+                                   e.target.closest('.ribbon-container') ||
+                                   e.target.closest('#custom-color-picker') ||
+                                   e.target.closest('.custom-dropdown') ||
                                    e.target.closest('.sidebar-panel') ||
                                    e.target.closest('#float-toolbar') ||
                                    e.target.closest('.custom-dialog');

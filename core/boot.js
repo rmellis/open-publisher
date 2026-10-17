@@ -1,5 +1,5 @@
 // ==========================================
-// APPLICATION BOOTSTRAPPER (v5.8.7)
+// APPLICATION BOOTSTRAPPER (v5.9.0)
 // ==========================================
 
 window.onload = function() {
@@ -51,6 +51,14 @@ window.onload = function() {
 let selectionTimer = null;
 document.addEventListener('selectionchange', () => {
     if(state.isProgrammaticUpdate) return; 
+
+    const selNow = window.getSelection();
+    if(selNow && selNow.rangeCount > 0) {
+        const rangeNow = selNow.getRangeAt(0);
+        if(paper.contains(rangeNow.commonAncestorContainer)) {
+            state.lastRange = rangeNow.cloneRange();
+        }
+    }
 
     // Clear the timer if the user is still actively highlighting
     if (selectionTimer) clearTimeout(selectionTimer);

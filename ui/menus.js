@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.8.7)
+   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.9.0)
 ========================================================================= */
 
 const ContextMenuSystem = {
