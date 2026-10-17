@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.9.2)
+// OpenPublisher Print Engine (v5.9.3)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -967,10 +967,35 @@
 
         const parent = bgEl.parentNode;
         let textAlign = 'left';
+        let parentLineHeight = 0;
+        let fontSize = 14;
         try {
             const parentComp = window.getComputedStyle(parent);
             textAlign = parentComp.textAlign || 'left';
+            parentLineHeight = parseFloat(parentComp.lineHeight) || 0;
         } catch (e) {}
+
+        let origRadius = '2px';
+        let padLeft = 3;
+        let padRight = 3;
+        try {
+            const bgComp = window.getComputedStyle(bgEl);
+            fontSize = parseFloat(bgComp.fontSize) || 14;
+            if (!parentLineHeight) {
+                parentLineHeight = parseFloat(bgComp.lineHeight) || (fontSize * 1.25);
+            }
+            if (bgComp.borderRadius && bgComp.borderRadius !== '0px') {
+                origRadius = bgComp.borderRadius;
+            }
+            const pL = parseFloat(bgComp.paddingLeft);
+            const pR = parseFloat(bgComp.paddingRight);
+            if (!isNaN(pL) && pL > 0) padLeft = pL;
+            if (!isNaN(pR) && pR > 0) padRight = pR;
+        } catch (e) {}
+
+        // Calculate the natural inter-line gap observed in the editor.
+        // In Chromium, inline backgrounds naturally exhibit a ~2px to 3px gap due to the difference between line-height and font height.
+        const lineGap = Math.max(2, Math.min(5, Math.round(parentLineHeight ? (parentLineHeight - fontSize) : (fontSize * 0.18))));
 
         const linesCreated = [];
 
@@ -982,8 +1007,11 @@
             el.style.boxSizing = 'border-box';
             el.style.marginTop = '0px';
             el.style.marginBottom = '0px';
-            el.style.paddingTop = '0px';
-            el.style.paddingBottom = '0px';
+            el.style.paddingTop = '1px';
+            el.style.paddingBottom = '1px';
+            el.style.paddingLeft = padLeft + 'px';
+            el.style.paddingRight = padRight + 'px';
+            el.style.borderRadius = origRadius;
             el.style.lineHeight = 'inherit';
             el.setAttribute('data-op-line-split', 'true');
 
@@ -1048,9 +1076,18 @@
             formatLineElement(bgEl);
         }
 
-        // Lock exact computed pixel widths onto each line element so html2canvas renders exact shrink-wrapped boxes
-        for (const line of linesCreated) {
+        // Apply editor-matching inter-line gap and lock exact computed pixel widths onto each line element
+        for (let k = 0; k < linesCreated.length; k++) {
+            const line = linesCreated[k];
             if (!line.parentNode) continue;
+
+            // Apply the inter-line separation between strips, but leave 0px margin after the final row
+            if (k < linesCreated.length - 1) {
+                line.style.marginBottom = lineGap + 'px';
+            } else {
+                line.style.marginBottom = '0px';
+            }
+
             try {
                 const textRange = document.createRange();
                 textRange.selectNodeContents(line);
@@ -1058,11 +1095,11 @@
                 const textW = Math.ceil(textRect.width || 0);
 
                 const compL = window.getComputedStyle(line);
-                const padL = parseFloat(compL.paddingLeft) || 0;
-                const padR = parseFloat(compL.paddingRight) || 0;
+                const pL = parseFloat(compL.paddingLeft) || padLeft;
+                const pR = parseFloat(compL.paddingRight) || padRight;
                 const borderL = parseFloat(compL.borderLeftWidth) || 0;
                 const borderR = parseFloat(compL.borderRightWidth) || 0;
-                const totalW = textW + padL + padR + borderL + borderR;
+                const totalW = textW + pL + pR + borderL + borderR;
 
                 const lineRect = line.getBoundingClientRect();
                 const rectW = Math.ceil(lineRect.width || line.offsetWidth || 0);
