@@ -1467,6 +1467,17 @@ td, th {
     -webkit-user-select: text !important;
     cursor: text;
 }
+[contenteditable="true"]:not(.wa-text),
+[contenteditable="true"]:not(.wa-text):focus,
+[contenteditable="true"]:not(.wa-text):focus-visible,
+.element-content [contenteditable="true"]:not(.wa-text),
+.element-content [contenteditable="true"]:not(.wa-text):focus,
+.element-content [contenteditable="true"]:not(.wa-text):focus-visible,
+.pub-element [contenteditable="true"]:not(.wa-text),
+.pub-element [contenteditable="true"]:not(.wa-text):focus,
+.pub-element [contenteditable="true"]:not(.wa-text):focus-visible {
+    outline: none !important;
+}
 /* --- Modern Chromium / Edge Spellcheck & Grammar Proofing under Canvas Transform (v5.6.0) --- */
 ::highlight(spelling-error) {
     text-decoration: underline wavy #e74c3c !important;

@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.9.7)
+// Open Publisher Text Engine (v5.9.8)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -254,7 +254,7 @@ function addTextBox() {
     const userLang = navigator.language || 'en';
     const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
     
-    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
+    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
     applySingleElementScheme(el, state.currentScheme);
     return el;
