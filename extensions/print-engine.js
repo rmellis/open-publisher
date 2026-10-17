@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.9.1)
+// OpenPublisher Print Engine (v5.9.2)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -920,6 +920,7 @@
     // spans while strictly preserving all actual text box backgrounds, colors, and gradients.
     const isInlineTextBgCandidate = (el) => {
         if (!el || el.nodeType !== 1) return false;
+        if (el.hasAttribute('data-op-line-split')) return false;
         const tag = el.tagName ? el.tagName.toUpperCase() : '';
         if (tag === 'TABLE' || tag === 'THEAD' || tag === 'TBODY' || tag === 'TFOOT' ||
             tag === 'TR' || tag === 'TH' || tag === 'TD' || tag === 'SVG' || tag === 'CANVAS' ||
@@ -961,6 +962,55 @@
     };
 
     const splitInlineBackgroundAtBr = (bgEl) => {
+        if (!bgEl || !bgEl.parentNode) return;
+        if (bgEl.hasAttribute('data-op-line-split')) return;
+
+        const parent = bgEl.parentNode;
+        let textAlign = 'left';
+        try {
+            const parentComp = window.getComputedStyle(parent);
+            textAlign = parentComp.textAlign || 'left';
+        } catch (e) {}
+
+        const linesCreated = [];
+
+        const formatLineElement = (el) => {
+            if (!el || el.nodeType !== 1) return;
+            el.style.display = 'block';
+            el.style.width = 'fit-content';
+            el.style.maxWidth = '100%';
+            el.style.boxSizing = 'border-box';
+            el.style.marginTop = '0px';
+            el.style.marginBottom = '0px';
+            el.style.paddingTop = '0px';
+            el.style.paddingBottom = '0px';
+            el.style.lineHeight = 'inherit';
+            el.setAttribute('data-op-line-split', 'true');
+
+            if (textAlign === 'center') {
+                el.style.marginLeft = 'auto';
+                el.style.marginRight = 'auto';
+            } else if (textAlign === 'right' || textAlign === 'end') {
+                el.style.marginLeft = 'auto';
+                el.style.marginRight = '0px';
+            } else {
+                el.style.marginLeft = '0px';
+                el.style.marginRight = 'auto';
+            }
+
+            try {
+                const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+                let tNode;
+                while ((tNode = walker.nextNode())) {
+                    if (tNode.nodeValue) {
+                        tNode.nodeValue = tNode.nodeValue.replace(/[\r\n]+/g, '');
+                    }
+                }
+            } catch (err) {}
+
+            linesCreated.push(el);
+        };
+
         let br;
         let guard = 500;
         while ((br = bgEl.querySelector('br')) && guard-- > 0) {
@@ -975,24 +1025,61 @@
                 const parent = bgEl.parentNode;
                 if (!parent) break;
 
-                const hasContent = fragment.textContent.length > 0 || fragment.querySelector('img, svg');
+                const hasContent = fragment.textContent.trim().length > 0 || fragment.querySelector('img, svg');
                 if (hasContent) {
+                    const lineEl = fragment.firstElementChild || fragment;
+                    formatLineElement(lineEl);
                     parent.insertBefore(fragment, bgEl);
+                } else {
+                    const spacer = document.createElement('div');
+                    spacer.style.cssText = 'height: 1.2em; display: block; margin: 0; padding: 0; width: 100%;';
+                    spacer.setAttribute('data-op-line-split', 'true');
+                    parent.insertBefore(spacer, bgEl);
                 }
-                parent.insertBefore(br, bgEl);
             } catch (err) {
                 console.warn('[Print Engine] Error splitting inline text background at BR:', err);
                 break;
             }
         }
 
-        if (bgEl.textContent.length === 0 && !bgEl.querySelector('img, svg')) {
+        if (bgEl.textContent.trim().length === 0 && !bgEl.querySelector('img, svg')) {
             bgEl.remove();
+        } else {
+            formatLineElement(bgEl);
+        }
+
+        // Lock exact computed pixel widths onto each line element so html2canvas renders exact shrink-wrapped boxes
+        for (const line of linesCreated) {
+            if (!line.parentNode) continue;
+            try {
+                const textRange = document.createRange();
+                textRange.selectNodeContents(line);
+                const textRect = textRange.getBoundingClientRect();
+                const textW = Math.ceil(textRect.width || 0);
+
+                const compL = window.getComputedStyle(line);
+                const padL = parseFloat(compL.paddingLeft) || 0;
+                const padR = parseFloat(compL.paddingRight) || 0;
+                const borderL = parseFloat(compL.borderLeftWidth) || 0;
+                const borderR = parseFloat(compL.borderRightWidth) || 0;
+                const totalW = textW + padL + padR + borderL + borderR;
+
+                const lineRect = line.getBoundingClientRect();
+                const rectW = Math.ceil(lineRect.width || line.offsetWidth || 0);
+
+                const finalW = (rectW > 0 && rectW <= totalW + 4) ? rectW : Math.ceil(totalW);
+                if (finalW > 0) {
+                    line.style.width = finalW + 'px';
+                }
+            } catch (e) {
+                line.style.width = 'fit-content';
+            }
         }
     };
 
     const splitSoftWrappedInlineBackground = (bgEl) => {
         if (!bgEl || !bgEl.parentNode) return;
+        if (bgEl.hasAttribute('data-op-line-split')) return;
         let rects;
         try {
             rects = bgEl.getClientRects();
