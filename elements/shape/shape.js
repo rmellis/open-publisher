@@ -363,6 +363,7 @@ window.initShapes = function() {
             const svgOuter = state.selectedEl.querySelector('svg .shape-path') || state.selectedEl.querySelector('svg g') || state.selectedEl.querySelector('svg rect') || state.selectedEl.querySelector('svg polygon') || state.selectedEl.querySelector('svg path');
             const content = state.selectedEl.querySelector('.element-content');
             const imgEl = state.selectedEl.querySelector('img');
+            const isTextBox = Boolean(!isShape && !imgEl && (state.selectedEl.getAttribute('data-type') === 'text' || (content && (content.querySelector('[contenteditable="true"]') || content.querySelector('.text-content') || content.isContentEditable))));
             
             if (isShape && svgOuter) {
                 const fillAttr = svgOuter.getAttribute('fill');
@@ -577,7 +578,7 @@ window.initShapes = function() {
                         </div>
 
                         <!-- Gradient Fill Panel -->
-                        <div id="ctx-box-gradient-panel" style="display:${currentFillType==='gradient'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.65); border:1px solid #c4dcd9; border-radius:8px;">
+                        <div id="ctx-box-gradient-panel" style="display:${currentFillType==='gradient'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
                             <div class="fp-row">
                                 <label class="fp-label" style="font-size:12.5px;">Gradient Preset:</label>
                                 <div class="fp-select-box" style="width:140px;">
@@ -619,7 +620,7 @@ window.initShapes = function() {
                         </div>
 
                         <!-- Pattern Fill Panel -->
-                        <div id="ctx-box-pattern-panel" style="display:${currentFillType==='pattern'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.65); border:1px solid #c4dcd9; border-radius:8px;">
+                        <div id="ctx-box-pattern-panel" style="display:${currentFillType==='pattern'?'flex':'none'}; flex-direction:column; gap:8px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
                             <div class="fp-row">
                                 <label class="fp-label" style="font-size:12.5px;">Pattern Style:</label>
                                 <div class="fp-select-box" style="width:140px;">
@@ -757,6 +758,13 @@ window.initShapes = function() {
                                 <span id="ctx-val-3d-rz" class="fp-readout">${current3dRz}°</span>
                             </div>
                         </div>
+
+                        ${isTextBox ? `
+                        <div class="fp-3d-warning-note">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div><strong>Note:</strong> Applying a 3D effect converts the text box into an image, and you will not be able to edit the text again.</div>
+                        </div>
+                        ` : ''}
 
                         <div class="fp-divider"></div>
 

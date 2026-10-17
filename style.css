@@ -5393,16 +5393,16 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 /* =========================================================================
-   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.9.9)
+   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.9.10)
    ========================================================================= */
 
 .custom-dialog.format-properties-modal {
     width: 760px !important;
     max-width: 95vw !important;
-    background: #ebf3f2 !important;
-    border-radius: 16px !important;
-    border: 1px solid #b8cecc !important;
-    box-shadow: 0 16px 40px rgba(0, 50, 45, 0.25) !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #ccc !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
     overflow: hidden !important;
     color: #1a2e2c !important;
     font-family: inherit !important;
@@ -5411,12 +5411,12 @@ body.mac-theme #pwa-install-ribbon-btn {
 .custom-dialog.format-properties-modal .custom-dialog-header {
     background: #007670 !important;
     color: #ffffff !important;
-    padding: 10px 14px 10px 22px !important;
-    font-size: 17px !important;
+    padding: 8px 14px 8px 20px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     border-bottom: none !important;
-    border-top-left-radius: 15px !important;
-    border-top-right-radius: 15px !important;
+    border-top-left-radius: 11px !important;
+    border-top-right-radius: 11px !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -5428,12 +5428,12 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 .custom-dialog.format-properties-modal .custom-dialog-close {
-    background: #004d49 !important;
-    border-radius: 8px !important;
+    background: rgba(0, 0, 0, 0.25) !important;
+    border-radius: 10px !important;
     width: 32px !important;
     height: 32px !important;
     color: #ffffff !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -5443,12 +5443,12 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 .custom-dialog.format-properties-modal .custom-dialog-close:hover {
-    background: #c0392b !important;
+    background: rgba(235, 87, 87, 0.9) !important;
 }
 
 .custom-dialog.format-properties-modal .custom-dialog-body {
     padding: 20px 24px 20px 24px !important;
-    background: #ebf3f2 !important;
+    background: #ffffff !important;
     gap: 0 !important;
 }
 
@@ -5475,7 +5475,7 @@ body.mac-theme #pwa-install-ribbon-btn {
     flex-direction: column;
     gap: 13px;
     padding-left: 14px;
-    border-left: 1px solid rgba(0, 118, 112, 0.12);
+    border-left: 1px solid #e5e7eb;
 }
 
 /* Form Rows */
@@ -5725,8 +5725,8 @@ body.mac-theme #pwa-install-ribbon-btn {
 
 /* Clipart Border Art Card */
 .fp-border-art-box {
-    background: rgba(255, 255, 255, 0.45);
-    border: 1px solid #bfd5d2;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 9px 12px;
     display: flex;
@@ -5744,7 +5744,7 @@ body.mac-theme #pwa-install-ribbon-btn {
 
 .fp-border-art-sub {
     font-size: 11px;
-    color: #5a7370;
+    color: #64748b;
     margin-top: 2px;
 }
 
@@ -5787,9 +5787,9 @@ body.mac-theme #pwa-install-ribbon-btn {
     padding: 2px 9px;
     font-size: 11px;
     font-weight: 600;
-    color: var(--ui-theme-dark, #005a54);
+    color: #007670;
     background: transparent;
-    border: 1px solid var(--ui-border, #bfd5d2);
+    border: 1px solid #cbd5e1;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -5797,13 +5797,36 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 .fp-btn-reset-3d:hover {
-    background: var(--ui-theme-dark, #005a54);
+    background: #007670;
     color: #ffffff;
-    border-color: var(--ui-theme-dark, #005a54);
+    border-color: #007670;
+}
+
+/* 3D Warning Note for Text Boxes */
+.fp-3d-warning-note {
+    margin-top: auto;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.fp-3d-warning-note i {
+    color: #d97706;
+    font-size: 13px;
+    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .fp-divider {
-    border-top: 1px solid #bfd5d2;
+    border-top: 1px solid #e5e7eb;
     margin-top: 6px;
     margin-bottom: 12px;
 }
@@ -5818,19 +5841,20 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 .fp-btn-cancel {
-    background: #d4e5e3;
-    color: #005a54;
+    background: #f1f5f9;
+    color: #475569;
     font-weight: 700;
     font-size: 14px;
-    border: none;
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
-    padding: 8px 24px;
+    padding: 7px 24px;
     cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .fp-btn-cancel:hover {
-    background: #c3d9d6;
+    background: #e2e8f0;
+    color: #1e293b;
 }
 
 .fp-btn-cancel:active {
@@ -5933,6 +5957,17 @@ body.dark-mode .custom-dialog.format-properties-modal .fp-right-col {
 body.dark-mode .custom-dialog.format-properties-modal .fp-divider {
     border-top-color: rgba(255, 255, 255, 0.12) !important;
 }
+
+body.dark-mode .custom-dialog.format-properties-modal .fp-3d-warning-note {
+    background: rgba(120, 53, 15, 0.25) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    color: #fde68a !important;
+}
+
+body.dark-mode .custom-dialog.format-properties-modal .fp-3d-warning-note i {
+    color: #fbbf24 !important;
+}
+
 
 
 

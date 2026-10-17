@@ -1107,12 +1107,22 @@ window.ContextMenuActions = {
         const rz = content.getAttribute('data-3d-rz');
         const p = content.getAttribute('data-3d-p');
         
-        // 2. Temporarily remove 3D to get a clean 2D raster
-        content.style.transform = 'none';
-        content.style.transformStyle = 'flat';
+        // 2. Render flat 2D state using an offscreen unscaled clone attached directly to document.body
+        // This eliminates canvas zoom scaling issues (where html2canvas calculated squashed/overlapping text ranges inside transformed #paper)
+        const clone = content.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = '-10000px';
+        clone.style.top = '-10000px';
+        clone.style.width = w + 'px';
+        clone.style.height = h + 'px';
+        clone.style.transform = 'none';
+        clone.style.transformStyle = 'flat';
+        clone.style.zIndex = '-9999';
+        clone.style.visibility = 'visible';
+        document.body.appendChild(clone);
         
         // --- CLIP-PATH INTERCEPT FOR HTML2CANVAS ---
-        let shapeDiv = content.querySelector('div:not(.shape-text)') || content;
+        let shapeDiv = clone.querySelector('div:not(.shape-text)') || clone;
         let clipStr = shapeDiv.style.clipPath || shapeDiv.style.webkitClipPath || '';
         let clipPoints = null;
         if (clipStr && clipStr.includes('polygon')) {
@@ -1128,8 +1138,9 @@ window.ContextMenuActions = {
         }
         
         try {
-            // 3. Render flat 2D state using html2canvas (handles CORS, CSS, fonts perfectly)
-            let flatCanvas = await html2canvas(content, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+            // 3. Render flat 2D state using html2canvas on the unscaled clone
+            let flatCanvas = await html2canvas(clone, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+            clone.remove();
             
             if (clipPoints && clipPoints.length > 2) {
                 const clipCanvas = document.createElement('canvas');
@@ -1148,17 +1159,8 @@ window.ContextMenuActions = {
                 cCtx.drawImage(flatCanvas, 0, 0);
                 flatCanvas = clipCanvas;
             }
-            
-            if (clipStr) {
-                shapeDiv.style.clipPath = clipStr;
-                shapeDiv.style.webkitClipPath = clipStr;
-            }
 
             const flatBase64 = flatCanvas.toDataURL('image/png');
-            
-            // Restore 3D immediately so user doesn't see a flicker
-            content.style.transform = originalTransform;
-            content.style.transformStyle = originalStyle;
             
             // 4. Project the 2D image into 3D using foreignObject
             const pad = Math.max(w, h, 200); 
@@ -1309,6 +1311,7 @@ window.ContextMenuActions = {
             
         } catch(err) {
             console.error(err);
+            if (typeof clone !== 'undefined' && clone && clone.parentNode) clone.remove();
             content.style.transform = originalTransform;
             content.style.transformStyle = originalStyle;
             DialogSystem.close();
