@@ -229,6 +229,9 @@ window.exportAsHTML = async function(opts = {}) {
                 const emailBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
                     ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!(page.themeSettings?.saved))
                     : null;
+                if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
+                    window.normalizeTextBackgroundsForPrint(pageWrapper);
+                }
                 const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: emailBg });
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
                 const tbl = `

@@ -193,6 +193,10 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         ? window.sanitizeH2cBackgroundColor(curPageForExport?.background || '#ffffff', !!(curPageForExport?.themeSettings?.saved))
         : null;
 
+    if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
+        window.normalizeTextBackgroundsForPrint(clone);
+    }
+
     const canvas = await html2canvas(clone, { 
         scale: scaleMultiplier, 
         useCORS: true, 

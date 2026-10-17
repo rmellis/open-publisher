@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.9.0)
+// OpenPublisher Print Engine (v5.9.1)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -311,6 +311,11 @@
                     }
                 });
 
+                // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT SPOOLER ✨
+                if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
+                    window.normalizeTextBackgroundsForPrint(scaler);
+                }
+
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
             });
@@ -372,7 +377,7 @@
 
 
 (function installPhysicalPrintEngine() {
-    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.8.6...");
+    console.log("[Print Engine] Initializing Sandbox Iframe Print sequence v5.9.1...");
 
     // 1. Purge all legacy print styles and spoolers from the DOM
     document.querySelectorAll('.op-dynamic-print-style, #op-master-print-css, #op-legacy-viewport-fix, #op-legacy-ratio-fix, #op-definitive-scale-fix').forEach(e => e.remove());
@@ -906,6 +911,183 @@
 
         return finalCanvas.toDataURL('image/jpeg', 0.95);
     };
+
+    // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT ✨
+    // In html2canvas, inline box fragmentation is unsupported; multi-line inline elements
+    // receive a single union bounding box, painting an oversized solid rectangle.
+    // This normalizer segments inline text background elements (such as pasted Discord addresses
+    // or highlighted text) at explicit <br> tags and visual line wraps into individual per-line
+    // spans while strictly preserving all actual text box backgrounds, colors, and gradients.
+    const isInlineTextBgCandidate = (el) => {
+        if (!el || el.nodeType !== 1) return false;
+        const tag = el.tagName ? el.tagName.toUpperCase() : '';
+        if (tag === 'TABLE' || tag === 'THEAD' || tag === 'TBODY' || tag === 'TFOOT' ||
+            tag === 'TR' || tag === 'TH' || tag === 'TD' || tag === 'SVG' || tag === 'CANVAS' ||
+            tag === 'IMG' || tag === 'HR' || tag === 'BR') {
+            return false;
+        }
+        if (el.classList.contains('element-content') || el.classList.contains('pub-element')) {
+            return false;
+        }
+        if (el.closest('[data-type="shape"], .border-art-wrapper, #native-border-art-border, .page-border-container, .op-theme-container, .op-theme-bg')) {
+            return false;
+        }
+        if (el.classList.contains('wa-text') || el.closest('.wa-text, .beta-wa-img, [class*="wa-style-"]')) {
+            return false;
+        }
+
+        const comp = window.getComputedStyle(el);
+        const display = comp.display;
+        const isInlineLevel = display === 'inline' || display === 'inline-block' ||
+            tag === 'SPAN' || tag === 'MARK' || tag === 'FONT' || tag === 'A' ||
+            tag === 'B' || tag === 'STRONG' || tag === 'I' || tag === 'EM' ||
+            tag === 'U' || tag === 'S' || tag === 'SMALL' || tag === 'CODE' ||
+            tag === 'SUB' || tag === 'SUP';
+        if (!isInlineLevel) return false;
+
+        if (el.hasAttribute('data-opub-hilite') || tag === 'MARK') return true;
+
+        const sBg = el.style.backgroundColor || el.style.background;
+        if (sBg && sBg !== 'transparent' && sBg !== 'none' && !sBg.includes('rgba(0, 0, 0, 0)')) {
+            return true;
+        }
+
+        const bg = comp.backgroundColor;
+        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'rgba(0,0,0,0)') {
+            return true;
+        }
+
+        return false;
+    };
+
+    const splitInlineBackgroundAtBr = (bgEl) => {
+        let br;
+        let guard = 500;
+        while ((br = bgEl.querySelector('br')) && guard-- > 0) {
+            try {
+                const range = document.createRange();
+                range.setStartBefore(bgEl);
+                range.setEndBefore(br);
+                const fragment = range.extractContents();
+
+                br.remove();
+
+                const parent = bgEl.parentNode;
+                if (!parent) break;
+
+                const hasContent = fragment.textContent.length > 0 || fragment.querySelector('img, svg');
+                if (hasContent) {
+                    parent.insertBefore(fragment, bgEl);
+                }
+                parent.insertBefore(br, bgEl);
+            } catch (err) {
+                console.warn('[Print Engine] Error splitting inline text background at BR:', err);
+                break;
+            }
+        }
+
+        if (bgEl.textContent.length === 0 && !bgEl.querySelector('img, svg')) {
+            bgEl.remove();
+        }
+    };
+
+    const splitSoftWrappedInlineBackground = (bgEl) => {
+        if (!bgEl || !bgEl.parentNode) return;
+        let rects;
+        try {
+            rects = bgEl.getClientRects();
+        } catch (e) {
+            return;
+        }
+        if (!rects || rects.length <= 1) return;
+
+        const walker = document.createTreeWalker(bgEl, NodeFilter.SHOW_TEXT, null, false);
+        const textNodes = [];
+        let tNode;
+        while ((tNode = walker.nextNode())) {
+            if (tNode.nodeValue && tNode.nodeValue.length > 0) {
+                textNodes.push(tNode);
+            }
+        }
+        if (textNodes.length === 0) return;
+
+        let currentLineTop = null;
+        const breakPoints = [];
+
+        for (const node of textNodes) {
+            const textLen = node.nodeValue.length;
+            for (let i = 0; i < textLen; i++) {
+                const range = document.createRange();
+                range.setStart(node, i);
+                range.setEnd(node, i + 1);
+                const r = range.getBoundingClientRect();
+                if (!r || (r.width === 0 && r.height === 0)) continue;
+
+                if (currentLineTop === null) {
+                    currentLineTop = r.top;
+                } else if (r.top > currentLineTop + 3) {
+                    breakPoints.push({ node: node, offset: i });
+                    currentLineTop = r.top;
+                }
+            }
+        }
+
+        if (breakPoints.length === 0) return;
+
+        for (let j = breakPoints.length - 1; j >= 0; j--) {
+            const bp = breakPoints[j];
+            try {
+                const rightText = bp.node.splitText(bp.offset);
+                const br = document.createElement('br');
+                bp.node.parentNode.insertBefore(br, rightText);
+            } catch (e) {}
+        }
+
+        splitInlineBackgroundAtBr(bgEl);
+    };
+
+    const normalizeTextBackgroundsForPrint = (container) => {
+        if (!container) return;
+
+        const contentContainers = container.querySelectorAll('.element-content');
+        if (contentContainers.length === 0) return;
+
+        contentContainers.forEach(contentEl => {
+            if (contentEl.closest('[data-type="shape"], .border-art-wrapper, #native-border-art-border, .page-border-container, .op-theme-container')) {
+                return;
+            }
+
+            const allDescendants = Array.from(contentEl.querySelectorAll('*'));
+            const bgElements = allDescendants.filter(isInlineTextBgCandidate);
+
+            bgElements.sort((a, b) => {
+                let depthA = 0, pA = a;
+                while ((pA = pA.parentElement)) depthA++;
+                let depthB = 0, pB = b;
+                while ((pB = pB.parentElement)) depthB++;
+                return depthA - depthB;
+            });
+
+            // Pass 1: Split at explicit <br> tags (e.g. pasted multi-line address from Discord)
+            for (const bgEl of bgElements) {
+                if (!bgEl.parentNode) continue;
+                if (bgEl.querySelector('br')) {
+                    splitInlineBackgroundAtBr(bgEl);
+                }
+            }
+
+            // Pass 2: Split any remaining soft-wrapped multi-line text backgrounds
+            const remainingDescendants = Array.from(contentEl.querySelectorAll('*'));
+            for (const el of remainingDescendants) {
+                if (!el.parentNode) continue;
+                if (isInlineTextBgCandidate(el)) {
+                    splitSoftWrappedInlineBackground(el);
+                }
+            }
+        });
+    };
+
+    window.normalizeTextBackgroundsForPrint = normalizeTextBackgroundsForPrint;
 
     window.printFullDocument = async function(isBooklet = false) {
         // Smart pre-flight detection for business card sized pages
@@ -1751,6 +1933,9 @@
                         : `Rendering page ${i + 1} of ${totalPages}...`;
                 }
                 await sleep(100); 
+
+                // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT ✨
+                normalizeTextBackgroundsForPrint(pageWrapper);
                 
                 // Calculate optimal html2canvas scale based on page DPI (target print density is ~300 DPI)
                 const pageDpi = parseFloat(page.dpi) || masterDpi || 96;
