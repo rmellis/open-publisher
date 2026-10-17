@@ -1,4 +1,4 @@
-// Open Publisher PWA & Desktop Download Engine (v5.9.2)
+// Open Publisher PWA & Desktop Download Engine (v5.9.4)
 (function() {
     'use strict';
 

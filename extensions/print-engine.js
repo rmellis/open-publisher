@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.9.3)
+// OpenPublisher Print Engine (v5.9.4)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -1058,6 +1058,7 @@
         let origRadius = '0px';
         let padLeft = 0;
         let padRight = 0;
+        let noWrapMode = 'nowrap';
         try {
             const bgComp = window.getComputedStyle(bgEl);
             if (bgComp.borderRadius && bgComp.borderRadius !== '0px') {
@@ -1067,6 +1068,10 @@
             const pR = parseFloat(bgComp.paddingRight);
             if (!isNaN(pL) && pL > 0) padLeft = pL;
             if (!isNaN(pR) && pR > 0) padRight = pR;
+            const ws = bgComp.whiteSpace || 'normal';
+            if (ws === 'pre' || ws === 'pre-wrap' || ws === 'break-spaces') {
+                noWrapMode = 'pre';
+            }
         } catch (e) {}
 
         const linesCreated = [];
@@ -1075,7 +1080,8 @@
             if (!el || el.nodeType !== 1) return;
             el.style.display = 'block';
             el.style.width = 'fit-content';
-            el.style.maxWidth = '100%';
+            el.style.maxWidth = 'none';
+            el.style.whiteSpace = noWrapMode;
             el.style.boxSizing = 'border-box';
             el.style.marginTop = '0px';
             el.style.marginBottom = '0px';
@@ -1149,7 +1155,7 @@
         }
 
         // Enforce exact sub-pixel vertical stride parity (stripHeight + lineGap === lineStride)
-        // and lock exact shrink-wrapped pixel widths onto each line element
+        // and lock exact shrink-wrapped ceiling pixel widths onto each line element
         for (let k = 0; k < linesCreated.length; k++) {
             const line = linesCreated[k];
             if (!line.parentNode) continue;
@@ -1160,15 +1166,10 @@
                 const targetStride = lineStride > 0 ? lineStride : naturalBlockH;
                 const stripHeight = Math.max(1, targetStride - lineGap);
 
-                line.style.height = stripHeight.toFixed(2) + 'px';
-                line.style.lineHeight = stripHeight.toFixed(2) + 'px';
-                line.style.marginTop = '0px';
-                line.style.marginBottom = lineGap.toFixed(2) + 'px';
-
                 const textRange = document.createRange();
                 textRange.selectNodeContents(line);
                 const textRect = textRange.getBoundingClientRect();
-                const textW = (textRect.width || 0) / scaleX;
+                const textW = Math.ceil((textRect.width || 0) / scaleX);
 
                 const compL = window.getComputedStyle(line);
                 const pL = parseFloat(compL.paddingLeft) || padLeft;
@@ -1177,11 +1178,16 @@
                 const borderR = parseFloat(compL.borderRightWidth) || 0;
                 const totalW = textW + pL + pR + borderL + borderR;
 
-                const rectW = (lineRect.width / scaleX) || line.offsetWidth || 0;
-                const finalW = (rectW > 0 && rectW <= totalW + 2) ? rectW : totalW;
+                const rectW = Math.ceil(((lineRect.width || 0) / scaleX) || line.offsetWidth || 0);
+                const finalW = (rectW > 0 && rectW <= totalW + 4) ? rectW : Math.ceil(totalW);
                 if (finalW > 0) {
-                    line.style.width = finalW.toFixed(2) + 'px';
+                    line.style.width = finalW + 'px';
                 }
+
+                line.style.height = stripHeight.toFixed(2) + 'px';
+                line.style.lineHeight = stripHeight.toFixed(2) + 'px';
+                line.style.marginTop = '0px';
+                line.style.marginBottom = lineGap.toFixed(2) + 'px';
             } catch (e) {
                 line.style.width = 'fit-content';
             }
