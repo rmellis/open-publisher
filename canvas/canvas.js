@@ -564,71 +564,62 @@ window.syncHandleScaling = function(z) {
     const zoom = parseFloat(z) || (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
     if (!zoom || zoom <= 0) return;
 
-    // Optical screen sizes calibrated to the standard 60% page zoom appearance:
-    // Resize handle: ~10px visual screen width/height (10 / 0.6 = 16.667px at 60% zoom)
-    // Rotate circle: ~11px visual diameter
-    // Rotate stick length: ~24px visual length (40px at 60% zoom)
-    // Rotate top distance: stick length + half circle diameter
-    // Border width: 1 physical screen pixel across all zoom levels
+    const invZoom = (1 / zoom).toFixed(6);
+    const zoomStr = zoom.toFixed(6);
+
+    // Zoom-invariant screen sizes across all zoom levels (10% to 400%+):
     const handleSize = (10 / zoom).toFixed(3) + 'px';
     const handleHalf = (5 / zoom).toFixed(3) + 'px';
-    const rotateSize = (11 / zoom).toFixed(3) + 'px';
-    const rotateHalf = (5.5 / zoom).toFixed(3) + 'px';
+    const rotateSize = (13 / zoom).toFixed(3) + 'px';
+    const rotateHalf = (6.5 / zoom).toFixed(3) + 'px';
     const rotateStickLen = (24 / zoom).toFixed(3) + 'px';
-    const rotateTop = (29.5 / zoom).toFixed(3) + 'px';
-    const borderWidth = Math.max(1, 1 / zoom).toFixed(3) + 'px';
+    const rotateTop = (30.5 / zoom).toFixed(3) + 'px';
+    const borderWidth = (1.5 / zoom).toFixed(4) + 'px';
     const handleRadius = (2 / zoom).toFixed(3) + 'px';
-    const cropHandleSize = (13.33 / zoom).toFixed(3) + 'px';
-    const cropHandleHalf = (6.67 / zoom).toFixed(3) + 'px';
-    const cropBorderWidth = Math.max(1.5, 2 / zoom).toFixed(3) + 'px';
-    const shapeHandleSize = (8.5 / zoom).toFixed(3) + 'px';
+    const cropHandleSize = (14 / zoom).toFixed(3) + 'px';
+    const cropHandleHalf = (7 / zoom).toFixed(3) + 'px';
+    const cropBorderWidth = (2 / zoom).toFixed(4) + 'px';
+    const shapeHandleSize = (10 / zoom).toFixed(3) + 'px';
 
-    // Smart Arrow UI optical scaling (zoom invariance)
-    // Inverted zoom scaling ensures controls (slider pill, badge, handle) remain 
-    // constant, legible, and comfortable to use whether zoomed out to 30% or in to 200%.
-    const arrowUiScale = Math.min(3.5, Math.max(0.5, 1 / zoom)).toFixed(4);
-    const arrowHandleSize = (16 / zoom).toFixed(3) + 'px';
-    const arrowHandleBorder = Math.max(1.5, 2 / zoom).toFixed(3) + 'px';
-    const arrowBorderWidth = Math.max(1.2, 1.5 / zoom).toFixed(3) + 'px';
+    // Smart Arrow UI optical scaling (true zoom invariance)
+    const arrowUiScale = invZoom;
+    const arrowHandleSize = (14 / zoom).toFixed(3) + 'px';
+    const arrowHandleBorder = (2 / zoom).toFixed(4) + 'px';
+    const arrowBorderWidth = (1.5 / zoom).toFixed(4) + 'px';
 
-    const root = document.documentElement;
-    if (root) {
-        root.style.setProperty('--handle-size', handleSize);
-        root.style.setProperty('--handle-half', handleHalf);
-        root.style.setProperty('--rotate-size', rotateSize);
-        root.style.setProperty('--rotate-half', rotateHalf);
-        root.style.setProperty('--rotate-stick-len', rotateStickLen);
-        root.style.setProperty('--rotate-top', rotateTop);
-        root.style.setProperty('--handle-border-width', borderWidth);
-        root.style.setProperty('--handle-radius', handleRadius);
-        root.style.setProperty('--crop-handle-size', cropHandleSize);
-        root.style.setProperty('--crop-handle-half', cropHandleHalf);
-        root.style.setProperty('--crop-border-width', cropBorderWidth);
-        root.style.setProperty('--shape-handle-size', shapeHandleSize);
-        root.style.setProperty('--arrow-ui-scale', arrowUiScale);
-        root.style.setProperty('--arrow-handle-size', arrowHandleSize);
-        root.style.setProperty('--arrow-handle-border', arrowHandleBorder);
-        root.style.setProperty('--arrow-border-width', arrowBorderWidth);
-    }
+    const applyVars = (target) => {
+        if (!target) return;
+        target.style.setProperty('--zoom-level', zoomStr);
+        target.style.setProperty('--ui-inv-zoom', invZoom);
+        target.style.setProperty('--handle-size', handleSize);
+        target.style.setProperty('--handle-half', handleHalf);
+        target.style.setProperty('--rotate-size', rotateSize);
+        target.style.setProperty('--rotate-half', rotateHalf);
+        target.style.setProperty('--rotate-stick-len', rotateStickLen);
+        target.style.setProperty('--rotate-top', rotateTop);
+        target.style.setProperty('--handle-border-width', borderWidth);
+        target.style.setProperty('--handle-radius', handleRadius);
+        target.style.setProperty('--crop-handle-size', cropHandleSize);
+        target.style.setProperty('--crop-handle-half', cropHandleHalf);
+        target.style.setProperty('--crop-border-width', cropBorderWidth);
+        target.style.setProperty('--shape-handle-size', shapeHandleSize);
+        target.style.setProperty('--arrow-ui-scale', arrowUiScale);
+        target.style.setProperty('--arrow-handle-size', arrowHandleSize);
+        target.style.setProperty('--arrow-handle-border', arrowHandleBorder);
+        target.style.setProperty('--arrow-border-width', arrowBorderWidth);
+    };
 
+    applyVars(document.documentElement);
     const paperEl = document.getElementById('paper');
-    if (paperEl) {
-        paperEl.style.setProperty('--handle-size', handleSize);
-        paperEl.style.setProperty('--handle-half', handleHalf);
-        paperEl.style.setProperty('--rotate-size', rotateSize);
-        paperEl.style.setProperty('--rotate-half', rotateHalf);
-        paperEl.style.setProperty('--rotate-stick-len', rotateStickLen);
-        paperEl.style.setProperty('--rotate-top', rotateTop);
-        paperEl.style.setProperty('--handle-border-width', borderWidth);
-        paperEl.style.setProperty('--handle-radius', handleRadius);
-        paperEl.style.setProperty('--crop-handle-size', cropHandleSize);
-        paperEl.style.setProperty('--crop-handle-half', cropHandleHalf);
-        paperEl.style.setProperty('--crop-border-width', cropBorderWidth);
-        paperEl.style.setProperty('--shape-handle-size', shapeHandleSize);
-        paperEl.style.setProperty('--arrow-ui-scale', arrowUiScale);
-        paperEl.style.setProperty('--arrow-handle-size', arrowHandleSize);
-        paperEl.style.setProperty('--arrow-handle-border', arrowHandleBorder);
-        paperEl.style.setProperty('--arrow-border-width', arrowBorderWidth);
+    applyVars(paperEl);
+
+    // Keep quick actions edge-flip and rotate-handle clearance synced when zooming
+    if (typeof window.updateQuickActionsPosition === 'function') {
+        const qaPill = document.querySelector('.selected-overlay .element-quick-actions');
+        const boundEl = (typeof state !== 'undefined' && state.selectedEl) || (qaPill && qaPill.parentElement && qaPill.parentElement._boundEl);
+        if (qaPill && boundEl) {
+            window.updateQuickActionsPosition(qaPill, boundEl);
+        }
     }
 };
 

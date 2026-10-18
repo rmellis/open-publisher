@@ -216,11 +216,13 @@
             els.push(state.selectedEl);
         }
 
+        const isTransforming = (typeof state !== 'undefined' && !!state.dragMode);
+
         if (els.length === 1 && (!state.multiSelected || state.multiSelected.length === 0)) {
             const el = els[0];
             const existing = container.firstElementChild;
-            const isTransforming = !!state.dragMode;
             if (existing && existing.classList.contains('selected-overlay') && existing._boundEl === el && container.children.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+                existing.classList.toggle('is-transforming', isTransforming);
                 existing.style.left = el.style.left;
                 existing.style.top = el.style.top;
                 existing.style.width = el.style.width;
@@ -237,6 +239,14 @@
                         window.renderSmartArrowTipControls(existing, el);
                     }
                 }
+                let qaPill = existing.querySelector('.element-quick-actions');
+                if (!qaPill && el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
+                    if (typeof window.renderElementQuickActions === 'function') {
+                        window.renderElementQuickActions(existing, el);
+                    }
+                } else if (qaPill && typeof window.updateQuickActionsPosition === 'function') {
+                    window.updateQuickActionsPosition(qaPill, el);
+                }
                 if (isTransforming || existing._lastRot === el.style.transform) {
                     return;
                 }
@@ -248,7 +258,7 @@
         if (els.length === 1) {
             const el = els[0];
             const overlay = document.createElement('div');
-            overlay.className = 'selected-overlay'; 
+            overlay.className = 'selected-overlay' + (isTransforming ? ' is-transforming' : '') + (el.classList.contains('cropping') ? ' is-cropping' : ''); 
             overlay._boundEl = el;
             overlay._lastRot = el.style.transform; 
             overlay.style.cssText = `
@@ -261,7 +271,7 @@
             `;
             
             const box = document.createElement('div');
-            box.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: var(--handle-border-width, 1px) dashed var(--selection); pointer-events: none; box-sizing: border-box;';
+            box.className = 'selection-border-box';
             overlay.appendChild(box);
 
             if (!el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
@@ -293,6 +303,13 @@
                 if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg')) {
                     if (typeof window.renderSmartArrowTipControls === 'function') {
                         window.renderSmartArrowTipControls(overlay, el);
+                    }
+                }
+
+                // --- FLOATING MICRO-ACTION PILL (Clone & Delete) ---
+                if (el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
+                    if (typeof window.renderElementQuickActions === 'function') {
+                        window.renderElementQuickActions(overlay, el);
                     }
                 }
             }
@@ -348,7 +365,8 @@
                 const groupH = maxB - minT;
                 const groupOverlay = document.createElement('div');
                 groupOverlay.id = 'group-selection-overlay';
-                groupOverlay.className = 'selected-overlay group-selection-overlay';
+                groupOverlay.className = 'selected-overlay group-selection-overlay' + (isTransforming ? ' is-transforming' : '');
+                groupOverlay._boundEl = groupOverlay;
                 groupOverlay.style.cssText = `
                     position: absolute;
                     left: ${minL}px; top: ${minT}px;
@@ -358,7 +376,7 @@
                 `;
 
                 const groupBox = document.createElement('div');
-                groupBox.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: var(--handle-border-width, 1.5px) solid var(--selection); pointer-events: none; box-sizing: border-box;';
+                groupBox.className = 'selection-border-box group-border-box';
                 groupOverlay.appendChild(groupBox);
 
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -385,6 +403,10 @@
 
                 groupOverlay.appendChild(rStick);
                 groupOverlay.appendChild(rHandle);
+
+                if (typeof window.renderElementQuickActions === 'function') {
+                    window.renderElementQuickActions(groupOverlay, groupOverlay);
+                }
 
                 container.appendChild(groupOverlay);
             }
@@ -841,6 +863,102 @@
             }
         }
     };
+
+    /**
+     * Render Floating Micro-Action Pill (Clone & Delete) on Selected Element Overlay.
+     */
+    window.renderElementQuickActions = function(overlay, el) {
+        if (!overlay || !el) return;
+
+        const oldPill = overlay.querySelector('.element-quick-actions');
+        if (oldPill) oldPill.remove();
+
+        const isTextBox = !!(el.querySelector('[contenteditable="true"], .text-content') || el.getAttribute('data-type') === 'text');
+        const cloneTooltip = isTextBox ? 'Clone Text Box (Ctrl+D)' : 'Duplicate Element (Ctrl+D)';
+        const deleteTooltip = isTextBox ? 'Delete Text Box (Del)' : 'Delete Element (Del)';
+
+        const pill = document.createElement('div');
+        pill.className = 'element-quick-actions';
+        pill.setAttribute('role', 'toolbar');
+        pill.setAttribute('aria-label', 'Element Quick Actions');
+
+        pill.innerHTML = `
+            <button type="button" class="quick-action-btn quick-action-clone" title="${cloneTooltip}" aria-label="${cloneTooltip}">
+                <i class="fas fa-clone"></i>
+            </button>
+            <div class="quick-action-divider"></div>
+            <button type="button" class="quick-action-btn quick-action-delete" title="${deleteTooltip}" aria-label="${deleteTooltip}">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+
+        const cloneBtn = pill.querySelector('.quick-action-clone');
+        if (cloneBtn) {
+            cloneBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            cloneBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.duplicateSelected === 'function') {
+                    window.duplicateSelected();
+                } else if (typeof duplicateSelected === 'function') {
+                    duplicateSelected();
+                }
+            });
+        }
+
+        const deleteBtn = pill.querySelector('.quick-action-delete');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.deleteSelected === 'function') {
+                    window.deleteSelected();
+                } else if (typeof deleteSelected === 'function') {
+                    deleteSelected();
+                }
+            });
+        }
+
+        if (typeof window.updateQuickActionsPosition === 'function') {
+            window.updateQuickActionsPosition(pill, el);
+        }
+
+        overlay.appendChild(pill);
+    };
+
+    window.updateQuickActionsPosition = function(pill, el) {
+        if (!pill || !el) return;
+        const zoom = (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+        const topVal = parseFloat(el.style.top) || el.offsetTop || 0;
+        const elW = parseFloat(el.style.width) || el.offsetWidth || 100;
+        const elH = parseFloat(el.style.height) || el.offsetHeight || 100;
+        const paper = document.getElementById('paper');
+        const paperH = paper ? (parseFloat(paper.style.height) || 1123) : 1123;
+        const clearance = 12;
+
+        pill.classList.remove('flip-bottom', 'inside-top', 'offset-from-rotate');
+        if (topVal < clearance) {
+            if (topVal + elH + (36 / zoom) > paperH) {
+                pill.classList.add('inside-top');
+            } else {
+                pill.classList.add('flip-bottom');
+            }
+        } else if (elW * zoom < 145) {
+            pill.classList.add('offset-from-rotate');
+        }
+    };
+
+    window.addEventListener('mouseup', () => {
+        document.querySelectorAll('.selected-overlay.is-transforming').forEach(o => o.classList.remove('is-transforming'));
+        document.body.classList.remove('is-dragging-element');
+    });
 
     // Polling fallback to catch selection changes across the app
     setTimeout(() => {
@@ -3962,6 +4080,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
 
         if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
+            document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
             if(e.target.classList.contains('rotate-handle')) {
                 state.dragMode = 'rotate';
                 if (state.multiSelected && state.multiSelected.length > 1) {
@@ -4176,6 +4295,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
                 e.preventDefault(); return;
             }
 
@@ -4199,6 +4319,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
                 if(!isEditingText) e.preventDefault(); 
             }
         }

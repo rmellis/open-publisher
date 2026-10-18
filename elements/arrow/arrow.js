@@ -1774,7 +1774,7 @@
         const isStrokeOnly = pathInfo.isStrokeOnly || styleId.startsWith('open-barb-') || styleId === 'dimension-arrow' || styleId === 'dimension-dual-right' || styleId === 'hairline-arrow';
         const hasStroke = stroke && stroke !== 'none' && stroke !== 'transparent' && strokeWidth > 0;
         const strokePad = hasStroke ? Math.ceil(Math.max(20, strokeWidth * 1.5 + 4)) : 0;
-        const shadowPad = hasShadow ? Math.ceil(shadowBlur * 2.5 + Math.max(Math.abs(shadowOx), Math.abs(shadowOy)) + 20) : 0;
+        const shadowPad = hasShadow ? Math.ceil(shadowBlur * 3.5 + Math.max(Math.abs(shadowOx), Math.abs(shadowOy)) + strokePad + 16) : 0;
         const pad = Math.max(strokePad, shadowPad);
 
         const targetW = Math.max(16, Math.round((w + pad * 2) * scaleFactor));
@@ -1786,57 +1786,56 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
 
-        ctx.scale(scaleFactor, scaleFactor);
-        if (pad > 0) ctx.translate(pad, pad);
-
         const capAttr = (path && path.getAttribute('stroke-linecap')) || 'round';
         const joinAttr = (path && path.getAttribute('stroke-linejoin')) || 'round';
 
         try {
             const p = new Path2D(pathInfo.d);
-            
-            // 1. Draw glowing shadow halo following arrow shape if present
-            if (hasShadow && shadowBlur > 0) {
-                ctx.save();
-                let col = shadowColor;
-                const cm = col.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i);
-                if (cm) {
-                    const r = cm[1], g = cm[2], b = cm[3];
-                    let a = cm[4] !== undefined ? parseFloat(cm[4]) : 1.0;
-                    if (a < 0.75) a = Math.min(0.9, a * 1.6);
-                    col = `rgba(${r}, ${g}, ${b}, ${a})`;
+            const useDropShadow = hasShadow && (shadowBlur > 0 || shadowOx !== 0 || shadowOy !== 0);
+
+            if (useDropShadow) {
+                // Render the unified arrow silhouette (fill + stroke) onto an offscreen canvas first
+                // so fill and stroke never cast double-stacked shadows, then apply CSS drop-shadow 1:1 with the editor.
+                const arrowCanvas = document.createElement('canvas');
+                arrowCanvas.width = targetW;
+                arrowCanvas.height = targetH;
+                const arrowCtx = arrowCanvas.getContext('2d');
+                if (arrowCtx) {
+                    arrowCtx.scale(scaleFactor, scaleFactor);
+                    if (pad > 0) arrowCtx.translate(pad, pad);
+
+                    if (!isStrokeOnly && !isHollow && fill && fill !== 'none' && fill !== 'transparent') {
+                        arrowCtx.fillStyle = fill;
+                        arrowCtx.fill(p);
+                    }
+                    if (hasStroke) {
+                        arrowCtx.strokeStyle = stroke;
+                        arrowCtx.lineWidth = strokeWidth;
+                        arrowCtx.lineCap = capAttr;
+                        arrowCtx.lineJoin = joinAttr;
+                        arrowCtx.stroke(p);
+                    }
+
+                    ctx.save();
+                    ctx.filter = `drop-shadow(${shadowOx * scaleFactor}px ${shadowOy * scaleFactor}px ${shadowBlur * scaleFactor}px ${shadowColor})`;
+                    ctx.drawImage(arrowCanvas, 0, 0);
+                    ctx.restore();
                 }
-                ctx.shadowColor = col;
-                // HTML5 Canvas 2D shadow properties are unaffected by ctx.scale() CTM and must be multiplied by scaleFactor
-                ctx.shadowBlur = Math.round(shadowBlur * scaleFactor);
-                ctx.shadowOffsetX = Math.round(shadowOx * scaleFactor);
-                ctx.shadowOffsetY = Math.round(shadowOy * scaleFactor);
-                
+            } else {
+                ctx.scale(scaleFactor, scaleFactor);
+                if (pad > 0) ctx.translate(pad, pad);
+
                 if (!isStrokeOnly && !isHollow && fill && fill !== 'none' && fill !== 'transparent') {
-                    ctx.fillStyle = col;
+                    ctx.fillStyle = fill;
                     ctx.fill(p);
                 }
                 if (hasStroke) {
-                    ctx.strokeStyle = col;
+                    ctx.strokeStyle = stroke;
                     ctx.lineWidth = strokeWidth;
                     ctx.lineCap = capAttr;
                     ctx.lineJoin = joinAttr;
                     ctx.stroke(p);
                 }
-                ctx.restore();
-            }
-
-            // 2. Draw solid arrow body and stroke on top
-            if (!isStrokeOnly && !isHollow && fill && fill !== 'none' && fill !== 'transparent') {
-                ctx.fillStyle = fill;
-                ctx.fill(p);
-            }
-            if (hasStroke) {
-                ctx.strokeStyle = stroke;
-                ctx.lineWidth = strokeWidth;
-                ctx.lineCap = capAttr;
-                ctx.lineJoin = joinAttr;
-                ctx.stroke(p);
             }
         } catch (e) {
             console.error('[Smart Arrows] Error drawing Path2D in bakeSmartArrowForPrint:', e);

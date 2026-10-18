@@ -31,18 +31,20 @@
     --main-scrollbar-thumb-hover: var(--ui-theme-dark);
 
     /* Handle Scaling Variables (Dynamically adjusted per zoom level) */
+    --zoom-level: 0.6;
+    --ui-inv-zoom: 1.666667;
     --handle-size: 16.667px;
     --handle-half: 8.333px;
-    --rotate-size: 18.333px;
-    --rotate-half: 9.167px;
+    --rotate-size: 21.667px;
+    --rotate-half: 10.833px;
     --rotate-stick-len: 40px;
-    --rotate-top: 49.167px;
-    --handle-border-width: 1.667px;
+    --rotate-top: 50.833px;
+    --handle-border-width: 2.5px;
     --handle-radius: 2px;
-    --crop-handle-size: 22.222px;
-    --crop-handle-half: 11.111px;
+    --crop-handle-size: 23.333px;
+    --crop-handle-half: 11.667px;
     --crop-border-width: 3.333px;
-    --shape-handle-size: 14.167px;
+    --shape-handle-size: 16.667px;
 }
 
 /* Signature UI Accent Color for Form Controls */
@@ -1068,12 +1070,16 @@ body.dark-mode .tab.active {
 }
 .custom-guide.h {
     left: 0; right: 0;
-    height: 2px;
+    height: 1.5px;
+    transform: scaleY(var(--ui-inv-zoom, 1));
+    transform-origin: 0 0;
     cursor: ns-resize;
 }
 .custom-guide.v {
     top: 0; bottom: 0;
-    width: 2px;
+    width: 1.5px;
+    transform: scaleX(var(--ui-inv-zoom, 1));
+    transform-origin: 0 0;
     cursor: ew-resize;
 }
 /* Hitbox area for easier dragging */
@@ -1545,11 +1551,20 @@ td, th {
 }
 
 .resize-handle {
-    width: var(--handle-size, 15px); height: var(--handle-size, 15px); background: white; border: var(--handle-border-width, 1px) solid var(--selection);
-    position: absolute; display: none; z-index: 1001; cursor: pointer;
-    border-radius: var(--handle-radius, 2px);
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border: 1.5px solid var(--selection);
+    position: absolute;
+    display: none;
+    z-index: 1001;
+    cursor: pointer;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     pointer-events: auto;
     box-sizing: border-box;
+    transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 50%;
 }
 .pub-element.selected .resize-handle { display: block; }
 
@@ -1559,11 +1574,17 @@ td, th {
 }
 
 .shape-edit-handle {
-    width: var(--shape-handle-size, 12px); height: var(--shape-handle-size, 12px); background: #fff; border: var(--handle-border-width, 2px) solid var(--selection);
-    position: absolute; z-index: 1002; cursor: pointer;
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border: 2px solid var(--selection);
+    position: absolute;
+    z-index: 1002;
+    cursor: pointer;
     border-radius: 50%;
     pointer-events: auto;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 50%;
     box-sizing: border-box;
 }
 .pub-element.editing-shape .resize-handle,
@@ -1574,28 +1595,49 @@ td, th {
 .pub-element.cropping .rotate-handle, 
 .pub-element.cropping .rotate-stick { display: none !important; }
 
-.rh-nw { top: calc(-1 * var(--handle-half, 8px)); left: calc(-1 * var(--handle-half, 8px)); cursor: nw-resize; }
-.rh-n  { top: calc(-1 * var(--handle-half, 8px)); left: calc(50% - var(--handle-half, 8px)); cursor: n-resize; }
-.rh-ne { top: calc(-1 * var(--handle-half, 8px)); right: calc(-1 * var(--handle-half, 8px)); cursor: ne-resize; }
-.rh-e  { top: calc(50% - var(--handle-half, 8px)); right: calc(-1 * var(--handle-half, 8px)); cursor: e-resize; }
-.rh-se { bottom: calc(-1 * var(--handle-half, 8px)); right: calc(-1 * var(--handle-half, 8px)); cursor: se-resize; }
-.rh-s  { bottom: calc(-1 * var(--handle-half, 8px)); left: calc(50% - var(--handle-half, 8px)); cursor: s-resize; }
-.rh-sw { bottom: calc(-1 * var(--handle-half, 8px)); left: calc(-1 * var(--handle-half, 8px)); cursor: sw-resize; }
-.rh-w  { top: calc(50% - var(--handle-half, 8px)); left: calc(-1 * var(--handle-half, 8px)); cursor: w-resize; }
+.rh-nw { top: 0;    left: 0;    right: auto; bottom: auto; cursor: nw-resize; }
+.rh-n  { top: 0;    left: 50%;  right: auto; bottom: auto; cursor: n-resize; }
+.rh-ne { top: 0;    left: 100%; right: auto; bottom: auto; cursor: ne-resize; }
+.rh-e  { top: 50%;  left: 100%; right: auto; bottom: auto; cursor: e-resize; }
+.rh-se { top: 100%; left: 100%; right: auto; bottom: auto; cursor: se-resize; }
+.rh-s  { top: 100%; left: 50%;  right: auto; bottom: auto; cursor: s-resize; }
+.rh-sw { top: 100%; left: 0;    right: auto; bottom: auto; cursor: sw-resize; }
+.rh-w  { top: 50%;  left: 0;    right: auto; bottom: auto; cursor: w-resize; }
 
 .rotate-handle {
-    position: absolute; top: calc(-1 * var(--rotate-top, 50px)); left: calc(50% - var(--rotate-half, 8px)); width: var(--rotate-size, 16px); height: var(--rotate-size, 16px);
-    background: #28a745; border: var(--handle-border-width, 1px) solid #ffffff; border-radius: 50%; display: none;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    background: #28a745;
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+    display: none;
     pointer-events: auto;
     box-sizing: border-box;
+    transform-origin: 0 0;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-50%, -30.5px);
     cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='white' stroke='black' stroke-width='1.5' style='transform: rotate(45deg)'><path d='M21 11c0 5.5-4.5 10-10 10-3.9 0-7.2-2.3-8.9-5.6l2.4-1.2C5.7 16.5 8.1 18 11 18c3.9 0 7-3.1 7-7s-3.1-7-7-7c-1.3 0-2.5.4-3.6 1L10 8H3V1l2.6 2.6C7.2 2.3 9 1.5 11 1.5c5.5 0 10 4.5 10 9.5z'/></svg>") 12 12, pointer;
 }
-.rotate-stick { position: absolute; top: calc(-1 * var(--rotate-stick-len, 40px)); left: 50%; width: var(--handle-border-width, 1px); height: var(--rotate-stick-len, 40px); background: var(--selection); display: none; transform: translateX(-50%); }
+.rotate-stick {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1.5px;
+    height: 24px;
+    background: var(--selection);
+    display: none;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-50%, -24px);
+}
 .pub-element.selected .rotate-handle, .pub-element.selected .rotate-stick { display: block; }
 
 /* --- View Tab Toggles --- */
 #paper.show-boundaries .pub-element {
-    outline: 2px solid var(--ui-theme-color) !important;
+    outline: calc(1.5px * var(--ui-inv-zoom, 1)) solid var(--ui-theme-color) !important;
 }
 
 #paper.show-text-blocks .pub-element[contenteditable="true"],
@@ -2037,7 +2079,7 @@ td, th {
         transform: none !important; position: absolute; top: 0; left: 0;
     }
     #paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .margin-guides, .resize-handle, .rotate-handle, .rotate-stick { display: none !important; }
+    .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .element-quick-actions, #selection-overlay-container, .selected-overlay { display: none !important; }
     .page-header.visible, .page-footer.visible { display: flex !important; }
     .page-header:not(.visible), .page-footer:not(.visible) { display: none !important; }
 }
@@ -4323,6 +4365,7 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
 /* 1. Stop the main wrapper from chopping off the handles */
         .pub-element.cropping {
             overflow: visible !important;
+            outline: none !important;
         }
 
         /* 2. Force the inner wrapper to do the actual image masking */
@@ -4335,25 +4378,27 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
         /* 3. Enlarge the handles ONLY when the element is in crop mode */
         .pub-element.cropping .resize-handle {
             display: block !important;
-            width: var(--crop-handle-size, 20px) !important;
-            height: var(--crop-handle-size, 20px) !important;
+            width: 14px !important;
+            height: 14px !important;
             background-color: #f97316 !important; /* Bright orange */
-            border: var(--crop-border-width, 2px) solid #ffffff !important;
+            border: 2px solid #ffffff !important;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
             border-radius: 50% !important; 
             z-index: 20 !important;
+            transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1)) !important;
+            transform-origin: 50% 50% !important;
         }
 
-        /* 4. Re-center the handles based on the dynamic crop handle size */
-        .pub-element.cropping .rh-nw { top: calc(-1 * var(--crop-handle-half, 10px)) !important; left: calc(-1 * var(--crop-handle-half, 10px)) !important; }
-        .pub-element.cropping .rh-ne { top: calc(-1 * var(--crop-handle-half, 10px)) !important; right: calc(-1 * var(--crop-handle-half, 10px)) !important; }
-        .pub-element.cropping .rh-sw { bottom: calc(-1 * var(--crop-handle-half, 10px)) !important; left: calc(-1 * var(--crop-handle-half, 10px)) !important; }
-        .pub-element.cropping .rh-se { bottom: calc(-1 * var(--crop-handle-half, 10px)) !important; right: calc(-1 * var(--crop-handle-half, 10px)) !important; }
+        /* 4. Re-center the handles based on the zoom-invariant crop handle transform */
+        .pub-element.cropping .rh-nw { top: 0 !important; left: 0 !important; right: auto !important; bottom: auto !important; }
+        .pub-element.cropping .rh-ne { top: 0 !important; left: 100% !important; right: auto !important; bottom: auto !important; }
+        .pub-element.cropping .rh-sw { top: 100% !important; left: 0 !important; right: auto !important; bottom: auto !important; }
+        .pub-element.cropping .rh-se { top: 100% !important; left: 100% !important; right: auto !important; bottom: auto !important; }
         
-        .pub-element.cropping .rh-n  { top: calc(-1 * var(--crop-handle-half, 10px)) !important; left: calc(50% - var(--crop-handle-half, 10px)) !important; margin-left: 0 !important; }
-        .pub-element.cropping .rh-s  { bottom: calc(-1 * var(--crop-handle-half, 10px)) !important; left: calc(50% - var(--crop-handle-half, 10px)) !important; margin-left: 0 !important; }
-        .pub-element.cropping .rh-e  { top: calc(50% - var(--crop-handle-half, 10px)) !important; right: calc(-1 * var(--crop-handle-half, 10px)) !important; margin-top: 0 !important; }
-        .pub-element.cropping .rh-w  { top: calc(50% - var(--crop-handle-half, 10px)) !important; left: calc(-1 * var(--crop-handle-half, 10px)) !important; margin-top: 0 !important; }
+        .pub-element.cropping .rh-n  { top: 0 !important; left: 50% !important; right: auto !important; bottom: auto !important; margin-left: 0 !important; }
+        .pub-element.cropping .rh-s  { top: 100% !important; left: 50% !important; right: auto !important; bottom: auto !important; margin-left: 0 !important; }
+        .pub-element.cropping .rh-e  { top: 50% !important; left: 100% !important; right: auto !important; bottom: auto !important; margin-top: 0 !important; }
+        .pub-element.cropping .rh-w  { top: 50% !important; left: 0 !important; right: auto !important; bottom: auto !important; margin-top: 0 !important; }
 
 #paper.is-spread::after {
     content: "";
@@ -4424,15 +4469,18 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
 /* Shape Edit Handles */
 .shape-edit-handle {
     position: absolute;
-    width: 8px;
-    height: 8px;
-    background: #000;
-    border: 1px solid #fff;
+    width: 10px;
+    height: 10px;
+    background: #000000;
+    border: 1.5px solid #ffffff;
     border-radius: 50%;
-    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 50%;
     cursor: crosshair;
     z-index: 10000;
     pointer-events: auto;
+    box-sizing: border-box;
 }
 
 /* Linked Text Box Mode Cursor Override */
@@ -5055,10 +5103,29 @@ body.dark-mode .op-sidebar-slider::-webkit-slider-thumb { border-color: var(--ui
 body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-panel-bg); }
 
 /* ==========================================================================
-   SELECTION OVERLAY (Z-INDEX FIX)
+   SELECTION OVERLAY (Z-INDEX FIX & ZOOM-INVARIANT UI)
    ========================================================================== */
 .selected-overlay {
     z-index: 999999 !important;
+}
+.selection-border-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(100% * var(--zoom-level, 1));
+    height: calc(100% * var(--zoom-level, 1));
+    transform-origin: 0 0;
+    transform: scale(var(--ui-inv-zoom, 1));
+    border: 1.5px dashed var(--selection);
+    pointer-events: none;
+    box-sizing: border-box;
+}
+.group-selection-overlay .selection-border-box,
+.selection-border-box.group-border-box {
+    border: 1.5px solid var(--selection);
+}
+.selected-overlay.is-cropping .selection-border-box {
+    border: 2px dashed var(--crop-color, #ff6600);
 }
 .pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape) .resize-handle,
 .pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape) .rotate-handle,
@@ -5069,6 +5136,7 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
 .pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape).selected::after { display: none !important; }
 
 .selected-overlay .resize-handle, .selected-overlay .rotate-handle, .selected-overlay .rotate-stick { display: block !important; pointer-events: auto; }
+.selected-overlay .rotate-stick { pointer-events: none !important; }
 
 .group-selection-overlay {
     z-index: 1000000 !important;
@@ -5077,6 +5145,287 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
     border-color: var(--selection, #007670) !important;
     background: #ffffff !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   ELEMENT QUICK ACTIONS (FLOATING CLONE & DELETE MICRO-TOOLBAR)
+   ========================================================================== */
+.element-quick-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    height: 28px;
+    padding: 2px 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1005;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    opacity: 0.92;
+    transform-origin: 100% 0%;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 6px));
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+/* While actively dragging, rotating, or resizing, smoothly fade out the quick action pill */
+.selected-overlay.is-transforming .element-quick-actions,
+body.is-dragging-element .element-quick-actions {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 4px)) scale(0.92) !important;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* In the resting state, buttons and divider display in a washed-out monochrome slate look */
+.element-quick-actions .quick-action-btn {
+    position: relative;
+    z-index: 1;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 11px;
+    outline: none;
+    line-height: 1;
+    color: #64748b;
+    opacity: 0.58;
+    transform: scale(0.96);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s ease,
+                color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.element-quick-actions .quick-action-clone {
+    color: #64748b;
+}
+
+.element-quick-actions .quick-action-delete {
+    color: #64748b;
+}
+
+.element-quick-actions .quick-action-divider {
+    width: 1px;
+    height: 14px;
+    background: #94a3b8;
+    opacity: 0.4;
+    margin: 0 1px;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Expanded invisible hover zone around the pill so it smoothly activates as cursor approaches */
+.element-quick-actions::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    pointer-events: auto;
+    border-radius: 18px;
+    z-index: -1;
+}
+
+/* LIGHT MODE HOVER STATE: Bright crisp white badge with rich clarity */
+.element-quick-actions:hover {
+    opacity: 1.0;
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(0, 118, 112, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 8px));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.element-quick-actions:hover .quick-action-btn {
+    opacity: 1.0;
+    transform: scale(1);
+}
+
+.element-quick-actions:hover .quick-action-clone {
+    color: #007670;
+}
+
+.element-quick-actions:hover .quick-action-delete {
+    color: #dc2626;
+}
+
+.element-quick-actions:hover .quick-action-divider {
+    background: #cbd5e1;
+    opacity: 0.8;
+}
+
+/* When element screen width is narrow, offset quick actions to the right of the rotate handle */
+.element-quick-actions.offset-from-rotate {
+    left: 50%;
+    right: auto;
+    transform-origin: 0% 0%;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(14px, calc(-100% - 6px));
+}
+.element-quick-actions.offset-from-rotate:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(14px, calc(-100% - 8px));
+}
+.selected-overlay.is-transforming .element-quick-actions.offset-from-rotate,
+body.is-dragging-element .element-quick-actions.offset-from-rotate {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(14px, calc(-100% - 4px)) scale(0.92) !important;
+}
+
+.element-quick-actions.flip-bottom {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    transform-origin: 100% 100%;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 6px));
+}
+.element-quick-actions.flip-bottom:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 8px));
+}
+.selected-overlay.is-transforming .element-quick-actions.flip-bottom,
+body.is-dragging-element .element-quick-actions.flip-bottom {
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 4px)) scale(0.92) !important;
+}
+
+.element-quick-actions.inside-top {
+    top: 0;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    transform-origin: 100% 0%;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-6px, 6px);
+}
+.element-quick-actions.inside-top:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-6px, 6px) scale(1.02);
+}
+.selected-overlay.is-transforming .element-quick-actions.inside-top,
+body.is-dragging-element .element-quick-actions.inside-top {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-6px, 6px) scale(0.92) !important;
+}
+
+.element-quick-actions .quick-action-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--ui-theme-color, #007670);
+}
+
+.element-quick-actions:hover .quick-action-clone:hover {
+    background: rgba(0, 118, 112, 0.12);
+    color: #005a56;
+    transform: scale(1.12);
+}
+.element-quick-actions .quick-action-clone:active {
+    transform: scale(0.96);
+}
+
+.element-quick-actions:hover .quick-action-delete:hover {
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+    transform: scale(1.12);
+}
+.element-quick-actions .quick-action-delete:active {
+    transform: scale(0.96);
+}
+
+/* ==========================================================================
+   DARK MODE QUICK ACTIONS (body.dark-mode, html.dark-mode)
+   ========================================================================== */
+body.dark-mode .element-quick-actions,
+html.dark-mode .element-quick-actions {
+    background: rgba(30, 41, 59, 0.88);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .element-quick-actions .quick-action-btn,
+html.dark-mode .element-quick-actions .quick-action-btn {
+    color: #94a3b8;
+    opacity: 0.6;
+}
+
+body.dark-mode .element-quick-actions .quick-action-clone,
+html.dark-mode .element-quick-actions .quick-action-clone {
+    color: #94a3b8;
+}
+
+body.dark-mode .element-quick-actions .quick-action-delete,
+html.dark-mode .element-quick-actions .quick-action-delete {
+    color: #94a3b8;
+}
+
+body.dark-mode .element-quick-actions .quick-action-divider,
+html.dark-mode .element-quick-actions .quick-action-divider {
+    background: rgba(255, 255, 255, 0.18);
+    opacity: 0.35;
+}
+
+/* Dark Mode Hover State: Sleek dark slate glassmorphic badge with vibrant glow */
+body.dark-mode .element-quick-actions:hover,
+html.dark-mode .element-quick-actions:hover {
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-btn,
+html.dark-mode .element-quick-actions:hover .quick-action-btn {
+    opacity: 1.0;
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-clone,
+html.dark-mode .element-quick-actions:hover .quick-action-clone {
+    color: #14b8a6;
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-delete,
+html.dark-mode .element-quick-actions:hover .quick-action-delete {
+    color: #f87171;
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-divider,
+html.dark-mode .element-quick-actions:hover .quick-action-divider {
+    background: rgba(255, 255, 255, 0.18);
+    opacity: 1.0;
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-clone:hover,
+html.dark-mode .element-quick-actions:hover .quick-action-clone:hover {
+    background: rgba(20, 184, 166, 0.25);
+    color: #2dd4bf;
+    transform: scale(1.12);
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-delete:hover,
+html.dark-mode .element-quick-actions:hover .quick-action-delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    transform: scale(1.12);
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-clone:active,
+html.dark-mode .element-quick-actions:hover .quick-action-clone:active,
+body.dark-mode .element-quick-actions:hover .quick-action-delete:active,
+html.dark-mode .element-quick-actions:hover .quick-action-delete:active {
+    transform: scale(0.96);
 }
 
 /* Reset default margins for headings and paragraphs inside elements */
@@ -5094,7 +5443,7 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
 }
 .arrow-tip-subbox {
     position: absolute;
-    border: var(--arrow-border-width, 1.5px) dashed #f59e0b;
+    border: none;
     background: rgba(245, 158, 11, 0.08);
     pointer-events: none;
     box-sizing: border-box;
@@ -5102,9 +5451,23 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
     z-index: 10;
     transition: width 0.04s ease, height 0.04s ease, left 0.04s ease, top 0.04s ease;
 }
+.arrow-tip-subbox::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(100% * var(--zoom-level, 1));
+    height: calc(100% * var(--zoom-level, 1));
+    transform-origin: 0 0;
+    transform: scale(var(--ui-inv-zoom, 1));
+    border: 1.5px dashed #f59e0b;
+    border-radius: 2px;
+    box-sizing: border-box;
+    pointer-events: none;
+}
 .arrow-tip-badge {
     position: absolute;
-    top: calc(-24px * var(--arrow-ui-scale, 1));
+    top: calc(-24px * var(--ui-inv-zoom, 1));
     right: 0;
     background: #f59e0b;
     color: #ffffff;
@@ -5118,25 +5481,27 @@ body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-pan
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     letter-spacing: 0.2px;
-    transform: scale(var(--arrow-ui-scale, 1));
+    transform: scale(var(--ui-inv-zoom, 1));
     transform-origin: bottom right;
 }
 .arrow-tip-handle {
     position: absolute;
-    width: var(--arrow-handle-size, 16px);
-    height: var(--arrow-handle-size, 16px);
-    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 50%;
     background: #f59e0b;
-    border: var(--arrow-handle-border, 2px) solid #ffffff;
+    border: 2px solid #ffffff;
     border-radius: 50%;
     box-shadow: 0 1px 6px rgba(0,0,0,0.4);
     pointer-events: auto !important;
     z-index: 1000002 !important;
     transition: transform 0.12s ease, background 0.12s ease;
     cursor: ew-resize;
+    box-sizing: border-box;
 }
 .arrow-tip-handle:hover {
-    transform: translate(-50%, -50%) scale(1.25);
+    transform: translate(-50%, -50%) scale(calc(var(--ui-inv-zoom, 1) * 1.2));
     background: #d97706;
 }
 .arrow-tip-slider-overlay {
@@ -5393,7 +5758,7 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 /* =========================================================================
-   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.10.2)
+   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.10.3)
    ========================================================================= */
 
 .custom-dialog.format-properties-modal {
@@ -5969,7 +6334,7 @@ body.dark-mode .custom-dialog.format-properties-modal .fp-3d-warning-note i {
 }
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.10.2)
+   STYLED TEXT BOX SYSTEM (v5.10.3)
    ========================================================================= */
 
 .styled-textbox-gallery-strip {

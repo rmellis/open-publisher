@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.10.2)
+   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.10.3)
 ========================================================================= */
 
 const ContextMenuSystem = {
@@ -429,6 +429,7 @@ const ContextMenuSystem = {
                 html += this.buildDivider();
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
                 html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
+                html += this.buildItem('Duplicate', 'fa-clone', 'if(window.duplicateSelected) window.duplicateSelected(); else if(typeof duplicateSelected === "function") duplicateSelected();');
                 html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
                 if (isText) {
                     html += this.buildItem('Paste Without Formatting', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteWithoutFormatting()');

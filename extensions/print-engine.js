@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.10.2)
+// OpenPublisher Print Engine (v5.10.3)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -122,6 +122,7 @@
                 let scaler = document.createElement('div');
                 scaler.className = 'op-print-scaler';
                 scaler.style.background = page.background || '#ffffff';
+                scaler.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
                 let elementsToRender = page.elements || [];
                 
@@ -225,6 +226,8 @@
                         
                         let underlayHTML = '';
                         if (underlay) {
+                            css = css.replace(/box-shadow:\s*[^;]+;?/gi, '').replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '');
+                            css += '; box-shadow: none !important;';
                             underlayHTML = `<img class="op-print-shadow-underlay" src="${underlay.dataUrl}" style="position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">`;
                         }
 
@@ -700,15 +703,6 @@
     };
 
     const boostGlowColorForPrint = (color) => {
-        const m = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i);
-        if (m) {
-            const r = m[1], g = m[2], b = m[3];
-            let a = m[4] !== undefined ? parseFloat(m[4]) : 1.0;
-            if (a < 0.75) {
-                a = Math.min(0.9, a * 1.6);
-            }
-            return `rgba(${r}, ${g}, ${b}, ${a})`;
-        }
         return color;
     };
 
@@ -717,7 +711,8 @@
         if (filterStr && filterStr.includes('drop-shadow')) {
             const dsMatches = filterStr.matchAll(/drop-shadow\(([^)]+)\)/g);
             for (let ds of dsMatches) {
-                shadows = shadows.concat(parseBoxShadowForPrint(ds[1]));
+                const parsedDs = parseBoxShadowForPrint(ds[1]).map(s => ({ ...s, isDropShadow: true }));
+                shadows = shadows.concat(parsedDs);
             }
         }
         if (!shadows.length) return null;
@@ -726,7 +721,8 @@
         let maxSpread = 0;
         let maxOffset = 0;
         shadows.forEach(s => {
-            if (s.blur > maxBlur) maxBlur = s.blur;
+            const effectiveBlur = s.isDropShadow ? s.blur * 2 : s.blur;
+            if (effectiveBlur > maxBlur) maxBlur = effectiveBlur;
             if (s.spread > maxSpread) maxSpread = s.spread;
             const off = Math.max(Math.abs(s.ox), Math.abs(s.oy));
             if (off > maxOffset) maxOffset = off;
@@ -745,15 +741,13 @@
         shadows.forEach(s => {
             if (s.isInset) return;
             ctx.save();
-            let col = s.color;
-            if (s.blur > 0) {
-                col = boostGlowColorForPrint(s.color);
-            }
+            const col = boostGlowColorForPrint(s.color);
             ctx.shadowColor = col;
             // CRITICAL: In HTML5 Canvas 2D, shadowBlur, shadowOffsetX, and shadowOffsetY
             // are defined in canvas pixel units and are NOT affected by ctx.scale() (the CTM).
-            // They MUST be explicitly multiplied by scale to preserve the intended CSS blur/offsets!
-            ctx.shadowBlur = Math.round(s.blur * scale);
+            // Note: CSS filter: drop-shadow uses sigma = blur, whereas CSS box-shadow and Canvas shadowBlur use sigma = blur / 2.
+            const blurMultiplier = s.isDropShadow ? 2 : 1;
+            ctx.shadowBlur = Math.round(s.blur * blurMultiplier * scale);
             ctx.shadowOffsetX = Math.round(s.ox * scale);
             ctx.shadowOffsetY = Math.round(s.oy * scale);
             
@@ -765,7 +759,9 @@
             
             ctx.beginPath();
             drawRoundRectPath(ctx, sx, sy, sw, sh, sr);
-            ctx.fillStyle = col;
+            // Use opaque caster fill so Canvas does not multiply fillStyle alpha by shadowColor alpha;
+            // the interior box is punched out cleanly below via destination-out.
+            ctx.fillStyle = '#000000';
             ctx.fill();
             ctx.restore();
         });
@@ -919,6 +915,11 @@
                 glowImg.style.cssText = `position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
                 content.style.position = 'relative';
                 content.style.zIndex = '1';
+                content.style.setProperty('box-shadow', 'none', 'important');
+                if (content.style.filter && content.style.filter.includes('drop-shadow')) {
+                    const cleanedFilter = content.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '').trim();
+                    content.style.filter = cleanedFilter || 'none';
+                }
                 el.style.overflow = 'visible';
                 el.insertBefore(glowImg, content);
             }
@@ -1029,7 +1030,7 @@
                 ctx.restore();
                 
                 try {
-                    safeResolve({ src: c.toDataURL('image/png'), padX, padY, padW, padH });
+                    safeResolve({ src: c.toDataURL('image/png'), padX, padY, padW, padH, scale });
                 } catch (e) {
                     safeReject(e);
                 }
@@ -1940,6 +1941,7 @@
                 pageWrapper.style.position = 'relative';
                 pageWrapper.style.overflow = 'hidden';
                 pageWrapper.style.background = page.background || '#ffffff';
+                pageWrapper.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
                 // Determine active theme settings for this page
                 let currentThemeSettings = null;
@@ -2240,13 +2242,14 @@
                                 await loadImageStrict(img, bakedSrc);
                                 
                                 if (baked && baked.padW) {
+                                    const bScale = baked.scale || 2;
                                     img.style.position = 'absolute';
                                     img.style.left = '0px';
                                     img.style.top = '0px';
-                                    img.style.width = `calc(100% + ${baked.padW/2}px)`;
-                                    img.style.height = `calc(100% + ${baked.padH/2}px)`;
-                                    img.style.marginLeft = `-${baked.padX/2}px`;
-                                    img.style.marginTop = `-${baked.padY/2}px`;
+                                    img.style.width = `calc(100% + ${baked.padW / bScale}px)`;
+                                    img.style.height = `calc(100% + ${baked.padH / bScale}px)`;
+                                    img.style.marginLeft = `-${baked.padX / bScale}px`;
+                                    img.style.marginTop = `-${baked.padY / bScale}px`;
                                     img.style.maxWidth = 'none';
                                     img.style.maxHeight = 'none';
                                     cropDiv.style.overflow = 'visible'; // ALLOW SHADOW TO BE SEEN
@@ -2355,6 +2358,8 @@
                         if (!css.includes('width:')) css += '; width:100%; height:100%;';
 
                         if (underlay) {
+                            css = css.replace(/box-shadow:\s*[^;]+;?/gi, '').replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '');
+                            css += '; box-shadow: none !important;';
                             const pad = underlay.pad;
                             elDiv.style.left = `${elLeft - pad}px`;
                             elDiv.style.top = `${elTop - pad}px`;
@@ -2634,6 +2639,7 @@
                             logging: false, 
                             backgroundColor: null,
                             ignoreElements: (el) => {
+                                if (el === document.head || (document.head && document.head.contains(el)) || el.tagName === 'STYLE' || el.tagName === 'LINK') return false;
                                 if (el === tempBox || tempBox.contains(el)) return false;
                                 if (el === document.body || el === document.documentElement || el.contains(tempBox)) return false;
                                 return true;
@@ -2781,7 +2787,14 @@
                     }
                 });
 
+                if (document.fonts && document.fonts.ready) {
+                    try {
+                        await Promise.race([document.fonts.ready, sleep(1500)]);
+                    } catch (e) {}
+                }
+
                 const pageIgnoreFn = (el) => {
+                    if (el === document.head || (document.head && document.head.contains(el)) || el.tagName === 'STYLE' || el.tagName === 'LINK') return false;
                     if (el === pageWrapper || pageWrapper.contains(el)) return false;
                     if (el === document.body || el === document.documentElement || el.contains(pageWrapper)) return false;
                     return true;

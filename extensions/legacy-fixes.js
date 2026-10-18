@@ -1,4 +1,4 @@
-// OpenPublisher Legacy Fixes & Compatibility (v5.10.2)
+// OpenPublisher Legacy Fixes & Compatibility (v5.10.3)
 (function lockGlobalWorkspaceAnimation() {
     const viewport = document.getElementById('viewport');
     if (!viewport) return;
@@ -1181,7 +1181,7 @@
             <div class="float-tool-row">
                 <div class="float-input-group">
                     <div class="float-font-btn" id="float-font" onclick="toggleFloatFontDropdown(); event.stopPropagation();">
-                        <span id="float-font-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Arial</span>
+                        <span id="float-font-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Segoe UI</span>
                         <div class="drop-arrow"><i class="fas fa-chevron-down"></i></div>
                     </div>
                     <div class="float-size-wrapper">
@@ -1547,7 +1547,7 @@
             const activeEl = document.activeElement;
             const isTextEditing = activeEl && activeEl.isContentEditable;
 
-            if (!isTextEditing && typeof state !== 'undefined' && state.lastRange && state.selectedEl) {
+            if (!isTextEditing && typeof state !== 'undefined' && state.lastRange && state.selectedEl && state.lastRange.commonAncestorContainer && state.selectedEl.contains(state.lastRange.commonAncestorContainer)) {
                 const sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(state.lastRange);

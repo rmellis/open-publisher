@@ -244,6 +244,20 @@ document.addEventListener('keydown', (e) => {
             return;
         }
 
+        // Duplicate Selected Text Box / Element (Ctrl+D or Cmd+D)
+        // CRITICAL: Strictly check !e.shiftKey and !e.altKey to avoid intercepting Ctrl+Shift+D (which is reserved for the Desktop App Debug HUD)
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'd' || e.key === 'D')) {
+            if (typeof state !== 'undefined' && (state.selectedEl || (state.multiSelected && state.multiSelected.length > 0))) {
+                e.preventDefault();
+                if (typeof window.duplicateSelected === 'function') {
+                    window.duplicateSelected();
+                } else if (typeof duplicateSelected === 'function') {
+                    duplicateSelected();
+                }
+                return;
+            }
+        }
+
         // Only delete if not editing text (supports Delete and Mac Backspace)
         if ((e.key === 'Delete' || e.key === 'Backspace') && !isTextEditing()) {
             e.preventDefault();

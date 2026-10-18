@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.10.2)
+// Open Publisher UI Interactions (v5.10.3)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.10.2)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.10.3)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -356,7 +356,7 @@
                     <div style="display:flex; gap:6px; align-items: center;">
                         <div class="font-picker-container" style="width: 140px;">
                             <div class="modern-select" id="ctx-font-btn-${target.suffix}" onclick="window._currentRibbonSuffix='${target.suffix}'; toggleCustomDropdown('ctx-ribbon'); event.stopPropagation();">
-                                <span id="ctx-font-label-${target.suffix}">Arial</span> 
+                                <span id="ctx-font-label-${target.suffix}">Segoe UI</span> 
                                 <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                             </div>
                         </div>

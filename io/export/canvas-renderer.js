@@ -122,7 +122,7 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
     const clone = paper.cloneNode(true);
     
     // Strip UI elements from the clone before capturing
-    clone.querySelectorAll('.margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .op-dynamic-print-style').forEach(el => el.remove());
+    clone.querySelectorAll('.margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .op-dynamic-print-style, .element-quick-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
 
     const stagingArea = document.createElement('div');
     stagingArea.style.cssText = 'position: fixed; top: -10000px; left: -10000px; z-index: -100; overflow: visible; display: block; opacity: 0.01; pointer-events: none;';

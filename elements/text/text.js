@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.10.2)
+// Open Publisher Text Engine (v5.10.3)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -253,10 +253,12 @@ function addTextBox() {
     const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
     const userLang = navigator.language || 'en';
     const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
+    state.lastRange = null;
     
-    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
+    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', sans-serif;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
     applySingleElementScheme(el, state.currentScheme);
+    updateFloatToolbarValues();
     return el;
 }
 
@@ -537,9 +539,11 @@ function execCmd(cmd, val) {
     // If we don't restore the selection before executing the command, it fails because
     // the text box is no longer the active selection.
     if (state.lastRange && state.lastRange.commonAncestorContainer && state.lastRange.commonAncestorContainer.isConnected) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(state.lastRange);
+        if (!state.selectedEl || state.selectedEl.contains(state.lastRange.commonAncestorContainer)) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(state.lastRange);
+        }
     }
     
     // Enable styleWithCSS to force the browser to use <span style="..."> instead of legacy <font> tags.
@@ -565,6 +569,35 @@ function execCmd(cmd, val) {
             document.execCommand('hiliteColor', false, val);
             document.execCommand('backColor', false, val);
         }
+    } else if (cmd === 'fontName' && state.selectedEl) {
+        const waText = state.selectedEl.querySelector('.wa-text');
+        if (waText) {
+            waText.style.fontFamily = val;
+            if (typeof syncWordArt === 'function') syncWordArt(state.selectedEl);
+        } else {
+            const editableRoot = state.selectedEl.querySelector('[contenteditable="true"]') ||
+                                 state.selectedEl.querySelector('.element-content > div') ||
+                                 state.selectedEl.querySelector('.element-content');
+            const sel = window.getSelection();
+            const hasActiveHighlight = sel && sel.rangeCount > 0 && !sel.isCollapsed && state.selectedEl.contains(sel.getRangeAt(0).commonAncestorContainer);
+
+            if (hasActiveHighlight) {
+                document.execCommand('fontName', false, val);
+                state.selectedEl.querySelectorAll('font[face]').forEach(f => {
+                    f.style.fontFamily = val;
+                    f.removeAttribute('face');
+                });
+            } else if (editableRoot) {
+                editableRoot.style.fontFamily = val;
+                editableRoot.querySelectorAll('[style*="font-family"], font[face]').forEach(child => {
+                    child.style.fontFamily = val;
+                    if (child.hasAttribute('face')) child.removeAttribute('face');
+                });
+            } else {
+                document.execCommand('fontName', false, val);
+            }
+        }
+        if (typeof pushHistory === 'function') pushHistory();
     } else {
         document.execCommand(cmd, false, val); 
     }
@@ -580,7 +613,9 @@ function execCmd(cmd, val) {
     } 
     
     const sel = window.getSelection();
-    if(sel.rangeCount > 0) state.lastRange = sel.getRangeAt(0).cloneRange();
+    if (sel.rangeCount > 0 && (!state.selectedEl || state.selectedEl.contains(sel.getRangeAt(0).commonAncestorContainer))) {
+        state.lastRange = sel.getRangeAt(0).cloneRange();
+    }
     
     if(!state.isProgrammaticUpdate) updateFloatToolbarValues();
     if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -634,9 +669,15 @@ function updateFloatToolbarValues() {
     const activeId = document.activeElement ? document.activeElement.id : null;
     if(['float-font', 'float-size', 'font-size', 'ribbon-font-btn'].includes(activeId)) return;
 
-    if(state.lastRange) {
+    let node = null;
+    const rangeIsInsideSelected = state.lastRange &&
+        state.lastRange.startContainer &&
+        state.lastRange.startContainer.isConnected &&
+        (!state.selectedEl || state.selectedEl.contains(state.lastRange.startContainer));
+
+    if (rangeIsInsideSelected) {
         // Pinpoint the exact text node the cursor is touching
-        let node = state.lastRange.startContainer;
+        node = state.lastRange.startContainer;
         if (node.nodeType === 3) {
             node = node.parentNode;
         } else {
@@ -648,42 +689,54 @@ function updateFloatToolbarValues() {
                 if (child && child.nodeType === 1) node = child;
             }
         }
+    } else if (state.selectedEl && state.selectedEl.nodeType === 1) {
+        const editable = state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
+                         state.selectedEl.querySelector('.element-content > div') ||
+                         state.selectedEl;
+        const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face]') : null;
+        node = styledChild || editable;
+    }
 
-        if(node && (node.nodeType === 1)) {
-            const computed = window.getComputedStyle(node);
-            const fam = computed.fontFamily.replace(/['"]/g, '').split(',')[0].trim();
-            
-            // Update Font Family Labels
-            document.getElementById('ribbon-font-label').innerText = fam;
-            document.getElementById('float-font-label').innerText = fam;
+    if (node && node.nodeType === 1) {
+        const computed = window.getComputedStyle(node);
+        const fam = computed.fontFamily.replace(/['"]/g, '').split(',')[0].trim() || 'Segoe UI';
+        
+        // Update Font Family Labels
+        const ribbonLbl = document.getElementById('ribbon-font-label');
+        const floatLbl = document.getElementById('float-font-label');
+        const ctxTextLbl = document.getElementById('ctx-font-label-text');
+        const ctxWaLbl = document.getElementById('ctx-font-label-wa');
+        if (ribbonLbl) ribbonLbl.innerText = fam;
+        if (floatLbl) floatLbl.innerText = fam;
+        if (ctxTextLbl) ctxTextLbl.innerText = fam;
+        if (ctxWaLbl) ctxWaLbl.innerText = fam;
 
-            const fSize = parseInt(computed.fontSize);
-            
-            const floatSelect = document.getElementById('float-size');
-            const ribbonInput = document.getElementById('font-size');
+        const fSize = parseInt(computed.fontSize);
+        
+        const floatSelect = document.getElementById('float-size');
+        const ribbonInput = document.getElementById('font-size');
 
-            // Force the float dropdown to accept custom numbers
-            if (floatSelect) {
-                let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === fSize);
-                if(!optionExists) {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = fSize;
-                    newOpt.innerText = fSize;
-                    floatSelect.appendChild(newOpt);
-                    
-                    // Sort options so the new number fits in naturally
-                    const opts = Array.from(floatSelect.options);
-                    opts.sort((a,b) => parseInt(a.value) - parseInt(b.value));
-                    floatSelect.innerHTML = '';
-                    opts.forEach(o => floatSelect.appendChild(o));
-                }
-                floatSelect.value = fSize;
+        // Force the float dropdown to accept custom numbers
+        if (floatSelect && !isNaN(fSize)) {
+            let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === fSize);
+            if(!optionExists) {
+                const newOpt = document.createElement('option');
+                newOpt.value = fSize;
+                newOpt.innerText = fSize;
+                floatSelect.appendChild(newOpt);
+                
+                // Sort options so the new number fits in naturally
+                const opts = Array.from(floatSelect.options);
+                opts.sort((a,b) => parseInt(a.value) - parseInt(b.value));
+                floatSelect.innerHTML = '';
+                opts.forEach(o => floatSelect.appendChild(o));
             }
-            
-            // Update the Ribbon Input
-            if (ribbonInput) {
-                ribbonInput.value = fSize;
-            }
+            floatSelect.value = fSize;
+        }
+        
+        // Update the Ribbon Input
+        if (ribbonInput && !isNaN(fSize)) {
+            ribbonInput.value = fSize;
         }
     }
 }
@@ -795,7 +848,7 @@ const fontList = [
 ];
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.10.2)
+   STYLED TEXT BOX SYSTEM (v5.10.3)
    Dual-Mode Architecture: Creation Templates + Contextual Ribbon Styling
    ========================================================================= */
 
