@@ -232,6 +232,9 @@ window.exportAsHTML = async function(opts = {}) {
                 if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
                     window.normalizeTextBackgroundsForPrint(pageWrapper);
                 }
+                if (typeof window.bakeElementShadowUnderlays === 'function') {
+                    window.bakeElementShadowUnderlays(pageWrapper, null, 2);
+                }
                 const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: emailBg });
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
                 const tbl = `

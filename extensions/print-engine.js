@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.10.0)
+// OpenPublisher Print Engine (v5.10.1)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -159,6 +159,11 @@
                         if (el.altText) img.alt = el.altText;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
                         img.style.display = 'block';
+                        if (el.type === 'emoji') {
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'fill';
+                        }
                         elDiv.style.overflow = 'visible';
                         let fStr = (el.imgStyle && el.imgStyle.filter) ? el.imgStyle.filter : (el.filter || '');
                         if (!fStr && el.contentCssText) {
@@ -195,6 +200,16 @@
                         }
                         elDiv.appendChild(img);
                     } else {
+                        const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, page, null) : { boxShadow: '', filter: '' };
+                        const brPx = window.extractBorderRadiusForPrint ? window.extractBorderRadiusForPrint(el, el.contentCssText, null) : 0;
+                        const elW = parseFloat(el.width) || 260;
+                        const elH = parseFloat(el.height) || 100;
+                        
+                        let underlay = null;
+                        if ((shadowInfo.boxShadow || shadowInfo.filter) && window.generateShadowUnderlayDataURL) {
+                            underlay = window.generateShadowUnderlayDataURL(elW, elH, brPx, shadowInfo.boxShadow, shadowInfo.filter, 2);
+                        }
+
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
@@ -208,7 +223,13 @@
                         css = css.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
                         if (!css.includes('width:')) css += '; width:100%; height:100%;';
                         
-                        elDiv.innerHTML = `<div class="element-content" style="${css}">${cleanHTML}</div>`;
+                        let underlayHTML = '';
+                        if (underlay) {
+                            underlayHTML = `<img class="op-print-shadow-underlay" src="${underlay.dataUrl}" style="position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">`;
+                        }
+
+                        elDiv.style.overflow = 'visible';
+                        elDiv.innerHTML = `${underlayHTML}<div class="element-content" style="${css}; position: relative; z-index: 1;">${cleanHTML}</div>`;
                     }
                     scaler.appendChild(elDiv);
                 });
@@ -620,8 +641,291 @@
         const isHeight100 = !h || h === '100%' || h === 'auto';
         return isWidth100 && isHeight100 && leftZero && topZero;
     };
+    window.isDefaultFillImageLayout = isDefaultFillImageLayout;
 
-    window.bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {} } = {}) => new Promise((resolve, reject) => {
+    function drawRoundRectPath(ctx, x, y, w, h, r) {
+        if (ctx.roundRect) {
+            ctx.roundRect(x, y, w, h, Math.max(0, r));
+        } else {
+            const rad = Math.min(Math.max(0, r), w / 2, h / 2);
+            ctx.moveTo(x + rad, y);
+            ctx.arcTo(x + w, y, x + w, y + h, rad);
+            ctx.arcTo(x + w, y + h, x, y + h, rad);
+            ctx.arcTo(x, y + h, x, y, rad);
+            ctx.arcTo(x, y, x + w, y, rad);
+            ctx.closePath();
+        }
+    }
+
+    const parseBoxShadowForPrint = (str) => {
+        if (!str || str === 'none') return [];
+        const shadows = [];
+        const parts = [];
+        let cur = '';
+        let depth = 0;
+        for (let i = 0; i < str.length; i++) {
+            const c = str[i];
+            if (c === '(') depth++;
+            else if (c === ')') depth--;
+            if (c === ',' && depth === 0) {
+                parts.push(cur.trim());
+                cur = '';
+            } else {
+                cur += c;
+            }
+        }
+        if (cur.trim()) parts.push(cur.trim());
+        
+        for (let part of parts) {
+            const isInset = part.includes('inset');
+            part = part.replace(/inset/gi, '').trim();
+            
+            let color = 'rgba(0,0,0,0.5)';
+            const colorMatch = part.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}|[a-z]+)/i);
+            if (colorMatch) {
+                color = colorMatch[1];
+                part = part.replace(color, '').trim();
+            }
+            
+            const nums = part.match(/([-\d.]+)px|([-\d.]+)/g) || [];
+            const parsedNums = nums.map(n => parseFloat(n) || 0);
+            const ox = parsedNums[0] || 0;
+            const oy = parsedNums[1] || 0;
+            const blur = parsedNums[2] || 0;
+            const spread = parsedNums[3] || 0;
+            
+            shadows.push({ isInset, color, ox, oy, blur, spread });
+        }
+        return shadows;
+    };
+
+    const boostGlowColorForPrint = (color) => {
+        const m = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+        if (m) {
+            const r = m[1], g = m[2], b = m[3];
+            let a = m[4] !== undefined ? parseFloat(m[4]) : 1.0;
+            if (a < 0.75) {
+                a = Math.min(0.9, a * 1.6);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        return color;
+    };
+
+    window.generateShadowUnderlayDataURL = function(w, h, borderRadiusPx, boxShadowStr, filterStr, scale = 2) {
+        let shadows = parseBoxShadowForPrint(boxShadowStr);
+        if (filterStr && filterStr.includes('drop-shadow')) {
+            const dsMatches = filterStr.matchAll(/drop-shadow\(([^)]+)\)/g);
+            for (let ds of dsMatches) {
+                shadows = shadows.concat(parseBoxShadowForPrint(ds[1]));
+            }
+        }
+        if (!shadows.length) return null;
+        
+        let maxBlur = 0;
+        let maxSpread = 0;
+        let maxOffset = 0;
+        shadows.forEach(s => {
+            if (s.blur > maxBlur) maxBlur = s.blur;
+            if (s.spread > maxSpread) maxSpread = s.spread;
+            const off = Math.max(Math.abs(s.ox), Math.abs(s.oy));
+            if (off > maxOffset) maxOffset = off;
+        });
+        
+        const pad = Math.ceil(maxBlur * 2.5 + Math.max(0, maxSpread) + maxOffset + 14);
+        const totalW = w + pad * 2;
+        const totalH = h + pad * 2;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(totalW * scale);
+        canvas.height = Math.round(totalH * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+        
+        shadows.forEach(s => {
+            if (s.isInset) return;
+            ctx.save();
+            let col = s.color;
+            if (s.blur > 0) {
+                col = boostGlowColorForPrint(s.color);
+            }
+            ctx.shadowColor = col;
+            // CRITICAL: In HTML5 Canvas 2D, shadowBlur, shadowOffsetX, and shadowOffsetY
+            // are defined in canvas pixel units and are NOT affected by ctx.scale() (the CTM).
+            // They MUST be explicitly multiplied by scale to preserve the intended CSS blur/offsets!
+            ctx.shadowBlur = Math.round(s.blur * scale);
+            ctx.shadowOffsetX = Math.round(s.ox * scale);
+            ctx.shadowOffsetY = Math.round(s.oy * scale);
+            
+            const sx = pad - s.spread;
+            const sy = pad - s.spread;
+            const sw = w + s.spread * 2;
+            const sh = h + s.spread * 2;
+            const sr = borderRadiusPx >= 900 ? Math.min(sw, sh) / 2 : Math.max(0, borderRadiusPx + s.spread);
+            
+            ctx.beginPath();
+            drawRoundRectPath(ctx, sx, sy, sw, sh, sr);
+            ctx.fillStyle = col;
+            ctx.fill();
+            ctx.restore();
+        });
+        
+        // Punch out the inner box area so background stays transparent/clean
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        const innerRadius = borderRadiusPx >= 900 ? Math.min(w, h) / 2 : borderRadiusPx;
+        ctx.beginPath();
+        drawRoundRectPath(ctx, pad, pad, w, h, innerRadius);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.restore();
+        
+        return {
+            dataUrl: canvas.toDataURL('image/png'),
+            pad: pad,
+            totalW: totalW,
+            totalH: totalH
+        };
+    };
+
+    window.extractElementShadowForPrint = function(el, page, livePaper) {
+        if (!el) return { boxShadow: '', filter: '' };
+
+        // Rectangular shadow underlay baking is strictly reserved for styled text boxes and card panels.
+        // It must NEVER be applied to Smart Arrows, vector shapes, or image elements (which have their own dedicated high-res vector/image renderers).
+        const elType = el.type || (el.getAttribute && el.getAttribute('data-type'));
+        const isArrow = elType === 'smart-arrow' || el.arrowStyle || (el.getAttribute && el.getAttribute('data-arrow-style'));
+        const isShape = elType === 'shape';
+        const isImage = elType === 'image' || el.imgSrc;
+        if (isArrow || isShape || isImage) {
+            return { boxShadow: '', filter: '' };
+        }
+
+        let shadowStr = '';
+        let filterStr = '';
+        
+        if (el.contentCssText) {
+            const bsMatch = el.contentCssText.match(/box-shadow:\s*([^;]+)/i);
+            if (bsMatch && bsMatch[1] && bsMatch[1].trim() !== 'none') {
+                shadowStr = bsMatch[1].trim();
+            }
+            const fMatch = el.contentCssText.match(/filter:\s*([^;]+)/i);
+            if (fMatch && fMatch[1] && fMatch[1].includes('drop-shadow')) {
+                filterStr = fMatch[1].trim();
+            }
+        }
+        
+        // Preset definition check
+        let styleId = el.textboxStyle;
+        if (!styleId && el.getAttribute && typeof el.getAttribute === 'function') {
+            styleId = el.getAttribute('data-textbox-style');
+        }
+        if (!styleId && el.innerHTML) {
+            const m = el.innerHTML.match(/data-textbox-style="([^"]+)"/);
+            if (m) styleId = m[1];
+        }
+        
+        if ((!shadowStr && !filterStr) && livePaper) {
+            const matchEl = (el.id ? livePaper.querySelector('#' + el.id) : null) ||
+                Array.from(livePaper.querySelectorAll('.pub-element')).find(e => {
+                    const l1 = parseFloat(el.left) || 0;
+                    const t1 = parseFloat(el.top) || 0;
+                    const l2 = parseFloat(e.style.left) || 0;
+                    const t2 = parseFloat(e.style.top) || 0;
+                    return Math.abs(l1 - l2) < 2 && Math.abs(t1 - t2) < 2;
+                });
+            if (matchEl) {
+                if (!styleId && matchEl.getAttribute) {
+                    styleId = matchEl.getAttribute('data-textbox-style');
+                }
+                const content = matchEl.querySelector('.element-content');
+                if (content) {
+                    if (content.style.boxShadow && content.style.boxShadow !== 'none') {
+                        shadowStr = content.style.boxShadow;
+                    }
+                    if (content.style.filter && content.style.filter.includes('drop-shadow')) {
+                        filterStr = content.style.filter;
+                    }
+                    if (!shadowStr) {
+                        try {
+                            const comp = window.getComputedStyle(content);
+                            if (comp.boxShadow && comp.boxShadow !== 'none') shadowStr = comp.boxShadow;
+                            if (comp.filter && comp.filter.includes('drop-shadow')) filterStr = comp.filter;
+                        } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        if (!shadowStr && styleId && window.TextBoxStylesSystem) {
+            const preset = window.TextBoxStylesSystem.getPreset(styleId);
+            if (preset && preset.containerStyle && preset.containerStyle.boxShadow && preset.containerStyle.boxShadow !== 'none') {
+                shadowStr = preset.containerStyle.boxShadow;
+            }
+        }
+        
+        return { boxShadow: shadowStr, filter: filterStr };
+    };
+
+    window.extractBorderRadiusForPrint = function(el, contentCssText, livePaper) {
+        if (contentCssText) {
+            const brMatch = contentCssText.match(/border-radius:\s*([^;]+)/i);
+            if (brMatch && brMatch[1]) {
+                const val = brMatch[1].trim();
+                if (val.includes('999') || parseFloat(val) >= 900) return 9999;
+                return parseFloat(val) || 0;
+            }
+        }
+        if (livePaper) {
+            const matchEl = el.id ? livePaper.querySelector('#' + el.id) : null;
+            const content = matchEl ? matchEl.querySelector('.element-content') : null;
+            if (content) {
+                try {
+                    const comp = window.getComputedStyle(content);
+                    if (comp.borderRadius && comp.borderRadius !== '0px') {
+                        if (comp.borderRadius.includes('999') || parseFloat(comp.borderRadius) >= 900) return 9999;
+                        return parseFloat(comp.borderRadius) || 0;
+                    }
+                } catch (e) {}
+            }
+        }
+        return 0;
+    };
+
+    window.bakeElementShadowUnderlays = function(container, livePaper, scale = 2) {
+        if (!container) return;
+        const elements = container.querySelectorAll('.pub-element');
+        elements.forEach(el => {
+            const elType = el.getAttribute('data-type');
+            if (elType === 'smart-arrow' || elType === 'shape' || elType === 'image' || el.hasAttribute('data-arrow-style') || el.querySelector('.smart-arrow-svg') || el.querySelector('.smart-arrow-baked-img')) {
+                return;
+            }
+            const content = el.querySelector('.element-content');
+            if (!content) return;
+            if (el.querySelector('.op-print-shadow-underlay')) return;
+            
+            const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, null, livePaper) : { boxShadow: '', filter: '' };
+            if (!shadowInfo.boxShadow && !shadowInfo.filter) return;
+            
+            const w = parseFloat(el.style.width) || content.offsetWidth || 260;
+            const h = parseFloat(el.style.height) || content.offsetHeight || 100;
+            const brPx = window.extractBorderRadiusForPrint ? window.extractBorderRadiusForPrint(el, content.style.cssText, livePaper) : 0;
+            
+            const underlay = window.generateShadowUnderlayDataURL ? window.generateShadowUnderlayDataURL(w, h, brPx, shadowInfo.boxShadow, shadowInfo.filter, scale) : null;
+            if (underlay) {
+                const glowImg = document.createElement('img');
+                glowImg.className = 'op-print-shadow-underlay';
+                glowImg.src = underlay.dataUrl;
+                glowImg.style.cssText = `position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
+                content.style.position = 'relative';
+                content.style.zIndex = '1';
+                el.style.overflow = 'visible';
+                el.insertBefore(glowImg, content);
+            }
+        });
+    };
+
+    window.bakeImageForPrint = (src, displayW, displayH, { filter = '', opacity = '1', clipPath = '', imgStyle = {}, targetScale = 2 } = {}) => new Promise((resolve, reject) => {
         let isSettled = false;
         const safetyTimer = setTimeout(() => {
             if (!isSettled) {
@@ -657,7 +961,7 @@
             }
             tempImg.onload = () => {
                 if (isSettled) return;
-                const scale = 2;
+                const scale = Math.max(2, targetScale || 2);
                 
                 let finalFilter = (filter || '').replace(/\bnone\b/g, '').trim();
                 let padX = 0, padY = 0, padW = 0, padH = 0;
@@ -1626,6 +1930,9 @@
 
                 const pW = parseFloat(page.width) || 794;
                 const pH = parseFloat(page.height) || 1123;
+                const pageDpi = parseFloat(page.dpi) || masterDpi || 96;
+                const targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
+                const fallbackScale = Math.max(1, targetScale - 1);
 
                 let pageWrapper = document.createElement('div');
                 pageWrapper.style.width = pW + 'px';
@@ -1712,18 +2019,23 @@
                         
                         if (matchEl) {
                             const comp = window.getComputedStyle(matchEl);
-                            if (comp.filter && comp.filter !== 'none') hueFilter = comp.filter;
-                            else {
+                            if (comp.filter && comp.filter !== 'none' && (comp.filter.includes('hue-rotate') || comp.filter.includes('saturate'))) {
+                                hueFilter = comp.filter;
+                            } else {
                                 const inner = matchEl.querySelector('.element-content');
                                 if (inner) {
                                     const iComp = window.getComputedStyle(inner);
-                                    if (iComp.filter && iComp.filter !== 'none') hueFilter = iComp.filter;
+                                    if (iComp.filter && iComp.filter !== 'none' && (iComp.filter.includes('hue-rotate') || iComp.filter.includes('saturate'))) {
+                                        hueFilter = iComp.filter;
+                                    }
                                 }
                             }
                         }
                     }
 
-                    if (hueFilter && hueFilter !== 'none') {
+                    const isSmartArrow = el.type === 'smart-arrow' || elDiv.getAttribute('data-type') === 'smart-arrow' || elDiv.hasAttribute('data-arrow-style');
+                    const isEmoji = el.type === 'emoji' || elDiv.getAttribute('data-type') === 'emoji' || elDiv.hasAttribute('data-emoji');
+                    if (hueFilter && hueFilter !== 'none' && (hueFilter.includes('hue-rotate') || hueFilter.includes('saturate')) && !isSmartArrow && !isEmoji) {
                         elDiv.setAttribute('data-target-filter', hueFilter);
                     }
 
@@ -1742,11 +2054,23 @@
                             let svgText = null;
 
                             if (finalSrc.includes('.svg') && !finalSrc.startsWith('data:')) {
-                                const svgRes = await fetch(finalSrc, { mode: 'cors' });
-                                svgText = await svgRes.text();
-                                isSvg = true;
+                                try {
+                                    const controller = new AbortController();
+                                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                                    const svgRes = await fetch(finalSrc, { mode: 'cors', signal: controller.signal });
+                                    clearTimeout(timeoutId);
+                                    if (svgRes.ok) {
+                                        svgText = await svgRes.text();
+                                        isSvg = true;
+                                    }
+                                } catch(e) {}
                             } else if (finalSrc.startsWith('data:image/svg+xml')) {
-                                svgText = decodeURIComponent(escape(atob(finalSrc.split(',')[1])));
+                                if (finalSrc.includes(';base64,')) {
+                                    svgText = decodeURIComponent(escape(atob(finalSrc.split(';base64,')[1])));
+                                } else {
+                                    const parts = finalSrc.split(',');
+                                    svgText = decodeURIComponent(parts[1] || '');
+                                }
                                 isSvg = true;
                             }
 
@@ -1900,7 +2224,8 @@
                         const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
                         const hasOpacityChange = (currentOpacity !== '' && currentOpacity !== '1' && !isNaN(parseFloat(currentOpacity)) && parseFloat(currentOpacity) < 0.999);
                         const isCropped = !isDefaultFillImageLayout(savedImgStyle);
-                        const needsBake = !!(isCropped || shapeClipPath || (currentFilter && currentFilter !== 'none') || hasOpacityChange);
+                        const isSvgImage = !!(isEmoji || (finalSrc && (finalSrc.startsWith('data:image/svg+xml') || finalSrc.includes('.svg'))));
+                        const needsBake = !!(isSvgImage || isCropped || shapeClipPath || (currentFilter && currentFilter !== 'none') || hasOpacityChange);
 
                         if (needsBake) {
                             try {
@@ -1908,7 +2233,8 @@
                                     filter: currentFilter,
                                     opacity: currentOpacity,
                                     clipPath: shapeClipPath,
-                                    imgStyle: savedImgStyle
+                                    imgStyle: savedImgStyle,
+                                    targetScale: targetScale
                                 });
                                 const bakedSrc = typeof baked === 'string' ? baked : baked.src;
                                 await loadImageStrict(img, bakedSrc);
@@ -1996,14 +2322,24 @@
                         const sY = el.scaleY || "1";
                         elDiv.innerHTML = `<div style="width:100%; height:100%; background:${el.bg}; clip-path:${el.clipPath}; -webkit-clip-path:${el.clipPath}; transform: scale(${sX}, ${sY}); transform-origin: center center;"></div>`;
                     } else {
-                        const pad = 40;
+                        const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, page, livePaper) : { boxShadow: '', filter: '' };
+                        const brPx = window.extractBorderRadiusForPrint ? window.extractBorderRadiusForPrint(el, el.contentCssText, livePaper) : 0;
+                        const elW = parseFloat(el.width) || 260;
+                        const elH = parseFloat(el.height) || 100;
+                        const elementScale = (masterDpi && Math.round(300 / masterDpi)) ? Math.max(1, Math.min(3, Math.round(300 / masterDpi))) : 2;
+
+                        let underlay = null;
+                        if ((shadowInfo.boxShadow || shadowInfo.filter) && window.generateShadowUnderlayDataURL) {
+                            underlay = window.generateShadowUnderlayDataURL(elW, elH, brPx, shadowInfo.boxShadow, shadowInfo.filter, elementScale);
+                        }
+
                         const sX = el.scaleX || "1";
                         const sY = el.scaleY || "1";
                         
-                        elDiv.style.left = `calc(${el.left} - ${pad}px)`;
-                        elDiv.style.top = `calc(${el.top} - ${pad}px)`;
-                        elDiv.style.width = `calc(${el.width} + ${pad * 2}px)`;
-                        elDiv.style.height = `calc(${el.height} + ${pad * 2}px)`;
+                        const elLeft = parseFloat(el.left) || 0;
+                        const elTop = parseFloat(el.top) || 0;
+                        const elWidth = parseFloat(el.width) || 260;
+                        const elHeight = parseFloat(el.height) || 100;
 
                         let cleanHTML = el.innerHTML.replace(/contenteditable="true"/g, 'contenteditable="false"');
                         cleanHTML = cleanHTML.replace(/https:\/\/(www\.transparenttextures\.com[^'"]+)/g, 'https://wsrv.nl/?url=$1');
@@ -2017,17 +2353,41 @@
                         
                         css = css.replace(/transform-style:\s*preserve-3d;?/gi, '').replace(/backface-visibility:\s*hidden;?/gi, '');
                         if (!css.includes('width:')) css += '; width:100%; height:100%;';
-                        
-                        let parentStyle = `position: absolute; top: ${pad}px; left: ${pad}px; width: ${el.width}; height: ${el.height}; overflow: visible !important;`;
-                        if (pVal) { parentStyle += ` perspective: ${pVal}; perspective-origin: center;`; }
-                        
-                        elDiv.innerHTML = `
-                            <div style="${parentStyle}">
-                                <div class="element-content" style="${css}">
+
+                        if (underlay) {
+                            const pad = underlay.pad;
+                            elDiv.style.left = `${elLeft - pad}px`;
+                            elDiv.style.top = `${elTop - pad}px`;
+                            elDiv.style.width = `${elWidth + pad * 2}px`;
+                            elDiv.style.height = `${elHeight + pad * 2}px`;
+                            elDiv.style.overflow = 'visible';
+
+                            let parentStyle = `position: absolute; top: ${pad}px; left: ${pad}px; width: ${elWidth}px; height: ${elHeight}px; overflow: visible !important;`;
+                            if (pVal) { parentStyle += ` perspective: ${pVal}; perspective-origin: center;`; }
+                            
+                            const underlayHTML = `<img class="op-print-shadow-underlay" src="${underlay.dataUrl}" style="position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">`;
+
+                            elDiv.innerHTML = `
+                                <div style="${parentStyle}">
+                                    ${underlayHTML}
+                                    <div class="element-content" style="${css}; position: relative; z-index: 1;">
+                                        ${cleanHTML}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            elDiv.style.left = el.left;
+                            elDiv.style.top = el.top;
+                            elDiv.style.width = el.width;
+                            elDiv.style.height = el.height;
+                            if (pVal) { elDiv.style.perspective = pVal; elDiv.style.perspectiveOrigin = 'center'; }
+                            elDiv.style.overflow = 'visible';
+                            elDiv.innerHTML = `
+                                <div class="element-content" style="${css}; position: relative; z-index: 1;">
                                     ${cleanHTML}
                                 </div>
-                            </div>
-                        `;
+                            `;
+                        }
                     }
                     pageWrapper.appendChild(elDiv);
                 }
@@ -2244,6 +2604,11 @@
                         const filterStr = fNode.getAttribute('data-target-filter');
                         if (!filterStr || filterStr === 'none') continue;
 
+                        if (fNode.getAttribute('data-type') === 'smart-arrow' || fNode.hasAttribute('data-arrow-style') || fNode.querySelector('.smart-arrow-svg, .smart-arrow-baked-img') || fNode.getAttribute('data-type') === 'emoji') {
+                            fNode.removeAttribute('data-target-filter');
+                            continue;
+                        }
+
                         const w = fNode.offsetWidth || parseFloat(fNode.style.width) || 300;
                         const h = fNode.offsetHeight || parseFloat(fNode.style.height) || 100;
                         
@@ -2264,7 +2629,18 @@
                         tempBox.appendChild(clone);
                         document.body.appendChild(tempBox);
 
-                        const rawCanvas = await html2canvas(tempBox, { scale: 2, logging: false, backgroundColor: null });
+                        const h2cBoxPromise = html2canvas(tempBox, { 
+                            scale: 2, 
+                            logging: false, 
+                            backgroundColor: null,
+                            ignoreElements: (el) => {
+                                if (el === tempBox || tempBox.contains(el)) return false;
+                                if (el === document.body || el === document.documentElement || el.contains(tempBox)) return false;
+                                return true;
+                            }
+                        });
+                        const timeoutBoxPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('tempBox html2canvas timeout')), 3000));
+                        const rawCanvas = await Promise.race([h2cBoxPromise, timeoutBoxPromise]);
                         tempBox.remove();
 
                         const bakedCanvas = document.createElement('canvas');
@@ -2318,11 +2694,7 @@
                 // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT ✨
                 normalizeTextBackgroundsForPrint(pageWrapper);
                 
-                // Calculate optimal html2canvas scale based on page DPI (target print density is ~300 DPI)
-                const pageDpi = parseFloat(page.dpi) || masterDpi || 96;
-                const targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
-                const fallbackScale = Math.max(1, targetScale - 1);
-
+                // Optimal html2canvas scale based on page DPI (target print density is ~300 DPI, computed at start of page loop)
                 let h2cBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
                     ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!currentThemeSettings)
                     : (currentThemeSettings || (page.background && (page.background.includes('gradient') || page.background.includes('url('))) ? null : '#ffffff');
@@ -2358,6 +2730,49 @@
                     }));
                 }
 
+                // Pre-flight: Normalize any inline SVG emojis in pageWrapper to SVG data URI <img> tags so html2canvas never stalls
+                pageWrapper.querySelectorAll('.pub-element[data-type="emoji"] svg').forEach(svg => {
+                    try {
+                        const content = svg.closest('.element-content') || svg.parentNode;
+                        let svgText = svg.outerHTML;
+                        if (!svgText.includes('xmlns=')) {
+                            svgText = svgText.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+                        }
+                        svgText = svgText.replace(/\bpreserveAspectRatio\s*=\s*["'][^"']*["']/gi, '');
+                        svgText = svgText.replace(/<svg/i, '<svg preserveAspectRatio="none"');
+                        const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
+                        content.innerHTML = `<img src="${dataUri}" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
+                    } catch(e) {}
+                });
+
+                // Universal pre-flight: Rasterize ANY remaining SVG <img> elements (emojis, twemojis, SVGs) into PNG canvases.
+                // html2canvas drops percentage-based SVG <img> elements when scale >= 3. Rasterizing them to PNG eliminates the bug entirely.
+                const pendingSvgImgs = Array.from(pageWrapper.querySelectorAll('img')).filter(img => {
+                    return img.src && (img.src.startsWith('data:image/svg+xml') || img.src.includes('.svg'));
+                });
+                for (const sImg of pendingSvgImgs) {
+                    try {
+                        if (!sImg.complete || sImg.naturalWidth === 0) {
+                            await new Promise(r => { sImg.onload = r; sImg.onerror = r; setTimeout(r, 1500); });
+                        }
+                        const w = (sImg.offsetWidth || parseFloat(sImg.style.width) || parseFloat(sImg.parentElement?.style?.width) || 100) * targetScale;
+                        const h = (sImg.offsetHeight || parseFloat(sImg.style.height) || parseFloat(sImg.parentElement?.style?.height) || 100) * targetScale;
+                        const cvs = document.createElement('canvas');
+                        cvs.width = Math.max(1, Math.round(w));
+                        cvs.height = Math.max(1, Math.round(h));
+                        const ctx = cvs.getContext('2d');
+                        ctx.drawImage(sImg, 0, 0, cvs.width, cvs.height);
+                        const pngUri = cvs.toDataURL('image/png');
+                        sImg.src = pngUri;
+                        await new Promise(r => {
+                            if (sImg.complete) r();
+                            else { sImg.onload = r; sImg.onerror = r; setTimeout(r, 500); }
+                        });
+                    } catch(svgRasterErr) {
+                        console.warn('[Print Engine] Pre-flight SVG rasterization fallback error:', svgRasterErr);
+                    }
+                }
+
                 // Universal pre-flight: verify all <img> elements in pageWrapper have crossOrigin set for html2canvas
                 pageWrapper.querySelectorAll('img').forEach(pImg => {
                     if (pImg.src && !pImg.src.startsWith('data:')) {
@@ -2366,24 +2781,37 @@
                     }
                 });
 
+                const pageIgnoreFn = (el) => {
+                    if (el === pageWrapper || pageWrapper.contains(el)) return false;
+                    if (el === document.body || el === document.documentElement || el.contains(pageWrapper)) return false;
+                    return true;
+                };
+
                 let canvas;
                 try {
                     const h2cPromise = html2canvas(pageWrapper, { 
-                        scale: targetScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 4000
+                        scale: targetScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 4000,
+                        ignoreElements: pageIgnoreFn
                     });
                     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`html2canvas scale ${targetScale} timeout`)), 12000));
                     canvas = await Promise.race([h2cPromise, timeoutPromise]);
                 } catch (h2cErr) {
                     console.warn(`[Print Engine] html2canvas scale ${targetScale} failed or timed out, falling back to scale ${fallbackScale}:`, h2cErr);
                     try {
-                        canvas = await html2canvas(pageWrapper, { 
-                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000
+                        const fbPromise1 = html2canvas(pageWrapper, { 
+                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000,
+                            ignoreElements: pageIgnoreFn
                         });
+                        const fbTimeout1 = new Promise((_, reject) => setTimeout(() => reject(new Error(`fallback scale ${fallbackScale} timeout`)), 6000));
+                        canvas = await Promise.race([fbPromise1, fbTimeout1]);
                     } catch (fallbackErr) {
                         console.warn(`[Print Engine] html2canvas fallback scale ${fallbackScale} with bg failed, retrying with transparent background:`, fallbackErr);
-                        canvas = await html2canvas(pageWrapper, { 
-                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 3000
+                        const fbPromise2 = html2canvas(pageWrapper, { 
+                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 3000,
+                            ignoreElements: pageIgnoreFn
                         });
+                        const fbTimeout2 = new Promise((_, reject) => setTimeout(() => reject(new Error('fallback transparent timeout')), 6000));
+                        canvas = await Promise.race([fbPromise2, fbTimeout2]);
                     }
                 }
 

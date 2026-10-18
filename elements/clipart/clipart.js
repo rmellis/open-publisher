@@ -1,5 +1,7 @@
 // --- CLIPART SYSTEM (TWEMOJI) ---
 function initClipart() {
+    const modal = document.getElementById('clipart-modal');
+    if (modal) modal.setAttribute('data-html2canvas-ignore', 'true');
     const grid = document.getElementById('clipart-grid');
 
     // Massive list of high-quality vector emojis
@@ -91,6 +93,9 @@ function prepareTwemojiSvgMarkup(svgText) {
     svg = svg.replace(/\bpreserveAspectRatio\s*=\s*["'][^"']*["']/gi, '');
     svg = svg.replace(/\bwidth\s*=\s*["'][^"']*["']/gi, '');
     svg = svg.replace(/\bheight\s*=\s*["'][^"']*["']/gi, '');
+    if (!svg.includes('xmlns=')) {
+        svg = svg.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
     const stretchStyle = 'width:100%;height:100%;display:block;position:absolute;top:0;left:0;overflow:visible;';
     if (/<svg[^>]*style\s*=/i.test(svg)) {
         svg = svg.replace(/<svg([^>]*?)style\s*=\s*["']([^"']*)["']/i, `<svg$1preserveAspectRatio="none" style="${stretchStyle}$2"`);
@@ -123,17 +128,24 @@ function applyEmojiStretch(root) {
         img.style.left = '0';
         img.style.maxWidth = 'none';
         img.style.maxHeight = 'none';
+        img.style.display = 'block';
     });
 }
 
 async function insertEmojiFromUrl(url) {
     let markup;
     try {
-        const res = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error('Emoji fetch failed');
-        markup = prepareTwemojiSvgMarkup(await res.text());
+        const rawSvg = await res.text();
+        const svgMarkup = prepareTwemojiSvgMarkup(rawSvg);
+        const dataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgMarkup)))}`;
+        markup = `<img src="${dataUri}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
     } catch (e) {
-        markup = `<img src="${url}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;">`;
+        markup = `<img src="${url}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
     }
     const el = createWrapper(markup);
     el.setAttribute('data-type', 'emoji');
@@ -148,20 +160,36 @@ let emojiMigrateTimer = null;
 function scheduleEmojiMigrate() {
     clearTimeout(emojiMigrateTimer);
     emojiMigrateTimer = setTimeout(async () => {
-        const imgs = Array.from(document.querySelectorAll('.pub-element img[src*="twemoji"]'));
         let migrated = false;
+        // 1. Convert any legacy inline SVG emojis into SVG data URI <img> tags
+        const svgs = Array.from(document.querySelectorAll('.pub-element[data-type="emoji"] svg'));
+        for (const svg of svgs) {
+            const content = svg.closest('.element-content');
+            const el = svg.closest('.pub-element');
+            if (!content || !el) continue;
+            try {
+                const svgMarkup = prepareTwemojiSvgMarkup(svg.outerHTML);
+                const dataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgMarkup)))}`;
+                content.innerHTML = `<img src="${dataUri}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
+                applyEmojiStretch(content);
+                migrated = true;
+            } catch (e) {}
+        }
+        // 2. Convert any external twemoji <img> tags into SVG data URIs with preserveAspectRatio="none"
+        const imgs = Array.from(document.querySelectorAll('.pub-element[data-type="emoji"] img:not([src^="data:"])'));
         for (const img of imgs) {
             const content = img.closest('.element-content');
-            const el = img.closest('.pub-element');
-            if (!content || !el) continue;
+            if (!content) continue;
             try {
                 const res = await fetch(img.src);
                 if (!res.ok) continue;
-                content.innerHTML = prepareTwemojiSvgMarkup(await res.text());
-                el.setAttribute('data-type', 'emoji');
-                applyEmojiStretch(content);
+                const svgMarkup = prepareTwemojiSvgMarkup(await res.text());
+                img.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgMarkup)))}`;
+                img.style.objectFit = 'fill';
+                img.style.width = '100%';
+                img.style.height = '100%';
                 migrated = true;
-            } catch (e) { /* keep img fallback */ }
+            } catch (e) {}
         }
         if (migrated && typeof state !== 'undefined' && typeof serializeCurrentPage === 'function') {
             state.pages[state.currentPageIndex] = serializeCurrentPage();

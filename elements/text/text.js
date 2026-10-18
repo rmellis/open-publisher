@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.10.0)
+// Open Publisher Text Engine (v5.10.1)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -795,7 +795,7 @@ const fontList = [
 ];
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.10.0)
+   STYLED TEXT BOX SYSTEM (v5.10.1)
    Dual-Mode Architecture: Creation Templates + Contextual Ribbon Styling
    ========================================================================= */
 
@@ -1423,6 +1423,1754 @@ window.TextBoxStylesSystem = {
             },
             previewCSS: 'background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e293b; border-radius:0 3px 3px 0;',
             starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-crimson',
+            name: 'Crimson Editorial Quote',
+            cat: 'quotes',
+            desc: 'Rich crimson left border with delicate blush tint and serif typography',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fff1f2',
+                border: 'none',
+                borderLeft: '4px solid #be123c',
+                borderRadius: '0 6px 6px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#881337',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fff1f2; border-left:3px solid #be123c; border-radius:0 3px 3px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-slate-minimal',
+            name: 'Minimal Slate Blockquote',
+            cat: 'quotes',
+            desc: 'Subtle slate border line on clean white background',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderLeft: '3px solid #94a3b8',
+                borderRadius: '0',
+                padding: '12px 18px'
+            },
+            textStyle: {
+                color: '#475569',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontStyle: 'italic',
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border-left:3px solid #94a3b8;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-emerald',
+            name: 'Emerald Forest Quote',
+            cat: 'quotes',
+            desc: 'Forest green left accent with soft mint background',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ecfdf5',
+                border: 'none',
+                borderLeft: '4px solid #047857',
+                borderRadius: '0 6px 6px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#064e3b',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ecfdf5; border-left:3px solid #047857; border-radius:0 3px 3px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-purple-royal',
+            name: 'Royal Purple Quote',
+            cat: 'quotes',
+            desc: 'Stately violet accent border with soft lavender fill',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f5f3ff',
+                border: 'none',
+                borderLeft: '4px solid #7c3aed',
+                borderRadius: '0 6px 6px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#4c1d95',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f5f3ff; border-left:3px solid #7c3aed; border-radius:0 3px 3px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-navy-academic',
+            name: 'Academic Navy Quote',
+            cat: 'quotes',
+            desc: 'Scholarly navy border line with crisp light slate paper tint',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                border: 'none',
+                borderLeft: '5px double #1e3a8a',
+                borderRadius: '0 4px 4px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#172554',
+                fontFamily: "'Times New Roman', serif",
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border-left:4px double #1e3a8a;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-charcoal-bold',
+            name: 'Bold Charcoal Pullquote',
+            cat: 'quotes',
+            desc: 'Heavy dark slate left band with contemporary sans-serif copy',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f4f4f5',
+                border: 'none',
+                borderLeft: '6px solid #18181b',
+                borderRadius: '0 4px 4px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#09090b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '600',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f4f4f5; border-left:4px solid #18181b;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-coral',
+            name: 'Warm Coral Quote',
+            cat: 'quotes',
+            desc: 'Vibrant coral accent border with gentle warm glow',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fff1f2',
+                border: 'none',
+                borderLeft: '4px solid #f43f5e',
+                borderRadius: '0 8px 8px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#9f1239',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fff1f2; border-left:3px solid #f43f5e; border-radius:0 4px 4px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'quote-coffee',
+            name: 'Vintage Sepia Quote',
+            cat: 'quotes',
+            desc: 'Warm coffee brown accent with vintage parchment tint',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fefce8',
+                border: 'none',
+                borderLeft: '4px solid #78350f',
+                borderRadius: '0 4px 4px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fefce8; border-left:3px solid #78350f;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-danger',
+            name: 'Critical Alert Box',
+            cat: 'quotes',
+            desc: 'High-contrast red alert callout for warnings and errors',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderLeft: '5px solid #dc2626',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#991b1b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #dc2626; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-info',
+            name: 'Cyan Information Notice',
+            cat: 'quotes',
+            desc: 'Crisp informational notice box with cyan highlight bar',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderLeft: '5px solid #0284c7',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#075985',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f0f9ff; border:1px solid #bae6fd; border-left:4px solid #0284c7; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-note',
+            name: 'Neutral Note Callout',
+            cat: 'quotes',
+            desc: 'Gentle neutral card with subtle grey border for side notes',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#334155',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-insight',
+            name: 'Deep Insight Callout',
+            cat: 'quotes',
+            desc: 'Deep indigo accent box for key takeaways and highlights',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#eef2ff',
+                border: '1px solid #c7d2fe',
+                borderLeft: '5px solid #4338ca',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#312e81',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#eef2ff; border:1px solid #c7d2fe; border-left:4px solid #4338ca; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-quote-centered',
+            name: 'Centered Editorial Quote',
+            cat: 'quotes',
+            desc: 'Elegant top and bottom dividing lines with centered quote copy',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderTop: '2px solid #cbd5e1',
+                borderBottom: '2px solid #cbd5e1',
+                borderRadius: '0',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border-top:2px solid #cbd5e1; border-bottom:2px solid #cbd5e1;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-dark-quote',
+            name: 'Midnight Dark Quote',
+            cat: 'quotes',
+            desc: 'Deep slate container with luminous teal left stripe',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#0f172a',
+                border: 'none',
+                borderLeft: '4px solid #14b8a6',
+                borderRadius: '0 6px 6px 0',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#f1f5f9',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#0f172a; border-left:3px solid #14b8a6; border-radius:0 3px 3px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-gradient-bar',
+            name: 'Prism Accent Quote',
+            cat: 'quotes',
+            desc: 'Multi-color vibrant gradient left bar on crisp white card',
+            defaultWidth: 280,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #f1f5f9',
+                borderLeft: '5px solid #ec4899',
+                borderRadius: '0 8px 8px 0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #f1f5f9; border-left:4px solid #ec4899; border-radius:0 4px 4px 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-question',
+            name: 'Reflection / Question Box',
+            cat: 'quotes',
+            desc: 'Amber dashed container for thought-provoking discussion points',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '2px dashed #f59e0b',
+                borderRadius: '8px',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#92400e',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border:2px dashed #f59e0b; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-announcement',
+            name: 'Notice Announcement',
+            cat: 'quotes',
+            desc: 'Royal blue card with top color line for prominent announcements',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderTop: '4px solid #2563eb',
+                borderRadius: '0 0 6px 6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#1e40af',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '600',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#eff6ff; border:1px solid #bfdbfe; border-top:3px solid #2563eb; border-radius:0 0 3px 3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'callout-checklist',
+            name: 'Action Item Callout',
+            cat: 'quotes',
+            desc: 'Light mint box with green accent for tasks and requirements',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderLeft: '5px solid #10b981',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#065f46',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #10b981; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-emerald-gradient',
+            name: 'Emerald Isle Card',
+            cat: 'cards',
+            desc: 'Rich emerald-to-teal gradient panel with bright white text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #059669, #0d9488)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #059669, #0d9488); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-royal-violet',
+            name: 'Royal Violet Card',
+            cat: 'cards',
+            desc: 'Deep violet to indigo gradient with radiant white copy',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #7c3aed, #4338ca)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #7c3aed, #4338ca); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-midnight-gold',
+            name: 'Midnight Gold Card',
+            cat: 'cards',
+            desc: 'Obsidian dark card with metallic gold border and champagne text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#09090b',
+                border: '1px solid #eab308',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#fef08a',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#09090b; border:1px solid #eab308; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-peachy-glow',
+            name: 'Peach Glow Pastel',
+            cat: 'cards',
+            desc: 'Gentle warm pastel peach card with terracotta lettering',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #ffedd5, #fee2e2)',
+                border: '1px solid #fed7aa',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(254, 215, 170, 0.4)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#9a3412',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #ffedd5, #fee2e2); border:1px solid #fed7aa; border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-lavender-mist',
+            name: 'Lavender Mist Card',
+            cat: 'cards',
+            desc: 'Soft pastel lilac panel with deep purple text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #ede9fe, #fbcfe8)',
+                border: '1px solid #ddd6fe',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(221, 214, 254, 0.4)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#5b21b6',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #ede9fe, #fbcfe8); border:1px solid #ddd6fe; border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-minty-fresh',
+            name: 'Mint Breeze Card',
+            cat: 'cards',
+            desc: 'Refreshing pastel mint gradient card with deep teal text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #d1fae5, #cffafe)',
+                border: '1px solid #a7f3d0',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(167, 243, 208, 0.4)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#065f46',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #d1fae5, #cffafe); border:1px solid #a7f3d0; border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-slate-glass',
+            name: 'Smoky Glass Panel',
+            cat: 'cards',
+            desc: 'Translucent dark glassmorphic panel with soft backdrop blur',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '10px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#f8fafc',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.25); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-rose-gold',
+            name: 'Rose Gold Luxury Card',
+            cat: 'cards',
+            desc: 'Delicate metallic rose gold gradient with rich wine copy',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #fecdd3, #fbcfe8)',
+                border: '1px solid #f43f5e',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(244, 63, 94, 0.2)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#881337',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #fecdd3, #fbcfe8); border:1px solid #f43f5e; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-aurora',
+            name: 'Northern Lights Card',
+            cat: 'cards',
+            desc: 'Luminous cyan to purple aurora borealis gradient card',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #06b6d4, #8b5cf6); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-fire-ember',
+            name: 'Fire Ember Card',
+            cat: 'cards',
+            desc: 'Fiery red-to-orange gradient container with bold white text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #dc2626, #ea580c)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #dc2626, #ea580c); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-charcoal-matte',
+            name: 'Matte Obsidian Panel',
+            cat: 'cards',
+            desc: 'Ultra-clean matte dark card with subtle boundary styling',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#18181b',
+                border: '1px solid #27272a',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#f4f4f5',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#18181b; border:1px solid #27272a; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-minimal-ghost',
+            name: 'Ghost Floating Card',
+            cat: 'cards',
+            desc: 'Borderless white card elevated by soft multi-tier drop shadow',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)',
+                padding: '16px 18px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border-radius:6px; box-shadow:0 3px 8px rgba(0,0,0,0.12);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-header-crimson',
+            name: 'Crimson Banner Card',
+            cat: 'cards',
+            desc: 'Structured card featuring a top crimson banner accent',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderTop: '5px solid #9f1239',
+                borderRadius: '0 0 8px 8px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-top:4px solid #9f1239; border-radius:0 0 4px 4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-header-navy',
+            name: 'Navy Executive Card',
+            cat: 'cards',
+            desc: 'White executive card with top midnight navy bar',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderTop: '5px solid #0f172a',
+                borderRadius: '0 0 8px 8px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#334155',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-top:4px solid #0f172a; border-radius:0 0 4px 4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-header-gold',
+            name: 'Gold Premium Card',
+            cat: 'cards',
+            desc: 'Warm ivory container with elegant top gold accent line',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderTop: '5px solid #d97706',
+                borderRadius: '0 0 8px 8px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border:1px solid #fde68a; border-top:4px solid #d97706; border-radius:0 0 4px 4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-blueprint',
+            name: 'Architect Blueprint Card',
+            cat: 'cards',
+            desc: 'Technical blue card inspired by architectural drafting sheets',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#1e3a8a',
+                border: '1px solid #3b82f6',
+                borderRadius: '4px',
+                boxShadow: 'none',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#eff6ff',
+                fontFamily: "'Courier New', monospace",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#1e3a8a; border:1px solid #3b82f6; border-radius:2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'card-retro-clay',
+            name: 'Terracotta Clay Card',
+            cat: 'cards',
+            desc: 'Warm earthy terracotta clay gradient with ivory text',
+            defaultWidth: 260,
+            defaultHeight: 110,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #c2410c, #9a3412)',
+                border: 'none',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(194, 65, 12, 0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#fff7ed',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #c2410c, #9a3412); border-radius:5px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-navy',
+            name: 'Executive Stat Box',
+            cat: 'metrics',
+            desc: 'Deep navy box with bright amber gold metric typography',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '8px',
+                boxShadow: '0 4px 10px rgba(15,23,42,0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#fbbf24',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#0f172a; border:1px solid #1e293b; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-emerald',
+            name: 'Growth Metric Card',
+            cat: 'metrics',
+            desc: 'White card with vibrant green top border and metric text',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderTop: '4px solid #10b981',
+                borderRadius: '6px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#047857',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-top:3px solid #10b981; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-rose',
+            name: 'KPI Target Callout',
+            cat: 'metrics',
+            desc: 'Soft blush card with bold ruby red metric numbering',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#fff1f2',
+                border: '1px solid #fecdd3',
+                borderTop: '4px solid #f43f5e',
+                borderRadius: '6px',
+                boxShadow: '0 2px 6px rgba(244,63,94,0.1)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#e11d48',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#fff1f2; border:1px solid #fecdd3; border-top:3px solid #f43f5e; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-minimal-split',
+            name: 'Clean Metric Counter',
+            cat: 'metrics',
+            desc: 'Clean white container with 2px bottom accent line',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderBottom: '3px solid #64748b',
+                borderRadius: '4px',
+                boxShadow: 'none',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #cbd5e1; border-bottom:2px solid #64748b; border-radius:2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-dark-neon',
+            name: 'Cyber Metric Display',
+            cat: 'metrics',
+            desc: 'Dark tech display with luminous neon green text',
+            defaultWidth: 220,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#022c22',
+                border: '1px solid #10b981',
+                borderRadius: '6px',
+                boxShadow: '0 0 10px rgba(16,185,129,0.3)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#34d399',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#022c22; border:1px solid #10b981; border-radius:3px; box-shadow:0 0 6px rgba(16,185,129,0.4);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-emerald',
+            name: 'Emerald Success Pill',
+            cat: 'metrics',
+            desc: 'Vibrant green gradient pill for confirmed statuses',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #10b981, #059669); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-rose',
+            name: 'Ruby Promo Pill',
+            cat: 'metrics',
+            desc: 'Bright rose-red gradient pill for discounts and highlights',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #f43f5e, #be123c)',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(244,63,94,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #f43f5e, #be123c); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-purple',
+            name: 'Ultra Violet Pill',
+            cat: 'metrics',
+            desc: 'Vibrant violet-to-purple gradient pill banner',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #a855f7, #6b21a8)',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(168,85,247,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #a855f7, #6b21a8); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-sky',
+            name: 'Sky Blue Pill',
+            cat: 'metrics',
+            desc: 'Crisp light cyan-to-blue gradient pill',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(56,189,248,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #38bdf8, #0284c7); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-sunset',
+            name: 'Tangerine Sunset Pill',
+            cat: 'metrics',
+            desc: 'Warm bright orange gradient pill badge',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #fb923c, #ea580c)',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(251,146,60,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #fb923c, #ea580c); border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-silver',
+            name: 'Silver Metallic Pill',
+            cat: 'metrics',
+            desc: 'Refined brushed platinum pill with dark contrast text',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #f8fafc, #cbd5e1)',
+                border: '1px solid #94a3b8',
+                borderRadius: '999px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #f8fafc, #cbd5e1); border:1px solid #94a3b8; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-outline-theme',
+            name: 'Theme Outline Pill',
+            cat: 'metrics',
+            desc: 'White pill with crisp 2px theme color border',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: '#ffffff',
+                border: '2px solid var(--ui-theme-color, #007670)',
+                borderRadius: '999px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: 'var(--ui-theme-color, #007670)',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#ffffff; border:2px solid #007670; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'pill-outline-dark',
+            name: 'Dark Outline Pill',
+            cat: 'metrics',
+            desc: 'Transparent pill with bold 2px black border',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'transparent',
+                border: '2px solid #0f172a',
+                borderRadius: '999px',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:transparent; border:2px solid #0f172a; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'badge-ribbon-tag',
+            name: 'Price Tag / Ribbon',
+            cat: 'metrics',
+            desc: 'Warm amber badge tag for special pricing and offers',
+            defaultWidth: 240,
+            defaultHeight: 54,
+            containerStyle: {
+                background: '#f59e0b',
+                border: 'none',
+                borderRadius: '4px',
+                boxShadow: '0 3px 8px rgba(245,158,11,0.3)',
+                padding: '10px 16px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#f59e0b; border-radius:2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'badge-sale-flash',
+            name: 'Flash Sale Badge',
+            cat: 'metrics',
+            desc: 'Bold crimson badge with slight glow for high priority notices',
+            defaultWidth: 240,
+            defaultHeight: 54,
+            containerStyle: {
+                background: '#e11d48',
+                border: 'none',
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(225,29,72,0.35)',
+                padding: '10px 16px'
+            },
+            textStyle: {
+                color: '#ffffff',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#e11d48; border-radius:3px; box-shadow:0 0 6px rgba(225,29,72,0.4);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'badge-verified',
+            name: 'Verified Trust Badge',
+            cat: 'metrics',
+            desc: 'Soft blue pill with royal blue border for trust signals',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '999px',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#1d4ed8',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'badge-beta-pill',
+            name: 'Feature Flag / Beta Pill',
+            cat: 'metrics',
+            desc: 'Soft purple badge for labels, versions, and tags',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: '#faf5ff',
+                border: '1px solid #e9d5ff',
+                borderRadius: '999px',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#7e22ce',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'badge-limited',
+            name: 'Limited Edition Pill',
+            cat: 'metrics',
+            desc: 'Deep bronze gradient badge with metallic gold text',
+            defaultWidth: 240,
+            defaultHeight: 50,
+            containerStyle: {
+                background: 'linear-gradient(135deg, #451a03, #78350f)',
+                border: '1px solid #b45309',
+                borderRadius: '999px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#fef08a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:linear-gradient(135deg, #451a03, #78350f); border:1px solid #b45309; border-radius:12px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-modern-circle',
+            name: 'Compact Stat Capsule',
+            cat: 'metrics',
+            desc: 'Dual-toned compact pill capsule with bold metric font',
+            defaultWidth: 220,
+            defaultHeight: 60,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                borderRadius: '999px',
+                padding: '8px 18px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '16px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'stat-floating-shadow',
+            name: 'Elevated Metric Pill',
+            cat: 'metrics',
+            desc: 'White pill elevated by a soft, modern floating shadow',
+            defaultWidth: 240,
+            defaultHeight: 54,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderRadius: '999px',
+                boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+                padding: '10px 20px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#ffffff; border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.15);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-cinema',
+            name: 'Vintage Cinema Pass',
+            cat: 'borders',
+            desc: 'Dark charcoal vintage pass with dashed gold border',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#27272a',
+                border: '2px dashed #eab308',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#fef08a',
+                fontFamily: "'Courier New', monospace",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#27272a; border:2px dashed #eab308; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-vip',
+            name: 'VIP Admission Pass',
+            cat: 'borders',
+            desc: 'Royal deep purple ticket with elegant gold dashed frame',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#1e1b4b',
+                border: '2px dashed #ca8a04',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#fde047',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#1e1b4b; border:2px dashed #ca8a04; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-neon',
+            name: 'Nightclub Event Ticket',
+            cat: 'borders',
+            desc: 'Black event stub with hot pink dashed outline',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#09090b',
+                border: '2px dashed #f43f5e',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#fda4af',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#09090b; border:2px dashed #f43f5e; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-clean-minimal',
+            name: 'Modern Clean Coupon',
+            cat: 'borders',
+            desc: 'Minimalist white coupon card with clean grey dashed border',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#ffffff',
+                border: '2px dashed #94a3b8',
+                borderRadius: '6px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#334155',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                fontWeight: '600',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#ffffff; border:2px dashed #94a3b8; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'ticket-craft',
+            name: 'Kraft Paper Stub',
+            cat: 'borders',
+            desc: 'Natural warm kraft paper stub with coffee brown dashed line',
+            defaultWidth: 250,
+            defaultHeight: 90,
+            containerStyle: {
+                background: '#f5ebe0',
+                border: '2px dashed #78350f',
+                borderRadius: '4px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'center'
+            },
+            previewCSS: 'background:#f5ebe0; border:2px dashed #78350f; border-radius:2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-diploma',
+            name: 'Collegiate Diploma Frame',
+            cat: 'borders',
+            desc: 'Stately double navy border on ivory parchment background',
+            defaultWidth: 270,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '3px double #1e3a8a',
+                borderRadius: '0px',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#172554',
+                fontFamily: "'Times New Roman', serif",
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border:3px double #1e3a8a;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-ornate-gold',
+            name: 'Ornate Gold Box',
+            cat: 'borders',
+            desc: 'Nested gold borders for luxury product framing and certificates',
+            defaultWidth: 270,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#fafaf9',
+                border: '1px solid #d97706',
+                outline: '1px solid #d97706',
+                outlineOffset: '-5px',
+                borderRadius: '0px',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fafaf9; border:1px solid #d97706; outline:1px solid #d97706; outline-offset:-2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-modern-double',
+            name: 'Contemporary Double Frame',
+            cat: 'borders',
+            desc: 'Deep slate modern double border on pure white card',
+            defaultWidth: 270,
+            defaultHeight: 110,
+            containerStyle: {
+                background: '#ffffff',
+                border: '3px double #0f172a',
+                borderRadius: '0px',
+                padding: '14px 18px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:3px double #0f172a;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-dashed-gold',
+            name: 'Golden Dashed Frame',
+            cat: 'borders',
+            desc: 'Ivory card framed by a warm golden dashed line',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#fffbeb',
+                border: '2px dashed #b45309',
+                borderRadius: '6px',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#78350f',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#fffbeb; border:2px dashed #b45309; border-radius:3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'frame-stamp-edge',
+            name: 'Postage Stamp Card',
+            cat: 'borders',
+            desc: 'Vintage postal card with delicate dotted boundary',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#faf8f5',
+                border: '2px dotted #78350f',
+                borderRadius: '0px',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#451a03',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#faf8f5; border:2px dotted #78350f;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-bottom-bold',
+            name: 'Bottom Accent Bar',
+            cat: 'borders',
+            desc: 'Clean white panel with prominent 5px bottom theme line',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderBottom: '5px solid var(--ui-theme-color, #007670)',
+                borderRadius: '6px 6px 0 0',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                padding: '12px 14px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #e2e8f0; border-bottom:4px solid #007670; border-radius:3px 3px 0 0;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-right-bold',
+            name: 'Right Accent Lead',
+            cat: 'borders',
+            desc: 'Contemporary card with heavy right accent boundary stripe',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRight: '6px solid var(--ui-theme-color, #007670)',
+                borderRadius: '6px 0 0 6px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border:1px solid #e2e8f0; border-right:4px solid #007670; border-radius:3px 0 0 3px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-bracket',
+            name: 'Editorial Bracket Box',
+            cat: 'borders',
+            desc: 'Top and bottom bracket border lines framing centered serif text',
+            defaultWidth: 270,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderTop: '2px solid #0f172a',
+                borderBottom: '2px solid #0f172a',
+                borderRadius: '0',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0f172a',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border-top:2px solid #0f172a; border-bottom:2px solid #0f172a;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'accent-dual-corners',
+            name: 'Opposing Corners Accent',
+            cat: 'borders',
+            desc: 'Stylized top-left and bottom-right corner borders',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f8fafc',
+                borderTop: '3px solid var(--ui-theme-color, #007670)',
+                borderLeft: '3px solid var(--ui-theme-color, #007670)',
+                borderBottom: '3px solid #64748b',
+                borderRight: '3px solid #64748b',
+                borderRadius: '4px',
+                padding: '12px 16px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f8fafc; border-top:2px solid #007670; border-left:2px solid #007670; border-bottom:2px solid #64748b; border-right:2px solid #64748b; border-radius:2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'border-cross-hatch',
+            name: 'Cross-Border Frame',
+            cat: 'borders',
+            desc: 'Dual-tone outer outline with nested offset frame',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: '1px solid #334155',
+                outline: '1px dashed #94a3b8',
+                outlineOffset: '-4px',
+                borderRadius: '0',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#1e293b',
+                fontFamily: 'Georgia, serif',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:1px solid #334155; outline:1px dashed #94a3b8; outline-offset:-2px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'border-dotted-round',
+            name: 'Dotted Round Notice',
+            cat: 'borders',
+            desc: 'Soft pastel rounded card with playful dotted blue boundary',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#f0f9ff',
+                border: '2px dotted #0284c7',
+                borderRadius: '12px',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#0369a1',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#f0f9ff; border:2px dotted #0284c7; border-radius:6px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'border-gradient-line',
+            name: 'Prism Border Frame',
+            cat: 'borders',
+            desc: 'Clean white card framed by a vibrant violet gradient border',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: '2px solid #8b5cf6',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.15)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#4c1d95',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '13px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border:2px solid #8b5cf6; border-radius:4px;',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'border-neon-glow',
+            name: 'Cyan Neon Glow Frame',
+            cat: 'borders',
+            desc: 'Dark container surrounded by an electric cyan glow line',
+            defaultWidth: 260,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#090d16',
+                border: '1px solid #06b6d4',
+                borderRadius: '6px',
+                boxShadow: '0 0 12px rgba(6, 182, 212, 0.4)',
+                padding: '14px 16px'
+            },
+            textStyle: {
+                color: '#a5f3fc',
+                fontFamily: "'Segoe UI', sans-serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#090d16; border:1px solid #06b6d4; border-radius:3px; box-shadow:0 0 6px rgba(6,182,212,0.5);',
+            starterHTML: 'Click to edit text'
+        },
+        {
+            id: 'border-vintage-newspaper',
+            name: 'Newspaper Editorial Column',
+            cat: 'borders',
+            desc: 'Classic newspaper column with top and bottom heavy rules',
+            defaultWidth: 270,
+            defaultHeight: 100,
+            containerStyle: {
+                background: '#ffffff',
+                border: 'none',
+                borderTop: '3px solid #000000',
+                borderBottom: '1px solid #000000',
+                borderRadius: '0',
+                padding: '12px 14px'
+            },
+            textStyle: {
+                color: '#000000',
+                fontFamily: "'Times New Roman', serif",
+                fontSize: '14px',
+                lineHeight: '1.4'
+            },
+            previewCSS: 'background:#ffffff; border-top:3px solid #000000; border-bottom:1px solid #000000;',
+            starterHTML: 'Click to edit text'
         }
     ],
 
@@ -2040,32 +3788,54 @@ window.TextBoxStylesSystem = {
         }
     },
 
+    currentSearchTerm: '',
+
+    onSearchInput: function(val, mode, filterCat) {
+        this.currentSearchTerm = val;
+        this.renderMenu(mode, filterCat);
+        const input = document.getElementById('styled-textbox-search');
+        if (input) {
+            input.focus();
+            input.setSelectionRange(val.length, val.length);
+        }
+    },
+
     renderMenu: function(mode, filterCat = 'all') {
         const menu = document.getElementById('styled-textbox-dropdown');
         if (!menu) return;
 
         const isInsert = mode === 'insert';
         const titleText = isInsert ? 'Insert Styled Text Box' : 'Apply Text Box Style';
-        const subText = isInsert ? 'Choose a pre-styled template to insert onto your page' : 'Select a style to apply to the selected text box';
+        const subText = isInsert ? 'Choose from 100 pre-styled templates to insert' : 'Select a style to apply to the selected text box';
 
         const categories = [
-            { id: 'all', label: 'All Styles' },
-            { id: 'quotes', label: 'Quotes & Callouts' },
-            { id: 'cards', label: 'Cards & Panels' },
-            { id: 'metrics', label: 'Badges & Stats' },
-            { id: 'borders', label: 'Borders & Tickets' }
+            { id: 'all', label: `All (${this.presets.length})` },
+            { id: 'quotes', label: `Quotes (${this.presets.filter(p => p.cat === 'quotes').length})` },
+            { id: 'cards', label: `Cards (${this.presets.filter(p => p.cat === 'cards').length})` },
+            { id: 'metrics', label: `Badges & Stats (${this.presets.filter(p => p.cat === 'metrics').length})` },
+            { id: 'borders', label: `Borders (${this.presets.filter(p => p.cat === 'borders').length})` }
         ];
 
-        const filtered = filterCat === 'all' ? this.presets : this.presets.filter(p => p.cat === filterCat);
+        let filtered = filterCat === 'all' ? this.presets : this.presets.filter(p => p.cat === filterCat);
+        const searchVal = (this.currentSearchTerm || '').trim().toLowerCase();
+        if (searchVal) {
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(searchVal) || p.desc.toLowerCase().includes(searchVal) || p.id.toLowerCase().includes(searchVal));
+        }
 
         let html = `
             <div class="styled-dropdown-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-swatchbook" style="color:var(--ui-theme-color); font-size:16px;"></i>
-                    <div>
-                        <div style="font-weight:700; font-size:13px; color:var(--ui-text);">${titleText}</div>
-                        <div style="font-size:11px; color:var(--ui-text-muted, #64748b);">${subText}</div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-swatchbook" style="color:var(--ui-theme-color); font-size:16px;"></i>
+                        <div>
+                            <div style="font-weight:700; font-size:13px; color:var(--ui-text);">${titleText}</div>
+                            <div style="font-size:11px; color:var(--ui-text-muted, #64748b);">${subText}</div>
+                        </div>
                     </div>
+                    <span style="font-size:10px; font-weight:700; background:var(--ui-hover-bg, #f1f5f9); border:1px solid var(--ui-border, #e2e8f0); border-radius:10px; padding:2px 7px; color:var(--ui-theme-color);">100 Presets</span>
+                </div>
+                <div style="margin-top:6px;">
+                    <input type="text" id="styled-textbox-search" placeholder="Search 100 styles (e.g. quote, dark, neon, gold, card)..." value="${this.currentSearchTerm || ''}" oninput="TextBoxStylesSystem.onSearchInput(this.value, '${mode}', '${filterCat}')" onclick="event.stopPropagation();" style="width:100%; box-sizing:border-box; padding:5px 8px; font-size:12px; border:1px solid var(--ui-border, #cbd5e1); border-radius:4px; background:var(--ui-panel-bg, #ffffff); color:var(--ui-text); outline:none;">
                 </div>
             </div>
 
@@ -2078,7 +3848,7 @@ window.TextBoxStylesSystem = {
             </div>
 
             <div class="styled-box-grid">
-                ${filtered.map(p => `
+                ${filtered.length > 0 ? filtered.map(p => `
                     <div class="styled-box-card" onclick="TextBoxStylesSystem.${isInsert ? 'insertStyled' : 'applyStyle'}(${isInsert ? `'${p.id}'` : `state.selectedEl, '${p.id}'`}); if(!${isInsert}) document.getElementById('styled-textbox-dropdown').style.display='none'; event.stopPropagation();" title="${p.desc}">
                         <div class="styled-box-preview-box" style="${p.previewCSS || ''}">
                             <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:2px;">
@@ -2090,7 +3860,12 @@ window.TextBoxStylesSystem = {
                             <span class="styled-box-name">${p.name}</span>
                         </div>
                     </div>
-                `).join('')}
+                `).join('') : `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 24px 10px; color: var(--ui-text-muted, #64748b); font-size: 13px;">
+                        <i class="fas fa-search" style="margin-bottom:6px; font-size:16px; opacity:0.5; display:block;"></i>
+                        No styles matching "<b>${searchVal}</b>"
+                    </div>
+                `}
             </div>
 
             <div class="styled-dropdown-footer">

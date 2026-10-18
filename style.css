@@ -5393,7 +5393,7 @@ body.mac-theme #pwa-install-ribbon-btn {
 }
 
 /* =========================================================================
-   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.10.0)
+   FORMAT PROPERTIES MODAL REDESIGN & ROUNDED CORNERS (v5.10.1)
    ========================================================================= */
 
 .custom-dialog.format-properties-modal {
@@ -5969,7 +5969,7 @@ body.dark-mode .custom-dialog.format-properties-modal .fp-3d-warning-note i {
 }
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.10.0)
+   STYLED TEXT BOX SYSTEM (v5.10.1)
    ========================================================================= */
 
 .styled-textbox-gallery-strip {
@@ -6016,8 +6016,8 @@ body.dark-mode .custom-dialog.format-properties-modal .fp-3d-warning-note i {
 
 /* Styled Text Box Dropdown */
 #styled-textbox-dropdown {
-    width: 420px;
-    max-height: 520px;
+    width: 440px;
+    max-height: 540px;
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid var(--ui-theme-color, #007670);
@@ -6341,4 +6341,17 @@ body.dark-mode .border-opt-btn:hover {
     background: #334155;
     border-color: var(--ui-theme-color, #007670);
     color: #ffffff;
+}
+
+body.dark-mode #styled-textbox-search {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+.op-print-shadow-underlay {
+    pointer-events: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    user-select: none !important;
 }

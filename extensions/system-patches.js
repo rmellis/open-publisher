@@ -1139,13 +1139,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         };
 
         if (window.DashboardSystem) {
-            const paper = document.getElementById('paper');
-            let thumbPromise = (window.html2canvas && paper)
-                ? html2canvas(paper, { scale: 0.2 }).then(canvas => canvas.toDataURL('image/jpeg', 0.6)).catch(() => '')
-                : Promise.resolve('');
-            thumbPromise.then(thumbDataUrl => {
-                DashboardSystem.addToRecent(currentTitle + '.opub', docData, thumbDataUrl, detectedFormat);
-            });
+            try {
+                DashboardSystem.addToRecent(currentTitle + '.opub', docData, '', detectedFormat);
+            } catch(e) {}
         }
         
         let savePayload = docData;

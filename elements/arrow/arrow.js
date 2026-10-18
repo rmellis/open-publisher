@@ -1663,20 +1663,11 @@
                         svg.getAttribute('data-arrow-style') ||
                         (contentDiv && contentDiv.getAttribute('data-arrow-style')) || 'block-right';
 
-        // Resolve true vector dimensions from viewBox first
+        // Resolve true dimensions from element styles first, fallback to viewBox
         let w = 0, h = 0;
-        if (svg.getAttribute('viewBox')) {
-            const vb = svg.getAttribute('viewBox').trim().split(/[\s,]+/);
-            if (vb.length >= 4) {
-                w = parseFloat(vb[2]);
-                h = parseFloat(vb[3]);
-            }
-        }
-        if (!w || !h || isNaN(w) || isNaN(h)) {
-            if (arrowWrapper && arrowWrapper.style && arrowWrapper.style.width && arrowWrapper.style.height) {
-                w = parseFloat(arrowWrapper.style.width);
-                h = parseFloat(arrowWrapper.style.height);
-            }
+        if (arrowWrapper && arrowWrapper.style && arrowWrapper.style.width && arrowWrapper.style.height) {
+            w = parseFloat(arrowWrapper.style.width);
+            h = parseFloat(arrowWrapper.style.height);
         }
         if (!w || !h || isNaN(w) || isNaN(h)) {
             if (contentDiv && contentDiv.style && contentDiv.style.width && contentDiv.style.height) {
@@ -1685,8 +1676,23 @@
             }
         }
         if (!w || !h || isNaN(w) || isNaN(h)) {
-            w = arrowWrapper ? (arrowWrapper.offsetWidth || 220) : 220;
-            h = arrowWrapper ? (arrowWrapper.offsetHeight || 55) : 55;
+            if (arrowWrapper && (arrowWrapper.offsetWidth || arrowWrapper.offsetHeight)) {
+                w = arrowWrapper.offsetWidth;
+                h = arrowWrapper.offsetHeight;
+            }
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+            if (svg && svg.getAttribute('viewBox')) {
+                const vb = svg.getAttribute('viewBox').trim().split(/[\s,]+/);
+                if (vb.length >= 4) {
+                    w = parseFloat(vb[2]);
+                    h = parseFloat(vb[3]);
+                }
+            }
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+            w = 220;
+            h = 55;
         }
 
         // Resolve head length
@@ -1738,10 +1744,38 @@
             }
         }
 
+        // Check for glow or drop-shadow filter on contentDiv, arrowWrapper, or svg
+        let arrowFilter = '';
+        if (contentDiv && contentDiv.style && contentDiv.style.filter) arrowFilter = contentDiv.style.filter;
+        if (!arrowFilter && arrowWrapper && arrowWrapper.style && arrowWrapper.style.filter) arrowFilter = arrowWrapper.style.filter;
+        if (!arrowFilter && svg && svg.style && svg.style.filter) arrowFilter = svg.style.filter;
+        if (!arrowFilter && computed && computed.filter && computed.filter !== 'none') {
+            arrowFilter = computed.filter;
+        }
+
+        let shadowColor = '';
+        let shadowBlur = 0;
+        let shadowOx = 0;
+        let shadowOy = 0;
+        let hasShadow = false;
+
+        if (arrowFilter && arrowFilter.includes('drop-shadow')) {
+            const m = arrowFilter.match(/drop-shadow\(\s*(?:(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}|[a-z]+)\s+)?([-\d.]+)px\s+([-\d.]+)px(?:\s+([-\d.]+)px)?(?:\s+(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}|[a-z]+))?\s*\)/i);
+            if (m) {
+                shadowColor = m[1] || m[5] || 'rgba(0,191,255,0.8)';
+                shadowOx = parseFloat(m[2]) || 0;
+                shadowOy = parseFloat(m[3]) || 0;
+                shadowBlur = m[4] !== undefined ? parseFloat(m[4]) : 0;
+                hasShadow = true;
+            }
+        }
+
         const isHollow = pathInfo.isStrokeOnly || styleId.startsWith('hollow-');
         const isStrokeOnly = pathInfo.isStrokeOnly || styleId.startsWith('open-barb-') || styleId === 'dimension-arrow' || styleId === 'dimension-dual-right' || styleId === 'hairline-arrow';
         const hasStroke = stroke && stroke !== 'none' && stroke !== 'transparent' && strokeWidth > 0;
-        const pad = hasStroke ? Math.ceil(Math.max(20, strokeWidth * 1.5 + 4)) : 0;
+        const strokePad = hasStroke ? Math.ceil(Math.max(20, strokeWidth * 1.5 + 4)) : 0;
+        const shadowPad = hasShadow ? Math.ceil(shadowBlur * 2.5 + Math.max(Math.abs(shadowOx), Math.abs(shadowOy)) + 20) : 0;
+        const pad = Math.max(strokePad, shadowPad);
 
         const targetW = Math.max(16, Math.round((w + pad * 2) * scaleFactor));
         const targetH = Math.max(16, Math.round((h + pad * 2) * scaleFactor));
@@ -1760,6 +1794,39 @@
 
         try {
             const p = new Path2D(pathInfo.d);
+            
+            // 1. Draw glowing shadow halo following arrow shape if present
+            if (hasShadow && shadowBlur > 0) {
+                ctx.save();
+                let col = shadowColor;
+                const cm = col.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+                if (cm) {
+                    const r = cm[1], g = cm[2], b = cm[3];
+                    let a = cm[4] !== undefined ? parseFloat(cm[4]) : 1.0;
+                    if (a < 0.75) a = Math.min(0.9, a * 1.6);
+                    col = `rgba(${r}, ${g}, ${b}, ${a})`;
+                }
+                ctx.shadowColor = col;
+                // HTML5 Canvas 2D shadow properties are unaffected by ctx.scale() CTM and must be multiplied by scaleFactor
+                ctx.shadowBlur = Math.round(shadowBlur * scaleFactor);
+                ctx.shadowOffsetX = Math.round(shadowOx * scaleFactor);
+                ctx.shadowOffsetY = Math.round(shadowOy * scaleFactor);
+                
+                if (!isStrokeOnly && !isHollow && fill && fill !== 'none' && fill !== 'transparent') {
+                    ctx.fillStyle = col;
+                    ctx.fill(p);
+                }
+                if (hasStroke) {
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = strokeWidth;
+                    ctx.lineCap = capAttr;
+                    ctx.lineJoin = joinAttr;
+                    ctx.stroke(p);
+                }
+                ctx.restore();
+            }
+
+            // 2. Draw solid arrow body and stroke on top
             if (!isStrokeOnly && !isHollow && fill && fill !== 'none' && fill !== 'transparent') {
                 ctx.fillStyle = fill;
                 ctx.fill(p);
@@ -1775,6 +1842,10 @@
             console.error('[Smart Arrows] Error drawing Path2D in bakeSmartArrowForPrint:', e);
         }
 
+        // Clear filter on container so html2canvas doesn't fail or double-filter
+        if (contentDiv) contentDiv.style.filter = 'none';
+        if (arrowWrapper) arrowWrapper.style.filter = 'none';
+
         const pngUrl = canvas.toDataURL('image/png');
 
         const img = document.createElement('img');
@@ -1782,12 +1853,19 @@
         img.src = pngUrl;
         img.alt = 'Smart Arrow';
         img.setAttribute('data-arrow-style', styleId);
-        img.style.cssText = `position: absolute !important; top: -${pad}px !important; left: -${pad}px !important; width: ${w + pad * 2}px !important; height: ${h + pad * 2}px !important; max-width: none !important; max-height: none !important; object-fit: fill !important; display: block !important; pointer-events: none !important;`;
+        img.style.cssText = `position: absolute !important; top: -${pad}px !important; left: -${pad}px !important; width: ${w + pad * 2}px !important; height: ${h + pad * 2}px !important; max-width: none !important; max-height: none !important; object-fit: fill !important; display: block !important; pointer-events: none !important; filter: none !important;`;
 
-        if (arrowWrapper) arrowWrapper.style.overflow = 'visible';
+        if (arrowWrapper) {
+            arrowWrapper.style.overflow = 'visible';
+            arrowWrapper.removeAttribute('data-target-filter');
+        }
         if (contentDiv) {
             contentDiv.style.overflow = 'visible';
-            if (contentDiv.parentElement) contentDiv.parentElement.style.overflow = 'visible';
+            contentDiv.removeAttribute('data-target-filter');
+            if (contentDiv.parentElement) {
+                contentDiv.parentElement.style.overflow = 'visible';
+                contentDiv.parentElement.removeAttribute('data-target-filter');
+            }
         }
 
         // Replace the SVG node with the baked image

@@ -129,6 +129,7 @@ function serializeCurrentPage() {
             arrowStyle: el.getAttribute('data-arrow-style') || null,
             arrowHead: el.getAttribute('data-arrow-head') || null,
             arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null,
+            textboxStyle: el.getAttribute('data-textbox-style') || null,
             isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border'
         };
 
@@ -160,9 +161,10 @@ function serializeCurrentPage() {
         data.rz3d = content ? content.getAttribute('data-3d-rz') : null;
         data.p3d = content ? content.getAttribute('data-3d-p') : null;
         const img = content ? content.querySelector('img') : null;
+        const svg = content ? content.querySelector('svg') : null;
         const shapeDiv = content ? content.querySelector('div') : null;
         const isBetaWordArt = img && (img.classList.contains('beta-wa-img') || img.hasAttribute('data-beta-wa-text') || data.type === 'beta-wordart');
-        const isTrueImage = !isBetaWordArt && img && (data.type === 'image' || data.type === 'emoji' || (content.children.length === 1 && content.children[0].tagName === 'IMG'));
+        const isTrueImage = !isBetaWordArt && (img || (svg && data.type === 'emoji')) && (data.type === 'image' || data.type === 'emoji' || (content && content.children.length === 1 && content.children[0].tagName === 'IMG'));
 
         if (isBetaWordArt) {
             data.type = 'beta-wordart';
@@ -170,14 +172,24 @@ function serializeCurrentPage() {
             data.waStyle = img.getAttribute('data-beta-wa-style') || '';
             data.innerHTML = content ? content.innerHTML : '';
         } else if (isTrueImage) {
-            data.imgSrc = img.src;
-            data.altText = img.alt || '';
-            const imgClipPath = img.style.clipPath || img.style.webkitClipPath || '';
-            const imgBorderRadius = img.style.borderRadius || el.getAttribute('data-rounded-corners') || '';
-            const imgOpacity = (img.style.opacity !== undefined && img.style.opacity !== '') ? img.style.opacity : '';
+            let srcVal = img ? img.src : '';
+            if (!srcVal && svg && data.type === 'emoji') {
+                if (typeof prepareTwemojiSvgMarkup === 'function') {
+                    const markup = prepareTwemojiSvgMarkup(svg.outerHTML);
+                    srcVal = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(markup)));
+                } else {
+                    srcVal = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg.outerHTML)));
+                }
+            }
+            data.imgSrc = srcVal;
+            data.altText = (img && img.alt) || (data.type === 'emoji' ? 'emoji' : '');
+            const targetEl = img || svg;
+            const imgClipPath = (targetEl && (targetEl.style.clipPath || targetEl.style.webkitClipPath)) || '';
+            const imgBorderRadius = (targetEl && targetEl.style.borderRadius) || el.getAttribute('data-rounded-corners') || '';
+            const imgOpacity = (targetEl && targetEl.style.opacity !== undefined && targetEl.style.opacity !== '') ? targetEl.style.opacity : '';
             
-            // Extract filter from both img and .element-content wrapper (Picture Tools shadow/glow applies to .element-content)
-            let combinedFilter = (img.style.filter || '').replace(/\bnone\b/g, '').trim();
+            // Extract filter from both img/svg and .element-content wrapper (Picture Tools shadow/glow applies to .element-content)
+            let combinedFilter = ((targetEl && targetEl.style.filter) || '').replace(/\bnone\b/g, '').trim();
             if (content && content.style.filter) {
                 const cFilter = content.style.filter.replace(/\bnone\b/g, '').trim();
                 if (cFilter) {
@@ -196,17 +208,17 @@ function serializeCurrentPage() {
             
             data.filter = combinedFilter || '';
             data.imgStyle = {
-                width: img.style.width,
-                height: img.style.height,
-                top: img.style.top,
-                left: img.style.left,
-                position: img.style.position,
+                width: (targetEl && targetEl.style.width) || '100%',
+                height: (targetEl && targetEl.style.height) || '100%',
+                top: (targetEl && targetEl.style.top) || '0px',
+                left: (targetEl && targetEl.style.left) || '0px',
+                position: (targetEl && targetEl.style.position) || 'absolute',
                 filter: combinedFilter || '',
                 opacity: imgOpacity,
-                maxWidth: img.style.maxWidth,
-                maxHeight: img.style.maxHeight,
-                transform: img.style.transform || '',
-                objectFit: img.style.objectFit || ''
+                maxWidth: (targetEl && targetEl.style.maxWidth) || 'none',
+                maxHeight: (targetEl && targetEl.style.maxHeight) || 'none',
+                transform: (targetEl && targetEl.style.transform) || '',
+                objectFit: (targetEl && targetEl.style.objectFit) || 'fill'
             };
             if (imgOpacity !== '' && !filterAttrs['data-filter-transparency']) {
                 filterAttrs['data-filter-transparency'] = String(Math.round((1 - parseFloat(imgOpacity)) * 100));
@@ -220,9 +232,11 @@ function serializeCurrentPage() {
                 data.imgStyle.borderRadius = imgBorderRadius;
                 data.borderRadius = imgBorderRadius;
             }
-            const imgObjectFit = img.style.objectFit || (window.getComputedStyle ? window.getComputedStyle(img).objectFit : '');
+            const imgObjectFit = (targetEl && targetEl.style.objectFit) || (targetEl && window.getComputedStyle ? window.getComputedStyle(targetEl).objectFit : '');
             if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
-            data.type = 'image';
+            if (data.type !== 'emoji') {
+                data.type = 'image';
+            }
             data.isImage = true;
             data.innerHTML = content ? content.innerHTML : '';
         } else if (shapeDiv && shapeDiv.style.clipPath) {

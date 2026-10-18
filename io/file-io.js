@@ -57,18 +57,16 @@ window.saveDocument = function() {
         };
     }
     
-    if (window.DashboardSystem && window.html2canvas) {
-        const paper = document.getElementById('paper');
-        html2canvas(paper, { scale: 0.2 }).then(canvas => {
-            const thumbDataUrl = canvas.toDataURL('image/jpeg', 0.6);
-            let sizeLabel = 'Custom';
-            if (typeof window.getPageSizeLabel === 'function' && state.pages.length > 0) {
-                const w = parseInt(state.pages[0].width);
-                const h = parseInt(state.pages[0].height);
-                sizeLabel = window.getPageSizeLabel(w, h);
-            }
-            DashboardSystem.addToRecent(docData.title + '.opub', docData, thumbDataUrl, sizeLabel);
-        }).catch(err => console.log('Could not generate thumbnail', err));
+    if (window.DashboardSystem) {
+        let sizeLabel = 'Custom';
+        if (typeof window.getPageSizeLabel === 'function' && state.pages.length > 0) {
+            const w = parseInt(state.pages[0].width);
+            const h = parseInt(state.pages[0].height);
+            sizeLabel = window.getPageSizeLabel(w, h);
+        }
+        try {
+            DashboardSystem.addToRecent(docData.title + '.opub', docData, '', sizeLabel);
+        } catch(e) {}
     }
 
     const blob = new Blob([JSON.stringify(docData)], {type: 'application/json'});

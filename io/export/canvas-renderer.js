@@ -23,7 +23,8 @@ window.bakeSVGFiltersForHtml2Canvas = async function(clone, original) {
             clipPath = `inset(0 round ${comp.borderRadius})`;
         }
         
-        if ((filter && filter !== 'none') || (opacity && opacity !== '1') || (clipPath && clipPath !== 'none')) {
+        const isSvgImg = !!(oImg.src && (oImg.src.startsWith('data:image/svg+xml') || oImg.src.includes('.svg')));
+        if (isSvgImg || (filter && filter !== 'none') || (opacity && opacity !== '1') || (clipPath && clipPath !== 'none')) {
             let finalSrc = oImg.src;
             try {
                 let isSvg = false;
@@ -195,6 +196,10 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
 
     if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
         window.normalizeTextBackgroundsForPrint(clone);
+    }
+
+    if (typeof window.bakeElementShadowUnderlays === 'function') {
+        window.bakeElementShadowUnderlays(clone, paper, scaleMultiplier || 2);
     }
 
     const canvas = await html2canvas(clone, { 
