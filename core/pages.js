@@ -243,9 +243,10 @@ function renderPage(pageData) {
         if (data.shrinkOverflow) el.setAttribute('data-shrink-overflow', 'true');
 
         let inner = '';
+        let finalFilter = '';
         if (data.imgSrc) {
             const s = data.imgStyle || {};
-            let finalFilter = (s.filter || data.filter || '').replace(/\bnone\b/g, '').trim();
+            finalFilter = (s.filter || data.filter || '').replace(/\bnone\b/g, '').trim();
             if (!finalFilter && data.contentCssText) {
                 const fMatch = data.contentCssText.match(/filter:\s*([^;]+)/i);
                 if (fMatch) finalFilter = fMatch[1].replace(/\bnone\b/g, '').trim();
@@ -269,7 +270,15 @@ function renderPage(pageData) {
                 el.style.overflow = 'visible';
             }
 
-            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${finalFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            let imgFilter = finalFilter;
+            // Drop-shadow belongs on the .element-content wrapper so that when the image has rounded corners
+            // or clip-path, the drop-shadow is rendered based on the image's alpha channel and is not clipped by img's own clip-path.
+            if (imgFilter.includes('drop-shadow')) {
+                imgFilter = imgFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').trim();
+                if (!imgFilter) imgFilter = 'none';
+            }
+
+            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${imgFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
             
             // Restore opacity: prioritize s.opacity, fallback to data-filter-transparency
             if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
@@ -306,7 +315,18 @@ function renderPage(pageData) {
         inner = inner.replace(/spellcheck="true"/g, 'spellcheck="false"');
         inner = inner.replace(/contenteditable="true"(?!\s+spellcheck)/g, 'contenteditable="true" spellcheck="false"');
         
-        const css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
+        let css = data.contentCssText || `transform: scale(${sX}, ${sY});`;
+        if (data.imgSrc && finalFilter && finalFilter.includes('drop-shadow') && !css.includes('drop-shadow')) {
+            const dsMatches = finalFilter.match(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g);
+            if (dsMatches) {
+                const dsStr = dsMatches.join(' ');
+                if (css.includes('filter:')) {
+                    css = css.replace(/filter:\s*([^;]+)/, `filter: $1 ${dsStr}`);
+                } else {
+                    css += ` filter: ${dsStr};`;
+                }
+            }
+        }
         let d3d = '';
         if (data.rx3d) d3d += ` data-3d-rx="${data.rx3d}"`;
         if (data.ry3d) d3d += ` data-3d-ry="${data.ry3d}"`;
@@ -335,16 +355,24 @@ function renderPage(pageData) {
                 el.style.borderRadius = effectiveRadius;
                 if (cEl) {
                     cEl.style.borderRadius = effectiveRadius;
-                    const clip = `inset(0 round ${effectiveRadius})`;
-                    cEl.style.clipPath = clip;
-                    cEl.style.webkitClipPath = clip;
-                    cEl.style.overflow = 'hidden';
+                    cEl.style.clipPath = '';
+                    cEl.style.webkitClipPath = '';
+                    cEl.style.overflow = 'visible';
                 }
+                el.style.overflow = 'visible';
             } else if (effectiveClip && effectiveClip !== 'none') {
                 if (cEl) {
-                    cEl.style.clipPath = effectiveClip;
-                    cEl.style.webkitClipPath = effectiveClip;
-                    cEl.style.overflow = 'hidden';
+                    const hasShadow = (data.contentCssText && data.contentCssText.includes('drop-shadow')) || (data.filter && data.filter.includes('drop-shadow')) || (data.imgStyle && data.imgStyle.filter && data.imgStyle.filter.includes('drop-shadow'));
+                    if (hasShadow) {
+                        cEl.style.clipPath = '';
+                        cEl.style.webkitClipPath = '';
+                        cEl.style.overflow = 'visible';
+                        el.style.overflow = 'visible';
+                    } else {
+                        cEl.style.clipPath = effectiveClip;
+                        cEl.style.webkitClipPath = effectiveClip;
+                        cEl.style.overflow = 'hidden';
+                    }
                 }
             }
         }
@@ -352,7 +380,14 @@ function renderPage(pageData) {
         if ((data.contentCssText && data.contentCssText.includes('drop-shadow')) || (data.filter && data.filter.includes('drop-shadow')) || (data.imgStyle && data.imgStyle.filter && data.imgStyle.filter.includes('drop-shadow'))) {
             el.style.overflow = 'visible';
             const cEl = el.querySelector('.element-content');
-            if (cEl) cEl.style.overflow = 'visible';
+            if (cEl) {
+                cEl.style.overflow = 'visible';
+                const childImg = el.querySelector('img');
+                if (childImg) {
+                    cEl.style.clipPath = '';
+                    cEl.style.webkitClipPath = '';
+                }
+            }
         }
 
         if (data.cropMode) el.classList.add('cropping');

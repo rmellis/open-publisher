@@ -96,8 +96,14 @@ window.toggleCrop = function() {
         if (statusMsg) statusMsg.innerText = "Element Selected";
 
         // Restore overflow to defaults now that we are out of crop mode.
-        el.style.overflow = 'hidden';
-        if (contentDiv) contentDiv.style.overflow = 'hidden';
+        const hasShadow = (contentDiv && contentDiv.style.filter && contentDiv.style.filter.includes('drop-shadow')) || (el.style.filter && el.style.filter.includes('drop-shadow'));
+        if (hasShadow) {
+            el.style.overflow = 'visible';
+            if (contentDiv) contentDiv.style.overflow = 'visible';
+        } else {
+            el.style.overflow = 'hidden';
+            if (contentDiv) contentDiv.style.overflow = 'hidden';
+        }
         
         // Convert fixed pixels back into percentages.
         // This restores the browser's ability to stretch the image when the box is resized.
@@ -120,15 +126,23 @@ window.toggleCrop = function() {
             el.style.borderRadius = savedRadius;
             if (contentDiv) {
                 contentDiv.style.borderRadius = savedRadius;
-                contentDiv.style.clipPath = `inset(0 round ${savedRadius})`;
-                contentDiv.style.webkitClipPath = `inset(0 round ${savedRadius})`;
-                contentDiv.style.overflow = 'hidden';
+                contentDiv.style.clipPath = '';
+                contentDiv.style.webkitClipPath = '';
+                contentDiv.style.overflow = 'visible';
             }
+            el.style.overflow = 'visible';
         } else if (savedClip && savedClip !== 'none') {
             if (contentDiv) {
-                contentDiv.style.clipPath = savedClip;
-                contentDiv.style.webkitClipPath = savedClip;
-                contentDiv.style.overflow = 'hidden';
+                if (hasShadow) {
+                    contentDiv.style.clipPath = '';
+                    contentDiv.style.webkitClipPath = '';
+                    contentDiv.style.overflow = 'visible';
+                    el.style.overflow = 'visible';
+                } else {
+                    contentDiv.style.clipPath = savedClip;
+                    contentDiv.style.webkitClipPath = savedClip;
+                    contentDiv.style.overflow = 'hidden';
+                }
             }
         }
     }

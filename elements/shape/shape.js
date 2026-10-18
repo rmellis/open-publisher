@@ -1051,18 +1051,23 @@ window.initShapes = function() {
                     content.style.border = bt > 0 ? `${bt}px solid ${bc}` : 'none';
                 }
 
+                const currentImg = state.selectedEl ? state.selectedEl.querySelector('img') : null;
                 // Rounded Corners Handling
                 const radiusStr = radiusVal > 0 ? `${radiusVal}px` : '';
                 if (content) {
                     content.style.borderRadius = radiusStr;
-                    if (radiusVal > 0) {
+                    if (radiusVal > 0 && !currentImg) {
                         content.style.overflow = 'hidden';
                     } else {
-                        content.style.overflow = '';
+                        content.style.overflow = 'visible';
+                        if (currentImg) {
+                            content.style.clipPath = '';
+                            content.style.webkitClipPath = '';
+                            state.selectedEl.style.overflow = 'visible';
+                        }
                     }
                 }
 
-                const currentImg = state.selectedEl ? state.selectedEl.querySelector('img') : null;
                 if (currentImg) {
                     if (radiusVal > 0) {
                         const clip = `inset(0 round ${radiusVal}px)`;

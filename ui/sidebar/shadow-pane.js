@@ -118,6 +118,14 @@ window.updateShadowFromSliders = function() {
         inner.style.filter = (currentFilter + ' ' + dropShadowStr).trim();
     }
     
+    state.selectedEl.style.overflow = 'visible';
+    inner.style.overflow = 'visible';
+    const childImg = state.selectedEl.querySelector('img');
+    if (childImg) {
+        inner.style.clipPath = '';
+        inner.style.webkitClipPath = '';
+    }
+
     clearTimeout(window.shadowHistoryTimeout);
     window.shadowHistoryTimeout = setTimeout(() => {
         if (typeof pushHistory === 'function') pushHistory();

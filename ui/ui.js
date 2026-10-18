@@ -264,11 +264,12 @@ window.ContextMenuActions = {
             el.setAttribute('data-rounded-corners', radius);
             el.style.borderRadius = radius;
             if (content) {
-                content.style.clipPath = clip;
-                content.style.webkitClipPath = clip;
+                content.style.clipPath = '';
+                content.style.webkitClipPath = '';
                 content.style.borderRadius = radius;
-                content.style.overflow = 'hidden';
+                content.style.overflow = 'visible';
             }
+            el.style.overflow = 'visible';
         }
         if (typeof updateThumbnails === 'function') updateThumbnails();
         if (typeof pushHistory === 'function') pushHistory();
@@ -1719,6 +1720,11 @@ window.ContextRibbonActions = {
                 inner.style.filter = (currentFilter + ' drop-shadow(5px 5px 10px rgba(0,0,0,0.6))').trim();
                 state.selectedEl.style.overflow = 'visible';
                 inner.style.overflow = 'visible';
+                const childImg = state.selectedEl.querySelector('img');
+                if (childImg) {
+                    inner.style.clipPath = '';
+                    inner.style.webkitClipPath = '';
+                }
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
             }
             if (typeof pushHistory === 'function') pushHistory(); 
@@ -1739,6 +1745,11 @@ window.ContextRibbonActions = {
                 inner.style.filter = (currentFilter + ' drop-shadow(0px 0px 15px rgba(0,191,255,0.8))').trim();
                 state.selectedEl.style.overflow = 'visible';
                 inner.style.overflow = 'visible';
+                const childImg = state.selectedEl.querySelector('img');
+                if (childImg) {
+                    inner.style.clipPath = '';
+                    inner.style.webkitClipPath = '';
+                }
                 if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
             }
             if (typeof pushHistory === 'function') pushHistory(); 
@@ -1767,21 +1778,31 @@ window.ContextRibbonActions = {
                     el.setAttribute('data-rounded-corners', rMatch[1]);
                     el.style.borderRadius = rMatch[1];
                     if (content) {
-                        content.style.clipPath = clip;
-                        content.style.webkitClipPath = clip;
+                        content.style.clipPath = '';
+                        content.style.webkitClipPath = '';
                         content.style.borderRadius = rMatch[1];
-                        content.style.overflow = 'hidden';
+                        content.style.overflow = 'visible';
                     }
+                    el.style.overflow = 'visible';
                 } else if (clip !== 'none') {
                     img.style.borderRadius = '';
                     img.removeAttribute('data-rounded-corners');
                     el.removeAttribute('data-rounded-corners');
                     el.style.borderRadius = '';
                     if (content) {
-                        content.style.clipPath = clip;
-                        content.style.webkitClipPath = clip;
-                        content.style.borderRadius = '';
-                        content.style.overflow = 'hidden';
+                        const hasShadow = (content.style.filter && content.style.filter.includes('drop-shadow')) || (el.style.filter && el.style.filter.includes('drop-shadow'));
+                        if (hasShadow) {
+                            content.style.clipPath = '';
+                            content.style.webkitClipPath = '';
+                            content.style.borderRadius = '';
+                            content.style.overflow = 'visible';
+                            el.style.overflow = 'visible';
+                        } else {
+                            content.style.clipPath = clip;
+                            content.style.webkitClipPath = clip;
+                            content.style.borderRadius = '';
+                            content.style.overflow = 'hidden';
+                        }
                     }
                 } else {
                     img.style.borderRadius = '';
