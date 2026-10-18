@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.10.3)
+// OpenPublisher Print Engine (v5.10.4)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -793,7 +793,12 @@
         const isArrow = elType === 'smart-arrow' || el.arrowStyle || (el.getAttribute && el.getAttribute('data-arrow-style'));
         const isShape = elType === 'shape';
         const isImage = elType === 'image' || el.imgSrc;
-        if (isArrow || isShape || isImage) {
+        const isBetaWA = elType === 'beta-wordart' ||
+            (el.getAttribute && el.getAttribute('data-type') === 'beta-wordart') ||
+            (el.innerHTML && el.innerHTML.includes('beta-wa-img')) ||
+            (el.querySelector && el.querySelector('.beta-wa-img')) ||
+            !!el.waText;
+        if (isArrow || isShape || isImage || isBetaWA) {
             return { boxShadow: '', filter: '' };
         }
 
@@ -893,7 +898,8 @@
         const elements = container.querySelectorAll('.pub-element');
         elements.forEach(el => {
             const elType = el.getAttribute('data-type');
-            if (elType === 'smart-arrow' || elType === 'shape' || elType === 'image' || el.hasAttribute('data-arrow-style') || el.querySelector('.smart-arrow-svg') || el.querySelector('.smart-arrow-baked-img')) {
+            const isBetaWA = elType === 'beta-wordart' || (el.querySelector && el.querySelector('.beta-wa-img')) || (el.classList && el.classList.contains('wa-text')) || (el.querySelector && el.querySelector('.wa-text'));
+            if (elType === 'smart-arrow' || elType === 'shape' || elType === 'image' || isBetaWA || el.hasAttribute('data-arrow-style') || el.querySelector('.smart-arrow-svg') || el.querySelector('.smart-arrow-baked-img')) {
                 return;
             }
             const content = el.querySelector('.element-content');
@@ -2476,7 +2482,56 @@
                                 const renderFn = window.generateWordArtPNG || window.renderWordArtCanvasSync;
                                 const highResSrc = await renderFn(text, styleId, false, scaleX, scaleY);
                                 if (highResSrc) {
-                                    await loadImageStrict(waImg, highResSrc);
+                                    const content = waImg.closest('.element-content') || waImg.parentElement;
+                                    let waFilter = (content && content.style.filter) || (waImg && waImg.style.filter) || (parentEl && parentEl.style.filter) || '';
+                                    if ((!waFilter || waFilter === 'none') && livePaper) {
+                                        const l1 = parseFloat(parentEl.style.left) || 0;
+                                        const t1 = parseFloat(parentEl.style.top) || 0;
+                                        const liveEl = (parentEl.id ? livePaper.querySelector('#' + CSS.escape(parentEl.id)) : null) ||
+                                            Array.from(livePaper.querySelectorAll('.pub-element')).find(e => Math.abs((parseFloat(e.style.left)||0) - l1) < 2 && Math.abs((parseFloat(e.style.top)||0) - t1) < 2);
+                                        if (liveEl) {
+                                            const liveContent = liveEl.querySelector('.element-content');
+                                            if (liveContent && liveContent.style.filter) waFilter = liveContent.style.filter;
+                                            else if (liveEl.style.filter) waFilter = liveEl.style.filter;
+                                        }
+                                    }
+                                    waFilter = (waFilter || '').replace(/\bnone\b/g, '').trim();
+
+                                    if (waFilter && waFilter.includes('drop-shadow') && typeof window.bakeImageForPrint === 'function') {
+                                        const baked = await window.bakeImageForPrint(highResSrc, dispW, dispH, {
+                                            filter: waFilter,
+                                            targetScale: 4.0
+                                        });
+                                        if (baked && baked.src) {
+                                            await loadImageStrict(waImg, baked.src);
+                                            if (baked.padW) {
+                                                const bScale = baked.scale || 4;
+                                                waImg.style.position = 'absolute';
+                                                waImg.style.left = '0px';
+                                                waImg.style.top = '0px';
+                                                waImg.style.width = `calc(100% + ${baked.padW / bScale}px)`;
+                                                waImg.style.height = `calc(100% + ${baked.padH / bScale}px)`;
+                                                waImg.style.marginLeft = `-${baked.padX / bScale}px`;
+                                                waImg.style.marginTop = `-${baked.padY / bScale}px`;
+                                                waImg.style.maxWidth = 'none';
+                                                waImg.style.maxHeight = 'none';
+                                                waImg.style.objectFit = 'fill';
+                                            }
+                                            if (content) {
+                                                content.style.overflow = 'visible';
+                                                content.style.contain = 'none';
+                                                content.style.filter = 'none';
+                                            }
+                                            if (parentEl) {
+                                                parentEl.style.overflow = 'visible';
+                                                parentEl.style.contain = 'none';
+                                            }
+                                        } else {
+                                            await loadImageStrict(waImg, highResSrc);
+                                        }
+                                    } else {
+                                        await loadImageStrict(waImg, highResSrc);
+                                    }
                                 }
                             } catch (err) {
                                 console.warn('[Print Engine] Failed to upscale WordArt for print:', err);

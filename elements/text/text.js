@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.10.3)
+// Open Publisher Text Engine (v5.10.4)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -848,7 +848,7 @@ const fontList = [
 ];
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.10.3)
+   STYLED TEXT BOX SYSTEM (v5.10.4)
    Dual-Mode Architecture: Creation Templates + Contextual Ribbon Styling
    ========================================================================= */
 
