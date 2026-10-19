@@ -1,8 +1,46 @@
-// --- CLIPART SYSTEM (TWEMOJI) ---
+// --- CLIPART SYSTEM (TWEMOJI) - v5.11.6 ---
 function initClipart() {
     const modal = document.getElementById('clipart-modal');
     if (modal) modal.setAttribute('data-html2canvas-ignore', 'true');
     const grid = document.getElementById('clipart-grid');
+    if (!grid) return;
+
+    const searchInput = document.getElementById('emoji-search-input');
+    const searchClear = document.getElementById('emoji-search-clear');
+
+    if (searchInput && !searchInput._boundEmojiSearch) {
+        searchInput._boundEmojiSearch = true;
+        searchInput.addEventListener('input', (e) => {
+            if (typeof window.filterEmojis === 'function') {
+                window.filterEmojis(e.target.value);
+            }
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (searchInput.value) {
+                    searchInput.value = '';
+                    if (typeof window.filterEmojis === 'function') {
+                        window.filterEmojis('');
+                    }
+                } else if (modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (searchClear && !searchClear._boundEmojiClear) {
+        searchClear._boundEmojiClear = true;
+        searchClear.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                if (typeof window.filterEmojis === 'function') {
+                    window.filterEmojis('');
+                }
+                searchInput.focus();
+            }
+        });
+    }
 
     // Massive list of high-quality vector emojis
     // Grouped by Category with unique, intact sequences
@@ -13,7 +51,7 @@ function initClipart() {
             // Gestures
             "👋","🤚","🖐","✋","🖖","👌","🤏","✌️","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪",
             // People (Base)
-            "👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕",
+            "👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕",
             // Professions (ZWJ Sequences)
             "👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️",
             // Fantasy & Roles
@@ -39,24 +77,36 @@ function initClipart() {
             "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚️","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕️","🛑","⛔️","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗️","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯️","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿️","🅿️","🈳","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚼","🚻","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸","⏯","⏹","⏺","⏭","⏮","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","♾","💲","💱","™️","©️","®️","👁‍🗨","🔚","🔙","🔛","🔝","🔜","〰️","➰","➿","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫️","⚪️","🟤","🔺","🔻","🔸","🔹","🔶","🔷","🔳","🔲","▪️","▫️","◾️","◽️","◼️","◻️","🟥","🟧","🟨","🟩","🟦","🟪","⬛️","⬜️","🔈","🔇","🔉","🔊","🔔","🔕","📣","📢","💬","💭","🗯","♠️","♣️","♥️","♦️","🃏","🎴","🀄️","🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","🕜","🕝","🕞","🕟","🕠","🕡","🕢","🕣","🕤","🕥","🕦","🕧"
         ],
         "Flags": [
-            "🏳️","🏴","🏁","🚩","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇦🇫","🇦🇽","🇦🇱","🇩🇿","🇦🇸","🇦🇩","🇦🇴","🇦🇮","🇦🇶","🇦🇬","🇦🇷","🇦🇲","🇦🇼","🇦🇺","🇦🇹","🇦🇿","🇧🇸","🇧🇭","🇧🇩","🇧🇧","🇧🇾","🇧🇪","🇧🇿","🇧🇯","🇧🇲","🇧🇹","🇧🇴","🇧🇦","🇧🇼","🇧🇷","🇮🇴","🇻🇬","🇧🇳","🇧🇬","🇧🇫","🇧🇮","🇰🇭","🇨🇲","🇨🇦","🇮🇨","🇨🇻","🇧🇧","🇰🇾","🇨🇫","🇹🇩","🇨🇱","🇨🇳","🇨🇽","🇨🇨","🇨🇴","🇰🇲","🇨🇬","🇨🇩","🇨🇰","🇨🇷","🇨🇮","🇭🇷","🇨🇺","🇨🇼","🇨🇾","🇨🇿","🇩🇰","🇩🇯","🇩🇲","🇩🇴","🇪🇨","🇪🇬","🇸🇻","🇬🇶","🇪🇷","🇪🇪","🇪🇹","🇪🇺","🇫🇰","🇫🇴","🇫🇯","🇫🇮","🇫🇷","🇬🇫","🇵🇫","🇹🇫","🇬🇦","🇬🇲","🇬🇪","🇩🇪","🇬🇭","🇬🇮","🇬🇷","🇬🇱","🇬🇩","🇬🇵","🇬🇺","🇬🇹","🇬🇬","🇬🇳","🇬🇼","🇬🇾","🇭🇹","🇭🇳","🇭🇰","🇭🇺","🇮🇸","🇮🇳","🇮🇩","🇮🇷","🇮🇶","🇮🇪","🇮🇲","🇮🇱","🇮🇹","🇯🇲","🇯🇵","🎌","🇯🇪","🇯🇴","🇰🇿","🇰🇪","🇰🇮","🇽🇰","🇰🇼","🇰🇬","🇱🇦","🇱🇻","🇱🇧","🇱🇸","🇱🇷","🇱🇾","🇱🇮","🇱🇹","🇱🇺","🇲🇴","🇲🇰","🇲🇬","🇲🇼","🇲🇾","🇲🇻","🇲🇱","🇲🇹","🇲🇭","🇲🇶","🇲🇷","🇲🇺","YT","🇲🇽","🇫🇲","🇲🇩","🇲🇨","🇲🇳","🇲🇪","🇲🇸","🇲🇦","🇲🇿","🇲🇲","🇳🇦","🇳🇷","🇳🇵","🇳🇱","🇳🇨","🇳🇿","🇳🇮","🇳🇪","🇳🇬","🇳🇺","🇳🇫","🇰🇵","🇲🇵","🇳🇴","🇴🇲","🇵🇰","🇵🇼","🇵🇸","🇵🇦","🇵🇬","🇵🇾","🇵🇪","🇵🇭","🇵🇳","🇵🇱","🇵🇹","🇵🇷","🇶🇦","🇷🇪","🇷🇴","🇷🇺","🇷🇼","🇼🇸","🇸🇲","🇸🇦","🇸🇳","🇷🇸","🇸🇨","🇸🇱","🇸🇬","🇸🇽","🇸🇰","🇸🇮","🇬🇸","🇸🇧","🇸🇴","🇿🇦","🇰🇷","🇸🇸","🇪🇸","🇱🇰","🇧🇱","🇸🇭","🇰🇳","🇱🇨","🇵🇲","🇻🇨","🇸🇩","🇸🇷","🇸🇿","🇸🇪","🇨🇭","🇸🇾","🇹🇼","🇹🇯","🇹🇿","🇹🇭","🇹🇱","🇹🇬","🇹🇰","🇹🇴","🇹🇹","🇹🇳","🇹🇷","🇹🇲","🇹🇨","🇹🇻","🇺🇬","🇺🇦","🇦🇪","🇬🇧","🏴󠁧󠁢󠁥󠁮󠁧󠁿","🏴󠁧󠁢󠁳󠁣󠁴󠁿","🏴󠁧󠁢󠁷󠁬󠁳󠁿","🇺🇸","🇺🇾","🇺🇿","🇻🇺","🇻🇦","🇻🇪","🇻🇳","🇼🇫","🇪🇭","🇾🇪","🇿🇲","🇿🇼"
+            "🏳️","🏴","🏁","🚩","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇦🇫","🇦🇽","🇦🇱","🇩🇿","🇦🇸","🇦🇩","🇦🇴","🇦🇮","🇦🇶","🇦🇬","🇦🇷","🇦🇲","🇦🇼","🇦🇺","🇦🇹","🇦🇿","🇧🇸","🇧🇭","🇧🇩","🇧🇧","🇧🇾","🇧🇪","🇧🇿","🇧🇯","🇧🇲","🇧🇹","🇧🇴","🇧🇦","🇧🇼","🇧🇷","🇮🇴","🇻🇬","🇧🇳","🇧🇬","🇧🇫","🇧🇮","🇰🇭","🇨🇲","🇨🇦","🇮🇨","🇨🇻","🇧🇧","🇰🇾","🇨🇫","🇹🇩","🇨🇱","🇨🇳","🇨🇽","🇨🇨","🇨🇴","🇰🇲","🇨🇬","🇨🇩","🇨🇰","🇨🇷","🇨🇮","🇭🇷","🇨🇺","🇨🇼","🇨🇾","🇨🇿","🇩🇰","🇩🇯","🇩🇲","🇩🇴","🇪🇨","🇪🇬","🇸🇻","🇬🇶","🇪🇷","🇪🇪","🇪🇹","🇪🇺","🇫🇰","🇫🇴","🇫🇯","🇫🇮","🇫🇷","🇬🇫","🇵🇫","🇹🇫","🇬🇦","🇬🇲","🇬🇪","🇩🇪","🇬🇭","🇬🇮","🇬🇷","🇬🇱","🇬🇩","🇬🇵","🇬🇺","🇬🇹","🇬🇬","🇬🇳","🇬🇼","🇬🇾","🇭🇹","🇭🇳","🇭🇰","🇭🇺","🇮🇸","🇮🇳","🇮🇩","🇮🇷","🇮🇶","🇮🇪","🇮🇲","🇮🇱","🇮🇹","🇯🇲","🇯🇵","🎌","🇯🇪","🇯🇴","🇰🇿","🇰🇪","🇰🇮","🇽🇰","🇰🇼","🇰🇬","🇱🇦","🇱🇻","🇱🇧","🇱🇸","🇱🇷","🇱🇾","🇱🇮","🇱🇹","🇱🇺","🇲🇴","🇲🇰","🇲🇬","🇲🇼","🇲🇾","🇲🇻","🇲🇱","🇲🇹","🇲🇭","🇲🇶","🇲🇷","🇲🇺","🇾🇹","🇲🇽","🇫🇲","🇲🇩","🇲🇨","🇲🇳","🇲🇪","🇲🇸","🇲🇦","🇲🇿","🇲🇲","🇳🇦","🇳🇷","🇳🇵","🇳🇱","🇳🇨","🇳🇿","🇳🇮","🇳🇪","🇳🇬","🇳🇺","🇳🇫","🇰🇵","🇲🇵","🇳🇴","🇴🇲","🇵🇰","🇵🇼","🇵🇸","🇵🇦","🇵🇬","🇵🇾","🇵🇪","🇵🇭","🇵🇳","🇵🇱","🇵🇹","🇵🇷","🇶🇦","🇷🇪","🇷🇴","🇷🇺","🇷🇼","🇼🇸","🇸🇲","🇸🇦","🇸🇳","🇷🇸","🇸🇨","🇸🇱","🇸🇬","🇸🇽","🇸🇰","🇸🇮","🇬🇸","🇸🇧","🇸🇴","🇿🇦","🇰🇷","🇸🇸","🇪🇸","🇱🇰","🇧🇱","🇸🇭","🇰🇳","🇱🇨","🇵🇲","🇻🇨","🇸🇩","🇸🇷","🇸🇿","🇸🇪","🇨🇭","🇸🇾","🇹🇼","🇹🇯","🇹🇿","🇹🇭","🇹🇱","🇹🇬","🇹🇰","🇹🇴","🇹🇹","🇹🇳","🇹🇷","🇹🇲","🇹🇨","🇹🇻","🇺🇬","🇺🇦","🇦🇪","🇬🇧","🏴󠁧󠁢󠁥󠁮󠁧󠁿","🏴󠁧󠁢󠁳󠁣󠁴󠁿","🏴󠁧󠁢󠁷󠁬󠁳󠁿","🇺🇸","🇺🇾","🇺🇿","🇻🇺","🇻🇦","🇻🇪","🇻🇳","🇼🇫","🇪🇭","🇾🇪","🇿🇲","🇿🇼"
         ]
     };
 
     const hexHelper = (str) => {
-        // Correctly handles ZWJ sequences like 👨‍✈️ by processing codepoints not chars
-        return Array.from(str).map(c => c.codePointAt(0).toString(16)).join('-');
+        // Official Twemoji grabTheRightIcon rule:
+        // If no ZWJ (\u200D), strip \uFE0F
+        let clean = str;
+        if (!clean.includes('\u200d')) {
+            clean = clean.replace(/\ufe0f/g, '');
+        }
+        // Strip dangling ZWJ if any
+        clean = clean.replace(/\u200d+$/, '');
+        const codepoints = Array.from(clean).map(c => c.codePointAt(0).toString(16).toLowerCase());
+        return codepoints.join('-');
     };
 
+    grid.innerHTML = '';
     Object.keys(categories).forEach(cat => {
         // Add header
         const header = document.createElement('div');
+        header.className = 'emoji-category-header';
+        header.setAttribute('data-category', cat);
         header.style.gridColumn = "1 / -1";
-        header.style.padding = "5px";
+        header.style.padding = "5px 8px";
         header.style.background = "#eee";
         header.style.fontWeight = "bold";
         header.style.fontSize = "12px";
         header.style.marginTop = "10px";
+        header.style.borderRadius = "3px";
         header.innerText = cat;
         grid.appendChild(header);
 
@@ -65,27 +115,103 @@ function initClipart() {
             const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${hex}.svg`;
 
             const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.title = "Insert Clipart";
+            div.className = 'gallery-item emoji-item';
+            div.setAttribute('data-category', cat);
+            div.setAttribute('data-char', char);
+            div.setAttribute('data-hex', hex);
+            
+            const kw = (window.EMOJI_KEYWORDS && window.EMOJI_KEYWORDS[char]) || cat.toLowerCase();
+            div.setAttribute('data-keywords', `${char} ${kw} ${cat.toLowerCase()}`);
+            div.title = kw ? `${char} (${kw.split(' ').slice(0, 3).join(', ')})` : "Insert Emoji";
             
             const img = document.createElement('img');
             img.src = url;
+            img.alt = char;
             img.style.width = "100%";
             img.style.height = "100%";
             img.loading = "lazy";
             
-            // Add simple error handler to hide broken ones
-            img.onerror = () => { div.style.display = 'none'; };
+            // Fallback: If SVG image fails to load, render the native Unicode character
+            img.onerror = () => {
+                img.style.display = 'none';
+                if (!div.querySelector('.emoji-fallback-char')) {
+                    const span = document.createElement('span');
+                    span.className = 'emoji-fallback-char';
+                    span.textContent = char;
+                    span.style.cssText = 'font-size: 34px; line-height: 1; user-select: none; pointer-events: none; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;';
+                    div.appendChild(span);
+                }
+            };
 
             div.appendChild(img);
             div.onclick = () => {
                  document.getElementById('clipart-modal').style.display = 'none';
-                 insertEmojiFromUrl(url);
+                 insertEmojiFromUrl(url, char);
             };
             grid.appendChild(div);
         });
     });
 }
+
+window.filterEmojis = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    const grid = document.getElementById('clipart-grid');
+    const clearBtn = document.querySelector('#custom-dialog-box #emoji-search-clear') || document.getElementById('emoji-search-clear');
+    if (!grid) return;
+
+    if (clearBtn) {
+        clearBtn.style.display = q ? 'block' : 'none';
+    }
+
+    const items = grid.querySelectorAll('.emoji-item');
+    const headers = grid.querySelectorAll('.emoji-category-header');
+    let noResultsEl = document.getElementById('emoji-no-results');
+
+    if (!q) {
+        items.forEach(it => { it.style.removeProperty('display'); });
+        headers.forEach(h => { h.style.removeProperty('display'); });
+        if (noResultsEl) noResultsEl.remove();
+        return;
+    }
+
+    const tokens = q.split(/\s+/).filter(Boolean);
+    let totalVisible = 0;
+    const catCounts = {};
+
+    items.forEach(it => {
+        const text = (it.getAttribute('data-keywords') || '') + ' ' + (it.getAttribute('data-char') || '');
+        const matches = tokens.every(tok => text.includes(tok));
+        const cat = it.getAttribute('data-category');
+        if (matches) {
+            it.style.setProperty('display', 'flex', 'important');
+            catCounts[cat] = (catCounts[cat] || 0) + 1;
+            totalVisible++;
+        } else {
+            it.style.setProperty('display', 'none', 'important');
+        }
+    });
+
+    headers.forEach(h => {
+        const cat = h.getAttribute('data-category');
+        if (catCounts[cat] > 0) {
+            h.style.removeProperty('display');
+        } else {
+            h.style.setProperty('display', 'none', 'important');
+        }
+    });
+
+    if (totalVisible === 0) {
+        if (!noResultsEl) {
+            noResultsEl = document.createElement('div');
+            noResultsEl.id = 'emoji-no-results';
+            noResultsEl.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--ui-text-muted, #888); font-size: 14px;';
+            grid.appendChild(noResultsEl);
+        }
+        noResultsEl.innerHTML = `<i class="fas fa-search" style="font-size: 26px; margin-bottom: 12px; display: block; opacity: 0.45;"></i>No emojis found matching "<strong>${query.replace(/</g, '&lt;')}</strong>"`;
+    } else if (noResultsEl) {
+        noResultsEl.remove();
+    }
+};
 // --- ELEMENTS & MANIPULATION ---
 function prepareTwemojiSvgMarkup(svgText) {
     if (!svgText || !svgText.includes('<svg')) return svgText;
@@ -132,8 +258,31 @@ function applyEmojiStretch(root) {
     });
 }
 
-async function insertEmojiFromUrl(url) {
+function hexToEmojiChar(hex) {
+    if (!hex) return '';
+    try {
+        const codepoints = hex.split('-').map(h => parseInt(h, 16)).filter(n => !isNaN(n));
+        return String.fromCodePoint(...codepoints);
+    } catch (e) {
+        return '';
+    }
+}
+window.hexToEmojiChar = hexToEmojiChar;
+
+function createEmojiSvgFromChar(char) {
+    const clean = char || '😀';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><text x="50%" y="54%" font-size="75" text-anchor="middle" dominant-baseline="central" font-family="'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif">${clean}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+window.createEmojiSvgFromChar = createEmojiSvgFromChar;
+
+async function insertEmojiFromUrl(url, fallbackChar = '') {
     let markup;
+    const hexMatch = (url || '').match(/\/([0-9a-fA-F-]+)\.svg/);
+    const hex = hexMatch ? hexMatch[1].toLowerCase() : '';
+    const baseHex = window.getBaseHexFromEmoji ? window.getBaseHexFromEmoji(hex) : hex;
+    const supportsSkinTone = window.emojiSupportsSkinTone ? window.emojiSupportsSkinTone(baseHex) : false;
+
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2500);
@@ -145,16 +294,104 @@ async function insertEmojiFromUrl(url) {
         const dataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgMarkup)))}`;
         markup = `<img src="${dataUri}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
     } catch (e) {
-        markup = `<img src="${url}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
+        // Unicode character fallback if CDN SVG fails
+        const char = fallbackChar || hexToEmojiChar(hex) || '😀';
+        const dataUri = createEmojiSvgFromChar(char);
+        markup = `<img src="${dataUri}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
     }
     const el = createWrapper(markup);
     el.setAttribute('data-type', 'emoji');
+    if (baseHex) el.setAttribute('data-base-hex', baseHex);
+    if (hex) el.setAttribute('data-current-hex', hex);
+    if (supportsSkinTone) {
+        el.setAttribute('data-supports-skin-tone', 'true');
+        const toneMatch = hex.match(/1f3f[b-f]/);
+        const initialTone = toneMatch ? ((window.SKIN_TONES || []).find(t => t.hex === toneMatch[0])?.id || 'default') : 'default';
+        el.setAttribute('data-skin-tone', initialTone);
+    }
     el.style.width = '100px';
     el.style.height = '100px';
     applyEmojiStretch(el.querySelector('.element-content'));
     if (typeof selectElement === 'function') selectElement(el); // Re-trigger UI now that type is set
     return el;
 }
+
+window.ensureEmojiAttributes = function(el) {
+    if (!el || el.getAttribute('data-type') !== 'emoji') return;
+    if (el.getAttribute('data-supports-skin-tone')) return;
+    const img = el.querySelector('img');
+    if (!img) return;
+    let hex = el.getAttribute('data-current-hex') || el.getAttribute('data-base-hex') || '';
+    if (!hex && img.src && img.src.includes('twemoji/')) {
+        const m = img.src.match(/\/([0-9a-fA-F-]+)\.svg/);
+        if (m) hex = m[1].toLowerCase();
+    }
+    if (hex) {
+        const baseHex = window.getBaseHexFromEmoji ? window.getBaseHexFromEmoji(hex) : hex;
+        const supports = window.emojiSupportsSkinTone ? window.emojiSupportsSkinTone(baseHex) : false;
+        el.setAttribute('data-base-hex', baseHex);
+        el.setAttribute('data-current-hex', hex);
+        if (supports) {
+            el.setAttribute('data-supports-skin-tone', 'true');
+            const toneMatch = hex.match(/1f3f[b-f]/);
+            const initialTone = toneMatch ? ((window.SKIN_TONES || []).find(t => t.hex === toneMatch[0])?.id || 'default') : 'default';
+            el.setAttribute('data-skin-tone', initialTone);
+        }
+    }
+};
+
+window.setEmojiSkinTone = async function(el, toneId) {
+    if (!el) return;
+    if (typeof window.ensureEmojiAttributes === 'function') {
+        window.ensureEmojiAttributes(el);
+    }
+    const baseHex = el.getAttribute('data-base-hex');
+    if (!baseHex) return;
+    const tones = window.SKIN_TONES || [];
+    const tone = tones.find(t => t.id === toneId) || tones[0];
+    const newHex = window.getEmojiHexForSkinTone ? window.getEmojiHexForSkinTone(baseHex, tone.hex) : (tone.hex ? `${baseHex}-${tone.hex}` : baseHex);
+    const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${newHex}.svg`;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('Fetch failed');
+        const rawSvg = await res.text();
+        const svgMarkup = prepareTwemojiSvgMarkup(rawSvg);
+        const dataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgMarkup)))}`;
+        const img = el.querySelector('img');
+        if (img) {
+            img.src = dataUri;
+        } else {
+            const content = el.querySelector('.element-content') || el;
+            content.innerHTML = `<img src="${dataUri}" draggable="false" style="width:100%;height:100%;object-fit:fill;position:absolute;top:0;left:0;display:block;">`;
+        }
+    } catch (e) {
+        const char = hexToEmojiChar(newHex) || '😀';
+        const dataUri = createEmojiSvgFromChar(char);
+        const img = el.querySelector('img');
+        if (img) img.src = dataUri;
+    }
+
+    el.setAttribute('data-skin-tone', tone.id);
+    el.setAttribute('data-current-hex', newHex);
+
+    // Update active swatch state in floating toolbar if present
+    const toolbar = document.querySelector('.emoji-skin-tone-actions');
+    if (toolbar) {
+        toolbar.querySelectorAll('.skin-tone-swatch').forEach(btn => {
+            const isMatch = btn.getAttribute('data-tone') === tone.id;
+            btn.classList.toggle('active', isMatch);
+            btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+        });
+    }
+
+    if (typeof saveState === 'function') {
+        saveState();
+    }
+};
 
 let emojiMigrateTimer = null;
 function scheduleEmojiMigrate() {
@@ -196,7 +433,18 @@ function scheduleEmojiMigrate() {
         }
     }, 80);
 }
-function showClipartModal() { document.getElementById('clipart-modal').style.display = 'flex'; }
+function showClipartModal() {
+    const modal = document.getElementById('clipart-modal');
+    if (modal) modal.style.display = 'flex';
+    const input = document.getElementById('emoji-search-input');
+    if (input) {
+        input.value = '';
+        if (typeof window.filterEmojis === 'function') {
+            window.filterEmojis('');
+        }
+        setTimeout(() => input.focus(), 60);
+    }
+}
 // --- INSERT SYMBOL MODAL ---
 window._symbolRecentlyUsed = JSON.parse(localStorage.getItem('op-recent-symbols') || '[]');
 

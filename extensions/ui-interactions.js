@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.10.5)
+// Open Publisher UI Interactions (v5.11.6)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.10.5)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.6)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1467,39 +1467,407 @@
         }
     };
 
-    // 5. CLIPART MODAL OVERRIDE
+    // 5. CLIPART MODAL OVERRIDE (v5.11.6: Beta WordArt Style Emoji Dialog)
     window.showClipartModal = function() {
         rescueGrids();
         const grid = document.getElementById('clipart-grid');
         if (!grid) return;
 
-        const html = `<div id="dialog-clipart-container"></div>`;
-        DialogSystem.show('Emojis', html, null, true);
+        const uiHTML = `
+            <style>
+                /* Overwrite default dialog styles to achieve the edge-to-edge banner */
+                #custom-dialog-header { display: none !important; }
+                .custom-dialog-footer { display: none !important; }
+                .custom-dialog-body { padding: 0 !important; background: #f3f4f6 !important; border-radius: 8px; overflow: hidden; }
+                
+                /* The Green Header Banner */
+                .emoji-modal-header {
+                    background: var(--ui-theme-dark);
+                    padding: 15px 25px;
+                    text-align: center;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                    cursor: grab;
+                    position: relative;
+                }
+                .emoji-modal-header:active {
+                    cursor: grabbing;
+                }
+                .emoji-modal-title {
+                    color: white;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin-bottom: 12px;
+                    pointer-events: none;
+                }
+                
+                /* The Giant White Input Box */
+                .emoji-modal-input-wrapper {
+                    position: relative;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .emoji-modal-input {
+                    width: 100%;
+                    padding: 12px 42px 12px 15px;
+                    font-size: 20px;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-weight: 600;
+                    text-align: center;
+                    color: #111;
+                    border: none;
+                    border-radius: 4px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    outline: none;
+                    box-sizing: border-box;
+                    transition: box-shadow 0.2s;
+                }
+                .emoji-modal-input:focus {
+                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4);
+                }
+                .emoji-modal-input::placeholder {
+                    color: #94a3b8;
+                    font-weight: 600;
+                    font-size: 18px;
+                }
+                #emoji-search-clear {
+                    display: none;
+                    position: absolute;
+                    right: 14px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    cursor: pointer;
+                    color: #888;
+                    font-size: 18px;
+                    transition: color 0.15s;
+                }
+                #emoji-search-clear:hover {
+                    color: #333;
+                }
+
+                /* Grid Area */
+                .emoji-modal-grid-container {
+                    padding: 15px 20px;
+                    background: #f1f5f9;
+                    max-height: 55vh;
+                    overflow-y: auto;
+                }
+                #clipart-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(5, 1fr) !important;
+                    gap: 10px !important;
+                }
+                @media (min-width: 650px) {
+                    #clipart-grid {
+                        grid-template-columns: repeat(6, 1fr) !important;
+                    }
+                }
+                @media (min-width: 800px) {
+                    #clipart-grid {
+                        grid-template-columns: repeat(7, 1fr) !important;
+                    }
+                }
+                
+                /* The Selectable Cards (Exact Beta WordArt style) */
+                #clipart-grid .gallery-item.emoji-item {
+                    background: white;
+                    border: 3px solid transparent;
+                    border-radius: 12px;
+                    height: 65px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 6px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+                    transition: all 0.15s ease-in-out;
+                    box-sizing: border-box;
+                }
+                #clipart-grid .gallery-item.emoji-item:hover {
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+                    transform: translateY(-2px);
+                }
+                #clipart-grid .gallery-item.emoji-item.selected {
+                    border-color: var(--ui-theme-color);
+                    background: #f0fdf4; 
+                    box-shadow: 0 4px 8px rgba(0, 118, 112, 0.15);
+                }
+                #clipart-grid .gallery-item.emoji-item img {
+                    max-width: 44px;
+                    max-height: 44px;
+                    width: 44px;
+                    height: 44px;
+                    object-fit: contain;
+                    pointer-events: none;
+                    user-select: none;
+                }
+                #clipart-grid .gallery-item.emoji-item .emoji-fallback-char {
+                    font-size: 34px;
+                    line-height: 1;
+                    user-select: none;
+                    pointer-events: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+                }
+
+                /* Category Header inside grid */
+                #clipart-grid .emoji-category-header {
+                    grid-column: 1 / -1;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 13px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: #64748b;
+                    padding: 12px 6px 4px 6px;
+                    border-bottom: 1px solid #e2e8f0;
+                    margin-top: 8px;
+                    background: transparent;
+                }
+
+                /* Custom Footer */
+                .emoji-modal-footer {
+                    padding: 10px 20px;
+                    background: #f1f5f9;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    border-bottom-left-radius: 8px;
+                    border-bottom-right-radius: 8px;
+                    border-top: 1px solid #e2e8f0;
+                }
+                .emoji-btn {
+                    padding: 8px 24px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-family: 'Segoe UI', sans-serif;
+                    border: none;
+                    transition: all 0.2s;
+                }
+                .emoji-btn-ok {
+                    background: var(--ui-theme-dark);
+                    color: white;
+                }
+                .emoji-btn-ok:hover {
+                    background: var(--ui-theme-color);
+                }
+                .emoji-btn-cancel {
+                    background: white;
+                    color: var(--ui-theme-dark);
+                    border: 2px solid #cbd5e1;
+                }
+                .emoji-btn-cancel:hover {
+                    background: #f8fafc;
+                    border-color: #94a3b8;
+                }
+                
+                /* Custom Scrollbar */
+                .emoji-modal-grid-container::-webkit-scrollbar { width: 8px; }
+                .emoji-modal-grid-container::-webkit-scrollbar-track { background: transparent; }
+                .emoji-modal-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .emoji-modal-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+                /* Dark Mode Overrides */
+                body.dark-mode .custom-dialog-body { background: #1e293b !important; }
+                body.dark-mode .emoji-modal-grid-container { background: #0f172a !important; }
+                body.dark-mode .emoji-modal-footer { background: #0f172a !important; border-top-color: #334155 !important; }
+                body.dark-mode #clipart-grid .gallery-item.emoji-item { background: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important; }
+                body.dark-mode #clipart-grid .gallery-item.emoji-item.selected { border-color: var(--ui-theme-color) !important; background: #064e3b !important; }
+                body.dark-mode #clipart-grid .emoji-category-header { color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+                body.dark-mode .emoji-btn-cancel { background: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+                body.dark-mode .emoji-btn-cancel:hover { background: #334155 !important; }
+                body.dark-mode .emoji-modal-input { background: #1e293b !important; color: #f8fafc !important; }
+            </style>
+            
+            <div class="emoji-modal-header" id="emoji-modal-header">
+                <div class="custom-dialog-close" id="emoji-close-x" title="Close" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
+                <div class="emoji-modal-title">Emojis</div>
+                <div class="emoji-modal-input-wrapper">
+                    <input type="text" id="emoji-search-input" class="emoji-modal-input" placeholder="Search Emojis (e.g. smile, hand, heart, food)..." autocomplete="off">
+                    <span id="emoji-search-clear" title="Clear search"><i class="fas fa-times-circle"></i></span>
+                </div>
+            </div>
+            
+            <div class="emoji-modal-grid-container" id="dialog-clipart-container"></div>
+            
+            <div class="emoji-modal-footer">
+                <button class="emoji-btn emoji-btn-ok" id="emoji-btn-ok">OK</button>
+                <button class="emoji-btn emoji-btn-cancel" id="emoji-btn-cancel">Cancel</button>
+            </div>
+        `;
+
+        DialogSystem.show('', uiHTML, null, true);
         
-        const dialogBox = document.getElementById('custom-dialog-box');
-        if(dialogBox) { 
-            dialogBox.style.width = '800px'; 
-            dialogBox.style.maxWidth = '95vw'; 
-            const body = dialogBox.querySelector('.custom-dialog-body');
-            if (body) { body.style.maxHeight = '70vh'; body.style.overflowY = 'auto'; }
-        }
+        setTimeout(() => {
+            const dialogBox = document.getElementById('custom-dialog-box');
+            if (dialogBox) { 
+                dialogBox.style.width = '850px'; 
+                dialogBox.style.maxWidth = '95vw'; 
+                dialogBox.style.padding = '0';
+                dialogBox.style.backgroundColor = 'transparent';
+                dialogBox.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+
+                const header = document.getElementById('emoji-modal-header');
+                if (header) {
+                    let isDragging = false;
+                    header.addEventListener('mousedown', function(e) {
+                        if (e.target.tagName.toLowerCase() === 'input' || e.target.id === 'emoji-close-x' || e.target.closest('#emoji-close-x') || e.target.id === 'emoji-search-clear' || e.target.closest('#emoji-search-clear')) return;
+                        isDragging = true;
+                        const rect = dialogBox.getBoundingClientRect();
+                        const offsetX = e.clientX - rect.left;
+                        const offsetY = e.clientY - rect.top;
+
+                        dialogBox.style.position = 'fixed';
+                        dialogBox.style.transform = 'none';
+                        dialogBox.style.margin = '0';
+                        dialogBox.style.bottom = 'auto';
+                        dialogBox.style.right = 'auto';
+                        dialogBox.style.left = (e.clientX - offsetX) + 'px';
+                        dialogBox.style.top = (e.clientY - offsetY) + 'px';
+
+                        const onMouseMove = (me) => {
+                            if (!isDragging) return;
+                            dialogBox.style.left = (me.clientX - offsetX) + 'px';
+                            dialogBox.style.top = (me.clientY - offsetY) + 'px';
+                        };
+
+                        const onMouseUp = () => {
+                            isDragging = false;
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                        };
+
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+                }
+            }
+        }, 10);
         
         const container = document.getElementById('dialog-clipart-container');
         if (container) {
             container.appendChild(grid);
             grid.style.display = 'grid';
         }
-        
+
+        const closeX = document.getElementById('emoji-close-x');
+        if (closeX) closeX.onclick = () => DialogSystem.close();
+
+        const cancelBtn = document.getElementById('emoji-btn-cancel');
+        if (cancelBtn) cancelBtn.onclick = () => DialogSystem.close();
+
+        const selectEmoji = (item) => {
+            if (!item) return;
+            grid.querySelectorAll('.gallery-item.emoji-item.selected').forEach(c => c.classList.remove('selected'));
+            item.classList.add('selected');
+            const img = item.querySelector('img');
+            grid.dataset.selectedUrl = (img && img.src) || '';
+            grid.dataset.selectedChar = item.getAttribute('data-char') || (img && img.alt) || '';
+        };
+
+        const executeInsertion = () => {
+            let selected = grid.querySelector('.gallery-item.emoji-item.selected');
+            if (!selected || selected.style.display === 'none') {
+                selected = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+            }
+            if (selected) {
+                const img = selected.querySelector('img');
+                const url = (img && img.src) || grid.dataset.selectedUrl;
+                const char = selected.getAttribute('data-char') || grid.dataset.selectedChar || (img && img.alt) || '';
+                DialogSystem.close();
+                if (url && typeof insertEmojiFromUrl === 'function') {
+                    insertEmojiFromUrl(url, char);
+                }
+            } else {
+                DialogSystem.close();
+            }
+        };
+
+        const okBtn = document.getElementById('emoji-btn-ok');
+        if (okBtn) {
+            okBtn.onclick = executeInsertion;
+        }
+
+        // Pre-select first emoji card if none selected
+        const firstVisibleCard = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+        if (firstVisibleCard && !grid.querySelector('.gallery-item.emoji-item.selected')) {
+            selectEmoji(firstVisibleCard);
+        }
+
         Array.from(grid.children).forEach(item => {
-            if (item.classList.contains('gallery-item') && !item.dataset.modalHooked) {
-                const originalClick = item.onclick;
+            if (item.classList.contains('gallery-item')) {
                 item.onclick = (e) => {
-                    DialogSystem.close();
-                    if(originalClick) originalClick(e);
+                    e.stopPropagation();
+                    selectEmoji(item);
                 };
-                item.dataset.modalHooked = 'true';
+                item.ondblclick = (e) => {
+                    e.stopPropagation();
+                    selectEmoji(item);
+                    executeInsertion();
+                };
             }
         });
+
+        const searchInput = document.getElementById('emoji-search-input');
+        const searchClear = document.getElementById('emoji-search-clear');
+        if (searchInput) {
+            searchInput.value = '';
+            if (typeof window.filterEmojis === 'function') {
+                window.filterEmojis('');
+            }
+            const firstCard = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+            if (firstCard) selectEmoji(firstCard);
+
+            searchInput.addEventListener('input', (e) => {
+                if (typeof window.filterEmojis === 'function') {
+                    window.filterEmojis(e.target.value);
+                }
+                const selected = grid.querySelector('.gallery-item.emoji-item.selected');
+                if (!selected || selected.style.display === 'none') {
+                    const firstMatch = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+                    if (firstMatch) selectEmoji(firstMatch);
+                }
+            });
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (searchInput.value) {
+                        searchInput.value = '';
+                        if (typeof window.filterEmojis === 'function') {
+                            window.filterEmojis('');
+                        }
+                        const firstCard = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+                        if (firstCard) selectEmoji(firstCard);
+                    } else if (typeof DialogSystem !== 'undefined') {
+                        DialogSystem.close();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeInsertion();
+                }
+            });
+            setTimeout(() => searchInput.focus(), 80);
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    if (typeof window.filterEmojis === 'function') {
+                        window.filterEmojis('');
+                    }
+                    const firstCard = grid.querySelector('.gallery-item.emoji-item:not([style*="display: none"])');
+                    if (firstCard) selectEmoji(firstCard);
+                    searchInput.focus();
+                }
+            });
+        }
     };
 
     // 6. ADS MODAL OVERRIDE

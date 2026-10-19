@@ -144,6 +144,10 @@ function serializeCurrentPage() {
                 attr.name.startsWith('data-shadow-') || 
                 attr.name.startsWith('data-border-') ||
                 attr.name.startsWith('data-is-') ||
+                attr.name.startsWith('data-skin-tone') ||
+                attr.name.startsWith('data-base-') ||
+                attr.name.startsWith('data-current-') ||
+                attr.name.startsWith('data-supports-') ||
                 attr.name === 'data-is-border' ||
                 attr.name === 'data-aspect-lock' || 
                 attr.name === 'data-aspect-ratio' ||

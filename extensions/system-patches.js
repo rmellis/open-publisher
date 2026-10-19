@@ -247,6 +247,26 @@
                 } else if (qaPill && typeof window.updateQuickActionsPosition === 'function') {
                     window.updateQuickActionsPosition(qaPill, el);
                 }
+
+                // Emoji Skin Tone Floating Actions
+                if (typeof window.ensureEmojiAttributes === 'function') {
+                    window.ensureEmojiAttributes(el);
+                }
+                const isSkinEmoji = (el.getAttribute('data-type') === 'emoji' || !!el.getAttribute('data-base-hex')) &&
+                                    (el.getAttribute('data-supports-skin-tone') === 'true' || (window.emojiSupportsSkinTone && window.emojiSupportsSkinTone(el.getAttribute('data-base-hex'))));
+                let stPill = existing.querySelector('.emoji-skin-tone-actions');
+                if (isSkinEmoji) {
+                    if (!stPill) {
+                        if (typeof window.renderEmojiSkinToneActions === 'function') {
+                            window.renderEmojiSkinToneActions(existing, el);
+                        }
+                    } else if (typeof window.updateEmojiSkinTonePosition === 'function') {
+                        window.updateEmojiSkinTonePosition(stPill, el);
+                    }
+                } else if (stPill) {
+                    stPill.remove();
+                }
+
                 if (isTransforming || existing._lastRot === el.style.transform) {
                     return;
                 }
@@ -310,6 +330,17 @@
                 if (el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
                     if (typeof window.renderElementQuickActions === 'function') {
                         window.renderElementQuickActions(overlay, el);
+                    }
+                }
+
+                // --- FLOATING EMOJI SKIN TONE TOOLBAR ---
+                if (typeof window.ensureEmojiAttributes === 'function') {
+                    window.ensureEmojiAttributes(el);
+                }
+                if ((el.getAttribute('data-type') === 'emoji' || !!el.getAttribute('data-base-hex')) &&
+                    (el.getAttribute('data-supports-skin-tone') === 'true' || (window.emojiSupportsSkinTone && window.emojiSupportsSkinTone(el.getAttribute('data-base-hex'))))) {
+                    if (typeof window.renderEmojiSkinToneActions === 'function') {
+                        window.renderEmojiSkinToneActions(overlay, el);
                     }
                 }
             }
@@ -952,6 +983,94 @@
             }
         } else if (elW * zoom < 145) {
             pill.classList.add('offset-from-rotate');
+        }
+    };
+
+    /**
+     * Render Floating Emoji Skin Tone Actions Toolbar on Selected Element Overlay.
+     */
+    window.renderEmojiSkinToneActions = function(overlay, el) {
+        if (!overlay || !el) return;
+
+        const oldPill = overlay.querySelector('.emoji-skin-tone-actions');
+        if (oldPill) oldPill.remove();
+
+        if (typeof window.ensureEmojiAttributes === 'function') {
+            window.ensureEmojiAttributes(el);
+        }
+
+        const baseHex = el.getAttribute('data-base-hex');
+        const supports = el.getAttribute('data-supports-skin-tone') === 'true' ||
+                         (window.emojiSupportsSkinTone && window.emojiSupportsSkinTone(baseHex));
+        if (!supports) return;
+
+        const currentTone = el.getAttribute('data-skin-tone') || 'default';
+        const pill = document.createElement('div');
+        pill.className = 'emoji-skin-tone-actions';
+        pill.setAttribute('role', 'toolbar');
+        pill.setAttribute('aria-label', 'Emoji Skin Tone');
+
+        const tones = window.SKIN_TONES || [
+            { id: 'default', name: 'Default', hex: '', color: '#ffdc5d', border: '#e6c547' },
+            { id: 'light', name: 'Light', hex: '1f3fb', color: '#fadcbc', border: '#e2c5a4' },
+            { id: 'medium-light', name: 'Medium-Light', hex: '1f3fc', color: '#e0bb95', border: '#c7a37e' },
+            { id: 'medium', name: 'Medium', hex: '1f3fd', color: '#bf8f68', border: '#a57953' },
+            { id: 'medium-dark', name: 'Medium-Dark', hex: '1f3fe', color: '#9b643d', border: '#83522f' },
+            { id: 'dark', name: 'Dark', hex: '1f3ff', color: '#594539', border: '#45342a' }
+        ];
+
+        let buttonsHtml = '';
+        tones.forEach((tone, idx) => {
+            if (idx === 1) {
+                buttonsHtml += '<div class="quick-action-divider"></div>';
+            }
+            const isActive = tone.id === currentTone;
+            buttonsHtml += `
+                <button type="button" class="skin-tone-swatch tone-${tone.id}${isActive ? ' active' : ''}" 
+                        data-tone="${tone.id}" 
+                        title="${tone.name} skin tone" 
+                        aria-label="${tone.name} skin tone" 
+                        aria-pressed="${isActive ? 'true' : 'false'}">
+                    <span class="swatch-color" style="background-color: ${tone.color}; border: 1px solid ${tone.border};"></span>
+                </button>
+            `;
+        });
+
+        pill.innerHTML = buttonsHtml;
+
+        pill.querySelectorAll('.skin-tone-swatch').forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const toneId = btn.getAttribute('data-tone');
+                if (typeof window.setEmojiSkinTone === 'function') {
+                    window.setEmojiSkinTone(el, toneId);
+                }
+            });
+        });
+
+        if (typeof window.updateEmojiSkinTonePosition === 'function') {
+            window.updateEmojiSkinTonePosition(pill, el);
+        }
+
+        overlay.appendChild(pill);
+    };
+
+    window.updateEmojiSkinTonePosition = function(pill, el) {
+        if (!pill || !el) return;
+        const zoom = (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+        const topVal = parseFloat(el.style.top) || el.offsetTop || 0;
+        const elH = parseFloat(el.style.height) || el.offsetHeight || 100;
+        const paper = document.getElementById('paper');
+        const paperH = paper ? (parseFloat(paper.style.height) || 1123) : 1123;
+
+        pill.classList.remove('inside-bottom');
+        if (topVal + elH + (42 / zoom) > paperH) {
+            pill.classList.add('inside-bottom');
         }
     };
 

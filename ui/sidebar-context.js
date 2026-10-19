@@ -1,4 +1,4 @@
-// Open Publisher Sidebar Context Menu (v5.10.5)
+// Open Publisher Sidebar Context Menu (v5.11.6)
 function showMinimapContextMenu(e, index) {
     state.contextMenuTargetIndex = index;
     const menu = document.getElementById('minimap-context-menu');
