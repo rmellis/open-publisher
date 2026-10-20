@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.11.6)
+// Open Publisher Text Engine (v5.11.7)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -252,11 +252,15 @@ function addTextBox() {
     const autoHyphenate = localStorage.getItem('opub_autoHyphenate') === 'true';
     const hyphenStyle = autoHyphenate ? ' hyphens:auto; -webkit-hyphens:auto;' : '';
     const userLang = navigator.language || 'en';
+    const defaultDir = localStorage.getItem('opub_default_text_direction') || 'auto';
+    const dirAttr = ` dir="${defaultDir}"`;
+    const dirStyle = (defaultDir === 'rtl') ? ' direction: rtl; text-align: right;' : ((defaultDir === 'ltr') ? ' direction: ltr; text-align: left;' : '');
     const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
     state.lastRange = null;
     
-    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', sans-serif;${hyphenStyle}" contenteditable="true"${spellAttrs}>Click to edit text</div>`); 
+    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif;${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
+    el.setAttribute('data-text-direction', defaultDir);
     applySingleElementScheme(el, state.currentScheme);
     updateFloatToolbarValues();
     return el;
@@ -738,8 +742,172 @@ function updateFloatToolbarValues() {
         if (ribbonInput && !isNaN(fSize)) {
             ribbonInput.value = fSize;
         }
+
+        // Update Text Direction and Alignment UI indicators
+        const dirVal = node.getAttribute('dir') || computed.direction || 'ltr';
+        if (typeof window.updateTextDirectionUI === 'function') {
+            window.updateTextDirectionUI(dirVal);
+        }
+
+        const align = computed.textAlign || 'left';
+        const alignL = document.getElementById('btn-align-left');
+        const alignC = document.getElementById('btn-align-center');
+        const alignR = document.getElementById('btn-align-right');
+        if (alignL) alignL.classList.toggle('active-tool', align === 'left' || align === 'start');
+        if (alignC) alignC.classList.toggle('active-tool', align === 'center');
+        if (alignR) alignR.classList.toggle('active-tool', align === 'right' || align === 'end');
     }
 }
+
+window.setTextDirection = function(dir) {
+    const targetDir = (dir === 'rtl' || dir === 'auto') ? dir : 'ltr';
+    const sel = window.getSelection();
+    let editable = null;
+    let targetBlock = null;
+
+    if (sel && sel.rangeCount > 0) {
+        let node = sel.anchorNode;
+        if (node) {
+            if (node.nodeType === 3) node = node.parentNode;
+            editable = node.closest ? node.closest('[contenteditable="true"]') : null;
+            if (editable) {
+                targetBlock = (node !== editable && node.closest) ? (node.closest('p, div, li, h1, h2, h3, h4, h5, h6') || editable) : editable;
+            }
+        }
+    }
+
+    if (!editable && typeof state !== 'undefined' && state.selectedEl) {
+        editable = state.selectedEl.querySelector('[contenteditable="true"]') ||
+                   state.selectedEl.querySelector('.element-content > div') ||
+                   state.selectedEl.querySelector('.element-content');
+        targetBlock = editable;
+    }
+
+    // Support multiple selected table cells
+    if (window._tableSelectedCells && window._tableSelectedCells.length > 0) {
+        window._tableSelectedCells.forEach(cell => {
+            cell.setAttribute('dir', targetDir);
+            if (targetDir === 'auto') {
+                cell.style.removeProperty('direction');
+            } else {
+                cell.style.direction = targetDir;
+            }
+            if (targetDir === 'rtl') {
+                if (!cell.style.textAlign || cell.style.textAlign === 'left' || cell.style.textAlign === 'start') {
+                    cell.style.textAlign = 'right';
+                }
+            } else if (targetDir === 'ltr') {
+                if (cell.style.textAlign === 'right' || cell.style.textAlign === 'end') {
+                    cell.style.textAlign = 'left';
+                }
+            }
+        });
+        window.updateTextDirectionUI(targetDir);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+        return;
+    }
+
+    if (editable) {
+        if (targetDir === 'auto') {
+            editable.setAttribute('dir', 'auto');
+            editable.style.removeProperty('direction');
+            if (targetBlock && targetBlock !== editable) {
+                targetBlock.setAttribute('dir', 'auto');
+                targetBlock.style.removeProperty('direction');
+            }
+        } else {
+            editable.setAttribute('dir', targetDir);
+            editable.style.direction = targetDir;
+            if (targetBlock && targetBlock !== editable) {
+                targetBlock.setAttribute('dir', targetDir);
+                targetBlock.style.direction = targetDir;
+            }
+            if (targetDir === 'rtl') {
+                if (!editable.style.textAlign || editable.style.textAlign === 'left' || editable.style.textAlign === 'start') {
+                    editable.style.textAlign = 'right';
+                }
+                if (targetBlock && targetBlock !== editable && (!targetBlock.style.textAlign || targetBlock.style.textAlign === 'left' || targetBlock.style.textAlign === 'start')) {
+                    targetBlock.style.textAlign = 'right';
+                }
+            } else if (targetDir === 'ltr') {
+                if (editable.style.textAlign === 'right' || editable.style.textAlign === 'end') {
+                    editable.style.textAlign = 'left';
+                }
+                if (targetBlock && targetBlock !== editable && (targetBlock.style.textAlign === 'right' || targetBlock.style.textAlign === 'end')) {
+                    targetBlock.style.textAlign = 'left';
+                }
+            }
+        }
+
+        const pubEl = editable.closest('.pub-element');
+        if (pubEl) {
+            pubEl.setAttribute('data-text-direction', targetDir);
+        }
+
+        window.updateTextDirectionUI(targetDir);
+        if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    }
+};
+
+window.updateTextDirectionUI = function(currentDir) {
+    let dir = currentDir;
+    if (!dir) {
+        let node = null;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && sel.anchorNode) {
+            node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentNode : sel.anchorNode;
+        } else if (typeof state !== 'undefined' && state.selectedEl) {
+            node = state.selectedEl.querySelector('[contenteditable="true"]') ||
+                   state.selectedEl.querySelector('.element-content > div') ||
+                   state.selectedEl;
+        }
+        if (node && node.nodeType === 1) {
+            dir = node.getAttribute('dir') || node.style.direction || (window.getComputedStyle ? window.getComputedStyle(node).direction : 'ltr');
+        } else {
+            dir = 'ltr';
+        }
+    }
+
+    const isRtl = dir === 'rtl';
+    const isAuto = dir === 'auto';
+    const isLtr = !isRtl && !isAuto;
+
+    const btnLtr = document.getElementById('btn-text-dir-ltr');
+    const btnRtl = document.getElementById('btn-text-dir-rtl');
+    const btnAuto = document.getElementById('btn-text-dir-auto');
+    const floatLtr = document.getElementById('float-dir-ltr');
+    const floatRtl = document.getElementById('float-dir-rtl');
+
+    if (btnLtr) btnLtr.classList.toggle('active-tool', isLtr);
+    if (btnRtl) btnRtl.classList.toggle('active-tool', isRtl);
+    if (btnAuto) btnAuto.classList.toggle('active-tool', isAuto);
+    if (floatLtr) floatLtr.classList.toggle('active-tool', isLtr);
+    if (floatRtl) floatRtl.classList.toggle('active-tool', isRtl);
+
+    ['text', 'wa'].forEach(s => {
+        const cLtr = document.getElementById(`ctx-dir-ltr-${s}`);
+        const cRtl = document.getElementById(`ctx-dir-rtl-${s}`);
+        const cAuto = document.getElementById(`ctx-dir-auto-${s}`);
+        if (cLtr) cLtr.classList.toggle('active-tool', isLtr);
+        if (cRtl) cRtl.classList.toggle('active-tool', isRtl);
+        if (cAuto) cAuto.classList.toggle('active-tool', isAuto);
+    });
+};
+
+// Global Keyboard Shortcut: Ctrl + Right Shift (RTL) & Ctrl + Left Shift (LTR)
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Shift') {
+        if (e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT) {
+            e.preventDefault();
+            window.setTextDirection('rtl');
+        } else if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+            e.preventDefault();
+            window.setTextDirection('ltr');
+        }
+    }
+});
 
 
 function showFloatToolbar() {
@@ -848,7 +1016,7 @@ const fontList = [
 ];
 
 /* =========================================================================
-   STYLED TEXT BOX SYSTEM (v5.11.6)
+   STYLED TEXT BOX SYSTEM (v5.11.7)
    Dual-Mode Architecture: Creation Templates + Contextual Ribbon Styling
    ========================================================================= */
 
@@ -3380,11 +3548,16 @@ window.TextBoxStylesSystem = {
             if (preset.textStyle.lineHeight) textStyleStr += `line-height:${preset.textStyle.lineHeight}; `;
         }
 
-        const html = `<div style="padding:${pad}; height:100%; word-wrap:break-word; outline:none;${hyphenStyle} ${textStyleStr}" contenteditable="true"${spellAttrs}>Click to edit text</div>`;
+        const defaultDir = localStorage.getItem('opub_default_text_direction') || 'auto';
+        const dirAttr = ` dir="${defaultDir}"`;
+        const dirStyle = (defaultDir === 'rtl') ? 'direction:rtl; text-align:right; ' : ((defaultDir === 'ltr') ? 'direction:ltr; ' : '');
+
+        const html = `<div style="padding:${pad}; height:100%; word-wrap:break-word; outline:none;${hyphenStyle} ${dirStyle}${textStyleStr}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`;
 
         if (typeof createWrapper !== 'function') return;
         const el = createWrapper(html);
         if (!el) return;
+        el.setAttribute('data-text-direction', defaultDir);
 
         // Size appropriately
         const w = preset.defaultWidth || 260;

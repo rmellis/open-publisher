@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.11.6)
+// Open Publisher UI Interactions (v5.11.7)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.6)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.7)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -414,12 +414,25 @@
                         
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('outdent')" title="Decrease Indent"><i class="fas fa-outdent"></i></div>
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('indent')" title="Increase Indent"><i class="fas fa-indent"></i></div>
+                        
+                        <div style="width:1px; height:16px; background:#ccc; margin:0 2px;"></div>
+                        
+                        <div class="mini-btn ctx-btn-strict" id="ctx-dir-ltr-${target.suffix}" onclick="window.setTextDirection('ltr')" title="Left-to-Right Text Direction (Ctrl+Left Shift)"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M1 2.5h7v1.8H1zm0 3.2h5v1.8H1zm0 3.2h7v1.8H1zm0 3.2h4v1.8H1z"/><path d="M10 7.8h4.5m-2.2-2.2 2.2 2.2-2.2 2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+                        <div class="mini-btn ctx-btn-strict" id="ctx-dir-rtl-${target.suffix}" onclick="window.setTextDirection('rtl')" title="Right-to-Left Text Direction (Ctrl+Right Shift)"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M8 2.5h7v1.8H8zm2 3.2h5v1.8h-5zm-2 3.2h7v1.8H8zm3 3.2h4v1.8h-4z"/><path d="M6 7.8H1.5m2.2-2.2-2.2 2.2 2.2 2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
                     </div>
                     <div class="ctx-row">
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></div>
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></div>
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></div>
                         <div class="mini-btn ctx-btn-strict" onclick="execCmd('justifyFull')" title="Justify"><i class="fas fa-align-justify"></i></div>
+                        
+                        <div style="width:1px; height:16px; background:#ccc; margin:0 2px;"></div>
+                        
+                        <div class="mini-btn ctx-btn-strict" onclick="showLineSpacingModal()" title="Line Spacing"><i class="fas fa-arrows-alt-v"></i></div>
+                        
+                        <div style="width:1px; height:16px; background:#ccc; margin:0 2px;"></div>
+                        
+                        <div class="mini-btn ctx-btn-strict" id="ctx-dir-auto-${target.suffix}" onclick="window.setTextDirection('auto')" title="Auto Text Direction (Detect from language)"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M1 2.5h14v1.8H1zm2 3.4h10v1.8H3z"/><path d="M2.2 12.5h11.6m-9-2.2-2.4 2.2 2.4 2.2m6.6-4.4 2.4 2.2-2.4 2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
                     </div>
                 </div>
                 <div class="group-label">Paragraph</div>

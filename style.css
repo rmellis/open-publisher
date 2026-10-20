@@ -116,6 +116,8 @@ body.dark-mode .cm-item i,
 body.dark-mode .dropdown-item i,
 body.dark-mode .op-sidebar-btn i,
 body.dark-mode .ribbon-toolbar .mini-btn i,
+body.dark-mode .ribbon-toolbar .mini-btn svg,
+body.dark-mode .ctx-btn-strict svg,
 body.dark-mode .wa-float-toolbar .mini-btn i,
 body.dark-mode .modern-select span,
 body.dark-mode .modern-spinner input,
@@ -698,6 +700,13 @@ body.dark-mode .tab.active {
 .mini-btn.active-tool { background: color-mix(in srgb, var(--ui-theme-color) 20%, transparent); border-color: var(--ui-theme-color); border-radius: 6px; }
 
 .ribbon-toolbar .mini-btn i { color: var(--ui-theme-dark); }
+.ribbon-toolbar .mini-btn svg,
+.ctx-btn-strict svg,
+#float-toolbar .mini-btn svg {
+    color: var(--ui-theme-dark);
+    fill: currentColor;
+    display: block;
+}
 
 .ribbon-input { border: 1px solid var(--ui-border); background: var(--ui-panel-bg); color: var(--ui-text); padding: 2px; font-size: 12px; height: 24px; }
 

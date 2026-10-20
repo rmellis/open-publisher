@@ -1,4 +1,4 @@
-// Open Publisher Options Modal (v5.11.6)
+// Open Publisher Options Modal (v5.11.7)
 
 // Escape helper for safe innerHTML injection
 function _optEscapeHtml(str) {
@@ -720,6 +720,11 @@ window.saveGlobalOptions = function(closeDialog = true) {
         }
     }
 
+    const selDefaultTextDir = document.getElementById('opt-default-text-dir');
+    if (selDefaultTextDir) {
+        localStorage.setItem('opub_default_text_direction', selDefaultTextDir.value);
+    }
+
     // 5. Advanced Tab Settings
     const cbHyphen = document.getElementById('opt-autohyphenate');
     if (cbHyphen) {
@@ -832,6 +837,7 @@ window.showOptionsModal = function() {
     const saveFolder = localStorage.getItem('opub_save_folder') || 'Documents\\OpenPublisher';
     const currentUnit = (typeof state !== 'undefined' && state.rulerUnit) || localStorage.getItem('opub_ruler_unit') || 'cm';
     const proofingLang = localStorage.getItem('opub_proofing_lang') || 'en-US';
+    const defaultTextDir = localStorage.getItem('opub_default_text_direction') || 'auto';
     const onlineProofing = localStorage.getItem('opub_online_proofing_enabled') !== 'false';
     const crashDumps = localStorage.getItem('opub_crash_dumps_enabled') !== 'false';
 
@@ -1074,6 +1080,19 @@ window.showOptionsModal = function() {
                     </select>
                 </div>
                 <p style="${subtextStyle}; margin-left: 0; margin-top: 15px;">Proofing suggestions and grammar rules will automatically calibrate to the selected dialect.</p>
+
+                <hr style="${dividerStyle}">
+                <strong style="${sectionHeadingStyle}">Default Text Direction</strong>
+                <p style="font-size: 12px; opacity: 0.75; margin-top: 0; margin-bottom: 12px;">Choose default reading and typing direction for new text boxes.</p>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-size: 12px; width: 120px;">Default direction:</span>
+                    <select id="opt-default-text-dir" style="padding: 6px 10px; border: 1px solid var(--ui-border, #ccc); border-radius: 4px; width: 240px; background: var(--ui-panel-bg, #fff); color: var(--ui-text, #222); cursor: pointer;">
+                        <option value="auto" ${defaultTextDir === 'auto' ? 'selected' : ''}>Auto-detect (Recommended)</option>
+                        <option value="ltr" ${defaultTextDir === 'ltr' ? 'selected' : ''}>Left-to-Right (LTR)</option>
+                        <option value="rtl" ${defaultTextDir === 'rtl' ? 'selected' : ''}>Right-to-Left (RTL)</option>
+                    </select>
+                </div>
+                <p style="${subtextStyle}; margin-left: 0; margin-top: 15px;">Auto-detect automatically switches text orientation and alignment for RTL languages such as Arabic, Hebrew, Urdu, and Persian when typed.</p>
             `;
         } else if (tab === 'Advanced') {
             tabContent = `

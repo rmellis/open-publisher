@@ -1,4 +1,4 @@
-// OpenPublisher Core Engine (v5.11.6)
+// OpenPublisher Core Engine (v5.11.7)
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
