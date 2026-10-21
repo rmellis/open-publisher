@@ -1,5 +1,6 @@
+// Open Publisher Smart Images Engine (v5.11.8)
 (function installSmartImages() {
-    console.log("🛠️ Smart Image Script initializing...");
+    console.log("🛠️ Smart Image Script initializing (v5.11.8)...");
 
     // 1. The Bulletproof Image Builder
     window.insertSmartImage = function(imageSrc, fallbackSrc, dropCoords = null) {
@@ -35,24 +36,139 @@
         const img = new Image();
         let fallbackAttempted = false;
         let loaded = false;
+        let timeoutId = null;
 
-        img.onerror = function() {
+        function getRightSidebarOffset() {
+            const sidebars = [
+                document.getElementById('op-image-sidebar'),
+                document.getElementById('op-selection-sidebar'),
+                document.getElementById('op-shadow-sidebar'),
+                document.getElementById('op-a11y-sidebar'),
+                document.getElementById('op-graphics-sidebar'),
+                document.getElementById('op-thesaurus-sidebar')
+            ];
+            let maxRightWidth = 0;
+            for (const sb of sidebars) {
+                if (sb && (sb.classList.contains('visible') || sb.offsetWidth > 100)) {
+                    const rect = sb.getBoundingClientRect();
+                    if (rect.width > maxRightWidth) maxRightWidth = rect.width;
+                }
+            }
+            const anyVisible = document.querySelector('.op-sidebar.visible, [id$="-sidebar"].visible');
+            if (anyVisible) {
+                const w = anyVisible.getBoundingClientRect().width || anyVisible.offsetWidth;
+                if (w > maxRightWidth) maxRightWidth = w;
+            }
+            // If an image sidebar is active or about to open on image select, use standard sidebar width (300px)
+            if (maxRightWidth === 0) {
+                maxRightWidth = 310;
+            }
+            return (maxRightWidth + 24) + 'px';
+        }
+
+        function showClipartToast(titleMsg, detailMsg) {
+            let toast = document.getElementById('op-clipart-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'op-clipart-toast';
+                document.body.appendChild(toast);
+            }
+
+            const rightOffset = getRightSidebarOffset();
+            toast.style.position = 'fixed';
+            toast.style.bottom = '35px';
+            toast.style.right = rightOffset;
+            toast.style.background = 'linear-gradient(135deg, var(--ui-theme-dark, #005a55) 0%, var(--ui-theme-color, #007670) 100%)';
+            toast.style.backdropFilter = 'blur(10px)';
+            toast.style.webkitBackdropFilter = 'blur(10px)';
+            toast.style.color = '#ffffff';
+            toast.style.padding = '10px 18px';
+            toast.style.borderRadius = '8px';
+            toast.style.border = '1px solid rgba(255, 255, 255, 0.35)';
+            toast.style.boxShadow = '0 12px 28px -4px rgba(0, 45, 42, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25)';
+            toast.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+            toast.style.zIndex = '100000';
+            toast.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(15px)';
+            toast.style.pointerEvents = 'none';
+
+            const title = titleMsg || 'Using Preview Resolution';
+            const detail = detailMsg || 'Server timed out • fallback applied';
+
+            toast.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="background:#ffffff; color:var(--ui-theme-dark, #005a55); width:30px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.18);">
+                        <i class="fas fa-info" style="color:var(--ui-theme-color, #007670);"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:13px; color:#ffffff; letter-spacing:0.25px;">
+                            ${title}
+                        </div>
+                        <div style="font-size:11px; color:#e0f2f1; opacity:0.95; margin-top:2px;">
+                            ${detail}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+                toast.style.pointerEvents = 'auto';
+            });
+
+            if (window._clipartToastTimeout) clearTimeout(window._clipartToastTimeout);
+            window._clipartToastTimeout = setTimeout(() => {
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(15px)';
+                    toast.style.pointerEvents = 'none';
+                }
+            }, 4500);
+        }
+
+        const triggerFallback = (reason) => {
             if (fallbackSrc && !fallbackAttempted) {
-                console.warn("Primary image failed to load (onerror), falling back to:", fallbackSrc);
+                console.warn(`Primary image failed (${reason}), falling back to:`, fallbackSrc);
                 fallbackAttempted = true;
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
                 img.src = fallbackSrc;
+                showClipartToast('Using Preview Resolution', 'Server timed out • fallback applied');
             } else {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
                 removeSpinner();
                 DialogSystem.alert('Error', 'Failed to load image. It may not exist on the server.');
             }
         };
+
+        // If fallbackSrc exists and is distinct, race primary fetch with a 3.5s timeout
+        if (fallbackSrc && fallbackSrc !== imageSrc) {
+            timeoutId = setTimeout(() => {
+                if (!loaded && !fallbackAttempted) {
+                    triggerFallback('timeout after 3.5s');
+                }
+            }, 3500);
+        }
+
+        img.onerror = function() {
+            triggerFallback('onerror');
+        };
         img.onload = function() {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
             if (loaded) return;
             // Check if the proxy returned a 1x1 error pixel instead of a 404
             if (img.naturalWidth <= 1 && fallbackSrc && !fallbackAttempted) {
-                console.warn("Primary image returned 1x1 pixel, falling back to:", fallbackSrc);
-                fallbackAttempted = true;
-                img.src = fallbackSrc;
+                triggerFallback('1x1 pixel returned');
                 return;
             }
             
@@ -106,7 +222,7 @@
                 // Inject the HTML with the exact resize handles so it behaves normally
                 el.innerHTML = `
                     <div class="element-content">
-                        <img src="${img.src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;">
+                        <img src="${img.src}" draggable="false" style="width: 100%; height: 100%; object-fit: fill; display: block; position: absolute; top: 0; left: 0;${fallbackAttempted ? ' image-rendering: -webkit-optimize-contrast;' : ''}">
                     </div>
                     <div class="resize-handle rh-nw" data-dir="nw"></div>
                     <div class="resize-handle rh-n" data-dir="n"></div>
