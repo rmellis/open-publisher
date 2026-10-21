@@ -2,6 +2,7 @@
     
     // 1. Intercept the Mousedown to build the group
     window.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
         // v5.4.8: If user is clicking highlighted text, allow TextDragSystem to handle text drag / copy
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             return;
@@ -4100,6 +4101,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
+        if (e.button !== 0) return;
         if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
             if(state.shapeEditMode) window.exitShapeEditMode();
             if(typeof window.deselect === 'function') window.deselect();
@@ -4376,7 +4378,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         const el = e.target.closest('.pub-element');
         if(el) {
             // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
-            if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+            if (e.button === 0 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
                 window.TextDragSystem.startDrag(e);
                 return;
             }

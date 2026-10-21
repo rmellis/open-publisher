@@ -1,4 +1,4 @@
-// OpenPublisher Legacy Fixes & Compatibility (v5.11.8)
+// OpenPublisher Legacy Fixes & Compatibility (v5.11.9)
 (function lockGlobalWorkspaceAnimation() {
     const viewport = document.getElementById('viewport');
     if (!viewport) return;
@@ -809,11 +809,34 @@
         // inner contenteditable, set isTextEditing=true, then silently return because
         // hasTextSelection is false - leaving the element never copied.
         if (isTextEditing && hasTextSelection) {
-            const textToCopy = sel.toString();
+            let range = sel.getRangeAt(0);
+            let textToCopy = sel.toString();
+            
+            // If cutting or copying a word selection that captured trailing whitespace (e.g. from double-clicking),
+            // exclude the trailing whitespace from the cut/copy range so the space after the word is preserved in the document.
+            if (isCut || /\s+$/.test(textToCopy)) {
+                const trailingMatch = textToCopy.match(/\s+$/);
+                if (trailingMatch) {
+                    const count = trailingMatch[0].length;
+                    let endNode = range.endContainer;
+                    let endOff = range.endOffset;
+                    if (endNode.nodeType === 3 && endOff >= count) {
+                        range.setEnd(endNode, endOff - count);
+                    } else if (endNode.nodeType === 1 && endOff > 0) {
+                        let lastChild = endNode.childNodes[endOff - 1];
+                        if (lastChild && lastChild.nodeType === 3 && lastChild.textContent.length >= count) {
+                            range.setEnd(lastChild, lastChild.textContent.length - count);
+                        }
+                    }
+                    textToCopy = range.toString();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+
             state.copiedText = textToCopy;
             
             try {
-                const range = sel.getRangeAt(0);
                 const div = document.createElement('div');
                 div.appendChild(range.cloneContents());
                 let wrapperHtml = div.innerHTML;
@@ -839,17 +862,57 @@
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(textToCopy).catch(e => {
-                        document.execCommand(isCut ? 'cut' : 'copy');
+                        document.execCommand('copy');
                     });
                 } else {
-                    document.execCommand(isCut ? 'cut' : 'copy');
+                    document.execCommand('copy');
                 }
             } catch(e) {
-                document.execCommand(isCut ? 'cut' : 'copy');
+                try { document.execCommand('copy'); } catch(err) {}
             }
             
             if (isCut) {
-                sel.deleteFromDocument();
+                // Determine characters immediately before and after the range to preserve spaces
+                let charBefore = '';
+                let charAfter = '';
+                const startContainer = range.startContainer;
+                const startOffset = range.startOffset;
+                const endContainer = range.endContainer;
+                const endOffset = range.endOffset;
+
+                if (startContainer.nodeType === 3 && startOffset > 0) {
+                    charBefore = startContainer.textContent[startOffset - 1];
+                } else if (startContainer.nodeType === 1 && startOffset > 0) {
+                    const prevNode = startContainer.childNodes[startOffset - 1];
+                    if (prevNode && prevNode.textContent) charBefore = prevNode.textContent.slice(-1);
+                }
+
+                if (endContainer.nodeType === 3 && endOffset < endContainer.textContent.length) {
+                    charAfter = endContainer.textContent[endOffset];
+                } else if (endContainer.nodeType === 1 && endOffset < endContainer.childNodes.length) {
+                    const nextNode = endContainer.childNodes[endOffset];
+                    if (nextNode && nextNode.textContent) charAfter = nextNode.textContent[0];
+                }
+
+                range.deleteContents();
+
+                // If preceded by a space AND followed by a space, prevent HTML whitespace collapsing
+                // from eating the trailing space by converting the preceding space to non-breaking space \u00A0
+                if (/\s/.test(charBefore) && /\s/.test(charAfter)) {
+                    if (startContainer.nodeType === 3 && startOffset > 0) {
+                        const txt = startContainer.textContent;
+                        const idx = startOffset - 1;
+                        if (txt[idx] === ' ') {
+                            startContainer.textContent = txt.substring(0, idx) + '\u00A0' + txt.substring(idx + 1);
+                        }
+                    }
+                }
+
+                const editHost = targetBox.closest ? (targetBox.closest('[contenteditable="true"]') || targetBox) : targetBox;
+                if (editHost && editHost.dispatchEvent) {
+                    try { editHost.dispatchEvent(new Event('input', { bubbles: true })); } catch(e) {}
+                }
+
                 window._contextTargetRange = null;
                 if (typeof pushHistory !== 'undefined') pushHistory();
             }
@@ -900,6 +963,25 @@
     window.cutEl = function() {
         window.copyEl(true);
     };
+
+    // Global cut listener to cleanly intercept any native cut events in contenteditables
+    document.addEventListener('cut', function(e) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            const active = document.activeElement;
+            if (active && (active.isContentEditable || (active.closest && active.closest('[contenteditable="true"]')))) {
+                if (!window._handlingCut) {
+                    e.preventDefault();
+                    window._handlingCut = true;
+                    try {
+                        window.copyEl(true);
+                    } finally {
+                        window._handlingCut = false;
+                    }
+                }
+            }
+        }
+    }, true);
 
     // --- 3. MULTI-ITEM PASTE ---
     window.pasteEl = function(inPlace = false) {

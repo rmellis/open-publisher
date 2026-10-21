@@ -1,6 +1,6 @@
-// Open Publisher Smart Images Engine (v5.11.8)
+// Open Publisher Smart Images Engine (v5.11.9)
 (function installSmartImages() {
-    console.log("🛠️ Smart Image Script initializing (v5.11.8)...");
+    console.log("🛠️ Smart Image Script initializing (v5.11.9)...");
 
     // 1. The Bulletproof Image Builder
     window.insertSmartImage = function(imageSrc, fallbackSrc, dropCoords = null) {

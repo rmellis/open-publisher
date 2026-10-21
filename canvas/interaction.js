@@ -1,4 +1,5 @@
 function handleMouseDown(e) {
+    if (e.button !== 0) return;
     if (e.target.classList.contains('custom-guide')) {
         if (state.isGuidesLocked) return;
         state.dragMode = 'drag-guide';

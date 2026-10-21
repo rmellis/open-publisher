@@ -1,5 +1,5 @@
 /**
- * Open Publisher - Canvas Text Drag & Drop Module (v5.4.8)
+ * Open Publisher - Canvas Text Drag & Drop Module (v5.11.9)
  * Allows users to highlight a chunk of text and drag it into another area
  * within the text box (or across text boxes), with visual drop caret indicator,
  * ghost drag badge, Ctrl-to-copy support, and full Undo/Redo integration.
@@ -140,6 +140,7 @@ window.TextDragSystem = (function() {
      * Starts a text drag session from mousedown.
      */
     function startDrag(e) {
+        if (!e || e.button !== 0) return false;
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return false;
 
@@ -360,6 +361,7 @@ window.TextDragSystem = (function() {
      * while an intentional drag-and-drop executes the text relocation.
      */
     function onMouseUp(e) {
+        if (!e || e.button !== 0) return;
         if (!session || !session.active) return;
 
         const currentSession = session;

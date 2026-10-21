@@ -78,10 +78,17 @@ document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'X')) {
             const sel = window.getSelection();
             const hasTextSel = sel && sel.rangeCount > 0 && !sel.isCollapsed;
-            if (state.selectedEl && !(isTextEditing() && hasTextSel)) {
+            if (isTextEditing() && hasTextSel) {
                 e.preventDefault();
                 if (typeof window.cutEl === 'function') window.cutEl();
                 else if (typeof cutEl === 'function') cutEl();
+                return;
+            }
+            if (state.selectedEl) {
+                e.preventDefault();
+                if (typeof window.cutEl === 'function') window.cutEl();
+                else if (typeof cutEl === 'function') cutEl();
+                return;
             }
         }
         // Copy

@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.11.8)
+   CONTEXT MENU ADDON (DYNAMIC RIGHT-CLICK SYSTEM - v5.11.9)
 ========================================================================= */
 
 const ContextMenuSystem = {
@@ -54,8 +54,25 @@ const ContextMenuSystem = {
         window._contextTargetLink = e.target.closest('a');
         
         const sel = window.getSelection();
+        let preservedRange = null;
         if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-            window._contextTargetRange = sel.getRangeAt(0).cloneRange();
+            let r = sel.getRangeAt(0);
+            const selStr = sel.toString();
+            // If the user selected a word or text that captured trailing whitespace (e.g. Chromium double-click),
+            // trim the trailing whitespace so context actions (Cut, Copy) and the highlight target strictly the word.
+            if (/\s+$/.test(selStr)) {
+                const count = selStr.match(/\s+$/)[0].length;
+                if (r.endContainer.nodeType === 3 && r.endOffset >= count) {
+                    try {
+                        r = r.cloneRange();
+                        r.setEnd(r.endContainer, r.endOffset - count);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
+                    } catch(err) {}
+                }
+            }
+            preservedRange = r.cloneRange();
+            window._contextTargetRange = preservedRange;
             if (typeof state !== 'undefined') {
                 state.lastRange = window._contextTargetRange;
             }
@@ -444,6 +461,16 @@ const ContextMenuSystem = {
 
         this.menuEl.innerHTML = html;
         this.menuEl.style.display = 'block';
+
+        // Ensure text selection is maintained while context menu is displayed
+        if (preservedRange && sel) {
+            try {
+                if (sel.isCollapsed || sel.rangeCount === 0 || sel.toString() !== preservedRange.toString()) {
+                    sel.removeAllRanges();
+                    sel.addRange(preservedRange);
+                }
+            } catch(err) {}
+        }
 
         // Proofing (Spell & Grammar) Async Fetch
         if (window._currentSpellCheckWord || window._currentSpellCheckRange || window._currentSpellCheckPointRange || window._currentSpellCheckEditable) {

@@ -1,4 +1,4 @@
-// Open Publisher Card & Label Sheet Imposition Engine (v5.11.8)
+// Open Publisher Card & Label Sheet Imposition Engine (v5.11.9)
 // Allows designing a single business card / label and printing 10 or 12 to a page (Avery / N-Up Imposition).
 
 (function() {
