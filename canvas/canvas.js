@@ -1,5 +1,5 @@
 /* =========================================================================
-   CANVAS RULER ENGINE (Hardware Accelerated, 100% Crisp, Zero Lag) (v5.4.8)
+   CANVAS RULER ENGINE (Hardware Accelerated, 100% Crisp, Zero Lag) (v5.11.10)
    ========================================================================= */
 window.initRulers = function() {
     const h = document.getElementById('ruler-h');
@@ -22,6 +22,56 @@ window.initRulers = function() {
         <div id="ruler-v-selection-marker" class="ruler-selection-marker-v op-ruler-highlight-v" style="display:none;"></div>
         <div id="ruler-v-cursor-marker" class="ruler-cursor-marker-v" style="display:none;"></div>
     `;
+
+    const hCanvas = document.getElementById('ruler-h-canvas');
+    const vCanvas = document.getElementById('ruler-v-canvas');
+
+    function wireCanvasLossRecovery(canvas) {
+        if (!canvas) return;
+        // e.preventDefault() on contextlost informs the browser engine that
+        // the application is ready to restore its context when GPU resources recover.
+        canvas.addEventListener('contextlost', (e) => {
+            e.preventDefault();
+            console.warn('[OpenPublisher Ruler] Canvas context lost. Preventing permanent discard.');
+        }, false);
+
+        canvas.addEventListener('contextrestored', () => {
+            console.log('[OpenPublisher Ruler] Canvas context restored. Repainting rulers...');
+            if (window.syncRulers) requestAnimationFrame(window.syncRulers);
+        }, false);
+    }
+
+    wireCanvasLossRecovery(hCanvas);
+    wireCanvasLossRecovery(vCanvas);
+
+    if (!window._rulerLifecycleListenersAttached) {
+        window._rulerLifecycleListenersAttached = true;
+
+        // When returning to tab from background, low-resource hibernation, or window focus
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && window.syncRulers) {
+                requestAnimationFrame(() => {
+                    if (window.syncRulers) window.syncRulers();
+                });
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            if (window.syncRulers) {
+                requestAnimationFrame(() => {
+                    if (window.syncRulers) window.syncRulers();
+                });
+            }
+        });
+
+        window.addEventListener('pageshow', () => {
+            if (window.syncRulers) {
+                requestAnimationFrame(() => {
+                    if (window.syncRulers) window.syncRulers();
+                });
+            }
+        });
+    }
 
     const vp = document.getElementById('viewport');
     if(vp) vp.addEventListener('scroll', window.syncRulers);
@@ -48,6 +98,15 @@ window.initRulers = function() {
         createNewGuide('v', e);
     });
 
+    // Ruler corner click recovery
+    const rc = document.querySelector('.ruler-c');
+    if (rc && !rc._recoveryWired) {
+        rc._recoveryWired = true;
+        rc.addEventListener('click', () => {
+            if (window.syncRulers) window.syncRulers();
+        });
+    }
+
     window.initIndentMarkersLogic();
     if (window.initRulerOriginLogic) window.initRulerOriginLogic();
     if (typeof window.initCanvasScrollEnhancements === 'function') window.initCanvasScrollEnhancements();
@@ -62,6 +121,33 @@ window.setRulerUnit = function(unit) {
         state._userExplicitRulerUnit = true;
         if (typeof window.syncRulers === 'function') window.syncRulers();
         if (typeof pushHistory === 'function') pushHistory();
+    }
+};
+
+window.isRulerCanvasHealthy = function() {
+    if (document.hidden) return true;
+    const hCanvas = document.getElementById('ruler-h-canvas');
+    const vCanvas = document.getElementById('ruler-v-canvas');
+    if (!hCanvas || !vCanvas) return false;
+
+    if (hCanvas.width <= 0 || hCanvas.height <= 0 || vCanvas.width <= 0 || vCanvas.height <= 0) {
+        return false;
+    }
+
+    const hCtx = hCanvas.getContext('2d');
+    const vCtx = vCanvas.getContext('2d');
+    if (!hCtx || !vCtx) return false;
+
+    if (typeof hCtx.isContextLost === 'function' && hCtx.isContextLost()) return false;
+    if (typeof vCtx.isContextLost === 'function' && vCtx.isContextLost()) return false;
+
+    return true;
+};
+
+window.ensureRulersRendered = function() {
+    if (document.hidden) return;
+    if (!window.isRulerCanvasHealthy()) {
+        if (window.syncRulers) window.syncRulers();
     }
 };
 
@@ -81,14 +167,40 @@ window.syncRulers = function() {
         if (rc && rc.style.display === 'none') rc.style.display = '';
     }
 
-    const hCanvas = document.getElementById('ruler-h-canvas');
-    const vCanvas = document.getElementById('ruler-v-canvas');
+    let hCanvas = document.getElementById('ruler-h-canvas');
+    let vCanvas = document.getElementById('ruler-v-canvas');
     const paperEl = document.getElementById('paper');
-    if(!hCanvas || !vCanvas || !paperEl) return;
+    if (!paperEl) return;
 
-    const hRect = hCanvas.parentElement.getBoundingClientRect();
-    const vRect = vCanvas.parentElement.getBoundingClientRect();
+    // Self-healing: if canvases were destroyed or detached, reinitialize
+    if (!hCanvas || !vCanvas) {
+        if (typeof window.initRulers === 'function') {
+            window.initRulers();
+            hCanvas = document.getElementById('ruler-h-canvas');
+            vCanvas = document.getElementById('ruler-v-canvas');
+        }
+        if (!hCanvas || !vCanvas) return;
+    }
+
+    const hParent = hCanvas.parentElement;
+    const vParent = vCanvas.parentElement;
+    if (!hParent || !vParent) return;
+
+    const hRect = hParent.getBoundingClientRect();
+    const vRect = vParent.getBoundingClientRect();
     const pRect = paperEl.getBoundingClientRect();
+
+    // Prevent collapsing canvas to 0x0 if called during background tab or zero dimensions
+    if (hRect.width <= 0 || vRect.height <= 0 || hRect.height <= 0 || vRect.width <= 0) {
+        if (!document.hidden && !window._rulerPendingRetry) {
+            window._rulerPendingRetry = true;
+            requestAnimationFrame(() => {
+                window._rulerPendingRetry = false;
+                if (window.syncRulers) window.syncRulers();
+            });
+        }
+        return;
+    }
 
     const zoom = state.zoom || 1.0;
     const pageDpi = (state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi)) 
@@ -102,15 +214,27 @@ window.syncRulers = function() {
     const dpr = window.devicePixelRatio || 1; 
 
     // Match physical canvas pixels to screen pixels
-    hCanvas.width = hRect.width * dpr;
-    hCanvas.height = hRect.height * dpr;
-    vCanvas.width = vRect.width * dpr;
-    vCanvas.height = vRect.height * dpr;
+    const targetHW = Math.max(1, Math.round(hRect.width * dpr));
+    const targetHH = Math.max(1, Math.round(hRect.height * dpr));
+    const targetVW = Math.max(1, Math.round(vRect.width * dpr));
+    const targetVH = Math.max(1, Math.round(vRect.height * dpr));
+
+    if (hCanvas.width !== targetHW || hCanvas.height !== targetHH) {
+        hCanvas.width = targetHW;
+        hCanvas.height = targetHH;
+    }
+    if (vCanvas.width !== targetVW || vCanvas.height !== targetVH) {
+        vCanvas.width = targetVW;
+        vCanvas.height = targetVH;
+    }
 
     const hCtx = hCanvas.getContext('2d');
     const vCtx = vCanvas.getContext('2d');
-    hCtx.scale(dpr, dpr);
-    vCtx.scale(dpr, dpr);
+    if (!hCtx || !vCtx) return;
+
+    // Idempotent transform
+    hCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    vCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const isDark = document.body.classList.contains('dark-mode');
     const bgStyle = isDark ? '#333333' : '#eeeeee';

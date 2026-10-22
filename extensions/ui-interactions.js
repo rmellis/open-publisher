@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.11.9)
+// Open Publisher UI Interactions (v5.11.10)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.9)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.10)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -58,6 +58,7 @@
     let vRectCache = null;
     let vpRectCache = null;
     let rulersActive = false;
+    let lastRulerHealthCheck = 0;
 
     // --- Last written values (skip redundant style writes) ---
     let lastSel = { hl: NaN, hw: NaN, vt: NaN, vh: NaN, marquee: null, shownH: null, shownV: null };
@@ -130,6 +131,17 @@
             applyCursor();
             requestAnimationFrame(trackSelection);
             return;
+        }
+
+        // Automatic Ruler Canvas Self-Healing (handles background hibernation & low-resource GPU recovery)
+        if (!document.hidden) {
+            const now = performance.now();
+            if (now - lastRulerHealthCheck > 1000) {
+                lastRulerHealthCheck = now;
+                if (typeof window.isRulerCanvasHealthy === 'function' && !window.isRulerCanvasHealthy()) {
+                    if (typeof window.syncRulers === 'function') window.syncRulers();
+                }
+            }
         }
 
         // Refresh geometry once per frame so mouse events never touch layout
