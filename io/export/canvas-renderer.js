@@ -148,6 +148,21 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         }
     });
 
+    // High-resolution Legacy WordArt print baking for canvas export (v5.11.11)
+    const legacyWordArtTargets = Array.from(clone.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+    const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtTargets)).filter(el => {
+        return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
+    });
+    for (const waEl of uniqueLegacyWordArts) {
+        if (typeof window.bakeLegacyWordArtForPrint === 'function') {
+            try {
+                await window.bakeLegacyWordArtForPrint(waEl, Math.max(3.0, (scaleMultiplier || 2) * 1.5));
+            } catch (e) {
+                console.warn('[Canvas Renderer] Failed to bake Legacy WordArt:', e);
+            }
+        }
+    }
+
     // Bake Theme Background (saturation, brightness, texture) for html2canvas export
     const themeContainer = clone.querySelector('.op-theme-container');
     if (themeContainer && typeof window.bakeThemeBackgroundForPrint === 'function') {
@@ -212,6 +227,8 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
     stagingArea.remove();
     return canvas;
 };
+
+window.renderPaperToCanvas = window.capturePageAsCanvasWithFilters;
 
 
 window.shareCurrentPageEmail = async function() {

@@ -226,6 +226,15 @@ window.exportAsHTML = async function(opts = {}) {
                         window.bakeSmartArrowForPrint(arrowEl, 3.0);
                     }
                 });
+                const waTargets = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+                const uniqueWa = Array.from(new Set(waTargets)).filter(el => el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img'));
+                for (const waEl of uniqueWa) {
+                    if (typeof window.bakeLegacyWordArtForPrint === 'function') {
+                        try {
+                            await window.bakeLegacyWordArtForPrint(waEl, 3.0);
+                        } catch (e) {}
+                    }
+                }
                 const emailBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
                     ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!(page.themeSettings?.saved))
                     : null;

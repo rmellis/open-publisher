@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.11.9)
+// OpenPublisher Print Engine (v5.11.11)
 (function installNativePrintHooks() {
 
     function buildPrintDOM() {
@@ -332,6 +332,17 @@
                 smartArrows.forEach(arrowEl => {
                     if (typeof window.bakeSmartArrowForPrint === 'function') {
                         window.bakeSmartArrowForPrint(arrowEl, 4.0);
+                    }
+                });
+
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.11) ✨
+                const legacyWordArtNodes = Array.from(scaler.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+                const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
+                    return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
+                });
+                uniqueLegacyWordArts.forEach(waEl => {
+                    if (typeof window.bakeLegacyWordArtForPrint === 'function') {
+                        window.bakeLegacyWordArtForPrint(waEl, 4.0);
                     }
                 });
 
@@ -2557,103 +2568,23 @@
                     }
                 }
 
-                if (statusEl) statusEl.innerText = `Converting WordArt to a printable format on page ${i + 1}...`;
-                
-                const wordArts = Array.from(pageWrapper.querySelectorAll('.wa-text')).filter(node => {
-                    if (node.getAttribute('data-wa-print-baked') === 'true') return false;
-                    let comp;
-                    try { comp = window.getComputedStyle(node); } catch (e) { return false; }
-                    if (!comp) return false;
-                    const wClip = comp.webkitBackgroundClip || comp.backgroundClip || '';
-                    const fill = comp.webkitTextFillColor || '';
-                    const hasClip = wClip === 'text' || fill === 'transparent';
-                    if (!hasClip) return false;
-                    const bgImage = comp.backgroundImage !== 'none' ? comp.backgroundImage : comp.background;
-                    return bgImage && bgImage !== 'none';
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.11) ✨
+                const legacyWordArtNodes = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+                const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
+                    return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
                 });
-
-                for (let node of wordArts) {
-                    try {
-                        flattenWaTextForPrint(node);
-
-                        const comp = window.getComputedStyle(node);
-                        const bgImage = comp.backgroundImage !== 'none' ? comp.backgroundImage : comp.background;
-                        if (!bgImage || bgImage === 'none') continue;
-
-                        const w = node.offsetWidth || 300;
-                        const h = node.offsetHeight || 100;
-
-                        const gradDiv = document.createElement('div');
-                        gradDiv.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:${w}px; height:${h}px; background:${bgImage};`;
-                        document.body.appendChild(gradDiv);
-                        const gradCanvas = await html2canvas(gradDiv, { scale: 2, logging: false });
-                        gradDiv.remove();
-
-                        const maskNode = node.cloneNode(true);
-                        flattenWaTextForPrint(maskNode);
-                        
-                        Array.from(maskNode.classList).forEach(cls => {
-                            if (cls.startsWith('wa-style-')) {
-                                maskNode.classList.remove(cls);
+                if (uniqueLegacyWordArts.length > 0 && typeof window.bakeLegacyWordArtForPrint === 'function') {
+                    if (statusEl) statusEl.innerText = `Baking high-resolution Legacy WordArt on page ${i + 1}...`;
+                    for (const waEl of uniqueLegacyWordArts) {
+                        try {
+                            const bakedImg = await window.bakeLegacyWordArtForPrint(waEl, 4.0);
+                            if (bakedImg && typeof loadImageStrict === 'function') {
+                                await loadImageStrict(bakedImg, bakedImg.src);
                             }
-                        });
-
-                        maskNode.style.setProperty('text-shadow', 'none', 'important');
-                        maskNode.style.setProperty('-webkit-text-stroke', '0px', 'important');
-                        maskNode.style.setProperty('color', '#000000', 'important');
-                        maskNode.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
-                        maskNode.style.setProperty('background', 'transparent', 'important');
-                        maskNode.style.setProperty('background-color', 'transparent', 'important');
-                        maskNode.style.setProperty('background-image', 'none', 'important');
-                        maskNode.style.setProperty('-webkit-background-clip', 'initial', 'important');
-                        maskNode.style.setProperty('white-space', 'nowrap', 'important');
-                        maskNode.style.setProperty('display', 'block', 'important');
-                        maskNode.style.setProperty('transform', 'none', 'important');
-                        maskNode.style.setProperty('margin', '0', 'important');
-
-                        const captureBox = document.createElement('div');
-                        captureBox.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${w}px;height:${h}px;display:flex;align-items:center;justify-content:center;overflow:visible; background:transparent;`;
-                        captureBox.appendChild(maskNode);
-                        document.body.appendChild(captureBox);
-
-                        const maskCanvas = await html2canvas(captureBox, { scale: 2, logging: false, backgroundColor: null });
-                        captureBox.remove();
-
-                        const finalCanvas = document.createElement('canvas');
-                        finalCanvas.width = maskCanvas.width;
-                        finalCanvas.height = maskCanvas.height;
-                        const ctx = finalCanvas.getContext('2d');
-
-                        ctx.drawImage(maskCanvas, 0, 0);
-                        ctx.globalCompositeOperation = 'source-in';
-                        ctx.drawImage(gradCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
-
-                        Array.from(node.classList).forEach(cls => {
-                            if (cls.startsWith('wa-style-')) node.classList.remove(cls);
-                        });
-
-                        node.innerHTML = '';
-                        node.setAttribute('data-wa-print-baked', 'true');
-                        node.style.position = 'relative';
-                        node.style.width = w + 'px';
-                        node.style.height = h + 'px';
-                        node.style.margin = '0';
-                        node.style.setProperty('background', 'none', 'important');
-                        node.style.setProperty('background-image', 'none', 'important');
-                        node.style.setProperty('-webkit-background-clip', 'border-box', 'important');
-                        node.style.setProperty('background-clip', 'border-box', 'important');
-                        node.style.setProperty('filter', 'none', 'important');
-
-                        const img = document.createElement('img');
-                        img.src = finalCanvas.toDataURL('image/png');
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.objectFit = 'contain';
-                        img.style.pointerEvents = 'none';
-                        img.style.display = 'block';
-                        node.appendChild(img);
-
-                    } catch (e) {}
+                        } catch (err) {
+                            console.warn('[Print Engine] Failed to bake Legacy WordArt for export:', err);
+                        }
+                    }
                 }
 
                 if (statusEl) statusEl.innerText = `Applying color filters on page ${i + 1}...`;

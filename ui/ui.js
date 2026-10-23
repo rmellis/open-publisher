@@ -1074,6 +1074,16 @@ window.ContextMenuActions = {
             }
         });
 
+        const waTargets = Array.from(clone.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+        const uniqueWa = Array.from(new Set(waTargets)).filter(el => el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img'));
+        for (const waEl of uniqueWa) {
+            if (typeof window.bakeLegacyWordArtForPrint === 'function') {
+                try {
+                    await window.bakeLegacyWordArtForPrint(waEl, 4.0);
+                } catch (e) {}
+            }
+        }
+
         if (typeof window.bakeSVGFiltersForHtml2Canvas === 'function') {
             await window.bakeSVGFiltersForHtml2Canvas(clone, content);
         }

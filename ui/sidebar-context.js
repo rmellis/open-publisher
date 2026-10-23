@@ -385,7 +385,11 @@ function syncWordArt(el) {
     
     // NEW: Force the containers to allow visual bleed (shadows, strokes) outside the box
     el.style.overflow = 'visible';
-    if (content) content.style.overflow = 'visible';
+    el.style.contain = 'none';
+    if (content) {
+        content.style.overflow = 'visible';
+        content.style.contain = 'none';
+    }
     text.style.overflow = 'visible';
     
     // Ensure wrapper centers the scaled text perfectly within the padded area
@@ -396,6 +400,7 @@ function syncWordArt(el) {
         wrapper.style.width = '100%';
         wrapper.style.height = '100%';
         wrapper.style.overflow = 'visible'; // NEW: No clipping here either
+        wrapper.style.contain = 'none';
     }
     
     // Keep the 4px padding on all sides (8px total) as a baseline buffer
