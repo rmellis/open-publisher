@@ -1,4 +1,4 @@
-// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.14) ---
+// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.15) ---
 const brokenWordArts = [];
 
 // Cache of WordArt CSS rules parsed from stylesheets
@@ -247,7 +247,7 @@ function getWaRulesMap() {
 }
 
 
-// --- CSS Text-Shadow & Drop-Shadow Parsers (v5.11.14) ---
+// --- CSS Text-Shadow & Drop-Shadow Parsers (v5.11.15) ---
 function parseTextShadows(shadowStr) {
     if (!shadowStr || shadowStr === 'none') return [];
     const rawParts = shadowStr.split(/,(?![^(]*\))/g).map(s => s.trim()).filter(Boolean);
@@ -294,7 +294,7 @@ function parseDropShadowFilters(filterStr) {
 }
 
 /**
- * High-resolution Legacy WordArt serialization engine for print and export (v5.11.14).
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.15).
  * Implements a Dual-Engine Precision Architecture:
  * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
  *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.
@@ -1121,7 +1121,7 @@ function attachBakedWordArtImage(pubEl, waWrapper, waText, styleId, rawText, png
 }
 
 /**
- * Synchronous Legacy WordArt print baking for Canvas 2D Precision styles (v5.11.14).
+ * Synchronous Legacy WordArt print baking for Canvas 2D Precision styles (v5.11.15).
  * Fast-path for immediate synchronous rasterization without waiting on microtasks.
  */
 window.bakeLegacyWordArtForPrintSync = function(targetEl, scaleMultiplier = 4.0) {
@@ -1136,7 +1136,7 @@ window.bakeLegacyWordArtForPrintSync = function(targetEl, scaleMultiplier = 4.0)
 };
 
 /**
- * High-resolution Legacy WordArt serialization engine for print and export (v5.11.14).
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.15).
  * Implements a Dual-Engine Precision Architecture:
  * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
  *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.

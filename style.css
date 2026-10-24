@@ -2104,7 +2104,7 @@ td, th {
     display: none; 
     align-items: center; 
     justify-content: center; 
-    z-index: 9999;
+    z-index: 1000000;
     /* backdrop-filter removed so live preview behind the modal is crystal clear */
 }
 

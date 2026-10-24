@@ -405,6 +405,9 @@ window.printCardSheet = function() {
 };
 
 function uploadAndConvertDoc(file) {
+    if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+        try { DashboardSystem.close(); } catch (e) {}
+    }
     
     // --- 1. THE PRE-FLIGHT MENU ---
     // Pauses the process to ask the user how they want to import
@@ -2238,6 +2241,9 @@ window.OpenPubImporter = (function() {
 })();
 
 function uploadAndConvertPub(file) {
+    if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+        try { DashboardSystem.close(); } catch (e) {}
+    }
     
     // --- 1. THE PRE-FLIGHT MENU ---
     const promptHtml = `
@@ -2488,6 +2494,10 @@ if (fileOpenEl) {
     fileOpenEl.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+            try { DashboardSystem.close(); } catch (err) {}
+        }
 
         const fileName = file.name.toLowerCase();
 

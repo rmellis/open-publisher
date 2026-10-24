@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.11.14)
+// Open Publisher UI Interactions (v5.11.15)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.14)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.11.15)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -836,6 +836,10 @@
             }
         }
 
+        if (otherFiles.length > 0 && typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+            try { DashboardSystem.close(); } catch (err) {}
+        }
+
         otherFiles.forEach(file => {
             const fileName = file.name.toLowerCase();
             
@@ -1051,7 +1055,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.11.14</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.11.15</div>
                 </div>
                 
                 <div class="about-desc">
