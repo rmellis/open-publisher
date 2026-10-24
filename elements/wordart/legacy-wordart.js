@@ -1,4 +1,4 @@
-// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.11) ---
+// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.12) ---
 const brokenWordArts = [];
 
 // Cache of WordArt CSS rules parsed from stylesheets
@@ -246,19 +246,69 @@ function getWaRulesMap() {
     return _waRulesCache;
 }
 
+
+// --- CSS Text-Shadow & Drop-Shadow Parsers (v5.11.12) ---
+function parseTextShadows(shadowStr) {
+    if (!shadowStr || shadowStr === 'none') return [];
+    const rawParts = shadowStr.split(/,(?![^(]*\))/g).map(s => s.trim()).filter(Boolean);
+    const shadows = [];
+    rawParts.forEach(part => {
+        let color = '';
+        let rest = part;
+        const rgbaMatch = part.match(/rgba?\([^)]+\)|hsla?\([^)]+\)/i);
+        if (rgbaMatch) {
+            color = rgbaMatch[0];
+            rest = part.replace(color, '').trim();
+        } else {
+            const hexMatch = part.match(/#[0-9a-fA-F]{3,8}/);
+            if (hexMatch) {
+                color = hexMatch[0];
+                rest = part.replace(color, '').trim();
+            } else {
+                const tokens = part.split(/\s+/);
+                const nonNumTokens = tokens.filter(t => isNaN(parseFloat(t)));
+                if (nonNumTokens.length > 0) {
+                    color = nonNumTokens[0];
+                    rest = tokens.filter(t => !isNaN(parseFloat(t))).join(' ');
+                }
+            }
+        }
+        const nums = rest.trim().split(/\s+/).map(n => parseFloat(n) || 0);
+        const offsetX = nums[0] !== undefined ? nums[0] : 0;
+        const offsetY = nums[1] !== undefined ? nums[1] : 0;
+        const blur = nums[2] !== undefined ? nums[2] : 0;
+        shadows.push({ offsetX, offsetY, blur, color: color || '#000000' });
+    });
+    return shadows;
+}
+
+function parseDropShadowFilters(filterStr) {
+    if (!filterStr || !filterStr.includes('drop-shadow')) return [];
+    const shadows = [];
+    const matches = filterStr.matchAll(/drop-shadow\(\s*([^)]+)\s*\)/g);
+    for (const m of matches) {
+        const parsed = parseTextShadows(m[1].trim());
+        if (parsed.length > 0) shadows.push(...parsed);
+    }
+    return shadows;
+}
+
 /**
- * High-resolution Legacy WordArt serialization engine for print and export (v5.11.11).
- * Rasterizes complex CSS properties (-webkit-background-clip: text, multi-shadow, 3D transforms,
- * text-stroke, gradients) into high-DPI non-tainting PNG images.
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.12).
+ * Implements a Dual-Engine Precision Architecture:
+ * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
+ *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.
+ * - Path 2 (Canvas 2D Precision Engine): Renders authentic typography styles with Google Fonts,
+ *   multi-tier ambient neon glows, 3D text extrusion shadows, and outline strokes with zero font fallback.
  */
-window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.0) {
+function resolveWordArtTargets(targetEl) {
     if (!targetEl) return null;
     if (targetEl.tagName && targetEl.tagName.toLowerCase() === 'img' && targetEl.classList.contains('wa-baked-img')) {
-        return targetEl;
+        return { isAlreadyBaked: true, bakedImg: targetEl };
     }
     if (targetEl.querySelector) {
         const existingImg = targetEl.querySelector('img.wa-baked-img');
-        if (existingImg) return existingImg;
+        if (existingImg) return { isAlreadyBaked: true, bakedImg: existingImg };
     }
 
     let waText = null;
@@ -297,15 +347,6 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
         specificRule = `.wa-style-${styleId} { ${specificRule} }`;
     }
 
-    // Determine whether this style requires rasterization.
-    // Styles with -webkit-background-clip: text or CSS gradients (linear, conic, radial) CANNOT be clipped to text by html2canvas,
-    // so they must be baked into high-DPI raster images.
-    // Pure CSS text styles (like Lobster Glow 8, Pacifico 9, Bangers, etc. using real Google/system fonts, text-shadow, glows, strokes)
-    // are natively rendered with full typographic fidelity by html2canvas and browser print when kept as live DOM.
-    const needsBake = specificRule.includes('background-clip') || 
-                      specificRule.includes('gradient') || 
-                      (waText.style && (waText.style.backgroundClip || waText.style.webkitBackgroundClip));
-
     // Ensure all containers allow natural overflow and shadow bleed
     if (pubEl) {
         pubEl.style.setProperty('overflow', 'visible', 'important');
@@ -322,12 +363,6 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     }
     waText.style.setProperty('overflow', 'visible', 'important');
 
-    if (!needsBake) {
-        // Retain live DOM with loaded document web fonts and smooth multi-layer glow bleed
-        if (pubEl) pubEl.setAttribute('data-wa-print-baked', 'true');
-        return null;
-    }
-
     const rawText = (waText.innerText || waText.textContent || '').replace(/\u205F/g, ' ').trim();
     if (!rawText) return null;
 
@@ -338,6 +373,529 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
+    const LEGACY_GOOGLE_FONTS = [
+        'lobster', 'pacifico', 'oswald', 'cinzel', 'orbitron', 
+        'press start', 'bangers', 'indie flower', 'comic neue', 
+        'playfair', 'montserrat', 'righteous', 'abril', 
+        'shadows into light', 'acme', 'anton'
+    ];
+    let compFontFamily = '';
+    try {
+        const c = window.getComputedStyle(waText);
+        if (c && c.fontFamily) compFontFamily = c.fontFamily;
+    } catch (e) {}
+
+    const combinedRule = `${compFontFamily} ${specificRule}`.toLowerCase();
+    const hasWebFont = LEGACY_GOOGLE_FONTS.some(f => combinedRule.includes(f));
+    const hasComplexCss = specificRule.includes('background-clip') || 
+                          specificRule.includes('gradient') || 
+                          specificRule.includes('background:') ||
+                          specificRule.includes('border:') ||
+                          specificRule.includes('border-') ||
+                          specificRule.includes('perspective') ||
+                          specificRule.includes('rotateX') ||
+                          specificRule.includes('rotateY') ||
+                          (waText.style && (waText.style.backgroundClip || waText.style.webkitBackgroundClip));
+
+    // SVG foreignObject is the primary high-fidelity engine for all system-font styles (Impact, Arial, etc.),
+    // all gradient styles, all 3D extrusions, and all box/border styles.
+    // Canvas 2D is reserved for pure-typography Google Fonts styles that don't use gradients.
+    const isGradientOrBoxStyle = !hasWebFont || hasComplexCss;
+
+    return {
+        isAlreadyBaked: false,
+        pubEl,
+        waWrapper,
+        waText,
+        styleId,
+        specificRule,
+        rawText,
+        safeText,
+        isGradientOrBoxStyle
+    };
+}
+
+function parseTransformScale(transformStr) {
+    let sx = 1, sy = 1, hasScale = false;
+    if (!transformStr || transformStr === 'none') return { sx: 1, sy: 1, hasScale: false };
+
+    // Match scale(x, y) or scale(x)
+    const sm = transformStr.match(/scale\(\s*([+-]?[0-9.]+)(?:[\s,]+([+-]?[0-9.]+))?\s*\)/i);
+    if (sm) {
+        sx = parseFloat(sm[1]) || 1;
+        sy = parseFloat(sm[2] !== undefined ? sm[2] : sm[1]) || 1;
+        hasScale = true;
+        return { sx, sy, hasScale };
+    }
+
+    // Match scaleX and scaleY
+    let found = false;
+    const sxm = transformStr.match(/scaleX\(\s*([+-]?[0-9.]+)\s*\)/i);
+    if (sxm) { sx = parseFloat(sxm[1]) || 1; found = true; }
+    const sym = transformStr.match(/scaleY\(\s*([+-]?[0-9.]+)\s*\)/i);
+    if (sym) { sy = parseFloat(sym[1]) || 1; found = true; }
+    if (found) return { sx, sy, hasScale: true };
+
+    // Match matrix(a, b, c, d, e, f)
+    const mm = transformStr.match(/matrix\(\s*([+-]?[0-9.]+)\s*,\s*([+-]?[0-9.]+)\s*,\s*([+-]?[0-9.]+)\s*,\s*([+-]?[0-9.]+)\s*,\s*([+-]?[0-9.]+)\s*,\s*([+-]?[0-9.]+)\s*\)/i);
+    if (mm) {
+        const a = parseFloat(mm[1]) || 1;
+        const b = parseFloat(mm[2]) || 0;
+        const c = parseFloat(mm[3]) || 0;
+        const d = parseFloat(mm[4]) || 1;
+        sx = Math.sqrt(a * a + b * b) || 1;
+        sy = Math.sqrt(c * c + d * d) || 1;
+        hasScale = true;
+        return { sx, sy, hasScale };
+    }
+
+    return { sx: 1, sy: 1, hasScale: false };
+}
+
+function renderCanvas2DWordArt(waText, pubEl, waWrapper, styleId, specificRule, rawText, scaleMultiplier) {
+    let dispW = parseFloat(pubEl && pubEl.style ? pubEl.style.width : 0);
+    if (!dispW || isNaN(dispW) || dispW <= 0) {
+        dispW = (pubEl ? pubEl.offsetWidth : 0) || (waWrapper ? waWrapper.offsetWidth : 0) || (waText ? waText.offsetWidth : 0) || 300;
+    }
+    let dispH = parseFloat(pubEl && pubEl.style ? pubEl.style.height : 0);
+    if (!dispH || isNaN(dispH) || dispH <= 0) {
+        dispH = (pubEl ? pubEl.offsetHeight : 0) || (waWrapper ? waWrapper.offsetHeight : 0) || (waText ? waText.offsetHeight : 0) || 100;
+    }
+    dispW = Math.max(30, Math.ceil(dispW));
+    dispH = Math.max(20, Math.ceil(dispH));
+
+    let fontFamily = 'Impact, sans-serif';
+    let fontSize = '40px';
+    let fontWeight = '900';
+    let fontStyle = 'normal';
+    let letterSpacing = 'normal';
+    let textTransform = 'none';
+    let transform = '';
+    let comp = null;
+
+    try {
+        comp = window.getComputedStyle(waText);
+        if (comp) {
+            if (comp.fontFamily && !comp.fontFamily.includes('Times New Roman')) fontFamily = comp.fontFamily;
+            if (comp.fontSize) fontSize = comp.fontSize;
+            if (comp.fontWeight) fontWeight = comp.fontWeight;
+            if (comp.fontStyle) fontStyle = comp.fontStyle;
+            if (comp.letterSpacing) letterSpacing = comp.letterSpacing;
+            if (comp.textTransform) textTransform = comp.textTransform;
+            if (comp.transform && comp.transform !== 'none') {
+                transform = comp.transform;
+            }
+        }
+    } catch (e) {}
+
+    // Parse definitive typography declarations from specificRule
+    if (specificRule) {
+        const ffm = specificRule.match(/font-family:\s*([^;]+)/i);
+        if (ffm && (!waText.style || !waText.style.fontFamily)) {
+            const rf = ffm[1].trim();
+            if (rf) fontFamily = rf;
+        }
+        const fwm = specificRule.match(/font-weight:\s*([^;]+)/i);
+        if (fwm && (!waText.style || !waText.style.fontWeight)) {
+            fontWeight = fwm[1].trim();
+        } else if (!fwm && (!comp || !comp.fontWeight || comp.fontWeight === '400') && fontFamily.toLowerCase().includes('lobster')) {
+            fontWeight = 'normal';
+        }
+        const fsm = specificRule.match(/font-style:\s*([^;]+)/i);
+        if (fsm && (!waText.style || !waText.style.fontStyle)) {
+            fontStyle = fsm[1].trim();
+        }
+        const lsm = specificRule.match(/letter-spacing:\s*([^;]+)/i);
+        if (lsm && (!waText.style || !waText.style.letterSpacing)) {
+            letterSpacing = lsm[1].trim();
+        }
+        const ttm = specificRule.match(/text-transform:\s*([^;]+)/i);
+        if (ttm && (!waText.style || !waText.style.textTransform)) {
+            textTransform = ttm[1].trim();
+        }
+        const fzm = specificRule.match(/font-size:\s*([^;]+)/i);
+        if (fzm && (!waText.style || !waText.style.fontSize)) {
+            fontSize = fzm[1].trim();
+        }
+    }
+
+    if (waText.style && waText.style.transform && waText.style.transform !== 'none') {
+        transform = waText.style.transform;
+    }
+
+    let renderText = rawText;
+    if (textTransform === 'uppercase') renderText = renderText.toUpperCase();
+    else if (textTransform === 'lowercase') renderText = renderText.toLowerCase();
+
+    // Parse transform scale
+    const scaleInfo = parseTransformScale(transform);
+    let scaleX = scaleInfo.sx;
+    let scaleY = scaleInfo.sy;
+
+    // Natural text dimensions
+    let naturalW = waText.scrollWidth || waText.offsetWidth || 0;
+    let naturalH = waText.scrollHeight || waText.offsetHeight || 0;
+    if (!naturalW || !naturalH) {
+        const testCanvas = document.createElement('canvas');
+        const testCtx = testCanvas.getContext('2d');
+        testCtx.font = `${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`;
+        naturalW = Math.ceil(testCtx.measureText(renderText).width) || 180;
+        naturalH = Math.ceil(parseFloat(fontSize)) || 40;
+    }
+
+    // Auto-fit if scale was not explicitly provided but element was resized larger
+    if (!scaleInfo.hasScale && naturalW > 0 && naturalH > 0) {
+        const cw = dispW - 8;
+        const ch = dispH - 8;
+        if (cw > naturalW * 1.05 || ch > naturalH * 1.05) {
+            scaleX = cw / naturalW;
+            scaleY = ch / naturalH;
+        }
+    }
+
+    const avgScale = (Math.abs(scaleX) + Math.abs(scaleY)) / 2;
+    const visualW = naturalW * Math.abs(scaleX);
+    const visualH = naturalH * Math.abs(scaleY);
+
+    let strokeWidth = 0;
+    let strokeColor = '';
+    const sm = (comp && comp.webkitTextStroke ? comp.webkitTextStroke.match(/(\d+(?:\.\d+)?px)\s*(.+)/) : null) || 
+               specificRule.match(/-webkit-text-stroke:\s*(\d+(?:\.\d+)?px)\s*([^;]+)/);
+    if (sm) {
+        strokeWidth = parseFloat(sm[1]) || 0;
+        strokeColor = sm[2].trim();
+    }
+
+    let textColor = '';
+    if (waText.style && waText.style.color) {
+        textColor = waText.style.color;
+    } else if (comp && comp.color && comp.color !== 'rgb(0, 0, 0)' && comp.color !== '#000000') {
+        textColor = comp.color;
+    }
+    if (specificRule) {
+        const cm = specificRule.match(/(?:^|[^-\w])color:\s*([^;]+)/i);
+        if (cm) {
+            const ruleColor = cm[1].trim();
+            if (ruleColor === 'transparent') {
+                textColor = 'transparent';
+            } else if (!textColor || textColor === 'rgb(0, 0, 0)' || textColor === '#000000') {
+                textColor = ruleColor;
+            }
+        }
+    }
+    if (!textColor) {
+        textColor = (comp ? comp.color : '') || '#000000';
+    }
+    if (specificRule.includes('color: transparent') || specificRule.includes('color:transparent') || textColor === 'transparent' || textColor === 'rgba(0, 0, 0, 0)') {
+        textColor = 'transparent';
+    }
+
+    let textShadowStr = (comp ? comp.textShadow : '') || '';
+    if (!textShadowStr || textShadowStr === 'none') {
+        const tsm = specificRule.match(/text-shadow:\s*([^;]+)/);
+        if (tsm) textShadowStr = tsm[1].trim();
+    }
+    let filterStr = (comp ? comp.filter : '') || '';
+    if (!filterStr || filterStr === 'none') {
+        const fm = specificRule.match(/filter:\s*([^;]+)/);
+        if (fm) filterStr = fm[1].trim();
+    }
+
+    const shadows = [
+        ...parseTextShadows(textShadowStr),
+        ...parseDropShadowFilters(filterStr)
+    ];
+
+    let maxScaledBlur = 0, maxScaledOffX = 0, maxScaledOffY = 0;
+    shadows.forEach(sh => {
+        maxScaledBlur = Math.max(maxScaledBlur, (sh.blur || 0) * avgScale);
+        maxScaledOffX = Math.max(maxScaledOffX, Math.abs(sh.offsetX || 0) * Math.abs(scaleX));
+        maxScaledOffY = Math.max(maxScaledOffY, Math.abs(sh.offsetY || 0) * Math.abs(scaleY));
+    });
+
+    const extraLeft = Math.max(0, (visualW - dispW) / 2);
+    const extraTop = Math.max(0, (visualH - dispH) / 2);
+
+    // Provide generous padding so neon glow and drop shadow never clip
+    const padX = Math.ceil(extraLeft + Math.max(160, maxScaledBlur * 2.4 + maxScaledOffX + 50));
+    const padY = Math.ceil(extraTop + Math.max(120, maxScaledBlur * 2.4 + maxScaledOffY + 50));
+    const totalW = dispW + padX * 2;
+    const totalH = dispH + padY * 2;
+
+    const scale = Math.max(1.0, Math.min(6.0, parseFloat(scaleMultiplier) || 4.0));
+    const canvasW = Math.round(totalW * scale);
+    const canvasH = Math.round(totalH * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    const cx = totalW / 2;
+    const cy = totalH / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scaleX, scaleY);
+    ctx.translate(-cx, -cy);
+
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (letterSpacing && letterSpacing !== 'normal') {
+        try { ctx.letterSpacing = letterSpacing; } catch (e) {}
+    }
+
+    // Draw shadows in reverse order (bottom/ambient diffusion layer first, up to crisp drop shadow)
+    shadows.slice().reverse().forEach(s => {
+        ctx.save();
+        ctx.shadowColor = s.color;
+        // In Canvas 2D, shadowBlur is in raw canvas device units and does not scale with CTM.
+        // Multiplying by avgScale * scale accurately replicates the huge ambient CSS glow spread.
+        ctx.shadowBlur = (s.blur || 0) * avgScale * scale;
+        ctx.shadowOffsetX = (s.offsetX || 0) * scaleX * scale;
+        ctx.shadowOffsetY = (s.offsetY || 0) * scaleY * scale;
+        if (strokeWidth > 0 && (!textColor || textColor === 'transparent')) {
+            ctx.lineWidth = strokeWidth * 2;
+            ctx.strokeStyle = s.color;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(renderText, cx, cy);
+        } else {
+            ctx.fillStyle = s.color;
+            ctx.fillText(renderText, cx, cy);
+            if (strokeWidth > 0) {
+                ctx.lineWidth = strokeWidth * 2;
+                ctx.strokeStyle = s.color;
+                ctx.lineJoin = 'round';
+                ctx.strokeText(renderText, cx, cy);
+            }
+        }
+        ctx.restore();
+    });
+
+    // Draw main stroke if present
+    if (strokeWidth > 0 && strokeColor) {
+        ctx.save();
+        ctx.lineWidth = strokeWidth * 2;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.strokeText(renderText, cx, cy);
+        ctx.restore();
+    }
+
+    // Draw main text fill
+    if (textColor && textColor !== 'transparent') {
+        ctx.save();
+        ctx.fillStyle = textColor;
+        ctx.fillText(renderText, cx, cy);
+        ctx.restore();
+    }
+
+    ctx.restore(); // restore translate & scale transform
+
+    let pngUrl = '';
+    try {
+        pngUrl = canvas.toDataURL('image/png');
+    } catch (taintErr) {
+        console.error('[WordArt 2D Bake] Canvas tainted error:', taintErr);
+        return null;
+    }
+
+    return { pngUrl, padX, padY, totalW, totalH };
+}
+
+const WORDART_STATIC_FONT_URLS = {
+    "abril fatface": "https://fonts.gstatic.com/s/abrilfatface/v25/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2",
+    "acme": "https://fonts.gstatic.com/s/acme/v29/RrQfboBx-C5_XxrBbg.woff2",
+    "anton": "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3Kz-C8.woff2",
+    "architects daughter": "https://fonts.gstatic.com/s/architectsdaughter/v20/KtkxAKiDZI_td1Lkx62xHZHDtgO_Y-bvTYlg4w.woff2",
+    "archivo black": "https://fonts.gstatic.com/s/archivoblack/v23/HTxqL289NzCGg4MzN6KJ7eW6CYyF_g.woff2",
+    "arvo": "https://fonts.gstatic.com/s/arvo/v23/tDbD2oWUg0MKqScQ7Q.woff2",
+    "bangers": "https://fonts.gstatic.com/s/bangers/v25/FeVQS0BTqb0h60ACH55Q2A.woff2",
+    "barlow": "https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7E_DMs5.woff2",
+    "bebas neue": "https://fonts.gstatic.com/s/bebasneue/v16/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2",
+    "bitter": "https://fonts.gstatic.com/s/bitter/v42/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLjOXQ.woff2",
+    "bree serif": "https://fonts.gstatic.com/s/breeserif/v18/4UaHrEJCrhhnVA3DgluA96rp5w.woff2",
+    "cabin": "https://fonts.gstatic.com/s/cabin/v35/u-4X0qWljRw-PfU81xCKCpdpbgZJl6XFpfEd7eA9BIxxkV2EH7alxw.woff2",
+    "cairo": "https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hOA-a1PiLA.woff2",
+    "caveat": "https://fonts.gstatic.com/s/caveat/v23/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9eIWpYQ.woff2",
+    "cinzel": "https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-tbnfY3lDQ.woff2",
+    "comfortaa": "https://fonts.gstatic.com/s/comfortaa/v47/1Pt_g8LJRfWJmhDAuUsSQamb1W0lwk4S4WjMDrMfIA.woff2",
+    "comic neue": "https://fonts.gstatic.com/s/comicneue/v9/4UaHrEJDsxBrF37olUeD96rp5w.woff2",
+    "concert one": "https://fonts.gstatic.com/s/concertone/v24/VEM1Ro9xs5PjtzCu-srDqSTijP4.woff2",
+    "cookie": "https://fonts.gstatic.com/s/cookie/v23/syky-y18lb0tSbf9kgqS.woff2",
+    "courgette": "https://fonts.gstatic.com/s/courgette/v19/wEO_EBrAnc9BLjLQAUk1VvoK.woff2",
+    "creepster": "https://fonts.gstatic.com/s/creepster/v13/AlZy_zVUqJz4yMrniH4Rcn35.woff2",
+    "crimson text": "https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2",
+    "dancing script": "https://fonts.gstatic.com/s/dancingscript/v29/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSo3Sup8.woff2",
+    "dm sans": "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxRSW32.woff2",
+    "dosis": "https://fonts.gstatic.com/s/dosis/v34/HhyJU5sn9vOmLxNkIwRSjTVNWLEJN7Ml2xME.woff2",
+    "eb garamond": "https://fonts.gstatic.com/s/ebgaramond/v33/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RkBI9_.woff2",
+    "exo 2": "https://fonts.gstatic.com/s/exo2/v26/7cH1v4okm5zmbvwkAx_sfcEuiD8jvvKsOdC_.woff2",
+    "fira sans": "https://fonts.gstatic.com/s/firasans/v18/va9E4kDNxMZdWfMOD5Vvl4jL.woff2",
+    "fjalla one": "https://fonts.gstatic.com/s/fjallaone/v16/Yq6R-LCAWCX3-6Ky7FAFrOF6kg.woff2",
+    "fredoka one": "https://fonts.gstatic.com/s/fredokaone/v15/k3kUo8kEI-tA1RRcTZGmTlHGCac.woff2",
+    "gloria hallelujah": "https://fonts.gstatic.com/s/gloriahallelujah/v24/LYjYdHv3kUk9BMV96EIswT9DIbW-MIS11zM.woff2",
+    "great vibes": "https://fonts.gstatic.com/s/greatvibes/v21/RWmMoKWR9v4ksMfaWd_JN9XFiaQ.woff2",
+    "heebo": "https://fonts.gstatic.com/s/heebo/v28/NGSpv5_NC0k9P_v6ZUCbLRAHxK1EiSysdUmm.woff2",
+    "hind": "https://fonts.gstatic.com/s/hind/v18/5aU69_a8oxmIdGl4BA.woff2",
+    "ibm plex sans": "https://fonts.gstatic.com/s/ibmplexsans/v23/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDB6g4.woff2",
+    "inconsolata": "https://fonts.gstatic.com/s/inconsolata/v37/QldgNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmAwLYxYWI2qfdm7Lpp4U8WR32lw.woff2",
+    "indie flower": "https://fonts.gstatic.com/s/indieflower/v24/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2",
+    "josefin sans": "https://fonts.gstatic.com/s/josefinsans/v34/Qw3PZQNVED7rKGKxtqIqX5E-AVSJrOCfjY46_DjQbMZhLw.woff2",
+    "kanit": "https://fonts.gstatic.com/s/kanit/v17/nKKZ-Go6G5tXcraVGwA.woff2",
+    "karla": "https://fonts.gstatic.com/s/karla/v33/qkBIXvYC6trAT55ZBi1ueQVIjQTD-JqaE0lK.woff2",
+    "lato": "https://fonts.gstatic.com/s/lato/v25/S6uyw4BMUTPHjx4wXg.woff2",
+    "libre baskerville": "https://fonts.gstatic.com/s/librebaskerville/v24/kmKUZrc3Hgbbcjq75U4uslyuy4kn0olVQ-LglH6T17uj8Q4iDgNP.woff2",
+    "lobster": "https://fonts.gstatic.com/s/lobster/v32/neILzCirqoswsqX9zoKmMw.woff2",
+    "lora": "https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787weuxJBkq0.woff2",
+    "manrope": "https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk79FN_C-bk.woff2",
+    "maven pro": "https://fonts.gstatic.com/s/mavenpro/v40/7Auup_AqnyWWAxW2Wk3swUz56MS91Eww8SX21nejog.woff2",
+    "merriweather": "https://fonts.gstatic.com/s/merriweather/v33/u-4D0qyriQwlOrhSvowK_l5UcA6zuSYEqOzpPe3HOZJ5eX1WtLaQwmYiScCmDxhtNOKl8yDr3icaFF31.woff2",
+    "monoton": "https://fonts.gstatic.com/s/monoton/v22/5h1aiZUrOngCibe4TkHLQg.woff2",
+    "montserrat": "https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aXo.woff2",
+    "mukta": "https://fonts.gstatic.com/s/mukta/v17/iJWKBXyXfDDVXbnBrXw.woff2",
+    "nanum gothic": "https://fonts.gstatic.com/s/nanumgothic/v26/PN_3Rfi-oW3hYwmKDpxS7F_D-dje.woff2",
+    "noto sans": "https://fonts.gstatic.com/s/notosans/v42/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6VI.woff2",
+    "nunito": "https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDLshdTQ3jw.woff2",
+    "old standard tt": "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVeqlq4.woff2",
+    "open sans": "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVI.woff2",
+    "orbitron": "https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyGy6BoWgz.woff2",
+    "oswald": "https://fonts.gstatic.com/s/oswald/v57/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvsUZiZQ.woff2",
+    "oxygen": "https://fonts.gstatic.com/s/oxygen/v16/2sDfZG1Wl4LcnbuKjk0m.woff2",
+    "pacifico": "https://fonts.gstatic.com/s/pacifico/v23/FwZY7-Qmy14u9lezJ-6H6Mk.woff2",
+    "passion one": "https://fonts.gstatic.com/s/passionone/v20/PbynFmL8HhTPqbjUzux3JEuR9ls.woff2",
+    "patrick hand": "https://fonts.gstatic.com/s/patrickhand/v25/LDI1apSQOAYtSuYWp8ZhfYe8XsLL.woff2",
+    "permanent marker": "https://fonts.gstatic.com/s/permanentmarker/v16/Fh4uPib9Iyv2ucM6pGQMWimMp004La2Cfw.woff2",
+    "playfair display": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtM.woff2",
+    "poppins": "https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrJJfecg.woff2",
+    "press start 2p": "https://fonts.gstatic.com/s/pressstart2p/v16/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2",
+    "prompt": "https://fonts.gstatic.com/s/prompt/v12/-W__XJnvUD7dzB2KYNod.woff2",
+    "pt sans": "https://fonts.gstatic.com/s/ptsans/v18/jizaRExUiTo99u79D0KExQ.woff2",
+    "pt serif": "https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvAFWzr8.woff2",
+    "quicksand": "https://fonts.gstatic.com/s/quicksand/v37/6xK-dSZaM9iE8KbpRA_LJ3z8mH9BOJvgkP8o58a-wg.woff2",
+    "rajdhani": "https://fonts.gstatic.com/s/rajdhani/v17/LDIxapCSOBg7S-QT7p4HM-Y.woff2",
+    "raleway": "https://fonts.gstatic.com/s/raleway/v37/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaorCIPrE.woff2",
+    "righteous": "https://fonts.gstatic.com/s/righteous/v18/1cXxaUPXBpj2rGoU7C9WiHGF.woff2",
+    "roboto": "https://fonts.gstatic.com/s/roboto/v51/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmUiAo.woff2",
+    "roboto condensed": "https://fonts.gstatic.com/s/robotocondensed/v31/ieVo2ZhZI2eCN5jzbjEETS9weq8-_d6T_POl0fRJeyWyosBO5Xw.woff2",
+    "roboto mono": "https://fonts.gstatic.com/s/robotomono/v31/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4.woff2",
+    "roboto slab": "https://fonts.gstatic.com/s/robotoslab/v36/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjojISmb2Rj.woff2",
+    "rubik": "https://fonts.gstatic.com/s/rubik/v31/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4iFV0U1.woff2",
+    "sacramento": "https://fonts.gstatic.com/s/sacramento/v17/buEzpo6gcdjy0EiZMBUG4C0f_Q.woff2",
+    "satisfy": "https://fonts.gstatic.com/s/satisfy/v22/rP2Hp2yn6lkG50LoCZOIHQ.woff2",
+    "shadows into light": "https://fonts.gstatic.com/s/shadowsintolight/v22/UqyNK9UOIntux_czAvDQx_ZcHqZXBNQzdcD5.woff2",
+    "signika": "https://fonts.gstatic.com/s/signika/v29/vEF72_JTCgwQ5ejvMV0Ox_Kg1UwJ0tKfX4zNpD8E4ASzH1r9gTuoyjkm.woff2",
+    "slabo 27px": "https://fonts.gstatic.com/s/slabo27px/v16/mFT0WbgBwKPR_Z4hGN2qgx8D1Q.woff2",
+    "source code pro": "https://fonts.gstatic.com/s/sourcecodepro/v32/HI_diYsKILxRpg3hIP6sJ7fM7PqPMcMnZFqUwX28DMyQtMlrTA.woff2",
+    "source sans pro": "https://fonts.gstatic.com/s/sourcesanspro/v24/6xK3dSBYKcSV-LCoeQqfX1RYOo3qOK7l.woff2",
+    "space mono": "https://fonts.gstatic.com/s/spacemono/v17/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff2",
+    "teko": "https://fonts.gstatic.com/s/teko/v23/LYjYdG7kmE0gV69VVPPdFl06VN8XG4S11zM.woff2",
+    "titillium web": "https://fonts.gstatic.com/s/titilliumweb/v19/NaPecZTIAOhVxoMyOr9n_E7fdMPmDQ.woff2",
+    "ubuntu": "https://fonts.gstatic.com/s/ubuntu/v21/4iCs6KVjbNBYlgoKfw72.woff2",
+    "varela round": "https://fonts.gstatic.com/s/varelaround/v21/w8gdH283Tvk__Lua32TysjIfp8uP.woff2",
+    "vollkorn": "https://fonts.gstatic.com/s/vollkorn/v30/0ybgGDoxxrvAnPhYGzMlQLzuMasz6Df2MHGeHmmc.woff2",
+    "work sans": "https://fonts.gstatic.com/s/worksans/v24/QGY_z_wNahGAdqQ43RhVcIgYT2Xz5u32K0nXBi8Jpg.woff2",
+    "yanone kaffeesatz": "https://fonts.gstatic.com/s/yanonekaffeesatz/v34/3y9I6aknfjLm_3lMKjiMgmUUYBs04aUXNxt9gW2LIfto9tWZd2GK.woff2",
+    "zilla slab": "https://fonts.gstatic.com/s/zillaslab/v12/dFa6ZfeM_74wlPZtksIFajo6_Q.woff2",
+};
+
+window._wordArtFontCache = window._wordArtFontCache || {};
+
+/**
+ * Downloads and converts Google Fonts into self-contained base64 @font-face data URIs.
+ * This enables SVG <foreignObject> to render Google Fonts with 100% fidelity without being blocked
+ * by Chromium's SVG cross-origin security sandbox.
+ */
+async function getEmbeddedFontCss(fontFamily, fontWeight = '') {
+    if (!fontFamily) return '';
+    const cleanName = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
+    if (!cleanName) return '';
+    const sysFonts = [
+        'impact', 'arial', 'helvetica', 'times new roman', 'times', 'courier new', 
+        'courier', 'georgia', 'palatino', 'garamond', 'bookman', 'comic sans ms', 
+        'trebuchet ms', 'arial black', 'segoe ui', 'tahoma', 'verdana', 'sans-serif', 
+        'serif', 'monospace', 'cursive', 'fantasy'
+    ];
+    if (sysFonts.includes(cleanName.toLowerCase())) return '';
+
+    const lowerName = cleanName.toLowerCase();
+    const cacheKey = `${lowerName}_${fontWeight || 'default'}`;
+    if (window._wordArtFontCache[cacheKey] !== undefined) {
+        return window._wordArtFontCache[cacheKey];
+    }
+    if (window._wordArtFontCache[lowerName] !== undefined && (!fontWeight || fontWeight === 'normal' || fontWeight === '400')) {
+        return window._wordArtFontCache[lowerName];
+    }
+
+    try {
+        let fontFileUrl = WORDART_STATIC_FONT_URLS[lowerName] || null;
+
+        if (!fontFileUrl) {
+            let css = '';
+            const weightNum = parseInt(fontWeight, 10);
+            if (weightNum && weightNum >= 600) {
+                try {
+                    const wUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(cleanName.replace(/\s+/g, '+'))}:wght@${weightNum}&display=swap`;
+                    const wResp = await fetch(wUrl);
+                    if (wResp.ok) css = await wResp.text();
+                } catch (e) {}
+            }
+            if (!css) {
+                const gFontsUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(cleanName.replace(/\s+/g, '+'))}&display=swap`;
+                const resp = await fetch(gFontsUrl);
+                if (resp.ok) css = await resp.text();
+            }
+            if (css) {
+                const m = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/);
+                if (m) fontFileUrl = m[1];
+            }
+        }
+
+        if (!fontFileUrl) {
+            window._wordArtFontCache[cacheKey] = '';
+            return '';
+        }
+
+        const fResp = await fetch(fontFileUrl);
+        if (!fResp.ok) {
+            window._wordArtFontCache[cacheKey] = '';
+            return '';
+        }
+        const blob = await fResp.blob();
+        const base64DataUri = await new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(blob);
+        });
+
+        if (!base64DataUri) {
+            window._wordArtFontCache[cacheKey] = '';
+            return '';
+        }
+
+        const embeddedCss = `
+            @font-face {
+                font-family: '${cleanName}';
+                font-weight: 100 900;
+                font-style: normal;
+                src: url('${base64DataUri}') format('woff2');
+            }
+        `;
+        window._wordArtFontCache[cacheKey] = embeddedCss;
+        window._wordArtFontCache[lowerName] = embeddedCss;
+        return embeddedCss;
+    } catch(err) {
+        console.warn('[WordArt Font Embed] Could not embed font:', cleanName, err);
+        window._wordArtFontCache[cacheKey] = '';
+        return '';
+    }
+}
+
+async function renderSvgWordArt(waText, pubEl, waWrapper, styleId, specificRule, safeText, rawText, scaleMultiplier) {
     let dispW = parseFloat(pubEl && pubEl.style ? pubEl.style.width : 0);
     if (!dispW || isNaN(dispW) || dispW <= 0) {
         dispW = (pubEl ? pubEl.offsetWidth : 0) || (waWrapper ? waWrapper.offsetWidth : 0) || (waText ? waText.offsetWidth : 0) || 300;
@@ -360,64 +918,135 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     try {
         const comp = window.getComputedStyle(waText);
         if (comp) {
-            fontFamily = comp.fontFamily || fontFamily;
-            fontSize = comp.fontSize || fontSize;
-            fontWeight = comp.fontWeight || fontWeight;
-            fontStyle = comp.fontStyle || fontStyle;
-            letterSpacing = comp.letterSpacing || letterSpacing;
-            textTransform = comp.textTransform || textTransform;
+            if (comp.fontFamily && !comp.fontFamily.includes('Times New Roman')) fontFamily = comp.fontFamily;
+            if (comp.fontSize) fontSize = comp.fontSize;
+            if (comp.fontWeight) fontWeight = comp.fontWeight;
+            if (comp.fontStyle) fontStyle = comp.fontStyle;
+            if (comp.letterSpacing) letterSpacing = comp.letterSpacing;
+            if (comp.textTransform) textTransform = comp.textTransform;
             if (comp.transform && comp.transform !== 'none') {
                 transform = comp.transform;
             }
         }
     } catch (e) {}
 
+    if (specificRule) {
+        const ffm = specificRule.match(/font-family:\s*([^;]+)/i);
+        if (ffm && (!waText.style || !waText.style.fontFamily)) {
+            const rf = ffm[1].trim();
+            if (rf) fontFamily = rf;
+        }
+        const fwm = specificRule.match(/font-weight:\s*([^;]+)/i);
+        if (fwm && (!waText.style || !waText.style.fontWeight)) fontWeight = fwm[1].trim();
+        const fsm = specificRule.match(/font-style:\s*([^;]+)/i);
+        if (fsm && (!waText.style || !waText.style.fontStyle)) fontStyle = fsm[1].trim();
+        const lsm = specificRule.match(/letter-spacing:\s*([^;]+)/i);
+        if (lsm && (!waText.style || !waText.style.letterSpacing)) letterSpacing = lsm[1].trim();
+        const ttm = specificRule.match(/text-transform:\s*([^;]+)/i);
+        if (ttm && (!waText.style || !waText.style.textTransform)) textTransform = ttm[1].trim();
+        const fzm = specificRule.match(/font-size:\s*([^;]+)/i);
+        if (fzm && (!waText.style || !waText.style.fontSize)) fontSize = fzm[1].trim();
+    }
+
     if (waText.style && waText.style.transform && waText.style.transform !== 'none') {
         transform = waText.style.transform;
     }
 
-    // Calculate true visual width and height including scaling & overflows
-    let scaleX = 1;
-    let scaleY = 1;
-    if (transform) {
-        const sm = transform.match(/scale\(\s*([0-9.]+)\s*(?:,\s*([0-9.]+))?\s*\)/);
-        if (sm) {
-            scaleX = parseFloat(sm[1]) || 1;
-            scaleY = parseFloat(sm[2] || sm[1]) || 1;
-        }
+    const scaleInfo = parseTransformScale(transform);
+    let scaleX = scaleInfo.sx;
+    let scaleY = scaleInfo.sy;
+
+    let naturalW = waText.scrollWidth || waText.offsetWidth || 0;
+    let naturalH = waText.scrollHeight || waText.offsetHeight || 0;
+    if (!naturalW || !naturalH) {
+        const testCanvas = document.createElement('canvas');
+        const testCtx = testCanvas.getContext('2d');
+        testCtx.font = `${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`;
+        naturalW = Math.ceil(testCtx.measureText(rawText).width) || 180;
+        naturalH = Math.ceil(parseFloat(fontSize)) || 40;
     }
 
-    const naturalW = waText.scrollWidth || waText.offsetWidth || 0;
-    const naturalH = waText.scrollHeight || waText.offsetHeight || 0;
-    const visualW = Math.max(dispW, naturalW * scaleX, naturalW);
-    const visualH = Math.max(dispH, naturalH * scaleY, naturalH);
+    if (!scaleInfo.hasScale && naturalW > 0 && naturalH > 0) {
+        const cw = dispW - 8;
+        const ch = dispH - 8;
+        if (cw > naturalW * 1.05 || ch > naturalH * 1.05) {
+            scaleX = cw / naturalW;
+            scaleY = ch / naturalH;
+            transform = `scale(${scaleX}, ${scaleY})`;
+        }
+    } else if (scaleInfo.hasScale && (!transform || !transform.includes('scale'))) {
+        transform = `scale(${scaleX}, ${scaleY})`;
+    }
+
+    const avgScale = (Math.abs(scaleX) + Math.abs(scaleY)) / 2;
+    const visualW = naturalW * Math.abs(scaleX);
+    const visualH = naturalH * Math.abs(scaleY);
 
     const extraLeft = Math.max(0, (visualW - dispW) / 2);
     const extraTop = Math.max(0, (visualH - dispH) / 2);
 
-    // Generous glow, shadow and stroke bleed buffer (100px horizontal, 60px vertical)
-    const padX = Math.ceil(extraLeft + 100);
-    const padY = Math.ceil(extraTop + 60);
+    const scale = Math.max(1.0, Math.min(6.0, parseFloat(scaleMultiplier) || 4.0));
 
+    let textShadowRuleStr = '';
+    if (specificRule) {
+        const tsm = specificRule.match(/text-shadow:\s*([^;]+)/i);
+        if (tsm) textShadowRuleStr = tsm[1].trim();
+    }
+    const textShadowMatches = parseTextShadows(textShadowRuleStr);
+    const filterMatches = parseDropShadowFilters(specificRule);
+    const allShadows = [...textShadowMatches, ...filterMatches];
+    let svgMaxBlur = 0, svgMaxOffX = 0, svgMaxOffY = 0;
+    allShadows.forEach(f => {
+        svgMaxBlur = Math.max(svgMaxBlur, (f.blur || 0) * avgScale);
+        svgMaxOffX = Math.max(svgMaxOffX, Math.abs(f.offsetX || 0) * Math.abs(scaleX));
+        svgMaxOffY = Math.max(svgMaxOffY, Math.abs(f.offsetY || 0) * Math.abs(scaleY));
+    });
+
+    const padX = Math.ceil(extraLeft + Math.max(160, svgMaxBlur * 2.4 + svgMaxOffX + 60));
+    const padY = Math.ceil(extraTop + Math.max(120, svgMaxBlur * 2.4 + svgMaxOffY + 60));
     const totalW = dispW + padX * 2;
     const totalH = dispH + padY * 2;
 
-    const scale = Math.max(1.0, Math.min(6.0, parseFloat(scaleMultiplier) || 4.0));
     const canvasW = Math.round(totalW * scale);
     const canvasH = Math.round(totalH * scale);
+
+    let effectiveRule = specificRule;
+    if (transform && transform !== 'none') {
+        effectiveRule = effectiveRule.replace(/transform\s*:\s*[^;]+;?/gi, '');
+    }
+
+    if (waText.style && waText.style.fontFamily) {
+        fontFamily = waText.style.fontFamily.replace(/['"]/g, '').split(',')[0].trim();
+    }
+
+    let inlineExtraStyles = '';
+    if (transform && transform !== 'none') {
+        inlineExtraStyles += `transform: ${transform} !important; transform-origin: center center; `;
+    }
+    if (waText.style) {
+        if (waText.style.fontFamily) inlineExtraStyles += `font-family: ${waText.style.fontFamily.replace(/"/g, "'")} !important; `;
+        if (waText.style.color) inlineExtraStyles += `color: ${waText.style.color} !important; `;
+        if (waText.style.fontSize) inlineExtraStyles += `font-size: ${waText.style.fontSize} !important; `;
+        if (waText.style.fontWeight) inlineExtraStyles += `font-weight: ${waText.style.fontWeight} !important; `;
+        if (waText.style.fontStyle) inlineExtraStyles += `font-style: ${waText.style.fontStyle} !important; `;
+        if (waText.style.letterSpacing) inlineExtraStyles += `letter-spacing: ${waText.style.letterSpacing} !important; `;
+    }
+
+    const embeddedFontCss = await getEmbeddedFontCss(fontFamily, fontWeight);
 
     const svgXml = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}" viewBox="-${padX} -${padY} ${totalW} ${totalH}">
     <foreignObject x="-${padX}" y="-${padY}" width="${totalW}" height="${totalH}">
         <div xmlns="http://www.w3.org/1999/xhtml" style="width:${totalW}px; height:${totalH}px; margin:0; padding:0; display:flex; align-items:center; justify-content:center; overflow:visible; background:transparent;">
             <style>
+                ${embeddedFontCss}
                 * { box-sizing: border-box; }
                 .wa-wrapper { width: ${dispW}px; height: ${dispH}px; display: flex; align-items: center; justify-content: center; overflow: visible; background: transparent; margin: 0; padding: 0; }
-                .wa-text { white-space: nowrap; font-family: ${fontFamily}; font-size: ${fontSize}; font-weight: ${fontWeight}; font-style: ${fontStyle}; letter-spacing: ${letterSpacing}; text-transform: ${textTransform}; line-height: 1; text-align: center; overflow: visible; display: inline-block; margin: 0; padding: 0; outline: none; border: none; ${transform ? `transform: ${transform}; transform-origin: center center;` : ''} }
-                ${specificRule}
+                .wa-text { white-space: nowrap; font-family: ${fontFamily}; font-size: ${fontSize}; font-weight: ${fontWeight}; font-style: ${fontStyle}; letter-spacing: ${letterSpacing}; text-transform: ${textTransform}; line-height: 1; text-align: center; overflow: visible; display: inline-block; margin: 0; padding: 0; outline: none; border: none; }
+                ${effectiveRule}
             </style>
             <div class="wa-wrapper">
-                <div class="wa-text wa-style-${styleId}">${safeText}</div>
+                <div class="wa-text wa-style-${styleId}" style="${inlineExtraStyles}">${safeText}</div>
             </div>
         </div>
     </foreignObject>
@@ -433,7 +1062,7 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     });
 
     if (!loaded) {
-        console.warn('[WordArt Bake] Image load timed out for style', styleId);
+        console.warn('[WordArt SVG Bake] Image load timed out for style', styleId);
         return null;
     }
 
@@ -447,9 +1076,15 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     try {
         pngUrl = canvas.toDataURL('image/png');
     } catch (taintErr) {
-        console.error('[WordArt Bake] Canvas tainted error:', taintErr);
+        console.error('[WordArt SVG Bake] Canvas tainted error:', taintErr);
         return null;
     }
+
+    return { pngUrl, padX, padY, totalW, totalH };
+}
+
+function attachBakedWordArtImage(pubEl, waWrapper, waText, styleId, rawText, pngUrl, padX, padY, totalW, totalH) {
+    if (!pngUrl) return null;
 
     const bakedImg = document.createElement('img');
     bakedImg.className = 'wa-baked-img';
@@ -483,6 +1118,74 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     }
 
     return bakedImg;
+}
+
+/**
+ * Synchronous Legacy WordArt print baking for Canvas 2D Precision styles (v5.11.12).
+ * Fast-path for immediate synchronous rasterization without waiting on microtasks.
+ */
+window.bakeLegacyWordArtForPrintSync = function(targetEl, scaleMultiplier = 4.0) {
+    const info = resolveWordArtTargets(targetEl);
+    if (!info) return null;
+    if (info.isAlreadyBaked) return info.bakedImg;
+    if (info.isGradientOrBoxStyle) return null; // Path 1 requires async SVG image load
+
+    const res = renderCanvas2DWordArt(info.waText, info.pubEl, info.waWrapper, info.styleId, info.specificRule, info.rawText, scaleMultiplier);
+    if (!res) return null;
+    return attachBakedWordArtImage(info.pubEl, info.waWrapper, info.waText, info.styleId, info.rawText, res.pngUrl, res.padX, res.padY, res.totalW, res.totalH);
+};
+
+/**
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.12).
+ * Implements a Dual-Engine Precision Architecture:
+ * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
+ *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.
+ * - Path 2 (Canvas 2D Precision Engine): Renders authentic typography styles with Google Fonts,
+ *   multi-tier ambient neon glows, 3D text extrusion shadows, and outline strokes with zero font fallback.
+ */
+window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.0) {
+    const info = resolveWordArtTargets(targetEl);
+    if (!info) return null;
+    if (info.isAlreadyBaked) return info.bakedImg;
+
+    // ✨ PATH 1 (PRIMARY): SVG FOREIGNOBJECT ENGINE (With Base64 Embedded Web Fonts) ✨
+    // High-fidelity vector layout: preserves 3D extrusions, chromatic planes, ambient glows, gradients, boxes, and Google Fonts
+    try {
+        const res = await renderSvgWordArt(info.waText, info.pubEl, info.waWrapper, info.styleId, info.specificRule, info.safeText, info.rawText, scaleMultiplier);
+        if (res && res.pngUrl) {
+            return attachBakedWordArtImage(info.pubEl, info.waWrapper, info.waText, info.styleId, info.rawText, res.pngUrl, res.padX, res.padY, res.totalW, res.totalH);
+        }
+    } catch (svgErr) {
+        console.warn('[WordArt Bake] SVG foreignObject render error, falling back to Canvas 2D:', svgErr);
+    }
+
+    // ✨ PATH 2 (FALLBACK): CANVAS 2D PRECISION ENGINE ✨
+    try {
+        const comp = window.getComputedStyle(info.waText);
+        let fontStyle = (comp && comp.fontStyle) || 'normal';
+        let fontWeight = (comp && comp.fontWeight) || '900';
+        let fontSize = (comp && comp.fontSize) || '40px';
+        let fontFamily = (comp && comp.fontFamily && !comp.fontFamily.includes('Times New Roman')) ? comp.fontFamily : 'Impact, sans-serif';
+        if (info.specificRule) {
+            const ffm = info.specificRule.match(/font-family:\s*([^;]+)/i);
+            if (ffm) fontFamily = ffm[1].trim();
+            const fwm = info.specificRule.match(/font-weight:\s*([^;]+)/i);
+            if (fwm) fontWeight = fwm[1].trim();
+            else if (fontFamily.toLowerCase().includes('lobster')) fontWeight = 'normal';
+            const fsm = info.specificRule.match(/font-style:\s*([^;]+)/i);
+            if (fsm) fontStyle = fsm[1].trim();
+            const fzm = info.specificRule.match(/font-size:\s*([^;]+)/i);
+            if (fzm) fontSize = fzm[1].trim();
+        }
+        if (document.fonts && document.fonts.load) {
+            await document.fonts.load(`${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`);
+            await document.fonts.ready;
+        }
+    } catch (e) {}
+
+    const res = renderCanvas2DWordArt(info.waText, info.pubEl, info.waWrapper, info.styleId, info.specificRule, info.rawText, scaleMultiplier);
+    if (!res) return null;
+    return attachBakedWordArtImage(info.pubEl, info.waWrapper, info.waText, info.styleId, info.rawText, res.pngUrl, res.padX, res.padY, res.totalW, res.totalH);
 };
 
 window.handleWordArtClick = function(i) {

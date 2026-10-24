@@ -1,7 +1,7 @@
-// OpenPublisher Print Engine (v5.11.11)
+// OpenPublisher Print Engine (v5.11.12)
 (function installNativePrintHooks() {
 
-    function buildPrintDOM() {
+    async function buildPrintDOM() {
         let pagesToPrint = state && state.pages ? state.pages : [];
         if ((window._isBookletPrinting || window._isMultiUpPrinting) && window._imposedSpreads) {
             pagesToPrint = window._imposedSpreads;
@@ -11,6 +11,12 @@
             if (!window._isBookletPrinting && !window._isMultiUpPrinting && typeof serializeCurrentPage === 'function') {
                 pagesToPrint[state.currentPageIndex] = serializeCurrentPage();
             }
+        }
+
+        if (document.fonts && document.fonts.ready) {
+            try {
+                await document.fonts.ready;
+            } catch (e) {}
         }
 
         let isLandscape = false;
@@ -116,13 +122,15 @@
         printSpooler.innerHTML = '';
 
         if (pagesToPrint) {
-            pagesToPrint.forEach((page) => {
+            for (const page of pagesToPrint) {
                 let pageWrapper = document.createElement('div');
                 pageWrapper.className = 'op-print-page';
                 let scaler = document.createElement('div');
                 scaler.className = 'op-print-scaler';
                 scaler.style.background = page.background || '#ffffff';
                 scaler.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                pageWrapper.appendChild(scaler);
+                printSpooler.appendChild(pageWrapper);
 
                 let elementsToRender = page.elements || [];
                 
@@ -335,25 +343,30 @@
                     }
                 });
 
-                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.11) ✨
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.12) ✨
                 const legacyWordArtNodes = Array.from(scaler.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
                 const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
                     return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
                 });
-                uniqueLegacyWordArts.forEach(waEl => {
+                for (const waEl of uniqueLegacyWordArts) {
                     if (typeof window.bakeLegacyWordArtForPrint === 'function') {
-                        window.bakeLegacyWordArtForPrint(waEl, 4.0);
+                        try {
+                            await window.bakeLegacyWordArtForPrint(waEl, 4.0);
+                        } catch (e) {
+                            if (typeof window.bakeLegacyWordArtForPrintSync === 'function') {
+                                window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
+                            }
+                        }
+                    } else if (typeof window.bakeLegacyWordArtForPrintSync === 'function') {
+                        window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
                     }
-                });
+                }
 
                 // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT SPOOLER ✨
                 if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
                     window.normalizeTextBackgroundsForPrint(scaler);
                 }
-
-                pageWrapper.appendChild(scaler);
-                printSpooler.appendChild(pageWrapper);
-            });
+            }
         }
     }
 
@@ -380,9 +393,13 @@
     window.printFullDocumentDirect = async (isImposed = false) => {
         if (!isImposed) clearImpositionState();
         
+        // Build print spooler DOM and await all high-DPI baking (v5.11.12)
+        if (typeof buildPrintDOM === 'function') {
+            await buildPrintDOM();
+        }
+
         if (window.OP_Desktop_API) {
             // Need to manually build and cleanup if we bypass the browser's native beforeprint/afterprint events
-            if (typeof buildPrintDOM === 'function') buildPrintDOM();
             await window.OP_Desktop_API.triggerCustomPrint();
             const spooler = document.getElementById('op-print-spooler');
             if (spooler) {
@@ -2568,7 +2585,7 @@
                     }
                 }
 
-                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.11) ✨
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.12) ✨
                 const legacyWordArtNodes = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
                 const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
                     return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
