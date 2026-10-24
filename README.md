@@ -221,11 +221,29 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 - **Subpixel Font Rendering** - Subpixel antialiasing and hardware-accelerated GPU rasterization across all UI text and vector icons.
 - **Smooth Image Interpolation** - Scaled icons and images in the ribbon appear smooth and anti-aliased rather than pixelated.
 
-### 🔤 Text Editing and Typography
+### 🔤 Text Editing, Styled Text Boxes and International Typography
 
-- **Native Spellcheck** - Bundled offline Hunspell dictionaries for English US (en-US) and English GB (en-GB). Real-time red squiggly underlines. Right-click any misspelled word for correction suggestions.
+- **100 Styled Text Box Presets** - Browse and insert 100 handcrafted callout boxes, quote frames, sidebars, badges, and decorative containers directly from the Insert > Text Box gallery, complete with instant keyword search and category filtering.
+- **Clipart Border Art Engine (40 Presets)** - Frame any text box with 40 repeating decorative borders (florals, stars, certificates, geometric patterns, and seasonal motifs). Borders dynamically recalculate perimeter spacing as you resize the box and automatically pad interior text so your writing never overlaps the frame.
+- **Native Spellcheck and Grammar Engine** - Bundled offline Hunspell dictionaries for English US (en-US) and English GB (en-GB) expanded with thousands of UK/US towns, cities, retail brands, and honorifics. Red squiggly underlines catch spelling errors with phonetic suggestions, while green underlines highlight grammar, punctuation, and name/title capitalization issues.
+- **Native Right-to-Left (RTL) and Bidirectional Support** - First-class support for Arabic, Hebrew, Persian, and Urdu with automatic script direction detection, dedicated LTR/RTL paragraph ribbon buttons, and standard `Ctrl+Shift` directional shortcuts.
+- **Highlighted Text Drag-and-Drop** - Select any word, phrase, or sentence inside a text box and drag it directly to a new position within the text flow.
 - **System Fonts Integration** - All locally installed Windows fonts discovered from the registry and merged with Google Fonts into one alphabetically sorted dropdown. Local fonts show a monitor icon; Google Fonts show a "G" icon. Opens in under 20ms using lazy rendering.
-- **Horizontal Scrolling and Full Pasteboard** - Hold Shift and scroll the mouse wheel to scroll the canvas horizontally. Full pasteboard margins on both sides so the page can be scrolled completely off-screen at any zoom level.
+- **Horizontal Scrolling and 360-Degree Pasteboard** - Hold Shift and scroll the mouse wheel to pan horizontally, or scroll freely in any direction across the scratch area with a floating **Return to Page** button whenever the page moves out of view.
+
+### 🎨 Theme Studio, Smart Arrows and Creative Design Tools
+
+- **700+ Curated Page Themes and Live 6-Slider Studio** - Expanded 8-column Page Design gallery and pin-open auditioning popover with 700 themes across Classic, Pastel, Neon, Corporate, Fine Textures, and Geometric styles. Fine-tune any theme in real time using 6 live sliders (Pattern Zoom, Contrast, Hue Shift, Brightness, Saturation, and Opacity), and assign independent themes to individual pages.
+- **Dedicated Smart Arrows Engine (98 Parametric Arrows)** - A dedicated **Smart Arrows** gallery on the Insert ribbon featuring 98 vector arrows across 7 categories. Unlike standard shapes that distort when stretched, Smart Arrows use parametric stem-only scaling so arrowheads stay sharp and proportional at any length, with an interactive yellow handle to customize tip depth and wing width live on the canvas.
+- **214 WordArt Styles and Ultra High-DPI Print Baking** - Expanded WordArt Studio with 214 styles, zoom-aware anisotropic supersampling, embedded Google Fonts, full 3D extrusion stacks, and unconstrained cursive swash overflow so curved and shadowed typography prints with razor-sharp edges.
+- **280+ Ready-Made Publication Templates** - Built-in template library spanning 15 categories including Flyers, Posters, Menus, Business Cards, Brochures, Newsletters, Resumes, Certificates, Invitations, Magazines, Reports, Labels, Letterheads, Calendars, and Social Media graphics.
+- **Multi-Element Group Resizing and Orbit Rotation** - Select multiple elements together to scale the entire layout proportionally or rotate objects in unison around a shared center point, paired with a floating quick-action pill and `Ctrl+D` one-step duplication.
+- **Rounded Image Corners with Contour Shadows** - Round the corners of any picture or cropped image from 0px to 100px with drop shadows and outer glows that smoothly hug the curved border both on screen and in print.
+
+### 🖨️ Multi-Up Card Imposition and Legacy File Import
+
+- **Business Card and Label Sheet Imposition (Multiple Copies per Sheet)** - Design a single business card, gift tag, or label and automatically tile multiple copies across an A4 or Letter sheet when printing. Includes configurable rows, columns, gutter spacing, bleed guides, professional corner crop marks, and double-sided duplex alignment.
+- **Dual-Canvas Microsoft Publisher (`.pub`) and Word (`.doc` / `.docx`) Import** - Upgraded import pipeline that separates background vector artwork, tables, and embedded photos from foreground typography. Choose **Editable Mode** to reconstruct color-matched, shadow-aware editable text boxes over crisp original page graphics, or **Flattened Image Mode** for 100% pixel-identical archival reproduction.
 
 ### 🤖 Clippy Assistant
 
@@ -288,24 +306,26 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 | Category | Highlights |
 |---|---|
-| **Platforms** | Windows (Installer + Portable), macOS (.dmg), Linux (.flatpak, .AppImage, .run, .deb, .rpm), FreeBSD (.pkg), Web Browser |
+| **Platforms** | Windows (Installer, Portable, Windows XP), macOS (.dmg), Linux (.flatpak, .AppImage, .run, .deb, .rpm), FreeBSD (.pkg), Web & Installable PWA |
 | **Engine and Limits** | Uncapped 8GB RAM / 4GB GPU VRAM, asynchronous IPC streams, 60 FPS hardware acceleration |
 | **Physical Units and DPI** | CM, MM, Inches, Pixels; 72/96/140/150/300 DPI or custom; DPI-aware margins, rulers, and print engine |
-| **300 DPI Print** | Zero-spillage single-page printing, DPI-aware @page dimensions, sub-pixel blank page elimination |
+| **300 DPI & Multi-Up Print** | Zero-spillage single-page printing, Booklet imposition, and Business Card / Label multi-up sheet printing with crop marks |
 | **Data Protection** | 4-step atomic save, 15-minute shadow snapshots (50 per document), external file watcher, Backup Manager, Previous Versions |
-| **Page Formats** | A3, A4, A5, Letter, Legal, Tabloid, Business Card, Square - with auto locale detection |
-| **Typography and Fonts** | Full font control, Windows registry system font discovery, offline Hunspell spellcheck, subpixel smoothing |
+| **Page Formats & Templates** | A3, A4, A5, Letter, Legal, Tabloid, Business Card, Square - plus 280+ ready-made templates across 15 categories |
+| **Typography and Proofing** | 100 Styled Text Boxes, 40 Clipart Border Art frames, RTL language support, Windows font discovery, offline spellcheck & grammar |
+| **Theme Studio** | 700+ curated page themes & fine textures, 6 live background adjustment sliders, per-page independent themes |
 | **Clipboard and Assets** | Unified clipboard engine, 25-item Clipboard Scrapbook drawer, intelligent paste separation, drag-and-drop shockwave feedback |
 | **Bulk Image Import** | Select or drop multiple images; choose single-page collage or one page per image automatically |
-| **Shapes and Vectors** | 200+ SVG vector shapes, solid/gradient/pattern fills, 3D rotation engine, custom point editing |
-| **Images and Graphics** | Picture placeholders, batch picture swap, non-destructive crop, 14-shape crop-to-shape, Lock Aspect Ratio |
+| **Shapes and Smart Arrows** | 200+ SVG vector shapes, 98 parametric Smart Arrows with stem-only scaling, 3D rotation engine, custom point editing |
+| **Images and Graphics** | Picture placeholders, batch picture swap, non-destructive crop, rounded corners with contour shadows, 14-shape clipping |
 | **Tables** | 100 styled templates, multi-cell selection, Excel import (xlsx/xls), convert to text, line height control |
-| **WordArt** | 60+ styles (Curved, Neon, 3D Extrusion, Holographic, Vaporwave), live hue shifting, double-click re-editing |
-| **Clipart and Emojis** | 3,403 high-quality transparent images, full Twemoji vector library, Unicode symbol inserter, QR code generator |
+| **WordArt** | 214 creative styles (Curved, Neon, 3D Extrusion, Holographic, Vaporwave), live hue shifting, high-DPI vector font print baking |
+| **Clipart and Emojis** | 3,403 high-quality transparent images, searchable Twemoji gallery with skin tone picker, symbol inserter, QR code generator |
+| **Legacy File Import** | Dual-canvas Microsoft Publisher (`.pub`) and Word (`.doc`/`.docx`) import with editable text & preserved background graphics |
 | **Multi-Page Overview** | Decoupled from zoom, explicit toggle, keyboard navigation, thumbnail grid with double-click to edit |
 | **Security and Recovery** | AES-GCM password encryption, Document Inspector, automated crash dumps, safe mode launch flags |
-| **Workspace and Shell** | Full canvas pasteboard, horizontal scrolling, system tray, dynamic dirty asterisk (*), developer HUD |
-| **Export and Print** | High-fidelity PDF, standalone export queue, live presentation preview, Pack and Go, HTML with SEO meta tags |
+| **Workspace and Shell** | 360-degree scratch area scrolling, ruler selection span markers, group orbit rotation, system tray, developer HUD |
+| **Export and Output** | High-fidelity PDF, standalone export queue, live presentation preview, Pack and Go, HTML with SEO meta tags |
 
 ---
 
@@ -570,15 +590,16 @@ Page format and DPI are stored in `.opub` files as explicit metadata. When you r
 - **Quick Jump** - Double-click the top or bottom 100px of any page canvas to jump directly to the Master Page header or footer area.
 - **Per-page override** - Right-click any page thumbnail > Master Pages > **None (Hide)** to exempt a page (e.g., a full-bleed cover page).
 
-**Theme Studio** (Page Design ribbon) applies consistent visual styling across the entire document:
+**Theme Studio** (Page Design ribbon) applies consistent visual styling across your publication or to individual pages:
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/328080f0-34b6-4256-9736-3f4663df17eb" alt="Theme Studio with colour schemes and textured backgrounds" width="700"/>
 </p>
 
-- **Colour Schemes** - Classic, Pastel, Neon, Corporate. Shapes and elements dynamically update to match.
-- **Background Themes** - Solid colours, gradients, and textured patterns applied via a dedicated background layer.
-- **Ignore Theme** - Exempt individual pages from the theme background (e.g., for a back cover).
+- **700+ Curated Page Themes** - Browse an 8-column ribbon gallery or open the pin-open auditioning catalog with instant keyword search across Classic, Pastel, Neon, Corporate, Fine Textures, Geometric, and Gradient categories.
+- **6-Slider Live Background Adjustment Suite** - Customize any theme background in real time directly from the Page Design ribbon using six dedicated sliders: **Pattern Zoom**, **Contrast**, **Hue Shift**, **Brightness**, **Saturation**, and **Opacity**.
+- **Per-Page Independent Themes** - Assign distinct themes and slider adjustments to individual pages within a multi-page publication, or click **Ignore Theme** to exempt a specific page (such as a cover or photo spread).
+- **Colour Schemes** - Classic, Pastel, Neon, and Corporate palettes that dynamically recolor theme-linked shapes and layout accents.
 - **Page Borders** - 100 scalable SVG border styles in categories: Classic, Geometric, Layered/3D, Craft/Deco. Fully customisable colour and thickness.
 
 ---
@@ -588,12 +609,20 @@ Page format and DPI are stored in `.opub` files as explicit metadata. When you r
 
 Text boxes are the primary container for all written content in Open Publisher.
 
-- Insert via **Insert > Text Box**, or press **T** while the canvas is focused.
-- Contextual **Text Box Tools** ribbon and **Floating Toolbar** provide complete typography control.
+- Insert a standard box via **Insert > Text Box** (or press **T** while the canvas is focused), or pick from **100 Styled Text Box Presets** in the dropdown gallery.
+- Contextual **Text Box Tools** ribbon, **Format Properties Studio**, and **Floating Toolbar** provide complete typography and frame control.
 
-### Advanced Typography and Proofing
+### Styled Text Boxes and Clipart Border Art
 
-- **Native Spellcheck Engine**: Integrated offline Hunspell dictionaries (English US and GB) with red squiggly underlines and right-click suggestion menus.
+- **100 Handcrafted Styled Text Box Presets** - Ready-to-use callout boxes, pull-quote frames, badges, sidebars, certificates, and modern card containers with real-time search and category filtering.
+- **Clipart Border Art Engine (40 Decorative Presets)** - Surround any text box with repeating decorative vector and clipart borders (florals, stars, certificates, geometric motifs, and seasonal frames). Borders dynamically recalculate perimeter spacing as you resize the box and automatically pad interior text so your writing never overlaps the frame.
+- **Box Fill, Outline and Rounded Corners** - Customize background colours, gradients, border thickness, dash styles, and corner radius, or open the unified **Format Properties** dialog for numeric precision and 3D perspective tilt.
+
+### Advanced Typography, Proofing and International Languages
+
+- **Native Offline Spellcheck and Grammar Engine**: Integrated offline Hunspell dictionaries (English US and GB) expanded with thousands of UK/US towns, cities, retail brands, and honorifics. Red squiggly underlines flag spelling mistakes with phonetic suggestions, while green underlines catch grammar, punctuation, and name/title capitalization issues.
+- **Native Right-to-Left (RTL) and Bidirectional Support**: Full support for Arabic, Hebrew, Persian, and Urdu with automatic script direction detection, dedicated LTR/RTL paragraph buttons on the Home ribbon and floating toolbar, and standard `Ctrl+Shift` directional shortcuts.
+- **Highlighted Text Drag-and-Drop**: Select any word or phrase inside a text box and drag it directly to a new position within the text flow.
 - **Windows System Fonts Discovery**: Merges all installed TrueType and OpenType fonts from the Windows registry with Google Fonts into a single alphabetically sorted list. System fonts display a desktop monitor icon; Google Fonts display the Google "G" icon. Both render in their actual typeface in the dropdown.
 - **Subpixel Font Smoothing**: Safari-style text anti-aliasing and geometric vector precision across all zoom levels.
 
@@ -629,7 +658,7 @@ Insert tables in multiple ways:
 
 | Feature | Description |
 |---|---|
-| **Multi-cell selection** | Click and drag across cells; apply formatting to groups |
+| **Multi-cell selection** | Click and drag across cells; apply formatting and text direction to groups |
 | **Table Layout Sidebar** | Insert/delete rows and columns, 9-way cell alignment grid |
 | **Line Spacing in Tables** | Same point-value line height control as text boxes |
 | **Convert Table to Text** | Export table data as tab, comma, paragraph, or custom-separated text |
@@ -654,7 +683,8 @@ Images can be imported into your publication through multiple intuitive workflow
 
 - **Picture Placeholders** - Block out image positions with dashed-border frames; double-click to swap with real photos.
 - **Batch Picture Swap** - Drag multiple images onto the canvas to fill all placeholders automatically, in top-to-bottom/left-to-right order.
-- **Non-Destructive Crop** - Drag crop handles inward; pan the image within the frame; settings persist across save/load.
+- **Non-Destructive Crop** - Drag crop handles inward; pan the image within the frame; settings persist across save/load and bake cleanly at full print resolution.
+- **Rounded Corners with Contour Shadows** - Round the corners of any picture or cropped image from 0px to 100px; drop shadows and outer glows follow the curved silhouette both in the editor and in print.
 - **Crop to Shape** - Clip any image to one of 14 shapes: circle, star, triangle, heart, diamond, pentagon, hexagon, octagon, cross, arrows, trapezoid, parallelogram, shield, speech bubble.
 
 ---
@@ -667,12 +697,13 @@ Selecting any image on the canvas activates the **Picture Tools** contextual rib
 | Control | Description |
 |---|---|
 | **Recolor** | Apply color filter presets to transform image tone |
-| **Shadow** | Add configurable drop shadows behind the image |
-| **Glow** | Apply an outer glow effect |
-| **Brightness / Contrast / Hue** | Non-destructive live image adjustments |
+| **Shadow** | Add configurable drop shadows that contour to rounded corners and shapes |
+| **Glow** | Apply an outer glow halo around the image perimeter |
+| **Rounded Corners** | Smoothly round image corners from 0px to 100px (supported on cropped images too) |
+| **Brightness / Contrast / Hue** | Non-destructive live image adjustments preserved across undo/redo |
 | **Opacity** | 0-100% transparency slider |
-| **Crop** | Enter crop mode with drag handles |
-| **Crop to Shape** | Clip image within 14 predefined shapes |
+| **Crop** | Enter non-destructive crop mode with drag handles |
+| **Crop to Shape** | Clip image within 14 predefined vector shapes |
 | **Compress Image** | Reduce embedded image file size |
 | **Lock Aspect Ratio** | Checkbox at the right of the ribbon. When checked, resizing the image maintains its original proportions exactly without needing to hold Shift. |
 | **Reset Picture** | Restore original image without adjustments |
@@ -684,9 +715,17 @@ Selecting any image on the canvas activates the **Picture Tools** contextual rib
 <a id="shapes-and-drawing"></a>
 ## Shapes and Drawing
 
-Open Publisher includes a library of **200+ vector shapes** built from mathematical SVG paths - infinitely scalable at any zoom level or document size.
+Open Publisher includes a library of **200+ vector shapes** built from mathematical SVG paths - infinitely scalable at any zoom level or document size - alongside a dedicated **Smart Arrows** engine.
 
 Shape categories: Basic Geometry, Arrows and Lines, Callouts and Speech, Stars and Bursts, Hearts and Shields, Banners and Ribbons, Flow and Process, Frames and Borders.
+
+### Dedicated Smart Arrows Engine (98 Parametric Arrows)
+
+Accessible directly from **Insert > Smart Arrows**, Open Publisher provides **98 parametric vector arrows** organized across 7 categories (Basic, Block, Curved, Bent & U-Turn, Callout, Connector, and Decorative/Tail):
+
+- **Stem-Only Parametric Stretching** - Lengthening a Smart Arrow extends only its shaft while keeping the arrowhead sharp and geometrically proportional, avoiding the stretched, distorted arrowheads common in standard SVG shapes.
+- **Interactive On-Canvas Tip Handle** - Drag the yellow control diamond directly on the canvas to adjust arrowhead depth and wing width in real time with a live measurement badge.
+- **Floating Styling Controls** - Customize fill colour, outline stroke, opacity, and contour drop shadows directly from the floating toolbar.
 
 ### Shape Fill Options
 
@@ -697,9 +736,11 @@ Shape categories: Basic Geometry, Arrows and Lines, Callouts and Speech, Stars a
 | **Gradient** | Gold, Chrome, Bronze, Silver, Sunset, Ocean presets + custom two-colour tool; Linear, Diagonal, or Radial |
 | **Textured Patterns** | 8 styles: Tiny Dots, Polka Dots, Diagonal Lines, Vertical Lines, Horizontal Lines, Crosshatch, Checkerboard, Square Grid |
 
-### Advanced Shape Features
+### Advanced Shape and Object Features
 
-- **3D Rotation Engine** - Rotate shapes along X, Y, Z axes with perspective depth. Automatically flattened to a high-quality PNG for print fidelity. Non-destructive: double-click the PNG to restore live 3D editing.
+- **3D Rotation Engine** - Rotate shapes, images, and text boxes along X, Y, Z axes with perspective depth in the Format Properties studio. Automatically flattened to a high-quality PNG for print fidelity. Non-destructive: double-click to restore live 3D editing.
+- **Multi-Element Group Resizing and Orbit Rotation** - Select multiple shapes, images, or text boxes together to scale the entire arrangement proportionally or rotate all selected items in orbit around their shared center.
+- **Rotation-Aware Resizing** - Resize rotated objects naturally along their tilted local axes with orientation-matched resize cursors.
 - **Custom Shape Points Editor** - Right-click > Edit Points to drag individual vertices and morph shapes into custom polygons.
 - **Opacity Slider** - 0-100% transparency for semi-opaque overlay effects.
 - **Rotation and Flip** - Rotate Right/Left 90 degrees, Flip Horizontal/Vertical, or type any exact degree value.
@@ -709,21 +750,23 @@ Shape categories: Basic Geometry, Arrows and Lines, Callouts and Speech, Stars a
 <a id="wordart"></a>
 ## WordArt
 
-The **WordArt Studio** generates styled typographic art across 60+ creative styles:
+The **WordArt Studio** generates styled typographic art across **214 creative styles**:
 
 | Category | Examples |
 |---|---|
-| Classic | 90s Rainbow Gradients, 3D Blue Extrusions, Silver Chrome |
-| Modern and Minimal | Clean shadows, thin metallic outlines, flat fills |
+| Classic | 90s Rainbow Gradients, 3D Blue Extrusions, Silver Chrome, Vintage Serif |
+| Modern and Minimal | Clean shadows, thin metallic outlines, flat fills, editorial titles |
 | Neon and Glow | Neon wireframes, electric glow halos, cyberpunk outlines |
 | Holographic | Glass-like prismatic gradients, holographic foil effects |
 | Vaporwave and Retro | Sunset gradients, synthwave purples, pastel 80s palettes |
-| 3D and Depth | Extruded letter stacks, bevelled edges, cast shadows |
-| Curved and Arched | Arch Up, Arch Down, Wave, Sine Wave, Zig-Zag, Triangle peak |
+| 3D and Depth | Extruded letter stacks, bevelled edges, multi-layer cast shadows |
+| Curved and Arched | Arch Up, Arch Down, Wave, Sine Wave, Zig-Zag, Triangle peak, Circle paths |
 
 **Key WordArt behaviours:**
-- **Double-click to re-edit** - Reopens the generator pre-filled with your original text and style.
+- **Double-click to re-edit** - Reopens the generator pre-filled with your original text, font, and style.
 - **Dedicated Floating Toolbar** - Edit Text / Change Style buttons in a pill-shaped teal toolbar.
+- **WYSIWYG Freeform & Proportional Resizing** - Stretch WordArt freely to fit any banner space, or hold `Shift` (or enable Lock Aspect Ratio) for proportional corner scaling.
+- **Ultra High-Resolution Print & Zoom Supersampling** - WordArt renders with anisotropic supersampling on screen and embeds Google Fonts, 3D extrusions, and drop shadows at high print resolution with unconstrained cursive swash overflow so wide script letters are never clipped at the box edges.
 - **Hue Shifting** - Shift the entire colour spectrum of any WordArt in real time without regenerating.
 - **Save as Picture** - Export a pixel-perfect transparent PNG from the right-click menu.
 
@@ -732,8 +775,8 @@ The **WordArt Studio** generates styled typographic art across 60+ creative styl
 <a id="clipart-emojis-and-symbols"></a>
 ## Clipart, Emojis, and Symbols
 
-- **Clipart Gallery** - 3,403 high-quality transparent images with live search, lazy loading, and auto-retry on network failures. Gallery shuffles with a Fisher-Yates algorithm every session for fresh results.
-- **Emojis** - Full Twemoji library (Twitter's open-source SVG emoji set) with free stretching to any size, no letterboxing.
+- **Clipart Gallery** - 3,403 high-quality transparent images with live search, lazy loading, and fast multi-mirror fallback racing on slow connections. Gallery shuffles with a Fisher-Yates algorithm every session for fresh results.
+- **Emoji Studio with Skin Tone Picker** - Categorized Twemoji vector library with instant keyword search and a floating Fitzpatrick skin tone selector toolbar whenever a hand or person emoji is selected on the canvas.
 - **Insert Symbol** - Rich modal for special characters without memorising Unicode codes.
 - **QR Code Generator** - Insert > QR Code to generate a scannable code from any URL or text string.
 
@@ -742,12 +785,12 @@ The **WordArt Studio** generates styled typographic art across 60+ creative styl
 <a id="marketing-and-promotional-tools"></a>
 ## Marketing and Promotional Tools
 
-- **Ad Templates and Stickers** - Pre-built marketing layouts.
-- **Coupons** - Promotional coupon designs.
-- **QR Codes** - Insert from ribbon or canvas right-click menu.
-- **Templates Gallery** - File > New > Templates; browse Resumes, Flyers, Menus, Certificates and more.
+- **280+ Ready-Made Templates Gallery** - Browse **File > New > Templates** (or open from the startup Dashboard) to launch nearly 290 professionally designed templates across 15 categories: **Flyers, Posters, Menus, Business Cards, Brochures, Newsletters, Resumes, Certificates, Invitations, Magazines, Reports, Labels, Letterheads, Calendars, and Social Media**.
+- **Ad Templates and Stickers** - Pre-built marketing badges, retail sale bursts, and promotional banners.
+- **Coupons** - Ready-to-print promotional coupon layouts with dashed cut lines.
+- **QR Codes** - Insert from the ribbon or canvas right-click menu.
 
-> **Note:** Loading a template replaces only the currently selected page, not the entire document.
+> **Note:** Loading a template replaces only the currently selected page, making it easy to combine different template layouts inside a multi-page publication.
 
 ---
 
@@ -756,17 +799,19 @@ The **WordArt Studio** generates styled typographic art across 60+ creative styl
 
 ### Rulers, Guides and Snapping
 
-- **Physical Rulers** - Run along the top and left canvas edges. Display in the active unit (cm, mm, in, or px). Toggle via View > Show > Rulers.
+- **Physical Rulers with Selection Span Markers** - Run along the top and left canvas edges in the active unit (cm, mm, in, or px). Selecting any object illuminates a teal span band inside both rulers showing its exact physical width and height, alongside 60 FPS real-time cursor position hairlines.
 - **Custom Ruler Origin** - Drag the intersection box to set a new 0,0 point; double-click to reset.
 - **Three Independent Snapping Modes** - Snap to Grid, Snap to Guides, Snap to Objects (toggle each individually).
 - **Hold `Ctrl` while dragging** to temporarily bypass grid snapping without changing the setting.
 - **Smart Guides** - Teal alignment lines appear when dragging near edges/centres of other elements; smooth fade-in/out.
 
-### Canvas Navigation and Zoom
+### Canvas Navigation, Selection and Customization
 
 - **Auto-centering on load**: Opening any document automatically fits the page to the viewport and centers it. No manual scroll needed.
+- **360-Degree Scratch Area Scrolling & Return to Page Button** - Scroll freely in all four directions (including left and above the page) with automatic pasteboard expansion. If you scroll the page out of view, a floating directional **Return to Page** button appears to recenter your work in one click.
 - **Shift + Mouse Wheel Horizontal Navigation** - Smooth horizontal panning across the wide canvas pasteboard at all zoom levels.
-- **Horizontal Scrollbars** - Native side-to-side scrollbars appear at zoom levels wider than the viewport with equal 50px padding on each side.
+- **Zoom-Invariant Selection UI & Quick-Action Pill** - Selection handles, rotation grips, and bounding outlines remain crisp and consistently sized regardless of zoom level. Selecting an object displays a compact floating action pill for one-click **Duplicate (`Ctrl+D`)**, **Bring to Front**, **Send to Back**, and **Delete**.
+- **Customizable Ribbon Layout** - Rearrange ribbon button groups to match your preferred workflow in **File > Options**.
 - **Pan Hand Tool** - Click and drag the canvas to navigate. Activates from the View ribbon, the Hand tool button, or by holding the appropriate modifier.
 - **Liquid Content Pour Animation** - Cascading entrance animation with zero-flicker pre-paint clamping when documents load.
 
@@ -784,7 +829,7 @@ The **WordArt Studio** generates styled typographic art across 60+ creative styl
 Access Multi-Page Overview from the status bar view toggle buttons or the View ribbon:
 
 - Single-click any page slot or sidebar thumbnail to select and center it (high-visibility teal outline).
-- Double-click any page slot or press `Enter` to open that page for editing in Single-Page mode.
+- Double-click any page slot or press `Enter` to open that page for editing in Single-Page mode while preserving your zoom level and centering the chosen page.
 - Zoom scales all page previews simultaneously without switching modes.
 - Arrow keys cycle page selection; `Escape` returns to Single-Page mode.
 - Rulers and margin guides are suppressed during overview (they restore automatically on return).
@@ -805,6 +850,8 @@ Access Multi-Page Overview from the status bar view toggle buttons or the View r
 | Export Format | Description |
 |---|---|
 | **PDF** | High-fidelity multi-page PDF with correct orientation, crop settings, and master pages |
+| **Business Card & Label Sheet Imposition** | Print multiple copies of a card, tag, or label on a single A4/Letter sheet with configurable rows, columns, gutters, bleed, crop marks, and duplex alignment |
+| **Booklet Print** | Imposition engine for double-page spread printing with accurate gradient reproduction |
 | **Standalone Export Queue** | Dedicated tearaway monitor window tracking PDF and print rendering jobs with taskbar progress |
 | **Presentation Preview** | Distraction-free live preview window (`doc_preview.html`) mirroring the active canvas in real time. Supports page thumbnail navigation, zoom presets, and F11 fullscreen. |
 | **Export as Image** | Current page as a clean image snapshot (2000px max dimension) |
@@ -812,7 +859,6 @@ Access Multi-Page Overview from the status bar view toggle buttons or the View r
 | **Export as HTML** | Standalone `.html` with newsletter layout, email-client optimization, SEO meta tags, Google Fonts, and mobile scaling |
 | **Export as XPS** | Windows XML Paper Specification via the browser's native print engine |
 | **Pack and Go** | Commercial print package: extracts all images, lists all fonts used, zips everything for print shop handoff |
-| **Booklet Print** | Imposition engine for double-page spread printing with accurate gradient reproduction |
 
 ### HTML Export Options (Advanced)
 
@@ -852,7 +898,7 @@ Open Publisher V5 includes built-in diagnostic and developer tooling:
 Open Publisher encrypts documents using the **Web Crypto API (AES-GCM)**, an industry-standard algorithm implemented natively in the browser.
 
 - Encrypted files save as binary blobs, completely unreadable without the correct password.
-- A "Protected" badge appears in the top-right canvas area when a document is secured.
+- A **Protected** status badge appears in the bottom status bar when a document is secured.
 - To open a protected document: open the file, enter the password in the decryption prompt.
 
 > **Warning:** There is no password recovery mechanism. If you lose the password, the document cannot be recovered. Always keep a backup of the unprotected source file.
@@ -878,7 +924,7 @@ Open Publisher's native format is `.opub`:
 
 - **Double-click to open** on all supported platforms after installation.
 - **Backwards compatible** with older versions of the application.
-- Stores custom ruler origins, page notes, margin settings, master page overrides, theme preferences, DPI, physical unit, page format, and spread mode.
+- Stores custom ruler origins, page notes, margin settings, master page overrides, per-page theme preferences, DPI, physical unit, page format, and spread mode.
 - Supports **AES-GCM encryption** for protected documents.
 
 ### Supported Import Formats
@@ -887,13 +933,13 @@ Open Publisher's native format is `.opub`:
 |---|---|
 | `.opub` / `.json` | Native format - full fidelity, restores entire working session |
 | `.png`, `.jpg`, `.gif`, `.webp`, `.svg` | Placed directly onto the canvas with visual feedback |
-| `.pub`, `.pubx` | Experimental legacy Microsoft Publisher import (layout fidelity varies) |
+| `.pub`, `.pubx` | Dual-canvas Microsoft Publisher import: Editable Text & Graphics Mode or Flattened Image Mode |
 | `.xlsx`, `.xls` | Fully interactive table object via Import Wizard |
-| `.doc`, `.docx` | Editable Text Mode or Flattened Image Mode (Safe Mode) |
+| `.doc`, `.docx` | Dual-canvas Microsoft Word import: Editable Text & Graphics Mode or Flattened Image Mode |
 
-**Word Document Import Modes:**
-1. **Editable Text Mode** - Extracts all text, fonts, and colours into editable Open Publisher text boxes. Best for documents you want to continue editing.
-2. **Flattened Image Mode (Safe Mode)** - Renders the document as a high-resolution background image, guaranteeing 100% layout accuracy. Recommended for complex forms, medical tables, or any document where pixel-perfect fidelity matters more than editability.
+**Microsoft Publisher (`.pub`) and Word (`.doc` / `.docx`) Import Modes:**
+1. **Editable Text & Graphics Mode** - Uses a dual-canvas reconstruction pipeline that strips foreground text from the background artwork layer while preserving all original vector shapes, borders, table grids, and embedded photographs. Foreground text is reconstructed as editable Open Publisher text boxes with sampled ink colours (including light text over dark backgrounds), inline icons, multi-column table separation, and native CSS drop shadows.
+2. **Flattened Image Mode (Safe Mode)** - Renders each page as a high-resolution background image, guaranteeing 100% pixel-identical layout accuracy. Ideal for archival documents, complex forms, or layouts where exact visual preservation matters more than text editing.
 
 ---
 
@@ -909,9 +955,11 @@ Open Publisher's native format is `.opub`:
 | `Ctrl + X` | Cut element or selected text |
 | `Ctrl + V` | Paste with intelligent context routing |
 | `Ctrl + Shift + V` | Paste without styles |
+| `Ctrl + D` | Duplicate selected element or multi-element group |
 | `Ctrl + A` | Select all |
 | `Ctrl + S` | Save document (Atomic Pipeline) |
 | `Delete` / `Backspace` | Delete selected element |
+| `Ctrl + Left Shift` / `Ctrl + Right Shift` | Set paragraph direction to Left-to-Right (LTR) or Right-to-Left (RTL) |
 | `F9` | Toggle zoom to/from 100% |
 | `F11` | Native borderless fullscreen toggle |
 | `Shift + Mouse Wheel` | Pan canvas horizontally |
