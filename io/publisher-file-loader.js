@@ -155,8 +155,8 @@ window.handlePublisherFileLoad = (evt) => {
                 if (typeof pushHistory === 'function') pushHistory(); 
             }, 500);
             
-            if (typeof DashboardSystem !== 'undefined' && DashboardSystem) {
-                DashboardSystem.close();
+            if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+                try { DashboardSystem.close(); } catch (e) {}
             }
         };
 

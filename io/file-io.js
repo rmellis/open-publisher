@@ -1210,6 +1210,74 @@ window.OpenPubImporter = (function() {
         };
     }
 
+    function eraseRegionsFromCanvas(canvas, ctx, imgData, regions, scale) {
+        if (!canvas || !ctx || !imgData || !Array.isArray(regions) || regions.length === 0) return;
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const data = imgData.data;
+
+        regions.forEach(reg => {
+            const x0 = Math.max(0, Math.floor((reg.left - 3) * scale));
+            const x1 = Math.min(cw - 1, Math.ceil((reg.left + reg.width + 4) * scale));
+            const y0 = Math.max(0, Math.floor((reg.top - 2) * scale));
+            const y1 = Math.min(ch - 1, Math.ceil((reg.top + reg.height + 3) * scale));
+            if (x1 <= x0 || y1 <= y0) return;
+
+            const yTop = Math.max(0, y0 - 2);
+            const yBot = Math.min(ch - 1, y1 + 2);
+            let whiteSamples = 0;
+            let totalSamples = 0;
+            let sumBgR = 0, sumBgG = 0, sumBgB = 0;
+
+            for (let x = x0; x <= x1; x += 2) {
+                const idxT = (yTop * cw + x) * 4;
+                const idxB = (yBot * cw + x) * 4;
+                if (data[idxT] > 238 && data[idxT + 1] > 238 && data[idxT + 2] > 238) whiteSamples++;
+                if (data[idxB] > 238 && data[idxB + 1] > 238 && data[idxB + 2] > 238) whiteSamples++;
+                sumBgR += data[idxT] + data[idxB];
+                sumBgG += data[idxT + 1] + data[idxB + 1];
+                sumBgB += data[idxT + 2] + data[idxB + 2];
+                totalSamples += 2;
+            }
+
+            const isMostlyWhiteBg = totalSamples > 0 && (whiteSamples / totalSamples) >= 0.78;
+            if (isMostlyWhiteBg) {
+                for (let y = y0; y <= y1; y++) {
+                    let rowIdx = (y * cw + x0) * 4;
+                    for (let x = x0; x <= x1; x++) {
+                        data[rowIdx] = 255;
+                        data[rowIdx + 1] = 255;
+                        data[rowIdx + 2] = 255;
+                        data[rowIdx + 3] = 255;
+                        rowIdx += 4;
+                    }
+                }
+            } else if (reg.inkRGB) {
+                const bgR = Math.round(reg.bgRGB ? reg.bgRGB[0] : (sumBgR / Math.max(1, totalSamples)));
+                const bgG = Math.round(reg.bgRGB ? reg.bgRGB[1] : (sumBgG / Math.max(1, totalSamples)));
+                const bgB = Math.round(reg.bgRGB ? reg.bgRGB[2] : (sumBgB / Math.max(1, totalSamples)));
+                const [inkR, inkG, inkB] = reg.inkRGB;
+
+                for (let y = y0; y <= y1; y++) {
+                    let rowIdx = (y * cw + x0) * 4;
+                    for (let x = x0; x <= x1; x++) {
+                        const r = data[rowIdx], g = data[rowIdx + 1], b = data[rowIdx + 2];
+                        const distInk = Math.abs(r - inkR) + Math.abs(g - inkG) + Math.abs(b - inkB);
+                        const distBg = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+                        if (distInk < 95 && distInk < distBg) {
+                            data[rowIdx] = bgR;
+                            data[rowIdx + 1] = bgG;
+                            data[rowIdx + 2] = bgB;
+                        }
+                        rowIdx += 4;
+                    }
+                }
+            }
+        });
+
+        ctx.putImageData(imgData, 0, 0);
+    }
+
     /**
      * Phase 3: Reconstruct lines, inline spans, callouts, and paragraph alignments,
      * and resolve libmspub font-substitution collisions.
@@ -1221,6 +1289,7 @@ window.OpenPubImporter = (function() {
         const sourceImgData = options.sourceImgData || null;
         const canvasScale = options.canvasScale || 1.5;
         const isPublisher = options.isPublisher !== false;
+        const erasedRegionsOut = Array.isArray(options.erasedRegionsOut) ? options.erasedRegionsOut : [];
 
         // 1. Sanitize text and map fonts
         const sanitized = rawItems.map(it => {
@@ -1244,25 +1313,39 @@ window.OpenPubImporter = (function() {
 
         // 3. Extract inline key icons for "+ K" / "+ P" items if sourceCanvas is available,
         // or attach clean Windows key SVG icon
+        const hasShortcutKeys = deduped.some(it => /^\+\s*[A-Z0-9]$/i.test(it.str.trim()));
         deduped.forEach(it => {
             if (/^\+\s*[A-Z0-9]$/i.test(it.str.trim())) {
                 const cropped = findInlineKeyIcon(sourceCanvas, sourceImgData, it, canvasScale);
                 it.inlineIconUrl = (cropped && cropped.dataUrl) ? cropped.dataUrl : WINDOWS_KEY_SVG_DATA_URL;
+                if (cropped) {
+                    erasedRegionsOut.push({
+                        left: cropped.left - 2,
+                        top: cropped.top - 2,
+                        width: cropped.width + 4,
+                        height: cropped.height + 4
+                    });
+                }
+                erasedRegionsOut.push({
+                    left: it.tx - it.fontSize * 1.25,
+                    top: it.top - 2,
+                    width: it.fontSize * 1.25,
+                    height: it.height + 4
+                });
             }
         });
 
         // 4. Merge multi-line side callouts that share the same left X and non-black color
-        // (e.g. "TV name:" at x=520.6, y=493.9 + "HRCONF" at x=520.6, y=528.0, or "TV name: Conf" + "4")
+        // ONLY on shortcut-key sheets (e.g. "TV name:" + "HRCONF" or "TV name: Conf" + "4")
         const mergedCallouts = [];
         const usedCalloutIdx = new Set();
-        // Sort by top Y first so multi-line callouts merge in top-to-bottom order
         deduped.sort((a, b) => a.top - b.top || a.left - b.left);
 
         for (let i = 0; i < deduped.length; i++) {
             if (usedCalloutIdx.has(i)) continue;
             const curr = { ...deduped[i] };
 
-            const isSideCallout = curr.left > pageWidth * 0.55 && curr.width < pageWidth * 0.4;
+            const isSideCallout = hasShortcutKeys && curr.left > pageWidth * 0.55 && curr.width < pageWidth * 0.4;
             if (isSideCallout) {
                 for (let j = i + 1; j < deduped.length; j++) {
                     if (usedCalloutIdx.has(j)) continue;
@@ -1296,7 +1379,6 @@ window.OpenPubImporter = (function() {
                 if (!sameBaseline) continue;
 
                 // Never merge a standalone "+ P" / "+ K" shortcut key into a quoted line like “Duplicate”
-                // so that Step 6 can dock "+ P" into the inline gap of "To mirror your screen, press ... and select"
                 const seedIsKey = /^\+\s*[A-Z0-9]$/i.test(seed.str.trim());
                 const candIsKey = /^\+\s*[A-Z0-9]$/i.test(cand.str.trim());
                 const seedIsQuoted = /^[“"‘'].*[”"’']$/.test(seed.str.trim());
@@ -1307,6 +1389,14 @@ window.OpenPubImporter = (function() {
                 const seedIsRed = /rgb\(\s*2[0-5]\d\s*,\s*[0-6]?\d/.test(seed.color || '');
                 const candIsRed = /rgb\(\s*2[0-5]\d\s*,\s*[0-6]?\d/.test(cand.color || '');
                 if (seedIsRed !== candIsRed && Math.abs(seed.fontSize - cand.fontSize) > 8) continue;
+
+                // Prevent collapsing multi-column tables/lists across wide horizontal column gaps
+                // unless this is a shortcut-key instruction line with an inline key gap
+                group.sort((a, b) => a.left - b.left);
+                const groupRight = Math.max(...group.map(g => g.left + g.width));
+                const hGap = cand.left - groupRight;
+                const maxAllowedGap = hasShortcutKeys ? 210 : Math.max(seed.fontSize * 1.5, 20);
+                if (hGap > maxAllowedGap) continue;
 
                 group.push(cand);
                 lineUsed.add(j);
@@ -1319,31 +1409,37 @@ window.OpenPubImporter = (function() {
         // 6. Detect split lines with an intentional inline gap (e.g. "To mirror your screen, press" ... "and select")
         // where a floating "+ P" keystroke was vertically displaced onto the next line ("Duplicate") by libmspub!
         const consumedFloatingLines = new Set();
-        for (let li = 0; li < lines.length; li++) {
-            const grp = lines[li];
-            if (grp.length === 2) {
-                const leftPart = grp[0];
-                const rightPart = grp[1];
-                const gapStart = leftPart.left + leftPart.width;
-                const gapEnd = rightPart.left;
-                const gapWidth = gapEnd - gapStart;
+        if (hasShortcutKeys) {
+            for (let li = 0; li < lines.length; li++) {
+                const grp = lines[li];
+                if (grp.length === 2) {
+                    const leftPart = grp[0];
+                    const rightPart = grp[1];
+                    const gapStart = leftPart.left + leftPart.width;
+                    const gapEnd = rightPart.left;
+                    const gapWidth = gapEnd - gapStart;
 
-                if (gapWidth > 50 && gapWidth < 220) {
-                    // Look for a single-item "+ P" / "+ <Key>" line within 80px vertically
-                    for (let fk = 0; fk < lines.length; fk++) {
-                        if (fk === li || consumedFloatingLines.has(fk)) continue;
-                        if (lines[fk].length === 1 && /^\+\s*[A-Z0-9]$/i.test(lines[fk][0].str.trim())) {
-                            const keyItem = lines[fk][0];
-                            const vDist = Math.abs(keyItem.top - leftPart.top);
-                            if (vDist > 15 && vDist < 85 && Math.abs(keyItem.fontSize - leftPart.fontSize) < 6) {
-                                consumedFloatingLines.add(fk);
-                                // Insert the keyItem right into the middle of the horizontal line!
-                                grp.splice(1, 0, {
-                                    ...keyItem,
-                                    top: leftPart.top,
-                                    fontSize: leftPart.fontSize
-                                });
-                                break;
+                    if (gapWidth > 50 && gapWidth < 220) {
+                        for (let fk = 0; fk < lines.length; fk++) {
+                            if (fk === li || consumedFloatingLines.has(fk)) continue;
+                            if (lines[fk].length === 1 && /^\+\s*[A-Z0-9]$/i.test(lines[fk][0].str.trim())) {
+                                const keyItem = lines[fk][0];
+                                const vDist = Math.abs(keyItem.top - leftPart.top);
+                                if (vDist > 15 && vDist < 85 && Math.abs(keyItem.fontSize - leftPart.fontSize) < 6) {
+                                    consumedFloatingLines.add(fk);
+                                    erasedRegionsOut.push({
+                                        left: gapStart - 4,
+                                        top: leftPart.top - 4,
+                                        width: gapWidth + 8,
+                                        height: (leftPart.height || leftPart.fontSize * 1.2) + 8
+                                    });
+                                    grp.splice(1, 0, {
+                                        ...keyItem,
+                                        top: leftPart.top,
+                                        fontSize: leftPart.fontSize
+                                    });
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1356,21 +1452,19 @@ window.OpenPubImporter = (function() {
         // 7. Build structured line descriptors and detect horizontal alignment
         let lineObjs = activeLines.map(grp => {
             const first = grp[0];
-            const last = grp[grp.length - 1];
             const minLeft = first.left;
             const maxRight = Math.max(...grp.map(g => g.left + g.width));
             const rawSpanWidth = maxRight - minLeft;
 
-            // If this came from legacy safeWidth = (w * 1.05) + 10, estimate true PDF width for centering check
             const estTrueWidth = grp.length === 1 && rawSpanWidth > 180
                 ? (rawSpanWidth - 10) / 1.05
                 : rawSpanWidth;
             const estCenter = minLeft + estTrueWidth / 2;
 
             const isSingleShortKey = grp.length === 1 && /^\+\s*[A-Z0-9]$/i.test(first.str.trim());
-            const isSideCallout = grp.length === 1 && minLeft > pageWidth * 0.55 && rawSpanWidth < pageWidth * 0.42;
+            const hasInlineIcon = grp.some(g => Boolean(g.inlineIconUrl));
+            const isSideCallout = hasShortcutKeys && grp.length === 1 && minLeft > pageWidth * 0.55 && rawSpanWidth < pageWidth * 0.42;
 
-            // Check if multiple lines share this exact left edge with varying widths (left-aligned column/margin)
             const sharedLeftMarginCount = activeLines.filter(otherGrp => {
                 const oLeft = otherGrp[0].left;
                 const oRight = Math.max(...otherGrp.map(g => g.left + g.width));
@@ -1382,13 +1476,14 @@ window.OpenPubImporter = (function() {
             const explicitAlign = first.textAlign || '';
             const isCentered = explicitAlign
                 ? explicitAlign === 'center'
-                : (!isSideCallout && !isLeftMarginColumn && (
+                : (isPublisher && !isSideCallout && !isLeftMarginColumn && (
                     isSingleShortKey ||
-                    Math.abs(estCenter - pageWidth / 2) < pageWidth * 0.075 ||
-                    (grp.length >= 2 && minLeft < pageWidth * 0.2 && maxRight > pageWidth * 0.8)
+                    hasInlineIcon ||
+                    Math.abs(estCenter - pageWidth / 2) < pageWidth * (hasShortcutKeys ? 0.075 : 0.055) ||
+                    (hasShortcutKeys && grp.length >= 2 && minLeft < pageWidth * 0.2 && maxRight > pageWidth * 0.8)
                 ));
 
-            // Construct HTML content with inline spans and inline Windows key vector icon
+            const joinSeparator = (hasShortcutKeys && (hasInlineIcon || grp.length > 1)) ? '&nbsp;&nbsp;' : ' ';
             const spansHtml = grp.map(span => {
                 const weightCSS = span.isBold ? 'font-weight: bold;' : 'font-weight: normal;';
                 const styleCSS = span.isItalic ? 'font-style: italic;' : 'font-style: normal;';
@@ -1403,15 +1498,14 @@ window.OpenPubImporter = (function() {
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;');
                 return `<span style="${weightCSS} ${styleCSS} ${colorCSS} ${shadowCSS}">${iconHtml}${safeText}</span>`;
-            }).join('&nbsp;&nbsp;');
+            }).join(joinSeparator);
 
             const fontSize = first.fontSize || 28;
-            // Scale down oversized 29.3px DejaVu Sans slightly to 26.5px Calibri so wide lines fit comfortably within margins
             const normalizedFontSize = (isPublisher && Math.abs(fontSize - 29.3) < 1.2) ? 26.5 : fontSize;
             const height = Math.max(...grp.map(g => g.height || fontSize * 1.2));
 
             let boxLeft = minLeft;
-            let boxWidth = Math.min(pageWidth - boxLeft - 16, Math.max(rawSpanWidth + 30, 140));
+            let boxWidth = Math.min(pageWidth - boxLeft - 8, Math.max(rawSpanWidth * 1.05 + 14, 45));
             let textAlign = explicitAlign || 'left';
 
             if (isCentered) {
@@ -1448,7 +1542,6 @@ window.OpenPubImporter = (function() {
         });
 
         // 8. Resolve vertical overlaps caused by libmspub font/line-spacing substitution
-        // Group into vertical page bands/slips (separated by > 70px vertical gaps)
         lineObjs.sort((a, b) => a.top - b.top);
         const slips = [];
         let currSlip = [];
@@ -1468,11 +1561,9 @@ window.OpenPubImporter = (function() {
         if (currSlip.length > 0) slips.push(currSlip);
 
         slips.forEach(slip => {
-            // Find if there is a large display key row (e.g. "+ K", fontSize >= 40) in this slip
             const displayKey = slip.find(x => x.isSingleShortKey && x.fontSize >= 38);
             const sideCallout = slip.find(x => x.isSideCallout);
             if (displayKey) {
-                // Position the display key cleanly below the line above it
                 const linesAbove = slip.filter(x => x !== displayKey && x !== sideCallout && x.top < displayKey.top);
                 if (linesAbove.length > 0) {
                     const bottomAbove = Math.max(...linesAbove.map(x => x.top + x.height));
@@ -1481,14 +1572,12 @@ window.OpenPubImporter = (function() {
                     }
                 }
                 if (sideCallout) {
-                    // Align side callout vertically with the display key row so it sits beside "+ K"
                     sideCallout.top = displayKey.top + (displayKey.height - sideCallout.height) * 0.5;
                 }
                 const obstacleBottom = Math.max(
                     displayKey.top + displayKey.height,
                     sideCallout ? (sideCallout.top + sideCallout.height) : 0
                 );
-                // Any centered full-width body lines whose top was supposed to be below displayKey
                 const linesBelow = slip.filter(x => x !== displayKey && x !== sideCallout && x.top > displayKey.top - 5);
                 linesBelow.sort((a, b) => a.top - b.top);
                 if (linesBelow.length > 0 && linesBelow[0].top < obstacleBottom + 4) {
@@ -1532,7 +1621,8 @@ window.OpenPubImporter = (function() {
     }
 
     /**
-     * Process a single PDF.js page into clean, deduplicated, properly aligned OpenPublisher elements.
+     * Process a single PDF.js page into clean, deduplicated, properly aligned OpenPublisher elements,
+     * while preserving all images, backgrounds, borders, and graphics on a text-erased canvas layer.
      */
     async function processPdfPage(page, pageNum, options = {}) {
         const viewport = page.getViewport({ scale: 1.0 });
@@ -1548,118 +1638,276 @@ window.OpenPubImporter = (function() {
         canvas.height = viewportImg.height;
         await page.render({ canvasContext: ctx, viewport: viewportImg }).promise;
 
-        const bgImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const pxPerPagePx = renderScale / ratio;
+        try {
+            const fullImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const pxPerPagePx = renderScale / ratio;
 
-        await page.getOperatorList();
-        const textContent = await page.getTextContent();
-        const rawItems = [];
+            const opList = await page.getOperatorList();
+            const ops = (typeof pdfjsLib !== 'undefined' && pdfjsLib.OPS)
+                ? pdfjsLib.OPS
+                : { paintJpegXObject: 82, paintImageXObject: 85, paintImageMaskXObject: 83, paintInlineImageXObject: 86 };
+            const imageOps = [ops.paintJpegXObject, ops.paintImageXObject, ops.paintImageMaskXObject, ops.paintInlineImageXObject].filter(Boolean);
+            const pageHasImages = Boolean(options.hasImages) || (opList && Array.isArray(opList.fnArray) && opList.fnArray.some(op => imageOps.includes(op)));
 
-        textContent.items.forEach(item => {
-            if (!item.str || !item.str.trim()) return;
-            const tx = item.transform[4] * ratio;
-            const ty = (viewport.height - item.transform[5]) * ratio;
-            const fontSize = Math.abs(item.transform[0] || item.transform[3]) * ratio;
+            const textContent = await page.getTextContent();
+            const hasRawText = textContent && Array.isArray(textContent.items) && textContent.items.some(it => it.str && it.str.trim());
 
-            let isItalicFont = Math.abs(item.transform[1]) > 0.1 || Math.abs(item.transform[2]) > 0.1;
-            let isBoldFont = false;
-            let detectedFontName = '';
+            let bgCanvas = canvas;
+            let bgCtx = ctx;
+            let noTextImgData = fullImgData;
 
-            try {
-                const rawFont = page.commonObjs.get(item.fontName) || page.objs.get(item.fontName);
-                detectedFontName = rawFont?.name || rawFont?.fallbackName || '';
-                const realName = detectedFontName.toLowerCase();
-                isBoldFont = realName.includes('bold') || realName.includes('black') || realName.includes('heavy');
-                if (!isItalicFont) isItalicFont = realName.includes('italic') || realName.includes('oblique');
-            } catch (e) {}
-
-            if (!isBoldFont || !isItalicFont || !detectedFontName) {
-                const fallbackStyle = textContent.styles[item.fontName] || {};
-                const fallbackName = fallbackStyle.fontFamily || fallbackStyle.name || '';
-                if (!detectedFontName) detectedFontName = fallbackName;
-                const lowerFb = fallbackName.toLowerCase();
-                if (!isBoldFont) isBoldFont = lowerFb.includes('bold') || lowerFb.includes('black') || lowerFb.includes('heavy');
-                if (!isItalicFont) isItalicFont = lowerFb.includes('italic') || lowerFb.includes('oblique');
+            if (hasRawText) {
+                bgCanvas = document.createElement('canvas');
+                bgCanvas.width = canvasWidth;
+                bgCanvas.height = canvasHeight;
+                bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
+                bgCtx.fillText = () => {};
+                bgCtx.strokeText = () => {};
+                await page.render({ canvasContext: bgCtx, viewport: viewportImg }).promise;
+                noTextImgData = bgCtx.getImageData(0, 0, canvasWidth, canvasHeight);
             }
 
-            // Optical ink color sampling across the text fragment
-            let optR = 0, optG = 0, optB = 0, samples = 0;
-            const py = Math.floor((ty - fontSize * 0.3) * pxPerPagePx);
-            if (py >= 0 && py < canvasHeight) {
-                for (let x = 0; x < (item.width * ratio); x += 2) {
-                    const px = Math.floor((tx + x) * pxPerPagePx);
-                    if (px >= 0 && px < canvasWidth) {
-                        const idx = (py * canvasWidth + px) * 4;
-                        const r = bgImgData.data[idx];
-                        const g = bgImgData.data[idx + 1];
-                        const b = bgImgData.data[idx + 2];
-                        if (r < 240 || g < 240 || b < 240) {
-                            optR += r; optG += g; optB += b; samples++;
-                        }
+            const rawItems = [];
+            const erasedRegions = [];
+
+            textContent.items.forEach(item => {
+                if (!item.str || !item.str.trim()) return;
+                const tx = item.transform[4] * ratio;
+                const ty = (viewport.height - item.transform[5]) * ratio;
+                const fontSize = Math.abs(item.transform[0] || item.transform[3]) * ratio;
+                const itemWidth = item.width * ratio;
+
+                let isItalicFont = Math.abs(item.transform[1]) > 0.1 || Math.abs(item.transform[2]) > 0.1;
+                let isBoldFont = false;
+                let detectedFontName = '';
+
+                try {
+                    const rawFont = page.commonObjs.get(item.fontName) || page.objs.get(item.fontName);
+                    detectedFontName = rawFont?.name || rawFont?.fallbackName || '';
+                    const realName = detectedFontName.toLowerCase();
+                    isBoldFont = realName.includes('bold') || realName.includes('black') || realName.includes('heavy');
+                    if (!isItalicFont) isItalicFont = realName.includes('italic') || realName.includes('oblique');
+                } catch (e) {}
+
+                if (!isBoldFont || !isItalicFont || !detectedFontName) {
+                    const fallbackStyle = textContent.styles[item.fontName] || {};
+                    const fallbackName = fallbackStyle.fontFamily || fallbackStyle.name || '';
+                    if (!detectedFontName) detectedFontName = fallbackName;
+                    const lowerFb = fallbackName.toLowerCase();
+                    if (!isBoldFont) isBoldFont = lowerFb.includes('bold') || lowerFb.includes('black') || lowerFb.includes('heavy');
+                    if (!isItalicFont) isItalicFont = lowerFb.includes('italic') || lowerFb.includes('oblique');
+                }
+
+                // Compare fullImgData (with text) against noTextImgData (without text) inside the glyph box
+                // to extract exact unblended core glyph ink color
+                const xStart = Math.max(0, Math.floor(tx * pxPerPagePx));
+                const xEnd = Math.min(canvasWidth - 1, Math.ceil((tx + Math.max(itemWidth, 4)) * pxPerPagePx));
+                const yStart = Math.max(0, Math.floor((ty - fontSize * 0.75) * pxPerPagePx));
+                const yEnd = Math.min(canvasHeight - 1, Math.ceil((ty - fontSize * 0.10) * pxPerPagePx));
+
+                let maxDiff = 0;
+                let sumBgR = 0, sumBgG = 0, sumBgB = 0, bgCount = 0;
+                const fData = fullImgData.data;
+                const nData = noTextImgData.data;
+
+                for (let py = yStart; py <= yEnd; py += 2) {
+                    const rowOff = py * canvasWidth;
+                    for (let px = xStart; px <= xEnd; px += 2) {
+                        const idx = (rowOff + px) * 4;
+                        const bgR = nData[idx], bgG = nData[idx + 1], bgB = nData[idx + 2];
+                        sumBgR += bgR; sumBgG += bgG; sumBgB += bgB; bgCount++;
+                        const diff = Math.abs(fData[idx] - bgR) + Math.abs(fData[idx + 1] - bgG) + Math.abs(fData[idx + 2] - bgB);
+                        if (diff > maxDiff) maxDiff = diff;
                     }
                 }
-            }
-            let finalColor = 'rgb(36, 36, 36)';
-            if (samples > 0) {
-                finalColor = `rgb(${Math.round(optR / samples)}, ${Math.round(optG / samples)}, ${Math.round(optB / samples)})`;
-            }
 
-            rawItems.push({
-                str: item.str.trim(),
-                tx,
-                ty,
-                width: item.width * ratio,
-                fontSize,
-                isBold: isBoldFont,
-                isItalic: isItalicFont,
-                fontFamily: detectedFontName,
-                color: finalColor
-            });
-        });
+                const avgBgR = bgCount > 0 ? sumBgR / bgCount : 255;
+                const avgBgG = bgCount > 0 ? sumBgG / bgCount : 255;
+                const avgBgB = bgCount > 0 ? sumBgB / bgCount : 255;
+                let inkR = (avgBgR + avgBgG + avgBgB) / 3 < 128 ? 255 : 36;
+                let inkG = inkR, inkB = inkR;
 
-        const textElements = reconstructPublisherElements(rawItems, {
-            pageWidth,
-            pageHeight,
-            sourceCanvas: canvas,
-            sourceImgData: bgImgData,
-            canvasScale: pxPerPagePx,
-            isPublisher: options.isPublisher !== false
-        });
-
-        // Include any standalone extracted images from ServerSide if present (excluding tiny inline icons already placed inline)
-        const standaloneImageElements = [];
-        if (options.structuredPage && Array.isArray(options.structuredPage.images)) {
-            options.structuredPage.images.forEach((imgObj, idx) => {
-                if (imgObj.width > 45 || imgObj.height > 45) {
-                    standaloneImageElements.push({
-                        id: `pub-img-${pageNum}-${idx}`,
-                        left: `${imgObj.left}px`,
-                        top: `${imgObj.top}px`,
-                        width: `${imgObj.width}px`,
-                        height: `${imgObj.height}px`,
-                        transform: 'none',
-                        zIndex: String(2 + idx),
-                        type: 'box',
-                        innerHTML: '',
-                        imgSrc: imgObj.dataUrl,
-                        clipPath: '',
-                        bg: '',
-                        cropMode: false,
-                        imgStyle: { width: '100%', height: '100%', position: 'absolute', pointerEvents: 'none' },
-                        scaleX: '1',
-                        scaleY: '1'
+                if (maxDiff > 12) {
+                    const threshold = Math.max(24, maxDiff * 0.65);
+                    let optR = 0, optG = 0, optB = 0, samples = 0;
+                    for (let py = yStart; py <= yEnd; py += 2) {
+                        const rowOff = py * canvasWidth;
+                        for (let px = xStart; px <= xEnd; px += 2) {
+                            const idx = (rowOff + px) * 4;
+                            const diff = Math.abs(fData[idx] - nData[idx]) + Math.abs(fData[idx + 1] - nData[idx + 1]) + Math.abs(fData[idx + 2] - nData[idx + 2]);
+                            if (diff >= threshold) {
+                                optR += fData[idx];
+                                optG += fData[idx + 1];
+                                optB += fData[idx + 2];
+                                samples++;
+                            }
+                        }
+                    }
+                    if (samples > 0) {
+                        inkR = Math.round(optR / samples);
+                        inkG = Math.round(optG / samples);
+                        inkB = Math.round(optB / samples);
+                    }
+                } else {
+                    // Fallback for outline/Type3 glyph paths not rendered via fillText
+                    let optR = 0, optG = 0, optB = 0, samples = 0;
+                    const py = Math.floor((ty - fontSize * 0.3) * pxPerPagePx);
+                    if (py >= 0 && py < canvasHeight) {
+                        for (let x = 0; x < itemWidth; x += 2) {
+                            const px = Math.floor((tx + x) * pxPerPagePx);
+                            if (px >= 0 && px < canvasWidth) {
+                                const idx = (py * canvasWidth + px) * 4;
+                                const r = fData[idx], g = fData[idx + 1], b = fData[idx + 2];
+                                if (Math.abs(r - avgBgR) + Math.abs(g - avgBgG) + Math.abs(b - avgBgB) > 42) {
+                                    optR += r; optG += g; optB += b; samples++;
+                                }
+                            }
+                        }
+                    }
+                    if (samples > 0) {
+                        inkR = Math.round(optR / samples);
+                        inkG = Math.round(optG / samples);
+                        inkB = Math.round(optB / samples);
+                    }
+                    erasedRegions.push({
+                        left: tx,
+                        top: ty - fontSize * 0.88,
+                        width: itemWidth,
+                        height: fontSize * 1.18,
+                        inkRGB: [inkR, inkG, inkB],
+                        bgRGB: [avgBgR, avgBgG, avgBgB]
                     });
                 }
-            });
-        }
 
-        return {
-            pageWidth,
-            pageHeight,
-            elements: [...standaloneImageElements, ...textElements]
-        };
+                const finalColor = `rgb(${inkR}, ${inkG}, ${inkB})`;
+
+                rawItems.push({
+                    str: item.str.trim(),
+                    tx,
+                    ty,
+                    width: itemWidth,
+                    fontSize,
+                    isBold: isBoldFont,
+                    isItalic: isItalicFont,
+                    fontFamily: detectedFontName,
+                    color: finalColor
+                });
+            });
+
+            const textElements = reconstructPublisherElements(rawItems, {
+                pageWidth,
+                pageHeight,
+                sourceCanvas: canvas,
+                sourceImgData: fullImgData,
+                canvasScale: pxPerPagePx,
+                isPublisher: options.isPublisher !== false,
+                erasedRegionsOut: erasedRegions
+            });
+
+            // Erase any promoted inline key icons (or outline fallback regions) from the text-free background canvas
+            if (erasedRegions.length > 0) {
+                eraseRegionsFromCanvas(bgCanvas, bgCtx, noTextImgData, erasedRegions, pxPerPagePx);
+            }
+
+            // Check if the background canvas still has non-white visual graphics (photos, cards, borders, shapes, colored backgrounds)
+            let nonWhiteCount = 0;
+            let totalChecked = 0;
+            const d = noTextImgData.data;
+            const step = 4;
+            for (let y = 0; y < canvasHeight; y += step) {
+                const rowOff = y * canvasWidth;
+                for (let x = 0; x < canvasWidth; x += step) {
+                    const idx = (rowOff + x) * 4;
+                    if (d[idx] < 245 || d[idx + 1] < 245 || d[idx + 2] < 245) {
+                        nonWhiteCount++;
+                    }
+                    totalChecked++;
+                }
+            }
+            const nonWhiteRatio = totalChecked > 0 ? (nonWhiteCount / totalChecked) : 0;
+            const hasShortcutKeys = rawItems.some(it => /^\+\s*[A-Z0-9]$/i.test(it.str.trim()));
+
+            const backgroundElements = [];
+            if (textElements.length === 0 || nonWhiteRatio > 0.0006 || (pageHasImages && !hasShortcutKeys)) {
+                const imgDataUrl = bgCanvas.toDataURL('image/jpeg', 0.90);
+                backgroundElements.push({
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    transform: 'none',
+                    zIndex: '1',
+                    type: 'box',
+                    innerHTML: '',
+                    imgSrc: imgDataUrl,
+                    clipPath: '',
+                    bg: '',
+                    cropMode: false,
+                    imgStyle: { width: '100%', height: '100%', position: 'absolute', pointerEvents: 'none' },
+                    scaleX: '1',
+                    scaleY: '1'
+                });
+            }
+
+            // Include any standalone extracted images from ServerSide if present and no full-page background was added
+            const standaloneImageElements = [];
+            if (backgroundElements.length === 0 && options.structuredPage && Array.isArray(options.structuredPage.images)) {
+                options.structuredPage.images.forEach((imgObj, idx) => {
+                    if (imgObj.width > 45 || imgObj.height > 45) {
+                        standaloneImageElements.push({
+                            id: `pub-img-${pageNum}-${idx}`,
+                            left: `${imgObj.left}px`,
+                            top: `${imgObj.top}px`,
+                            width: `${imgObj.width}px`,
+                            height: `${imgObj.height}px`,
+                            transform: 'none',
+                            zIndex: String(2 + idx),
+                            type: 'box',
+                            innerHTML: '',
+                            imgSrc: imgObj.dataUrl,
+                            clipPath: '',
+                            bg: '',
+                            cropMode: false,
+                            imgStyle: { width: '100%', height: '100%', position: 'absolute', pointerEvents: 'none' },
+                            scaleX: '1',
+                            scaleY: '1'
+                        });
+                    }
+                });
+            }
+
+            return {
+                pageWidth,
+                pageHeight,
+                elements: [...backgroundElements, ...standaloneImageElements, ...textElements]
+            };
+        } catch (err) {
+            console.warn('processPdfPage fallback to raster canvas:', err);
+            const fallbackUrl = canvas.toDataURL('image/jpeg', 0.90);
+            return {
+                pageWidth,
+                pageHeight,
+                elements: [{
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    transform: 'none',
+                    zIndex: '1',
+                    type: 'box',
+                    innerHTML: '',
+                    imgSrc: fallbackUrl,
+                    clipPath: '',
+                    bg: '',
+                    cropMode: false,
+                    imgStyle: { width: '100%', height: '100%', position: 'absolute', pointerEvents: 'none' },
+                    scaleX: '1',
+                    scaleY: '1'
+                }]
+            };
+        }
     }
 
     /**
@@ -1907,10 +2155,14 @@ window.OpenPubImporter = (function() {
             // Parse text elements into rawItems for reconstructPublisherElements
             const rawItems = [];
             const nonTextEls = [];
+            const hasLegacyShortcutKeys = textEls.some(el => {
+                const plain = (el.innerHTML || '').replace(/<[^>]+>/g, '').trim();
+                return /^\+\s*[A-Z0-9]$/i.test(plain);
+            });
 
             page.elements.forEach((el, idx) => {
-                if (idx === bgElIdx && hasLegacyHaloElements) {
-                    // Drop the full-page ghost-text raster background!
+                if (idx === bgElIdx && hasLegacyHaloElements && hasLegacyShortcutKeys) {
+                    // Drop the full-page ghost-text raster background on shortcut-key sheets!
                     return;
                 }
                 if (!el.innerHTML || !el.innerHTML.includes('contenteditable')) {
