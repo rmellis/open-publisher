@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.11.12)
+// OpenPublisher Print Engine (v5.11.13)
 (function installNativePrintHooks() {
 
     async function buildPrintDOM() {
@@ -343,7 +343,7 @@
                     }
                 });
 
-                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.12) ✨
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.13) ✨
                 const legacyWordArtNodes = Array.from(scaler.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
                 const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
                     return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
@@ -393,7 +393,7 @@
     window.printFullDocumentDirect = async (isImposed = false) => {
         if (!isImposed) clearImpositionState();
         
-        // Build print spooler DOM and await all high-DPI baking (v5.11.12)
+        // Build print spooler DOM and await all high-DPI baking (v5.11.13)
         if (typeof buildPrintDOM === 'function') {
             await buildPrintDOM();
         }
@@ -2585,7 +2585,7 @@
                     }
                 }
 
-                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.12) ✨
+                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.13) ✨
                 const legacyWordArtNodes = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
                 const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
                     return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');

@@ -6,6 +6,11 @@ window.handlePublisherFileLoad = (evt) => {
         if (Array.isArray(rawData)) {
             rawData = { title: "Untitled Publication", pages: rawData };
         }
+
+        // Automatically sanitize legacy broken .pub imports & cloned shadow layers
+        if (window.OpenPubImporter && typeof window.OpenPubImporter.sanitizeLegacyOpubData === 'function') {
+            rawData = window.OpenPubImporter.sanitizeLegacyOpubData(rawData);
+        }
         
         const loadDocumentData = (data) => {
             // ✨ TEMPLATE CHECK: If this file was saved as a template, open it as a fresh Untitled document
