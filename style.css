@@ -249,8 +249,9 @@ body.dark-mode #ad-grid .gallery-item {
     border-radius: 4px;
 }
 
-/* Beta WordArt Modal Overrides */
-body.dark-mode .custom-dialog-body:has(#beta-wa-grid-container) {
+/* WordArt Modal Overrides (Beta & Legacy) */
+body.dark-mode .custom-dialog-body:has(#beta-wa-grid-container),
+body.dark-mode .custom-dialog-body:has(#dialog-wordart-container) {
     background: var(--ui-panel-bg) !important;
     gap: 0 !important;
 }
@@ -261,11 +262,13 @@ body.dark-mode .wa-modal-footer {
 body.dark-mode .wa-modal-footer {
     border-top: 1px solid var(--ui-border) !important;
 }
-body.dark-mode .beta-wa-card {
+body.dark-mode .beta-wa-card,
+body.dark-mode .legacy-wa-card {
     background: transparent !important;
     border-color: transparent !important;
 }
-body.dark-mode .beta-wa-card.selected {
+body.dark-mode .beta-wa-card.selected,
+body.dark-mode .legacy-wa-card.selected {
     border-color: var(--ui-theme-color) !important;
     background: color-mix(in srgb, var(--ui-theme-color) 15%, transparent) !important;
     box-shadow: 0 4px 8px color-mix(in srgb, var(--ui-theme-color) 15%, transparent) !important;
@@ -285,6 +288,12 @@ body.dark-mode .wa-modal-input {
 }
 body.dark-mode .wa-modal-input::placeholder {
     color: rgba(255, 255, 255, 0.7) !important;
+}
+body.dark-mode .legacy-wa-id {
+    color: var(--ui-text-muted, #94a3b8) !important;
+}
+body.dark-mode .wa-modal-tip {
+    color: var(--ui-text-muted, #94a3b8) !important;
 }
 
 /* Beta WordArt Canvas Element WYSIWYG Parity */
@@ -1800,16 +1809,16 @@ td, th {
 
 /* WordArt Styles 1-60 */
 .wa-style-1 { color: transparent; -webkit-text-stroke: 2px #333; }
-.wa-style-2 { background: linear-gradient(to bottom, #f00, #ff0); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; transform: skewX(-10deg); }
+.wa-style-2 { background: linear-gradient(to bottom, #f00, #ff0); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; font-style: italic; }
 .wa-style-3 { color: #fff; text-shadow: 2px 2px 0 #000, 4px 4px 0 #555; }
 .wa-style-4 { background: linear-gradient(45deg, #00f, #0ff); -webkit-background-clip: text; color: transparent; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)); }
 .wa-style-5 { color: navy; text-shadow: 0 0 5px white, 0 0 10px cyan; letter-spacing: 2px; }
-.wa-style-6 { transform: perspective(200px) rotateX(20deg); color: #800000; text-shadow: 0 10px 5px rgba(0,0,0,0.3); }
+.wa-style-6 { color: #800000; text-shadow: 2px 2px 0 #4a0000, 3px 3px 0 #330000, 4px 6px 6px rgba(0,0,0,0.4); }
 .wa-style-7 { background: radial-gradient(circle, #ffd700, #b8860b); -webkit-background-clip: text; color: transparent; font-weight: 900; }
 .wa-style-8 { font-family: 'Lobster', cursive; color: #ff00de; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00de, 0 0 30px #ff00de; }
 .wa-style-9 { font-family: 'Pacifico', cursive; color: #fff; text-shadow: 3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
 .wa-style-10 { font-family: 'Oswald', sans-serif; background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #333; }
-.wa-style-11 { transform: rotate(-5deg); color: #ffd700; text-shadow: 1px 1px 0 #cda434, 2px 2px 0 #cda434, 3px 3px 0 #cda434, 4px 4px 0 #cda434; }
+.wa-style-11 { font-style: italic; color: #ffd700; text-shadow: 1px 1px 0 #cda434, 2px 2px 0 #cda434, 3px 3px 0 #cda434, 4px 4px 0 #cda434; }
 .wa-style-12 { font-family: 'Anton', sans-serif; letter-spacing: 5px; color: #fff; background: #000; padding: 0 10px; }
 .wa-style-13 { background: linear-gradient(to right, #30CFD0 0%, #330867 100%); -webkit-background-clip: text; color: transparent; font-style: italic; }
 .wa-style-14 { color: #fff; -webkit-text-stroke: 2px red; text-shadow: 4px 4px 0px rgba(0,0,0,0.2); }
@@ -1817,14 +1826,14 @@ td, th {
 .wa-style-16 { font-family: 'Cinzel', serif; color: #d4af37; text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15); }
 .wa-style-17 { font-family: 'Righteous', cursive; color: transparent; -webkit-text-stroke: 2px #fff; filter: drop-shadow(0 0 2px #ff00de) drop-shadow(0 0 5px #00eaff); }
 .wa-style-18 { font-family: 'Abril Fatface', cursive; background: linear-gradient(45deg, #ff007f, #7928ca, #4338ca, #00d4ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.3)); }
-.wa-style-19 { font-family: 'Shadows Into Light', cursive; color: #333; transform: rotate(-2deg); font-weight: bold; background: #ffeb3b; padding: 0 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+.wa-style-19 { font-family: 'Shadows Into Light', cursive; color: #333; font-weight: bold; background: #ffeb3b; padding: 0 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
 .wa-style-20 { font-family: 'Acme', sans-serif; color: #fff; text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000, 0 0 20px #ff0000; }
-.wa-style-21 { font-family: 'Bangers', cursive; color: #FF5722; letter-spacing: 2px; transform: scaleY(1.5); }
+.wa-style-21 { font-family: 'Bangers', cursive; color: #FF5722; letter-spacing: 2px; }
 .wa-style-22 { font-family: 'Indie Flower', cursive; color: #673AB7; border-bottom: 3px dashed #673AB7; }
 .wa-style-23 { font-family: 'Orbitron', sans-serif; color: #00ff00; text-shadow: 0 0 10px #00ff00; background: #000; padding: 2px; }
 .wa-style-24 { font-family: 'Lobster', cursive; color: #2196F3; -webkit-text-stroke: 1px white; filter: drop-shadow(2px 2px 0px #0D47A1); }
 .wa-style-25 { font-family: 'Impact', sans-serif; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); -webkit-background-clip: text; color: transparent; }
-.wa-style-26 { font-family: 'Comic Neue', cursive; color: #FF9800; font-weight: 900; transform: skewY(-5deg); }
+.wa-style-26 { font-family: 'Comic Neue', cursive; color: #FF9800; font-weight: 900; font-style: italic; }
 .wa-style-27 { font-family: 'Anton', sans-serif; color: #fff; background: #333; border-radius: 10px; padding: 5px 15px; }
 .wa-style-28 { font-family: 'Playfair Display', serif; font-style: italic; color: #795548; text-decoration: underline wavy #795548; }
 .wa-style-29 { font-family: 'Montserrat', sans-serif; font-weight: 900; color: #fff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 0 #ccc; }
@@ -1836,7 +1845,7 @@ td, th {
 .wa-style-34 { -webkit-text-stroke: 1px #000; color: white; filter: drop-shadow(4px 4px 0 red); }
 .wa-style-35 { background: radial-gradient(circle, #f00, #000); -webkit-background-clip: text; color: transparent; }
 .wa-style-36 { color: #555; text-shadow: 2px 2px 2px #ccc; letter-spacing: 4px; }
-.wa-style-37 { transform: rotate(-10deg) skewX(20deg); color: #e91e63; }
+.wa-style-37 { color: #e91e63; font-weight: 900; font-style: italic; }
 .wa-style-38 { border: 2px solid #000; padding: 2px; color: #000; background: #fff; box-shadow: 5px 5px 0 #000; }
 .wa-style-39 { font-family: monospace; color: #0f0; background: #000; padding: 2px; }
 .wa-style-40 { color: transparent; -webkit-text-stroke: 1px blue; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="2" fill="blue"/></svg>'); -webkit-background-clip: text; }
@@ -1852,7 +1861,7 @@ td, th {
 .wa-style-50 { color: #607d8b; letter-spacing: -2px; font-weight: 900; }
 .wa-style-51 { color: #fff; text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff; font-family: 'Orbitron'; }
 .wa-style-52 { color: #795548; border: 2px dashed #795548; padding: 0 10px; border-radius: 10px; }
-.wa-style-53 { transform: scale(1, 2); color: #3f51b5; }
+.wa-style-53 { font-family: 'Anton', Impact, sans-serif; color: #3f51b5; }
 .wa-style-54 { color: red; text-decoration: line-through; }
 .wa-style-55 { background: repeating-linear-gradient(90deg, #f00, #f00 5px, #fff 5px, #fff 10px); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; }
 .wa-style-56 { font-style: italic; color: #9c27b0; text-shadow: 3px 3px 5px rgba(0,0,0,0.3); }

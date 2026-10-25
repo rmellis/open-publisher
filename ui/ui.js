@@ -1713,7 +1713,11 @@ window.ContextRibbonActions = {
     },
     openWordArtModal: function() {
         const floatBar = document.getElementById('float-toolbar'); if(floatBar) floatBar.style.display = 'none';
-        const waModal = document.getElementById('wordart-modal'); if(waModal) { waModal.style.display = 'flex'; waModal.style.zIndex = '6000'; }
+        if (typeof window.showWordArtModal === 'function') {
+            window.showWordArtModal(state.selectedEl);
+        } else {
+            const waModal = document.getElementById('wordart-modal'); if(waModal) { waModal.style.display = 'flex'; waModal.style.zIndex = '6000'; }
+        }
     },
     addDropShadow: function() { 
         if(state.selectedEl) { 

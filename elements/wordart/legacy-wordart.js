@@ -1,19 +1,19 @@
-// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.15) ---
+// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.11.16) ---
 const brokenWordArts = [];
 
 // Cache of WordArt CSS rules parsed from stylesheets
 const LEGACY_WORDART_CSS_MAP = {
   "1": ".wa-style-1 { color: transparent; -webkit-text-stroke: 2px #333; }",
-  "2": ".wa-style-2 { background: linear-gradient(to bottom, #f00, #ff0); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; transform: skewX(-10deg);; -webkit-text-fill-color: transparent; }",
+  "2": ".wa-style-2 { background: linear-gradient(to bottom, #f00, #ff0); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000; -webkit-text-fill-color: transparent; font-style: italic; }",
   "3": ".wa-style-3 { color: #fff; text-shadow: 2px 2px 0 #000, 4px 4px 0 #555; }",
   "4": ".wa-style-4 { background: linear-gradient(45deg, #00f, #0ff); -webkit-background-clip: text; color: transparent; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));; -webkit-text-fill-color: transparent; }",
   "5": ".wa-style-5 { color: navy; text-shadow: 0 0 5px white, 0 0 10px cyan; letter-spacing: 2px; }",
-  "6": ".wa-style-6 { transform: perspective(200px) rotateX(20deg); color: #800000; text-shadow: 0 10px 5px rgba(0,0,0,0.3); }",
+  "6": ".wa-style-6 { color: #800000; text-shadow: 2px 2px 0 #4a0000, 3px 3px 0 #330000, 4px 6px 6px rgba(0,0,0,0.4); }",
   "7": ".wa-style-7 { background: radial-gradient(circle, #ffd700, #b8860b); -webkit-background-clip: text; color: transparent; font-weight: 900;; -webkit-text-fill-color: transparent; }",
   "8": ".wa-style-8 { font-family: 'Lobster', cursive; color: #ff00de; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00de, 0 0 30px #ff00de; }",
   "9": ".wa-style-9 { font-family: 'Pacifico', cursive; color: #fff; text-shadow: 3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }",
   "10": ".wa-style-10 { font-family: 'Oswald', sans-serif; background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #333;; -webkit-text-fill-color: transparent; }",
-  "11": ".wa-style-11 { transform: rotate(-5deg); color: #ffd700; text-shadow: 1px 1px 0 #cda434, 2px 2px 0 #cda434, 3px 3px 0 #cda434, 4px 4px 0 #cda434; }",
+  "11": ".wa-style-11 { font-style: italic; color: #ffd700; text-shadow: 1px 1px 0 #cda434, 2px 2px 0 #cda434, 3px 3px 0 #cda434, 4px 4px 0 #cda434; }",
   "12": ".wa-style-12 { font-family: 'Anton', sans-serif; letter-spacing: 5px; color: #fff; background: #000; padding: 0 10px; }",
   "13": ".wa-style-13 { background: linear-gradient(to right, #30CFD0 0%, #330867 100%); -webkit-background-clip: text; color: transparent; font-style: italic;; -webkit-text-fill-color: transparent; }",
   "14": ".wa-style-14 { color: #fff; -webkit-text-stroke: 2px red; text-shadow: 4px 4px 0px rgba(0,0,0,0.2); }",
@@ -21,14 +21,14 @@ const LEGACY_WORDART_CSS_MAP = {
   "16": ".wa-style-16 { font-family: 'Cinzel', serif; color: #d4af37; text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15); }",
   "17": ".wa-style-17 { font-family: 'Righteous', cursive; color: transparent; -webkit-text-stroke: 2px #fff; filter: drop-shadow(0 0 2px #ff00de) drop-shadow(0 0 5px #00eaff); }",
   "18": ".wa-style-18 { font-family: 'Abril Fatface', cursive; background: linear-gradient(45deg, #ff007f, #7928ca, #4338ca, #00d4ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.3)); }",
-  "19": ".wa-style-19 { font-family: 'Shadows Into Light', cursive; color: #333; transform: rotate(-2deg); font-weight: bold; background: #ffeb3b; padding: 0 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }",
+  "19": ".wa-style-19 { font-family: 'Shadows Into Light', cursive; color: #333; font-weight: bold; background: #ffeb3b; padding: 0 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }",
   "20": ".wa-style-20 { font-family: 'Acme', sans-serif; color: #fff; text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000, 0 0 20px #ff0000; }",
-  "21": ".wa-style-21 { font-family: 'Bangers', cursive; color: #FF5722; letter-spacing: 2px; transform: scaleY(1.5); }",
+  "21": ".wa-style-21 { font-family: 'Bangers', cursive; color: #FF5722; letter-spacing: 2px; }",
   "22": ".wa-style-22 { font-family: 'Indie Flower', cursive; color: #673AB7; border-bottom: 3px dashed #673AB7; }",
   "23": ".wa-style-23 { font-family: 'Orbitron', sans-serif; color: #00ff00; text-shadow: 0 0 10px #00ff00; background: #000; padding: 2px; }",
   "24": ".wa-style-24 { font-family: 'Lobster', cursive; color: #2196F3; -webkit-text-stroke: 1px white; filter: drop-shadow(2px 2px 0px #0D47A1); }",
   "25": ".wa-style-25 { font-family: 'Impact', sans-serif; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); -webkit-background-clip: text; color: transparent;; -webkit-text-fill-color: transparent; }",
-  "26": ".wa-style-26 { font-family: 'Comic Neue', cursive; color: #FF9800; font-weight: 900; transform: skewY(-5deg); }",
+  "26": ".wa-style-26 { font-family: 'Comic Neue', cursive; color: #FF9800; font-weight: 900; font-style: italic; }",
   "27": ".wa-style-27 { font-family: 'Anton', sans-serif; color: #fff; background: #333; border-radius: 10px; padding: 5px 15px; }",
   "28": ".wa-style-28 { font-family: 'Playfair Display', serif; font-style: italic; color: #795548; text-decoration: underline wavy #795548; }",
   "29": ".wa-style-29 { font-family: 'Montserrat', sans-serif; font-weight: 900; color: #fff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 0 #ccc; }",
@@ -39,7 +39,7 @@ const LEGACY_WORDART_CSS_MAP = {
   "34": ".wa-style-34 { -webkit-text-stroke: 1px #000; color: white; filter: drop-shadow(4px 4px 0 red); }",
   "35": ".wa-style-35 { background: radial-gradient(circle, #f00, #000); -webkit-background-clip: text; color: transparent;; -webkit-text-fill-color: transparent; }",
   "36": ".wa-style-36 { color: #555; text-shadow: 2px 2px 2px #ccc; letter-spacing: 4px; }",
-  "37": ".wa-style-37 { transform: rotate(-10deg) skewX(20deg); color: #e91e63; }",
+  "37": ".wa-style-37 { color: #e91e63; font-weight: 900; font-style: italic; }",
   "38": ".wa-style-38 { border: 2px solid #000; padding: 2px; color: #000; background: #fff; box-shadow: 5px 5px 0 #000; }",
   "39": ".wa-style-39 { font-family: monospace; color: #0f0; background: #000; padding: 2px; }",
   "40": ".wa-style-40 { color: transparent; -webkit-text-stroke: 1px blue; background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><circle cx=\"5\" cy=\"5\" r=\"2\" fill=\"blue\"/></svg>'); -webkit-background-clip: text;; -webkit-text-fill-color: transparent; }",
@@ -55,7 +55,7 @@ const LEGACY_WORDART_CSS_MAP = {
   "50": ".wa-style-50 { color: #607d8b; letter-spacing: -2px; font-weight: 900; }",
   "51": ".wa-style-51 { color: #fff; text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff; font-family: 'Orbitron'; }",
   "52": ".wa-style-52 { color: #795548; border: 2px dashed #795548; padding: 0 10px; border-radius: 10px; }",
-  "53": ".wa-style-53 { transform: scale(1, 2); color: #3f51b5; }",
+  "53": ".wa-style-53 { font-family: 'Anton', Impact, sans-serif; color: #3f51b5; }",
   "54": ".wa-style-54 { color: red; text-decoration: line-through; }",
   "55": ".wa-style-55 { background: repeating-linear-gradient(90deg, #f00, #f00 5px, #fff 5px, #fff 10px); -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 1px #000;; -webkit-text-fill-color: transparent; }",
   "56": ".wa-style-56 { font-style: italic; color: #9c27b0; text-shadow: 3px 3px 5px rgba(0,0,0,0.3); }",
@@ -247,7 +247,7 @@ function getWaRulesMap() {
 }
 
 
-// --- CSS Text-Shadow & Drop-Shadow Parsers (v5.11.15) ---
+// --- CSS Text-Shadow & Drop-Shadow Parsers (v5.11.16) ---
 function parseTextShadows(shadowStr) {
     if (!shadowStr || shadowStr === 'none') return [];
     const rawParts = shadowStr.split(/,(?![^(]*\))/g).map(s => s.trim()).filter(Boolean);
@@ -294,7 +294,7 @@ function parseDropShadowFilters(filterStr) {
 }
 
 /**
- * High-resolution Legacy WordArt serialization engine for print and export (v5.11.15).
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.16).
  * Implements a Dual-Engine Precision Architecture:
  * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
  *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.
@@ -1121,7 +1121,7 @@ function attachBakedWordArtImage(pubEl, waWrapper, waText, styleId, rawText, png
 }
 
 /**
- * Synchronous Legacy WordArt print baking for Canvas 2D Precision styles (v5.11.15).
+ * Synchronous Legacy WordArt print baking for Canvas 2D Precision styles (v5.11.16).
  * Fast-path for immediate synchronous rasterization without waiting on microtasks.
  */
 window.bakeLegacyWordArtForPrintSync = function(targetEl, scaleMultiplier = 4.0) {
@@ -1136,7 +1136,7 @@ window.bakeLegacyWordArtForPrintSync = function(targetEl, scaleMultiplier = 4.0)
 };
 
 /**
- * High-resolution Legacy WordArt serialization engine for print and export (v5.11.15).
+ * High-resolution Legacy WordArt serialization engine for print and export (v5.11.16).
  * Implements a Dual-Engine Precision Architecture:
  * - Path 1 (SVG foreignObject Engine): Renders complex CSS gradients, repeating stripes,
  *   -webkit-background-clip: text fills, box backgrounds, and 3D perspective transforms at 4.0x scale.
@@ -1228,44 +1228,412 @@ window.initWordArt = function() {
     }
     grid.innerHTML = html;
 };
-    // 3. WORDART MODAL OVERRIDE
-    window.showWordArtModal = function() {
-        if(window.rescueGrids) window.rescueGrids(); 
+    // 3. WORDART MODAL OVERRIDE (v5.11.16 Modern Redesign: Big Rounded Corners, Single-Click Select, Double-Click Insert)
+    window.showWordArtModal = function(explicitTarget = null) {
+        if (typeof rescueGrids === 'function') rescueGrids(); 
+        
+        // Only edit existing element if explicitTarget was passed AND is a valid WordArt element
+        const editTarget = (explicitTarget && explicitTarget.querySelector && explicitTarget.querySelector('.wa-text')) ? explicitTarget : null;
+        let initialText = '';
+        let initialStyleId = 1;
+        if (editTarget) {
+            const waText = editTarget.querySelector('.wa-text');
+            if (waText) {
+                initialText = waText.innerText.trim() || '';
+                const match = Array.from(waText.classList).find(c => c.startsWith('wa-style-'));
+                if (match) initialStyleId = parseInt(match.replace('wa-style-', ''), 10) || 1;
+            }
+        }
+
+        const uiHTML = `
+            <style>
+                /* Overwrite default dialog styles to achieve the edge-to-edge banner */
+                #custom-dialog-header { display: none !important; }
+                .custom-dialog-footer { display: none !important; }
+                .custom-dialog-body { padding: 0 !important; background: #f3f4f6 !important; border-radius: 8px; overflow: hidden; }
+                
+                /* Modal Spring Entrance Animation */
+                @keyframes waModalFadeIn {
+                    from { opacity: 0; transform: scale(0.95) translateY(12px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                #custom-dialog-box:has(#dialog-wordart-container) {
+                    animation: waModalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                }
+
+                /* The Green Header Banner */
+                .wa-modal-header {
+                    background: var(--ui-theme-dark);
+                    padding: 15px 25px;
+                    text-align: center;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                    cursor: grab;
+                    position: relative;
+                }
+                .wa-modal-header:active {
+                    cursor: grabbing;
+                }
+                .wa-modal-title {
+                    color: white;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin-bottom: 12px;
+                    pointer-events: none;
+                }
+                
+                /* The Giant White Input Box */
+                .wa-modal-input {
+                    width: 100%;
+                    padding: 12px 15px;
+                    font-size: 24px;
+                    font-family: 'Arial Black', Impact, sans-serif;
+                    text-align: center;
+                    color: #111;
+                    border: none;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    outline: none;
+                    transition: box-shadow 0.2s;
+                    box-sizing: border-box;
+                }
+                .wa-modal-input:focus {
+                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4);
+                }
+
+                /* Grid Area */
+                .wa-modal-grid-container {
+                    padding: 15px 20px;
+                    background: #f1f5f9;
+                    max-height: 55vh;
+                    overflow-y: auto;
+                }
+                #dialog-wordart-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(5, 1fr) !important;
+                    gap: 10px !important;
+                }
+                
+                /* The Selectable Cards (Modern Beta WordArt Style with 12px Rounded Corners & Animations) */
+                .legacy-wa-card {
+                    background: white;
+                    border: 3px solid transparent;
+                    border-radius: 12px;
+                    height: 74px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+                    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    position: relative;
+                    user-select: none;
+                }
+                .legacy-wa-card:hover {
+                    box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+                    transform: translateY(-3px) scale(1.02);
+                    border-color: rgba(0, 118, 112, 0.35);
+                    z-index: 2;
+                }
+                .legacy-wa-card.selected {
+                    border-color: var(--ui-theme-color);
+                    background: #f0fdf4; 
+                    box-shadow: 0 8px 22px rgba(0, 118, 112, 0.25);
+                    transform: translateY(-2px) scale(1.08);
+                    z-index: 10;
+                }
+                @keyframes waCardSelectPop {
+                    0% { transform: scale(0.96); }
+                    50% { transform: scale(1.11); }
+                    100% { transform: translateY(-2px) scale(1.08); }
+                }
+                .legacy-wa-card.anim-pop {
+                    animation: waCardSelectPop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+                .legacy-wa-card .wa-text {
+                    pointer-events: none;
+                    max-width: 100%;
+                    text-align: center;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    transition: font-size 0.15s ease;
+                    display: inline-block;
+                }
+
+                /* Animated Checkmark Badge on Selected Card */
+                .legacy-wa-badge {
+                    position: absolute;
+                    top: 6px;
+                    right: 6px;
+                    width: 18px;
+                    height: 18px;
+                    background: var(--ui-theme-color);
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    opacity: 0;
+                    transform: scale(0.3) rotate(-45deg);
+                    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    pointer-events: none;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+                    z-index: 5;
+                }
+                .legacy-wa-card.selected .legacy-wa-badge {
+                    opacity: 1;
+                    transform: scale(1) rotate(0deg);
+                }
+
+                /* Discreet Style ID Number in Bottom Left */
+                .legacy-wa-id {
+                    position: absolute;
+                    bottom: 4px;
+                    left: 7px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+                    color: #94a3b8;
+                    opacity: 0;
+                    transition: opacity 0.15s ease;
+                    pointer-events: none;
+                    user-select: none;
+                    z-index: 5;
+                }
+                .legacy-wa-card:hover .legacy-wa-id,
+                .legacy-wa-card.selected .legacy-wa-id {
+                    opacity: 0.85;
+                }
+
+                /* Custom Footer with Info Tip and Action Buttons */
+                .wa-modal-footer {
+                    padding: 12px 20px;
+                    background: #f1f5f9;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom-left-radius: 8px;
+                    border-bottom-right-radius: 8px;
+                    border-top: 1px solid #e2e8f0;
+                }
+                .wa-modal-tip {
+                    font-size: 12px;
+                    color: #64748b;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    user-select: none;
+                }
+                .wa-btn {
+                    padding: 8px 24px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-family: 'Segoe UI', sans-serif;
+                    border: none;
+                    transition: all 0.2s;
+                }
+                .wa-btn-ok {
+                    background: var(--ui-theme-dark);
+                    color: white;
+                }
+                .wa-btn-ok:hover {
+                    background: var(--ui-theme-color);
+                }
+                .wa-btn-cancel {
+                    background: white;
+                    color: var(--ui-theme-dark);
+                    border: 2px solid #cbd5e1;
+                }
+                .wa-btn-cancel:hover {
+                    background: #f8fafc;
+                    border-color: #94a3b8;
+                }
+                
+                /* Custom Scrollbar */
+                .wa-modal-grid-container::-webkit-scrollbar { width: 8px; }
+                .wa-modal-grid-container::-webkit-scrollbar-track { background: transparent; }
+                .wa-modal-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .wa-modal-grid-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+                /* Dark Mode Overrides */
+                body.dark-mode .custom-dialog-body { background: #1e293b !important; }
+                body.dark-mode .wa-modal-grid-container { background: #0f172a !important; }
+                body.dark-mode .wa-modal-footer { background: #0f172a !important; border-top-color: #334155 !important; }
+                body.dark-mode .legacy-wa-card { background: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important; }
+                body.dark-mode .legacy-wa-card.selected { border-color: var(--ui-theme-color) !important; background: #064e3b !important; }
+                body.dark-mode .legacy-wa-badge { background: var(--ui-theme-color) !important; color: white !important; }
+                body.dark-mode .legacy-wa-id { color: #64748b !important; }
+                body.dark-mode .wa-modal-tip { color: #94a3b8 !important; }
+                body.dark-mode .wa-btn-cancel { background: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+                body.dark-mode .wa-btn-cancel:hover { background: #334155 !important; }
+                body.dark-mode .wa-modal-input { background: #1e293b !important; color: #f8fafc !important; }
+            </style>
+            
+            <div class="wa-modal-header" id="legacy-wa-modal-header">
+                <div class="custom-dialog-close" id="legacy-wa-close-x" title="Close" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
+                <div class="wa-modal-title">WordArt Gallery (Legacy)</div>
+                <input type="text" id="legacy-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="${initialText ? initialText.replace(/"/g, '&quot;') : ''}">
+            </div>
+            
+            <div class="wa-modal-grid-container" id="dialog-wordart-container"></div>
+            
+            <div class="wa-modal-footer">
+                <div class="wa-modal-tip"><i class="fas fa-mouse-pointer" style="margin-right:7px; color:var(--ui-theme-color);"></i> Click to select &bull; Double-click to insert</div>
+                <div style="display:flex; gap:10px;">
+                    <button class="wa-btn wa-btn-ok" id="legacy-wa-btn-ok">OK</button>
+                    <button class="wa-btn wa-btn-cancel" id="legacy-wa-btn-cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+
         let grid = document.getElementById('dialog-wordart-grid');
         
+        const resetGridToDefault = () => {
+            if (!grid) return;
+            grid.querySelectorAll('.legacy-wa-card').forEach(card => {
+                const i = parseInt(card.dataset.styleId, 10);
+                const waText = card.querySelector('.wa-text');
+                if (!waText) return;
+                let demoText = 'Aa';
+                if ((i >= 81 && i <= 90) || (i >= 141 && i <= 150) || (i >= 191 && i <= 200)) demoText = 'AaBb'; 
+                else if (i === 112 || i === 113 || i === 145) demoText = 'TXT';
+                waText.textContent = demoText;
+                waText.style.fontSize = (demoText.length > 3) ? '30px' : '36px';
+            });
+        };
+
         // If grid doesn't exist at all, build it!
         if (!grid) {
             grid = document.createElement('div');
             grid.id = 'dialog-wordart-grid';
             grid.className = 'gallery-grid';
-            grid.style.cssText = 'grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 10px; background: #fafafa;';
+            grid.dataset.selectedId = String(initialStyleId);
             
-            let gridHtml = '';
             for(let i=1; i<=214; i++) {
                 if (brokenWordArts.includes(i)) continue;
                 let demoText = 'Aa';
                 if ((i >= 81 && i <= 90) || (i >= 141 && i <= 150) || (i >= 191 && i <= 200)) demoText = 'AaBb'; 
                 else if (i === 112 || i === 113 || i === 145) demoText = 'TXT';
                 
-                gridHtml += `<div class="gallery-item" style="height:40px;" onclick="handleWordArtClick(${i})">
-                            <div class="wa-text wa-style-${i}" style="font-size:24px; font-family: Impact, sans-serif;">${demoText}</div>
-                         </div>`;
+                const card = document.createElement('div');
+                card.className = 'legacy-wa-card' + (i === initialStyleId ? ' selected' : '');
+                card.dataset.styleId = i;
+                card.title = `WordArt Style ${i} (Click to select, double-click to insert)`;
+
+                const textFontSize = (demoText.length > 3) ? '30px' : '36px';
+                card.innerHTML = `
+                    <span class="legacy-wa-id">#${i}</span>
+                    <div class="legacy-wa-badge"><i class="fas fa-check"></i></div>
+                    <div class="wa-text wa-style-${i}" style="font-size:${textFontSize}; font-family: Impact, sans-serif;">${demoText}</div>
+                `;
+
+                card.onclick = () => {
+                    grid.querySelectorAll('.legacy-wa-card').forEach(c => {
+                        c.classList.remove('selected');
+                        c.classList.remove('anim-pop');
+                    });
+                    card.classList.add('selected');
+                    card.classList.add('anim-pop');
+                    grid.dataset.selectedId = i;
+                };
+
+                card.ondblclick = () => {
+                    grid.dataset.selectedId = i;
+                    card.style.transform = 'scale(0.94)';
+                    card.style.boxShadow = '0 0 0 4px var(--ui-theme-color)';
+                    setTimeout(() => {
+                        const okBtn = document.getElementById('legacy-wa-btn-ok');
+                        if (okBtn) okBtn.click();
+                    }, 80);
+                };
+
+                grid.appendChild(card);
             }
-            grid.innerHTML = gridHtml;
+            
             // Place it in safe zone initially so it exists in DOM
             const safeZone = document.getElementById('modal-safe-zone');
             if (safeZone) safeZone.appendChild(grid);
+        } else {
+            // If grid was cached, reset cards to default whenever not editing an existing element
+            if (!editTarget) {
+                resetGridToDefault();
+            }
+            grid.dataset.selectedId = String(initialStyleId);
+            grid.querySelectorAll('.legacy-wa-card').forEach(c => {
+                const isSelected = (parseInt(c.dataset.styleId, 10) === initialStyleId);
+                c.classList.toggle('selected', isSelected);
+                c.classList.remove('anim-pop');
+                if (!c.querySelector('.legacy-wa-badge')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'legacy-wa-badge';
+                    badge.innerHTML = '<i class="fas fa-check"></i>';
+                    c.appendChild(badge);
+                }
+                if (!c.querySelector('.legacy-wa-id')) {
+                    const idSpan = document.createElement('span');
+                    idSpan.className = 'legacy-wa-id';
+                    idSpan.textContent = `#${c.dataset.styleId}`;
+                    c.appendChild(idSpan);
+                }
+            });
         }
 
-        const htmlStr = `<div id="dialog-wordart-container"></div>`;
-        DialogSystem.show('WordArt Gallery', htmlStr, null, true);
+        DialogSystem.show('', uiHTML, null, true);
         
         const dialogBox = document.getElementById('custom-dialog-box');
         if(dialogBox) {
-            dialogBox.style.width = '650px';
+            dialogBox.style.width = '850px';
             dialogBox.style.maxWidth = '95vw';
-            const body = dialogBox.querySelector('.custom-dialog-body');
-            if (body) { body.style.maxHeight = '65vh'; body.style.overflowY = 'auto'; }
+            dialogBox.style.padding = '0';
+            dialogBox.style.backgroundColor = 'transparent';
+            dialogBox.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+
+            const header = document.getElementById('legacy-wa-modal-header');
+            if (header) {
+                let isDragging = false;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                header.addEventListener('mousedown', function(e) {
+                    if (e.target.tagName.toLowerCase() === 'input' || e.target.id === 'legacy-wa-close-x' || e.target.closest('#legacy-wa-close-x')) return;
+                    isDragging = true;
+                    const rect = dialogBox.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+
+                    dialogBox.style.position = 'fixed';
+                    dialogBox.style.transform = 'none';
+                    dialogBox.style.margin = '0';
+                    dialogBox.style.bottom = 'auto';
+                    dialogBox.style.right = 'auto';
+                    dialogBox.style.left = (e.clientX - offsetX) + 'px';
+                    dialogBox.style.top = (e.clientY - offsetY) + 'px';
+
+                    const onMouseMove = (me) => {
+                        if (!isDragging) return;
+                        dialogBox.style.left = (me.clientX - offsetX) + 'px';
+                        dialogBox.style.top = (me.clientY - offsetY) + 'px';
+                    };
+
+                    const onMouseUp = () => {
+                        isDragging = false;
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
         }
         
         // Retrieve grid from safe zone and append to the newly rendered modal container
@@ -1274,10 +1642,106 @@ window.initWordArt = function() {
             container.appendChild(grid);
             grid.style.display = 'grid'; // ensure it's visible
         }
+
+        const executeInsertion = () => {
+            const selectedStyleId = grid.dataset.selectedId ? parseInt(grid.dataset.selectedId, 10) : 1;
+            const textInput = document.getElementById('legacy-wa-text');
+            const customText = textInput ? textInput.value.trim() : '';
+            const finalText = customText || 'Word Art';
+
+            if (editTarget && editTarget.querySelector('.wa-text')) {
+                const waText = editTarget.querySelector('.wa-text');
+                const classes = Array.from(waText.classList);
+                classes.forEach(c => { if (c.startsWith('wa-style-')) waText.classList.remove(c); });
+                waText.classList.add(`wa-style-${selectedStyleId}`);
+                waText.setAttribute('spellcheck', 'false');
+                if (customText) {
+                    waText.innerText = customText;
+                }
+                DialogSystem.close();
+                const oldModal = document.getElementById('wordart-modal');
+                if (oldModal) oldModal.style.display = 'none';
+                if (typeof syncWordArt === 'function') syncWordArt(editTarget);
+                if (typeof pushHistory === 'function') pushHistory();
+            } else {
+                try {
+                    const safeText = finalText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const el = createWrapper(`<div class="wa-wrapper"><div class="wa-text wa-style-${selectedStyleId}" spellcheck="false">${safeText}</div></div>`);
+                    setTimeout(() => { if (typeof syncWordArt === 'function') syncWordArt(el); }, 10);
+                    if (typeof pushHistory === 'function') pushHistory();
+                } catch(e) { console.error(e); }
+                DialogSystem.close();
+                const oldModal = document.getElementById('wordart-modal');
+                if (oldModal) oldModal.style.display = 'none';
+            }
+        };
+
+        const updateCardPreviews = () => {
+            const textInput = document.getElementById('legacy-wa-text');
+            const rawVal = textInput ? textInput.value : '';
+            const trimmed = rawVal.trim();
+            const useDefault = !trimmed;
+
+            if (useDefault) {
+                resetGridToDefault();
+                return;
+            }
+
+            grid.querySelectorAll('.legacy-wa-card').forEach(card => {
+                const waText = card.querySelector('.wa-text');
+                if (!waText) return;
+
+                let fontSize;
+                if (trimmed.length <= 2) fontSize = '36px';
+                else if (trimmed.length <= 4) fontSize = '32px';
+                else if (trimmed.length <= 6) fontSize = '28px';
+                else if (trimmed.length <= 9) fontSize = '23px';
+                else if (trimmed.length <= 13) fontSize = '19px';
+                else fontSize = '16px';
+
+                waText.textContent = trimmed;
+                waText.style.fontSize = fontSize;
+            });
+        };
+
+        const okBtn = document.getElementById('legacy-wa-btn-ok');
+        if (okBtn) okBtn.onclick = executeInsertion;
+
+        const cancelBtn = document.getElementById('legacy-wa-btn-cancel');
+        if (cancelBtn) cancelBtn.onclick = () => DialogSystem.close();
+
+        const closeX = document.getElementById('legacy-wa-close-x');
+        if (closeX) closeX.onclick = () => DialogSystem.close();
+
+        const textInput = document.getElementById('legacy-wa-text');
+        if (textInput) {
+            textInput.addEventListener('input', updateCardPreviews);
+            if (editTarget && initialText) {
+                updateCardPreviews();
+            } else {
+                resetGridToDefault();
+            }
+            textInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeInsertion();
+                }
+            });
+            setTimeout(() => { textInput.focus(); textInput.select(); }, 120);
+        }
+
+        setTimeout(() => {
+            const selectedBtn = grid.querySelector(`.legacy-wa-card[data-style-id="${initialStyleId}"]`);
+            if (selectedBtn) {
+                selectedBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 60);
     };
 
     if (window.ContextRibbonActions) {
-        window.ContextRibbonActions.openWordArtModal = window.showWordArtModal;
+        window.ContextRibbonActions.openWordArtModal = function() {
+            window.showWordArtModal(state.selectedEl);
+        };
     }
 
 
