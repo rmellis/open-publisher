@@ -559,7 +559,10 @@ function uploadAndConvertDoc(file) {
         formData.append('docFile', file); 
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://pork-continuity-lamb-conservative.trycloudflare.com/api/convert-doc', true); 
+        const docEndpoint = window.OPENPUB_SERVER_URL
+            ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-doc`
+            : 'https://buy-abraham-birth-future.trycloudflare.com/api/convert-doc';
+        xhr.open('POST', docEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
             if (e.lengthComputable) {
@@ -2340,7 +2343,7 @@ function uploadAndConvertPub(file) {
         const xhr = new XMLHttpRequest();
         const pubEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-pub`
-            : 'https://pork-continuity-lamb-conservative.trycloudflare.com/api/convert-pub';
+            : 'https://buy-abraham-birth-future.trycloudflare.com/api/convert-pub';
         xhr.open('POST', pubEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
