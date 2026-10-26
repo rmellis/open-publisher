@@ -848,6 +848,9 @@ window.handleMouseUp = function() {
                     window.updateArrowTipOverlay(overlay, state.selectedEl);
                 }
             }
+            if (state.selectedEl && state.selectedEl.getAttribute('data-type') === 'progress-bar' && window.ProgressBarEngine && typeof window.ProgressBarEngine.refreshElement === 'function') {
+                window.ProgressBarEngine.refreshElement(state.selectedEl);
+            }
             if (state.dragData && state.dragData.multi) {
                 state.dragData.multi.forEach(item => {
                     if (item.el && typeof window.refreshBetaWordArt === 'function') {

@@ -315,6 +315,7 @@ function createWrapper(htmlContent) {
     pushHistory();
     return el;
 }
+window.createWrapper = createWrapper;
 
 function toggleHeaderFooter(forceState) {
     if (typeof forceState === 'boolean') {

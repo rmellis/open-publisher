@@ -228,6 +228,7 @@ const ContextMenuSystem = {
                     ${this.buildItemRaw('QR Code', qrcodeSvg, 'showQRCodeModal()')}
                     ${this.buildItem('Table', 'fa-table', 'toggleTableMenu(this)')}
                     ${this.buildItem('Styled Tables', 'fa-border-all', 'if(window.openTableTemplatesModal) window.openTableTemplatesModal()')}
+                    ${this.buildItem('Progress Bar', 'fa-tasks', 'if(window.ProgressBarEngine) window.ProgressBarEngine.showModal()')}
                     ${this.buildItem('Symbol', 'fa-copyright', 'if(window.showSymbolModal) window.showSymbolModal()')}
                     ${this.buildItem('Emojis', 'fa-icons', 'showClipartModal()')}
                 `);
@@ -243,10 +244,11 @@ const ContextMenuSystem = {
                 // --- ELEMENT MENUS ---
                 const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
                 const isTable = el.querySelector('table') !== null;
-                const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
-                const isWordArt = el.querySelector('.wa-text') !== null;
-                const isText = (el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable);
-                const isImage = !isText && !!contentImg;
+                const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget') !== null;
+                const isShape = !isProgressBar && (el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow');
+                const isWordArt = !isProgressBar && el.querySelector('.wa-text') !== null;
+                const isText = !isProgressBar && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
+                const isImage = !isProgressBar && !isText && !!contentImg;
 
                 let clickedWord = "";
                 let clickedWordRange = null;
@@ -437,6 +439,21 @@ const ContextMenuSystem = {
                     html += this.buildDivider();
                     html += this.buildItem('Format AutoShape', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
                     html += this.buildItem('Border Art...', 'fa-palette', 'if(window.ContextMenuActions && ContextMenuActions.openBorderArt) ContextMenuActions.openBorderArt(); else if(window.BorderArtEngine) BorderArtEngine.openForElement(state.selectedEl);');
+                }
+                // 4.5. PROGRESS BAR CONTEXT MENU
+                else if (isProgressBar) {
+                    html += this.buildItem('Designer / Edit Progress Bar...', 'fa-sliders-h', 'if(window.ProgressBarEngine) window.ProgressBarEngine.showModal(state.selectedEl)');
+                    html += this.buildFlyoutItem('Change Style Preset', 'fa-palette', `
+                        ${this.buildItem('CV Emerald Skill', 'fa-circle', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','capsule-green'); const p=ProgressBarEngine.styles.find(s=>s.id==='capsule-green'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Publisher Teal', 'fa-circle', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','capsule-teal'); const p=ProgressBarEngine.styles.find(s=>s.id==='capsule-teal'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Executive Sapphire', 'fa-circle', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','modern-sapphire'); const p=ProgressBarEngine.styles.find(s=>s.id==='modern-sapphire'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); state.selectedEl.setAttribute('data-pb-show-label','right'); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Cyberpunk Glow', 'fa-circle', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','cyber-cyan'); const p=ProgressBarEngine.styles.find(s=>s.id==='cyber-cyan'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); state.selectedEl.setAttribute('data-pb-glow',p.glow); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Sunset Radiance', 'fa-circle', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','sunset-gradient'); const p=ProgressBarEngine.styles.find(s=>s.id==='sunset-gradient'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('10-Pip Rating Blocks', 'fa-th-large', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','segmented-pips'); const p=ProgressBarEngine.styles.find(s=>s.id==='segmented-pips'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); state.selectedEl.setAttribute('data-pb-show-label','right'); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Barber Stripe', 'fa-bars', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','candy-stripe'); const p=ProgressBarEngine.styles.find(s=>s.id==='candy-stripe'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                        ${this.buildItem('Prestige Gold', 'fa-star', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','prestige-gold'); const p=ProgressBarEngine.styles.find(s=>s.id==='prestige-gold'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
+                    `);
+                    html += this.buildDivider();
                 }
 
                 // 5. UNIVERSAL OBJECT FUNCTIONS

@@ -122,7 +122,7 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
     const clone = paper.cloneNode(true);
     
     // Strip UI elements from the clone before capturing
-    clone.querySelectorAll('.margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .op-dynamic-print-style, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
+    clone.querySelectorAll('.margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .op-dynamic-print-style, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay, .pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
 
     const stagingArea = document.createElement('div');
     stagingArea.style.cssText = 'position: fixed; top: -10000px; left: -10000px; z-index: -100; overflow: visible; display: block; opacity: 0.01; pointer-events: none;';
@@ -211,6 +211,25 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
 
     if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
         window.normalizeTextBackgroundsForPrint(clone);
+    }
+
+    // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR EXPORT (v5.12.0) ✨
+    // html2canvas fails to parse CSS repeating-linear-gradient(), causing striped bars to render empty.
+    if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
+        clone.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
+            const bg = el.style.backgroundImage || el.style.background || '';
+            if (bg.includes('repeating-linear-gradient')) {
+                const parsed = window.ProgressBarEngine.parseStripeGradient(bg);
+                if (parsed) {
+                    const stripePng = window.ProgressBarEngine.createStripePatternDataURL(parsed.c1, parsed.c2, parsed.stripeWidth);
+                    if (stripePng) {
+                        el.style.backgroundImage = `url(${stripePng})`;
+                        el.style.backgroundRepeat = 'repeat';
+                        el.style.backgroundColor = parsed.c1;
+                    }
+                }
+            }
+        });
     }
 
     if (typeof window.bakeElementShadowUnderlays === 'function') {

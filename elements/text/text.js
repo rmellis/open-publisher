@@ -931,6 +931,18 @@ function showFloatToolbar() {
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     if (waToolbar) waToolbar.style.display = 'none';
     
+    const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget');
+    if (isProgressBar) {
+        if (window.ProgressBarEngine && typeof window.ProgressBarEngine.showToolbar === 'function') {
+            window.ProgressBarEngine.showToolbar(el);
+        }
+        return;
+    } else {
+        if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') {
+            window.ProgressBarEngine.hideToolbar();
+        }
+    }
+    
     let activeToolbar = null;
     
     if (isBetaWordArt) {

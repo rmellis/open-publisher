@@ -1,4 +1,4 @@
-// OpenPublisher Core Engine (v5.11.17)
+// OpenPublisher Core Engine (v5.12.0)
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -40,8 +40,8 @@ let state = {
     rulerUnit: 'cm',
     margins: { top: 48, right: 48, bottom: 48, left: 48 },
     marginsDpi: 96,
-    viewMode: 'single'
 };
+window.state = state;
 
 const colorSchemes = {
     "Classic": ["#2C3E50", "#E74C3C", "#ECF0F1", "#3498DB", "#F1C40F"],

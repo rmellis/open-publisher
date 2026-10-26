@@ -395,6 +395,7 @@ function renderPage(pageData) {
         if (data.growFit) applyGrowFit(el);
         if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
         if (data.type === 'smart-arrow' && typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
+        if (data.type === 'progress-bar' && window.ProgressBarEngine && typeof window.ProgressBarEngine.initElement === 'function') window.ProgressBarEngine.initElement(el);
         paper.appendChild(el);
     });
     

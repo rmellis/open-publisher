@@ -542,6 +542,7 @@ function deselect() {
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     const waToolbar = document.getElementById('wa-float-toolbar');
     if (waToolbar) waToolbar.style.display = 'none';
+    if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') window.ProgressBarEngine.hideToolbar();
     if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
 }
 

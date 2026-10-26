@@ -342,6 +342,12 @@ window.initShapes = function() {
         ContextMenuActions.formatTextBox = function() {
             if (!state.selectedEl) return;
             
+            if (state.selectedEl.getAttribute('data-type') === 'progress-bar' || state.selectedEl.querySelector('.progress-bar-widget')) {
+                if (window.ProgressBarEngine && typeof window.ProgressBarEngine.showModal === 'function') {
+                    return window.ProgressBarEngine.showModal(state.selectedEl);
+                }
+            }
+            
             let currentBg = "#ffffff";
             let currentBc = "#000000";
             let currentBt = 0;

@@ -77,6 +77,13 @@ const DialogSystem = {
     convertNativeSelects: function(container) {
         if(!container) return;
         const selects = container.querySelectorAll('select');
+        if (selects.length > 0) {
+            const dlg = container.closest ? (container.closest('.custom-dialog') || container) : container;
+            if (dlg) {
+                dlg.classList.add('allow-overflow');
+                dlg.style.overflow = 'visible';
+            }
+        }
         selects.forEach(sel => {
             if (sel.dataset.noCustom === 'true' || sel.classList.contains('no-custom-select') || sel.closest('.format-properties-modal')) return;
             const wrapper = document.createElement('div');
@@ -107,7 +114,7 @@ const DialogSystem = {
             arrowBox.appendChild(arrow);
             
             const optionsList = document.createElement('div');
-            optionsList.style.cssText = 'display:none; position:absolute; top:calc(100% + 2px); left:0; right:0; background:#fff; border:1px solid var(--ui-theme-dark); border-radius:4px; z-index:9999; max-height:200px; overflow-y:auto; box-shadow:0 4px 6px rgba(0,0,0,0.1);';
+            optionsList.style.cssText = 'display:none; position:absolute; top:calc(100% + 2px); left:0; right:0; background:#fff; border:1px solid var(--ui-theme-dark); border-radius:4px; z-index:99999; max-height:220px; overflow-y:auto; box-shadow:0 8px 16px rgba(0,0,0,0.18);';
             
             Array.from(sel.options).forEach((opt, idx) => {
                 const optDiv = document.createElement('div');
@@ -133,7 +140,22 @@ const DialogSystem = {
                 e.stopPropagation();
                 const isShowing = optionsList.style.display === 'block';
                 document.querySelectorAll('.custom-dom-select-list').forEach(l => l.style.display = 'none');
-                optionsList.style.display = isShowing ? 'none' : 'block';
+                if (!isShowing) {
+                    optionsList.style.display = 'block';
+                    const rect = wrapper.getBoundingClientRect();
+                    const listHeight = optionsList.offsetHeight || 160;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+                    if (spaceBelow < listHeight + 10 && spaceAbove > spaceBelow) {
+                        optionsList.style.top = 'auto';
+                        optionsList.style.bottom = 'calc(100% + 2px)';
+                    } else {
+                        optionsList.style.top = 'calc(100% + 2px)';
+                        optionsList.style.bottom = 'auto';
+                    }
+                } else {
+                    optionsList.style.display = 'none';
+                }
             };
             
             optionsList.className = 'custom-dom-select-list';
@@ -211,6 +233,7 @@ const DialogSystem = {
         }, 100);
     }
 };
+window.DialogSystem = DialogSystem;
 
 function switchTab(t) {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -2133,7 +2156,7 @@ window.ContextRibbonSystem = {
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-text">${clipGroup}<div class="group" id="group-format-textbox-styles"><div style="display:flex; align-items:center; height:100%; gap:5px; padding:0 2px;"><div style="display:flex; align-items:center; height:100%; gap:4px;"><div class="styled-textbox-gallery-strip" id="textbox-quick-styles-strip"></div><div class="tool-btn" onclick="if(window.TextBoxStylesSystem) TextBoxStylesSystem.toggleMenu(this, 'format'); event.stopPropagation();" title="More Text Box Styles" style="min-width:34px; padding:2px 4px; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;"><i class="fas fa-chevron-down" style="font-size:11px; color:var(--ui-theme-color);"></i><span style="font-size:10px; margin-top:2px;">More</span></div></div><div style="width:1px; height:70%; background:var(--ui-border, #e2e8f0); margin:0 2px;"></div><div class="tool-btn" id="btn-textbox-fill" onclick="if(window.TextBoxStylesSystem) TextBoxStylesSystem.toggleFillMenu(this); event.stopPropagation();" title="Change Text Box Fill Color or Gradient"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip" style="color:var(--ui-theme-color);"></i><div id="ribbon-box-fill-indicator" style="height: 3px; width: 22px; background: var(--ui-theme-color); margin-top: 2px; border-radius:1px;"></div></div><span style="font-size:11px;">Box Fill <i class="fas fa-caret-down" style="font-size:9px;"></i></span></div><div class="tool-btn" id="btn-textbox-border" onclick="if(window.TextBoxStylesSystem) TextBoxStylesSystem.toggleBorderMenu(this); event.stopPropagation();" title="Change Text Box Border Color & Weight"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-border-style" style="color:var(--ui-theme-color);"></i><div id="ribbon-box-border-indicator" style="height: 3px; width: 22px; background: #334155; margin-top: 2px; border-radius:1px;"></div></div><span style="font-size:11px;">Outline <i class="fas fa-caret-down" style="font-size:9px;"></i></span></div><div class="tool-btn" onclick="if(window.TextBoxStylesSystem) TextBoxStylesSystem.openFormatDialog();" title="Full Format Properties (Gradients, Patterns, Opacity, Rounded Corners)"><i class="fas fa-sliders-h" style="color:var(--ui-theme-color);"></i><span style="font-size:11px;">Format</span></div></div><div class="group-label">Text Box Styles & Colors</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.linkTextBox()"><i class="fas fa-link" style="color:var(--ui-theme-color)"></i> Link</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-compress-arrows-alt" style="color:var(--ui-theme-color)"></i> Fit</div><div class="tool-btn" id="btn-shrink-overflow" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleShrinkOverflow()"><i class="fas fa-compress" style="color:var(--ui-theme-color)"></i> Shrink Text<br>on Overflow</div><div class="tool-btn" id="btn-grow-fit" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.toggleGrowFit()"><i class="fas fa-text-height" style="color:var(--ui-theme-color)"></i> Grow Box<br>to Fit</div><div class="group-label">Text Flow</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('top')"><i class="fas fa-align-left" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Top</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('center')"><i class="fas fa-align-center" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Middle</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.alignTextVertical('bottom')"><i class="fas fa-align-right" style="transform: rotate(90deg); color:var(--ui-theme-color)"></i> Bottom</div><div class="group-label">Alignment</div></div><div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changeCase()"><i class="fas fa-font" style="color:var(--ui-theme-color)"></i> Change Case</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.dropCap()"><i class="fas fa-heading" style="color:var(--ui-theme-color)"></i> Drop Cap</div><div class="tool-btn" onclick="ContextRibbonActions.setColumns()"><i class="fas fa-columns" style="color:var(--ui-theme-color)"></i> Columns</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--ui-theme-color)"></i> Line<br>Spacing</div><div class="group-label">Typography</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('paper').classList.toggle('show-text-blocks')"><i class="fas fa-paragraph" style="color:var(--ui-theme-color)"></i> ¶ Blocks</div><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--ui-theme-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div></div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-wordart">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.bestFitText()"><i class="fas fa-expand-arrows-alt" style="color:var(--ui-theme-color)"></i> Fit to Box</div><div class="tool-btn" onclick="ContextRibbonActions.openWordArtModal()"><i class="fas fa-font" style="color:var(--ui-theme-color)"></i> Change Style</div><div class="group-label">WordArt Options</div></div>${arrGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-pic">${clipGroup}<div class="group"><div class="tool-btn" onclick="if(typeof editSelectedImageDrawing === 'function') editSelectedImageDrawing()"><i class="fas fa-paint-brush" style="color:var(--ui-theme-color)"></i> Edit</div><div class="group-label">Draw</div></div><div class="group"><div class="tool-btn" onclick="toggleRecolorMenu(this); event.stopPropagation();"><i class="fas fa-tint" style="color:var(--ui-theme-color)"></i> Recolor</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.changePicture()"><i class="fas fa-exchange-alt" style="color:var(--ui-theme-color)"></i> Swap</div><div class="tool-btn" onclick="if(typeof compressSelectedPicture === 'function') compressSelectedPicture()"><i class="fas fa-compress-arrows-alt" style="color:var(--ui-theme-color)"></i> Compress<br>Pictures</div><div class="group-label">Adjust</div></div><div class="group"><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--ui-theme-color)"></i> Glow</div><div class="tool-btn" onclick="if(typeof toggleCrop === 'function') toggleCrop()"><i class="fas fa-crop" style="color:var(--ui-theme-color)"></i> Crop</div><div class="tool-btn" onclick="ContextRibbonActions.cropToShape()"><i class="fas fa-draw-polygon" style="color:var(--ui-theme-color)"></i> Shape Crop</div><div class="group-label">Picture Styles</div></div>${arrGroup}<div class="group"><div class="tool-btn" onclick="toggleSnapMenu(this); event.stopPropagation();"><i class="fas fa-magnet" style="color:var(--ui-theme-color)"></i> Snap To <i class="fas fa-caret-down"></i></div><div class="group-label">Layout</div></div>${sizeGroup}</div>
-                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--ui-theme-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--ui-theme-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--ui-theme-color)"></i> Glow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
+                <div class="ribbon-toolbar contextual-toolbar" id="ribbon-format-shape">${clipGroup}<div class="group"><div class="tool-btn" id="btn-ribbon-pb-designer" onclick="if(window.ProgressBarEngine) window.ProgressBarEngine.showModal((window.state && window.state.selectedEl) || null);" title="Open Progress Bar Designer" style="display:none;"><i class="fas fa-sliders-h" style="color:var(--ui-theme-color)"></i> Bar Designer</div><div class="tool-btn" onclick="document.getElementById('shape-dropdown').style.display='block'"><i class="fas fa-shapes" style="color:var(--ui-theme-color)"></i> Shapes</div><div class="tool-btn" onclick="if(typeof ContextMenuActions !== 'undefined') ContextMenuActions.formatTextBox()"><div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 2px;"><i class="fas fa-fill-drip"></i><div style="height: 4px; width: 20px; background: var(--ui-theme-color); margin-top: 2px;"></div></div>Shape Fill</div><div class="tool-btn" onclick="ContextRibbonActions.addDropShadow()"><i class="fas fa-clone" style="color:var(--ui-theme-color)"></i> Shadow</div><div class="tool-btn" onclick="ContextRibbonActions.addGlow()"><i class="fas fa-sun" style="color:var(--ui-theme-color)"></i> Glow</div><div class="group-label">Shape Styles</div></div>${drawGroup}${arrGroup}${sizeGroup}</div>
                 <div class="ribbon-toolbar contextual-toolbar" id="ribbon-table-design">${clipGroup}<div class="group"><div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-table" style="color:var(--ui-theme-color)"></i> Styles</div><div class="tool-btn" onclick="ContextRibbonActions.tableBorders()"><i class="fas fa-border-all" style="color:var(--ui-theme-color)"></i> Borders</div><div class="tool-btn" onclick="showLineSpacingModal()"><i class="fas fa-arrows-alt-v" style="color:var(--ui-theme-color)"></i> Line<br>Spacing</div><div class="tool-btn" onclick="ContextRibbonActions.convertTableToText()"><i class="fas fa-align-left" style="color:var(--ui-theme-color)"></i> Convert<br>to Text</div><div class="group-label">Table Formats</div></div>${arrGroup}</div>
             `);
             initRibbonResponsiveness();
@@ -2150,10 +2173,11 @@ window.ContextRibbonSystem = {
         this.hideAllTabs(false); if (!el) return;
         const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
         const isTable = el.querySelector('table') !== null;
-        const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow';
-        const isWordArt = el.querySelector('.wa-text') !== null;
-        const isText = (el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable);
-        const isImage = !isText && (!!contentImg || el.getAttribute('data-type') === 'emoji');
+        const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget') !== null;
+        const isShape = el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow' || isProgressBar;
+        const isWordArt = !isProgressBar && el.querySelector('.wa-text') !== null;
+        const isText = !isProgressBar && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
+        const isImage = !isProgressBar && !isText && (!!contentImg || el.getAttribute('data-type') === 'emoji');
         let tabIdToOpen = null;
         if (isImage) { document.getElementById('tab-format-pic').style.display = 'inline-block'; tabIdToOpen = 'format-pic'; } 
         else if (isTable) { 
@@ -2169,7 +2193,12 @@ window.ContextRibbonSystem = {
                 if (label) label.innerText = padVal + 'px';
             }
         }
-        else if (isShape) { document.getElementById('tab-format-shape').style.display = 'inline-block'; tabIdToOpen = 'format-shape'; } 
+        else if (isShape) { 
+            document.getElementById('tab-format-shape').style.display = 'inline-block'; 
+            tabIdToOpen = 'format-shape'; 
+            const pbBtn = document.getElementById('btn-ribbon-pb-designer');
+            if (pbBtn) pbBtn.style.display = isProgressBar ? 'flex' : 'none';
+        } 
         else if (isWordArt) { document.getElementById('tab-format-wordart').style.display = 'inline-block'; tabIdToOpen = 'format-wordart'; } 
         else if (isText) { 
             document.getElementById('tab-format-text').style.display = 'inline-block'; 
@@ -2212,6 +2241,8 @@ window.ContextRibbonSystem = {
     hideAllTabs: function() {
         document.querySelectorAll('.contextual-tab').forEach(tab => { tab.style.display = 'none'; });
         document.getElementById('op-table-sidebar')?.classList.remove('visible');
+        const pbBtn = document.getElementById('btn-ribbon-pb-designer');
+        if (pbBtn) pbBtn.style.display = 'none';
         let activeTab = document.querySelector('.tab.active');
         if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
             window.switchTab(window.lastStandardTab || 'home');

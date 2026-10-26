@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.11.17)
+// OpenPublisher Print Engine (v5.12.0)
 (function installNativePrintHooks() {
 
     async function buildPrintDOM() {
@@ -365,6 +365,27 @@
                 // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT SPOOLER ✨
                 if (typeof window.normalizeTextBackgroundsForPrint === 'function') {
                     window.normalizeTextBackgroundsForPrint(scaler);
+                }
+
+                // Pre-flight: Strip interactive handles and non-printable elements
+                scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
+
+                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.12.0) ✨
+                if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
+                    scaler.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
+                        const bg = el.style.backgroundImage || el.style.background || '';
+                        if (bg.includes('repeating-linear-gradient')) {
+                            const parsed = window.ProgressBarEngine.parseStripeGradient(bg);
+                            if (parsed) {
+                                const stripePng = window.ProgressBarEngine.createStripePatternDataURL(parsed.c1, parsed.c2, parsed.stripeWidth);
+                                if (stripePng) {
+                                    el.style.backgroundImage = `url(${stripePng})`;
+                                    el.style.backgroundRepeat = 'repeat';
+                                    el.style.backgroundColor = parsed.c1;
+                                }
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -2737,6 +2758,29 @@
                             setTimeout(done, 2500);
                         });
                     }));
+                }
+
+                // Pre-flight: Remove interactive elements that should never appear on print (progress bar drag handles, selection handles, floating toolbars, etc.)
+                pageWrapper.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
+
+                // Pre-flight: Normalize progress bar repeating gradients for html2canvas
+                // html2canvas fails to parse CSS repeating-linear-gradient(), causing striped bars to render empty.
+                // Convert any repeating-linear-gradient backgrounds into canvas-backed seamless repeating pattern data URLs.
+                if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
+                    pageWrapper.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
+                        const bg = el.style.backgroundImage || el.style.background || '';
+                        if (bg.includes('repeating-linear-gradient')) {
+                            const parsed = window.ProgressBarEngine.parseStripeGradient(bg);
+                            if (parsed) {
+                                const stripePng = window.ProgressBarEngine.createStripePatternDataURL(parsed.c1, parsed.c2, parsed.stripeWidth);
+                                if (stripePng) {
+                                    el.style.backgroundImage = `url(${stripePng})`;
+                                    el.style.backgroundRepeat = 'repeat';
+                                    el.style.backgroundColor = parsed.c1;
+                                }
+                            }
+                        }
+                    });
                 }
 
                 // Pre-flight: Normalize any inline SVG emojis in pageWrapper to SVG data URI <img> tags so html2canvas never stalls
