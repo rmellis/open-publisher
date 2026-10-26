@@ -5193,19 +5193,82 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH
+// ANTI AD-OVERLAY SECURITY PATCH (v5.11.17)
 // ==========================================
+
+// Helper to verify trusted cloud desktop platforms (e.g. puter.com)
+function isPuterEnvironment() {
+    const isPuterHost = (hostname) => {
+        if (!hostname) return false;
+        const h = hostname.toLowerCase();
+        return h === 'puter.com' || h.endsWith('.puter.com') || h === 'puter.site' || h.endsWith('.puter.site');
+    };
+
+    try {
+        // 1. Current window hostname
+        if (isPuterHost(window.location.hostname)) return true;
+    } catch (e) {}
+
+    try {
+        // 2. Ancestor origins (supported in Chrome/Chromium/Safari/Edge)
+        if (window.location && window.location.ancestorOrigins) {
+            for (let i = 0; i < window.location.ancestorOrigins.length; i++) {
+                try {
+                    const originHost = new URL(window.location.ancestorOrigins[i]).hostname;
+                    if (isPuterHost(originHost)) return true;
+                } catch (err) {
+                    const orig = (window.location.ancestorOrigins[i] || '').toLowerCase();
+                    if (orig.includes('//puter.com') || orig.includes('.puter.com') || orig.includes('//puter.site') || orig.includes('.puter.site')) return true;
+                }
+            }
+        }
+    } catch (e) {}
+
+    try {
+        // 3. Document referrer from parent frame
+        if (document.referrer) {
+            try {
+                const refHost = new URL(document.referrer).hostname;
+                if (isPuterHost(refHost)) return true;
+            } catch (err) {
+                const ref = document.referrer.toLowerCase();
+                if (ref.includes('//puter.com') || ref.includes('.puter.com') || ref.includes('//puter.site') || ref.includes('.puter.site')) return true;
+            }
+        }
+    } catch (e) {}
+
+    try {
+        // 4. Same-origin top window location
+        if (window.top && window.top !== window.self && window.top.location) {
+            if (isPuterHost(window.top.location.hostname)) return true;
+        }
+    } catch (e) {}
+
+    try {
+        // 5. Puter runtime environment object
+        if (typeof window.puter !== 'undefined' || (window.parent && typeof window.parent.puter !== 'undefined')) {
+            return true;
+        }
+    } catch (e) {}
+
+    return false;
+}
+window.isPuterEnvironment = isPuterEnvironment;
 
 // --- ANTI AD-OVERLAY (INTERSECTION OBSERVER V2) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Only run if we are inside an iframe
     if (window.self === window.top) return;
 
+    // Exempt trusted platforms like puter.com from overlay occlusion checks
+    if (isPuterEnvironment()) return;
+
     try {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 // If the element is intersecting the viewport but is NOT visible (e.g. occluded by a parent iframe's overlay ad)
                 if (entry.isIntersecting && !entry.isVisible) {
+                    if (isPuterEnvironment()) return;
                     if (!window.hasShownOverlayWarning) {
                         window.hasShownOverlayWarning = true;
                         DialogSystem.show('Security Warning', '<div style="text-align:center; padding: 20px;"><i class="fas fa-shield-alt fa-3x" style="color:#d32f2f; margin-bottom:15px;"></i><br><h3 style="margin-top:0;">Suspicious Activity Detected</h3><p>It appears this website is overlaying unauthorized content (like ads) on top of Open Publisher.</p><p>Open Publisher is a 100% free tool. Please be careful as the surrounding site may be trying to mislead you.</p></div>', null, true);

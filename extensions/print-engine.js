@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.11.16)
+// OpenPublisher Print Engine (v5.11.17)
 (function installNativePrintHooks() {
 
     async function buildPrintDOM() {
