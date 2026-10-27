@@ -1,4 +1,4 @@
-// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.12.0) ---
+// --- 4. WORDART SWAP & SPELLCHECK FIX (v5.12.1) ---
 const brokenWordArts = [];
 
 // Cache of WordArt CSS rules parsed from stylesheets
