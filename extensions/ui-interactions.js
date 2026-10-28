@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.12.1)
+// Open Publisher UI Interactions (v5.12.2)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.12.1)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.12.2)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1055,7 +1055,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.12.1</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.12.2</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1442,7 +1442,7 @@
             safeZone.style.display = 'none';
             document.body.appendChild(safeZone);
         }
-        const grids = ['template-cats', 'template-grid', 'clipart-grid', 'ad-grid', 'dialog-wordart-grid', 'beta-wa-grid'];
+        const grids = ['template-cats', 'template-grid', 'clipart-grid', 'ad-grid', 'dialog-wordart-grid', 'beta-wa-grid', 'itp-cards-grid', 'itp-category-bar'];
         grids.forEach(id => {
             const el = document.getElementById(id);
             if (el) safeZone.appendChild(el); 
@@ -1469,14 +1469,31 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE
+    // 4. TEMPLATES MODAL OVERRIDE (v5.12.2: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');
         const grid = document.getElementById('template-grid');
         if (!cats || !grid) return; 
 
-        const html = `<div id="dialog-template-container" style="display:flex; flex-direction:column; gap:15px;"></div>`;
+        const bannerHtml = `
+            <div class="template-multipage-banner" style="display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg, color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 12%, #ffffff) 0%, color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 4%, #ffffff) 100%); border:1px solid color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 30%, transparent); border-radius:8px; padding:10px 16px; margin-bottom:5px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:34px; height:34px; border-radius:6px; background:var(--ui-theme-color, #0d9e8f); color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:13px; color:#1e293b;">Insert Templates into Multi-Page Publications</div>
+                        <div style="font-size:11px; color:#64748b;">Add templates directly to specific pages or mix multiple template styles across your document.</div>
+                    </div>
+                </div>
+                <button id="btn-open-insert-template-modal" onclick="if(window.showInsertTemplateModal) window.showInsertTemplateModal();" style="display:inline-flex; align-items:center; gap:8px; background:var(--ui-theme-color, #0d9e8f); color:#ffffff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:12px; cursor:pointer; box-shadow:0 2px 8px color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 35%, transparent); transition:all 0.2s ease; white-space:nowrap;">
+                    <i class="fas fa-file-medical"></i> Insert Template to Page...
+                </button>
+            </div>
+        `;
+
+        const html = `<div id="dialog-template-container" style="display:flex; flex-direction:column; gap:12px;">${bannerHtml}</div>`;
         DialogSystem.show('Publication Templates', html, null, true);
         
         const dialogBox = document.getElementById('custom-dialog-box');

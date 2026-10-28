@@ -166,7 +166,10 @@ window.DashboardSystem = {
     },
     
     loadTemplates: function() {
-        fetch('elements/templates/template-index.json?v=5.8.5')
+        const url = (typeof window.getTemplateAssetUrl === 'function')
+            ? window.getTemplateAssetUrl('elements/templates/template-index.json')
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.12.2');
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
@@ -183,7 +186,10 @@ window.DashboardSystem = {
         div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
         
         // Fetch opub to get thumbnail HTML
-        fetch(`elements/templates/files/${t.file}?v=5.8.5`)
+        const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
+            ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.12.2`);
+        fetch(fileUrl)
             .then(res => res.json())
             .then(opubData => {
                 const page = opubData.pages[0];

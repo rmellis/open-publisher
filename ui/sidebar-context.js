@@ -34,6 +34,15 @@ function contextAddPage() {
     addNewPage(state.contextMenuTargetIndex);
 }
 
+function contextInsertTemplatePage() {
+    const targetIdx = (state.contextMenuTargetIndex !== undefined) ? state.contextMenuTargetIndex : state.currentPageIndex;
+    const menu = document.getElementById('minimap-context-menu');
+    if (menu) menu.style.display = 'none';
+    if (typeof window.showInsertTemplateModal === 'function') {
+        window.showInsertTemplateModal({ targetIndex: targetIdx, action: 'after' });
+    }
+}
+
 
 function contextDuplicatePage(fromPasteboard = false) {
     const index = (fromPasteboard || state.contextMenuTargetIndex === undefined) ? state.currentPageIndex : state.contextMenuTargetIndex;
