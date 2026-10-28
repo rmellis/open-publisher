@@ -142,6 +142,7 @@ function serializeCurrentPage() {
             if (attr.name.startsWith('data-filter-') || 
                 attr.name.startsWith('data-waf-') || 
                 attr.name.startsWith('data-pb-') || 
+                attr.name.startsWith('data-chart-') || 
                 attr.name.startsWith('data-shadow-') || 
                 attr.name.startsWith('data-border-') ||
                 attr.name.startsWith('data-is-') ||

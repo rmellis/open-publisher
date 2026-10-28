@@ -396,6 +396,7 @@ function renderPage(pageData) {
         if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
         if (data.type === 'smart-arrow' && typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
         if (data.type === 'progress-bar' && window.ProgressBarEngine && typeof window.ProgressBarEngine.initElement === 'function') window.ProgressBarEngine.initElement(el);
+        if (data.type === 'chart' && typeof window.initChartElements === 'function') window.initChartElements();
         paper.appendChild(el);
     });
     

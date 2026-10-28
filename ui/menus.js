@@ -212,8 +212,8 @@ const ContextMenuSystem = {
                 html += this.buildDivider();
                 
                 const qrcodeSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ui-theme-dark)" style="vertical-align: -0.125em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/><rect x="5" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/><rect x="17" y="5" width="2" height="2"/><path fill-rule="evenodd" clip-rule="evenodd" d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/><rect x="5" y="17" width="2" height="2"/><rect x="11" y="2" width="2" height="3"/><rect x="11" y="6" width="2" height="4"/><rect x="2" y="11" width="3" height="2"/><rect x="6" y="11" width="4" height="2"/><rect x="14" y="11" width="3" height="2"/><rect x="18" y="11" width="4" height="2"/><rect x="11" y="14" width="2" height="4"/><rect x="11" y="19" width="2" height="3"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="2" height="2"/><rect x="21" y="14" width="1" height="3"/><rect x="15" y="18" width="2" height="4"/><rect x="18" y="17" width="4" height="2"/><rect x="18" y="20" width="2" height="2"/><rect x="21" y="20" width="1" height="2"/></svg>`;
-                const waLegacyPng = `<img src="ui/icons/WordArt.png?v=5.12.3" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">`;
-                const waBetaPng = `<img src="ui/icons/BetaWordArt.png?v=5.12.3" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">`;
+                const waLegacyPng = `<img src="ui/icons/WordArt.png?v=5.13.0" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">`;
+                const waBetaPng = `<img src="ui/icons/BetaWordArt.png?v=5.13.0" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">`;
                 const clipartPng = `<img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/9CWMb1b.png" style="width:14px; height:14px; object-fit:contain; vertical-align: -0.125em; pointer-events:none; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">`;
 
                 html += this.buildFlyoutItem('Insert...', 'fa-plus-circle', `
@@ -231,6 +231,7 @@ const ContextMenuSystem = {
                     ${this.buildItem('Table', 'fa-table', 'toggleTableMenu(this)')}
                     ${this.buildItem('Styled Tables', 'fa-border-all', 'if(window.openTableTemplatesModal) window.openTableTemplatesModal()')}
                     ${this.buildItem('Progress Bar', 'fa-tasks', 'if(window.ProgressBarEngine) window.ProgressBarEngine.showModal()')}
+                    ${this.buildItem('Chart or Graph...', 'fa-chart-pie', 'if(window.showChartModal) window.showChartModal()')}
                     ${this.buildItem('Page from Template...', 'fa-file-invoice', 'if(window.showInsertTemplateModal) window.showInsertTemplateModal()')}
                     ${this.buildItem('Symbol', 'fa-copyright', 'if(window.showSymbolModal) window.showSymbolModal()')}
                     ${this.buildItem('Emojis', 'fa-icons', 'showClipartModal()')}
@@ -249,10 +250,11 @@ const ContextMenuSystem = {
                 const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
                 const isTable = el.querySelector('table') !== null;
                 const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget') !== null;
-                const isShape = !isProgressBar && (el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow');
-                const isWordArt = !isProgressBar && el.querySelector('.wa-text') !== null;
-                const isText = !isProgressBar && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
-                const isImage = !isProgressBar && !isText && !!contentImg;
+                const isChart = el.getAttribute('data-type') === 'chart' || el.hasAttribute('data-chart-config');
+                const isShape = !isProgressBar && !isChart && (el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow');
+                const isWordArt = !isProgressBar && !isChart && el.querySelector('.wa-text') !== null;
+                const isText = !isProgressBar && !isChart && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
+                const isImage = !isProgressBar && !isChart && !isText && !!contentImg;
 
                 let clickedWord = "";
                 let clickedWordRange = null;
@@ -457,6 +459,11 @@ const ContextMenuSystem = {
                         ${this.buildItem('Barber Stripe', 'fa-bars', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','candy-stripe'); const p=ProgressBarEngine.styles.find(s=>s.id==='candy-stripe'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
                         ${this.buildItem('Prestige Gold', 'fa-star', "if(window.ProgressBarEngine){ state.selectedEl.setAttribute('data-pb-style','prestige-gold'); const p=ProgressBarEngine.styles.find(s=>s.id==='prestige-gold'); state.selectedEl.setAttribute('data-pb-fill',p.fillColor); state.selectedEl.setAttribute('data-pb-track',p.trackColor); state.selectedEl.setAttribute('data-pb-radius',p.radius); ProgressBarEngine.refreshElement(state.selectedEl); pushHistory(); }")}
                     `);
+                    html += this.buildDivider();
+                }
+                // 4.6. CHART CONTEXT MENU
+                else if (isChart) {
+                    html += this.buildItem('Edit Chart Data...', 'fa-chart-pie', 'if(window.showChartModal) window.showChartModal(state.selectedEl)');
                     html += this.buildDivider();
                 }
 

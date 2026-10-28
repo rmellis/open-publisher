@@ -7013,7 +7013,7 @@ body.dark-mode #styled-textbox-search {
 
 
 /* ==========================================================================
-   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.12.3)
+   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.13.0)
    ========================================================================== */
 
 .progress-bar-widget {
@@ -7594,7 +7594,7 @@ body.dark-mode .pb-form-select {
 }
 
 /* ==========================================================================
-   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.12.3)
+   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.13.0)
    ========================================================================== */
 .itp-modal-container {
     width: 100%;
@@ -7758,4 +7758,121 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
     transform: translateX(-50%) translateY(16px);
     pointer-events: none;
 }
+
+/* ==========================================================================
+   CHART & GRAPH STUDIO STYLES (v5.13.0)
+   ========================================================================== */
+.custom-dialog:has(#chart-studio-container) {
+    max-width: 95vw !important;
+}
+
+#chart-studio-container .chart-type-btn:hover {
+    background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 8%, transparent) !important;
+    border-color: var(--ui-theme-color, #0d9e8f) !important;
+}
+
+/* Themed Number Stepper (Matching Font Selector) */
+.chart-modern-spinner {
+    display: flex;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 28px;
+    width: 90px;
+    background: #ffffff;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+
+.chart-modern-spinner:hover,
+.chart-modern-spinner:focus-within {
+    border-color: var(--ui-theme-color, #0d9e8f);
+}
+
+.chart-modern-spinner input.chart-row-val {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: none !important;
+    outline: none !important;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #1e293b;
+    background: transparent;
+    text-align: center;
+    box-shadow: none !important;
+}
+
+.chart-modern-spinner .spin-btns {
+    display: flex;
+    flex-direction: column;
+    width: 22px;
+    background: var(--ui-theme-color, #0d9e8f);
+    color: #ffffff;
+    border-left: 1px solid color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 80%, black);
+    user-select: none;
+}
+
+.chart-modern-spinner .spin-btns div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 8px;
+    color: #ffffff;
+    transition: background 0.15s ease;
+}
+
+.chart-modern-spinner .spin-btns div:first-child i {
+    transform: translateY(1px);
+}
+
+.chart-modern-spinner .spin-btns div:last-child i {
+    transform: translateY(-1px);
+}
+
+.chart-modern-spinner .spin-btns div:hover {
+    background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 75%, white);
+}
+
+.chart-modern-spinner .spin-btns div:active {
+    background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 80%, black);
+}
+
+body.dark-mode #chart-studio-container {
+    color: #f1f5f9;
+}
+body.dark-mode #chart-studio-container input[type="text"] {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+body.dark-mode .chart-modern-spinner {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.dark-mode .chart-modern-spinner input.chart-row-val {
+    color: #f8fafc;
+}
+body.dark-mode #chart-studio-container .chart-type-btn {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode #chart-studio-container .chart-type-btn.active {
+    background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 25%, #1e293b) !important;
+    border-color: var(--ui-theme-color, #0d9e8f) !important;
+    color: #5eead4 !important;
+}
+body.dark-mode #chart-live-preview-box {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.dark-mode #chart-rows-list {
+    background: #0f172a;
+}
+
+
 
