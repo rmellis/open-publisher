@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.13.0)
+// Open Publisher UI Interactions (v5.13.1)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.13.0)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.13.1)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -843,12 +843,17 @@
         otherFiles.forEach(file => {
             const fileName = file.name.toLowerCase();
             
-            // --- B. HANDLE PUBLISHER FILES (.pub, .pubx) ---
-            if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+            // --- B. HANDLE PDF DOCUMENTS (.pdf) ---
+            if (fileName.endsWith('.pdf')) {
+                if (typeof openPdfDocument === 'function') openPdfDocument(file);
+            }
+
+            // --- C. HANDLE PUBLISHER FILES (.pub, .pubx) ---
+            else if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
                 if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
             } 
             
-            // --- C. HANDLE WORD DOCUMENTS (.doc, .docx) ---
+            // --- D. HANDLE WORD DOCUMENTS (.doc, .docx) ---
             else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
                 if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
             } 
@@ -1055,7 +1060,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.13.0</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.13.1</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1469,7 +1474,7 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE (v5.13.0: Added Multi-Page Insert Template Banner)
+    // 4. TEMPLATES MODAL OVERRIDE (v5.13.1: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');

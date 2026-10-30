@@ -2487,6 +2487,245 @@ function uploadAndConvertPub(file) {
     };
 }
 
+/* =========================================================================
+   PDF DOCUMENT IMPORT ENGINE (v5.13.1)
+   ========================================================================= */
+function openPdfDocument(file) {
+    if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
+        try { DashboardSystem.close(); } catch (e) {}
+    }
+
+    // --- 1. THE PRE-FLIGHT MODAL ---
+    const promptHtml = `
+        <style>
+            .op-import-modal { font-family: 'Segoe UI', sans-serif; color: #334155; width: 100%; box-sizing: border-box; }
+            .op-import-modal p { margin-top: 0; font-size: 13px; margin-bottom: 12px; font-weight: 500; }
+            .op-import-card { display: block; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease; background: #ffffff; width: 100%; box-sizing: border-box; }
+            .op-import-card:hover { border-color: #94a3b8; background: #f8fafc; }
+            .op-import-card:has(input:checked) { border-color: #0ea5e9; background: #f0f9ff; }
+            .op-import-card.safe-mode { border-color: #fde68a; background: #fffbeb; }
+            .op-import-card.safe-mode:hover { border-color: #fcd34d; background: #fef3c7; }
+            .op-import-card.safe-mode:has(input:checked) { border-color: #f59e0b; background: #fef3c7; }
+            .op-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+            .op-import-card input[type="radio"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #0ea5e9; }
+            .op-import-card.safe-mode input[type="radio"] { accent-color: #d97706; }
+            .op-import-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-size: 13px; }
+            .icon-edit { background: #e0f2fe; color: #0284c7; }
+            .icon-safe { background: #fef3c7; color: #d97706; }
+            .op-import-title { font-weight: 600; font-size: 13px; color: #0f172a; }
+            .title-safe { color: #92400e; }
+            .op-import-desc { font-size: 11.5px; color: #64748b; line-height: 1.4; margin-left: 24px; display: block; white-space: normal; }
+            .desc-safe { color: #92400e; }
+            .op-import-actions { display: flex; gap: 8px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+            .op-btn { flex: 1; padding: 8px 0; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; transition: all 0.2s; border: none; text-align: center; }
+            .op-btn-cancel { background: #f1f5f9; color: #475569; }
+            .op-btn-cancel:hover { background: #e2e8f0; color: #0f172a; }
+            .op-btn-start { background: #0ea5e9; color: white; }
+            .op-btn-start:hover { background: #0284c7; }
+        </style>
+
+        <div class="op-import-modal">
+            <p>Select how to process this PDF document:</p>
+            <label class="op-import-card">
+                <div class="op-card-header">
+                    <input type="radio" name="importModePdf" id="mode-editable-pdf" value="editable" checked>
+                    <div class="op-import-icon icon-edit"><i class="fas fa-file-signature"></i></div>
+                    <span class="op-import-title">Editable Text Mode</span>
+                </div>
+                <span class="op-import-desc">Extracts text, fonts, colors, and layout as editable canvas elements. Best for documents you need to edit.</span>
+            </label>
+
+            <label class="op-import-card safe-mode">
+                <div class="op-card-header">
+                    <input type="radio" name="importModePdf" id="mode-image-pdf" value="image">
+                    <div class="op-import-icon icon-safe"><i class="fas fa-file-image"></i></div>
+                    <span class="op-import-title title-safe">Flattened Image Mode</span>
+                </div>
+                <span class="op-import-desc desc-safe">Converts pages to high-res, uneditable images with 100% accurate visual layout.</span>
+            </label>
+
+            <div class="op-import-actions">
+                <button id="btn-cancel-pdf" class="op-btn op-btn-cancel">Cancel</button>
+                <button id="btn-start-pdf" class="op-btn op-btn-start"><i class="fas fa-file-pdf" style="margin-right:6px;"></i>Open PDF</button>
+            </div>
+        </div>
+    `;
+
+    DialogSystem.show('Import PDF Document', promptHtml, null, true);
+
+    setTimeout(() => {
+        const dialogContent = document.getElementById('custom-dialog-content');
+        if (dialogContent && dialogContent.parentElement) {
+            dialogContent.parentElement.style.width = '520px';
+            dialogContent.parentElement.style.maxWidth = '95vw';
+        }
+    }, 10);
+
+    const defaultConfirm = document.getElementById('custom-dialog-confirm');
+    if (defaultConfirm) defaultConfirm.style.display = 'none';
+
+    document.getElementById('btn-cancel-pdf').onclick = () => DialogSystem.close();
+
+    document.getElementById('btn-start-pdf').onclick = () => {
+        const isImageMode = document.getElementById('mode-image-pdf').checked;
+
+        // --- 2. PROGRESS MODAL ---
+        const progressHtml = `
+            <div style="text-align:center; padding: 10px;">
+                <p id="convert-status-pdf" style="margin-bottom:15px; font-weight:bold;">Reading PDF Document...</p>
+                <div style="width:100%; background:#eee; border-radius:10px; overflow:hidden; height:10px;">
+                    <div id="convert-progress-pdf" style="width:15%; height:100%; background:var(--selection, #0ea5e9); transition: width 0.3s;"></div>
+                </div>
+            </div>
+        `;
+
+        DialogSystem.show('Processing PDF...', progressHtml, null, true);
+        const newConfirm = document.getElementById('custom-dialog-confirm');
+        if (newConfirm) newConfirm.style.display = 'none';
+
+        // --- 3. LOCAL EXTRACTION ENGINE ---
+        const reader = new FileReader();
+        reader.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+                const pct = Math.round((evt.loaded / evt.total) * 30);
+                const pb = document.getElementById('convert-progress-pdf');
+                if (pb) pb.style.width = pct + '%';
+            }
+        };
+
+        reader.onload = async function(evt) {
+            try {
+                const pb = document.getElementById('convert-progress-pdf');
+                if (pb) pb.style.width = '35%';
+                const statusText = document.getElementById('convert-status-pdf');
+                if (statusText) statusText.innerText = "Analyzing PDF Structure...";
+
+                const bytes = new Uint8Array(evt.target.result);
+                if (typeof pdfjsLib === 'undefined') {
+                    throw new Error("PDF processing engine (pdfjsLib) is not loaded.");
+                }
+
+                const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                let opPages = [];
+                let hasImages = false;
+                const ops = pdfjsLib.OPS || { paintJpegXObject: 82, paintImageXObject: 85, paintImageMaskXObject: 83 };
+                const imageOps = [ops.paintJpegXObject, ops.paintImageXObject, ops.paintImageMaskXObject].filter(Boolean);
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const p = await pdf.getPage(i);
+                    const opList = await p.getOperatorList();
+                    if (opList && Array.isArray(opList.fnArray) && opList.fnArray.some(op => imageOps.includes(op))) {
+                        hasImages = true;
+                        break;
+                    }
+                }
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    const ratio = 96 / 72;
+
+                    const pageWidth = Math.round(viewport.width * ratio);
+                    const pageHeight = Math.round(viewport.height * ratio);
+
+                    let elements = [];
+
+                    if (isImageMode) {
+                        if (statusText) statusText.innerText = `Rendering High-Res Image (Page ${pageNum} of ${pdf.numPages})...`;
+
+                        const viewportImg = page.getViewport({ scale: 2.5 });
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = viewportImg.width;
+                        canvas.height = viewportImg.height;
+                        await page.render({ canvasContext: ctx, viewport: viewportImg }).promise;
+
+                        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+                        elements.push({
+                            left: "0px", top: "0px", width: "100%", height: "100%",
+                            transform: "none", zIndex: "1", type: "box",
+                            innerHTML: "", imgSrc: imgDataUrl, clipPath: "", bg: "", cropMode: false,
+                            imgStyle: { width: "100%", height: "100%", position: "absolute", pointerEvents: "none" },
+                            scaleX: "1", scaleY: "1"
+                        });
+                    } else {
+                        if (statusText) statusText.innerText = `Extracting Editable Text (Page ${pageNum} of ${pdf.numPages})...`;
+
+                        const pageResult = await window.OpenPubImporter.processPdfPage(page, pageNum, {
+                            isPublisher: false,
+                            hasImages,
+                            structuredPage: null
+                        });
+                        elements = pageResult.elements || [];
+                    }
+
+                    opPages.push({
+                        id: Date.now() + pageNum,
+                        width: `${pageWidth}px`, height: `${pageHeight}px`,
+                        background: "#ffffff", elements: elements,
+                        header: "", footer: "", borderStyle: "none", thumb: ""
+                    });
+
+                    if (pb) {
+                        const pageProgress = 35 + Math.round((pageNum / pdf.numPages) * 60);
+                        pb.style.width = pageProgress + '%';
+                    }
+                }
+
+                if (pb) pb.style.width = '100%';
+                setTimeout(() => {
+                    const docTitle = file.name ? file.name.replace(/\.[^/.]+$/, "") : "Imported_PDF";
+                    const titleEl = document.getElementById('doc-title');
+                    if (titleEl) titleEl.innerText = docTitle;
+                    state.pages = opPages;
+                    state.history = [];
+                    state.historyIndex = -1;
+                    state.currentPageIndex = 0;
+                    renderPage(state.pages[0]);
+
+                    updateSidebar();
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    if (typeof pushHistory === 'function') pushHistory();
+                    DialogSystem.close();
+
+                    if (typeof window.showToastNotification === 'function') {
+                        window.showToastNotification(`Opened PDF: ${docTitle} (${opPages.length} ${opPages.length === 1 ? 'page' : 'pages'})`, 'fa-file-pdf');
+                    }
+                }, 400);
+
+            } catch (err) {
+                console.error("PDF processing error:", err);
+                DialogSystem.close();
+                DialogSystem.alert('Error', "Failed to assemble layout from the PDF document: " + (err.message || err));
+            }
+        };
+
+        reader.onerror = function() {
+            DialogSystem.close();
+            DialogSystem.alert('Error', "Could not read the selected PDF file.");
+        };
+
+        reader.readAsArrayBuffer(file);
+    };
+}
+window.openPdfDocument = openPdfDocument;
+window.uploadAndConvertPdf = openPdfDocument;
+
+window.handleFileUpload = function(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const fileName = file.name.toLowerCase();
+    if (fileName.endsWith('.pdf')) {
+        if (typeof openPdfDocument === 'function') openPdfDocument(file);
+    } else if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
+        if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
+    } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+        if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
+    }
+    e.target.value = '';
+};
+
 // ==========================================
 // FILE OPEN & INSERTION LOGIC
 // ==========================================
@@ -2504,21 +2743,28 @@ if (fileOpenEl) {
 
         const fileName = file.name.toLowerCase();
 
-        // 1. Handle Publisher Files
+        // 1. Handle PDF Documents (.pdf)
+        if (fileName.endsWith('.pdf')) {
+            if (typeof openPdfDocument === 'function') openPdfDocument(file);
+            e.target.value = '';
+            return;
+        }
+
+        // 2. Handle Publisher Files
         if (fileName.endsWith('.pub') || fileName.endsWith('.pubx')) {
             if (typeof uploadAndConvertPub === 'function') uploadAndConvertPub(file);
             e.target.value = ''; 
             return;
         }
 
-        // 2. Handle Word Documents
+        // 3. Handle Word Documents
         if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
             if (typeof uploadAndConvertDoc === 'function') uploadAndConvertDoc(file);
             e.target.value = ''; 
             return;
         }
 
-        // 3. Handle OpenPublisher Native Files (.json or .opub)
+        // 4. Handle OpenPublisher Native Files (.json or .opub)
         if (fileName.endsWith('.json') || fileName.endsWith('.opub')) {
             const reader = new FileReader();
             reader.onload = window.handlePublisherFileLoad;
