@@ -7013,7 +7013,7 @@ body.dark-mode #styled-textbox-search {
 
 
 /* ==========================================================================
-   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.13.1)
+   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.13.2)
    ========================================================================== */
 
 .progress-bar-widget {
@@ -7594,7 +7594,7 @@ body.dark-mode .pb-form-select {
 }
 
 /* ==========================================================================
-   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.13.1)
+   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.13.2)
    ========================================================================== */
 .itp-modal-container {
     width: 100%;
@@ -7760,7 +7760,7 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
 }
 
 /* ==========================================================================
-   CHART & GRAPH STUDIO STYLES (v5.13.1)
+   CHART & GRAPH STUDIO STYLES (v5.13.2)
    ========================================================================== */
 .custom-dialog:has(#chart-studio-container) {
     max-width: 95vw !important;

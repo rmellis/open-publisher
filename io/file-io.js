@@ -1627,6 +1627,140 @@ window.OpenPubImporter = (function() {
     }
 
     /**
+     * Native PDF text reconstruction (v5.13.2).
+     * - Groups items by REAL baseline and never merges across column gaps (both directions).
+     * - Joins items with a space only when the measured gap calls for one.
+     * - Places boxes using measured ascent of the substitute font so baselines line up.
+     * - Fits each span to the original PDF width via a small letter-spacing correction.
+     * - Contrast guard prevents text that matches its local background colour (e.g. white on white).
+     */
+    let _pdfMeasureCtx = null;
+    function measurePdfFont(weight, style, sizePx, family) {
+        if (!_pdfMeasureCtx) _pdfMeasureCtx = document.createElement('canvas').getContext('2d');
+        const ctx = _pdfMeasureCtx;
+        ctx.font = `${style} ${weight} ${sizePx}px ${family}`;
+        const m = ctx.measureText('Hxg');
+        const asc = m.fontBoundingBoxAscent || sizePx * 0.95;
+        const desc = m.fontBoundingBoxDescent || sizePx * 0.25;
+        return { ctx, asc, desc };
+    }
+
+    function reconstructPdfElements(rawItems, options = {}) {
+        const pageWidth = options.pageWidth || 816;
+        const lum = (c) => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+
+        // 1. Sanitize, map fonts, preserve the real baseline (ty)
+        let items = rawItems.map(it => ({
+            ...it,
+            str: sanitizePublisherText(it.str, it.fontFamily),
+            fontFamily: mapPublisherFont(it.fontFamily, false),
+            left: it.tx,
+            top: it.ty - it.fontSize * 0.85,
+            height: it.fontSize * 1.2
+        })).filter(it => it.str && it.str.trim());
+
+        // 2. Collapse duplicate / faux-bold / shadow layers
+        items = deduplicateAndExtractShadows(items);
+        items.sort((a, b) => a.ty - b.ty || a.left - b.left);
+
+        // 3. Group by real baseline, then split on column gaps (interval distance, both directions)
+        const used = new Set();
+        const lines = [];
+        for (let i = 0; i < items.length; i++) {
+            if (used.has(i)) continue;
+            const seed = items[i];
+            const row = [seed];
+            used.add(i);
+            for (let j = i + 1; j < items.length; j++) {
+                if (used.has(j)) continue;
+                const c = items[j];
+                if (Math.abs(c.ty - seed.ty) < Math.min(seed.fontSize, c.fontSize) * 0.25) {
+                    row.push(c);
+                    used.add(j);
+                }
+            }
+            row.sort((a, b) => a.left - b.left);
+            let chain = [row[0]];
+            for (let k = 1; k < row.length; k++) {
+                const prev = chain[chain.length - 1];
+                const cur = row[k];
+                const fs = Math.max(prev.fontSize, cur.fontSize);
+                const gap = cur.left - (prev.left + prev.width);
+                if (gap >= -fs * 0.15 && gap <= fs * 0.9) {
+                    cur._gapBefore = gap;
+                    chain.push(cur);
+                } else {
+                    lines.push(chain);
+                    chain = [cur];
+                }
+            }
+            lines.push(chain);
+        }
+
+        // 4. Emit one element per line chain
+        let z = 10;
+        return lines.map(chain => {
+            const first = chain[0];
+            const minLeft = first.left;
+            const maxRight = Math.max(...chain.map(c => c.left + c.width));
+            const big = chain.reduce((a, b) => (b.fontSize > a.fontSize ? b : a), chain[0]);
+            const bigMetrics = measurePdfFont(big.isBold ? 'bold' : 'normal', big.isItalic ? 'italic' : 'normal', big.fontSize, big.fontFamily);
+            const lineHeightPx = bigMetrics.asc + bigMetrics.desc;
+
+            const spans = chain.map((span, idx) => {
+                const weight = span.isBold ? 'bold' : 'normal';
+                const style = span.isItalic ? 'italic' : 'normal';
+                const text = span.str.trim();
+
+                // Contrast guard: never let ink match the local background
+                let ink = span.inkRGB || [36, 36, 36];
+                const bg = span.bgRGB || [255, 255, 255];
+                if (Math.abs(lum(ink) - lum(bg)) < 40) {
+                    ink = lum(bg) < 128 ? [255, 255, 255] : [36, 36, 36];
+                }
+
+                // Fit substitute-font width to the PDF width
+                const mm = measurePdfFont(weight, style, span.fontSize, span.fontFamily);
+                const measured = mm.ctx.measureText(text).width;
+                let letterSpacing = 0;
+                if (measured > 0 && text.length > 1 && span.width > 0) {
+                    const ratio = span.width / measured;
+                    if (ratio > 0.75 && ratio < 1.35) {
+                        letterSpacing = Math.max(-1.5, Math.min(1.5, (span.width - measured) / text.length));
+                    }
+                }
+
+                const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const sep = idx === 0 ? '' : ((span._gapBefore !== undefined && span._gapBefore < span.fontSize * 0.15) ? '' : ' ');
+                const shadow = span.textShadow ? `text-shadow: ${span.textShadow};` : '';
+                return `${sep}<span style="font-family: ${span.fontFamily}; font-size: ${span.fontSize.toFixed(2)}px; font-weight: ${weight}; font-style: ${style}; color: rgb(${ink[0]}, ${ink[1]}, ${ink[2]}); letter-spacing: ${letterSpacing.toFixed(3)}px; ${shadow}">${safe}</span>`;
+            }).join('');
+
+            const top = first.ty - bigMetrics.asc;
+            const width = Math.min(pageWidth - minLeft + 40, (maxRight - minLeft) + Math.max(6, big.fontSize * 0.5));
+            const firstInk = first.inkRGB || [36, 36, 36];
+            return {
+                id: 'pdf-el-' + Math.random().toString(36).substr(2, 9),
+                left: `${minLeft.toFixed(1)}px`,
+                top: `${top.toFixed(1)}px`,
+                width: `${width.toFixed(1)}px`,
+                height: `${lineHeightPx.toFixed(1)}px`,
+                transform: 'none',
+                zIndex: String(z++),
+                type: 'box',
+                innerHTML: `<div style="width: 100%; height: 100%; font-family: ${big.fontFamily}; font-size: ${big.fontSize.toFixed(2)}px; line-height: ${lineHeightPx.toFixed(2)}px; color: rgb(${firstInk[0]}, ${firstInk[1]}, ${firstInk[2]}); text-align: left; white-space: nowrap; overflow: visible; background: transparent; padding: 0px;" contenteditable="true" spellcheck="true" lang="en-US">${spans}</div>`,
+                imgSrc: '',
+                clipPath: '',
+                bg: '',
+                cropMode: false,
+                imgStyle: {},
+                scaleX: '1',
+                scaleY: '1'
+            };
+        });
+    }
+
+    /**
      * Process a single PDF.js page into clean, deduplicated, properly aligned OpenPublisher elements,
      * while preserving all images, backgrounds, borders, and graphics on a text-erased canvas layer.
      */
@@ -1798,11 +1932,15 @@ window.OpenPubImporter = (function() {
                     isBold: isBoldFont,
                     isItalic: isItalicFont,
                     fontFamily: detectedFontName,
-                    color: finalColor
+                    color: finalColor,
+                    inkRGB: [inkR, inkG, inkB],
+                    bgRGB: [avgBgR, avgBgG, avgBgB],
+                    hasEOL: Boolean(item.hasEOL)
                 });
             });
 
-            const textElements = reconstructPublisherElements(rawItems, {
+            const reconstructFn = options.nativePdf ? reconstructPdfElements : reconstructPublisherElements;
+            const textElements = reconstructFn(rawItems, {
                 pageWidth,
                 pageHeight,
                 sourceCanvas: canvas,
@@ -2488,7 +2626,7 @@ function uploadAndConvertPub(file) {
 }
 
 /* =========================================================================
-   PDF DOCUMENT IMPORT ENGINE (v5.13.1)
+   PDF DOCUMENT IMPORT ENGINE (v5.13.2)
    ========================================================================= */
 function openPdfDocument(file) {
     if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
@@ -2654,6 +2792,7 @@ function openPdfDocument(file) {
 
                         const pageResult = await window.OpenPubImporter.processPdfPage(page, pageNum, {
                             isPublisher: false,
+                            nativePdf: true,
                             hasImages,
                             structuredPage: null
                         });

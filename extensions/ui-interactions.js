@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.13.1)
+// Open Publisher UI Interactions (v5.13.2)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.13.1)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.13.2)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1060,7 +1060,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.13.1</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.13.2</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1474,7 +1474,7 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE (v5.13.1: Added Multi-Page Insert Template Banner)
+    // 4. TEMPLATES MODAL OVERRIDE (v5.13.2: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');
