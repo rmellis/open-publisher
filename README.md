@@ -321,7 +321,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 | **Tables** | 100 styled templates, multi-cell selection, Excel import (xlsx/xls), convert to text, line height control |
 | **WordArt** | 214 creative styles (Curved, Neon, 3D Extrusion, Holographic, Vaporwave), live hue shifting, high-DPI vector font print baking |
 | **Clipart and Emojis** | 3,403 high-quality transparent images, searchable Twemoji gallery with skin tone picker, symbol inserter, QR code generator |
-| **Legacy File Import** | Dual-canvas Microsoft Publisher (`.pub`) and Word (`.doc`/`.docx`) import with editable text & preserved background graphics |
+| **File Import** | Open and edit PDFs directly, plus dual-canvas Microsoft Publisher (`.pub`) and Word (`.doc`/`.docx`) import with editable text & preserved background graphics |
 | **Multi-Page Overview** | Decoupled from zoom, explicit toggle, keyboard navigation, thumbnail grid with double-click to edit |
 | **Security and Recovery** | AES-GCM password encryption, Document Inspector, automated crash dumps, safe mode launch flags |
 | **Workspace and Shell** | 360-degree scratch area scrolling, ruler selection span markers, group orbit rotation, system tray, developer HUD |
@@ -936,10 +936,17 @@ Open Publisher's native format is `.opub`:
 | `.pub`, `.pubx` | Dual-canvas Microsoft Publisher import: Editable Text & Graphics Mode or Flattened Image Mode |
 | `.xlsx`, `.xls` | Fully interactive table object via Import Wizard |
 | `.doc`, `.docx` | Dual-canvas Microsoft Word import: Editable Text & Graphics Mode or Flattened Image Mode |
+| `.pdf` | Opened and edited directly in the browser (no server needed): Editable Text & Graphics Mode or Flattened Image Mode. Also works via drag and drop |
 
 **Microsoft Publisher (`.pub`) and Word (`.doc` / `.docx`) Import Modes:**
 1. **Editable Text & Graphics Mode** - Uses a dual-canvas reconstruction pipeline that strips foreground text from the background artwork layer while preserving all original vector shapes, borders, table grids, and embedded photographs. Foreground text is reconstructed as editable Open Publisher text boxes with sampled ink colours (including light text over dark backgrounds), inline icons, multi-column table separation, and native CSS drop shadows.
 2. **Flattened Image Mode (Safe Mode)** - Renders each page as a high-resolution background image, guaranteeing 100% pixel-identical layout accuracy. Ideal for archival documents, complex forms, or layouts where exact visual preservation matters more than text editing.
+
+**PDF Import (`.pdf`):**
+- **Open and edit PDFs directly** - Use File > Open, the Dashboard, or drag and drop any PDF onto the window. Pages are processed locally in your browser, so nothing is uploaded and it works offline.
+- **Same two modes** - Editable Text & Graphics Mode rebuilds each page as editable text boxes over the original artwork, with fonts, sizes, colours and positions matched to the source. Flattened Image Mode keeps pages as exact images.
+- **Layout-aware text** - Text is grouped by its real baseline and table columns stay separate. Spacing, vertical alignment and text widths follow the original, and text that would blend into its background (such as white text on a coloured button) is kept visible.
+- **Multi-page support** - Every page is imported with its original dimensions and the document is named after the file.
 
 ---
 
