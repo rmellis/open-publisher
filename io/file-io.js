@@ -1627,7 +1627,7 @@ window.OpenPubImporter = (function() {
     }
 
     /**
-     * Native PDF text reconstruction (v5.14.3).
+     * Native PDF text reconstruction (v5.14.4).
      * - Groups items by REAL baseline and never merges across column gaps (both directions).
      * - Joins items with a space only when the measured gap calls for one.
      * - Places boxes using measured ascent of the substitute font so baselines line up.
@@ -2626,7 +2626,7 @@ function uploadAndConvertPub(file) {
 }
 
 /* =========================================================================
-   PDF DOCUMENT IMPORT ENGINE (v5.14.3)
+   PDF DOCUMENT IMPORT ENGINE (v5.14.4)
    ========================================================================= */
 function openPdfDocument(file) {
     if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
