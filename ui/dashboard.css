@@ -60,17 +60,24 @@ body.bright-theme .dashboard-logo {
 .dashboard-search {
     position: relative;
     width: 400px;
+    box-sizing: border-box;
+    cursor: text;
 }
 
 .dashboard-search input {
+    box-sizing: border-box;
     width: 100%;
-    padding: 8px 12px 8px 35px;
+    height: 38px;
+    display: block;
+    padding: 8px 12px 8px 36px;
     border: 1px solid var(--ui-border);
     border-radius: 20px;
     background-color: var(--ruler-bg);
     color: var(--ui-text);
     outline: none;
     font-size: 0.95rem;
+    cursor: text;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 body.dark-mode .dashboard-search input {
@@ -80,14 +87,18 @@ body.dark-mode .dashboard-search input {
 
 .dashboard-search input:focus {
     border-color: var(--ui-theme-color);
+    box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.25);
 }
 
 .dashboard-search i {
     position: absolute;
-    left: 12px;
+    left: 13px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--ui-text-muted);
+    pointer-events: none;
+    user-select: none;
+    cursor: text;
 }
 
 .dashboard-skip-btn {
@@ -623,18 +634,26 @@ body.dashboard-open #wa-float-toolbar {
         order: 3;
         width: 100% !important;
         margin-top: 2px;
+        box-sizing: border-box;
+        cursor: text;
     }
 
     .dashboard-search input {
+        box-sizing: border-box;
+        width: 100% !important;
         height: 38px;
         font-size: 0.9rem;
         padding: 8px 12px 8px 34px;
         border-radius: 19px;
+        cursor: text;
     }
 
     .dashboard-search i {
         font-size: 0.9rem;
         left: 12px;
+        pointer-events: none;
+        user-select: none;
+        cursor: text;
     }
 
     /* 3. Horizontal Scrollable Navigation Bar */

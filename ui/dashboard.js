@@ -34,10 +34,59 @@ window.DashboardSystem = {
         });
         
         // Search Logic
+        const searchBox = document.querySelector('.dashboard-search');
         const searchInput = document.getElementById('dashboard-search-input');
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            this.handleSearch(query);
+        
+        if (searchBox && searchInput) {
+            searchBox.addEventListener('click', (e) => {
+                if (document.activeElement !== searchInput) {
+                    searchInput.focus();
+                }
+            });
+            searchBox.addEventListener('mousedown', (e) => {
+                // Prevent drag header or grab behavior from stealing focus
+                e.stopPropagation();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                this.handleSearch(query);
+            });
+            
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (searchInput.value) {
+                        searchInput.value = '';
+                        this.handleSearch('');
+                    }
+                }
+            });
+        }
+
+        // Global hotkey support: When dashboard is open, typing printable characters focuses the search bar
+        document.addEventListener('keydown', (e) => {
+            if (!document.body.classList.contains('dashboard-open')) return;
+            const input = document.getElementById('dashboard-search-input');
+            if (!input) return;
+            
+            // If already focused on an input or textarea, let it handle the event
+            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+                return;
+            }
+            
+            // Check if any modal dialog is currently visible
+            const dialogBox = document.getElementById('custom-dialog-box');
+            if (dialogBox && dialogBox.style.display !== 'none') return;
+            
+            // Ignore shortcut modifiers
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            
+            // Printable single-character keys redirect focus cleanly to the search bar
+            if (e.key && e.key.length === 1) {
+                input.focus();
+            }
         });
         
         // Setup dragging for the dashboard modal
@@ -114,7 +163,11 @@ window.DashboardSystem = {
         // Small delay to allow display:flex to apply before setting opacity for transition
         setTimeout(() => {
             overlay.style.opacity = '1';
-        }, 10);
+            const searchInput = document.getElementById('dashboard-search-input');
+            if (searchInput && window.innerWidth > 768) {
+                searchInput.focus();
+            }
+        }, 50);
         
         if (!this.initialized) this.init();
     },
@@ -168,7 +221,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.14.1');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.14.2');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -188,7 +241,7 @@ window.DashboardSystem = {
         // Fetch opub to get thumbnail HTML
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.14.1`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.14.2`);
         fetch(fileUrl)
             .then(res => res.json())
             .then(opubData => {
@@ -455,9 +508,19 @@ window.DashboardSystem = {
     },
     
     handleSearch: function(query) {
-        // If query is empty, go back to New tab
+        // If query is empty, go back to New tab without losing search input focus
         if (!query.trim()) {
-            document.getElementById('nav-tab-new').click();
+            const wasFocused = (document.activeElement === document.getElementById('dashboard-search-input'));
+            document.querySelectorAll('.dashboard-nav-item').forEach(t => t.classList.remove('active'));
+            const newTab = document.getElementById('nav-tab-new');
+            if (newTab) newTab.classList.add('active');
+            document.querySelectorAll('.dashboard-tab-pane').forEach(p => p.classList.remove('active'));
+            const newPane = document.getElementById('dashboard-tab-new');
+            if (newPane) newPane.classList.add('active');
+            if (wasFocused) {
+                const input = document.getElementById('dashboard-search-input');
+                if (input && document.activeElement !== input) input.focus();
+            }
             return;
         }
         
