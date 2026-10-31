@@ -185,8 +185,12 @@
       "file": "flyers_graduation.opub"
     },
     {
-      "name": "Lost Dog",
+      "name": "Lost Dog Urgent Flyer",
       "file": "flyers_lost_dog.opub"
+    },
+    {
+      "name": "Classic Lost Dog Flyer",
+      "file": "flyers_lost_dog_classic.opub"
     },
     {
       "name": "Concert Gig",

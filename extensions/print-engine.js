@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.14.4)
+// OpenPublisher Print Engine (v5.14.5)
 (function installNativePrintHooks() {
 
     async function buildPrintDOM() {
@@ -370,7 +370,7 @@
                 // Pre-flight: Strip interactive handles and non-printable elements
                 scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
 
-                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.14.4) ✨
+                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.14.5) ✨
                 if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
                     scaler.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
                         const bg = el.style.backgroundImage || el.style.background || '';
