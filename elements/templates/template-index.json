@@ -139,7 +139,7 @@
       "file": "invitations_anniversary.opub"
     },
     {
-      "name": "VIP Holiday Soirée Invitation",
+      "name": "VIP Holiday Soir\u00e9e Invitation",
       "file": "invitations_holiday_party.opub"
     },
     {
@@ -291,6 +291,22 @@
     {
       "name": "Car Wash",
       "file": "flyers_car_wash.opub"
+    },
+    {
+      "name": "School Library Opening Times",
+      "file": "flyers_school_library_opening.opub"
+    },
+    {
+      "name": "Gardening Club Event Flyer",
+      "file": "flyers_gardening_club.opub"
+    },
+    {
+      "name": "After School Art Club Flyer",
+      "file": "flyers_after_school_art_club.opub"
+    },
+    {
+      "name": "After School IT Club Flyer",
+      "file": "flyers_it_club.opub"
     }
   ],
   "Magazines": [
@@ -545,6 +561,10 @@
     {
       "name": "Employee of Month",
       "file": "certificates_employee_of_month.opub"
+    },
+    {
+      "name": "Santa's Official Nice List Certificate",
+      "file": "certificates_santa_nice_list.opub"
     }
   ],
   "Menus": [

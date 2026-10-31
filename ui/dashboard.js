@@ -221,7 +221,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.14.5');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.15.6');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -241,7 +241,7 @@ window.DashboardSystem = {
         // Fetch opub to get thumbnail HTML
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.14.5`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.15.6`);
         fetch(fileUrl)
             .then(res => res.json())
             .then(opubData => {
@@ -373,20 +373,24 @@ window.DashboardSystem = {
         if (!featuredContainer || !this.templateData) return;
         featuredContainer.innerHTML = '';
 
-        // Curated hand-picked featured templates — the best of the premium collection
+        // Curated hand-picked featured templates: the best of the premium collection
         const featured = [
-            { name: 'Executive Summary',       file: 'reports_executive_summary.opub',         category: 'Reports' },
-            { name: 'Luxury Wedding',           file: 'invitations_luxury_wedding.opub',         category: 'Invitations' },
-            { name: 'Michelin Fine Dining',     file: 'menus_michelin_fine_dining.opub',         category: 'Menus' },
-            { name: 'Black Tie Gala',           file: 'invitations_black_tie_gala.opub',         category: 'Invitations' },
-            { name: 'Film Festival',            file: 'posters_film_festival.opub',              category: 'Posters' },
-            { name: 'Nightclub Event',          file: 'flyers_nightclub_event.opub',             category: 'Flyers' },
-            { name: 'Creative Director',        file: 'resumes_creative_director.opub',          category: 'Resumes' },
-            { name: 'Gaming Magazine',          file: 'magazines_gaming_cover.opub',             category: 'Magazines' },
-            { name: 'Luxury Brand Post',        file: 'social_media_luxury_brand.opub',          category: 'Social Media' },
-            { name: 'Gold Excellence Award',    file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
-            { name: 'Vintage Concert',          file: 'posters_vintage_concert.opub',            category: 'Posters' },
-            { name: 'Yacht Charter',            file: 'brochures_yacht_charter.opub',            category: 'Brochures' },
+            { name: 'Gardening Club Event Flyer',             file: 'flyers_gardening_club.opub',              category: 'Flyers' },
+            { name: 'After School Art Club Flyer',            file: 'flyers_after_school_art_club.opub',       category: 'Flyers' },
+            { name: 'After School IT Club Flyer',             file: 'flyers_it_club.opub',                     category: 'Flyers' },
+            { name: 'Executive Summary',                      file: 'reports_executive_summary.opub',         category: 'Reports' },
+            { name: 'Luxury Wedding',                         file: 'invitations_luxury_wedding.opub',         category: 'Invitations' },
+            { name: 'Michelin Fine Dining',                   file: 'menus_michelin_fine_dining.opub',         category: 'Menus' },
+            { name: 'Black Tie Gala',                         file: 'invitations_black_tie_gala.opub',         category: 'Invitations' },
+            { name: 'Film Festival',                          file: 'posters_film_festival.opub',              category: 'Posters' },
+            { name: 'Nightclub Event',                        file: 'flyers_nightclub_event.opub',             category: 'Flyers' },
+            { name: 'Creative Director',                      file: 'resumes_creative_director.opub',          category: 'Resumes' },
+            { name: 'Gaming Magazine',                        file: 'magazines_gaming_cover.opub',             category: 'Magazines' },
+            { name: 'Luxury Brand Post',                      file: 'social_media_luxury_brand.opub',          category: 'Social Media' },
+            { name: 'Gold Excellence Award',                  file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
+            { name: 'Vintage Concert',                        file: 'posters_vintage_concert.opub',            category: 'Posters' },
+            { name: 'Yacht Charter',                          file: 'brochures_yacht_charter.opub',            category: 'Brochures' },
+            { name: "Santa's Official Nice List Certificate", file: 'certificates_santa_nice_list.opub',       category: 'Certificates' },
         ];
 
         featured.forEach(item => {

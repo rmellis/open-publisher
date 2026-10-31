@@ -1,5 +1,17 @@
-// OpenPublisher Print Engine (v5.14.5)
+// OpenPublisher Print Engine (v5.15.6)
 (function installNativePrintHooks() {
+
+    function shouldApplyCors(url) {
+        if (!url || typeof url !== 'string') return false;
+        const trimmed = url.trim();
+        if (trimmed.startsWith('data:') || trimmed.startsWith('blob:') || trimmed.startsWith('file:')) return false;
+        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) return false;
+        if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') {
+            if (trimmed.startsWith(window.location.origin)) return false;
+        }
+        return true;
+    }
+    window.shouldApplyCors = shouldApplyCors;
 
     async function buildPrintDOM() {
         let pagesToPrint = state && state.pages ? state.pages : [];
@@ -162,8 +174,10 @@
 
                     if (el.imgSrc) {
                         let img = document.createElement('img');
-                        img.crossOrigin = 'anonymous';
-                        img.setAttribute('crossorigin', 'anonymous');
+                        if (typeof shouldApplyCors === 'function' && shouldApplyCors(el.imgSrc)) {
+                            img.crossOrigin = 'anonymous';
+                            img.setAttribute('crossorigin', 'anonymous');
+                        }
                         img.src = el.imgSrc;
                         if (el.altText) img.alt = el.altText;
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
@@ -370,7 +384,7 @@
                 // Pre-flight: Strip interactive handles and non-printable elements
                 scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
 
-                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.14.5) ✨
+                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.15.6) ✨
                 if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
                     scaler.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
                         const bg = el.style.backgroundImage || el.style.background || '';
@@ -469,9 +483,12 @@
         };
         imgEl.onload = done;
         imgEl.onerror = done;
-        if (src && !src.startsWith('data:')) {
+        if (typeof shouldApplyCors === 'function' && shouldApplyCors(src)) {
             imgEl.crossOrigin = 'anonymous';
             imgEl.setAttribute('crossorigin', 'anonymous');
+        } else {
+            imgEl.removeAttribute('crossorigin');
+            imgEl.crossOrigin = null;
         }
         if (imgEl.complete && imgEl.naturalWidth !== undefined && imgEl.naturalWidth > 0 && imgEl.src === src) {
             done();
@@ -1009,11 +1026,8 @@
         const attemptLoad = (useCORS) => {
             const tempImg = new Image();
             let loadSrc = src;
-            if (!loadSrc.startsWith('data:')) {
-                const isSameOrigin = loadSrc.startsWith('/') || loadSrc.startsWith('./') || (typeof window !== 'undefined' && window.location && loadSrc.startsWith(window.location.origin));
-                if (useCORS && !isSameOrigin) {
-                    tempImg.crossOrigin = 'anonymous';
-                }
+            if (useCORS && typeof shouldApplyCors === 'function' && shouldApplyCors(loadSrc)) {
+                tempImg.crossOrigin = 'anonymous';
             }
             tempImg.onload = () => {
                 if (isSettled) return;
@@ -1093,7 +1107,7 @@
             tempImg.onerror = (e) => {
                 if (isSettled) return;
                 // If standard CORS load failed, retry once with cache-busting to bypass any stale opaque cache
-                if (useCORS && !loadSrc.includes('corsbuster=') && !loadSrc.startsWith('data:')) {
+                if (useCORS && typeof shouldApplyCors === 'function' && shouldApplyCors(loadSrc) && !loadSrc.includes('corsbuster=')) {
                     const busterSrc = loadSrc + (loadSrc.includes('?') ? '&' : '?') + 'corsbuster=' + Date.now();
                     const busterImg = new Image();
                     busterImg.crossOrigin = 'anonymous';
@@ -1113,7 +1127,7 @@
                 tempImg.onload();
             }
         };
-        attemptLoad(!src.startsWith('data:'));
+        attemptLoad(typeof shouldApplyCors === 'function' ? shouldApplyCors(src) : !src.startsWith('data:'));
     });
 
     window.bakeThemeBackgroundForPrint = async function(themeSettings, width, height) {
@@ -1156,7 +1170,9 @@
         if (type === 'texture' && url) {
             try {
                 const textureImg = new Image();
-                textureImg.crossOrigin = 'Anonymous';
+                if (typeof shouldApplyCors === 'function' && shouldApplyCors(url)) {
+                    textureImg.crossOrigin = 'Anonymous';
+                }
                 let safeUrl = url;
                 if (safeUrl.startsWith('http') && !safeUrl.includes('wsrv.nl')) {
                     const clean = safeUrl.replace(/^https?:\/\//, '');
@@ -2169,8 +2185,10 @@
                         cropDiv.style.transformOrigin = 'center center';
 
                         let img = document.createElement('img');
-                        img.crossOrigin = 'anonymous';
-                        img.setAttribute('crossorigin', 'anonymous');
+                        if (typeof shouldApplyCors === 'function' && shouldApplyCors(finalSrc)) {
+                            img.crossOrigin = 'anonymous';
+                            img.setAttribute('crossorigin', 'anonymous');
+                        }
                         // Note: do not prematurely set img.src here so loadImageStrict can manage onload/onerror/src and prevent event swallowed bugs
                         const savedImgStyle = { ...(el.imgStyle || {}) };
                         if (el.imgStyle) Object.assign(img.style, el.imgStyle);
@@ -2737,7 +2755,9 @@
                             let settled = false;
                             const done = () => { if (!settled) { settled = true; resolve(); } };
                             const img = new Image(); 
-                            img.crossOrigin = "Anonymous";
+                            if (typeof shouldApplyCors === 'function' && shouldApplyCors(url)) {
+                                img.crossOrigin = "Anonymous";
+                            }
                             img.onload = done; 
                             img.onerror = done; 
                             img.src = url;
@@ -2773,8 +2793,10 @@
                 const borderArtImgs = Array.from(pageWrapper.querySelectorAll('.border-art-wrapper img, .element-border-art img'));
                 if (borderArtImgs.length > 0) {
                     borderArtImgs.forEach(img => {
-                        img.crossOrigin = 'anonymous';
-                        img.setAttribute('crossorigin', 'anonymous');
+                        if (typeof shouldApplyCors === 'function' && shouldApplyCors(img.src)) {
+                            img.crossOrigin = 'anonymous';
+                            img.setAttribute('crossorigin', 'anonymous');
+                        }
                         if (img.src && img.src.includes('acr.floydcraft') && !img.src.includes('fit=contain')) {
                             img.src = img.src + '&w=128&h=128&fit=contain';
                         }
@@ -2859,11 +2881,14 @@
                     }
                 }
 
-                // Universal pre-flight: verify all <img> elements in pageWrapper have crossOrigin set for html2canvas
+                // Universal pre-flight: verify external <img> elements in pageWrapper have crossOrigin set for html2canvas
                 pageWrapper.querySelectorAll('img').forEach(pImg => {
-                    if (pImg.src && !pImg.src.startsWith('data:')) {
+                    if (typeof shouldApplyCors === 'function' && shouldApplyCors(pImg.src)) {
                         pImg.crossOrigin = 'anonymous';
                         pImg.setAttribute('crossorigin', 'anonymous');
+                    } else {
+                        pImg.removeAttribute('crossorigin');
+                        pImg.crossOrigin = null;
                     }
                 });
 

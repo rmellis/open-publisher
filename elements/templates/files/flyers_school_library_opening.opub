@@ -1,0 +1,85 @@
+{
+  "title": "School Library Opening Times",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
+  "pages": [
+    {
+      "id": 905101,
+      "width": "794px",
+      "height": "1123px",
+      "background": "#f4f1ea",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
+      "elements": [
+        {
+          "left": "36.0px",
+          "top": "32.0px",
+          "width": "722.0px",
+          "height": "1059.0px",
+          "innerHTML": "<div style='width:100%; height:100%; position:relative; overflow:hidden; border-radius:20px; box-shadow:0 12px 35px rgba(0,0,0,0.12); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><img src='elements/templates/files/school_library_bg.png' style='width:100%; height:100%; object-fit:fill; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "205.0px",
+          "width": "634.0px",
+          "height": "60.0px",
+          "innerHTML": "<style>@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Schoolbell&family=Fredoka:wght@600;700;800;900&display=swap');</style><div contenteditable='true' spellcheck='false' style='text-align:center; font-family:\"Patrick Hand\", cursive, sans-serif; font-size:46px; font-weight:700; color:#2d3748; line-height:1.1; outline:none;'>Opening Times</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "280.0px",
+          "width": "634.0px",
+          "height": "80.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:\"Schoolbell\", \"Fredoka\", cursive, sans-serif; font-size:62px; font-weight:900; letter-spacing:3.5px; color:#e04848; line-height:1.0; text-transform:uppercase; outline:none;'>SCHOOL LIBRARY</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "390.0px",
+          "width": "634.0px",
+          "height": "60.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:\"Patrick Hand\", cursive, sans-serif; font-size:46px; font-weight:700; color:#2d3748; line-height:1.1; outline:none;'>Monday - Friday</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "80.0px",
+          "top": "468.0px",
+          "width": "634.0px",
+          "height": "60.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:\"Patrick Hand\", cursive, sans-serif; font-size:46px; font-weight:700; color:#2d3748; line-height:1.1; outline:none;'>10am - 4pm</div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "108.0px",
+          "top": "565.0px",
+          "width": "576.0px",
+          "height": "358.0px",
+          "innerHTML": "<div style='width:100%; height:100%; position:relative; overflow:visible; cursor:move;'><img src='elements/templates/files/caterpillar_bookworm.png' style='width:100%; height:100%; object-fit:contain; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 10,
+          "scaleX": "1",
+          "scaleY": "1"
+        }
+      ]
+    }
+  ]
+}
