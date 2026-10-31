@@ -51,7 +51,7 @@
           "top": "350.0px",
           "width": "694.0px",
           "height": "700.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='column-count:2; column-gap:40px; font-family:Roboto; color:#444; font-size:13px;'><h3 style='margin-top:0; color:#ff6b6b;'>About Me</h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Education</h3><b>Design School</b><br>2010-2014<br>Bachelor of Arts<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Contact</h3>alex@example.com<br>123-456-7890<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Experience</h3><b>Studio X</b> - Senior Artist<br>Managed diverse projects for high-end clients.</div>",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='column-count:2; column-gap:40px; font-family:Roboto; color:#444; font-size:13px;'><h3 style='margin-top:0; color:#ff6b6b;'>About Me</h3>Crafted in small batches with locally sourced organic ingredients and signature house seasonings. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Education</h3><b>Design School</b><br>2010-2014<br>Bachelor of Arts<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Contact</h3>alex@example.com<br>123-456-7890<br><br><h3 style='margin-top:0; color:#ff6b6b;'>Experience</h3><b>Studio X</b> - Senior Artist<br>Managed diverse projects for high-end clients.</div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

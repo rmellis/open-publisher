@@ -1,26 +1,114 @@
 {
-  "title": "Sweet Sixteen",
+  "title": "Sweet Sixteen Invitation",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 1843919,
+      "id": 720008,
       "width": "794px",
       "height": "1123px",
-      "background": "#fce4ec",
+      "background": "#1a0926",
       "header": "",
       "footer": "",
       "borderStyle": "none",
       "elements": [
         {
-          "left": "100.0px",
-          "top": "100.0px",
-          "width": "594.0px",
-          "height": "923.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:#fff;border:2px solid #f06292;border-radius:20px;text-align:center;padding:50px;box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='color:#c2185b;font-size:60px;margin-top:100px;'>Sweet 16</h1><p style='margin-top:0; color:#880e4f;font-size:24px;'>You are invited to celebrate!</p></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #2e1042 0%, #11041a 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "28.0px",
+          "top": "28.0px",
+          "width": "738.0px",
+          "height": "1067.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #f472b6; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "38.0px",
+          "top": "38.0px",
+          "width": "718.0px",
+          "height": "1047.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:1px solid #fbbf24; opacity:0.5; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "65.0px",
+          "width": "664.0px",
+          "height": "52.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><span style='display:inline-block; background:#f472b6; color:#ffffff; font-size:11px; font-weight:800; letter-spacing:3.5px; padding:7px 22px; border-radius:30px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>✦ STARLIGHT & SPARKLE • VIP SWEET 16 GALA ✦</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "95.0px",
+          "top": "132.0px",
+          "width": "604.0px",
+          "height": "280.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:12px; overflow:hidden; box-sizing:border-box; border:4px solid #f472b6; box-shadow:0 12px 30px rgba(0,0,0,0.3);'><img src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "435.0px",
+          "width": "664.0px",
+          "height": "215.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:Georgia, serif; color:#fdf4ff;'><div style='font-family:sans-serif; font-size:12px; font-weight:700; letter-spacing:3px; color:#cbd5e1; margin-bottom:14px;'>GET READY TO DANCE THE NIGHT AWAY CELEBRATING</div><div style='font-size:52px; font-weight:900; letter-spacing:2px; color:#f472b6; line-height:1.05; margin-bottom:12px;'>MADISON ISABELLA</div><div style='font-size:15.5px; font-style:italic; color:#fdf4ff; opacity:0.9; max-width:540px; margin:0 auto; line-height:1.4;'>Sweet Sixteen Red Carpet Arrival, Live DJ Set, 360 Photo Booth & Mocktail Lounge</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "665.0px",
+          "width": "644.0px",
+          "height": "150.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-top:4px solid #f472b6; border-radius:10px; padding:22px 28px; text-align:center; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:22px; font-weight:900; letter-spacing:2.5px; color:#fdf4ff; margin-bottom:8px;'>SATURDAY, AUGUST 8, 2026</div><div style='font-size:12.5px; font-weight:700; letter-spacing:2px; color:#f472b6;'>8:00 PM - 12:00 AM • RED CARPET PHOTOS BEGIN AT 7:45 PM</div><div style='width:80px; height:2px; background:#fbbf24; margin:14px auto; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div><div style='font-size:15px; font-weight:800; color:#fdf4ff; letter-spacing:1.5px;'>THE SKYLINE LOFT STUDIO</div><div style='font-size:12.5px; color:#cbd5e1; margin-top:4px;'>900 Arts District Blvd, Penthouse B • Los Angeles, CA</div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "840.0px",
+          "width": "644.0px",
+          "height": "130.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#f472b6; margin-bottom:4px;'>🥂</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fdf4ff;'>LIBATIONS</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Signature Cocktails & Vintage Brut</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#f472b6; margin-bottom:4px;'>🍽️</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fdf4ff;'>CUISINE</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Chef-Prepared Seasonal Tasting</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#f472b6; margin-bottom:4px;'>🎶</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fdf4ff;'>MUSIC</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Live Entertainment & Dancing</div></div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "995.0px",
+          "width": "644.0px",
+          "height": "58.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#f472b6; color:#ffffff; border-radius:8px; padding:14px 20px; text-align:center; font-family:sans-serif; font-size:10.5px; font-weight:800; letter-spacing:1.8px; line-height:1.5; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>DRESS CODE: HOLLYWOOD GLAM & GOLD • RSVP TEXT TO (310) 555-0177 BY JULY 25TH</div>",
+          "transform": "none",
+          "zIndex": 8,
           "scaleX": "1",
           "scaleY": "1"
         }

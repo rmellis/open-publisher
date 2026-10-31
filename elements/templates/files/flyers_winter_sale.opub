@@ -1,41 +1,105 @@
 {
+  "title": "Winter Clearance & Holiday Sale Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750022,
       "width": "794px",
       "height": "1123px",
-      "background": "#6eb6d1",
+      "background": "#0c192c",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "400px",
-          "left": "0px",
-          "width": "794px",
-          "height": "723px",
-          "zIndex": 10,
-          "innerHTML": "<svg width='100%' height='100%' viewBox='0 0 100 100' preserveAspectRatio='none' style='display:block;'><polygon points='0,40 30,10 60,50 90,20 100,30 100,100 0,100' fill='#a3d3e6' /></svg>"
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #0c4a6e 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "550px",
-          "left": "0px",
-          "width": "794px",
-          "height": "573px",
-          "zIndex": 20,
-          "innerHTML": "<svg width='100%' height='100%' viewBox='0 0 100 100' preserveAspectRatio='none' style='display:block;'><polygon points='0,60 25,20 50,60 80,30 100,50 100,100 0,100' fill='#ffffff' /></svg>"
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #38bdf8; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "150px",
-          "left": "0px",
-          "width": "794px",
-          "height": "300px",
-          "zIndex": 30,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);letter-spacing:5px;'>WINTER</div><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);margin-top:-20px;letter-spacing:5px;'>SALE</div></div>"
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#38bdf8; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>ANNUAL END-OF-SEASON DESIGNER CLEARANCE EVENT</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "950px",
-          "left": "0px",
-          "width": "794px",
-          "height": "100px",
-          "zIndex": 40,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:35px;color:#004080;font-weight:bold;letter-spacing:2px;'>UP TO 50% OFF SITEWIDE</div>"
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #f43f5e;'><img src='https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#ffffff; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>WINTER MEGA SALE</div><div style='display:inline-block; background:#f43f5e; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>UP TO 70% OFF OUTERWEAR, CASHMERE, BOOTS & HOME LUXURY</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #38bdf8; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#38bdf8; letter-spacing:1px; margin-bottom:4px;'>✦ CASHMERE & TAILORED COATS — 50% OFF</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Italian wool overcoats, alpine down parkas, merino knitwear & leather gloves</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #38bdf8; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#38bdf8; letter-spacing:1px; margin-bottom:4px;'>✦ DESIGNER FOOTWEAR & BAGS — 60% OFF</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Handcrafted Chelsea boots, shearling-lined footwear & structured leather totes</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #38bdf8; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#38bdf8; letter-spacing:1px; margin-bottom:4px;'>✦ EXTRA 20% OFF VIP EARLY ACCESS</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Present this flyer at checkout Friday morning between 8:00 AM and 11:00 AM!</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#38bdf8; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THIS FRIDAY THROUGH MONDAY ONLY • EXTENDED HOURS 8AM - 10PM</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px dashed #f43f5e; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>NORDIC & CO. FLAGSHIP STORE • 600 MAGNIFICENT MILE • SHOP ONLINE: NORDICCO.COM</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }

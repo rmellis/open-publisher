@@ -1,33 +1,105 @@
 {
+  "title": "Community Book Fair & Literary Festival",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750014,
       "width": "794px",
       "height": "1123px",
-      "background": "#eadac4",
+      "background": "#fdfbf7",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "150px",
-          "left": "0px",
-          "width": "794px",
-          "height": "250px",
-          "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Georgia\",serif;font-size:100px;color:#8b0000;font-weight:bold;'>BOOK</div><div style='font-family:\"Georgia\",serif;font-size:100px;color:#8b0000;font-weight:bold;margin-top:-20px;'>FAIR</div></div>"
-        },
-        {
-          "top": "450px",
-          "left": "0px",
-          "width": "794px",
-          "height": "100px",
-          "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:30px;color:#4a3f35;'>Discover your next great read.</div>"
-        },
-        {
-          "top": "600px",
-          "left": "0px",
-          "width": "794px",
-          "height": "523px",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(180deg, #fdfbf7 0%, #f5ebe0 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 1,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:200px;text-align:center;line-height:0.8;'>📚<br>📖 📚</div>"
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #9a3412; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#9a3412; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>12TH ANNUAL AUTUMN LITERARY FESTIVAL & RARE BOOK MARKET</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #0f766e;'><img src='https://images.unsplash.com/photo-1507842229356-51c61504d3ab?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#1c1917; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>THE BOOK FAIR</div><div style='display:inline-block; background:#0f766e; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>50,000+ NEW, USED & ANTIQUARIAN BOOKS STARTING AT $2!</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.9); border:1px solid rgba(0,0,0,0.08); border-left:5px solid #9a3412; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#9a3412; letter-spacing:1px; margin-bottom:4px;'>✦ BESTSELLING AUTHOR SIGNINGS & PANELS</div><div style='font-size:12.5px; color:#1c1917; line-height:1.4;'>Live Q&A sessions with Pulitzer-winning novelists, historians, poets & illustrators</div></div><div style='background:rgba(255,255,255,0.9); border:1px solid rgba(0,0,0,0.08); border-left:5px solid #9a3412; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#9a3412; letter-spacing:1px; margin-bottom:4px;'>✦ CHILDREN STORYTIME & ILLUSTRATION LAB</div><div style='font-size:12.5px; color:#1c1917; line-height:1.4;'>Interactive puppet theater, bookmark printing press & young writers workshop</div></div><div style='background:rgba(255,255,255,0.9); border:1px solid rgba(0,0,0,0.08); border-left:5px solid #9a3412; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#9a3412; letter-spacing:1px; margin-bottom:4px;'>✦ RARE & FIRST EDITION PAVILION</div><div style='font-size:12.5px; color:#1c1917; line-height:1.4;'>Curated 19th-century leather bindings, vintage maps, vinyl & artisan espresso bar</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#9a3412; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>OCTOBER 24 - 25, 2026 • 9:00 AM TO 6:00 PM • CENTRAL LIBRARY PLAZA</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.9); border:1px dashed #0f766e; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#1c1917; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>ALL PROCEEDS SUPPORT PUBLIC LIBRARY LITERACY PROGRAMS • CITYBOOKFAIR.ORG</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }

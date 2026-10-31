@@ -1,26 +1,81 @@
 {
-  "title": "Lawyer",
+  "title": "Senior Partner Attorney Card",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 7901402,
+      "id": 90423,
       "width": "336px",
       "height": "192px",
-      "background": "#fafafa",
-      "header": "",
-      "footer": "",
+      "background": "#0f172a",
+      "header": "Header",
+      "footer": "Footer",
       "borderStyle": "none",
       "elements": [
         {
-          "left": "20.0px",
-          "top": "20.0px",
-          "width": "296.0px",
-          "height": "152.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='border:1px solid #9e9e9e;width:100%;height:100%;box-sizing:border-box;padding:20px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><strong style='color:#424242;font-size:18px;'>Legal Partners</strong><br><span style='font-size:10px;color:#757575;'>Attorneys at Law</span></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "336.0px",
+          "height": "192.0px",
+          "innerHTML": "<div style='width:100%; height:100%; background:#0f172a; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "8.0px",
+          "top": "8.0px",
+          "width": "320.0px",
+          "height": "176.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border:1px solid #c9a84c; pointer-events:none; box-sizing:border-box; opacity:0.65;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "6.0px",
+          "height": "192.0px",
+          "innerHTML": "<div style='width:100%; height:100%; background:#c9a84c; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "18.0px",
+          "width": "296.0px",
+          "height": "30.0px",
+          "innerHTML": "<div style='width:100%; height:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.12);'>\n          <span style='font-family:Inter,sans-serif; font-size:8px; font-weight:800; color:#c9a84c; letter-spacing:2px;'>VANCE, STERLING & MERCER LLP</span>\n          <span style='font-family:Inter,sans-serif; font-size:7px; font-weight:700; color:#94a3b8; letter-spacing:1px;'>✦ SUPREME COURT & APPELLATE BAR</span>\n        </div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "56.0px",
+          "width": "296.0px",
+          "height": "54.0px",
+          "innerHTML": "<div style='width:100%; height:100%;'>\n          <div style='font-family:Cinzel,Georgia,serif; font-size:18px; font-weight:800; color:#ffffff; letter-spacing:1.5px; margin-bottom:3px;'>JONATHAN VANCE, ESQ.</div>\n          <div style='font-family:Inter,sans-serif; font-size:8.5px; font-weight:700; color:#c9a84c; letter-spacing:2px;'>SENIOR LITIGATION PARTNER</div>\n        </div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "20.0px",
+          "top": "116.0px",
+          "width": "296.0px",
+          "height": "58.0px",
+          "innerHTML": "<div style='width:100%; height:100%; display:flex; justify-content:space-between; align-items:flex-end; font-family:Inter,sans-serif; font-size:8.5px; color:#cbd5e1; line-height:1.65;'>\n          <div>\n            <div><strong style='color:#c9a84c;'>T:</strong> +1 (212) 555-0199</div>\n            <div><strong style='color:#c9a84c;'>E:</strong> jvance@vancesterlinglaw.com</div>\n            <div><strong style='color:#c9a84c;'>A:</strong> 450 Lexington Ave, Suite 3200, NY</div>\n          </div>\n          <div style='width:38px; height:38px; border:1.5px solid #c9a84c; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:Cinzel,serif; font-size:14px; font-weight:800; color:#c9a84c;'>J</div>\n        </div>",
+          "transform": "none",
+          "zIndex": 4,
           "scaleX": "1",
           "scaleY": "1"
         }

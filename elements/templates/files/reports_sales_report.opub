@@ -1,16 +1,16 @@
 {
-  "title": "Sales Report Cover",
+  "title": "Sales Performance Report Cover",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 202374137,
+      "id": 800006,
       "width": "794px",
       "height": "1123px",
-      "background": "#ffffff",
-      "header": "Header",
-      "footer": "Footer",
+      "background": "#06281e",
+      "header": "",
+      "footer": "",
       "borderStyle": "none",
       "elements": [
         {
@@ -18,20 +18,64 @@
           "top": "0.0px",
           "width": "794.0px",
           "height": "1123.0px",
-          "innerHTML": "<div style='background:linear-gradient(135deg, #28a745, #20c997); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "innerHTML": "<div style='width:100%; height:100%; background:#06281e; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
           "scaleX": "1",
           "scaleY": "1"
         },
         {
-          "left": "100.0px",
-          "top": "200.0px",
-          "width": "594.0px",
-          "height": "700.0px",
-          "innerHTML": "<div style='background:white; padding:50px; border-radius:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin-top:0; color:#28a745; font-size:60px;'>Q4 SALES</h1><h2 style='margin-top:0;'>Performance Overview</h2><img src='https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80' style='width:100%; height:300px; object-fit:cover; margin-top:30px;'/></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "22.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='width:100%; height:100%; background:#4ade80; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "56.0px",
+          "width": "676.0px",
+          "height": "330.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; box-sizing:border-box; border:3px solid #4ade80;'><img src='https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "420.0px",
+          "width": "676.0px",
+          "height": "260.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-family:sans-serif; color:#ffffff;'><div style='display:inline-block; background:#4ade80; color:#09090b; font-size:11px; font-weight:900; letter-spacing:3px; padding:6px 16px; border-radius:4px; margin-bottom:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>GLOBAL COMMERCIAL REVIEW</div><div style='font-family:Georgia, serif; font-size:56px; font-weight:900; letter-spacing:2px; line-height:1.05; margin-bottom:16px;'>SALES PERFORMANCE</div><div style='font-size:15px; font-weight:600; letter-spacing:1.5px; color:#cbd5e1; line-height:1.5; border-left:4px solid #4ade80; padding-left:16px;'>ENTERPRISE ARR EXPANSION, TERRITORY PIPELINE & RETENTION METRICS</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "710.0px",
+          "width": "676.0px",
+          "height": "155.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #4ade80; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#4ade80;'>$240M</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>NEW NET ARR CLOSED</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #4ade80; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#4ade80;'>136%</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>NET DOLLAR RETENTION</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #4ade80; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#4ade80;'>480+</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>NEW ENTERPRISE LOGOS</div></div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "935.0px",
+          "width": "676.0px",
+          "height": "130.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid rgba(255,255,255,0.2); padding-top:24px; font-family:sans-serif; color:#ffffff;'><div><div style='font-size:10px; font-weight:800; letter-spacing:2.5px; color:#4ade80;'>PREPARED & PUBLISHED BY</div><div style='font-size:18px; font-weight:900; letter-spacing:1.5px; margin-top:4px;'>SYNAPSE COMMERCIAL OPERATIONS</div><div style='font-size:12px; color:#94a3b8; margin-top:2px;'>Board of Directors & Executive Strategy Office</div></div><div style='text-align:right; font-size:12px; color:#cbd5e1;'><div><strong>Document Classification:</strong> Board Confidential</div><div style='margin-top:4px;'><strong>Release Date:</strong> Q4 2026</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
           "scaleX": "1",
           "scaleY": "1"
         }

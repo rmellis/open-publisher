@@ -1,41 +1,105 @@
 {
+  "title": "Tech Conference & Summit Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750021,
       "width": "794px",
       "height": "1123px",
-      "background": "#0a1536",
+      "background": "#060913",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "200px",
-          "left": "0px",
-          "width": "794px",
-          "height": "300px",
-          "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:100px;color:#00e5ff;letter-spacing:4px;'>TECH</div><div style='font-family:\"Impact\",sans-serif;font-size:80px;color:#00e5ff;margin-top:-10px;letter-spacing:4px;'>CONFERENCE</div></div>"
-        },
-        {
-          "top": "450px",
-          "left": "0px",
-          "width": "794px",
-          "height": "100px",
-          "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:25px;color:#ffffff;letter-spacing:2px;'>INNOVATING THE FUTURE</div>"
-        },
-        {
-          "top": "0px",
-          "left": "0px",
-          "width": "794px",
-          "height": "1123px",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #060913 0%, #0f172a 55%, #1e1b4b 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 1,
-          "innerHTML": "<div style='width:100%;height:100%;background-image:linear-gradient(#00e5ff 1px, transparent 1px), linear-gradient(90deg, #00e5ff 1px, transparent 1px);background-size:50px 50px;opacity:0.1; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>"
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "800px",
-          "left": "247px",
-          "width": "300px",
-          "height": "60px",
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #06b6d4; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#06b6d4; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THE GLOBAL DEVELOPER & AI FOUNDERS SUMMIT</div>",
+          "transform": "none",
           "zIndex": 3,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%;height:100%;background:#00e5ff;color:#0a1536;font-family:Arial,sans-serif;font-size:24px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:30px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>REGISTER NOW</div>"
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #a855f7;'><img src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#ffffff; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>DEVCON HORIZON 2026</div><div style='display:inline-block; background:#a855f7; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>3 DAYS • 85 KEYNOTE SPEAKERS • 5,000+ BUILDERS & INVESTORS</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #06b6d4; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#06b6d4; letter-spacing:1px; margin-bottom:4px;'>✦ KEYNOTE TRACKS & HANDS-ON LABS</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Agentic AI Systems, Rust in Production, Distributed Edge Compute & WebGPU Graphics</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #06b6d4; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#06b6d4; letter-spacing:1px; margin-bottom:4px;'>✦ STARTUP PITCH ARENA ($500K PRIZE)</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Watch 20 seed-stage finalists pitch live to Tier-1 Silicon Valley Venture Partners</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #06b6d4; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#06b6d4; letter-spacing:1px; margin-bottom:4px;'>✦ HACKATHON & ROOFTOP AFTERPARTIES</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>48-hour hardware/software build challenge + networking lounges every evening</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#06b6d4; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>NOVEMBER 4 - 6, 2026 • MOSCONE WEST CONVENTION CENTER • SAN FRANCISCO</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px dashed #a855f7; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>USE CODE OPENPUB26 FOR $150 OFF EARLY BIRD PASSES • DEVCONHORIZON.COM</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }

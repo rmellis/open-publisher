@@ -1,26 +1,114 @@
 {
-  "title": "Anniversary",
+  "title": "Anniversary Invitation",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 5955412,
+      "id": 720005,
       "width": "794px",
       "height": "1123px",
-      "background": "#fdf5e6",
+      "background": "#14110f",
       "header": "",
       "footer": "",
       "borderStyle": "none",
       "elements": [
         {
-          "left": "100.0px",
-          "top": "200.0px",
-          "width": "594.0px",
-          "height": "700.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><h1 style='margin-top:0; color:#b76e79;font-size:80px;font-family:serif;font-weight:normal;'>50th</h1><h2 style='margin-top:0; color:#333;font-size:40px;font-weight:normal;'>Anniversary</h2><p style='color:#666;font-size:20px;margin-top:50px;'>Join us for an elegant evening.</p></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #1c1917 0%, #0c0a09 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "28.0px",
+          "top": "28.0px",
+          "width": "738.0px",
+          "height": "1067.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #d4af37; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "38.0px",
+          "top": "38.0px",
+          "width": "718.0px",
+          "height": "1047.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:1px solid #f59e0b; opacity:0.5; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "65.0px",
+          "width": "664.0px",
+          "height": "52.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><span style='display:inline-block; background:#d4af37; color:#ffffff; font-size:11px; font-weight:800; letter-spacing:3.5px; padding:7px 22px; border-radius:30px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>✦ TWENTY-FIVE GOLDEN YEARS • 2001 - 2026 ✦</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "95.0px",
+          "top": "132.0px",
+          "width": "604.0px",
+          "height": "280.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:12px; overflow:hidden; box-sizing:border-box; border:4px solid #d4af37; box-shadow:0 12px 30px rgba(0,0,0,0.3);'><img src='https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "435.0px",
+          "width": "664.0px",
+          "height": "215.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:Georgia, serif; color:#fafaf9;'><div style='font-family:sans-serif; font-size:12px; font-weight:700; letter-spacing:3px; color:#cbd5e1; margin-bottom:14px;'>PLEASE JOIN US FOR AN EVENING CELEBRATING THE 25TH ANNIVERSARY OF</div><div style='font-size:52px; font-weight:900; letter-spacing:2px; color:#d4af37; line-height:1.05; margin-bottom:12px;'>RICHARD & ELEANOR</div><div style='font-size:15.5px; font-style:italic; color:#fafaf9; opacity:0.9; max-width:540px; margin:0 auto; line-height:1.4;'>A Quarter Century of Love, Laughter, Family & Unforgettable Memories</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "665.0px",
+          "width": "644.0px",
+          "height": "150.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-top:4px solid #d4af37; border-radius:10px; padding:22px 28px; text-align:center; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:22px; font-weight:900; letter-spacing:2.5px; color:#fafaf9; margin-bottom:8px;'>SATURDAY, NOVEMBER 7, 2026</div><div style='font-size:12.5px; font-weight:700; letter-spacing:2px; color:#d4af37;'>6:30 PM CHAMPAGNE RECEPTION • 7:30 PM FOUR-COURSE GALA DINNER</div><div style='width:80px; height:2px; background:#f59e0b; margin:14px auto; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div><div style='font-size:15px; font-weight:800; color:#fafaf9; letter-spacing:1.5px;'>THE GRAND BALLROOM AT HOTEL ASTOR</div><div style='font-size:12.5px; color:#cbd5e1; margin-top:4px;'>500 Fifth Avenue • New York City</div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "840.0px",
+          "width": "644.0px",
+          "height": "130.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#d4af37; margin-bottom:4px;'>🥂</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fafaf9;'>LIBATIONS</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Signature Cocktails & Vintage Brut</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#d4af37; margin-bottom:4px;'>🍽️</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fafaf9;'>CUISINE</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Chef-Prepared Seasonal Tasting</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#d4af37; margin-bottom:4px;'>🎶</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#fafaf9;'>MUSIC</div><div style='font-size:11px; color:#cbd5e1; margin-top:4px;'>Live Entertainment & Dancing</div></div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "995.0px",
+          "width": "644.0px",
+          "height": "58.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#d4af37; color:#ffffff; border-radius:8px; padding:14px 20px; text-align:center; font-family:sans-serif; font-size:10.5px; font-weight:800; letter-spacing:1.8px; line-height:1.5; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>BLACK TIE OPTIONAL • RSVP BY OCTOBER 15TH TO EVENTS@ASTORCELEBRATIONS.COM</div>",
+          "transform": "none",
+          "zIndex": 8,
           "scaleX": "1",
           "scaleY": "1"
         }

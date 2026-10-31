@@ -1,26 +1,114 @@
 {
-  "title": "House Warming",
+  "title": "House Warming Invitation",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 1347707,
+      "id": 720004,
       "width": "794px",
       "height": "1123px",
-      "background": "#fbe9e7",
+      "background": "#faf6f0",
       "header": "",
       "footer": "",
       "borderStyle": "none",
       "elements": [
         {
-          "left": "100.0px",
-          "top": "200.0px",
-          "width": "594.0px",
-          "height": "700.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><h1 style='margin-top:0; color:#bf360c;font-size:60px;'>Housewarming<br>Party</h1><p style='color:#3e2723;font-size:24px;margin-top:60px;'>New home, same us.</p></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(180deg, #fdfbf7 0%, #f5ebe0 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "28.0px",
+          "top": "28.0px",
+          "width": "738.0px",
+          "height": "1067.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #b45309; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "38.0px",
+          "top": "38.0px",
+          "width": "718.0px",
+          "height": "1047.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:1px solid #4d7c0f; opacity:0.5; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "65.0px",
+          "width": "664.0px",
+          "height": "52.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><span style='display:inline-block; background:#b45309; color:#ffffff; font-size:11px; font-weight:800; letter-spacing:3.5px; padding:7px 22px; border-radius:30px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>✦ NEW KEYS • NEW ADDRESS • NEW MEMORIES ✦</span></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "95.0px",
+          "top": "132.0px",
+          "width": "604.0px",
+          "height": "280.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:12px; overflow:hidden; box-sizing:border-box; border:4px solid #b45309; box-shadow:0 12px 30px rgba(0,0,0,0.3);'><img src='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "65.0px",
+          "top": "435.0px",
+          "width": "664.0px",
+          "height": "215.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:Georgia, serif; color:#291d12;'><div style='font-family:sans-serif; font-size:12px; font-weight:700; letter-spacing:3px; color:#475569; margin-bottom:14px;'>WE BOUGHT A HOME! COME HELP US WARM HEARTH & HALL AT</div><div style='font-size:52px; font-weight:900; letter-spacing:2px; color:#b45309; line-height:1.05; margin-bottom:12px;'>THE MILLER RESIDENCE</div><div style='font-size:15.5px; font-style:italic; color:#291d12; opacity:0.9; max-width:540px; margin:0 auto; line-height:1.4;'>Artisanal Wood-Fired Pizza, Craft Cocktails, Patio Acoustic Music & Home Tours</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "665.0px",
+          "width": "644.0px",
+          "height": "150.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.88); border:1px solid rgba(0,0,0,0.1); border-top:4px solid #b45309; border-radius:10px; padding:22px 28px; text-align:center; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:22px; font-weight:900; letter-spacing:2.5px; color:#291d12; margin-bottom:8px;'>SATURDAY, OCTOBER 10, 2026</div><div style='font-size:12.5px; font-weight:700; letter-spacing:2px; color:#b45309;'>3:00 PM UNTIL LATE • DROP BY ANYTIME FOR DRINKS & BITES</div><div style='width:80px; height:2px; background:#4d7c0f; margin:14px auto; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div><div style='font-size:15px; font-weight:800; color:#291d12; letter-spacing:1.5px;'>742 WILLOW CREEK LANE</div><div style='font-size:12.5px; color:#475569; margin-top:4px;'>Maplewood Historic District • Portland, Oregon</div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "840.0px",
+          "width": "644.0px",
+          "height": "130.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.88); border:1px solid rgba(0,0,0,0.1); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#b45309; margin-bottom:4px;'>🥂</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#291d12;'>LIBATIONS</div><div style='font-size:11px; color:#475569; margin-top:4px;'>Signature Cocktails & Vintage Brut</div></div><div style='background:rgba(255,255,255,0.88); border:1px solid rgba(0,0,0,0.1); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#b45309; margin-bottom:4px;'>🍽️</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#291d12;'>CUISINE</div><div style='font-size:11px; color:#475569; margin-top:4px;'>Chef-Prepared Seasonal Tasting</div></div><div style='background:rgba(255,255,255,0.88); border:1px solid rgba(0,0,0,0.1); border-radius:8px; padding:14px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:18px; color:#b45309; margin-bottom:4px;'>🎶</div><div style='font-size:11px; font-weight:800; letter-spacing:1.5px; color:#291d12;'>MUSIC</div><div style='font-size:11px; color:#475569; margin-top:4px;'>Live Entertainment & Dancing</div></div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "75.0px",
+          "top": "995.0px",
+          "width": "644.0px",
+          "height": "58.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#b45309; color:#ffffff; border-radius:8px; padding:14px 20px; text-align:center; font-family:sans-serif; font-size:10.5px; font-weight:800; letter-spacing:1.8px; line-height:1.5; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>NO GIFTS NEEDED — JUST BRING YOUR FAVORITE BOTTLE OF WINE OR RECIPE! RSVP: (503) 555-0199</div>",
+          "transform": "none",
+          "zIndex": 8,
           "scaleX": "1",
           "scaleY": "1"
         }

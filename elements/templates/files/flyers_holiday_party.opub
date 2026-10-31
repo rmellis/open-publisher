@@ -1,41 +1,105 @@
 {
+  "title": "Winter Holiday Bash Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750018,
       "width": "794px",
       "height": "1123px",
-      "background": "#0e3820",
+      "background": "#26070b",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "0px",
-          "left": "0px",
-          "width": "794px",
-          "height": "200px",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #3f0912 0%, #0f172a 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 1,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:100px;text-align:center;margin-top:-20px;'>🎄 ✨ 🎁 ✨ 🎄</div>"
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "350px",
-          "left": "0px",
-          "width": "794px",
-          "height": "300px",
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #f59e0b; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Georgia\",serif;font-size:90px;color:#fcd34d;font-weight:bold;text-shadow:2px 2px 4px rgba(0,0,0,0.5);'>HOLIDAY</div><div style='font-family:\"Georgia\",serif;font-size:90px;color:#fcd34d;font-weight:bold;margin-top:-10px;text-shadow:2px 2px 4px rgba(0,0,0,0.5);'>PARTY</div></div>"
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "600px",
-          "left": "0px",
-          "width": "794px",
-          "height": "100px",
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#f59e0b; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EAT, DRINK & BE MERRY • ANNUAL WINTER CELEBRATION</div>",
+          "transform": "none",
           "zIndex": 3,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:30px;color:#ffffff;'>Join us for a festive celebration!</div>"
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "850px",
-          "left": "297px",
-          "width": "200px",
-          "height": "60px",
-          "zIndex": 3,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%;height:100%;background:#dc2626;color:white;font-family:Arial,sans-serif;font-size:24px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>RSVP</div>"
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #ef4444;'><img src='https://images.unsplash.com/photo-1512389142860-9c449e58a543?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#ffffff; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>HOLIDAY SOIREE</div><div style='display:inline-block; background:#ef4444; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>AN EVENING OF JAZZ, COCKTAILS & FESTIVE CHEER</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f59e0b; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f59e0b; letter-spacing:1px; margin-bottom:4px;'>✦ WINTER WONDERLAND COCKTAIL HOUR</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Spiced mulled wine, artisanal eggnog, champagne tower & gourmet raw bar</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f59e0b; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f59e0b; letter-spacing:1px; margin-bottom:4px;'>✦ CARVING STATION & DESSERT TABLE</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Herb-crusted prime rib, truffle mac & cheese, yule log patisserie & peppermint bark</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f59e0b; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f59e0b; letter-spacing:1px; margin-bottom:4px;'>✦ UGLY SWEATER CONTEST & CHARITY TOY DRIVE</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Bring an unwrapped toy for a chance to win 2 First-Class Vacation Airline Tickets!</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#f59e0b; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>FRIDAY, DECEMBER 18, 2026 • 7:00 PM TO MIDNIGHT</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px dashed #ef4444; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>THE GRAND BALLROOM • 250 PARK AVENUE • RSVP BY DEC 5TH</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }

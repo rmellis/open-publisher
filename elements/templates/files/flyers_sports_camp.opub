@@ -1,49 +1,105 @@
 {
+  "title": "Youth Sports & Athletics Camp Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750020,
       "width": "794px",
       "height": "1123px",
-      "background": "#ffffff",
+      "background": "#0a192f",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "100px",
-          "left": "0px",
-          "width": "794px",
-          "height": "250px",
-          "zIndex": 3,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:#1d4ed8;'>SPORTS</div><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:#1d4ed8;margin-top:-20px;'>CAMP</div></div>"
-        },
-        {
-          "top": "350px",
-          "left": "0px",
-          "width": "794px",
-          "height": "100px",
-          "zIndex": 3,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:30px;color:#333;font-weight:bold;'>SUMMER TRAINING SESSIONS</div>"
-        },
-        {
-          "top": "500px",
-          "left": "0px",
-          "width": "794px",
-          "height": "623px",
-          "zIndex": 2,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:250px;text-align:center;'>⚽ 🏃‍♂️</div>"
-        },
-        {
-          "top": "850px",
-          "left": "0px",
-          "width": "794px",
-          "height": "273px",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #0f172a 0%, #15803d 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 1,
-          "innerHTML": "<div style='width:100%;height:100%;background:#22c55e; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>"
+          "scaleX": "1",
+          "scaleY": "1"
         },
         {
-          "top": "950px",
-          "left": "247px",
-          "width": "300px",
-          "height": "60px",
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #facc15; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#facc15; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>TRAIN LIKE A PRO THIS SUMMER • AGES 8 TO 17</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #4ade80;'><img src='https://images.unsplash.com/photo-1526676037777-05a232554f77?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
           "zIndex": 4,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%;height:100%;background:#fbbf24;color:#92400e;font-family:Arial,sans-serif;font-size:24px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:30px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SIGN UP TODAY</div>"
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#ffffff; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>CHAMPIONS SPORTS CAMP</div><div style='display:inline-block; background:#4ade80; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SOCCER • BASKETBALL • SPEED & AGILITY • FLAG FOOTBALL</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #facc15; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#facc15; letter-spacing:1px; margin-bottom:4px;'>✦ NCAA & PRO COACHING STAFF</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Small-group skill stations focusing on footwork, shooting mechanics, vision & game IQ</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #facc15; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#facc15; letter-spacing:1px; margin-bottom:4px;'>✦ DAILY SCRIMMAGES & TOURNAMENT PLAY</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Competitive balanced leagues, championship Friday playoffs, medals & MVP awards</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #facc15; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#facc15; letter-spacing:1px; margin-bottom:4px;'>✦ ATHLETE FUEL & NIKE CAMP GEAR PACK</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Includes reversible jersey, dri-fit shorts, water bottle & healthy daily sports lunch</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#facc15; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>WEEKLY SESSIONS JUNE 15 - AUGUST 14 • 8:30 AM TO 3:30 PM</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px dashed #4ade80; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>VICTORY ATHLETIC COMPLEX • REGISTER TODAY AT CHAMPIONSCAMP.ORG • (555) 901-PLAY</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }

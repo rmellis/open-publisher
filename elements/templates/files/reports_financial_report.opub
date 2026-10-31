@@ -5,12 +5,12 @@
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 416435798,
+      "id": 800003,
       "width": "794px",
       "height": "1123px",
-      "background": "#1e1e1e",
-      "header": "Header",
-      "footer": "Footer",
+      "background": "#111827",
+      "header": "",
+      "footer": "",
       "borderStyle": "none",
       "elements": [
         {
@@ -18,20 +18,64 @@
           "top": "0.0px",
           "width": "794.0px",
           "height": "1123.0px",
-          "innerHTML": "<div><img src='https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=80' style='width:100%; height:100%; object-fit:cover; opacity:0.4;'/></div>",
+          "innerHTML": "<div style='width:100%; height:100%; background:#111827; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
           "scaleX": "1",
           "scaleY": "1"
         },
         {
-          "left": "100.0px",
-          "top": "400.0px",
-          "width": "594.0px",
-          "height": "300.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='border:2px solid #c5a880; padding:40px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin-top:0; color:#c5a880; font-size:50px; letter-spacing:5px;'>FINANCIAL<br/>SUMMARY</h1><p style='margin-top:0; color:white;'>Fiscal Year 2024</p></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "22.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='width:100%; height:100%; background:#10b981; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "56.0px",
+          "width": "676.0px",
+          "height": "330.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; box-sizing:border-box; border:3px solid #10b981;'><img src='https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "420.0px",
+          "width": "676.0px",
+          "height": "260.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-family:sans-serif; color:#ffffff;'><div style='display:inline-block; background:#10b981; color:#09090b; font-size:11px; font-weight:900; letter-spacing:3px; padding:6px 16px; border-radius:4px; margin-bottom:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>Q4 AUDITED FINANCIAL STATEMENTS</div><div style='font-family:Georgia, serif; font-size:56px; font-weight:900; letter-spacing:2px; line-height:1.05; margin-bottom:16px;'>FINANCIAL REPORT</div><div style='font-size:15px; font-weight:600; letter-spacing:1.5px; color:#cbd5e1; line-height:1.5; border-left:4px solid #10b981; padding-left:16px;'>INSTITUTIONAL PORTFOLIO PERFORMANCE, LIQUIDITY & RISK GOVERNANCE</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "710.0px",
+          "width": "676.0px",
+          "height": "155.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #10b981; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#10b981;'>$18.4B</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>ASSETS UNDER MANAGEMENT</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #10b981; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#10b981;'>+19.4%</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>NET IRR PERFORMANCE</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-top:4px solid #10b981; border-radius:8px; padding:22px 16px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:34px; font-weight:900; color:#10b981;'>AAA</div><div style='font-size:10.5px; font-weight:800; letter-spacing:1.5px; color:#ffffff; margin-top:8px;'>FIDUCIARY AUDIT RATING</div></div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "68.0px",
+          "top": "935.0px",
+          "width": "676.0px",
+          "height": "130.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid rgba(255,255,255,0.2); padding-top:24px; font-family:sans-serif; color:#ffffff;'><div><div style='font-size:10px; font-weight:800; letter-spacing:2.5px; color:#10b981;'>PREPARED & PUBLISHED BY</div><div style='font-size:18px; font-weight:900; letter-spacing:1.5px; margin-top:4px;'>VANGUARD HERITAGE CAPITAL</div><div style='font-size:12px; color:#94a3b8; margin-top:2px;'>Board of Directors & Executive Strategy Office</div></div><div style='text-align:right; font-size:12px; color:#cbd5e1;'><div><strong>Document Classification:</strong> Board Confidential</div><div style='margin-top:4px;'><strong>Release Date:</strong> Q4 2026</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
           "scaleX": "1",
           "scaleY": "1"
         }

@@ -1,26 +1,103 @@
 {
-  "title": "Sunday Brunch",
+  "title": "Sunday Brunch Menu",
   "isTemplate": true,
   "hasMasterPage": false,
   "isSpreadMode": false,
   "pages": [
     {
-      "id": 7914203,
+      "id": 710006,
       "width": "794px",
       "height": "1123px",
-      "background": "#ffccbc",
+      "background": "#fff7f5",
       "header": "",
       "footer": "",
       "borderStyle": "none",
       "elements": [
         {
-          "left": "100.0px",
-          "top": "100.0px",
-          "width": "594.0px",
-          "height": "923.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:#fff;border-radius:15px;padding:50px;box-sizing:border-box;text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin-top:0; color:#d84315;font-size:55px;'>Sunday Brunch</h1><p style='color:#5d4037;font-size:22px;margin-top:40px;'>Mimosa - <br><br>Avocado Toast - </p></div>",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(180deg, #fffafa 0%, #ffe4e1 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
-          "zIndex": 10,
+          "zIndex": 1,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #be123c; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "40.0px",
+          "width": "714.0px",
+          "height": "210.0px",
+          "innerHTML": "<div style='width:100%; height:100%; overflow:hidden; border-radius:6px; position:relative;'><img src='https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/><div style='position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.22) 100%); -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div></div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "60.0px",
+          "top": "80.0px",
+          "width": "674.0px",
+          "height": "150.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; color:#ffffff; font-family:Georgia, serif;'><div style='display:inline-block; background:#be123c; color:#ffffff; font-family:sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; padding:4px 14px; border-radius:20px; margin-bottom:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EST. 2026 • CHEF CURATED</div><div style='font-size:38px; font-weight:900; letter-spacing:3px; text-shadow:0 3px 12px rgba(0,0,0,0.7); line-height:1.1;'>LA BELLE MATINEE</div><div style='font-family:sans-serif; font-size:10.5px; font-weight:600; letter-spacing:2.2px; color:#f1f5f9; margin-top:8px;'>SUNDAY CHAMPAGNE BRUNCH & PATISSERIE • EVERY SUNDAY 9:30AM TO 3:00PM</div></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "268.0px",
+          "width": "714.0px",
+          "height": "385.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.85); border:1px solid rgba(0,0,0,0.08); border-left:5px solid #be123c; border-radius:6px; padding:18px 24px; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13px; font-weight:900; letter-spacing:3px; color:#be123c; text-transform:uppercase; margin-bottom:14px; border-bottom:2px solid #be123c; padding-bottom:5px; display:inline-block;'>✦ SAVORY BRUNCH MAINS</div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Smoked Norwegian Salmon Royale</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$23</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">House-cured Atlantic salmon, poached organic eggs, dill-caper hollandaise on toasted brioche</div></div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Steak & Truffle Eggs Frittata</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$26</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Prime hanger steak medallions, caramelized shallots, gruyere cheese, truffle herb potatoes</div></div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Croque Madame Provencal</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$19</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Shaved Parisian ham, melted Comte cheese, nutmeg bechamel on sourdough crowned with a sunny egg</div></div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Shakshuka Baked Farm Eggs</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$18</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Spiced heirloom tomato & roasted red pepper ragout, crumbled feta, cilantro & grilled flatbread</div></div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "670.0px",
+          "width": "714.0px",
+          "height": "286.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.85); border:1px solid rgba(0,0,0,0.08); border-left:5px solid #d97706; border-radius:6px; padding:18px 24px; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13px; font-weight:900; letter-spacing:3px; color:#be123c; text-transform:uppercase; margin-bottom:14px; border-bottom:2px solid #d97706; padding-bottom:5px; display:inline-block;'>✦ PATISSERIE & SWEET INDULGENCES</div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Lemon Curd & Mascarpone Crepes</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$17</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Delicate French crepes folded with whipped vanilla mascarpone, Meyer lemon curd & macerated berries</div></div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Bananas Foster Brioche Pain Perdu</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$18</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Caramelized rum-butter bananas, toasted macadamia nuts & Tahitian vanilla bean gelato</div></div><div style=\"margin-bottom:13px;\"><div style=\"display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dotted #d97706; padding-bottom:3px;\"><span style=\"font-weight:800; font-size:14.5px; color:#311018; letter-spacing:0.3px;\">Artisanal Pastry Basket for Two</span><span style=\"font-weight:900; font-size:15.5px; color:#be123c;\">$16</span></div><div style=\"font-size:11.5px; color:#57534e; margin-top:3px; line-height:1.35;\">Warm butter croissants, pain au chocolat, raspberry Kouign-Amann & house strawberry preserves</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "972.0px",
+          "width": "714.0px",
+          "height": "72.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#be123c; color:#ffffff; border-radius:6px; padding:12px 20px; text-align:center; font-family:sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:11px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:4px;'>BOTTOMLESS MIMOSA BAR ($25)</div><div style='font-size:12px; font-weight:500; opacity:0.95;'>Classic Brut & Valencia Orange • White Peach Bellini • Grapefruit Paloma Fizz • Blood Orange Rose</div></div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "40.0px",
+          "top": "1056.0px",
+          "width": "714.0px",
+          "height": "30.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif; font-size:10.5px; font-weight:700; letter-spacing:2px; color:#57534e;'>PATIO SEATING AVAILABLE • RESERVATIONS RECOMMENDED • 740 GRAND BOULEVARD</div>",
+          "transform": "none",
+          "zIndex": 8,
           "scaleX": "1",
           "scaleY": "1"
         }

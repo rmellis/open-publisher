@@ -1,49 +1,105 @@
 {
+  "title": "Modern Gallery Opening Flyer",
+  "isTemplate": true,
+  "hasMasterPage": false,
+  "isSpreadMode": false,
   "pages": [
     {
+      "id": 750013,
       "width": "794px",
       "height": "1123px",
-      "background": "#283573",
+      "background": "#111111",
+      "header": "",
+      "footer": "",
+      "borderStyle": "none",
       "elements": [
         {
-          "top": "150px",
-          "left": "60px",
-          "width": "400px",
-          "height": "300px",
-          "zIndex": 4,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-family:Arial,sans-serif;font-size:80px;color:white;font-weight:bold;line-height:1.1;'>Art<br>Exhibition</div>"
-        },
-        {
-          "top": "350px",
-          "left": "60px",
-          "width": "400px",
-          "height": "100px",
-          "zIndex": 4,
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-family:Arial,sans-serif;font-size:24px;color:#cccccc;'>Discover the unspoken beauty<br>of abstract shapes and forms.</div>"
-        },
-        {
-          "top": "100px",
-          "left": "450px",
-          "width": "120px",
-          "height": "450px",
-          "zIndex": 3,
-          "innerHTML": "<div style='width:100%;height:100%;background:#e3273e; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>"
-        },
-        {
-          "top": "200px",
-          "left": "580px",
-          "width": "150px",
-          "height": "600px",
-          "zIndex": 2,
-          "innerHTML": "<div style='width:100%;height:100%;background:#f5bc18; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>"
-        },
-        {
-          "top": "500px",
-          "left": "350px",
-          "width": "250px",
-          "height": "400px",
+          "left": "0.0px",
+          "top": "0.0px",
+          "width": "794.0px",
+          "height": "1123.0px",
+          "innerHTML": "<div style='background:linear-gradient(135deg, #18181b 0%, #09090b 100%); width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
           "zIndex": 1,
-          "innerHTML": "<div style='width:100%;height:100%;background:#00a3e0; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>"
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "24.0px",
+          "top": "24.0px",
+          "width": "746.0px",
+          "height": "1075.0px",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:2px solid #f43f5e; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "none",
+          "zIndex": 2,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "42.0px",
+          "width": "706.0px",
+          "height": "44.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#f43f5e; color:#ffffff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:sans-serif; font-size:11.5px; font-weight:900; letter-spacing:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>CONTEMPORARY ABSTRACT & DIGITAL SCULPTURE RETROSPECTIVE</div>",
+          "transform": "none",
+          "zIndex": 3,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "102.0px",
+          "width": "706.0px",
+          "height": "275.0px",
+          "innerHTML": "<div style='width:100%; height:100%; border-radius:10px; overflow:hidden; position:relative; box-sizing:border-box; border:3px solid #38bdf8;'><img src='https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=900&q=80' style='width:100%; height:100%; object-fit:cover; display:block;'/></div>",
+          "transform": "none",
+          "zIndex": 4,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "392.0px",
+          "width": "706.0px",
+          "height": "140.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center; font-family:sans-serif;'><div style='font-size:56px; font-weight:900; color:#ffffff; letter-spacing:3px; line-height:1.02; text-transform:uppercase;'>CHROMATIC FORMS</div><div style='display:inline-block; background:#38bdf8; color:#09090b; font-size:12px; font-weight:900; letter-spacing:2.5px; padding:6px 18px; border-radius:20px; margin-top:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SOLO EXHIBITION BY ELENA VANCE • CURATED BY GALERIE BLANC</div></div>",
+          "transform": "none",
+          "zIndex": 5,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "548.0px",
+          "width": "706.0px",
+          "height": "330.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; font-family:sans-serif;'><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f43f5e; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f43f5e; letter-spacing:1px; margin-bottom:4px;'>✦ OPENING NIGHT VERNISSAGE</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Friday, October 9 • 6:00 PM to 10:00 PM • Artist Walkthrough & Champagne Reception</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f43f5e; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f43f5e; letter-spacing:1px; margin-bottom:4px;'>✦ FEATURED INSTALLATIONS</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>24 Large-Scale Oil & Gold-Leaf Canvases + Interactive Kinetic Light Sculptures</div></div><div style='background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-left:5px solid #f43f5e; border-radius:8px; padding:14px 20px; margin-bottom:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><div style='font-size:13.5px; font-weight:900; color:#f43f5e; letter-spacing:1px; margin-bottom:4px;'>✦ COLLECTOR CATALOG & TALKS</div><div style='font-size:12.5px; color:#ffffff; line-height:1.4;'>Saturday 2:00 PM Panel Discussion: Color Theory & Spatial Emotion in Post-Digital Art</div></div></div>",
+          "transform": "none",
+          "zIndex": 6,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "895.0px",
+          "width": "706.0px",
+          "height": "75.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:#f43f5e; color:#ffffff; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 24px; font-family:sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>OCTOBER 9 - NOVEMBER 22, 2026 • TUE-SUN 11:00 AM - 7:00 PM</div>",
+          "transform": "none",
+          "zIndex": 7,
+          "scaleX": "1",
+          "scaleY": "1"
+        },
+        {
+          "left": "44.0px",
+          "top": "986.0px",
+          "width": "706.0px",
+          "height": "85.0px",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='width:100%; height:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px dashed #38bdf8; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px 20px; font-family:sans-serif; font-size:12px; font-weight:800; letter-spacing:1.8px; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>GALERIE BLANC • 420 CHELSEA ARTS DISTRICT • FREE PUBLIC ADMISSION</div>",
+          "transform": "none",
+          "zIndex": 8,
+          "scaleX": "1",
+          "scaleY": "1"
         }
       ]
     }
