@@ -40,8 +40,8 @@
           "top": "200.0px",
           "width": "150.0px",
           "height": "150.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:rgba(255,255,255,0.9); padding:20px; border-radius:50%; width:150px; height:150px; display:flex; align-items:center; justify-content:center; text-align:center; color:#e65100; font-weight:bold; transform:rotate(-10deg);  -webkit-print-color-adjust:exact; print-color-adjust:exact;'>BEST<br>RECIPES<br>2024</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='box-sizing:border-box; background:rgba(255,255,255,0.9); padding:20px; border-radius:50%; width:150px; height:150px; display:flex; align-items:center; justify-content:center; text-align:center; color:#e65100; font-weight:bold;   -webkit-print-color-adjust:exact; print-color-adjust:exact;'>BEST<br>RECIPES<br>2024</div>",
+          "transform": "rotate(-10deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

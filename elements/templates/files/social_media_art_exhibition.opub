@@ -29,8 +29,8 @@
           "top": "300.0px",
           "width": "400.0px",
           "height": "400.0px",
-          "innerHTML": "<div style='background:white; width:400px; height:400px; transform:rotate(10deg); margin:0 auto; border:10px solid #333; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
-          "transform": "none",
+          "innerHTML": "<div style='box-sizing:border-box; background:white; width:400px; height:400px;  margin:0 auto; border:10px solid #333; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "transform": "rotate(10deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

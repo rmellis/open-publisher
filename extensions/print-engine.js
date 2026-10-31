@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.14.0)
+// OpenPublisher Print Engine (v5.14.1)
 (function installNativePrintHooks() {
 
     async function buildPrintDOM() {
@@ -370,7 +370,7 @@
                 // Pre-flight: Strip interactive handles and non-printable elements
                 scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
 
-                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.14.0) ✨
+                // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.14.1) ✨
                 if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
                     scaler.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {
                         const bg = el.style.backgroundImage || el.style.background || '';
@@ -2159,8 +2159,8 @@
                         } else {
                             cropDiv.style.clipPath = 'none';
                             cropDiv.style.webkitClipPath = 'none';
-                            cropDiv.style.overflow = 'hidden';
-                            cropDiv.style.contain = 'paint';
+                            cropDiv.style.overflow = 'visible';
+                            cropDiv.style.contain = 'none';
                         }
 
                         const sX = el.scaleX || "1";
@@ -2241,6 +2241,21 @@
                                             savedImgStyle.position = activeImg.style.position || 'absolute';
                                         }
                                     }
+                                    if (activeImg.style.border && !savedImgStyle.border) {
+                                        savedImgStyle.border = activeImg.style.border;
+                                        savedImgStyle.boxSizing = activeImg.style.boxSizing || 'border-box';
+                                    }
+                                    if (activeImg.style.boxShadow && !savedImgStyle.boxShadow) {
+                                        savedImgStyle.boxShadow = activeImg.style.boxShadow;
+                                    }
+                                    if (activeImg.style.transform && /rotate\([^)]+\)/i.test(activeImg.style.transform) && (!elDiv.style.transform || elDiv.style.transform === 'none')) {
+                                        const rotMatch = activeImg.style.transform.match(/rotate\([^)]+\)/i);
+                                        if (rotMatch) {
+                                            elDiv.style.transform = rotMatch[0];
+                                            savedImgStyle.transform = activeImg.style.transform.replace(/rotate\([^)]+\)/i, '').trim();
+                                            img.style.transform = savedImgStyle.transform;
+                                        }
+                                    }
                                     const comp = window.getComputedStyle(activeImg);
                                     const f1 = (comp.filter && comp.filter !== 'none') ? comp.filter : (activeImg.style.filter || '');
                                     if (f1 && f1 !== 'none') liveFilter = (liveFilter + ' ' + f1).trim();
@@ -2276,6 +2291,16 @@
                             }
                         }
                         currentFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
+
+                        if (savedImgStyle.border && savedImgStyle.border !== 'none') {
+                            img.style.border = savedImgStyle.border;
+                            img.style.boxSizing = savedImgStyle.boxSizing || 'border-box';
+                            img.style.webkitPrintColorAdjust = 'exact';
+                            img.style.printColorAdjust = 'exact';
+                        }
+                        if (savedImgStyle.boxShadow && savedImgStyle.boxShadow !== 'none') {
+                            img.style.boxShadow = savedImgStyle.boxShadow;
+                        }
 
                         const displayW = parseFloat(el.width) || parseFloat(el.imgStyle?.width) || 400;
                         const displayH = parseFloat(el.height) || parseFloat(el.imgStyle?.height) || 400;
@@ -2322,8 +2347,13 @@
                                     img.style.maxWidth = 'none';
                                     img.style.maxHeight = 'none';
                                     img.style.objectFit = 'fill';
-                                    cropDiv.style.overflow = 'hidden';
-                                    cropDiv.style.contain = 'paint';
+                                    if (isCropped || shapeClipPath) {
+                                        cropDiv.style.overflow = 'hidden';
+                                        cropDiv.style.contain = 'paint';
+                                    } else {
+                                        cropDiv.style.overflow = 'visible';
+                                        cropDiv.style.contain = 'none';
+                                    }
                                 }
                                 
                                 img.style.filter = 'none';
@@ -2369,6 +2399,9 @@
                             if (isCropped || shapeClipPath) {
                                 cropDiv.style.overflow = 'hidden';
                                 cropDiv.style.contain = 'paint';
+                            } else {
+                                cropDiv.style.overflow = 'visible';
+                                cropDiv.style.contain = 'none';
                             }
                         }
                         

@@ -29,7 +29,7 @@
           "top": "40.0px",
           "width": "714.0px",
           "height": "160.0px",
-          "innerHTML": "<div style='border:1px solid #30363d; border-radius:8px; background:#161b22; padding:30px; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border:1px solid #30363d; border-radius:8px; background:#161b22; padding:30px; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
           "zIndex": 2,
           "scaleX": "1",

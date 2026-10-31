@@ -18,7 +18,7 @@
           "top": "100.0px",
           "width": "694.0px",
           "height": "2.0px",
-          "innerHTML": "<div style='border-bottom:2px solid black; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; border-bottom:2px solid black; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

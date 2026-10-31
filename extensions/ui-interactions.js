@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.14.0)
+// Open Publisher UI Interactions (v5.14.1)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.14.0)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.14.1)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1097,7 +1097,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.14.0</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.14.1</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1511,7 +1511,7 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE (v5.14.0: Added Multi-Page Insert Template Banner)
+    // 4. TEMPLATES MODAL OVERRIDE (v5.14.1: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');
@@ -2062,6 +2062,34 @@
                 c => c.tagName !== 'STYLE' && c.tagName !== 'SCRIPT'
             );
             if (nonStyleChildren.length === 0) return;
+
+            // Normalize single-child elements:
+            // 1. Promote centered inner rotate(...) to the outer .pub-element transform so selection bounding box & print match
+            // 2. Ensure bordered <img>/<div > uses box-sizing: border-box
+            // 3. Ensure empty background/frame <div> fills 100% width and height
+            if (nonStyleChildren.length === 1) {
+                const onlyChild = nonStyleChildren[0];
+                if (onlyChild && onlyChild.style) {
+                    const childTf = onlyChild.style.transform || '';
+                    const childOrigin = (onlyChild.style.transformOrigin || '').toLowerCase();
+                    const hasCornerOrigin = childOrigin.includes('left') || childOrigin.includes('top') || childOrigin.includes('right') || childOrigin.includes('bottom');
+                    if (childTf && /rotate\([^)]+\)/i.test(childTf) && !hasCornerOrigin && (!el.style.transform || el.style.transform === 'none')) {
+                        const rotMatch = childTf.match(/rotate\([^)]+\)/i);
+                        if (rotMatch) {
+                            el.style.transform = rotMatch[0];
+                            onlyChild.style.transform = childTf.replace(/rotate\([^)]+\)/i, '').trim();
+                        }
+                    }
+                    if ((onlyChild.style.border || onlyChild.style.padding) && !onlyChild.style.boxSizing) {
+                        onlyChild.style.boxSizing = 'border-box';
+                    }
+                    if (onlyChild.tagName === 'DIV' && onlyChild.children.length === 0 && !visibleText) {
+                        if (!onlyChild.style.width) onlyChild.style.width = '100%';
+                        if (!onlyChild.style.height) onlyChild.style.height = '100%';
+                        if (!onlyChild.style.boxSizing) onlyChild.style.boxSizing = 'border-box';
+                    }
+                }
+            }
 
             // Check if this is a pure image/SVG element with no text
             if (nonStyleChildren.length === 1 && ['IMG', 'SVG', 'CANVAS'].includes(nonStyleChildren[0].tagName)) {

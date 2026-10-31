@@ -268,7 +268,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.14.0`;
+    return `${path}?v=5.14.1`;
 };
 
 function initTemplates() {
@@ -397,7 +397,7 @@ function initTemplates() {
                     const page = opubData.pages[0];
                     let previewHTML = '';
                     page.elements.forEach(el => {
-                        previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex};">${el.innerHTML}</div>`;
+                        previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
                     });
                     
                     // Parse width/height if available to scale correctly
@@ -433,7 +433,7 @@ function initTemplates() {
     }
 }
 
-// --- MULTI-PAGE TEMPLATE INSERTION & LOAD ENGINE (v5.14.0) ---
+// --- MULTI-PAGE TEMPLATE INSERTION & LOAD ENGINE (v5.14.1) ---
 function loadTemplate(opubData) {
     const doWipeAndLoad = () => {
         state.pages = []; // Wipe document
@@ -946,7 +946,7 @@ window.showInsertTemplateModal = function(options = {}) {
                     let previewHTML = '';
                     if (page.elements) {
                         page.elements.forEach(el => {
-                            previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex};">${el.innerHTML}</div>`;
+                            previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
                         });
                     }
 

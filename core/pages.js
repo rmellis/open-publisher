@@ -297,6 +297,14 @@ function renderPage(pageData) {
             if (s.transform) {
                 styleStr += ` transform:${s.transform};`;
             }
+            if (s.border && s.border !== 'none') {
+                styleStr += ` border:${s.border}; box-sizing:${s.boxSizing || 'border-box'}; -webkit-print-color-adjust:exact; print-color-adjust:exact;`;
+            } else if (s.boxSizing) {
+                styleStr += ` box-sizing:${s.boxSizing};`;
+            }
+            if (s.boxShadow && s.boxShadow !== 'none') {
+                styleStr += ` box-shadow:${s.boxShadow};`;
+            }
             const effectiveClipPath = s.clipPath || data.clipPath;
             if (effectiveClipPath && effectiveClipPath !== 'none') {
                 styleStr += ` clip-path:${effectiveClipPath}; -webkit-clip-path:${effectiveClipPath};`;

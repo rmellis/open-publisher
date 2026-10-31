@@ -51,8 +51,8 @@
           "top": "320.0px",
           "width": "400.0px",
           "height": "250.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style=\"font-family: Arial, sans-serif; font-size: 40px; font-weight: 900; color: #fff;  transform: rotate(-5deg); line-height: 1.1; z-index: 4;\">THE<br>SPRING<br>ISSUE</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style=\"font-family: Arial, sans-serif; font-size: 40px; font-weight: 900; color: #fff;   line-height: 1.1; z-index: 4;\">THE<br>SPRING<br>ISSUE</div>",
+          "transform": "rotate(-5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

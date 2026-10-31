@@ -40,8 +40,8 @@
           "top": "300.0px",
           "width": "600.0px",
           "height": "100.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:red; color:white; font-size:30px; font-weight:bold; padding:20px; text-align:center; transform:rotate(-5deg); -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EVERYTHING MUST GO!</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='box-sizing:border-box; background:red; color:white; font-size:30px; font-weight:bold; padding:20px; text-align:center;  -webkit-print-color-adjust:exact; print-color-adjust:exact;'>EVERYTHING MUST GO!</div>",
+          "transform": "rotate(-5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

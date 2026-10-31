@@ -215,6 +215,17 @@ function serializeCurrentPage() {
                 }
             }
             
+            let imgTransform = (targetEl && targetEl.style.transform) || '';
+            if (imgTransform && /rotate\([^)]+\)/i.test(imgTransform) && (!data.transform || data.transform === 'none')) {
+                const rotMatch = imgTransform.match(/rotate\([^)]+\)/i);
+                if (rotMatch) {
+                    data.transform = rotMatch[0];
+                    el.style.transform = rotMatch[0];
+                    imgTransform = imgTransform.replace(/rotate\([^)]+\)/i, '').trim();
+                    if (targetEl) targetEl.style.transform = imgTransform;
+                }
+            }
+
             data.filter = combinedFilter || '';
             data.imgStyle = {
                 width: (targetEl && targetEl.style.width) || '100%',
@@ -226,8 +237,11 @@ function serializeCurrentPage() {
                 opacity: imgOpacity,
                 maxWidth: (targetEl && targetEl.style.maxWidth) || 'none',
                 maxHeight: (targetEl && targetEl.style.maxHeight) || 'none',
-                transform: (targetEl && targetEl.style.transform) || '',
-                objectFit: (targetEl && targetEl.style.objectFit) || 'fill'
+                transform: imgTransform,
+                objectFit: (targetEl && targetEl.style.objectFit) || 'fill',
+                border: (targetEl && targetEl.style.border) || '',
+                boxSizing: (targetEl && targetEl.style.boxSizing) || ((targetEl && targetEl.style.border) ? 'border-box' : ''),
+                boxShadow: (targetEl && targetEl.style.boxShadow) || ''
             };
             if (imgOpacity !== '') {
                 data.imgOpacity = imgOpacity;

@@ -40,8 +40,8 @@
           "top": "250.0px",
           "width": "300.0px",
           "height": "80.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:red; color:white; font-weight:bold; font-size:40px; padding:10px; display:inline-block; transform:rotate(-5deg); -webkit-print-color-adjust:exact; print-color-adjust:exact;'>MUST WATCH</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='box-sizing:border-box; background:red; color:white; font-weight:bold; font-size:40px; padding:10px; display:inline-block;  -webkit-print-color-adjust:exact; print-color-adjust:exact;'>MUST WATCH</div>",
+          "transform": "rotate(-5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

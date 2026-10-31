@@ -95,8 +95,8 @@
           "top": "200.0px",
           "width": "300.0px",
           "height": "300.0px",
-          "innerHTML": "<img src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border:5px solid white; transform:rotate(5deg); -webkit-print-color-adjust:exact; print-color-adjust:exact;'>",
-          "transform": "none",
+          "innerHTML": "<img src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80' style='width:100%; height:100%; object-fit:cover; border:5px solid white; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>",
+          "transform": "rotate(5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

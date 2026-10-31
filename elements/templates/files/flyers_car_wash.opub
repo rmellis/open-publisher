@@ -51,8 +51,8 @@
           "top": "450.0px",
           "width": "250.0px",
           "height": "100.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:yellow; color:red; font-weight:bold; font-size:40px; text-align:center; transform:rotate(5deg); padding:10px; border:3px solid red; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>ONLY $10</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='box-sizing:border-box; background:yellow; color:red; font-weight:bold; font-size:40px; text-align:center;  padding:10px; border:3px solid red; -webkit-print-color-adjust:exact; print-color-adjust:exact;'>ONLY $10</div>",
+          "transform": "rotate(5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"

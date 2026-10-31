@@ -29,7 +29,7 @@
           "top": "120.0px",
           "width": "794.0px",
           "height": "20.0px",
-          "innerHTML": "<div style='background:#1b5e20; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
+          "innerHTML": "<div style='width:100%; height:100%; box-sizing:border-box; background:#1b5e20; -webkit-print-color-adjust:exact; print-color-adjust:exact;'></div>",
           "transform": "none",
           "zIndex": 11,
           "scaleX": "1",

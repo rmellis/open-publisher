@@ -95,8 +95,8 @@
           "top": "50.0px",
           "width": "80.0px",
           "height": "80.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:60px; transform:rotate(-15deg);'>✨</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:60px; '>✨</div>",
+          "transform": "rotate(-15deg)",
           "zIndex": 8,
           "scaleX": "1",
           "scaleY": "1"
@@ -106,8 +106,8 @@
           "top": "150.0px",
           "width": "80.0px",
           "height": "80.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:50px; transform:rotate(20deg);'>🎁</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='font-size:50px; '>🎁</div>",
+          "transform": "rotate(20deg)",
           "zIndex": 9,
           "scaleX": "1",
           "scaleY": "1"

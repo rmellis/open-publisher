@@ -29,8 +29,8 @@
           "top": "240.0px",
           "width": "600.0px",
           "height": "100.0px",
-          "innerHTML": "<h2 contenteditable='true' spellcheck='false' style='margin-top:0; color:white; text-align:center; font-family:\"Rock Salt\"; font-size:40px; transform:rotate(-5deg); '>THE ROCKERS</h2>",
-          "transform": "none",
+          "innerHTML": "<h2 contenteditable='true' spellcheck='false' style='margin-top:0; color:white; text-align:center; font-family:\"Rock Salt\"; font-size:40px;  '>THE ROCKERS</h2>",
+          "transform": "rotate(-5deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"
@@ -40,8 +40,8 @@
           "top": "800.0px",
           "width": "300.0px",
           "height": "140.0px",
-          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:rgba(255,0,255,0.8); color:white; padding:20px; text-align:center; font-family:Impact; font-size:24px; transform:rotate(2deg); -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SATURDAY NIGHT<br>JULY 24TH</div>",
-          "transform": "none",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='box-sizing:border-box; background:rgba(255,0,255,0.8); color:white; padding:20px; text-align:center; font-family:Impact; font-size:24px;  -webkit-print-color-adjust:exact; print-color-adjust:exact;'>SATURDAY NIGHT<br>JULY 24TH</div>",
+          "transform": "rotate(2deg)",
           "zIndex": 10,
           "scaleX": "1",
           "scaleY": "1"
