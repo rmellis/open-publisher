@@ -148,7 +148,7 @@ function renderPage(pageData) {
     const marginGuides = paper.querySelector('.margin-guides');
     if (marginGuides) {
         if (!state.margins) {
-            const isCard = (page && (page.format === 'BusinessCard' || (parseFloat(page.width) <= 360 && parseFloat(page.height) <= 260))) || (typeof state !== 'undefined' && state.format === 'BusinessCard');
+            const isCard = (pageData && (pageData.format === 'BusinessCard' || (parseFloat(pageData.width) <= 360 && parseFloat(pageData.height) <= 260))) || (typeof state !== 'undefined' && state.format === 'BusinessCard');
             const defaultMarginInches = isCard ? 0.125 : 0.5;
             state.margins = {
                 top: Math.round(defaultMarginInches * pageDpi),
@@ -217,9 +217,13 @@ function renderPage(pageData) {
         el.style.width = data.width;
         el.style.height = data.height;
         el.style.transform = data.transform || 'none';
-        el.style.zIndex = data.zIndex || 10;
+        el.style.zIndex = (data.zIndex !== undefined && data.zIndex !== null && data.zIndex !== '') ? data.zIndex : 10;
         if (data.overflow) el.style.overflow = data.overflow;
         if (data.type) el.setAttribute('data-type', data.type);
+        if (data.textboxStyle) el.setAttribute('data-textbox-style', data.textboxStyle);
+        if (data.chartConfig) {
+            el.setAttribute('data-chart-config', typeof data.chartConfig === 'string' ? data.chartConfig : JSON.stringify(data.chartConfig));
+        }
         if (data.arrowStyle) el.setAttribute('data-arrow-style', data.arrowStyle);
         if (data.arrowHead) {
             el.setAttribute('data-arrow-head', data.arrowHead);
@@ -278,11 +282,13 @@ function renderPage(pageData) {
                 if (!imgFilter) imgFilter = 'none';
             }
 
-            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${imgFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||'fill'};`;
+            let styleStr = `width:${s.width||'100%'}; height:${s.height||'100%'}; top:${s.top||0}; left:${s.left||0}; position:${s.position||'absolute'}; filter:${imgFilter}; max-width:${s.maxWidth||'none'}; max-height:${s.maxHeight||'none'}; object-fit:${s.objectFit||data.objectFit||'fill'};`;
             
             // Restore opacity: prioritize s.opacity, fallback to data-filter-transparency
             if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
                 styleStr += ` opacity:${s.opacity};`;
+            } else if (data.imgOpacity !== undefined && data.imgOpacity !== '' && data.imgOpacity !== null) {
+                styleStr += ` opacity:${data.imgOpacity};`;
             } else if (data.filterAttributes && data.filterAttributes['data-filter-transparency']) {
                 const tVal = parseFloat(data.filterAttributes['data-filter-transparency']) || 0;
                 styleStr += ` opacity:${1 - (tVal / 100)};`;
@@ -305,7 +311,7 @@ function renderPage(pageData) {
             }
             const altAttr = data.altText ? ` alt="${data.altText.replace(/"/g, '&quot;')}"` : ' alt=""';
             inner = `<img src="${data.imgSrc}" style="${styleStr}"${altAttr}${roundedAttr}>`;
-        } else if (data.clipPath) {
+        } else if (data.clipPath && !data.innerHTML) {
             inner = `<div style="width:100%; height:100%; background:${data.bg}; clip-path:${data.clipPath}"></div>`;
         } else {
             inner = data.innerHTML || '';
@@ -395,10 +401,15 @@ function renderPage(pageData) {
         if (data.growFit) applyGrowFit(el);
         if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
         if (data.type === 'smart-arrow' && typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
-        if (data.type === 'progress-bar' && window.ProgressBarEngine && typeof window.ProgressBarEngine.initElement === 'function') window.ProgressBarEngine.initElement(el);
-        if (data.type === 'chart' && typeof window.initChartElements === 'function') window.initChartElements();
         paper.appendChild(el);
+        if (data.type === 'progress-bar' && window.ProgressBarEngine) {
+            if (typeof window.ProgressBarEngine.initElement === 'function') window.ProgressBarEngine.initElement(el);
+            else if (typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
+        }
     });
+    if (typeof window.initChartElements === 'function') window.initChartElements();
+    if (window.ProgressBarEngine && typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
+    if (typeof window.ensureTemplateElementsEditable === 'function') window.ensureTemplateElementsEditable(paper);
     
     toggleHeaderFooter(state.headersVisible);
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
@@ -961,7 +972,8 @@ function renderThumbnailHTML(pageData, pageIndex) {
             const elBox = document.createElement('div');
             elBox.className = 'pub-thumb-element';
             if (data.id) elBox.setAttribute('data-target-id', data.id);
-            elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
+            const zVal = (data.zIndex !== undefined && data.zIndex !== null && data.zIndex !== '') ? data.zIndex : 10;
+            elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${zVal};`;
             
             const scaleBox = document.createElement('div');
             scaleBox.className = 'pub-thumb-scalebox';
@@ -971,10 +983,12 @@ function renderThumbnailHTML(pageData, pageIndex) {
             if (data.type !== 'beta-wordart' && data.imgSrc && data.imgSrc !== '') {
                 const thumbImg = document.createElement('img');
                 const s = data.imgStyle || {};
-                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'contain') ? 'contain' : (s.objectFit || 'fill')};`;
+                let thumbImgCss = `width: ${s.width||'100%'}; height: ${s.height||'100%'}; top: ${s.top||0}; left: ${s.left||0}; position: ${s.position||'absolute'}; filter: ${s.filter||'none'}; display: block; pointer-events: none; object-fit: ${(s.objectFit === 'contain') ? 'contain' : (s.objectFit || data.objectFit || 'fill')};`;
                 
                 if (s.opacity !== undefined && s.opacity !== '' && s.opacity !== null) {
                     thumbImgCss += ` opacity: ${s.opacity} !important;`;
+                } else if (data.imgOpacity !== undefined && data.imgOpacity !== '' && data.imgOpacity !== null) {
+                    thumbImgCss += ` opacity: ${data.imgOpacity} !important;`;
                 } else if (data.filterAttributes && data.filterAttributes['data-filter-transparency']) {
                     const tVal = parseFloat(data.filterAttributes['data-filter-transparency']) || 0;
                     thumbImgCss += ` opacity: ${1 - (tVal / 100)} !important;`;
@@ -996,7 +1010,7 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 if (data.altText) thumbImg.alt = data.altText;
                 scaleBox.appendChild(thumbImg);
 
-            } else if (data.clipPath) {
+            } else if (data.clipPath && !data.innerHTML) {
                 const clipDiv = document.createElement('div');
                 clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
                 scaleBox.appendChild(clipDiv);

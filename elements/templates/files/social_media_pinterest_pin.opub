@@ -29,7 +29,7 @@
           "top": "400.0px",
           "width": "600.0px",
           "height": "200.0px",
-          "innerHTML": "<div style='background:white; opacity:0.9; padding:20px; text-align:center;'><h1 style='margin:0;'>10 Style Tips</h1><p>Look great for less.</p></div>",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:white; opacity:0.9; padding:20px; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin:0;'>10 Style Tips</h1><p style='margin-top:0;'>Look great for less.</p></div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

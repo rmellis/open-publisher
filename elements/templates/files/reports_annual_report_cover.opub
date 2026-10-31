@@ -29,7 +29,7 @@
           "top": "600.0px",
           "width": "694.0px",
           "height": "400.0px",
-          "innerHTML": "<div style='color:white;'><h1 style='font-size:60px; color:#d4af37;'>ANNUAL REPORT</h1><h2>2025</h2><hr style='border-color:#d4af37;'/><p>Corporate Group Ltd.</p></div>",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='color:white;'><h1 style='margin-top:0; font-size:60px; color:#d4af37;'>ANNUAL REPORT</h1><h2 style='margin-top:0;'>2025</h2><hr style='border-color:#d4af37; -webkit-print-color-adjust:exact; print-color-adjust:exact;'/><p style='margin-top:0;'>Corporate Group Ltd.</p></div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

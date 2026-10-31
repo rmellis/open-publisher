@@ -29,7 +29,7 @@
           "top": "300.0px",
           "width": "594.0px",
           "height": "300.0px",
-          "innerHTML": "<div style='background:#ffffff; padding:40px; box-shadow:0 10px 20px rgba(0,0,0,0.1); border-top:5px solid #20c997;'><h1 style='color:#343a40;'>Project Status Report</h1><h3>Phase 3 Delivery</h3></div>",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:#ffffff; padding:40px; box-shadow:0 10px 20px rgba(0,0,0,0.1); border-top:5px solid #20c997; -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin-top:0; color:#343a40;'>Project Status Report</h1><h3 style='margin-top:0;'>Phase 3 Delivery</h3></div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

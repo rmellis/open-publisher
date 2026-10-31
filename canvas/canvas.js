@@ -1506,7 +1506,8 @@ function enterMultiPageView(z) {
                 const sX = data.scaleX || "1";
                 const sY = data.scaleY || "1";
                 const elBox = document.createElement('div');
-                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 5}; opacity: 0.9;`;
+                const zVal = (data.zIndex !== undefined && data.zIndex !== null && data.zIndex !== '') ? data.zIndex : 5;
+                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${zVal}; opacity: 0.9;`;
                 const scaleBox = document.createElement('div');
                 scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: center center; outline: none; border: none;`;
                 if (data.contentCssText) scaleBox.style.cssText += ' ' + data.contentCssText;
@@ -1526,12 +1527,12 @@ function enterMultiPageView(z) {
                         scaleBox.style.clipPath = `inset(0 round ${effectiveRadius})`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
-                    let objFit = s.objectFit || '100% 100%';
+                    let objFit = s.objectFit || data.objectFit || '100% 100%';
                     if (objFit === 'fill') objFit = '100% 100%';
                     if (objFit === 'contain') objFit = 'contain';
                     imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
                     scaleBox.appendChild(imgDiv);
-                } else if (data.clipPath) {
+                } else if (data.clipPath && !data.innerHTML) {
                     const clipDiv = document.createElement('div');
                     clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
                     scaleBox.appendChild(clipDiv);
@@ -1550,7 +1551,8 @@ function enterMultiPageView(z) {
                 const sY = data.scaleY || "1";
 
                 const elBox = document.createElement('div');
-                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${data.zIndex || 10};`;
+                const zVal = (data.zIndex !== undefined && data.zIndex !== null && data.zIndex !== '') ? data.zIndex : 10;
+                elBox.style.cssText = `position: absolute; left: ${data.left}; top: ${data.top}; width: ${data.width}; height: ${data.height}; transform: ${data.transform || 'none'}; z-index: ${zVal};`;
 
                 const scaleBox = document.createElement('div');
                 scaleBox.style.cssText = `transform: scale(${sX}, ${sY}); width: 100%; height: 100%; overflow: hidden; position: relative; transform-origin: center center; outline: none; border: none;`;
@@ -1572,12 +1574,12 @@ function enterMultiPageView(z) {
                         scaleBox.style.clipPath = `inset(0 round ${effectiveRadius})`;
                     }
                     imgDiv.style.cssText = thumbImgCss;
-                    let objFit = s.objectFit || '100% 100%';
+                    let objFit = s.objectFit || data.objectFit || '100% 100%';
                     if (objFit === 'fill') objFit = '100% 100%';
                     if (objFit === 'contain') objFit = 'contain';
                     imgDiv.style.background = `url('${data.imgSrc}') center center / ${objFit} no-repeat`;
                     scaleBox.appendChild(imgDiv);
-                } else if (data.clipPath) {
+                } else if (data.clipPath && !data.innerHTML) {
                     const clipDiv = document.createElement('div');
                     clipDiv.style.cssText = `width: 100%; height: 100%; background: ${data.bg}; clip-path: ${data.clipPath}`;
                     scaleBox.appendChild(clipDiv);

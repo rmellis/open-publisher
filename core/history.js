@@ -130,6 +130,7 @@ function serializeCurrentPage() {
             arrowHead: el.getAttribute('data-arrow-head') || null,
             arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null,
             textboxStyle: el.getAttribute('data-textbox-style') || null,
+            chartConfig: el.getAttribute('data-chart-config') || null,
             isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border'
         };
 
@@ -228,9 +229,12 @@ function serializeCurrentPage() {
                 transform: (targetEl && targetEl.style.transform) || '',
                 objectFit: (targetEl && targetEl.style.objectFit) || 'fill'
             };
-            if (imgOpacity !== '' && !filterAttrs['data-filter-transparency']) {
-                filterAttrs['data-filter-transparency'] = String(Math.round((1 - parseFloat(imgOpacity)) * 100));
-                data.filterAttributes = filterAttrs;
+            if (imgOpacity !== '') {
+                data.imgOpacity = imgOpacity;
+                if (!filterAttrs['data-filter-transparency']) {
+                    filterAttrs['data-filter-transparency'] = String(Math.round((1 - parseFloat(imgOpacity)) * 100));
+                    data.filterAttributes = filterAttrs;
+                }
             }
             if (imgClipPath && imgClipPath !== 'none') {
                 data.imgStyle.clipPath = imgClipPath;
@@ -241,13 +245,16 @@ function serializeCurrentPage() {
                 data.borderRadius = imgBorderRadius;
             }
             const imgObjectFit = (targetEl && targetEl.style.objectFit) || (targetEl && window.getComputedStyle ? window.getComputedStyle(targetEl).objectFit : '');
-            if (imgObjectFit) data.imgStyle.objectFit = imgObjectFit;
+            if (imgObjectFit) {
+                data.imgStyle.objectFit = imgObjectFit;
+                data.objectFit = imgObjectFit;
+            }
             if (data.type !== 'emoji') {
                 data.type = 'image';
             }
             data.isImage = true;
             data.innerHTML = content ? content.innerHTML : '';
-        } else if (shapeDiv && shapeDiv.style.clipPath) {
+        } else if (shapeDiv && shapeDiv.style.clipPath && data.type === 'shape' && shapeDiv.children.length === 0 && !shapeDiv.textContent.trim() && !shapeDiv.style.backgroundImage) {
             data.clipPath = shapeDiv.style.clipPath;
             data.bg = shapeDiv.style.background;
         } else {

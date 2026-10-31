@@ -29,7 +29,7 @@
           "top": "400.0px",
           "width": "594.0px",
           "height": "300.0px",
-          "innerHTML": "<div style='background:white; padding:40px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);'><h1 style='color:#33691e;'>IMPACT REPORT</h1><h2 style='color:#558b2f;'>2023-2024</h2><p>Making a difference together.</p></div>",
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='background:white; padding:40px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1); -webkit-print-color-adjust:exact; print-color-adjust:exact;'><h1 style='margin-top:0; color:#33691e;'>IMPACT REPORT</h1><h2 style='margin-top:0; color:#558b2f;'>2023-2024</h2><p style='margin-top:0;'>Making a difference together.</p></div>",
           "transform": "none",
           "zIndex": 10,
           "scaleX": "1",

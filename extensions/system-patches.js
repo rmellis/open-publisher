@@ -4077,8 +4077,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     window.healUncroppedImage = function(el) {
         if (!el) return;
-        const img = el.querySelector('img');
+        const img = window.getElementContentImage ? window.getElementContentImage(el) : el.querySelector('img');
         if (!img) return;
+        if (!(img.parentElement && img.parentElement.classList.contains('element-content')) && el.getAttribute('data-type') !== 'image') return;
         if (el.classList.contains('cropping') || (typeof state !== 'undefined' && state && state.cropMode)) return;
 
         const leftVal = (img.style.left || '').trim();
@@ -4089,9 +4090,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         const wVal = (img.style.width || '').trim();
         const hVal = (img.style.height || '').trim();
 
-        if (isZeroOffset && (wVal === '' || wVal === '100%' || wVal === '100px' || wVal === '100' ||
-                             hVal === '' || hVal === '100%' || hVal === '100px' || hVal === '100' ||
-                             (!wVal.endsWith('px') && !wVal.includes('%')))) {
+        const wCorrupt = (wVal === '' || wVal === '100px' || wVal === '100' || (!wVal.endsWith('px') && !wVal.includes('%')));
+        const hCorrupt = (hVal === '' || hVal === '100px' || hVal === '100' || (!hVal.endsWith('px') && !hVal.includes('%')));
+        if (isZeroOffset && (wCorrupt || hCorrupt)) {
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.left = '0px';
@@ -4375,7 +4376,32 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             e.preventDefault(); return;
         }
 
-        const el = e.target.closest('.pub-element');
+        let el = e.target.closest('.pub-element');
+        // Click-through for hollow decorative frames (no fill, only border) when not clicking near the border edge
+        if (el && typeof document.elementsFromPoint === 'function') {
+            const c = el.querySelector('.element-content');
+            const firstDiv = c && c.firstElementChild;
+            if (firstDiv && c.children.length === 1 && (el.textContent || '').trim() === '' && !el.querySelector('img, svg')) {
+                const bg = (firstDiv.style.background || firstDiv.style.backgroundColor || '').toLowerCase();
+                const hasBorder = (firstDiv.style.border || firstDiv.style.borderTop || firstDiv.style.borderBottom || firstDiv.style.borderLeft || firstDiv.style.borderRight || '').length > 0;
+                const isHollow = (!bg || bg === 'none' || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') && hasBorder;
+                if (isHollow) {
+                    const r = el.getBoundingClientRect();
+                    const bEdge = 16;
+                    const onBorder = (e.clientX < r.left + bEdge) || (e.clientX > r.right - bEdge) || (e.clientY < r.top + bEdge) || (e.clientY > r.bottom - bEdge);
+                    if (!onBorder) {
+                        const stack = document.elementsFromPoint(e.clientX, e.clientY);
+                        for (const node of stack) {
+                            const candidate = node.closest && node.closest('.pub-element');
+                            if (candidate && candidate !== el) {
+                                el = candidate;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if(el) {
             // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
             if (e.button === 0 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
@@ -4407,12 +4433,20 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
             const isMulti = state.multiSelected && state.multiSelected.includes(el);
             if (!isMulti) {
-                if(state.selectedEl !== el && typeof window.selectElement === 'function') window.selectElement(el);
+                if(state.selectedEl !== el && typeof window.selectElement === 'function') {
+                    window.selectElement(el);
+                } else if (state.selectedEl === el && window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+                }
                 if(state.multiSelected && state.multiSelected.length > 0) { state.multiSelected.forEach(m => m.classList.remove('selected')); state.multiSelected = []; }
             }
 
-            const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
-            if(el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') {
+            const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : null;
+            const clickedEditableNode = (e.target.nodeType === 3 ? e.target.parentNode : e.target);
+            const clickedEditable = clickedEditableNode && clickedEditableNode.closest ? clickedEditableNode.closest('[contenteditable="true"]') : null;
+            const hasEditableText = !!(clickedEditable && el.contains(clickedEditable) && (el.textContent || '').replace(/@import[^;]+;/g, '').trim().length > 0);
+            const isChartEl = window.isChartElement ? window.isChartElement(el) : (el.getAttribute('data-type') === 'chart');
+            if ((el.querySelector('svg') && !hasEditableText) || isChartEl || (contentImg && !hasEditableText) || el.getAttribute('data-type') === 'shape') {
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -5193,7 +5227,7 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH (v5.13.2)
+// ANTI AD-OVERLAY SECURITY PATCH (v5.14.0)
 // ==========================================
 
 // Helper to verify trusted cloud desktop platforms (e.g. puter.com)

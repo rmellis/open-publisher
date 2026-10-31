@@ -2227,6 +2227,9 @@ window.ContextRibbonSystem = {
             }
         }
         if (tabIdToOpen) window.switchTab(tabIdToOpen);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
 
         const wInput = document.getElementById('ribbon-el-w');
         const hInput = document.getElementById('ribbon-el-h');
@@ -2243,6 +2246,9 @@ window.ContextRibbonSystem = {
         document.getElementById('op-table-sidebar')?.classList.remove('visible');
         const pbBtn = document.getElementById('btn-ribbon-pb-designer');
         if (pbBtn) pbBtn.style.display = 'none';
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.hideFloatingPill === 'function') {
+            window.TemplateCSSColorEngine.hideFloatingPill();
+        }
         let activeTab = document.querySelector('.tab.active');
         if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
             window.switchTab(window.lastStandardTab || 'home');

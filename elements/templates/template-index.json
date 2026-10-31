@@ -20,7 +20,8 @@
         { "name": "Medical Doctor", "file": "resumes_medical_doctor.opub" },
         { "name": "Fashion Designer", "file": "resumes_fashion_designer.opub" },
         { "name": "Data Scientist", "file": "resumes_data_scientist.opub" },
-        { "name": "Architect", "file": "resumes_architect.opub" }
+        { "name": "Architect", "file": "resumes_architect.opub" },
+        { "name": "Dark Mode", "file": "resumes_dark_mode.opub" }
     ],
     "Invitations": [
         { "name": "Dark Mode", "file": "invitations_dark_mode.opub" },
@@ -42,7 +43,8 @@
         { "name": "Black Tie Gala", "file": "invitations_black_tie_gala.opub" },
         { "name": "Masquerade Ball", "file": "invitations_masquerade_ball.opub" },
         { "name": "Luxury Wedding", "file": "invitations_luxury_wedding.opub" },
-        { "name": "Cocktail Party", "file": "invitations_cocktail_party.opub" }
+        { "name": "Cocktail Party", "file": "invitations_cocktail_party.opub" },
+        { "name": "Graduation", "file": "invitations_graduation.opub" }
     ],
     "Flyers": [
         { "name": "Modern Tech Flyer (NEW)", "file": "flyers_modern_tech_flyer.opub" },
@@ -71,7 +73,8 @@
         { "name": "Photography Services", "file": "flyers_photography_services.opub" },
         { "name": "Nightclub Event", "file": "flyers_nightclub_event.opub" },
         { "name": "Luxury Spa Day", "file": "flyers_luxury_spa.opub" },
-        { "name": "Startup Pitch Event", "file": "flyers_startup_pitch.opub" }
+        { "name": "Startup Pitch Event", "file": "flyers_startup_pitch.opub" },
+        { "name": "Car Wash", "file": "flyers_car_wash.opub" }
     ],
     "Magazines": [
         { "name": "Car Wash", "file": "magazines_car_wash.opub" },
@@ -90,7 +93,8 @@
         { "name": "Business & Finance", "file": "magazines_business_cover.opub" },
         { "name": "Travel Adventure", "file": "magazines_travel_adventure.opub" },
         { "name": "Gaming", "file": "magazines_gaming_cover.opub" },
-        { "name": "Luxury Living", "file": "magazines_luxury_living.opub" }
+        { "name": "Luxury Living", "file": "magazines_luxury_living.opub" },
+        { "name": "Nature", "file": "magazines_nature.opub" }
     ],
     "Brochures": [
         { "name": "Nature", "file": "brochures_nature.opub" },
@@ -116,7 +120,8 @@
         { "name": "Private School", "file": "brochures_private_school.opub" },
         { "name": "Yacht Charter", "file": "brochures_yacht_charter.opub" },
         { "name": "Fine Art Gallery", "file": "brochures_fine_art_gallery.opub" },
-        { "name": "Boutique Hotel", "file": "brochures_boutique_hotel.opub" }
+        { "name": "Boutique Hotel", "file": "brochures_boutique_hotel.opub" },
+        { "name": "Corporate", "file": "brochures_corporate.opub" }
     ],
     "Certificates": [
         { "name": "Corporate", "file": "certificates_corporate.opub" },
@@ -136,7 +141,8 @@
         { "name": "Best Employee of the Year", "file": "certificates_best_employee.opub" },
         { "name": "Gold Excellence Award", "file": "certificates_excellence_gold.opub" },
         { "name": "Premium Graduation", "file": "certificates_graduation_premium.opub" },
-        { "name": "Champion", "file": "certificates_champion.opub" }
+        { "name": "Champion", "file": "certificates_champion.opub" },
+        { "name": "Employee of Month", "file": "certificates_employee_of_month.opub" }
     ],
     "Menus": [
         { "name": "Chalkboard Menu", "file": "menus_chalkboard_menu.opub" },
@@ -154,7 +160,9 @@
         { "name": "Cocktail Menu", "file": "menus_cocktail_menu.opub" },
         { "name": "Sunday Brunch", "file": "menus_sunday_brunch.opub" },
         { "name": "Luxury Steakhouse", "file": "menus_luxury_steakhouse.opub" },
-        { "name": "Michelin Fine Dining", "file": "menus_michelin_fine_dining.opub" }
+        { "name": "Michelin Fine Dining", "file": "menus_michelin_fine_dining.opub" },
+        { "name": "Cocktail Bar", "file": "menus_cocktail_bar.opub" },
+        { "name": "Employee of Month", "file": "menus_employee_of_month.opub" }
     ],
     "Calendars": [
         { "name": "Cocktail Bar", "file": "calendars_cocktail_bar.opub" },
@@ -168,7 +176,8 @@
         { "name": "Year-at-a-Glance", "file": "calendars_year_at_a_glance.opub" },
         { "name": "Wedding Planning", "file": "calendars_wedding_planning.opub" },
         { "name": "Editorial Planner", "file": "calendars_editorial_planner.opub" },
-        { "name": "Academic Year", "file": "calendars_academic_year.opub" }
+        { "name": "Academic Year", "file": "calendars_academic_year.opub" },
+        { "name": "Yearly View", "file": "calendars_yearly_view.opub" }
     ],
     "Letterheads": [
         { "name": "Yearly View", "file": "letterheads_yearly_view.opub" },
@@ -189,7 +198,8 @@
         { "name": "Photography Studio", "file": "letterheads_photography_studio.opub" },
         { "name": "Florist", "file": "letterheads_florist.opub" },
         { "name": "Luxury Hotel", "file": "letterheads_luxury_hotel.opub" },
-        { "name": "Fashion Brand", "file": "letterheads_fashion_brand.opub" }
+        { "name": "Fashion Brand", "file": "letterheads_fashion_brand.opub" },
+        { "name": "Legal", "file": "letterheads_legal.opub" }
     ],
     "Newsletters": [
         { "name": "Legal", "file": "newsletters_legal.opub" },
@@ -215,7 +225,8 @@
         { "name": "Tech Startup Dark", "file": "newsletters_tech_startup_dark.opub" },
         { "name": "Wellness Premium", "file": "newsletters_wellness_premium.opub" },
         { "name": "Luxury Real Estate", "file": "newsletters_real_estate_luxury.opub" },
-        { "name": "Photography Premium", "file": "newsletters_photography_premium.opub" }
+        { "name": "Photography Premium", "file": "newsletters_photography_premium.opub" },
+        { "name": "Tech Digest", "file": "newsletters_tech_digest.opub" }
     ],
     "Business Cards": [
         { "name": "Tech Digest", "file": "business_cards_tech_digest.opub" },
@@ -251,7 +262,8 @@
         { "name": "Wellness Retreat", "file": "posters_wellness_retreat.opub" },
         { "name": "Music Festival Lineup", "file": "posters_music_festival_lineup.opub" },
         { "name": "Charity Gala", "file": "posters_charity_gala.opub" },
-        { "name": "Product Launch Event", "file": "posters_product_launch.opub" }
+        { "name": "Product Launch Event", "file": "posters_product_launch.opub" },
+        { "name": "Art Exhibition", "file": "posters_art_exhibition.opub" }
     ],
     "Social Media": [
         { "name": "Art Exhibition", "file": "social_media_art_exhibition.opub" },

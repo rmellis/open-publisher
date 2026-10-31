@@ -303,6 +303,20 @@ window.CustomColorPicker = class CustomColorPicker {
         return { h: h * 360, s: s, v: v };
     }
     
+    static resolveColorValue(color) {
+        if (!color || typeof color !== 'string') return '#007670';
+        const trimmed = color.trim();
+        if (trimmed.startsWith('var(')) {
+            const m = trimmed.match(/var\(\s*(--[^,\s)]+)/);
+            if (m && typeof getComputedStyle === 'function') {
+                const resolved = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+                if (resolved && /^#[0-9A-Fa-f]{6}$/i.test(resolved)) return resolved;
+            }
+            return '#007670';
+        }
+        return trimmed;
+    }
+
     static renderSwatches(container, colors) {
         container.innerHTML = '';
         colors.forEach(color => {
@@ -313,8 +327,9 @@ window.CustomColorPicker = class CustomColorPicker {
             swatch.onmousedown = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.setFromHex(color);
-                this.selectColor(color);
+                const resolved = this.resolveColorValue(color);
+                this.setFromHex(resolved);
+                this.selectColor(resolved);
             };
             container.appendChild(swatch);
         });
@@ -335,7 +350,8 @@ window.CustomColorPicker = class CustomColorPicker {
             }
         }
         
-        let validInitial = initialColor && /^#[0-9A-Fa-f]{6}$/i.test(initialColor) ? initialColor : '#000000';
+        const resolvedInit = this.resolveColorValue(initialColor);
+        let validInitial = resolvedInit && /^#[0-9A-Fa-f]{6}$/i.test(resolvedInit) ? resolvedInit : '#000000';
         this.setFromHex(validInitial, true);
         
         this.el.style.display = 'block';
@@ -385,8 +401,9 @@ window.CustomColorPicker = class CustomColorPicker {
     }
     
     static selectColor(color) {
+        const resolved = this.resolveColorValue(color);
         // Update recent colors array
-        const lowercaseColor = color.toLowerCase();
+        const lowercaseColor = resolved.toLowerCase();
         const index = this.recentColors.indexOf(lowercaseColor);
         if (index > -1) {
             this.recentColors.splice(index, 1);
@@ -398,7 +415,7 @@ window.CustomColorPicker = class CustomColorPicker {
         this.renderSwatches(this.recentGrid, this.recentColors);
 
         if (this.callback) {
-            this.callback(color);
+            this.callback(resolved);
         }
         this.close();
     }

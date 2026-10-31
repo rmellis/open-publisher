@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.13.2)
+// Open Publisher UI Interactions (v5.14.0)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.13.2)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.14.0)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -658,18 +658,55 @@
         // If it was a drag, abort completely so we don't mess up the movement engine
         if (dx > 3 || dy > 3) return;
 
-        const pubEl = e.target.closest('.pub-element') || e.target.closest('.page-header') || e.target.closest('.page-footer');
+        let pubEl = e.target.closest('.pub-element') || e.target.closest('.page-header') || e.target.closest('.page-footer');
+        if (pubEl && typeof state !== 'undefined' && state.selectedEl && state.selectedEl !== pubEl && state.selectedEl.classList.contains('pub-element')) {
+            // Respect click-through redirection from hollow decorative border frames
+            pubEl = state.selectedEl;
+        }
         
         // --- PART A: SINGLE-CLICK TO EDIT WITH EXACT CARET PLACEMENT ---
         if (pubEl) {
             // Target the exact cell/element clicked (Ignores WordArt intentionally)
-            let editable = e.target.closest('[contenteditable="true"]');
+            let editable = (pubEl.contains(e.target)) ? e.target.closest('[contenteditable="true"]') : null;
             
-            // Fallback for wrappers
+            // Fallback for wrappers or click-through: find the contenteditable child under (clientX, clientY)
             if (!editable && pubEl.getAttribute('contenteditable') === 'true') {
                 editable = pubEl;
             } else if (!editable) {
-                editable = pubEl.querySelector('[contenteditable="true"]');
+                const candidates = Array.from(pubEl.querySelectorAll('[contenteditable="true"]')).filter(n => n.tagName !== 'STYLE' && n.tagName !== 'SCRIPT');
+                if (candidates.length === 1) {
+                    editable = candidates[0];
+                } else if (candidates.length > 1) {
+                    editable = candidates.find(c => {
+                        const r = c.getBoundingClientRect();
+                        return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+                    });
+                    if (!editable) {
+                        // Pick closest vertically to click Y
+                        let bestDist = Infinity;
+                        candidates.forEach(c => {
+                            const r = c.getBoundingClientRect();
+                            const cy = (r.top + r.bottom) / 2;
+                            const d = Math.abs(e.clientY - cy);
+                            if (d < bestDist) { bestDist = d; editable = c; }
+                        });
+                    }
+                }
+            }
+
+            // If user double-clicked a non-image decorative box that has no text yet, allow typing into it on demand
+            if (!editable && e.detail >= 2 && pubEl.classList.contains('pub-element')) {
+                const dtype = pubEl.getAttribute('data-type') || '';
+                if (!['image', 'chart', 'progress-bar', 'smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype) && !pubEl.querySelector('img, svg, canvas, table')) {
+                    const c = pubEl.querySelector('.element-content');
+                    const targetDiv = c && (Array.from(c.children).find(ch => ch.tagName === 'DIV') || c);
+                    if (targetDiv) {
+                        targetDiv.setAttribute('contenteditable', 'true');
+                        targetDiv.setAttribute('spellcheck', 'false');
+                        targetDiv.style.outline = 'none';
+                        editable = targetDiv;
+                    }
+                }
             }
 
             if (editable && !e.target.closest('.resize-handle') && !e.target.closest('.rotate-handle')) {
@@ -696,8 +733,8 @@
                     }
                 }
 
-                // If we successfully found the exact text node, drop the cursor there!
-                if (range) {
+                // If we successfully found a text node inside editable, drop the cursor there!
+                if (range && editable.contains(range.startContainer)) {
                     const sel = window.getSelection();
                     sel.removeAllRanges();
                     sel.addRange(range);
@@ -1060,7 +1097,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.13.2</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.14.0</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1474,7 +1511,7 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE (v5.13.2: Added Multi-Page Insert Template Banner)
+    // 4. TEMPLATES MODAL OVERRIDE (v5.14.0: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');
@@ -1985,31 +2022,1230 @@
         DialogSystem._isSafelyPatched = true;
     }
 
-    // 2. THE BULLETPROOF EDITABLE SWEEP
+    // 2. DEEP TEMPLATE EDITABILITY ENGINE
+    window.ensureTemplateElementsEditable = function(rootEl) {
+        const paperEl = rootEl || document.getElementById('paper');
+        if (!paperEl) return;
+        const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
+        const langCode = navigator.language || 'en';
+        const pw = parseFloat(paperEl.style.width) || 794;
+        const ph = parseFloat(paperEl.style.height) || 1123;
+
+        const pubElements = paperEl.querySelectorAll('.pub-element');
+        pubElements.forEach(el => {
+            if (el.classList.contains('master-page-element') || el.getAttribute('data-is-border') === 'true') return;
+            if (window.isChartElement && window.isChartElement(el)) {
+                if (el.getAttribute('data-type') !== 'chart') el.setAttribute('data-type', 'chart');
+                el.querySelectorAll('[contenteditable]').forEach(ce => ce.removeAttribute('contenteditable'));
+                return;
+            }
+            const dtype = el.getAttribute('data-type') || '';
+            if (['image', 'chart', 'progress-bar', 'smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype)) return;
+            if (el.querySelector('.progress-bar-widget, .wa-wrapper, .wa-text, svg.smart-arrow-svg, .chart-pie-group, .chart-column-group, .chart-bar-group, .chart-line-group, .chart-area-group, .chart-half-donut-group, .chart-stacked-group, .chart-radar-group, .chart-slice')) return;
+
+            const contentContainer = el.querySelector('.element-content');
+            if (!contentContainer) return;
+
+            // Never leave contenteditable on <style>, <script>, <img>, <svg>, <canvas>
+            contentContainer.querySelectorAll('style, script, img, svg, canvas').forEach(badNode => {
+                if (badNode.hasAttribute('contenteditable')) badNode.removeAttribute('contenteditable');
+            });
+
+            // Determine visible text (ignoring <style> and <script> content)
+            const visibleText = Array.from(contentContainer.childNodes)
+                .filter(n => n.nodeName !== 'STYLE' && n.nodeName !== 'SCRIPT')
+                .map(n => n.textContent || '')
+                .join('')
+                .trim();
+
+            const nonStyleChildren = Array.from(contentContainer.children).filter(
+                c => c.tagName !== 'STYLE' && c.tagName !== 'SCRIPT'
+            );
+            if (nonStyleChildren.length === 0) return;
+
+            // Check if this is a pure image/SVG element with no text
+            if (nonStyleChildren.length === 1 && ['IMG', 'SVG', 'CANVAS'].includes(nonStyleChildren[0].tagName)) {
+                return;
+            }
+
+            // If element has a table, make table cells editable
+            const tables = contentContainer.querySelectorAll('table');
+            if (tables.length > 0) {
+                contentContainer.querySelectorAll('td, th').forEach(cell => {
+                    cell.setAttribute('contenteditable', 'true');
+                    cell.setAttribute('spellcheck', 'false');
+                    if (isSpell) cell.setAttribute('lang', langCode);
+                    cell.style.outline = 'none';
+                });
+                contentContainer.style.pointerEvents = 'auto';
+                return;
+            }
+
+            // If element has NO visible text, check if it is a decorative background, divider line, or hollow frame
+            if (!visibleText) {
+                const ew = parseFloat(el.style.width) || el.offsetWidth || 0;
+                const eh = parseFloat(el.style.height) || el.offsetHeight || 0;
+                const firstNode = nonStyleChildren[0];
+                const isThinLine = (ew <= 14 || eh <= 14);
+                const isFullPageBg = (ew >= pw * 0.9 && eh >= ph * 0.9);
+                const hasImgOrSvg = !!contentContainer.querySelector('img, svg, canvas');
+                const hasClipPath = !!(firstNode && firstNode.style && firstNode.style.clipPath);
+                const bgStr = (firstNode && firstNode.style && (firstNode.style.background || firstNode.style.backgroundColor || firstNode.style.backgroundImage)) || '';
+                const borderStr = (firstNode && firstNode.style && (firstNode.style.border || firstNode.style.borderTop || firstNode.style.borderLeft || firstNode.style.borderBottom || firstNode.style.borderRight || firstNode.style.outline)) || '';
+                const isHollowBorder = !bgStr || bgStr === 'transparent' || bgStr === 'none' ? !!borderStr : false;
+
+                if (isThinLine || isFullPageBg || hasImgOrSvg || hasClipPath || isHollowBorder || dtype === 'shape') {
+                    // Remove accidental contenteditable from pure decorative shapes/lines/frames
+                    contentContainer.querySelectorAll('[contenteditable="true"]').forEach(ce => ce.removeAttribute('contenteditable'));
+                    return;
+                }
+            }
+
+            // Element has text (or is a blank user text box)
+            const hasEmbeddedMedia = !!contentContainer.querySelector('img, svg, canvas');
+            const applyEditableAttrs = (node) => {
+                if (!node || node.nodeType !== 1) return;
+                if (['STYLE', 'SCRIPT', 'IMG', 'SVG', 'CANVAS'].includes(node.tagName)) return;
+                node.setAttribute('contenteditable', 'true');
+                node.setAttribute('spellcheck', 'false');
+                if (isSpell) node.setAttribute('lang', langCode);
+                if (!node.style.outline) node.style.outline = 'none';
+                node.style.pointerEvents = 'auto';
+            };
+
+            if (!hasEmbeddedMedia) {
+                // Make every direct non-style child editable (supports single wrapper div OR multiple sibling h1/p/div tags)
+                nonStyleChildren.forEach(child => {
+                    if (!child.style.clipPath || (child.textContent && child.textContent.trim().length > 0)) {
+                        applyEditableAttrs(child);
+                    }
+                });
+            } else {
+                // Composite element containing both <img>/<svg> and text:
+                // Apply contenteditable to the deepest text-bearing containers that do NOT wrap <img>/<svg>
+                let markedAny = false;
+                const walkForTextContainers = (node) => {
+                    if (!node || node.nodeType !== 1) return;
+                    if (['STYLE', 'SCRIPT', 'IMG', 'SVG', 'CANVAS'].includes(node.tagName)) return;
+                    const containsMedia = !!node.querySelector('img, svg, canvas');
+                    const hasText = (node.textContent || '').trim().length > 0;
+                    if (!hasText) return;
+                    if (!containsMedia) {
+                        applyEditableAttrs(node);
+                        markedAny = true;
+                        return;
+                    }
+                    // Has both media and text: check if it has direct text nodes alongside media
+                    const hasDirectText = Array.from(node.childNodes).some(
+                        cn => cn.nodeType === 3 && (cn.textContent || '').trim().length > 0
+                    );
+                    if (hasDirectText) {
+                        applyEditableAttrs(node);
+                        markedAny = true;
+                    } else {
+                        Array.from(node.children).forEach(walkForTextContainers);
+                    }
+                };
+                nonStyleChildren.forEach(walkForTextContainers);
+                if (!markedAny && visibleText) {
+                    nonStyleChildren.forEach(applyEditableAttrs);
+                }
+            }
+            contentContainer.style.pointerEvents = 'auto';
+        });
+    };
+
     if (typeof window.originalRenderPage_BeforeEditSweep === 'undefined') {
         window.originalRenderPage_BeforeEditSweep = window.renderPage;
         window.renderPage = function(page) {
             const ret = window.originalRenderPage_BeforeEditSweep(page);
+            window.ensureTemplateElementsEditable(document.getElementById('paper'));
             setTimeout(() => {
-                const paperEl = document.getElementById('paper');
-                if (!paperEl) return;
-                const pubElements = paperEl.querySelectorAll('.pub-element');
-                pubElements.forEach(el => {
-                    const contentContainer = el.querySelector('.element-content');
-                    if (!contentContainer) return;
-                    const innerNode = contentContainer.firstElementChild;
-                    if (!innerNode) return;
-                    if (innerNode.tagName !== 'IMG' && innerNode.tagName !== 'CANVAS' && innerNode.tagName !== 'SVG' && !innerNode.style.clipPath && !innerNode.classList.contains('wa-wrapper')) {
-                        innerNode.setAttribute('contenteditable', 'true');
-                        const isSpell = typeof state !== 'undefined' ? (state.spellCheck !== false) : true;
-                        innerNode.setAttribute('spellcheck', 'false');
-                        if (isSpell) innerNode.setAttribute('lang', navigator.language || 'en');
-                        contentContainer.style.pointerEvents = 'auto';
-                    }
-                });
-            }, 50);
+                window.ensureTemplateElementsEditable(document.getElementById('paper'));
+            }, 40);
             return ret;
         };
+    }
+
+    // 3. UNIVERSAL CSS COLOR, MULTI-STOP GRADIENT, BORDER & THEME STUDIO
+    window.TemplateCSSColorEngine = {
+        designerPalettes: [
+            { id: 'royal-gold', name: 'Royal Navy & Gold', colors: ['#0a1628', '#1e293b', '#d4af37', '#f8fafc', '#94a3b8'] },
+            { id: 'emerald-cream', name: 'Emerald & Cream', colors: ['#064e3b', '#047857', '#d97706', '#fdfbf7', '#6ee7b7'] },
+            { id: 'midnight-neon', name: 'Midnight Neon', colors: ['#0f0728', '#1e1b4b', '#a855f7', '#00f5d4', '#f8fafc'] },
+            { id: 'crimson-slate', name: 'Crimson & Slate', colors: ['#111827', '#1f2937', '#e11d48', '#ffffff', '#fda4af'] },
+            { id: 'teal-executive', name: 'Teal Executive', colors: ['#0f172a', '#007670', '#14b8a6', '#f8fafc', '#cbd5e1'] },
+            { id: 'terracotta-warm', name: 'Warm Terracotta', colors: ['#291d18', '#b05c34', '#e07a5f', '#faf6f0', '#f2cc8f'] },
+            { id: 'rose-blush', name: 'Rose Gold & Blush', colors: ['#2d1b22', '#b76e79', '#e8a598', '#fdf8f6', '#f4d5cd'] },
+            { id: 'cyber-electric', name: 'Electric Blue & Dark', colors: ['#090d16', '#1e3a8a', '#3b82f6', '#60a5fa', '#f8fafc'] },
+            { id: 'forest-sage', name: 'Forest & Sage', colors: ['#1b4332', '#2d6a4f', '#52b788', '#f4f9f5', '#b7e4c7'] },
+            { id: 'sunset-festival', name: 'Sunset Festival', colors: ['#3b0764', '#be185d', '#ea580c', '#fef3c7', '#fde047'] },
+            { id: 'champagne-noir', name: 'Champagne Noir', colors: ['#0d0d0d', '#1c1c1c', '#c9a84c', '#f5f0e6', '#a39e93'] },
+            { id: 'monochrome-pro', name: 'Monochrome Studio', colors: ['#09090b', '#27272a', '#71717a', '#fafafa', '#e4e4e7'] }
+        ],
+
+        // Normalize any CSS color (#rgb, #rrggbb, rgb(), rgba(), var(--...), named) to 6-digit #hex
+        toHex: function(colorStr) {
+            if (!colorStr) return null;
+            let s = colorStr.toString().trim();
+            if (s.toLowerCase().startsWith('var(')) {
+                const m = s.match(/var\(\s*(--[^,\s)]+)/i);
+                if (m && typeof getComputedStyle === 'function') {
+                    const resolved = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+                    if (resolved) s = resolved;
+                    else return '#007670';
+                } else {
+                    return '#007670';
+                }
+            }
+            s = s.toLowerCase();
+            if (!s || s === 'transparent' || s === 'none' || s === 'inherit' || s === 'initial' || s === 'currentcolor') return null;
+            if (s === 'rgba(0, 0, 0, 0)' || s === 'rgba(0,0,0,0)') return null;
+            if (/^#[0-9a-f]{6}$/i.test(s)) return s.toLowerCase();
+            if (/^#[0-9a-f]{3}$/i.test(s)) {
+                return '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+            }
+            if (/^#[0-9a-f]{8}$/i.test(s)) return s.substring(0, 7).toLowerCase();
+            const rgbMatch = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+            if (rgbMatch) {
+                if (rgbMatch[4] !== undefined && parseFloat(rgbMatch[4]) === 0) return null;
+                const r = Math.min(255, Math.max(0, parseInt(rgbMatch[1]))).toString(16).padStart(2, '0');
+                const g = Math.min(255, Math.max(0, parseInt(rgbMatch[2]))).toString(16).padStart(2, '0');
+                const b = Math.min(255, Math.max(0, parseInt(rgbMatch[3]))).toString(16).padStart(2, '0');
+                return `#${r}${g}${b}`;
+            }
+            const namedMap = {
+                white: '#ffffff', black: '#000000', gold: '#ffd700', silver: '#c0c0c0',
+                red: '#ff0000', blue: '#0000ff', green: '#008000', yellow: '#ffff00',
+                orange: '#ffa500', purple: '#800080', pink: '#ffc0cb', teal: '#008080',
+                navy: '#000080', gray: '#808080', grey: '#808080', cyan: '#00ffff',
+                magenta: '#ff00ff', maroon: '#800000', olive: '#808000', coral: '#ff7f50',
+                crimson: '#dc143c', indigo: '#4b0082', violet: '#ee82ee', khaki: '#f0e68c',
+                ivory: '#fffff0', beige: '#f5f5dc', wheat: '#f5deb3', tan: '#d2b48c'
+            };
+            return namedMap[s] || null;
+        },
+
+        // Replace the Nth color token inside a CSS gradient string
+        replaceGradientStopColor: function(gradStr, stopIndex, newColor) {
+            if (!gradStr) return gradStr;
+            const colorRegex = /(#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))/g;
+            let idx = 0;
+            return gradStr.replace(colorRegex, (match) => {
+                if (idx++ === stopIndex) {
+                    // If original stop was rgba with alpha < 1 and newColor is #hex, preserve alpha if user wants, or use newColor
+                    const alphaMatch = match.match(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/i);
+                    if (alphaMatch && parseFloat(alphaMatch[1]) > 0 && parseFloat(alphaMatch[1]) < 1 && /^#[0-9a-f]{6}$/i.test(newColor)) {
+                        const a = parseFloat(alphaMatch[1]);
+                        const r = parseInt(newColor.slice(1, 3), 16);
+                        const g = parseInt(newColor.slice(3, 5), 16);
+                        const b = parseInt(newColor.slice(5, 7), 16);
+                        return `rgba(${r}, ${g}, ${b}, ${a})`;
+                    }
+                    return newColor;
+                }
+                return match;
+            });
+        },
+
+        // Extract all color stops from a gradient string
+        extractGradientStops: function(gradStr) {
+            if (!gradStr || !gradStr.includes('gradient')) return [];
+            const colorRegex = /(#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))/g;
+            const stops = [];
+            let m;
+            let i = 0;
+            while ((m = colorRegex.exec(gradStr)) !== null) {
+                const raw = m[1];
+                const hex = this.toHex(raw);
+                if (hex) {
+                    stops.push({ index: i, raw: raw, hex: hex });
+                }
+                i++;
+            }
+            return stops;
+        },
+
+        // Friendly label for a DOM node inside a template element
+        describeNode: function(node, rootContent) {
+            if (!node || node === rootContent) return 'Box';
+            const txt = (node.textContent || '').replace(/@import[^;]+;/g, '').trim();
+            if (txt.length > 0 && txt.length <= 22) {
+                return `"${txt.substring(0, 18)}${txt.length > 18 ? '...' : ''}"`;
+            }
+            const tag = (node.tagName || '').toUpperCase();
+            if (['SVG', 'PATH', 'CIRCLE', 'RECT', 'POLYGON', 'LINE', 'ELLIPSE'].includes(tag)) return `Vector (${tag.toLowerCase()})`;
+            if (tag === 'TD' || tag === 'TH') return `Table Cell`;
+            if (tag === 'TABLE') return `Table`;
+            if (tag === 'HR') return `Divider Line`;
+            if (/^H[1-6]$/.test(tag)) return `Heading (${tag})`;
+            const w = node.style && node.style.width;
+            const h = node.style && node.style.height;
+            if (h && parseFloat(h) <= 12 && w && (w === '100%' || parseFloat(w) > 30)) return 'Accent Bar / Line';
+            if (w && parseFloat(w) <= 12 && h && (h === '100%' || parseFloat(h) > 30)) return 'Vertical Accent Strip';
+            if (node.parentElement === rootContent) return 'Main Container';
+            return 'Inner Element';
+        },
+
+        // Scan a .pub-element and return all editable CSS color slots, gradients, bars, borders, and images
+        scanElement: function(el) {
+            const result = {
+                gradients: [],
+                fills: [],
+                borders: [],
+                svgs: [],
+                texts: [],
+                bars: [],
+                images: [],
+                allSwatches: []
+            };
+            if (!el) return result;
+            // Never scan or modify chart widgets, progress bars, smart arrows, or wordart with CSS Color Studio
+            const dtype = el.getAttribute ? (el.getAttribute('data-type') || '') : '';
+            if (['chart', 'progress-bar', 'smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype)) return result;
+            if (window.isChartElement && window.isChartElement(el)) return result;
+            if (el.querySelector && el.querySelector('.progress-bar-widget, svg.smart-arrow-svg, .wa-wrapper')) return result;
+
+            const content = el.querySelector('.element-content');
+            if (!content) return result;
+
+            const nodes = [content, ...Array.from(content.querySelectorAll('*'))].filter(
+                n => n.tagName !== 'STYLE' && n.tagName !== 'SCRIPT' && !n.classList.contains('resize-handle') && !n.classList.contains('rotate-handle')
+            );
+
+            const textGroups = new Map(); // hex -> { hex, nodes: [], label }
+
+            nodes.forEach((node) => {
+                if (!node.style && !['SVG', 'PATH', 'RECT', 'CIRCLE', 'POLYGON', 'ELLIPSE', 'LINE', 'POLYLINE'].includes(node.tagName)) return;
+                const nodeDesc = this.describeNode(node, content);
+                const rawStyle = node.getAttribute ? (node.getAttribute('style') || '') : '';
+
+                // 1. Gradients (background or backgroundImage)
+                const bgFull = (node.style && (node.style.backgroundImage || node.style.background)) || '';
+                if (bgFull && bgFull.includes('gradient')) {
+                    const stops = this.extractGradientStops(bgFull);
+                    if (stops.length > 0) {
+                        const gradEntry = {
+                            node: node,
+                            label: `${nodeDesc} Gradient`,
+                            rawGradient: bgFull,
+                            stops: stops
+                        };
+                        result.gradients.push(gradEntry);
+                        stops.forEach((st, sIdx) => {
+                            result.allSwatches.push({
+                                category: 'gradient',
+                                label: `${nodeDesc} Gradient Stop ${sIdx + 1}`,
+                                shortLabel: `Grad ${sIdx + 1}`,
+                                hex: st.hex,
+                                apply: (newHex) => {
+                                    const currentGrad = node.style.backgroundImage && node.style.backgroundImage.includes('gradient')
+                                        ? node.style.backgroundImage
+                                        : node.style.background;
+                                    const updated = this.replaceGradientStopColor(currentGrad, st.index, newHex);
+                                    node.style.background = updated;
+                                    node.style.webkitPrintColorAdjust = 'exact';
+                                    node.style.printColorAdjust = 'exact';
+                                }
+                            });
+                        });
+                    }
+                } else if (node.style) {
+                    // 2. Solid Background Fill
+                    const bgCol = node.style.backgroundColor || (rawStyle.match(/background(?:-color)?\s*:\s*([^;]+)/i) || [])[1];
+                    if (bgCol && !bgCol.includes('gradient') && !bgCol.includes('url(')) {
+                        const hex = this.toHex(bgCol);
+                        if (hex) {
+                            const slot = {
+                                category: 'fill',
+                                node: node,
+                                label: `${nodeDesc} Fill`,
+                                shortLabel: 'Fill',
+                                hex: hex,
+                                apply: (newHex) => {
+                                    node.style.background = newHex;
+                                    node.style.backgroundColor = newHex;
+                                    node.style.webkitPrintColorAdjust = 'exact';
+                                    node.style.printColorAdjust = 'exact';
+                                }
+                            };
+                            result.fills.push(slot);
+                            result.allSwatches.push(slot);
+                        }
+                    }
+                }
+
+                // 3. Borders & Accent Side Borders & Outlines
+                if (node.style) {
+                    const borderProps = [
+                        { prop: 'border', colorProp: 'borderColor', widthProp: 'borderWidth', name: 'Border' },
+                        { prop: 'borderTop', colorProp: 'borderTopColor', widthProp: 'borderTopWidth', name: 'Top Border' },
+                        { prop: 'borderBottom', colorProp: 'borderBottomColor', widthProp: 'borderBottomWidth', name: 'Bottom Border' },
+                        { prop: 'borderLeft', colorProp: 'borderLeftColor', widthProp: 'borderLeftWidth', name: 'Left Accent' },
+                        { prop: 'borderRight', colorProp: 'borderRightColor', widthProp: 'borderRightWidth', name: 'Right Accent' },
+                        { prop: 'outline', colorProp: 'outlineColor', widthProp: 'outlineWidth', name: 'Outline' }
+                    ];
+                    const hasFullBorder = !!(node.style.borderWidth && parseFloat(node.style.borderWidth) > 0 && node.style.borderStyle !== 'none');
+                    borderProps.forEach(bp => {
+                        if (bp.prop !== 'border' && bp.prop !== 'outline' && hasFullBorder) {
+                            // Skip individual sides if uniform border is set
+                            if (node.style.borderTopColor === node.style.borderBottomColor &&
+                                node.style.borderLeftColor === node.style.borderRightColor &&
+                                node.style.borderTopColor === node.style.borderLeftColor &&
+                                node.style.borderTopWidth === node.style.borderLeftWidth) {
+                                return;
+                            }
+                        }
+                        if (bp.prop === 'border' && !hasFullBorder) return;
+                        const wVal = node.style[bp.widthProp];
+                        const cVal = node.style[bp.colorProp];
+                        if (wVal && parseFloat(wVal) > 0 && cVal) {
+                            const hex = this.toHex(cVal);
+                            if (hex) {
+                                const bSlot = {
+                                    category: 'border',
+                                    node: node,
+                                    prop: bp.prop,
+                                    colorProp: bp.colorProp,
+                                    widthProp: bp.widthProp,
+                                    widthPx: parseFloat(wVal) || 1,
+                                    label: `${nodeDesc} ${bp.name}`,
+                                    shortLabel: bp.name,
+                                    hex: hex,
+                                    apply: (newHex) => {
+                                        node.style[bp.colorProp] = newHex;
+                                    }
+                                };
+                                result.borders.push(bSlot);
+                                result.allSwatches.push(bSlot);
+                            }
+                        }
+                    });
+                }
+
+                // 4. SVG & Vector Elements
+                const tag = (node.tagName || '').toUpperCase();
+                if (['SVG', 'PATH', 'RECT', 'CIRCLE', 'POLYGON', 'ELLIPSE', 'LINE', 'POLYLINE'].includes(tag)) {
+                    const fillAttr = node.getAttribute('fill') || (node.style && node.style.fill);
+                    const strokeAttr = node.getAttribute('stroke') || (node.style && node.style.stroke);
+                    const fillHex = this.toHex(fillAttr);
+                    if (fillHex) {
+                        const sSlot = {
+                            category: 'svg',
+                            node: node,
+                            label: `SVG ${tag.toLowerCase()} Fill`,
+                            shortLabel: 'Vector',
+                            hex: fillHex,
+                            apply: (newHex) => {
+                                if (node.hasAttribute('fill')) node.setAttribute('fill', newHex);
+                                if (node.style && node.style.fill) node.style.fill = newHex;
+                            }
+                        };
+                        result.svgs.push(sSlot);
+                        result.allSwatches.push(sSlot);
+                    }
+                    const strokeHex = this.toHex(strokeAttr);
+                    if (strokeHex) {
+                        const stSlot = {
+                            category: 'svg',
+                            node: node,
+                            label: `SVG ${tag.toLowerCase()} Stroke`,
+                            shortLabel: 'Stroke',
+                            hex: strokeHex,
+                            apply: (newHex) => {
+                                if (node.hasAttribute('stroke')) node.setAttribute('stroke', newHex);
+                                if (node.style && node.style.stroke) node.style.stroke = newHex;
+                            }
+                        };
+                        result.svgs.push(stSlot);
+                        result.allSwatches.push(stSlot);
+                    }
+                }
+
+                // 5. CSS Width-Based Progress / Skill Bars inside composite divs
+                if (tag === 'DIV' && node.style && node.style.width && node.style.width.endsWith('%')) {
+                    const pct = parseFloat(node.style.width);
+                    if (pct > 0 && pct < 100 && node.children.length === 0 && !(node.textContent || '').trim()) {
+                        const parentH = node.parentElement && node.parentElement.style ? parseFloat(node.parentElement.style.height) : 0;
+                        const selfH = parseFloat(node.style.height) || parentH;
+                        if (selfH > 0 && selfH <= 32) {
+                            result.bars.push({
+                                node: node,
+                                pct: Math.round(pct),
+                                label: `Bar Fill (${Math.round(pct)}%)`
+                            });
+                        }
+                    }
+                }
+
+                // 6. Embedded Images
+                if (tag === 'IMG') {
+                    result.images.push({
+                        node: node,
+                        src: node.src,
+                        opacity: node.style.opacity !== '' && node.style.opacity !== undefined ? parseFloat(node.style.opacity) : 1,
+                        objectFit: node.style.objectFit || 'cover'
+                    });
+                }
+
+                // 7. Text Colors (group by hex so user can change matching text colors cleanly)
+                if (node.style && node.style.color) {
+                    const hasText = Array.from(node.childNodes).some(cn => cn.nodeType === 3 && (cn.textContent || '').trim().length > 0) ||
+                                    (node === content || node.parentElement === content) && (node.textContent || '').trim().length > 0;
+                    if (hasText) {
+                        const tHex = this.toHex(node.style.color);
+                        if (tHex) {
+                            if (!textGroups.has(tHex)) {
+                                textGroups.set(tHex, {
+                                    category: 'text',
+                                    hex: tHex,
+                                    nodes: [node],
+                                    label: `Text (${nodeDesc})`,
+                                    shortLabel: 'Text'
+                                });
+                            } else {
+                                textGroups.get(tHex).nodes.push(node);
+                            }
+                        }
+                    }
+                }
+            });
+
+            textGroups.forEach((tg) => {
+                const slot = {
+                    category: 'text',
+                    hex: tg.hex,
+                    label: tg.nodes.length > 1 ? `Text Color (${tg.nodes.length} items)` : tg.label,
+                    shortLabel: 'Text',
+                    apply: (newHex) => {
+                        tg.nodes.forEach(n => { n.style.color = newHex; });
+                    }
+                };
+                result.texts.push(slot);
+                result.allSwatches.push(slot);
+            });
+
+            return result;
+        },
+
+        // Populate the "Detected Element Colors" section inside Box Fill dropdown
+        populateDropdownSection: function(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const el = typeof state !== 'undefined' ? state.selectedEl : null;
+            if (!el) {
+                container.style.display = 'none';
+                return;
+            }
+            const scan = this.scanElement(el);
+            if (scan.allSwatches.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="styled-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Detected Element Colors (Click to Edit)</span>
+                    <span style="font-size:10px; color:var(--ui-theme-color); cursor:pointer; font-weight:700;" onclick="document.getElementById('textbox-fill-dropdown').style.display='none'; window.TemplateCSSColorEngine.openStudio(state.selectedEl); event.stopPropagation();">Open Studio &rarr;</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;"></div>
+            `;
+            const strip = container.lastElementChild;
+            scan.allSwatches.slice(0, 12).forEach((sw) => {
+                const chip = document.createElement('div');
+                chip.style.cssText = 'display:inline-flex; align-items:center; gap:5px; padding:3px 7px 3px 4px; border-radius:14px; border:1px solid var(--ui-border, #cbd5e1); background:var(--ui-bg, #f8fafc); cursor:pointer; font-size:10.5px; font-weight:600; color:var(--ui-text, #1e293b); transition:all 0.15s;';
+                chip.title = `Click to change ${sw.label} (${sw.hex})`;
+                chip.innerHTML = `<span style="width:14px; height:14px; border-radius:50%; background:${sw.hex}; border:1px solid rgba(0,0,0,0.2); display:inline-block; flex-shrink:0;"></span><span>${sw.shortLabel}</span>`;
+                chip.onclick = (e) => {
+                    e.stopPropagation();
+                    if (!window.CustomColorPicker) return;
+                    window.CustomColorPicker.open(chip, sw.hex, (newColor) => {
+                        sw.apply(newColor);
+                        sw.hex = newColor;
+                        chip.firstElementChild.style.background = newColor;
+                        if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                        this.refreshRibbonPanel(el);
+                        if (typeof pushHistory === 'function') pushHistory();
+                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                    });
+                };
+                strip.appendChild(chip);
+            });
+        },
+
+        // Inject the live "Element Colors & CSS" group into all contextual Ribbon tabs
+        injectRibbonGroups: function() {
+            const ribbonIds = ['ribbon-format-text', 'ribbon-format-shape', 'ribbon-format-pic', 'ribbon-table-design'];
+            ribbonIds.forEach(rId => {
+                const rib = document.getElementById(rId);
+                if (!rib || rib.querySelector('.op-css-colors-ribbon-group')) return;
+                const grp = document.createElement('div');
+                grp.className = 'group op-css-colors-ribbon-group';
+                grp.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:6px; height:100%; padding:0 4px;">
+                        <div class="op-css-ribbon-swatch-grid" style="display:grid; grid-template-columns:repeat(4, 18px); grid-auto-rows:18px; gap:4px; align-content:center; min-width:36px;"></div>
+                        <div class="tool-btn" onclick="window.TemplateCSSColorEngine.openStudio((window.state && window.state.selectedEl) || null);" title="Customize All CSS Colors, Gradients, Borders & Page Palette" style="min-width:58px;">
+                            <i class="fas fa-palette" style="color:var(--ui-theme-color);"></i>
+                            <span style="font-size:10.5px; line-height:1.1; margin-top:2px;">CSS Colors<br>&amp; Style</span>
+                        </div>
+                    </div>
+                    <div class="group-label">Element Colors</div>
+                `;
+                // Insert right after Text Box Styles or Shape Styles or Adjust group
+                const styleGrp = rib.querySelector('#group-format-textbox-styles') || rib.children[1] || null;
+                if (styleGrp && styleGrp.nextSibling) {
+                    rib.insertBefore(grp, styleGrp.nextSibling);
+                } else {
+                    rib.appendChild(grp);
+                }
+            });
+        },
+
+        // Refresh the live color swatches in the Ribbon and floating quick-pill when selection changes
+        refreshRibbonPanel: function(el) {
+            this.injectRibbonGroups();
+            if (!el && typeof state !== 'undefined') el = state.selectedEl;
+            const grids = document.querySelectorAll('.op-css-ribbon-swatch-grid');
+            if (!el) {
+                grids.forEach(g => { g.innerHTML = ''; });
+                this.hideFloatingPill();
+                return;
+            }
+            const scan = this.scanElement(el);
+            const swatches = scan.allSwatches.slice(0, 8);
+            grids.forEach(grid => {
+                grid.innerHTML = '';
+                if (swatches.length === 0) {
+                    grid.style.display = 'none';
+                    return;
+                }
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = `repeat(${Math.min(4, Math.max(1, Math.ceil(swatches.length / 2)))}, 18px)`;
+                swatches.forEach(sw => {
+                    const dot = document.createElement('div');
+                    dot.style.cssText = `width:18px; height:18px; border-radius:4px; background:${sw.hex}; border:1.5px solid rgba(0,0,0,0.25); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.35); cursor:pointer; transition:transform 0.12s;`;
+                    dot.title = `${sw.label} (${sw.hex}) - Click to recolor`;
+                    dot.onmouseenter = () => { dot.style.transform = 'scale(1.15)'; };
+                    dot.onmouseleave = () => { dot.style.transform = 'scale(1)'; };
+                dot.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!window.CustomColorPicker) return;
+                        window.CustomColorPicker.open(dot, sw.hex, (newColor) => {
+                            sw.apply(newColor);
+                            sw.hex = newColor;
+                            dot.style.background = newColor;
+                            if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                            // Update floating pill dots in-place if open, then refresh after picker closes
+                            setTimeout(() => {
+                                if (!window.CustomColorPicker || !window.CustomColorPicker.isOpen) {
+                                    this.refreshFloatingPill(el);
+                                }
+                            }, 30);
+                            if (typeof pushHistory === 'function') pushHistory();
+                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                        });
+                    };
+                    grid.appendChild(dot);
+                });
+            });
+            this.refreshFloatingPill(el, scan);
+        },
+
+        hideFloatingPill: function() {
+            const pill = document.getElementById('op-floating-css-color-pill');
+            if (pill) pill.style.display = 'none';
+        },
+
+        // Show a sleek floating action/color bar below/above the selected element
+        refreshFloatingPill: function(el, preScanned) {
+            if (!el || !el.isConnected || (typeof state !== 'undefined' && state.cropMode)) {
+                this.hideFloatingPill();
+                return;
+            }
+            const dtype = el.getAttribute('data-type') || '';
+            if (['smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype) || el.querySelector('svg.smart-arrow-svg, .wa-wrapper, .wa-text')) {
+                this.hideFloatingPill();
+                return;
+            }
+
+            let pill = document.getElementById('op-floating-css-color-pill');
+            if (!pill) {
+                pill = document.createElement('div');
+                pill.id = 'op-floating-css-color-pill';
+                pill.style.cssText = 'position:fixed; z-index:99990; display:none; align-items:center; gap:5px; padding:4px 8px; background:var(--ui-panel-bg, #ffffff); border:1px solid var(--ui-border, #cbd5e1); border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.16); font-family:"Segoe UI",sans-serif; font-size:11px; user-select:none; pointer-events:auto;';
+                document.body.appendChild(pill);
+            }
+
+            pill.innerHTML = '';
+
+            // 1. Dedicated Chart Studio button for Chart elements (instead of CSS Colors & Style)
+            const isChart = (dtype === 'chart') || (window.isChartElement && window.isChartElement(el));
+            if (isChart) {
+                const chartBtn = document.createElement('button');
+                chartBtn.type = 'button';
+                chartBtn.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;';
+                chartBtn.innerHTML = `<i class="fas fa-chart-pie" style="font-size:11px;"></i> Edit Chart &amp; Graph`;
+                chartBtn.title = 'Open Chart & Graph Format Studio';
+                chartBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (typeof window.showChartModal === 'function') {
+                        window.showChartModal(el);
+                    }
+                };
+                pill.appendChild(chartBtn);
+                this.positionFloatingPill(el, pill);
+                return;
+            }
+
+            // 2. Dedicated Progress Bar Studio button for Progress Bar widgets
+            const isProgressBar = (dtype === 'progress-bar') || !!el.querySelector('.progress-bar-widget');
+            if (isProgressBar) {
+                const pbBtn = document.createElement('button');
+                pbBtn.type = 'button';
+                pbBtn.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;';
+                pbBtn.innerHTML = `<i class="fas fa-tasks" style="font-size:11px;"></i> Edit Progress Bar`;
+                pbBtn.title = 'Open Progress Bar & Meter Studio';
+                pbBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (window.ProgressBarEngine && typeof window.ProgressBarEngine.showModal === 'function') {
+                        window.ProgressBarEngine.showModal(el);
+                    }
+                };
+                pill.appendChild(pbBtn);
+                this.positionFloatingPill(el, pill);
+                return;
+            }
+
+            // Skip standalone raw images (they use Format Picture sidebar)
+            const standaloneImg = window.getElementContentImage ? window.getElementContentImage(el) : null;
+            if (dtype === 'image' || standaloneImg) {
+                this.hideFloatingPill();
+                return;
+            }
+
+            const scan = preScanned || this.scanElement(el);
+            const visualSwatches = scan.allSwatches.filter(s => s.category !== 'text').slice(0, 6);
+            const displaySwatches = visualSwatches.length > 0 ? visualSwatches : scan.allSwatches.slice(0, 5);
+
+            displaySwatches.forEach(sw => {
+                const dot = document.createElement('div');
+                dot.style.cssText = `width:16px; height:16px; border-radius:50%; background:${sw.hex}; border:1.5px solid rgba(0,0,0,0.28); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4); cursor:pointer; flex-shrink:0; transition:transform 0.12s;`;
+                dot.title = `${sw.label} (${sw.hex}) - Click to change color`;
+                dot.onmouseenter = () => { dot.style.transform = 'scale(1.2)'; };
+                dot.onmouseleave = () => { dot.style.transform = 'scale(1)'; };
+                dot.onclick = (e) => {
+                    e.stopPropagation();
+                    if (!window.CustomColorPicker) return;
+                    window.CustomColorPicker.open(dot, sw.hex, (newColor) => {
+                        sw.apply(newColor);
+                        sw.hex = newColor;
+                        dot.style.background = newColor;
+                        if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                        setTimeout(() => {
+                            if (!window.CustomColorPicker || !window.CustomColorPicker.isOpen) {
+                                this.refreshRibbonPanel(el);
+                            }
+                        }, 30);
+                        if (typeof pushHistory === 'function') pushHistory();
+                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                    });
+                };
+                pill.appendChild(dot);
+            });
+
+            const studioBtn = document.createElement('button');
+            studioBtn.type = 'button';
+            studioBtn.style.cssText = 'display:inline-flex; align-items:center; gap:4px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer; margin-left:2px; white-space:nowrap;';
+            studioBtn.innerHTML = `<i class="fas fa-palette" style="font-size:10px;"></i> Colors &amp; Style`;
+            studioBtn.title = 'Open CSS Color, Gradient & Style Studio';
+            studioBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.openStudio(el);
+            };
+            pill.appendChild(studioBtn);
+
+            this.positionFloatingPill(el, pill);
+        },
+
+        positionFloatingPill: function(el, pill) {
+            if (!pill) pill = document.getElementById('op-floating-css-color-pill');
+            if (!pill || !el || !el.isConnected) {
+                if (pill) pill.style.display = 'none';
+                return;
+            }
+            const vp = document.getElementById('viewport');
+            if (!vp) return;
+            const vpRect = vp.getBoundingClientRect();
+            const r = el.getBoundingClientRect();
+            if (r.width <= 0 || r.height <= 0 || r.bottom < vpRect.top || r.top > vpRect.bottom) {
+                pill.style.display = 'none';
+                return;
+            }
+            pill.style.display = 'inline-flex';
+            const pillW = pill.offsetWidth || 180;
+            const pillH = pill.offsetHeight || 28;
+            let left = Math.round(r.left + (r.width - pillW) / 2);
+            left = Math.max(vpRect.left + 8, Math.min(vpRect.right - pillW - 8, left));
+            let top = Math.round(r.bottom + 10);
+            if (top + pillH > vpRect.bottom - 8) {
+                top = Math.max(vpRect.top + 8, Math.round(r.top - pillH - 10));
+            }
+            pill.style.left = left + 'px';
+            pill.style.top = top + 'px';
+        },
+
+        // Scan all elements on the current page and group every CSS color across the page
+        scanPagePalette: function() {
+            const paperEl = document.getElementById('paper');
+            const colorMap = new Map(); // hex -> { hex, count, setters: [] }
+            if (!paperEl) return [];
+
+            const addSetter = (hex, fn) => {
+                if (!hex) return;
+                if (!colorMap.has(hex)) {
+                    colorMap.set(hex, { hex: hex, count: 0, setters: [] });
+                }
+                const entry = colorMap.get(hex);
+                entry.count++;
+                entry.setters.push(fn);
+            };
+
+            // Also include paper background if solid color
+            const paperBg = this.toHex(paperEl.style.backgroundColor || paperEl.style.background);
+            if (paperBg) {
+                addSetter(paperBg, (newHex) => {
+                    paperEl.style.background = newHex;
+                    if (typeof state !== 'undefined' && state.pages && state.pages[state.currentPageIndex]) {
+                        state.pages[state.currentPageIndex].background = newHex;
+                    }
+                });
+            }
+
+            paperEl.querySelectorAll('.pub-element').forEach(el => {
+                const scan = this.scanElement(el);
+                scan.allSwatches.forEach(sw => {
+                    addSetter(sw.hex, sw.apply);
+                });
+            });
+
+            return Array.from(colorMap.values()).sort((a, b) => b.count - a.count);
+        },
+
+        // Apply a 1-click designer palette across the current page (maps existing page colors by luminance rank)
+        applyDesignerPaletteToPage: function(paletteId) {
+            const pal = this.designerPalettes.find(p => p.id === paletteId);
+            if (!pal) return;
+            const pageColors = this.scanPagePalette();
+            if (pageColors.length === 0) return;
+
+            const getLuma = (hex) => {
+                const c = hex.replace('#', '');
+                const r = parseInt(c.slice(0, 2), 16) || 0;
+                const g = parseInt(c.slice(2, 4), 16) || 0;
+                const b = parseInt(c.slice(4, 6), 16) || 0;
+                return 0.299 * r + 0.587 * g + 0.114 * b;
+            };
+
+            // Sort both current page colors and palette colors from darkest to lightest so contrast is preserved!
+            const sortedPage = [...pageColors].sort((a, b) => getLuma(a.hex) - getLuma(b.hex));
+            const sortedPal = [...pal.colors].sort((a, b) => getLuma(a) - getLuma(b));
+
+            sortedPage.forEach((entry, idx) => {
+                const mappedIdx = sortedPage.length === 1
+                    ? 0
+                    : Math.min(sortedPal.length - 1, Math.round((idx / (sortedPage.length - 1)) * (sortedPal.length - 1)));
+                const targetHex = sortedPal[mappedIdx];
+                entry.setters.forEach(fn => fn(targetHex));
+            });
+
+            if (typeof state !== 'undefined' && state.selectedEl) {
+                this.refreshRibbonPanel(state.selectedEl);
+                if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(state.selectedEl);
+            }
+            if (typeof pushHistory === 'function') pushHistory();
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+        },
+
+        // Open the full interactive CSS Color, Gradient, Border & Theme Studio modal
+        openStudio: function(targetEl) {
+            const el = targetEl || (typeof state !== 'undefined' ? state.selectedEl : null);
+            if (el && ((typeof window.isChartElement === 'function' && window.isChartElement(el)) || el.getAttribute('data-type') === 'chart' || (el.dataset && el.dataset.chartConfig))) {
+                if (typeof window.showChartModal === 'function') {
+                    window.showChartModal(el);
+                    return;
+                }
+            }
+            const scan = el ? this.scanElement(el) : { gradients: [], fills: [], borders: [], svgs: [], texts: [], bars: [], images: [], allSwatches: [] };
+            const pagePalette = this.scanPagePalette();
+            const visualBox = (el && window.TextBoxStylesSystem) ? window.TextBoxStylesSystem.getVisualBoxTarget(el) : (el && el.querySelector('.element-content'));
+            const curRadius = visualBox ? (parseInt(visualBox.style.borderRadius) || 0) : 0;
+
+            const uiHtml = `
+                <style>
+                    .css-studio-wrap { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--ui-text, #1e293b); display: flex; flex-direction: column; gap: 14px; max-height: 68vh; overflow-y: auto; padding-right: 4px; }
+                    .css-studio-section { background: var(--ui-bg, #f8fafc); border: 1px solid var(--ui-border, #e2e8f0); border-radius: 8px; padding: 12px 14px; }
+                    .css-studio-sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--ui-theme-color, #007670); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+                    .css-studio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 8px; }
+                    .css-slot-card { display: flex; align-items: center; gap: 8px; background: var(--ui-panel-bg, #ffffff); border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+                    .css-slot-card:hover { border-color: var(--ui-theme-color, #007670); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+                    .css-slot-swatch { width: 24px; height: 24px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.22); flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35); }
+                    .css-slot-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+                    .css-slot-label { font-size: 11.5px; font-weight: 600; color: var(--ui-text, #1e293b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .css-slot-hex { font-size: 10px; color: #64748b; font-family: monospace; }
+                    .css-theme-card { display: flex; flex-direction: column; gap: 5px; background: var(--ui-panel-bg, #ffffff); border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px; padding: 7px 9px; cursor: pointer; transition: all 0.15s; }
+                    .css-theme-card:hover { border-color: var(--ui-theme-color, #007670); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+                    .css-theme-bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,0.12); }
+                    .css-theme-bar > span { flex: 1; height: 100%; }
+                </style>
+                <div class="css-studio-wrap" id="css-studio-root">
+                    ${el ? `
+                        <div class="css-studio-section" id="css-studio-el-section">
+                            <div class="css-studio-sec-title">
+                                <span><i class="fas fa-crosshairs" style="margin-right:6px;"></i> Selected Element Colors &amp; Gradients</span>
+                                <span style="font-size:10.5px; font-weight:600; color:#64748b;">Click any color to customize live</span>
+                            </div>
+                            <div class="css-studio-grid" id="css-studio-el-swatches"></div>
+                            <div id="css-studio-el-extras" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                        </div>
+                        <div class="css-studio-section">
+                            <div class="css-studio-sec-title">
+                                <span><i class="fas fa-vector-square" style="margin-right:6px;"></i> Box Fill, Outline &amp; Corner Styling</span>
+                            </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                                <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px; cursor:pointer;" onclick="if(window.TextBoxStylesSystem) window.TextBoxStylesSystem.pickCustomSolidFill(this);">
+                                    <i class="fas fa-fill-drip" style="color:var(--ui-theme-color); margin-right:4px;"></i> Set Solid Box Fill...
+                                </button>
+                                <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px; cursor:pointer;" onclick="if(window.TextBoxStylesSystem) window.TextBoxStylesSystem.pickCustomBorderColor(this);">
+                                    <i class="fas fa-border-style" style="color:var(--ui-theme-color); margin-right:4px;"></i> Set Box Outline Color...
+                                </button>
+                                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;">
+                                    <span>Corner Radius:</span>
+                                    <input type="range" id="css-studio-radius-slider" min="0" max="60" value="${Math.min(60, curRadius)}" style="width:90px; accent-color:var(--ui-theme-color);">
+                                    <span id="css-studio-radius-val" style="min-width:32px;">${curRadius}px</span>
+                                </div>
+                                <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px; cursor:pointer;" onclick="DialogSystem.close(); if(window.BorderArtEngine) window.BorderArtEngine.openForElement(state.selectedEl);">
+                                    <i class="fas fa-Sparkles" style="color:var(--ui-theme-color);"></i> Border Art...
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="css-studio-section">
+                        <div class="css-studio-sec-title">
+                            <span><i class="fas fa-swatchbook" style="margin-right:6px;"></i> Entire Page Color Palette (${pagePalette.length} Colors Detected)</span>
+                            <span style="font-size:10.5px; font-weight:600; color:#64748b;">Replaces color everywhere on this page</span>
+                        </div>
+                        <div class="css-studio-grid" id="css-studio-page-swatches"></div>
+                    </div>
+
+                    <div class="css-studio-section">
+                        <div class="css-studio-sec-title">
+                            <span><i class="fas fa-magic" style="margin-right:6px;"></i> 1-Click Designer Color Themes (Re-Theme Entire Page)</span>
+                        </div>
+                        <div class="css-studio-grid" id="css-studio-themes-grid"></div>
+                    </div>
+                </div>
+            `;
+
+            DialogSystem.show('CSS Color, Gradient & Theme Studio', uiHtml, () => {
+                if (el) this.refreshRibbonPanel(el);
+                if (typeof pushHistory === 'function') pushHistory();
+                if (typeof updateThumbnails === 'function') updateThumbnails();
+            }, true, 'Done');
+
+            const dlgBox = document.getElementById('custom-dialog-box');
+            if (dlgBox) {
+                dlgBox.style.width = '720px';
+                dlgBox.style.maxWidth = '95vw';
+            }
+
+            // Populate Selected Element Swatches
+            const elGrid = document.getElementById('css-studio-el-swatches');
+            if (elGrid && el) {
+                if (scan.allSwatches.length === 0) {
+                    elGrid.innerHTML = `<div style="grid-column:1/-1; font-size:12px; color:#64748b;">No custom CSS colors detected on this element yet. Use "Set Solid Box Fill" or "Set Box Outline Color" below to add styling.</div>`;
+                } else {
+                    scan.allSwatches.forEach(sw => {
+                        const card = document.createElement('div');
+                        card.className = 'css-slot-card';
+                        card.innerHTML = `
+                            <div class="css-slot-swatch" style="background:${sw.hex};"></div>
+                            <div class="css-slot-meta">
+                                <span class="css-slot-label" title="${sw.label}">${sw.label}</span>
+                                <span class="css-slot-hex">${sw.hex.toUpperCase()}</span>
+                            </div>
+                        `;
+                        card.onclick = (e) => {
+                            e.stopPropagation();
+                            if (!window.CustomColorPicker) return;
+                            window.CustomColorPicker.open(card.firstElementChild, sw.hex, (newColor) => {
+                                sw.apply(newColor);
+                                sw.hex = newColor;
+                                card.firstElementChild.style.background = newColor;
+                                card.querySelector('.css-slot-hex').textContent = newColor.toUpperCase();
+                                if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                                this.refreshRibbonPanel(el);
+                                if (typeof pushHistory === 'function') pushHistory();
+                                if (typeof updateThumbnails === 'function') updateThumbnails();
+                            });
+                        };
+                        elGrid.appendChild(card);
+                    });
+                }
+
+                // Populate Extras: CSS Bar Sliders, Border Weight Sliders, and Embedded Image Controls
+                const extras = document.getElementById('css-studio-el-extras');
+                if (extras) {
+                    scan.bars.forEach((bar) => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex; align-items:center; gap:10px; font-size:12px; background:var(--ui-panel-bg,#fff); padding:6px 10px; border-radius:6px; border:1px solid var(--ui-border,#cbd5e1);';
+                        row.innerHTML = `
+                            <span style="font-weight:600; min-width:120px;"><i class="fas fa-tasks" style="color:var(--ui-theme-color); margin-right:5px;"></i> ${bar.label}:</span>
+                            <input type="range" min="1" max="100" value="${bar.pct}" style="flex:1; accent-color:var(--ui-theme-color);">
+                            <span style="font-weight:700; min-width:38px; text-align:right;">${bar.pct}%</span>
+                        `;
+                        const rng = row.querySelector('input');
+                        const valSpan = row.lastElementChild;
+                        rng.oninput = () => {
+                            bar.node.style.width = rng.value + '%';
+                            valSpan.textContent = rng.value + '%';
+                        };
+                        rng.onchange = () => {
+                            if (typeof pushHistory === 'function') pushHistory();
+                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                        };
+                        extras.appendChild(row);
+                    });
+
+                    scan.images.forEach((imgItem, idx) => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; background:var(--ui-panel-bg,#fff); padding:6px 10px; border-radius:6px; border:1px solid var(--ui-border,#cbd5e1);';
+                        const opPct = Math.round(imgItem.opacity * 100);
+                        row.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-image" style="color:var(--ui-theme-color);"></i>
+                                <span style="font-weight:600;">Embedded Photo ${scan.images.length > 1 ? idx + 1 : ''}</span>
+                                <button type="button" class="btn-secondary" style="padding:3px 9px; font-size:11.5px; cursor:pointer;">Swap Photo...</button>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-weight:600;">Photo Opacity:</span>
+                                <input type="range" min="5" max="100" value="${opPct}" style="width:90px; accent-color:var(--ui-theme-color);">
+                                <span style="min-width:34px; font-weight:700;">${opPct}%</span>
+                            </div>
+                        `;
+                        const swapBtn = row.querySelector('button');
+                        swapBtn.onclick = () => {
+                            const fInput = document.createElement('input');
+                            fInput.type = 'file';
+                            fInput.accept = 'image/*';
+                            fInput.onchange = (ev) => {
+                                if (ev.target.files && ev.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (loadEv) => {
+                                        imgItem.node.src = loadEv.target.result;
+                                        if (typeof pushHistory === 'function') pushHistory();
+                                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                                    };
+                                    reader.readAsDataURL(ev.target.files[0]);
+                                }
+                            };
+                            fInput.click();
+                        };
+                        const opSlider = row.querySelector('input[type="range"]');
+                        const opLabel = row.querySelector('div:last-child span:last-child');
+                        opSlider.oninput = () => {
+                            imgItem.node.style.opacity = (parseInt(opSlider.value) / 100).toFixed(2);
+                            opLabel.textContent = opSlider.value + '%';
+                        };
+                        opSlider.onchange = () => {
+                            if (typeof pushHistory === 'function') pushHistory();
+                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                        };
+                        extras.appendChild(row);
+                    });
+                }
+
+                // Corner radius slider wiring
+                const rSlider = document.getElementById('css-studio-radius-slider');
+                const rVal = document.getElementById('css-studio-radius-val');
+                if (rSlider && visualBox) {
+                    rSlider.oninput = () => {
+                        visualBox.style.borderRadius = rSlider.value + 'px';
+                        if (rVal) rVal.textContent = rSlider.value + 'px';
+                    };
+                    rSlider.onchange = () => {
+                        if (typeof pushHistory === 'function') pushHistory();
+                        if (typeof updateThumbnails === 'function') updateThumbnails();
+                    };
+                }
+            }
+
+            // Populate Page Palette Swatches
+            const pageGrid = document.getElementById('css-studio-page-swatches');
+            if (pageGrid) {
+                pagePalette.forEach(pEntry => {
+                    const card = document.createElement('div');
+                    card.className = 'css-slot-card';
+                    card.innerHTML = `
+                        <div class="css-slot-swatch" style="background:${pEntry.hex};"></div>
+                        <div class="css-slot-meta">
+                            <span class="css-slot-label">Page Color (${pEntry.count}x)</span>
+                            <span class="css-slot-hex">${pEntry.hex.toUpperCase()}</span>
+                        </div>
+                    `;
+                    card.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!window.CustomColorPicker) return;
+                        window.CustomColorPicker.open(card.firstElementChild, pEntry.hex, (newColor) => {
+                            pEntry.setters.forEach(fn => fn(newColor));
+                            pEntry.hex = newColor;
+                            card.firstElementChild.style.background = newColor;
+                            card.querySelector('.css-slot-hex').textContent = newColor.toUpperCase();
+                            if (el) this.refreshRibbonPanel(el);
+                            if (typeof pushHistory === 'function') pushHistory();
+                            if (typeof updateThumbnails === 'function') updateThumbnails();
+                        });
+                    };
+                    pageGrid.appendChild(card);
+                });
+            }
+
+            // Populate 1-Click Designer Themes
+            const themesGrid = document.getElementById('css-studio-themes-grid');
+            if (themesGrid) {
+                this.designerPalettes.forEach(pal => {
+                    const tCard = document.createElement('div');
+                    tCard.className = 'css-theme-card';
+                    tCard.innerHTML = `
+                        <div style="font-size:11px; font-weight:700; color:var(--ui-text,#1e293b);">${pal.name}</div>
+                        <div class="css-theme-bar">
+                            ${pal.colors.map(c => `<span style="background:${c};"></span>`).join('')}
+                        </div>
+                    `;
+                    tCard.onclick = () => {
+                        this.applyDesignerPaletteToPage(pal.id);
+                        DialogSystem.close();
+                        this.openStudio(el);
+                    };
+                    themesGrid.appendChild(tCard);
+                });
+            }
+        }
+    };
+
+    // Hook selectElement, deselect, scroll, mouseup, and contextmenu so the Ribbon & Floating Pill stay synced
+    const ensureSelectHooksWrapped = () => {
+        if (typeof window.selectElement === 'function' && !window.selectElement._cssColorHooked) {
+            const origSelect = window.selectElement;
+            const wrappedSelect = function(el) {
+                const res = origSelect.apply(this, arguments);
+                if (window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+                }
+                return res;
+            };
+            wrappedSelect._cssColorHooked = true;
+            window.selectElement = wrappedSelect;
+        }
+
+        if (typeof window.deselect === 'function' && !window.deselect._cssColorHooked) {
+            const origDeselect = window.deselect;
+            const wrappedDeselect = function() {
+                const res = origDeselect.apply(this, arguments);
+                if (window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.hideFloatingPill();
+                }
+                return res;
+            };
+            wrappedDeselect._cssColorHooked = true;
+            window.deselect = wrappedDeselect;
+        }
+    };
+
+    const installSelectionHooks = () => {
+        if (typeof window.selectElement !== 'function') {
+            setTimeout(installSelectionHooks, 100);
+            return;
+        }
+        ensureSelectHooksWrapped();
+        // Re-verify hooks after late 1500ms patches in system-patches.js and legacy-fixes.js
+        setTimeout(ensureSelectHooksWrapped, 600);
+        setTimeout(ensureSelectHooksWrapped, 1700);
+
+        if (window._cssColorEngineHooked) return;
+        window._cssColorEngineHooked = true;
+
+        // Keep floating pill aligned on scroll/drag/resize and restore after mouseup
+        const vp = document.getElementById('viewport');
+        if (vp) {
+            vp.addEventListener('scroll', () => {
+                if (typeof state !== 'undefined' && state.selectedEl && window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.positionFloatingPill(state.selectedEl);
+                }
+            }, { passive: true });
+        }
+        document.addEventListener('mousemove', () => {
+            if (typeof state !== 'undefined' && state.dragMode && state.selectedEl && window.TemplateCSSColorEngine) {
+                window.TemplateCSSColorEngine.positionFloatingPill(state.selectedEl);
+            }
+        }, { passive: true });
+        document.addEventListener('mouseup', (e) => {
+            ensureSelectHooksWrapped();
+            if (typeof state !== 'undefined' && state.selectedEl && window.TemplateCSSColorEngine) {
+                // Do not refresh if clicking inside color picker or modal dialog
+                if (e.target && e.target.closest && e.target.closest('.custom-color-picker, #custom-dialog-overlay, #op-floating-css-color-pill')) {
+                    return;
+                }
+                setTimeout(() => {
+                    if (typeof state !== 'undefined' && state.selectedEl && window.TemplateCSSColorEngine) {
+                        window.TemplateCSSColorEngine.refreshRibbonPanel(state.selectedEl);
+                    }
+                }, 20);
+            }
+        }, { passive: true });
+
+        // Upgrade ContextMenuActions.formatTextBox so Format Text Box opens the rich CSS Color & Box Studio (or Chart Studio for charts)
+        if (typeof window.ContextMenuActions !== 'undefined') {
+            window.ContextMenuActions.formatTextBox = function() {
+                const sel = typeof state !== 'undefined' ? state.selectedEl : null;
+                if (sel && window.isChartElement && window.isChartElement(sel)) {
+                    if (typeof window.showChartModal === 'function') window.showChartModal(sel);
+                    return;
+                }
+                if (window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.openStudio(sel);
+                }
+            };
+        }
+
+        // Inject "Customize Element Colors & CSS..." into Right-Click Context Menu
+        const ctxMenu = document.getElementById('context-menu');
+        if (ctxMenu && !document.getElementById('ctx-item-css-studio')) {
+            const item = document.createElement('div');
+            item.id = 'ctx-item-css-studio';
+            item.className = 'context-item';
+            item.innerHTML = `<i class="fas fa-palette" style="color:var(--ui-theme-color);"></i> Customize Colors &amp; CSS Style...`;
+            item.onclick = () => {
+                ctxMenu.style.display = 'none';
+                const sel = typeof state !== 'undefined' ? state.selectedEl : null;
+                if (sel && window.isChartElement && window.isChartElement(sel)) {
+                    if (typeof window.showChartModal === 'function') window.showChartModal(sel);
+                    return;
+                }
+                if (window.TemplateCSSColorEngine) {
+                    window.TemplateCSSColorEngine.openStudio(sel);
+                }
+            };
+            ctxMenu.insertBefore(item, ctxMenu.firstChild);
+        }
+
+        window.TemplateCSSColorEngine.injectRibbonGroups();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', installSelectionHooks);
+    } else {
+        setTimeout(installSelectionHooks, 50);
     }
 
 })();

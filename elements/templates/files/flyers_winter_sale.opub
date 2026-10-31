@@ -1,4 +1,4 @@
-﻿{
+{
   "pages": [
     {
       "width": "794px",
@@ -27,7 +27,7 @@
           "width": "794px",
           "height": "300px",
           "zIndex": 30,
-          "innerHTML": "<div style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);letter-spacing:5px;'>WINTER</div><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);margin-top:-20px;letter-spacing:5px;'>SALE</div></div>"
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;'><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);letter-spacing:5px;'>WINTER</div><div style='font-family:\"Impact\",sans-serif;font-size:110px;color:white;text-shadow:3px 3px 6px rgba(0,0,0,0.2);margin-top:-20px;letter-spacing:5px;'>SALE</div></div>"
         },
         {
           "top": "950px",
@@ -35,7 +35,7 @@
           "width": "794px",
           "height": "100px",
           "zIndex": 40,
-          "innerHTML": "<div style='text-align:center;font-family:Arial,sans-serif;font-size:35px;color:#004080;font-weight:bold;letter-spacing:2px;'>UP TO 50% OFF SITEWIDE</div>"
+          "innerHTML": "<div contenteditable='true' spellcheck='false' style='text-align:center;font-family:Arial,sans-serif;font-size:35px;color:#004080;font-weight:bold;letter-spacing:2px;'>UP TO 50% OFF SITEWIDE</div>"
         }
       ]
     }

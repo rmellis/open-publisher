@@ -1,4 +1,4 @@
-// OpenPublisher Core Engine (v5.13.2)
+// OpenPublisher Core Engine (v5.14.0)
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -87,14 +87,19 @@ window.sanitizeH2cBackgroundColor = function(bg, hasActiveTheme) {
  */
 window.getElementContentImage = function(el) {
     if (!el || typeof el.querySelectorAll !== 'function') return null;
-    const imgs = el.querySelectorAll('img');
-    for (let i = 0; i < imgs.length; i++) {
-        const img = imgs[i];
-        if (!img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border')) {
-            return img;
-        }
+    const allImgs = Array.from(el.querySelectorAll('img')).filter(
+        img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border')
+    );
+    if (allImgs.length === 0) return null;
+    if (el.getAttribute && el.getAttribute('data-type') === 'image') return allImgs[0];
+    // Do not treat multi-image grids or composite image+text cards as single raw image elements
+    if (allImgs.length > 1) return null;
+    const img = allImgs[0];
+    const cleanText = (el.textContent || '').replace(/@import[^;]+;/g, '').trim();
+    if (cleanText.length > 0 && !(img.parentElement && img.parentElement.classList.contains('element-content'))) {
+        return null;
     }
-    return null;
+    return img;
 };
 
 

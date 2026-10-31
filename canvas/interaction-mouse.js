@@ -255,7 +255,48 @@ window.handleMouseDown = function(e) {
         return;
     }
 
-    const el = e.target.closest('.pub-element');
+    let el = e.target.closest('.pub-element');
+    if (el && !e.ctrlKey && !e.metaKey) {
+        // Click-through hollow decorative border frames when clicking inside their empty interior (> 16px from edges)
+        const isHollowFrame = (elem) => {
+            if (!elem || elem.getAttribute('data-type') === 'image' || elem.getAttribute('data-type') === 'chart' || elem.getAttribute('data-type') === 'progress-bar' || elem.getAttribute('data-type') === 'smart-arrow') return false;
+            if (elem.textContent && elem.textContent.replace(/@import[^;]+;/g, '').trim().length > 0) return false;
+            if (elem.querySelector('img, svg, canvas, table')) return false;
+            const c = elem.querySelector('.element-content');
+            const inner = c && (c.querySelector('div') || c);
+            if (!inner) return false;
+            const bg = (inner.style.background || inner.style.backgroundColor || inner.style.backgroundImage || '').toLowerCase();
+            const hasOpaqueBg = bg && bg !== 'transparent' && bg !== 'none' && bg !== 'rgba(0, 0, 0, 0)' && !bg.includes('transparent');
+            const hasBorder = !!(inner.style.border || inner.style.borderTop || inner.style.borderLeft || inner.style.borderRight || inner.style.borderBottom || inner.style.outline || inner.style.boxShadow);
+            return !hasOpaqueBg && hasBorder;
+        };
+        if (isHollowFrame(el)) {
+            const r = el.getBoundingClientRect();
+            const borderHitZone = 16;
+            const insideInterior = (r.width > 48 && r.height > 48) &&
+                (e.clientX > r.left + borderHitZone) && (e.clientX < r.right - borderHitZone) &&
+                (e.clientY > r.top + borderHitZone) && (e.clientY < r.bottom - borderHitZone);
+            if (insideInterior && typeof document.elementsFromPoint === 'function') {
+                const stack = document.elementsFromPoint(e.clientX, e.clientY);
+                for (let sIdx = 0; sIdx < stack.length; sIdx++) {
+                    const candidate = stack[sIdx].closest && stack[sIdx].closest('.pub-element');
+                    if (candidate && candidate !== el && !candidate.classList.contains('master-page-element') && candidate.getAttribute('data-is-border') !== 'true' && !isHollowFrame(candidate)) {
+                        // Prefer non-full-page background elements, or elements with text/images
+                        const cw = parseFloat(candidate.style.width) || 0;
+                        const ch = parseFloat(candidate.style.height) || 0;
+                        const paperEl = document.getElementById('paper');
+                        const pw = paperEl ? (parseFloat(paperEl.style.width) || 794) : 794;
+                        const ph = paperEl ? (parseFloat(paperEl.style.height) || 1123) : 1123;
+                        const isFullPageBg = (cw >= pw * 0.95 && ch >= ph * 0.95) && !(candidate.textContent && candidate.textContent.replace(/@import[^;]+;/g, '').trim().length > 0);
+                        if (!isFullPageBg) {
+                            el = candidate;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
     if(el) {
         // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
         if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
@@ -305,7 +346,9 @@ window.handleMouseDown = function(e) {
         }
 
         const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
-        if(el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') {
+        const clickedEditable = e.target.closest && e.target.closest('[contenteditable="true"]');
+        const hasEditableText = clickedEditable && el.contains(clickedEditable) && (el.textContent && el.textContent.replace(/@import[^;]+;/g, '').trim().length > 0);
+        if((el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') && !hasEditableText) {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -315,7 +358,7 @@ window.handleMouseDown = function(e) {
 
         const rect = el.getBoundingClientRect(), edgeSize = 15;
         const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
-        const activeEl = document.activeElement, isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
+        const activeEl = document.activeElement, isEditingText = (activeEl && el.contains(activeEl) && activeEl.isContentEditable) || hasEditableText;
 
         if (nearEdge || !isEditingText) {
             state.dragMode = 'drag';

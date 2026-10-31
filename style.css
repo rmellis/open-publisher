@@ -1544,9 +1544,32 @@ td, th {
     text-decoration: none !important;
     -webkit-text-decoration: none !important;
 }
-.element-content img, .element-content svg { 
+.element-content > img, .element-content > svg { 
     width: 100%; height: 100%; object-fit: fill; 
     pointer-events: none; display: block; position: absolute; top:0; left:0;
+}
+.element-content img, .element-content svg {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+.element-content h1:first-child,
+.element-content h2:first-child,
+.element-content h3:first-child,
+.element-content h4:first-child,
+.element-content h5:first-child,
+.element-content h6:first-child,
+.element-content p:first-child,
+.element-content ul:first-child,
+.element-content ol:first-child,
+.element-content div > h1:first-child,
+.element-content div > h2:first-child,
+.element-content div > h3:first-child,
+.element-content div > h4:first-child,
+.element-content div > h5:first-child,
+.element-content div > h6:first-child,
+.element-content div > p:first-child {
+    margin-top: 0;
 }
 /* Twemoji inline SVG must stretch with the box (object-fit does not affect SVG-in-img) */
 .pub-element[data-type="emoji"] .element-content svg {
@@ -7013,7 +7036,7 @@ body.dark-mode #styled-textbox-search {
 
 
 /* ==========================================================================
-   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.13.2)
+   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.14.0)
    ========================================================================== */
 
 .progress-bar-widget {
@@ -7594,7 +7617,7 @@ body.dark-mode .pb-form-select {
 }
 
 /* ==========================================================================
-   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.13.2)
+   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.14.0)
    ========================================================================== */
 .itp-modal-container {
     width: 100%;
@@ -7760,7 +7783,7 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
 }
 
 /* ==========================================================================
-   CHART & GRAPH STUDIO STYLES (v5.13.2)
+   CHART & GRAPH STUDIO STYLES (v5.14.0)
    ========================================================================== */
 .custom-dialog:has(#chart-studio-container) {
     max-width: 95vw !important;

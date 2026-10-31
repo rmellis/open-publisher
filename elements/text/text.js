@@ -3438,36 +3438,78 @@ window.TextBoxStylesSystem = {
         return this.presets.find(p => p.id === id);
     },
 
+    getVisualBoxTarget: function(el) {
+        if (!el) return null;
+        const content = el.querySelector('.element-content');
+        if (!content) return null;
+        const nonStyleChildren = Array.from(content.children).filter(c => c.tagName !== 'STYLE' && c.tagName !== 'SCRIPT');
+        if (nonStyleChildren.length === 1 && nonStyleChildren[0].tagName === 'DIV') {
+            const inner = nonStyleChildren[0];
+            const hasInnerVisuals = !!(
+                inner.style.background ||
+                inner.style.backgroundColor ||
+                inner.style.backgroundImage ||
+                inner.style.border ||
+                inner.style.borderTop ||
+                inner.style.borderLeft ||
+                inner.style.borderRight ||
+                inner.style.borderBottom ||
+                inner.style.borderRadius ||
+                inner.style.boxShadow ||
+                inner.style.outline ||
+                (inner.style.width === '100%' && inner.style.height === '100%')
+            );
+            const hasContentVisuals = !!(
+                content.style.background ||
+                content.style.backgroundColor ||
+                content.style.backgroundImage ||
+                content.style.border ||
+                content.style.borderTop ||
+                content.style.borderLeft
+            );
+            if (hasInnerVisuals && !hasContentVisuals) {
+                return inner;
+            }
+        }
+        return content;
+    },
+
     applyStyle: function(el, styleId) {
         if (!el && typeof state !== 'undefined') el = state.selectedEl;
         if (!el) return;
         const content = el.querySelector('.element-content');
         if (!content) return;
+        const target = this.getVisualBoxTarget(el) || content;
         const editable = el.querySelector('[contenteditable="true"]');
 
         const preset = this.getPreset(styleId);
         if (!preset) return;
 
-        // Reset previous container styling
+        // Reset previous container styling on both content and inner target
         this.clearContainerStyles(content);
+        if (target !== content) this.clearContainerStyles(target);
 
         // Apply new container styling
         const s = preset.containerStyle;
-        if (s.background) content.style.background = s.background;
-        if (s.border) content.style.border = s.border;
-        if (s.borderLeft) content.style.borderLeft = s.borderLeft;
-        if (s.borderTop) content.style.borderTop = s.borderTop;
-        if (s.borderRight) content.style.borderRight = s.borderRight;
-        if (s.borderBottom) content.style.borderBottom = s.borderBottom;
-        if (s.borderRadius) content.style.borderRadius = s.borderRadius;
-        if (s.boxShadow) content.style.boxShadow = s.boxShadow;
-        if (s.outline) content.style.outline = s.outline;
-        if (s.outlineOffset) content.style.outlineOffset = s.outlineOffset;
-        if (s.backdropFilter) {
-            content.style.backdropFilter = s.backdropFilter;
-            content.style.webkitBackdropFilter = s.backdropFilter;
+        if (s.background) {
+            target.style.background = s.background;
+            target.style.webkitPrintColorAdjust = 'exact';
+            target.style.printColorAdjust = 'exact';
         }
-        content.style.boxSizing = 'border-box';
+        if (s.border) target.style.border = s.border;
+        if (s.borderLeft) target.style.borderLeft = s.borderLeft;
+        if (s.borderTop) target.style.borderTop = s.borderTop;
+        if (s.borderRight) target.style.borderRight = s.borderRight;
+        if (s.borderBottom) target.style.borderBottom = s.borderBottom;
+        if (s.borderRadius) target.style.borderRadius = s.borderRadius;
+        if (s.boxShadow) target.style.boxShadow = s.boxShadow;
+        if (s.outline) target.style.outline = s.outline;
+        if (s.outlineOffset) target.style.outlineOffset = s.outlineOffset;
+        if (s.backdropFilter) {
+            target.style.backdropFilter = s.backdropFilter;
+            target.style.webkitBackdropFilter = s.backdropFilter;
+        }
+        target.style.boxSizing = 'border-box';
 
         // Apply padding to editable
         if (editable && s.padding) {
@@ -3492,6 +3534,9 @@ window.TextBoxStylesSystem = {
         el.setAttribute('data-textbox-style', preset.id);
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
 
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -3502,9 +3547,11 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         const content = el.querySelector('.element-content');
         if (!content) return;
+        const target = this.getVisualBoxTarget(el) || content;
         const editable = el.querySelector('[contenteditable="true"]');
 
         this.clearContainerStyles(content);
+        if (target !== content) this.clearContainerStyles(target);
         if (editable) {
             editable.style.padding = '10px';
             editable.style.color = '#000000';
@@ -3512,6 +3559,9 @@ window.TextBoxStylesSystem = {
         el.removeAttribute('data-textbox-style');
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
 
         const menu = document.getElementById('styled-textbox-dropdown');
         if (menu) menu.style.display = 'none';
@@ -3630,17 +3680,30 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         let content = el.querySelector('.element-content');
         if (!content) return;
+        let target = this.getVisualBoxTarget(el) || content;
         let editable = el.querySelector('[contenteditable="true"]');
 
         if (fillVal === 'transparent' || fillVal === 'none') {
-            content.style.background = 'transparent';
-            content.style.backgroundImage = 'none';
-            content.style.backgroundColor = 'transparent';
+            target.style.background = 'transparent';
+            target.style.backgroundImage = 'none';
+            target.style.backgroundColor = 'transparent';
+            if (target !== content) {
+                content.style.background = 'transparent';
+                content.style.backgroundImage = 'none';
+                content.style.backgroundColor = 'transparent';
+            }
             if (editable && (editable.style.color === 'rgb(255, 255, 255)' || editable.style.color === '#ffffff')) {
                 editable.style.color = '#000000';
             }
         } else {
-            content.style.background = fillVal;
+            if (target !== content) {
+                content.style.background = '';
+                content.style.backgroundColor = '';
+                content.style.backgroundImage = '';
+            }
+            target.style.background = fillVal;
+            target.style.webkitPrintColorAdjust = 'exact';
+            target.style.printColorAdjust = 'exact';
             // Contrast check for solid dark fills
             if (editable && fillVal.startsWith('#')) {
                 const isDark = this.isDarkHex(fillVal);
@@ -3660,6 +3723,9 @@ window.TextBoxStylesSystem = {
         }
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
     },
@@ -3682,13 +3748,25 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         let content = el.querySelector('.element-content');
         if (!content) return;
+        let target = this.getVisualBoxTarget(el) || content;
 
-        let currentW = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
-        if (currentW <= 0) currentW = 1;
-        let currentS = content.style.borderStyle || 'solid';
-        content.style.border = `${currentW}px ${currentS} ${color}`;
+        const hasSideOnly = !target.style.border && (target.style.borderLeft || target.style.borderTop || target.style.borderRight || target.style.borderBottom);
+        if (hasSideOnly) {
+            if (target.style.borderLeft) target.style.borderLeftColor = color;
+            if (target.style.borderTop) target.style.borderTopColor = color;
+            if (target.style.borderRight) target.style.borderRightColor = color;
+            if (target.style.borderBottom) target.style.borderBottomColor = color;
+        } else {
+            let currentW = parseInt(target.style.borderWidth || target.style.borderTopWidth || target.style.borderLeftWidth) || 0;
+            if (currentW <= 0) currentW = 1;
+            let currentS = target.style.borderStyle || 'solid';
+            target.style.border = `${currentW}px ${currentS} ${color}`;
+        }
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
     },
@@ -3698,16 +3776,25 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         let content = el.querySelector('.element-content');
         if (!content) return;
+        let target = this.getVisualBoxTarget(el) || content;
 
         if (px <= 0) {
-            content.style.border = 'none';
+            target.style.border = 'none';
+            target.style.borderLeft = '';
+            target.style.borderTop = '';
+            target.style.borderRight = '';
+            target.style.borderBottom = '';
+            if (target !== content) content.style.border = 'none';
         } else {
-            let currentC = content.style.borderColor || content.style.borderTopColor || '#000000';
-            let currentS = content.style.borderStyle || 'solid';
-            content.style.border = `${px}px ${currentS} ${currentC}`;
+            let currentC = target.style.borderColor || target.style.borderTopColor || target.style.borderLeftColor || '#000000';
+            let currentS = target.style.borderStyle || 'solid';
+            target.style.border = `${px}px ${currentS} ${currentC}`;
         }
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
     },
@@ -3717,13 +3804,17 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         let content = el.querySelector('.element-content');
         if (!content) return;
+        let target = this.getVisualBoxTarget(el) || content;
 
-        let currentW = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
+        let currentW = parseInt(target.style.borderWidth || target.style.borderTopWidth || target.style.borderLeftWidth) || 0;
         if (currentW <= 0) currentW = 1;
-        let currentC = content.style.borderColor || content.style.borderTopColor || '#000000';
-        content.style.border = `${currentW}px ${style} ${currentC}`;
+        let currentC = target.style.borderColor || target.style.borderTopColor || target.style.borderLeftColor || '#000000';
+        target.style.border = `${currentW}px ${style} ${currentC}`;
 
         this.updateRibbonIndicators(el);
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
     },
@@ -3733,8 +3824,11 @@ window.TextBoxStylesSystem = {
         if (!el) return;
         let content = el.querySelector('.element-content');
         if (!content) return;
+        let target = this.getVisualBoxTarget(el) || content;
 
-        content.style.borderRadius = px > 0 ? (px >= 900 ? '999px' : `${px}px`) : '0px';
+        const rVal = px > 0 ? (px >= 900 ? '999px' : `${px}px`) : '0px';
+        target.style.borderRadius = rVal;
+        if (target !== content) content.style.borderRadius = rVal;
 
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -3756,10 +3850,10 @@ window.TextBoxStylesSystem = {
     pickCustomSolidFill: function(btn) {
         let el = (typeof state !== 'undefined') ? state.selectedEl : null;
         if (!el || !window.CustomColorPicker) return;
-        let content = el.querySelector('.element-content');
+        let target = this.getVisualBoxTarget(el) || el.querySelector('.element-content');
         let initialHex = '#007670';
-        if (content && content.style.backgroundColor && content.style.backgroundColor.startsWith('#')) {
-            initialHex = content.style.backgroundColor;
+        if (target && target.style.backgroundColor && target.style.backgroundColor.startsWith('#')) {
+            initialHex = target.style.backgroundColor;
         }
 
         const fillMenu = document.getElementById('textbox-fill-dropdown');
@@ -3777,10 +3871,10 @@ window.TextBoxStylesSystem = {
     pickCustomBorderColor: function(btn) {
         let el = (typeof state !== 'undefined') ? state.selectedEl : null;
         if (!el || !window.CustomColorPicker) return;
-        let content = el.querySelector('.element-content');
+        let target = this.getVisualBoxTarget(el) || el.querySelector('.element-content');
         let initialHex = '#000000';
-        if (content && content.style.borderColor && content.style.borderColor.startsWith('#')) {
-            initialHex = content.style.borderColor;
+        if (target && target.style.borderColor && target.style.borderColor.startsWith('#')) {
+            initialHex = target.style.borderColor;
         }
 
         const borderMenu = document.getElementById('textbox-border-dropdown');
@@ -3801,12 +3895,12 @@ window.TextBoxStylesSystem = {
         const borderBar = document.getElementById('ribbon-box-border-indicator');
         if (!el) return;
 
-        const content = el.querySelector('.element-content');
-        if (!content) return;
+        const target = this.getVisualBoxTarget(el) || el.querySelector('.element-content');
+        if (!target) return;
 
         if (fillBar) {
-            const bg = content.style.background || content.style.backgroundColor;
-            if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+            const bg = target.style.background || target.style.backgroundColor || target.style.backgroundImage;
+            if (bg && bg !== 'transparent' && bg !== 'none' && bg !== 'rgba(0, 0, 0, 0)') {
                 fillBar.style.background = bg;
             } else {
                 fillBar.style.background = 'var(--ui-theme-color, #007670)';
@@ -3814,8 +3908,8 @@ window.TextBoxStylesSystem = {
         }
 
         if (borderBar) {
-            const bc = content.style.borderColor || content.style.borderTopColor || content.style.borderLeftColor;
-            const bw = parseInt(content.style.borderWidth || content.style.borderTopWidth || content.style.borderLeftWidth) || 0;
+            const bc = target.style.borderColor || target.style.borderTopColor || target.style.borderLeftColor || target.style.borderRightColor || target.style.borderBottomColor;
+            const bw = parseInt(target.style.borderWidth || target.style.borderTopWidth || target.style.borderLeftWidth || target.style.borderRightWidth || target.style.borderBottomWidth) || 0;
             if (bw > 0 && bc && bc !== 'transparent') {
                 borderBar.style.background = bc;
             } else {
@@ -3833,6 +3927,9 @@ window.TextBoxStylesSystem = {
         document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
 
         if (!isCurrentlyOpen) {
+            if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.populateDropdownSection === 'function') {
+                window.TemplateCSSColorEngine.populateDropdownSection('textbox-fill-detected-colors');
+            }
             menu.style.display = 'block';
             if (btn) {
                 const r = btn.getBoundingClientRect();
@@ -3873,7 +3970,7 @@ window.TextBoxStylesSystem = {
             const fillMenu = document.createElement('div');
             fillMenu.id = 'textbox-fill-dropdown';
             fillMenu.className = 'dropdown-menu styled-textbox-menu';
-            fillMenu.style.cssText = 'display:none; width:300px; padding:12px; z-index:100000; box-sizing:border-box;';
+            fillMenu.style.cssText = 'display:none; width:310px; padding:12px; z-index:100000; box-sizing:border-box;';
 
             fillMenu.innerHTML = `
                 <div class="styled-dropdown-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:6px;">
@@ -3884,6 +3981,8 @@ window.TextBoxStylesSystem = {
                         <i class="fas fa-ban" style="color:#ef4444; margin-right:4px;"></i> No Fill
                     </button>
                 </div>
+
+                <div id="textbox-fill-detected-colors" style="display:none; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--ui-border, #e2e8f0);"></div>
 
                 <div class="styled-section-label">Theme & Solid Colors</div>
                 <div class="fill-palette-grid">
@@ -3902,6 +4001,9 @@ window.TextBoxStylesSystem = {
                 </div>
 
                 <div class="styled-dropdown-footer" style="display:flex; flex-direction:column; gap:6px; padding-top:8px;">
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="if(window.TemplateCSSColorEngine) { document.getElementById('textbox-fill-dropdown').style.display='none'; window.TemplateCSSColorEngine.openStudio(state.selectedEl); } event.stopPropagation();">
+                        <i class="fas fa-swatchbook" style="color:var(--ui-theme-color); margin-right:6px;"></i> CSS Color & Gradient Studio (All Element Colors)...
+                    </button>
                     <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.pickCustomSolidFill(this); event.stopPropagation();">
                         <i class="fas fa-eye-dropper" style="color:var(--ui-theme-color); margin-right:6px;"></i> More Fill Colors... (Color Picker)
                     </button>
@@ -3961,6 +4063,9 @@ window.TextBoxStylesSystem = {
                 </div>
 
                 <div class="styled-dropdown-footer" style="display:flex; flex-direction:column; gap:6px; padding-top:8px;">
+                    <button type="button" class="styled-dropdown-footer-btn" onclick="if(window.TemplateCSSColorEngine) { document.getElementById('textbox-border-dropdown').style.display='none'; window.TemplateCSSColorEngine.openStudio(state.selectedEl); } event.stopPropagation();">
+                        <i class="fas fa-swatchbook" style="color:var(--ui-theme-color); margin-right:6px;"></i> CSS Color & Gradient Studio (All Element Colors)...
+                    </button>
                     <button type="button" class="styled-dropdown-footer-btn" onclick="TextBoxStylesSystem.pickCustomBorderColor(this); event.stopPropagation();">
                         <i class="fas fa-eye-dropper" style="color:var(--ui-theme-color); margin-right:6px;"></i> More Outline Colors... (Color Picker)
                     </button>

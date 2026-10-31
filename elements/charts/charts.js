@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Chart & Graph Engine (v5.13.2)
+ * OpenPublisher Chart & Graph Engine (v5.14.0)
  * 
  * Provides interactive, vector-sharp SVG Pie Charts, Donut Charts, Vertical Column Graphs,
  * Horizontal Bar Graphs, and Line/Area Charts. Supports live data editing, dynamic theme colors,
@@ -688,6 +688,12 @@
             } catch (e) {
                 console.error("Failed to parse chart config for editing:", e);
             }
+        } else if (editElement && typeof window.inferChartConfigFromElement === 'function') {
+            const inferred = window.inferChartConfigFromElement(editElement);
+            if (inferred) {
+                initialConfig = inferred;
+                editElement.dataset.chartConfig = JSON.stringify(inferred);
+            }
         }
 
         // Active working state
@@ -1022,14 +1028,19 @@
      * Inserts or updates the chart element on the active canvas
      */
     function applyChartToCanvas(config, existingElement = null) {
-        const svgMarkup = generateChartSVG(config, 380, 280);
-
         if (existingElement) {
-            // Update existing element
+            // Update existing element using its actual canvas dimensions
+            const w = parseFloat(existingElement.style.width) || 380;
+            const h = parseFloat(existingElement.style.height) || 280;
+            const svgMarkup = generateChartSVG(config, w, h);
+            existingElement.setAttribute('data-type', 'chart');
             existingElement.dataset.chartConfig = JSON.stringify(config);
             const content = existingElement.querySelector('.element-content');
             if (content) {
                 content.innerHTML = svgMarkup;
+            }
+            if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+                window.TemplateCSSColorEngine.refreshRibbonPanel(existingElement);
             }
             if (typeof updateThumbnails === 'function') updateThumbnails();
             if (typeof pushHistory === 'function') pushHistory();
@@ -1038,6 +1049,8 @@
             }
             return existingElement;
         }
+
+        const svgMarkup = generateChartSVG(config, 380, 280);
 
         // Create new canvas element
         if (typeof createWrapper !== 'function') {
@@ -1066,21 +1079,134 @@
             window.showChartModal(el);
         });
 
+        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+            window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+        }
+
         if (typeof updateThumbnails === 'function') updateThumbnails();
         if (typeof pushHistory === 'function') pushHistory();
 
         if (typeof window.showToastNotification === 'function') {
             const typeLabel = config.type.charAt(0).toUpperCase() + config.type.slice(1);
-            window.showToastNotification(`Inserted ${typeLabel} Chart`, 'fa-chart-pie');
+            window.showToastNotification(`${existingElement ? 'Updated' : 'Inserted'} ${typeLabel} Chart`, 'fa-chart-pie');
         }
 
         return el;
     }
 
+    /**
+     * Universal detector for chart elements (both explicit data-type="chart" and SVG/template charts)
+     */
+    window.isChartElement = function(el) {
+        if (!el || !el.querySelector) return false;
+        if (el.getAttribute && el.getAttribute('data-type') === 'chart') return true;
+        if (el.dataset && el.dataset.chartConfig) return true;
+        if (el.querySelector('.chart-pie-group, .chart-column-group, .chart-bar-group, .chart-line-group, .chart-area-group, .chart-half-donut-group, .chart-stacked-group, .chart-radar-group, .chart-slice')) {
+            return true;
+        }
+        return false;
+    };
+
+    /**
+     * Infers a valid chartConfig from an existing chart element's SVG or DOM if data-chart-config was missing
+     */
+    window.inferChartConfigFromElement = function(el) {
+        if (!el) return null;
+        if (el.dataset && el.dataset.chartConfig) {
+            try { return JSON.parse(el.dataset.chartConfig); } catch (e) {}
+        }
+        const svg = el.querySelector('svg');
+        if (!svg) return null;
+
+        let type = 'pie';
+        if (svg.querySelector('.chart-pie-group')) {
+            const firstPath = svg.querySelector('.chart-slice path');
+            const dAttr = firstPath ? (firstPath.getAttribute('d') || '') : '';
+            type = (dAttr.match(/A\s/g) || []).length >= 2 ? 'donut' : 'pie';
+        } else if (svg.querySelector('.chart-column-group')) type = 'column';
+        else if (svg.querySelector('.chart-bar-group')) type = 'bar';
+        else if (svg.querySelector('.chart-line-group')) type = 'line';
+        else if (svg.querySelector('.chart-area-group')) type = 'area';
+        else if (svg.querySelector('.chart-half-donut-group')) type = 'half-donut';
+        else if (svg.querySelector('.chart-stacked-group')) type = 'stacked-column';
+        else if (svg.querySelector('.chart-radar-group')) type = 'radar';
+
+        const texts = Array.from(svg.querySelectorAll('text'));
+        let title = '';
+        if (texts.length > 0 && parseFloat(texts[0].getAttribute('y') || '999') <= 32) {
+            title = (texts[0].textContent || '').trim();
+        }
+
+        const data = [];
+        const slices = svg.querySelectorAll('.chart-slice');
+        if (slices.length > 0) {
+            slices.forEach((slice, idx) => {
+                const path = slice.querySelector('path');
+                const color = (path && path.getAttribute('fill')) || CHART_PALETTE[idx % CHART_PALETTE.length];
+                const sliceText = slice.querySelector('text');
+                const rawVal = sliceText ? parseFloat((sliceText.textContent || '').replace(/[^0-9.-]/g, '')) : (idx + 1) * 20;
+                data.push({
+                    label: `Slice ${idx + 1}`,
+                    value: !isNaN(rawVal) && rawVal > 0 ? rawVal : 25,
+                    color: color
+                });
+            });
+            const legendGroup = svg.querySelector('g[transform*="translate"]');
+            if (legendGroup) {
+                const legendTexts = Array.from(legendGroup.querySelectorAll('text'));
+                legendTexts.forEach((lt, idx) => {
+                    if (data[idx] && lt.textContent) {
+                        data[idx].label = lt.textContent.trim();
+                    }
+                });
+            }
+        }
+
+        if (data.length === 0) {
+            return {
+                type: type,
+                title: title || 'Chart Overview',
+                showLegend: true,
+                showValues: true,
+                data: JSON.parse(JSON.stringify(DEFAULT_CHART_DATA))
+            };
+        }
+
+        return {
+            type: type,
+            title: title,
+            showLegend: true,
+            showValues: true,
+            data: data
+        };
+    };
+
     // Attach dblclick listeners to pre-existing chart elements on document load / render
     window.initChartElements = function() {
-        const charts = document.querySelectorAll('.pub-element[data-type="chart"]');
-        charts.forEach(el => {
+        const allEls = document.querySelectorAll('.pub-element');
+        allEls.forEach(el => {
+            if (!window.isChartElement(el)) return;
+            if (el.getAttribute('data-type') !== 'chart') {
+                el.setAttribute('data-type', 'chart');
+            }
+            el.querySelectorAll('[contenteditable]').forEach(ce => ce.removeAttribute('contenteditable'));
+
+            if (!el.dataset.chartConfig) {
+                const inferred = window.inferChartConfigFromElement(el);
+                if (inferred) {
+                    el.dataset.chartConfig = JSON.stringify(inferred);
+                }
+            } else {
+                const content = el.querySelector('.element-content');
+                if (content && !content.querySelector('svg')) {
+                    try {
+                        const cfg = JSON.parse(el.dataset.chartConfig);
+                        const w = parseFloat(el.style.width) || 380;
+                        const h = parseFloat(el.style.height) || 280;
+                        content.innerHTML = generateChartSVG(cfg, w, h);
+                    } catch (err) {}
+                }
+            }
             if (!el.dataset.chartBound) {
                 el.dataset.chartBound = "true";
                 el.addEventListener('dblclick', function(e) {
@@ -1091,10 +1217,23 @@
         });
     };
 
+    // Global capture-phase dblclick guard so double-clicking any chart ALWAYS opens Chart Studio
+    if (!window._chartGlobalDblClickBound) {
+        window._chartGlobalDblClickBound = true;
+        document.addEventListener('dblclick', function(e) {
+            const el = e.target && e.target.closest ? e.target.closest('.pub-element') : null;
+            if (el && window.isChartElement && window.isChartElement(el)) {
+                e.stopPropagation();
+                e.preventDefault();
+                window.showChartModal(el);
+            }
+        }, true);
+    }
+
     // Public export
     window.generateChartSVG = generateChartSVG;
     window.applyChartToCanvas = applyChartToCanvas;
 
-    console.log("✅ OpenPublisher Chart & Graph Engine (v5.13.2) loaded successfully.");
+    console.log("✅ OpenPublisher Chart & Graph Engine (v5.14.0) loaded successfully.");
 
 })(window);

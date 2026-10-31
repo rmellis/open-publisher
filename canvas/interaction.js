@@ -447,8 +447,9 @@ function handleKeyUp(e) {
 
 window.healUncroppedImage = function(el) {
     if (!el) return;
-    const img = el.querySelector('img');
+    const img = window.getElementContentImage ? window.getElementContentImage(el) : el.querySelector('img');
     if (!img) return;
+    if (!(img.parentElement && img.parentElement.classList.contains('element-content')) && el.getAttribute('data-type') !== 'image') return;
     if (el.classList.contains('cropping') || (typeof state !== 'undefined' && state && state.cropMode)) return;
 
     const leftVal = (img.style.left || '').trim();
@@ -459,10 +460,10 @@ window.healUncroppedImage = function(el) {
     const wVal = (img.style.width || '').trim();
     const hVal = (img.style.height || '').trim();
 
-    // If uncropped, or corrupted to 100px/100 by the previous resize bug
-    if (isZeroOffset && (wVal === '' || wVal === '100%' || wVal === '100px' || wVal === '100' ||
-                         hVal === '' || hVal === '100%' || hVal === '100px' || hVal === '100' ||
-                         (!wVal.endsWith('px') && !wVal.includes('%')))) {
+    // Only heal if uncropped AND dimensions were corrupted to 100px/100 or left blank
+    const wCorrupt = (wVal === '' || wVal === '100px' || wVal === '100' || (!wVal.endsWith('px') && !wVal.includes('%')));
+    const hCorrupt = (hVal === '' || hVal === '100px' || hVal === '100' || (!hVal.endsWith('px') && !hVal.includes('%')));
+    if (isZeroOffset && (wCorrupt || hCorrupt)) {
         img.style.width = '100%';
         img.style.height = '100%';
         img.style.left = '0px';
@@ -772,6 +773,15 @@ document.addEventListener('dblclick', (e) => {
             }
         }
         
+        if ((window.isChartElement && window.isChartElement(el)) || el.getAttribute('data-type') === 'chart') {
+            if (typeof window.showChartModal === 'function') window.showChartModal(el);
+            return;
+        }
+        if (el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget')) {
+            if (window.ProgressBarEngine && typeof window.ProgressBarEngine.showModal === 'function') window.ProgressBarEngine.showModal(el);
+            return;
+        }
+
         if (isShape && typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
             ContextMenuActions.formatTextBox();
             return;
