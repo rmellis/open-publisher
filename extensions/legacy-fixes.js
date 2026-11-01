@@ -150,6 +150,14 @@ if (!window._sliderFillListenerInstalled) {
                 <div class="op-slider-meta"><span class="op-slider-name">Invert</span><span class="op-slider-num" id="val-invert">0%</span></div>
                 <input type="range" class="op-sidebar-slider" data-filter="invert" min="0" max="100" value="0">
             </div>
+        </div>
+        
+        <div class="op-sidebar-section">
+            <span class="op-section-label">Corners</span>
+            <div class="op-slider-row">
+                <div class="op-slider-meta"><span class="op-slider-name">Rounded Corners</span><span class="op-slider-num" id="val-rounded-corners">0px</span></div>
+                <input type="range" class="op-sidebar-slider" data-filter="rounded-corners" min="0" max="100" value="0">
+            </div>
         </div>`;
     document.body.appendChild(panel);
 
@@ -180,13 +188,16 @@ if (!window._sliderFillListenerInstalled) {
                         } else {
                             v = 0;
                         }
+                    } else if (f === 'rounded-corners') {
+                        const rawR = el.getAttribute('data-rounded-corners') || (contentImg ? (contentImg.getAttribute('data-rounded-corners') || contentImg.style.borderRadius) : null) || el.style.borderRadius;
+                        v = rawR ? (parseInt(rawR) || 0) : 0;
                     } else {
                         v = (['brightness','contrast','saturate'].includes(f)?100:0);
                     }
                 }
                 s.value = v; 
                 const txt = panel.querySelector(`#val-${f}`);
-                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+                if(txt) txt.innerText = v + (f==='hue-rotate'?'°':(f==='blur'||f==='rounded-corners')?'px':'%');
                 if (typeof window.updateSliderFill === 'function') window.updateSliderFill(s);
             });
         } else {
@@ -217,16 +228,83 @@ if (!window._sliderFillListenerInstalled) {
         }
     };
 
+    const applyRoundedCorners = (el, v) => {
+        if (!el) return;
+        const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
+        const img = contentImg || (el.getAttribute('data-type') === 'emoji' ? el.querySelector('svg') : null);
+        const content = el.querySelector('.element-content');
+        const num = parseInt(v) || 0;
+        
+        if (num <= 0) {
+            if (img) {
+                img.style.clipPath = 'none';
+                img.style.webkitClipPath = 'none';
+                img.style.borderRadius = '';
+                img.removeAttribute('data-rounded-corners');
+            }
+            el.removeAttribute('data-rounded-corners');
+            el.style.borderRadius = '';
+            if (content) {
+                content.style.clipPath = '';
+                content.style.webkitClipPath = '';
+                content.style.borderRadius = '';
+            }
+        } else {
+            const radStr = `${num}px`;
+            const clip = `inset(0 round ${radStr})`;
+            if (img) {
+                img.style.clipPath = clip;
+                img.style.webkitClipPath = clip;
+                img.style.borderRadius = radStr;
+                img.setAttribute('data-rounded-corners', radStr);
+            }
+            el.setAttribute('data-rounded-corners', radStr);
+            el.style.borderRadius = radStr;
+            if (content) {
+                content.style.clipPath = '';
+                content.style.webkitClipPath = '';
+                content.style.borderRadius = radStr;
+                content.style.overflow = 'visible';
+            }
+            el.style.overflow = 'visible';
+        }
+
+        const curIdx = (typeof state !== 'undefined' && state.currentPageIndex !== undefined) ? state.currentPageIndex : 0;
+        const activeThumb = document.getElementById('thumb-' + curIdx);
+        if (activeThumb && el.id) {
+            const tEl = activeThumb.querySelector(`[data-target-id="${el.id}"]`);
+            if (tEl) {
+                const tImg = tEl.querySelector('img');
+                if (tImg) {
+                    if (num <= 0) {
+                        tImg.style.clipPath = 'none';
+                        tImg.style.webkitClipPath = 'none';
+                        tImg.style.borderRadius = '';
+                    } else {
+                        const radStr = `${num}px`;
+                        tImg.style.clipPath = `inset(0 round ${radStr})`;
+                        tImg.style.webkitClipPath = `inset(0 round ${radStr})`;
+                        tImg.style.borderRadius = radStr;
+                    }
+                }
+            }
+        }
+    };
+
     panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
         if (typeof window.updateSliderFill === 'function') window.updateSliderFill(s);
         s.addEventListener('input', e => {
             if (typeof window.updateSliderFill === 'function') window.updateSliderFill(e.target);
             if(!state.selectedEl) return;
             const f = e.target.dataset.filter, v = e.target.value;
-            state.selectedEl.setAttribute(`data-filter-${f}`, v);
+            if (f === 'rounded-corners') {
+                applyRoundedCorners(state.selectedEl, v);
+            } else {
+                state.selectedEl.setAttribute(`data-filter-${f}`, v);
+                apply(state.selectedEl);
+            }
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
-            apply(state.selectedEl);
+            if(txt) txt.innerText = v + (f==='hue-rotate'?'°':(f==='blur'||f==='rounded-corners')?'px':'%');
         });
         s.addEventListener('change', () => { if(window.pushHistory) pushHistory(); });
     });
@@ -235,10 +313,14 @@ if (!window._sliderFillListenerInstalled) {
         if(!state.selectedEl) return;
         panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
             const f = s.dataset.filter, d = (['brightness','contrast','saturate'].includes(f)?100:0);
-            state.selectedEl.removeAttribute(`data-filter-${f}`);
+            if (f === 'rounded-corners') {
+                applyRoundedCorners(state.selectedEl, 0);
+            } else {
+                state.selectedEl.removeAttribute(`data-filter-${f}`);
+            }
             s.value = d; 
             const txt = panel.querySelector(`#val-${f}`);
-            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':f==='blur'?'px':'%');
+            if(txt) txt.innerText = d + (f==='hue-rotate'?'°':(f==='blur'||f==='rounded-corners')?'px':'%');
             if (typeof window.updateSliderFill === 'function') window.updateSliderFill(s);
         });
         apply(state.selectedEl);

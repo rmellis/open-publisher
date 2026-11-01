@@ -498,7 +498,74 @@ document.addEventListener('paste', (e) => {
 }, true);
 
 
+window.syncTextColorIndicators = function(color) {
+    if (!color) return;
+    let hex = color;
+    if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.toHex === 'function') {
+        const h = window.TemplateCSSColorEngine.toHex(color);
+        if (h) hex = h;
+    } else if (typeof color === 'string' && color.startsWith('rgb')) {
+        const m = color.match(/\d+/g);
+        if (m && m.length >= 3) {
+            hex = '#' + [m[0], m[1], m[2]].map(x => Math.min(255, Math.max(0, parseInt(x))).toString(16).padStart(2, '0')).join('');
+        }
+    }
+    if (!hex) return;
+
+    const ids = ['ctx-text-color-bar-text', 'ctx-text-color-bar-wa', 'float-text-color-bar', 'float-color', 'text-color'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.backgroundColor = hex;
+            el.style.background = hex;
+        }
+    });
+
+    document.querySelectorAll('.float-color-bar#float-text-color-bar, [id^="ctx-text-color-bar"], #text-color, #float-color').forEach(el => {
+        el.style.backgroundColor = hex;
+        el.style.background = hex;
+    });
+};
+
+window.syncTextColorIndicatorsFromElement = function(el) {
+    if (!el && typeof state !== 'undefined') el = state.selectedEl;
+    if (!el) return null;
+
+    let color = null;
+    if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.scanElement === 'function') {
+        try {
+            const scan = window.TemplateCSSColorEngine.scanElement(el);
+            if (scan && scan.texts && scan.texts.length > 0) {
+                color = scan.texts[0].hex;
+            }
+        } catch (e) {}
+    }
+
+    if (!color) {
+        const editable = el.querySelector('[contenteditable="true"], .wa-text') ||
+                         el.querySelector('.element-content > div') ||
+                         el.querySelector('.element-content') || el;
+        if (editable) {
+            const styled = editable.querySelector('[style*="color"]') || editable.querySelector('font[color]') || editable;
+            if (styled && window.getComputedStyle) {
+                const comp = window.getComputedStyle(styled).color;
+                if (comp) color = comp;
+            }
+        }
+    }
+
+    if (color && typeof window.syncTextColorIndicators === 'function') {
+        window.syncTextColorIndicators(color);
+    }
+    return color;
+};
+
 function execCmd(cmd, val) { 
+    if (cmd === 'foreColor' && val) {
+        if (typeof window.syncTextColorIndicators === 'function') {
+            window.syncTextColorIndicators(val);
+        }
+    }
     if(cmd === 'foreColor' && state.selectedEl && state.selectedEl.getAttribute('data-type') === 'shape') {
         const shapeDiv = state.selectedEl.querySelector('.element-content div');
         if(shapeDiv) shapeDiv.style.background = val;
@@ -714,6 +781,10 @@ function updateFloatToolbarValues() {
         if (floatLbl) floatLbl.innerText = fam;
         if (ctxTextLbl) ctxTextLbl.innerText = fam;
         if (ctxWaLbl) ctxWaLbl.innerText = fam;
+
+        if (computed && computed.color && typeof window.syncTextColorIndicators === 'function') {
+            window.syncTextColorIndicators(computed.color);
+        }
 
         const fSize = parseInt(computed.fontSize);
         
@@ -3915,6 +3986,10 @@ window.TextBoxStylesSystem = {
             } else {
                 borderBar.style.background = '#334155';
             }
+        }
+
+        if (typeof window.syncTextColorIndicatorsFromElement === 'function') {
+            window.syncTextColorIndicatorsFromElement(el);
         }
     },
 

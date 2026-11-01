@@ -2254,6 +2254,18 @@
             return namedMap[s] || null;
         },
 
+        syncTextColorIndicators: function(color) {
+            if (typeof window.syncTextColorIndicators === 'function') {
+                window.syncTextColorIndicators(color);
+            }
+        },
+
+        syncTextColorIndicatorsFromElement: function(el) {
+            if (typeof window.syncTextColorIndicatorsFromElement === 'function') {
+                window.syncTextColorIndicatorsFromElement(el);
+            }
+        },
+
         // Replace the Nth color token inside a CSS gradient string
         replaceGradientStopColor: function(gradStr, stopIndex, newColor) {
             if (!gradStr) return gradStr;
@@ -2591,6 +2603,9 @@
                         sw.apply(newColor);
                         sw.hex = newColor;
                         chip.firstElementChild.style.background = newColor;
+                        if (sw.category === 'text' && typeof window.syncTextColorIndicators === 'function') {
+                            window.syncTextColorIndicators(newColor);
+                        }
                         if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
                         this.refreshRibbonPanel(el);
                         if (typeof pushHistory === 'function') pushHistory();
@@ -2662,6 +2677,9 @@
                             sw.apply(newColor);
                             sw.hex = newColor;
                             dot.style.background = newColor;
+                            if (sw.category === 'text' && typeof window.syncTextColorIndicators === 'function') {
+                                window.syncTextColorIndicators(newColor);
+                            }
                             if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
                             // Update floating pill dots in-place if open, then refresh after picker closes
                             setTimeout(() => {
@@ -2768,6 +2786,9 @@
                         sw.apply(newColor);
                         sw.hex = newColor;
                         dot.style.background = newColor;
+                        if (sw.category === 'text' && typeof window.syncTextColorIndicators === 'function') {
+                            window.syncTextColorIndicators(newColor);
+                        }
                         if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
                         setTimeout(() => {
                             if (!window.CustomColorPicker || !window.CustomColorPicker.isOpen) {
@@ -2889,6 +2910,9 @@
             if (typeof state !== 'undefined' && state.selectedEl) {
                 this.refreshRibbonPanel(state.selectedEl);
                 if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(state.selectedEl);
+                if (typeof window.syncTextColorIndicatorsFromElement === 'function') {
+                    window.syncTextColorIndicatorsFromElement(state.selectedEl);
+                }
             }
             if (typeof pushHistory === 'function') pushHistory();
             if (typeof updateThumbnails === 'function') updateThumbnails();
@@ -2897,6 +2921,9 @@
         // Open the full interactive CSS Color, Gradient, Border & Theme Studio modal
         openStudio: function(targetEl) {
             const el = targetEl || (typeof state !== 'undefined' ? state.selectedEl : null);
+            if (el && typeof window.syncTextColorIndicatorsFromElement === 'function') {
+                window.syncTextColorIndicatorsFromElement(el);
+            }
             if (el && ((typeof window.isChartElement === 'function' && window.isChartElement(el)) || el.getAttribute('data-type') === 'chart' || (el.dataset && el.dataset.chartConfig))) {
                 if (typeof window.showChartModal === 'function') {
                     window.showChartModal(el);
@@ -2976,7 +3003,13 @@
             `;
 
             DialogSystem.show('CSS Color, Gradient & Theme Studio', uiHtml, () => {
-                if (el) this.refreshRibbonPanel(el);
+                if (el) {
+                    this.refreshRibbonPanel(el);
+                    if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                    if (typeof window.syncTextColorIndicatorsFromElement === 'function') {
+                        window.syncTextColorIndicatorsFromElement(el);
+                    }
+                }
                 if (typeof pushHistory === 'function') pushHistory();
                 if (typeof updateThumbnails === 'function') updateThumbnails();
             }, true, 'Done');
@@ -3011,6 +3044,9 @@
                                 sw.hex = newColor;
                                 card.firstElementChild.style.background = newColor;
                                 card.querySelector('.css-slot-hex').textContent = newColor.toUpperCase();
+                                if (sw.category === 'text' && typeof window.syncTextColorIndicators === 'function') {
+                                    window.syncTextColorIndicators(newColor);
+                                }
                                 if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
                                 this.refreshRibbonPanel(el);
                                 if (typeof pushHistory === 'function') pushHistory();
@@ -3129,7 +3165,13 @@
                             pEntry.hex = newColor;
                             card.firstElementChild.style.background = newColor;
                             card.querySelector('.css-slot-hex').textContent = newColor.toUpperCase();
-                            if (el) this.refreshRibbonPanel(el);
+                            if (el) {
+                                this.refreshRibbonPanel(el);
+                                if (window.TextBoxStylesSystem) window.TextBoxStylesSystem.updateRibbonIndicators(el);
+                                if (typeof window.syncTextColorIndicatorsFromElement === 'function') {
+                                    window.syncTextColorIndicatorsFromElement(el);
+                                }
+                            }
                             if (typeof pushHistory === 'function') pushHistory();
                             if (typeof updateThumbnails === 'function') updateThumbnails();
                         });

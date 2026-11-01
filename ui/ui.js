@@ -294,6 +294,17 @@ window.ContextMenuActions = {
             }
             el.style.overflow = 'visible';
         }
+        
+        // Synchronize Format Picture sidebar slider if open
+        const rcSlider = document.querySelector('#op-image-sidebar input[data-filter="rounded-corners"]');
+        if (rcSlider) {
+            const num = (!radius || radius === 'none') ? 0 : (parseInt(radius) || 0);
+            rcSlider.value = num;
+            const txt = document.getElementById('val-rounded-corners');
+            if (txt) txt.innerText = num + 'px';
+            if (typeof window.updateSliderFill === 'function') window.updateSliderFill(rcSlider);
+        }
+
         if (typeof updateThumbnails === 'function') updateThumbnails();
         if (typeof pushHistory === 'function') pushHistory();
     },
