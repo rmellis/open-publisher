@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Chart & Graph Engine (v5.16.10)
+ * OpenPublisher Chart & Graph Engine (v5.16.11)
  * 
  * Provides interactive, vector-sharp SVG Pie Charts, Donut Charts, Vertical Column Graphs,
  * Horizontal Bar Graphs, and Line/Area Charts. Supports live data editing, dynamic theme colors,
@@ -1234,6 +1234,6 @@
     window.generateChartSVG = generateChartSVG;
     window.applyChartToCanvas = applyChartToCanvas;
 
-    console.log("✅ OpenPublisher Chart & Graph Engine (v5.16.10) loaded successfully.");
+    console.log("✅ OpenPublisher Chart & Graph Engine (v5.16.11) loaded successfully.");
 
 })(window);

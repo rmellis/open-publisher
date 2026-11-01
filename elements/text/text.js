@@ -258,11 +258,15 @@ function addTextBox() {
     const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
     state.lastRange = null;
     
-    const el = createWrapper(`<div style="padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif;${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
+    const initialColor = (typeof colorSchemes !== 'undefined' && state.currentScheme && colorSchemes[state.currentScheme] && colorSchemes[state.currentScheme][0]) || '#000000';
+    const el = createWrapper(`<div style="color:${initialColor}; padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif;${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
     el.setAttribute('data-scheme-text', '0');
     el.setAttribute('data-text-direction', defaultDir);
     applySingleElementScheme(el, state.currentScheme);
     updateFloatToolbarValues();
+    if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+        window.TemplateCSSColorEngine.refreshRibbonPanel(el);
+    }
     return el;
 }
 

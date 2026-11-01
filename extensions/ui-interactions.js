@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.16.10)
+// Open Publisher UI Interactions (v5.16.11)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.16.10)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.16.11)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1097,7 +1097,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.16.10</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.16.11</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1511,7 +1511,7 @@
 
 
 
-    // 4. TEMPLATES MODAL OVERRIDE (v5.16.10: Added Multi-Page Insert Template Banner)
+    // 4. TEMPLATES MODAL OVERRIDE (v5.16.11: Added Multi-Page Insert Template Banner)
     window.showTemplateModal = function() {
         if(typeof rescueGrids === 'function') rescueGrids();
         const cats = document.getElementById('template-cats');
@@ -2565,6 +2565,31 @@
                 result.allSwatches.push(slot);
             });
 
+            // Fallback for text elements where color is computed or inherited (e.g. freshly placed text box)
+            if (result.texts.length === 0) {
+                const textNode = content.querySelector('[contenteditable="true"]') || content.querySelector('div') || content;
+                const hasText = textNode && ((textNode.textContent || '').trim().length > 0 || textNode.hasAttribute('contenteditable'));
+                if (hasText) {
+                    let col = (textNode.style && textNode.style.color) || (content.style && content.style.color);
+                    if (!col && window.getComputedStyle) {
+                        try { col = window.getComputedStyle(textNode).color; } catch (e) {}
+                    }
+                    const tHex = this.toHex(col) || '#000000';
+                    const slot = {
+                        category: 'text',
+                        hex: tHex,
+                        label: 'Text Color',
+                        shortLabel: 'Text',
+                        apply: (newHex) => {
+                            if (textNode.style) textNode.style.color = newHex;
+                            if (content.style) content.style.color = newHex;
+                        }
+                    };
+                    result.texts.push(slot);
+                    result.allSwatches.push(slot);
+                }
+            }
+
             return result;
         },
 
@@ -2718,7 +2743,7 @@
             if (!pill) {
                 pill = document.createElement('div');
                 pill.id = 'op-floating-css-color-pill';
-                pill.style.cssText = 'position:fixed; z-index:99990; display:none; align-items:center; gap:5px; padding:4px 8px; background:var(--ui-panel-bg, #ffffff); border:1px solid var(--ui-border, #cbd5e1); border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.16); font-family:"Segoe UI",sans-serif; font-size:11px; user-select:none; pointer-events:auto;';
+                pill.className = 'op-floating-css-color-pill';
                 document.body.appendChild(pill);
             }
 
@@ -2729,7 +2754,7 @@
             if (isChart) {
                 const chartBtn = document.createElement('button');
                 chartBtn.type = 'button';
-                chartBtn.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;';
+                chartBtn.className = 'cs-floating-pill-btn';
                 chartBtn.innerHTML = `<i class="fas fa-chart-pie" style="font-size:11px;"></i> Edit Chart &amp; Graph`;
                 chartBtn.title = 'Open Chart & Graph Format Studio';
                 chartBtn.onclick = (e) => {
@@ -2748,7 +2773,7 @@
             if (isProgressBar) {
                 const pbBtn = document.createElement('button');
                 pbBtn.type = 'button';
-                pbBtn.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;';
+                pbBtn.className = 'cs-floating-pill-btn';
                 pbBtn.innerHTML = `<i class="fas fa-tasks" style="font-size:11px;"></i> Edit Progress Bar`;
                 pbBtn.title = 'Open Progress Bar & Meter Studio';
                 pbBtn.onclick = (e) => {
@@ -2770,22 +2795,29 @@
             }
 
             const scan = preScanned || this.scanElement(el);
-            const visualSwatches = scan.allSwatches.filter(s => s.category !== 'text').slice(0, 6);
-            const displaySwatches = visualSwatches.length > 0 ? visualSwatches : scan.allSwatches.slice(0, 5);
+            // Collect unique swatches across fills, borders, vectors, and text
+            const seenHexes = new Set();
+            const displaySwatches = [];
+            scan.allSwatches.forEach(sw => {
+                const lower = (sw.hex || '').toLowerCase();
+                if (lower && !seenHexes.has(lower) && displaySwatches.length < 5) {
+                    seenHexes.add(lower);
+                    displaySwatches.push(sw);
+                }
+            });
 
             displaySwatches.forEach(sw => {
                 const dot = document.createElement('div');
-                dot.style.cssText = `width:16px; height:16px; border-radius:50%; background:${sw.hex}; border:1.5px solid rgba(0,0,0,0.28); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4); cursor:pointer; flex-shrink:0; transition:transform 0.12s;`;
+                dot.className = 'cs-floating-pill-swatch';
+                dot.style.backgroundColor = sw.hex;
                 dot.title = `${sw.label} (${sw.hex}) - Click to change color`;
-                dot.onmouseenter = () => { dot.style.transform = 'scale(1.2)'; };
-                dot.onmouseleave = () => { dot.style.transform = 'scale(1)'; };
                 dot.onclick = (e) => {
                     e.stopPropagation();
                     if (!window.CustomColorPicker) return;
                     window.CustomColorPicker.open(dot, sw.hex, (newColor) => {
                         sw.apply(newColor);
                         sw.hex = newColor;
-                        dot.style.background = newColor;
+                        dot.style.backgroundColor = newColor;
                         if (sw.category === 'text' && typeof window.syncTextColorIndicators === 'function') {
                             window.syncTextColorIndicators(newColor);
                         }
@@ -2802,9 +2834,15 @@
                 pill.appendChild(dot);
             });
 
+            if (displaySwatches.length > 0) {
+                const divider = document.createElement('div');
+                divider.className = 'cs-floating-pill-divider';
+                pill.appendChild(divider);
+            }
+
             const studioBtn = document.createElement('button');
             studioBtn.type = 'button';
-            studioBtn.style.cssText = 'display:inline-flex; align-items:center; gap:4px; background:var(--ui-theme-color, #007670); color:#ffffff; border:none; border-radius:12px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer; margin-left:2px; white-space:nowrap;';
+            studioBtn.className = 'cs-floating-pill-btn';
             studioBtn.innerHTML = `<i class="fas fa-palette" style="font-size:10px;"></i> Colors &amp; Style`;
             studioBtn.title = 'Open CSS Color, Gradient & Style Studio';
             studioBtn.onclick = (e) => {
@@ -2820,6 +2858,10 @@
             if (!pill) pill = document.getElementById('op-floating-css-color-pill');
             if (!pill || !el || !el.isConnected) {
                 if (pill) pill.style.display = 'none';
+                return;
+            }
+            if (typeof state !== 'undefined' && (state.dragMode || state.isDragging || (document.body && document.body.classList.contains('is-dragging-element')))) {
+                pill.style.display = 'none';
                 return;
             }
             const vp = document.getElementById('viewport');
@@ -3255,7 +3297,12 @@
             }, { passive: true });
         }
         document.addEventListener('mousemove', () => {
-            if (typeof state !== 'undefined' && state.dragMode && state.selectedEl && window.TemplateCSSColorEngine) {
+            if (typeof state !== 'undefined' && (state.dragMode || state.isDragging) && window.TemplateCSSColorEngine) {
+                window.TemplateCSSColorEngine.hideFloatingPill();
+            }
+        }, { passive: true });
+        window.addEventListener('resize', () => {
+            if (typeof state !== 'undefined' && state.selectedEl && window.TemplateCSSColorEngine) {
                 window.TemplateCSSColorEngine.positionFloatingPill(state.selectedEl);
             }
         }, { passive: true });
