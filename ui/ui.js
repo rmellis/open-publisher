@@ -2166,7 +2166,7 @@ window.ContextRibbonSystem = {
             window.originalSelectElementForRibbon = window.selectElement;
             window.originalDeselectForRibbon = window.deselect;
             window.selectElement = function(el) { if (window.originalSelectElementForRibbon) window.originalSelectElementForRibbon(el); window.ContextRibbonSystem.updateTabs(el); };
-            window.deselect = function() { if (window.originalDeselectForRibbon) window.originalDeselectForRibbon(); window.ContextRibbonSystem.hideAllTabs(); };
+            window.deselect = function() { if (window.originalDeselectForRibbon) window.originalDeselectForRibbon(); if (!window._isTransitioningSelection) window.ContextRibbonSystem.hideAllTabs(); };
         }
     },
     updateTabs: function(el) {

@@ -2811,20 +2811,23 @@ svg .shape-path, svg .shape-path * {
         
         /* 💥 SLEEK TRACKS: Visible but refined */
         .op-sidebar-slider::-webkit-slider-runnable-track {
-            width: 100%; height: 3px; background: #999; border-radius: 2px;
+            width: 100%; height: 4px;
+            background: linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) var(--slider-progress, 0%), #e2e8f0 var(--slider-progress, 0%), #e2e8f0 100%);
+            border-radius: 4px;
         }
         
         .op-sidebar-slider::-webkit-slider-thumb {
             -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: var(--ui-theme-color); border: 2.5px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-top: -6.5px;
+            background: var(--ui-theme-color, #007670); border: 2.5px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: -6px;
             transition: transform 0.1s;
         }
         .op-sidebar-slider:active::-webkit-slider-thumb { transform: scale(1.15); }
         
         /* Firefox */
-        .op-sidebar-slider::-moz-range-track { height: 3px; background: #999; border-radius: 2px; }
-        .op-sidebar-slider::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color); border: 2.5px solid #fff; border-radius: 50%; }
+        .op-sidebar-slider::-moz-range-track { height: 4px; background: #e2e8f0; border-radius: 4px; }
+        .op-sidebar-slider::-moz-range-progress { height: 4px; background: var(--ui-theme-color, #007670); border-radius: 4px 0 0 4px; }
+        .op-sidebar-slider::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 /* Extracted Block 5 */
 #op-wordart-sidebar {
@@ -2853,15 +2856,20 @@ svg .shape-path, svg .shape-path * {
             -webkit-appearance: none; width: 100%; background: transparent; height: 16px; cursor: pointer;
         }
         .wa-sidebar-input::-webkit-slider-runnable-track {
-            width: 100%; height: 3px; background: #999; border-radius: 2px;
+            width: 100%; height: 4px;
+            background: linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) var(--slider-progress, 0%), #e2e8f0 var(--slider-progress, 0%), #e2e8f0 100%);
+            border-radius: 4px;
         }
         .wa-sidebar-input::-webkit-slider-thumb {
             -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: var(--ui-theme-color); border: 2.5px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-top: -6.5px;
+            background: var(--ui-theme-color, #007670); border: 2.5px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: -6px;
             transition: transform 0.1s;
         }
         .wa-sidebar-input:active::-webkit-slider-thumb { transform: scale(1.15); }
+        .wa-sidebar-input::-moz-range-track { height: 4px; background: #e2e8f0; border-radius: 4px; }
+        .wa-sidebar-input::-moz-range-progress { height: 4px; background: var(--ui-theme-color, #007670); border-radius: 4px 0 0 4px; }
+        .wa-sidebar-input::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
         /* 💥 SHAPE GRID UI CSS */
         .wa-shape-grid { display: flex; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
@@ -2926,15 +2934,20 @@ svg .shape-path, svg .shape-path * {
 
         /* Gray Slider UI */
         .op-sidebar-slider { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; cursor: pointer; }
-        .op-sidebar-slider::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #ccc; border-radius: 2px; }
+        .op-sidebar-slider::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            background: linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) var(--slider-progress, 0%), #e2e8f0 var(--slider-progress, 0%), #e2e8f0 100%);
+            border-radius: 4px;
+        }
         .op-sidebar-slider::-webkit-slider-thumb {
             -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: var(--ui-theme-color); border: 2.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            margin-top: -6.5px; transition: transform 0.1s;
+            background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-top: -6px; transition: transform 0.1s;
         }
         .op-sidebar-slider:active::-webkit-slider-thumb { transform: scale(1.15); }
-        .op-sidebar-slider::-moz-range-track { height: 3px; background: #ccc; border-radius: 2px; }
-        .op-sidebar-slider::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color); border: 2.5px solid #fff; border-radius: 50%; }
+        .op-sidebar-slider::-moz-range-track { height: 4px; background: #e2e8f0; border-radius: 4px; }
+        .op-sidebar-slider::-moz-range-progress { height: 4px; background: var(--ui-theme-color, #007670); border-radius: 4px 0 0 4px; }
+        .op-sidebar-slider::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 /* Extracted Block 7 */
 #op-wordart-sidebar {
@@ -2959,15 +2972,20 @@ svg .shape-path, svg .shape-path * {
         #op-wa-sidebar-expander.visible { transform: translateY(-50%) translateX(0); }
         
         .wa-sidebar-input { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; cursor: pointer; margin-bottom: 10px; }
-        .wa-sidebar-input::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #ccc; border-radius: 2px; }
+        .wa-sidebar-input::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            background: linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) var(--slider-progress, 0%), #e2e8f0 var(--slider-progress, 0%), #e2e8f0 100%);
+            border-radius: 4px;
+        }
         .wa-sidebar-input::-webkit-slider-thumb {
             -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: var(--ui-theme-color); border: 2.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            margin-top: -6.5px; transition: transform 0.1s;
+            background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-top: -6px; transition: transform 0.1s;
         }
         .wa-sidebar-input:active::-webkit-slider-thumb { transform: scale(1.15); }
-        .wa-sidebar-input::-moz-range-track { height: 3px; background: #ccc; border-radius: 2px; }
-        .wa-sidebar-input::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color); border: 2.5px solid #fff; border-radius: 50%; }
+        .wa-sidebar-input::-moz-range-track { height: 4px; background: #e2e8f0; border-radius: 4px; }
+        .wa-sidebar-input::-moz-range-progress { height: 4px; background: var(--ui-theme-color, #007670); border-radius: 4px 0 0 4px; }
+        .wa-sidebar-input::-moz-range-thumb { height: 14px; width: 14px; background: var(--ui-theme-color, #007670); border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
         /* UI Fade logic for Disabled Sections */
         .wa-disabled-section { opacity: 0.4; pointer-events: none; transition: opacity 0.2s; }
@@ -5183,8 +5201,22 @@ body.dark-mode .op-section-label { color: var(--ui-text-muted); }
 body.dark-mode .op-slider-name { color: var(--ui-text); }
 body.dark-mode .op-header-btn { color: var(--ui-text-muted); }
 body.dark-mode .op-header-btn:hover { color: var(--ui-text); }
-body.dark-mode .op-sidebar-slider::-webkit-slider-thumb { border-color: var(--ui-panel-bg); }
-body.dark-mode .op-sidebar-slider::-moz-range-thumb { border-color: var(--ui-panel-bg); }
+body.dark-mode .op-sidebar-slider::-webkit-slider-runnable-track,
+body.dark-mode .wa-sidebar-input::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--ui-theme-color, #007670) 0%, var(--ui-theme-color, #007670) var(--slider-progress, 0%), #334155 var(--slider-progress, 0%), #334155 100%);
+}
+body.dark-mode .op-sidebar-slider::-moz-range-track,
+body.dark-mode .wa-sidebar-input::-moz-range-track {
+    background: #334155;
+}
+body.dark-mode .op-sidebar-slider::-webkit-slider-thumb,
+body.dark-mode .wa-sidebar-input::-webkit-slider-thumb {
+    border-color: var(--ui-panel-bg, #1e293b);
+}
+body.dark-mode .op-sidebar-slider::-moz-range-thumb,
+body.dark-mode .wa-sidebar-input::-moz-range-thumb {
+    border-color: var(--ui-panel-bg, #1e293b);
+}
 
 /* ==========================================================================
    SELECTION OVERLAY (Z-INDEX FIX & ZOOM-INVARIANT UI)
@@ -7036,7 +7068,7 @@ body.dark-mode #styled-textbox-search {
 
 
 /* ==========================================================================
-   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.16.7)
+   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.16.8)
    ========================================================================== */
 
 .progress-bar-widget {
@@ -7617,7 +7649,7 @@ body.dark-mode .pb-form-select {
 }
 
 /* ==========================================================================
-   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.16.7)
+   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.16.8)
    ========================================================================== */
 .itp-modal-container {
     width: 100%;
@@ -7783,7 +7815,7 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
 }
 
 /* ==========================================================================
-   CHART & GRAPH STUDIO STYLES (v5.16.7)
+   CHART & GRAPH STUDIO STYLES (v5.16.8)
    ========================================================================== */
 .custom-dialog:has(#chart-studio-container) {
     max-width: 95vw !important;

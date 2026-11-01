@@ -510,19 +510,24 @@ function selectElement(el) {
         return;
     }
 
-    if(state.selectedEl && state.selectedEl !== el) deselect();
-    state.selectedEl = el;
-    el.classList.add('selected');
-    if (window.healUncroppedImage) window.healUncroppedImage(el);
-    document.getElementById('status-msg').innerText = "Element Selected";
-    
-    if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
-        window.parseShadowToSliders();
+    window._isTransitioningSelection = true;
+    try {
+        if(state.selectedEl && state.selectedEl !== el) deselect();
+        state.selectedEl = el;
+        el.classList.add('selected');
+        if (window.healUncroppedImage) window.healUncroppedImage(el);
+        document.getElementById('status-msg').innerText = "Element Selected";
+        
+        if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
+            window.parseShadowToSliders();
+        }
+        showFloatToolbar();
+        if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
+        if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
+        else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
+    } finally {
+        window._isTransitioningSelection = false;
     }
-    showFloatToolbar();
-    if (window.SpellCheckEngine) window.SpellCheckEngine.trigger(100);
-    if (typeof window.updateSelectionObserver === 'function') window.updateSelectionObserver();
-    else if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
 
 function deselect() {
@@ -539,6 +544,7 @@ function deselect() {
         }
     }
     state.selectedEl = null;
+    if (window._isTransitioningSelection) return;
     document.getElementById('status-msg').innerText = "Ready";
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     const waToolbar = document.getElementById('wa-float-toolbar');

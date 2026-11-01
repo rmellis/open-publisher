@@ -34,6 +34,9 @@ window.setShadowPaneVisibility = function(visible) {
             </div>
         `;
         document.body.appendChild(panel);
+        panel.querySelectorAll('.op-sidebar-slider').forEach(s => {
+            if (typeof window.updateSliderFill === 'function') window.updateSliderFill(s);
+        });
     }
     
     if (visible) {
@@ -77,14 +80,15 @@ window.parseShadowToSliders = function() {
         
         const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
         
-        document.getElementById('shadow-x-slider').value = x;
-        document.getElementById('shadow-x-val').innerText = x;
-        document.getElementById('shadow-y-slider').value = y;
-        document.getElementById('shadow-y-val').innerText = y;
-        document.getElementById('shadow-blur-slider').value = blur;
-        document.getElementById('shadow-blur-val').innerText = blur;
-        document.getElementById('shadow-alpha-slider').value = Math.round((1 - a) * 100);
-        document.getElementById('shadow-alpha-val').innerText = Math.round((1 - a) * 100);
+        const sx = document.getElementById('shadow-x-slider');
+        const sy = document.getElementById('shadow-y-slider');
+        const sb = document.getElementById('shadow-blur-slider');
+        const sa = document.getElementById('shadow-alpha-slider');
+
+        if (sx) { sx.value = x; document.getElementById('shadow-x-val').innerText = x; if (typeof window.updateSliderFill === 'function') window.updateSliderFill(sx); }
+        if (sy) { sy.value = y; document.getElementById('shadow-y-val').innerText = y; if (typeof window.updateSliderFill === 'function') window.updateSliderFill(sy); }
+        if (sb) { sb.value = blur; document.getElementById('shadow-blur-val').innerText = blur; if (typeof window.updateSliderFill === 'function') window.updateSliderFill(sb); }
+        if (sa) { sa.value = Math.round((1 - a) * 100); document.getElementById('shadow-alpha-val').innerText = Math.round((1 - a) * 100); if (typeof window.updateSliderFill === 'function') window.updateSliderFill(sa); }
         document.getElementById('shadow-color-input').value = hex;
     }
 };

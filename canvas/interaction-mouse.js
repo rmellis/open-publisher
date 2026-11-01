@@ -338,7 +338,14 @@ window.handleMouseDown = function(e) {
 
         const isMulti = state.multiSelected && state.multiSelected.includes(el);
         if (!isMulti) {
-            if(state.selectedEl !== el) window.selectElement(el);
+            if(state.selectedEl !== el) {
+                window._isTransitioningSelection = true;
+                try {
+                    window.selectElement(el);
+                } finally {
+                    window._isTransitioningSelection = false;
+                }
+            }
             if(state.multiSelected && state.multiSelected.length > 0) {
                 state.multiSelected.forEach(m => m.classList.remove('selected'));
                 state.multiSelected = [];
