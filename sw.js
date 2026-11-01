@@ -1,5 +1,5 @@
-// Open Publisher Service Worker (v5.15.6)
-const CACHE_NAME = 'open-publisher-v5-15-6';
+// Open Publisher Service Worker (v5.16.7)
+const CACHE_NAME = 'open-publisher-v5-16-7';
 
 self.addEventListener('install', (event) => {
     // Activate worker immediately once installed

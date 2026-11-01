@@ -221,7 +221,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.15.6');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.16.7');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -236,12 +236,74 @@ window.DashboardSystem = {
     createTemplateCard: function(t, isExpanded = false) {
         const div = document.createElement('div');
         div.className = 'dashboard-template-card';
-        div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">Loading...</div><div class="dashboard-template-title">${t.name}</div>`;
+
+        const isMobile = window.innerWidth <= 768;
+        const baseCardW = isMobile 
+            ? (isExpanded ? Math.max(130, Math.floor((Math.min(window.innerWidth, 500) - 36) / 2)) : 155)
+            : 200;
+
+        const w = t.width || 794;
+        const h = t.height || 1123;
+        const scale = baseCardW / w;
+        const cardHeight = Math.round(h * scale);
+
+        let sizeLabel = t.format || '';
+        if (!sizeLabel) {
+            if (typeof window.getPageSizeLabel === 'function') {
+                sizeLabel = window.getPageSizeLabel(w, h);
+            } else {
+                sizeLabel = (w > h) ? 'Landscape' : 'A4';
+            }
+        }
+        const sizeBadge = `<div class="dashboard-template-badge">${sizeLabel}</div>`;
+
+        // Check if pre-rendered WebP thumbnail is available
+        const thumbFile = t.thumbnail || t.file.replace(/\.opub$/, '.webp');
+        const thumbUrl = (typeof window.getTemplateAssetUrl === 'function')
+            ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
+            : (window.location && window.location.protocol === 'file:' 
+                ? `elements/templates/thumbnails/${thumbFile}` 
+                : `elements/templates/thumbnails/${thumbFile}?v=5.16.7`);
+
+        div.innerHTML = `
+            <div class="dashboard-template-preview" style="height:${cardHeight}px; background:#f4f4f4; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                <img src="${thumbUrl}" loading="lazy" decoding="async" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="DashboardSystem.renderDynamicFallback(this.parentElement, '${t.file}', ${w}, ${h}, '${sizeLabel}', ${isExpanded});">
+                ${sizeBadge}
+            </div>
+            <div class="dashboard-template-title">${t.name}</div>
+        `;
+
+        // Load project on-demand ONLY when the user clicks!
+        div.onclick = () => {
+            const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
+                ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.16.7`);
+            
+            const titleEl = div.querySelector('.dashboard-template-title');
+            const origTitle = t.name;
+            if (titleEl) titleEl.textContent = 'Opening...';
+
+            fetch(fileUrl)
+                .then(res => res.json())
+                .then(opubData => {
+                    this.hide();
+                    loadTemplate(opubData);
+                })
+                .catch(err => {
+                    console.error("Failed to load template project:", err);
+                    if (titleEl) titleEl.textContent = origTitle;
+                });
+        };
         
-        // Fetch opub to get thumbnail HTML
+        return div;
+    },
+
+    renderDynamicFallback: function(previewContainer, fileName, defaultW, defaultH, sizeLabel, isExpanded) {
+        if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
-            ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.15.6`);
+            ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.16.7`);
+
         fetch(fileUrl)
             .then(res => res.json())
             .then(opubData => {
@@ -250,23 +312,27 @@ window.DashboardSystem = {
                 page.elements.forEach(el => {
                     previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
                 });
-                
-                const w = parseInt(page.width) || 794;
-                const h = parseInt(page.height) || 1123;
+
+                const w = parseInt(page.width) || defaultW || 794;
+                const h = parseInt(page.height) || defaultH || 1123;
                 const isMobile = window.innerWidth <= 768;
                 const baseCardW = isMobile 
                     ? (isExpanded ? Math.max(130, Math.floor((Math.min(window.innerWidth, 500) - 36) / 2)) : 155)
                     : 200;
                 const scale = baseCardW / w;
-                
-                let sizeLabel = '';
-                if (typeof window.getPageSizeLabel === 'function') {
-                    sizeLabel = window.getPageSizeLabel(w, h);
-                } else {
-                    sizeLabel = `${w}x${h}`;
+                const cardHeight = Math.round(h * scale);
+
+                let badge = sizeLabel;
+                if (!badge) {
+                    if (typeof window.getPageSizeLabel === 'function') {
+                        badge = window.getPageSizeLabel(w, h);
+                    } else {
+                        badge = `${w}x${h}`;
+                    }
                 }
-                
-                const content = `
+
+                previewContainer.style.height = `${cardHeight}px`;
+                previewContainer.innerHTML = `
                     <div style="
                         width: ${page.width}; 
                         height: ${page.height}; 
@@ -280,29 +346,12 @@ window.DashboardSystem = {
                     ">
                         ${previewHTML}
                     </div>
+                    <div class="dashboard-template-badge">${badge}</div>
                 `;
-                const sizeBadge = `<div class="dashboard-template-badge">${sizeLabel}</div>`;
-                
-                // Set the container height based on aspect ratio
-                const cardHeight = h * scale;
-                
-                div.innerHTML = `
-                    <div class="dashboard-template-preview" style="height:${cardHeight}px; background:#eee; position:relative;">
-                        ${content}${sizeBadge}
-                    </div>
-                    <div class="dashboard-template-title">${t.name}</div>
-                `;
-                
-                div.onclick = () => {
-                    this.hide();
-                    loadTemplate(opubData);
-                };
             })
             .catch(err => {
-                div.innerHTML = `<div class="dashboard-template-preview" style="display:flex;align-items:center;justify-content:center;color:#cc0000;font-size:0.8rem;">Error</div><div class="dashboard-template-title">${t.name}</div>`;
+                previewContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.75rem;height:100%;">Preview Unavailable</div>`;
             });
-            
-        return div;
     },
 
     setupGridScroll: function(gridWrapper) {
@@ -375,6 +424,7 @@ window.DashboardSystem = {
 
         // Curated hand-picked featured templates: the best of the premium collection
         const featured = [
+            { name: 'Dear Santa Letter',                      file: 'letterheads_dear_santa.opub',             category: 'Letterheads' },
             { name: 'Gardening Club Event Flyer',             file: 'flyers_gardening_club.opub',              category: 'Flyers' },
             { name: 'After School Art Club Flyer',            file: 'flyers_after_school_art_club.opub',       category: 'Flyers' },
             { name: 'After School IT Club Flyer',             file: 'flyers_it_club.opub',                     category: 'Flyers' },

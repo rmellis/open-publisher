@@ -268,7 +268,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.15.6`;
+    return `${path}?v=5.16.7`;
 };
 
 function initTemplates() {
@@ -433,7 +433,7 @@ function initTemplates() {
     }
 }
 
-// --- MULTI-PAGE TEMPLATE INSERTION & LOAD ENGINE (v5.15.6) ---
+// --- MULTI-PAGE TEMPLATE INSERTION & LOAD ENGINE (v5.16.7) ---
 function loadTemplate(opubData) {
     const doWipeAndLoad = () => {
         state.pages = []; // Wipe document

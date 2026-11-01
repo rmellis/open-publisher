@@ -365,6 +365,16 @@ body.dark-mode .dashboard-template-preview {
     box-shadow: 0 6px 12px rgba(0,0,0,0.1);
 }
 
+.dashboard-template-preview img {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.dashboard-template-card:hover .dashboard-template-preview img {
+    transform: scale(1.02);
+}
+
 .dashboard-template-title {
     font-weight: 500;
     font-size: 0.95rem;
