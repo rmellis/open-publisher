@@ -1,5 +1,5 @@
 // ==========================================
-// APPLICATION BOOTSTRAPPER (v5.16.9)
+// APPLICATION BOOTSTRAPPER (v5.16.10)
 // ==========================================
 
 window.onload = function() {
@@ -29,6 +29,16 @@ window.onload = function() {
     // Show Dashboard on startup if enabled
     if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
         DashboardSystem.show();
+    }
+
+    // Classic MS Publisher Cursor Settings
+    window.useClassicCursors = (localStorage.getItem('opub_classic_cursors') !== 'false');
+    if (document.body) {
+        document.body.classList.toggle('classic-cursors-enabled', window.useClassicCursors);
+    }
+    const classicBtn = document.getElementById('ribbon-classic-cursors-btn');
+    if (classicBtn) {
+        classicBtn.classList.toggle('active-tool', window.useClassicCursors);
     }
     
     // Events

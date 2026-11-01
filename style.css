@@ -24,6 +24,7 @@
 
     --selection: #0078d4;
     --crop-color: #ff6600;
+    --cursor-move-truck: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' shape-rendering='crispEdges'%3E%3Cpath d='M1 1h18v5h5v2h1v2h1v2h1v9h-2v3h-6v-2h-8v2h-6v-3h-4v-19h1z' fill='%23FFF'/%3E%3Cg fill='%23000'%3E%3Crect x='2' y='2' width='17' height='1'/%3E%3Crect x='1' y='3' width='1' height='15'/%3E%3Crect x='19' y='3' width='1' height='15'/%3E%3Crect x='1' y='18' width='19' height='1'/%3E%3Crect x='20' y='7' width='4' height='1'/%3E%3Crect x='24' y='8' width='1' height='2'/%3E%3Crect x='25' y='10' width='1' height='2'/%3E%3Crect x='26' y='12' width='1' height='7'/%3E%3Crect x='20' y='18' width='7' height='1'/%3E%3Crect x='21' y='9' width='2' height='1'/%3E%3Crect x='21' y='10' width='1' height='4'/%3E%3Crect x='21' y='13' width='4' height='1'/%3E%3Crect x='23' y='10' width='1' height='2'/%3E%3Crect x='24' y='12' width='1' height='1'/%3E%3Crect x='21' y='15' width='2' height='1'/%3E%3Crect x='1' y='19' width='3' height='1'/%3E%3Crect x='11' y='19' width='7' height='1'/%3E%3Crect x='25' y='19' width='2' height='1'/%3E%3Crect x='5' y='18' width='5' height='1'/%3E%3Crect x='4' y='19' width='1' height='4'/%3E%3Crect x='10' y='19' width='1' height='4'/%3E%3Crect x='5' y='23' width='5' height='1'/%3E%3Crect x='7' y='20' width='1' height='2'/%3E%3Crect x='19' y='18' width='5' height='1'/%3E%3Crect x='18' y='19' width='1' height='4'/%3E%3Crect x='24' y='19' width='1' height='4'/%3E%3Crect x='19' y='23' width='5' height='1'/%3E%3Crect x='21' y='20' width='1' height='2'/%3E%3Crect x='10' y='4' width='1' height='13'/%3E%3Crect x='4' y='10' width='13' height='1'/%3E%3Crect x='9' y='5' width='3' height='1'/%3E%3Crect x='8' y='6' width='5' height='1'/%3E%3Crect x='9' y='15' width='3' height='1'/%3E%3Crect x='8' y='14' width='5' height='1'/%3E%3Crect x='5' y='9' width='1' height='3'/%3E%3Crect x='6' y='8' width='1' height='5'/%3E%3Crect x='15' y='9' width='1' height='3'/%3E%3Crect x='14' y='8' width='1' height='5'/%3E%3C/g%3E%3C/svg%3E") 10 10, url('ui/icons/truck.svg') 11 11, move;
     
     --scroll-track: #f1f5f9;
     --scroll-border: #f1f5f9;
@@ -1464,6 +1465,10 @@ td, th {
 
 .force-move-cursor, .force-move-cursor * {
     cursor: move !important;
+}
+body.classic-cursors-enabled .force-move-cursor,
+body.classic-cursors-enabled .force-move-cursor * {
+    cursor: var(--cursor-move-truck) !important;
 }
 
 .pub-element.cropping { 
@@ -5263,6 +5268,79 @@ body.dark-mode .wa-sidebar-input::-moz-range-thumb {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Classic MS Publisher Move Truck Cursor on Draggable Bounding-Box Borders */
+.selection-edge-drag {
+    position: absolute;
+    pointer-events: auto;
+    z-index: 998;
+    cursor: move;
+    background: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.selection-edge-drag.sed-n {
+    top: -5px;
+    left: 14px;
+    right: 14px;
+    height: 10px;
+}
+.selection-edge-drag.sed-s {
+    bottom: -5px;
+    left: 14px;
+    right: 14px;
+    height: 10px;
+}
+.selection-edge-drag.sed-w {
+    left: -5px;
+    top: 14px;
+    bottom: 14px;
+    width: 10px;
+}
+.selection-edge-drag.sed-e {
+    right: -5px;
+    top: 14px;
+    bottom: 14px;
+    width: 10px;
+}
+.selected-overlay.is-cropping .selection-edge-drag,
+.selected-overlay.editing-shape .selection-edge-drag,
+.pub-element.cropping .selection-edge-drag {
+    display: none !important;
+}
+
+/* Base draggable cursor: default to standard move cursor */
+.openpublisher-movable {
+    cursor: move;
+}
+
+/* While actively dragging: standard move cursor */
+body.is-dragging-element,
+body.is-dragging-element * {
+    cursor: move !important;
+}
+
+/* Classic MS Publisher Cursors: ONLY when enabled via Ribbon toggle or Options */
+body.classic-cursors-enabled .selection-edge-drag,
+body.classic-cursors-enabled .openpublisher-movable {
+    cursor: var(--cursor-move-truck) !important;
+}
+
+body.classic-cursors-enabled .openpublisher-movable:active,
+body.classic-cursors-enabled.is-dragging-element,
+body.classic-cursors-enabled.is-dragging-element * {
+    cursor: crosshair !important;
+}
+
+/* Ensure resize handles take cursor priority when hovering near them */
+.openpublisher-resize-handle {
+    z-index: 1005;
+}
+.openpublisher-resize-handle::after {
+    content: "";
+    position: absolute;
+    inset: -4px; /* Expands invisible hit-zone by 4px on all sides */
+}
+
 /* ==========================================================================
    ELEMENT QUICK ACTIONS (FLOATING CLONE & DELETE MICRO-TOOLBAR)
    ========================================================================== */
@@ -7068,7 +7146,7 @@ body.dark-mode #styled-textbox-search {
 
 
 /* ==========================================================================
-   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.16.9)
+   PROGRESS BAR WIDGET & DESIGNER STYLES (v5.16.10)
    ========================================================================== */
 
 .progress-bar-widget {
@@ -7649,7 +7727,7 @@ body.dark-mode .pb-form-select {
 }
 
 /* ==========================================================================
-   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.16.9)
+   MULTI-PAGE TEMPLATE INSERTION STUDIO & TOAST NOTIFICATION (v5.16.10)
    ========================================================================== */
 .itp-modal-container {
     width: 100%;
@@ -7815,7 +7893,7 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
 }
 
 /* ==========================================================================
-   CHART & GRAPH STUDIO STYLES (v5.16.9)
+   CHART & GRAPH STUDIO STYLES (v5.16.10)
    ========================================================================== */
 .custom-dialog:has(#chart-studio-container) {
     max-width: 95vw !important;

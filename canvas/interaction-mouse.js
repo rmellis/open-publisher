@@ -56,6 +56,36 @@ window.handleMouseDown = function(e) {
         return;
     }
 
+    if(e.target.classList.contains('selection-edge-drag')) {
+            const overlay = e.target.closest('.selected-overlay');
+            const isGroup = overlay && overlay.classList.contains('group-selection-overlay');
+            const targetEl = (overlay && overlay._boundEl && overlay._boundEl !== overlay) ? overlay._boundEl : state.selectedEl;
+            if (isGroup && state.multiSelected && state.multiSelected.length > 0) {
+                state.dragMode = 'drag';
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    multi: state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left) || m.offsetLeft, t: parseFloat(m.style.top) || m.offsetTop }))
+                };
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
+                e.preventDefault();
+                return;
+            } else if (targetEl) {
+                state.dragMode = 'drag';
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    l: parseFloat(targetEl.style.left) || targetEl.offsetLeft,
+                    t: parseFloat(targetEl.style.top) || targetEl.offsetTop
+                };
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
+                e.preventDefault();
+                return;
+            }
+        }
+
     if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
         if(e.target.classList.contains('rotate-handle')) {
             state.dragMode = 'rotate';
@@ -359,6 +389,7 @@ window.handleMouseDown = function(e) {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+            if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
             e.preventDefault();
             return;
         }
@@ -371,6 +402,7 @@ window.handleMouseDown = function(e) {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
+            if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
             if(!isEditingText) e.preventDefault();
         }
 
@@ -392,11 +424,13 @@ window.handleMouseMove = function(e) {
         if(el) {
             const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
             const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape', rect = el.getBoundingClientRect();
+            const moveCursor = window.useClassicCursors ? "url('ui/icons/truck.svg') 11 11, move" : 'move';
             if (isShape) {
-                el.style.cursor = 'move';
+                el.style.cursor = moveCursor;
             } else {
                 const edgeSize = 15;
-                const cursorVal = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                const isNearEdge = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize));
+                const cursorVal = isNearEdge ? moveCursor : 'text';
                 el.style.cursor = cursorVal;
                 const editable = el.querySelector('[contenteditable="true"]');
                 if (editable) editable.style.cursor = cursorVal;
@@ -934,5 +968,6 @@ window.handleMouseUp = function() {
         if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
     }
     state.dragMode = null;
+    if (typeof window.setDragCursorState === 'function') window.setDragCursorState(false);
     if(typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 };

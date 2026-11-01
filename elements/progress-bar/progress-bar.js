@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Progress Bar Engine (v5.16.9)
+ * OpenPublisher Progress Bar Engine (v5.16.10)
  * 
  * Provides interactive, scrollable, and draggable progress bars for publications,
  * CVs, resumes, portfolios, and reports. Supports 71 distinct visual styles,

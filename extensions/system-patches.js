@@ -249,6 +249,14 @@ if (!window._sliderFillListenerInstalled) {
                 existing.style.width = el.style.width;
                 existing.style.height = el.style.height;
                 existing.style.transform = el.style.transform;
+                if (!existing.querySelector('.selection-edge-drag')) {
+                    ['n', 's', 'w', 'e'].forEach(side => {
+                        const edge = document.createElement('div');
+                        edge.className = `selection-edge-drag openpublisher-movable sed-${side}`;
+                        edge.dataset.edge = side;
+                        existing.appendChild(edge);
+                    });
+                }
                 if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg')) {
                     const svg = el.querySelector('svg.smart-arrow-svg') || el.querySelector('svg');
                     const curStyle = el.getAttribute('data-arrow-style') || (svg && svg.getAttribute('data-arrow-style')) || 'block-right';
@@ -315,13 +323,20 @@ if (!window._sliderFillListenerInstalled) {
             box.className = 'selection-border-box';
             overlay.appendChild(box);
 
+            ['n', 's', 'w', 'e'].forEach(side => {
+                const edge = document.createElement('div');
+                edge.className = `selection-edge-drag openpublisher-movable sed-${side}`;
+                edge.dataset.edge = side;
+                overlay.appendChild(edge);
+            });
+
             if (!el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 const basis = window.getElementTransformBasis(el);
                 const rotDeg = Math.round(basis.rotRad * (180 / Math.PI));
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
                 dirs.forEach(dir => {
                     const h = document.createElement('div');
-                    h.className = `resize-handle rh-${dir}`;
+                    h.className = `resize-handle openpublisher-resize-handle rh-${dir}`;
                     h.dataset.dir = dir;
                     h.style.pointerEvents = 'auto'; 
                     h.style.display = 'block';
@@ -431,10 +446,17 @@ if (!window._sliderFillListenerInstalled) {
                 groupBox.className = 'selection-border-box group-border-box';
                 groupOverlay.appendChild(groupBox);
 
+                ['n', 's', 'w', 'e'].forEach(side => {
+                    const edge = document.createElement('div');
+                    edge.className = `selection-edge-drag openpublisher-movable sed-${side}`;
+                    edge.dataset.edge = side;
+                    groupOverlay.appendChild(edge);
+                });
+
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
                 dirs.forEach(dir => {
                     const h = document.createElement('div');
-                    h.className = `resize-handle rh-${dir}`;
+                    h.className = `resize-handle openpublisher-resize-handle rh-${dir}`;
                     h.dataset.dir = dir;
                     h.dataset.isGroup = 'true';
                     h.style.pointerEvents = 'auto';
@@ -4181,6 +4203,50 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 ;(function installDefinitiveCropFix() {
     console.log("🛠️ V95.0 Definitive Crop Anchor Fix initializing...");
 
+    // Classic MS Publisher Cursor Engine (v5.16.10)
+    window.useClassicCursors = (localStorage.getItem('opub_classic_cursors') !== 'false');
+    if (document.body) {
+        document.body.classList.toggle('classic-cursors-enabled', window.useClassicCursors);
+    }
+    window.setDragCursorState = function(isDragging) {
+        if (typeof state !== 'undefined' && state) {
+            state.isDragging = !!isDragging;
+        }
+        if (document.body) {
+            document.body.classList.toggle('is-dragging-element', !!isDragging);
+        }
+    };
+    window.toggleClassicCursors = function(force) {
+        if (typeof force === 'boolean') {
+            window.useClassicCursors = force;
+        } else {
+            window.useClassicCursors = !window.useClassicCursors;
+        }
+        localStorage.setItem('opub_classic_cursors', window.useClassicCursors ? 'true' : 'false');
+        if (document.body) {
+            document.body.classList.toggle('classic-cursors-enabled', window.useClassicCursors);
+        }
+        const btn = document.getElementById('ribbon-classic-cursors-btn');
+        if (btn) {
+            btn.classList.toggle('active-tool', window.useClassicCursors);
+        }
+        const optCb = document.getElementById('opt-classic-cursors');
+        if (optCb) {
+            optCb.checked = window.useClassicCursors;
+        }
+        if (typeof state !== 'undefined' && state && state.isDragging) {
+            window.setDragCursorState(true);
+        }
+        if (typeof showToast === 'function') {
+            showToast(window.useClassicCursors ? 'Classic Publisher Cursors: Enabled' : 'Classic Publisher Cursors: Disabled');
+        }
+    };
+    window.addEventListener('mouseup', function() {
+        if (typeof window.setDragCursorState === 'function') {
+            window.setDragCursorState(false);
+        }
+    }, true);
+
     window.healUncroppedImage = function(el) {
         if (!el) return;
         const img = window.getElementContentImage ? window.getElementContentImage(el) : el.querySelector('img');
@@ -4305,6 +4371,36 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 e.preventDefault(); return;
             }
             if(!e.target.closest('.pub-element.cropping')) if(typeof toggleCrop === 'function') toggleCrop();
+        }
+
+        if(e.target.classList.contains('selection-edge-drag')) {
+            const overlay = e.target.closest('.selected-overlay');
+            const isGroup = overlay && overlay.classList.contains('group-selection-overlay');
+            const targetEl = (overlay && overlay._boundEl && overlay._boundEl !== overlay) ? overlay._boundEl : state.selectedEl;
+            if (isGroup && state.multiSelected && state.multiSelected.length > 0) {
+                state.dragMode = 'drag';
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    multi: state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left) || m.offsetLeft, t: parseFloat(m.style.top) || m.offsetTop }))
+                };
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
+                e.preventDefault();
+                return;
+            } else if (targetEl) {
+                state.dragMode = 'drag';
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    l: parseFloat(targetEl.style.left) || targetEl.offsetLeft,
+                    t: parseFloat(targetEl.style.top) || targetEl.offsetTop
+                };
+                document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
+                e.preventDefault();
+                return;
+            }
         }
 
         if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
@@ -4557,6 +4653,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
                 document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
                 e.preventDefault(); return;
             }
 
@@ -4581,6 +4678,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
                 document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
+                if (typeof window.setDragCursorState === 'function') window.setDragCursorState(true);
                 if(!isEditingText) e.preventDefault(); 
             }
         }
@@ -4597,10 +4695,13 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
                 const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
                 const rect = el.getBoundingClientRect();
-                if (isShape) { el.style.cursor = 'move'; } 
-                else { 
+                const moveCursor = window.useClassicCursors ? "url('ui/icons/truck.svg') 11 11, move" : 'move';
+                if (isShape) { 
+                    el.style.cursor = moveCursor; 
+                } else { 
                     const edgeSize = 15; 
-                    const cursorVal = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize)) ? 'move' : 'text';
+                    const isNearEdge = ((e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize));
+                    const cursorVal = isNearEdge ? moveCursor : 'text';
                     el.style.cursor = cursorVal;
                     const editable = el.querySelector('[contenteditable="true"]');
                     if (editable) editable.style.cursor = cursorVal;
@@ -5333,7 +5434,7 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH (v5.16.9)
+// ANTI AD-OVERLAY SECURITY PATCH (v5.16.10)
 // ==========================================
 
 // Helper to verify trusted cloud desktop platforms (e.g. puter.com)

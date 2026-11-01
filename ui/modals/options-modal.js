@@ -629,6 +629,19 @@ window.saveGlobalOptions = function(closeDialog = true) {
         if (typeof state !== 'undefined') state.snapToGuides = cbSnapGuides.checked;
     }
 
+    const cbClassicCursors = document.getElementById('opt-classic-cursors');
+    if (cbClassicCursors) {
+        localStorage.setItem('opub_classic_cursors', cbClassicCursors.checked ? 'true' : 'false');
+        window.useClassicCursors = cbClassicCursors.checked;
+        if (document.body) {
+            document.body.classList.toggle('classic-cursors-enabled', window.useClassicCursors);
+        }
+        const ribbonBtn = document.getElementById('ribbon-classic-cursors-btn');
+        if (ribbonBtn) {
+            ribbonBtn.classList.toggle('active-tool', window.useClassicCursors);
+        }
+    }
+
     const txtUser = document.getElementById('opt-username');
     if (txtUser) {
         localStorage.setItem('opub_username', txtUser.value.trim());
@@ -830,6 +843,7 @@ window.showOptionsModal = function() {
     const showStartScreen = localStorage.getItem('opub_show_start_screen') !== 'false';
     const snapToGrid = localStorage.getItem('opub_snap_to_grid') === 'true' || (typeof state !== 'undefined' && state.snapToGrid);
     const snapToGuides = localStorage.getItem('opub_snap_to_guides') !== 'false';
+    const useClassicCursors = localStorage.getItem('opub_classic_cursors') !== 'false';
     const autorecoverEnabled = localStorage.getItem('opub_autorecover_enabled') !== 'false';
     const autorecoverInterval = localStorage.getItem('opub_autorecover_interval') || '10';
     const confirmExit = localStorage.getItem('opub_confirm_exit') !== 'false';
@@ -906,6 +920,11 @@ window.showOptionsModal = function() {
                     <input type="checkbox" id="opt-snap-guides" ${snapToGuides ? 'checked' : ''} style="${checkboxStyle}">
                     Snap objects to guidelines and neighbor elements
                 </label>
+                <label style="${labelStyle}">
+                    <input type="checkbox" id="opt-classic-cursors" ${useClassicCursors ? 'checked' : ''} style="${checkboxStyle}">
+                    Use classic MS Publisher drag cursors (Move Truck & Crosshair)
+                </label>
+                <p style="${subtextStyle}">When enabled, hovering over object borders shows the Publisher Move Truck, and holding to drag switches to crosshair. When disabled, standard system move cursors are used.</p>
 
                 <hr style="${dividerStyle}">
                 <strong style="${sectionHeadingStyle}">Personalize your copy of Publisher</strong>
