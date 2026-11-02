@@ -8695,6 +8695,129 @@ html.dark-mode .op-pub-loading-progress-track {
     background: rgba(255, 255, 255, 0.12) !important;
 }
 
+/* ==========================================
+   LINE SPACING & TYPOGRAPHY MODAL (v5.17.3)
+   ========================================== */
+
+::highlight(line-spacing-selection) {
+    background-color: rgba(0, 118, 112, 0.35);
+    color: inherit;
+}
+body.dark-mode ::highlight(line-spacing-selection) {
+    background-color: rgba(0, 191, 166, 0.45);
+    color: inherit;
+}
+
+.op-line-spacing-active-target {
+    outline: 2px solid var(--ui-theme-color, #007670) !important;
+    outline-offset: 1px;
+}
+
+.op-ls-preset-btn {
+    padding: 5px 11px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 14px;
+    border: 1px solid var(--ui-border, #cbd5e1);
+    background: #ffffff;
+    color: var(--ui-text, #1e293b);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    line-height: 1;
+}
+.op-ls-preset-btn:hover {
+    border-color: var(--ui-theme-color, #007670);
+    background: rgba(0, 118, 112, 0.08);
+    color: var(--ui-theme-color, #007670);
+}
+.op-ls-preset-btn.active {
+    background: var(--ui-theme-color, #007670) !important;
+    border-color: var(--ui-theme-color, #007670) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(0, 118, 112, 0.3);
+}
+
+body.dark-mode .op-ls-preset-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+body.dark-mode .op-ls-preset-btn:hover {
+    background: rgba(0, 191, 166, 0.15);
+    border-color: var(--ui-theme-color, #00bfa6);
+    color: #ffffff;
+}
+body.dark-mode .op-ls-preset-btn.active {
+    background: var(--ui-theme-color, #00bfa6) !important;
+    border-color: var(--ui-theme-color, #00bfa6) !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 6px rgba(0, 191, 166, 0.3);
+}
+
+.op-ls-stepper-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid var(--ui-border, #cbd5e1);
+    background: #ffffff;
+    color: var(--ui-text, #334155);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+.op-ls-stepper-btn:hover {
+    background: rgba(0, 118, 112, 0.1);
+    border-color: var(--ui-theme-color, #007670);
+    color: var(--ui-theme-color, #007670);
+}
+.op-ls-stepper-btn:active {
+    transform: scale(0.94);
+}
+
+body.dark-mode .op-ls-stepper-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+body.dark-mode .op-ls-stepper-btn:hover {
+    background: rgba(0, 191, 166, 0.2);
+    border-color: var(--ui-theme-color, #00bfa6);
+    color: #ffffff;
+}
+
+.custom-dialog .op-ls-number-input {
+    width: 76px !important;
+    height: 28px !important;
+    padding: 2px 24px 2px 8px !important;
+    border: 1px solid var(--ui-border, #cbd5e1);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    text-align: center;
+    background: #ffffff;
+    color: var(--ui-text, #0f172a);
+}
+.custom-dialog .op-ls-number-input:focus {
+    border-color: var(--ui-theme-color, #007670) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.2) !important;
+}
+body.dark-mode .custom-dialog .op-ls-number-input {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+body.dark-mode .custom-dialog .op-ls-number-input:focus {
+    border-color: var(--ui-theme-color, #00bfa6) !important;
+    box-shadow: 0 0 0 2px rgba(0, 191, 166, 0.25) !important;
+}
+
+
 
 
 
