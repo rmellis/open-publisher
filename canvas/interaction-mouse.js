@@ -652,11 +652,7 @@ window.handleMouseMove = function(e) {
                 let newTop = Math.max(0, Math.min(d.h - 16, Math.round(d.startPad.top + curDy)));
                 const textH = (typeof window.getEditableTextHeight === 'function') ? window.getEditableTextHeight(target) : Math.max(16, target.scrollHeight - (d.startPad.top + d.startPad.bottom));
                 const centerTop = Math.max(0, Math.round((d.h - textH) / 2));
-                let isCentered = false;
-                if (Math.abs(newTop - centerTop) <= 4) {
-                    newTop = centerTop;
-                    isCentered = true;
-                }
+                const isCentered = (newTop === centerTop);
                 target.style.paddingTop = newTop + 'px';
                 if (isAlt) {
                     target.style.paddingBottom = newTop + 'px';
