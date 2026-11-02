@@ -1525,6 +1525,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     window.isDesktopApp = isDesktopEnvironment;
 
     async function masterSaveDocument(isTemplate = false) {
+        if (isTemplate && typeof window.showExportTemplateModal === 'function') {
+            window.showExportTemplateModal();
+            return;
+        }
+
         // 1. Serialize the current page before saving
         const isDashOpen = () => {
             const dash = document.getElementById('dashboard-overlay');
@@ -5594,7 +5599,7 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH (v5.16.13)
+// ANTI AD-OVERLAY SECURITY PATCH (v5.17.0)
 // ==========================================
 
 // Helper to verify trusted cloud desktop platforms (e.g. puter.com)

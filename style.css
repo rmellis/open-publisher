@@ -175,7 +175,7 @@ body.dark-mode .custom-dialog-close:hover {
 body.dark-mode .custom-dialog input[type="text"],
 body.dark-mode .custom-dialog input[type="number"],
 body.dark-mode .custom-dialog textarea,
-body.dark-mode .custom-dialog select {
+body.dark-mode .custom-dialog select:not(.op-tmpl-category-select) {
     background: var(--ui-bg);
     color: var(--ui-text);
     border-color: var(--ui-border);
@@ -2258,7 +2258,7 @@ body.classic-cursors-enabled .force-move-cursor * {
     border-color: transparent;
 }
 
-.custom-dialog select {
+.custom-dialog select:not(.op-tmpl-category-select) {
     padding: 4px 8px;
     border: 1px solid var(--ui-theme-color);
     border-radius: 4px;
@@ -2267,12 +2267,12 @@ body.classic-cursors-enabled .force-move-cursor * {
     cursor: pointer;
 }
 
-.custom-dialog select:focus {
+.custom-dialog select:not(.op-tmpl-category-select):focus {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-theme-color) 20%, transparent);
 }
 
 /* Modal Buttons */
-.custom-dialog button {
+.custom-dialog button:not(.op-tmpl-browse-btn):not(.op-tmpl-btn-cancel):not(.op-tmpl-btn-export) {
     padding: 8px 24px; 
     border: none; 
     border-radius: 20px; 
@@ -5776,7 +5776,7 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
 }
 
 /* ==========================================================================
-   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.16.13)
+   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.17.0)
    Attached to Selected Element Overlay (Top-Left, Opposite Quick Actions)
    Subtle resting appearance, proximity illumination, and transform tracking
    ========================================================================== */
@@ -8387,7 +8387,7 @@ body.dark-mode #chart-rows-list {
 }
 
 /* ==========================================================================
-   PUBLICATION LOADING MODAL (v5.16.13)
+   PUBLICATION LOADING MODAL (v5.17.0)
    ========================================================================== */
 #op-pub-loading-overlay {
     position: fixed;

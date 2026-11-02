@@ -1,5 +1,5 @@
 // ==========================================
-// OPEN PUBLISHER FILE LOADER (v5.16.13)
+// OPEN PUBLISHER FILE LOADER (v5.17.0)
 // Staged Progress UI, Anti-Blank Delay & Desktop Association Handler
 // ==========================================
 
