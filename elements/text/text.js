@@ -144,12 +144,22 @@ function initFontPickers() {
         item2.onmouseenter = () => { window.highlightFontItem(floatList, item2, false); };
         floatList.appendChild(item2);
 
-        // Preload font by creating an element
-        const span = document.createElement('span');
-        span.style.fontFamily = font;
-        span.innerText = "A";
-        preloader.appendChild(span);
+        // Preload font by creating an element with rich glyph coverage
+        if (preloader) {
+            const span = document.createElement('span');
+            span.style.fontFamily = font;
+            span.innerText = "Quick brown fox jumps over lazy dog 0123456789";
+            preloader.appendChild(span);
+        }
     });
+
+    // Proactively load web fonts via FontFaceSet API if available
+    if (document.fonts && typeof document.fonts.load === 'function') {
+        const sampleText = 'Quick brown fox 12345 (a, g, t, r)';
+        fontList.forEach(font => {
+            document.fonts.load(`16px "${font}"`, sampleText).catch(() => {});
+        });
+    }
 
     initFontDropdownKeyNav();
 }
@@ -160,6 +170,15 @@ function selectFont(fontName) {
     document.getElementById('ribbon-font-label').innerText = fontName;
     document.getElementById('float-font-label').innerText = fontName;
     
+    // Ensure font face is fully loaded from webfont cache or network, then trigger repaint
+    if (document.fonts && typeof document.fonts.load === 'function') {
+        document.fonts.load(`16px "${fontName}"`).then(() => {
+            if (typeof forceRepaint === 'function') forceRepaint();
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof updateFloatToolbarValues === 'function') updateFloatToolbarValues();
+        }).catch(() => {});
+    }
+
     // Execute
     if (state.selectedEl) {
         // If text selected, specific execute
@@ -1094,15 +1113,15 @@ window.isTextEditing = isTextEditing;
 // --- MIGRATED FONT LIST ---
 const fontList = [
     "Arial", "Segoe UI", "Times New Roman", "Courier New", "Verdana", "Georgia", "Comic Sans MS", "Impact", "Trebuchet MS",
-    "Abril Fatface", "Acme", "Anton", "Architects Daughter", "Archivo Black", "Arvo", "Bangers", "Barlow", "Bebas Neue", "Bitter",
-    "Bree Serif", "Cabin", "Cairo", "Caveat", "Cinzel", "Comfortaa", "Comic Neue", "Concert One", "Cookie", "Courgette", "Creepster",
+    "Abril Fatface", "Acme", "Alex Brush", "Anton", "Architects Daughter", "Archivo Black", "Arvo", "Bangers", "Barlow", "Bebas Neue", "Bitter",
+    "Bodoni Moda", "Bree Serif", "Bungee", "Bungee Shade", "Cabin", "Cairo", "Caveat", "Cinzel", "Cinzel Decorative", "Comfortaa", "Comic Neue", "Concert One", "Cookie", "Courgette", "Creepster",
     "Crimson Text", "Dancing Script", "DM Sans", "Dosis", "EB Garamond", "Exo 2", "Fira Sans", "Fjalla One", "Fredoka One",
-    "Gloria Hallelujah", "Great Vibes", "Heebo", "Hind", "IBM Plex Sans", "Inconsolata", "Indie Flower", "Josefin Sans", "Kanit",
+    "Gloria Hallelujah", "Great Vibes", "Heebo", "Hind", "IBM Plex Sans", "Inconsolata", "Indie Flower", "Inter", "Josefin Sans", "Kanit",
     "Karla", "Lato", "Libre Baskerville", "Lobster", "Lora", "Manrope", "Maven Pro", "Merriweather", "Monoton", "Montserrat", "Mukta",
-    "Nanum Gothic", "Noto Sans", "Nunito", "Old Standard TT", "Open Sans", "Orbitron", "Oswald", "Oxygen", "Pacifico", "Passion One",
-    "Patrick Hand", "Permanent Marker", "Playfair Display", "Poppins", "Press Start 2P", "Prompt", "PT Sans", "PT Serif", "Quicksand",
+    "Nanum Gothic", "Noto Sans", "Nunito", "Old Standard TT", "Open Sans", "Orbitron", "Oswald", "Outfit", "Oxygen", "Pacifico", "Passion One",
+    "Patrick Hand", "Permanent Marker", "Playfair Display", "Plus Jakarta Sans", "Poppins", "Press Start 2P", "Prompt", "PT Sans", "PT Serif", "Quicksand",
     "Rajdhani", "Raleway", "Righteous", "Roboto", "Roboto Condensed", "Roboto Mono", "Roboto Slab", "Rubik", "Sacramento", "Satisfy",
-    "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Mono", "Teko", "Titillium Web",
+    "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Grotesk", "Space Mono", "Syne", "Teko", "Titillium Web",
     "Ubuntu", "Varela Round", "Vollkorn", "Work Sans", "Yanone Kaffeesatz", "Zilla Slab"
 ];
 
