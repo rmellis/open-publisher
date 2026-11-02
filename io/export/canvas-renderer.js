@@ -213,7 +213,7 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         window.normalizeTextBackgroundsForPrint(clone);
     }
 
-    // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR EXPORT (v5.16.11) ✨
+    // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR EXPORT (v5.16.12) ✨
     // html2canvas fails to parse CSS repeating-linear-gradient(), causing striped bars to render empty.
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
         clone.querySelectorAll('.pb-fill, .pb-pip, [style*="repeating-linear-gradient"]').forEach(el => {

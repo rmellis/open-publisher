@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.16.11)
+// Open Publisher UI Interactions (v5.16.12)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.16.11)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.16.12)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -1097,7 +1097,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.16.11</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.16.12</div>
                 </div>
                 
                 <div class="about-desc">
@@ -2566,28 +2566,28 @@
             });
 
             // Fallback for text elements where color is computed or inherited (e.g. freshly placed text box)
-            if (result.texts.length === 0) {
-                const textNode = content.querySelector('[contenteditable="true"]') || content.querySelector('div') || content;
-                const hasText = textNode && ((textNode.textContent || '').trim().length > 0 || textNode.hasAttribute('contenteditable'));
-                if (hasText) {
-                    let col = (textNode.style && textNode.style.color) || (content.style && content.style.color);
-                    if (!col && window.getComputedStyle) {
-                        try { col = window.getComputedStyle(textNode).color; } catch (e) {}
-                    }
-                    const tHex = this.toHex(col) || '#000000';
-                    const slot = {
-                        category: 'text',
-                        hex: tHex,
-                        label: 'Text Color',
-                        shortLabel: 'Text',
-                        apply: (newHex) => {
-                            if (textNode.style) textNode.style.color = newHex;
-                            if (content.style) content.style.color = newHex;
-                        }
-                    };
-                    result.texts.push(slot);
-                    result.allSwatches.push(slot);
+            const isTextEl = el.querySelector('[contenteditable="true"], .text-content') !== null ||
+                             el.getAttribute('data-type') === 'text' ||
+                             (content && (content.querySelector('[contenteditable="true"]') || content.querySelector('div[contenteditable]')));
+            if (result.texts.length === 0 && isTextEl) {
+                const textNode = (content && (content.querySelector('[contenteditable="true"]') || content.querySelector('div'))) || content;
+                let col = (textNode && textNode.style && textNode.style.color) || (content && content.style && content.style.color);
+                if (!col && textNode && window.getComputedStyle) {
+                    try { col = window.getComputedStyle(textNode).color; } catch (e) {}
                 }
+                const tHex = this.toHex(col) || '#000000';
+                const slot = {
+                    category: 'text',
+                    hex: tHex,
+                    label: 'Text Color',
+                    shortLabel: 'Text',
+                    apply: (newHex) => {
+                        if (textNode && textNode.style) textNode.style.color = newHex;
+                        if (content && content.style) content.style.color = newHex;
+                    }
+                };
+                result.texts.push(slot);
+                result.allSwatches.push(slot);
             }
 
             return result;
@@ -2723,31 +2723,42 @@
         },
 
         hideFloatingPill: function() {
-            const pill = document.getElementById('op-floating-css-color-pill');
-            if (pill) pill.style.display = 'none';
+            document.querySelectorAll('.op-floating-css-color-pill, #op-floating-css-color-pill').forEach(p => {
+                p.style.display = 'none';
+            });
         },
 
-        // Show a sleek floating action/color bar below/above the selected element
-        refreshFloatingPill: function(el, preScanned) {
-            if (!el || !el.isConnected || (typeof state !== 'undefined' && state.cropMode)) {
-                this.hideFloatingPill();
+        // Render sleek floating Colors & Style action bar inside Selected Element Overlay (Top-Left, Opposite Quick Actions)
+        renderFloatingPill: function(overlay, el, preScanned) {
+            if (!overlay || !el || !el.isConnected || (typeof state !== 'undefined' && state.cropMode)) {
                 return;
             }
             const dtype = el.getAttribute('data-type') || '';
             if (['smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype) || el.querySelector('svg.smart-arrow-svg, .wa-wrapper, .wa-text')) {
-                this.hideFloatingPill();
+                return;
+            }
+            // Skip standalone raw images (they use Format Picture sidebar)
+            const standaloneImg = window.getElementContentImage ? window.getElementContentImage(el) : null;
+            if (dtype === 'image' || standaloneImg) {
                 return;
             }
 
-            let pill = document.getElementById('op-floating-css-color-pill');
+            let pill = overlay.querySelector('.op-floating-css-color-pill');
             if (!pill) {
                 pill = document.createElement('div');
-                pill.id = 'op-floating-css-color-pill';
                 pill.className = 'op-floating-css-color-pill';
-                document.body.appendChild(pill);
+                pill.setAttribute('role', 'toolbar');
+                pill.setAttribute('aria-label', 'Color and Style Actions');
+                overlay.appendChild(pill);
             }
-
+            pill.style.display = '';
             pill.innerHTML = '';
+
+            // Clean up any old legacy detached pill on body
+            const legacyBodyPill = document.getElementById('op-floating-css-color-pill');
+            if (legacyBodyPill && legacyBodyPill.parentElement === document.body) {
+                legacyBodyPill.remove();
+            }
 
             // 1. Dedicated Chart Studio button for Chart elements (instead of CSS Colors & Style)
             const isChart = (dtype === 'chart') || (window.isChartElement && window.isChartElement(el));
@@ -2755,7 +2766,7 @@
                 const chartBtn = document.createElement('button');
                 chartBtn.type = 'button';
                 chartBtn.className = 'cs-floating-pill-btn';
-                chartBtn.innerHTML = `<i class="fas fa-chart-pie" style="font-size:11px;"></i> Edit Chart &amp; Graph`;
+                chartBtn.innerHTML = `<i class="fas fa-chart-pie" style="font-size:11px;"></i><span class="cs-floating-pill-btn-label"> Edit Chart &amp; Graph</span>`;
                 chartBtn.title = 'Open Chart & Graph Format Studio';
                 chartBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -2764,7 +2775,9 @@
                     }
                 };
                 pill.appendChild(chartBtn);
-                this.positionFloatingPill(el, pill);
+                if (typeof window.updateColorStylePillPosition === 'function') {
+                    window.updateColorStylePillPosition(pill, el);
+                }
                 return;
             }
 
@@ -2774,7 +2787,7 @@
                 const pbBtn = document.createElement('button');
                 pbBtn.type = 'button';
                 pbBtn.className = 'cs-floating-pill-btn';
-                pbBtn.innerHTML = `<i class="fas fa-tasks" style="font-size:11px;"></i> Edit Progress Bar`;
+                pbBtn.innerHTML = `<i class="fas fa-tasks" style="font-size:11px;"></i><span class="cs-floating-pill-btn-label"> Edit Progress Bar</span>`;
                 pbBtn.title = 'Open Progress Bar & Meter Studio';
                 pbBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -2783,14 +2796,9 @@
                     }
                 };
                 pill.appendChild(pbBtn);
-                this.positionFloatingPill(el, pill);
-                return;
-            }
-
-            // Skip standalone raw images (they use Format Picture sidebar)
-            const standaloneImg = window.getElementContentImage ? window.getElementContentImage(el) : null;
-            if (dtype === 'image' || standaloneImg) {
-                this.hideFloatingPill();
+                if (typeof window.updateColorStylePillPosition === 'function') {
+                    window.updateColorStylePillPosition(pill, el);
+                }
                 return;
             }
 
@@ -2806,9 +2814,10 @@
                 }
             });
 
+            pill.classList.toggle('has-single-swatch', displaySwatches.length === 1);
             displaySwatches.forEach(sw => {
                 const dot = document.createElement('div');
-                dot.className = 'cs-floating-pill-swatch';
+                dot.className = 'cs-floating-pill-swatch' + (displaySwatches.length === 1 ? ' single-swatch' : '');
                 dot.style.backgroundColor = sw.hex;
                 dot.title = `${sw.label} (${sw.hex}) - Click to change color`;
                 dot.onclick = (e) => {
@@ -2843,7 +2852,7 @@
             const studioBtn = document.createElement('button');
             studioBtn.type = 'button';
             studioBtn.className = 'cs-floating-pill-btn';
-            studioBtn.innerHTML = `<i class="fas fa-palette" style="font-size:10px;"></i> Colors &amp; Style`;
+            studioBtn.innerHTML = `<i class="fas fa-palette" style="font-size:10px;"></i><span class="cs-floating-pill-btn-label"> Colors &amp; Style</span>`;
             studioBtn.title = 'Open CSS Color, Gradient & Style Studio';
             studioBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -2851,38 +2860,28 @@
             };
             pill.appendChild(studioBtn);
 
-            this.positionFloatingPill(el, pill);
+            if (typeof window.updateColorStylePillPosition === 'function') {
+                window.updateColorStylePillPosition(pill, el);
+            }
+        },
+
+        // Trigger floating pill update or delegate to active selection overlay
+        refreshFloatingPill: function(el, preScanned) {
+            if (!el || !el.isConnected) return;
+            const overlay = document.querySelector('.selected-overlay');
+            if (overlay && overlay._boundEl === el) {
+                this.renderFloatingPill(overlay, el, preScanned);
+            } else if (typeof window.renderSelectionOverlays === 'function') {
+                window.renderSelectionOverlays();
+            }
         },
 
         positionFloatingPill: function(el, pill) {
-            if (!pill) pill = document.getElementById('op-floating-css-color-pill');
-            if (!pill || !el || !el.isConnected) {
-                if (pill) pill.style.display = 'none';
-                return;
+            if (!pill) pill = document.querySelector('.selected-overlay .op-floating-css-color-pill');
+            if (!pill || !el || !el.isConnected) return;
+            if (typeof window.updateColorStylePillPosition === 'function') {
+                window.updateColorStylePillPosition(pill, el);
             }
-            if (typeof state !== 'undefined' && (state.dragMode || state.isDragging || (document.body && document.body.classList.contains('is-dragging-element')))) {
-                pill.style.display = 'none';
-                return;
-            }
-            const vp = document.getElementById('viewport');
-            if (!vp) return;
-            const vpRect = vp.getBoundingClientRect();
-            const r = el.getBoundingClientRect();
-            if (r.width <= 0 || r.height <= 0 || r.bottom < vpRect.top || r.top > vpRect.bottom) {
-                pill.style.display = 'none';
-                return;
-            }
-            pill.style.display = 'inline-flex';
-            const pillW = pill.offsetWidth || 180;
-            const pillH = pill.offsetHeight || 28;
-            let left = Math.round(r.left + (r.width - pillW) / 2);
-            left = Math.max(vpRect.left + 8, Math.min(vpRect.right - pillW - 8, left));
-            let top = Math.round(r.bottom + 10);
-            if (top + pillH > vpRect.bottom - 8) {
-                top = Math.max(vpRect.top + 8, Math.round(r.top - pillH - 10));
-            }
-            pill.style.left = left + 'px';
-            pill.style.top = top + 'px';
         },
 
         // Scan all elements on the current page and group every CSS color across the page

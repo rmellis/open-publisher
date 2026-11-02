@@ -737,12 +737,19 @@ window.syncHandleScaling = function(z) {
     const paperEl = document.getElementById('paper');
     applyVars(paperEl);
 
-    // Keep quick actions edge-flip and rotate-handle clearance synced when zooming
+    // Keep quick actions and colors & style edge-flip clearance synced when zooming
     if (typeof window.updateQuickActionsPosition === 'function') {
         const qaPill = document.querySelector('.selected-overlay .element-quick-actions');
         const boundEl = (typeof state !== 'undefined' && state.selectedEl) || (qaPill && qaPill.parentElement && qaPill.parentElement._boundEl);
         if (qaPill && boundEl) {
             window.updateQuickActionsPosition(qaPill, boundEl);
+        }
+    }
+    if (typeof window.updateColorStylePillPosition === 'function') {
+        const csPill = document.querySelector('.selected-overlay .op-floating-css-color-pill');
+        const boundEl = (typeof state !== 'undefined' && state.selectedEl) || (csPill && csPill.parentElement && csPill.parentElement._boundEl);
+        if (csPill && boundEl) {
+            window.updateColorStylePillPosition(csPill, boundEl);
         }
     }
 };

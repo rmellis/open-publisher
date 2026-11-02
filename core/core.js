@@ -1,4 +1,4 @@
-// OpenPublisher Core Engine (v5.16.11)
+// OpenPublisher Core Engine (v5.16.12)
 /* --- GLOBAL STATE --- */
 window.ribbonScrollInterval = null;
 window.startRibbonScroll = (id, amount) => {
@@ -60,6 +60,7 @@ const colorSchemes = {
     "Autumn": ["#C0392B", "#D35400", "#F39C12", "#F1C40F", "#2C3E50"],
     "Spring": ["#27AE60", "#2ECC71", "#F1C40F", "#E67E22", "#E74C3C"]
 };
+window.colorSchemes = colorSchemes;
 
 const paper = document.getElementById('paper');
 const floatToolbar = document.getElementById('float-toolbar');

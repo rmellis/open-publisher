@@ -277,6 +277,20 @@ if (!window._sliderFillListenerInstalled) {
                     window.updateQuickActionsPosition(qaPill, el);
                 }
 
+                let csPill = existing.querySelector('.op-floating-css-color-pill');
+                if (el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
+                    if (!csPill) {
+                        if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.renderFloatingPill === 'function') {
+                            window.TemplateCSSColorEngine.renderFloatingPill(existing, el);
+                        }
+                    } else {
+                        csPill.style.display = '';
+                        if (typeof window.updateColorStylePillPosition === 'function') {
+                            window.updateColorStylePillPosition(csPill, el);
+                        }
+                    }
+                }
+
                 // Emoji Skin Tone Floating Actions
                 if (typeof window.ensureEmojiAttributes === 'function') {
                     window.ensureEmojiAttributes(el);
@@ -366,6 +380,13 @@ if (!window._sliderFillListenerInstalled) {
                 if (el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
                     if (typeof window.renderElementQuickActions === 'function') {
                         window.renderElementQuickActions(overlay, el);
+                    }
+                }
+
+                // --- FLOATING COLORS & STYLE TOOLBAR (Top-Left) ---
+                if (el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
+                    if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.renderFloatingPill === 'function') {
+                        window.TemplateCSSColorEngine.renderFloatingPill(overlay, el);
                     }
                 }
 
@@ -1024,6 +1045,145 @@ if (!window._sliderFillListenerInstalled) {
             } else {
                 pill.classList.add('flip-bottom');
             }
+        } else if (elW * zoom < 145) {
+            pill.classList.add('offset-from-rotate');
+        }
+    };
+
+    window.ensureColorStylePillStyles = function() {
+        if (document.getElementById('op-floating-pill-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'op-floating-pill-styles';
+        style.textContent = `
+            .selected-overlay .op-floating-css-color-pill,
+            #op-floating-css-color-pill,
+            .op-floating-css-color-pill {
+                transform-origin: 0% 0% !important;
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 6px)) !important;
+            }
+            .selected-overlay .op-floating-css-color-pill:hover,
+            #op-floating-css-color-pill:hover,
+            .op-floating-css-color-pill:hover {
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 8px)) !important;
+            }
+            .selected-overlay.is-transforming .op-floating-css-color-pill,
+            body.is-dragging-element .op-floating-css-color-pill,
+            body.is-dragging-element #op-floating-css-color-pill,
+            .selected-overlay.is-transforming ~ #op-floating-css-color-pill,
+            body.is-transforming #op-floating-css-color-pill,
+            body.is-transforming .op-floating-css-color-pill {
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 4px)) scale(0.92) !important;
+            }
+            .selected-overlay .op-floating-css-color-pill.offset-from-rotate,
+            #op-floating-css-color-pill.offset-from-rotate,
+            .op-floating-css-color-pill.offset-from-rotate {
+                left: auto !important;
+                right: 50% !important;
+                transform-origin: 100% 0% !important;
+                transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 6px)) !important;
+            }
+            .selected-overlay .op-floating-css-color-pill.offset-from-rotate:hover,
+            #op-floating-css-color-pill.offset-from-rotate:hover,
+            .op-floating-css-color-pill.offset-from-rotate:hover {
+                transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 8px)) !important;
+            }
+            .selected-overlay.is-transforming .op-floating-css-color-pill.offset-from-rotate,
+            body.is-dragging-element .op-floating-css-color-pill.offset-from-rotate {
+                transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 4px)) scale(0.92) !important;
+            }
+            .selected-overlay .op-floating-css-color-pill.flip-bottom,
+            #op-floating-css-color-pill.flip-bottom,
+            .op-floating-css-color-pill.flip-bottom {
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: auto !important;
+                transform-origin: 0% 100% !important;
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 6px)) !important;
+            }
+            .selected-overlay .op-floating-css-color-pill.flip-bottom:hover,
+            #op-floating-css-color-pill.flip-bottom:hover,
+            .op-floating-css-color-pill.flip-bottom:hover {
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 8px)) !important;
+            }
+            .selected-overlay.is-transforming .op-floating-css-color-pill.flip-bottom,
+            body.is-dragging-element .op-floating-css-color-pill.flip-bottom {
+                transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 4px)) scale(0.92) !important;
+            }
+            .op-floating-css-color-pill.is-compact {
+                padding: 2px 5px !important;
+                gap: 3px !important;
+                min-width: 65px !important;
+                width: auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-sizing: border-box !important;
+            }
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-swatch.single-swatch,
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-swatch:first-child:nth-last-child(3),
+            .op-floating-css-color-pill.is-compact.has-single-swatch .cs-floating-pill-swatch {
+                margin: 0 5px !important;
+                flex-shrink: 0 !important;
+            }
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-swatch:not(.single-swatch):not(:first-child:nth-last-child(3)) {
+                margin: 0 1px !important;
+                flex-shrink: 0 !important;
+            }
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-divider {
+                width: 1px !important;
+                height: 14px !important;
+                margin: 0 1px !important;
+                flex-shrink: 0 !important;
+            }
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-btn {
+                width: 24px !important;
+                height: 24px !important;
+                min-width: 24px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-shrink: 0 !important;
+            }
+            .op-floating-css-color-pill.is-compact .cs-floating-pill-btn-label {
+                display: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    window.updateColorStylePillPosition = function(pill, el) {
+        if (!pill || !el) return;
+        if (typeof window.ensureColorStylePillStyles === 'function') window.ensureColorStylePillStyles();
+        pill.style.display = '';
+        const zoom = (typeof state !== 'undefined' && parseFloat(state.zoom)) || 0.6;
+        const topVal = parseFloat(el.style.top) || el.offsetTop || 0;
+        const elW = parseFloat(el.style.width) || el.offsetWidth || 100;
+        const elH = parseFloat(el.style.height) || el.offsetHeight || 100;
+        const paper = document.getElementById('paper');
+        const paperH = paper ? (parseFloat(paper.style.height) || 1123) : 1123;
+        const clearance = 12;
+
+        // Visual screen width drives compact vs expanded mode:
+        // When screen width is >= 240px (either by resizing box wider OR by zooming in),
+        // there is plenty of room on screen, so reveal the full "Colors & Style" label!
+        // When screen width is < 240px, condense to compact swatches + icon (matching quick actions width).
+        const isCompact = (elW * zoom) < 240;
+        pill.classList.toggle('is-compact', isCompact);
+
+        pill.classList.remove('flip-bottom', 'inside-top', 'offset-from-rotate');
+        if (topVal < clearance) {
+            if (topVal + elH + (36 / zoom) > paperH) {
+                pill.classList.add('inside-top');
+            } else {
+                pill.classList.add('flip-bottom');
+            }
+        } else if (elW * zoom < 105) {
+            // When zoomed out a lot or element is tiny on screen (< 105px), flip Colors & Style to bottom
+            // so Clone & Delete and Colors & Style NEVER overlap!
+            pill.classList.add('flip-bottom');
         } else if (elW * zoom < 145) {
             pill.classList.add('offset-from-rotate');
         }
@@ -5434,7 +5594,7 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH (v5.16.11)
+// ANTI AD-OVERLAY SECURITY PATCH (v5.16.12)
 // ==========================================
 
 // Helper to verify trusted cloud desktop platforms (e.g. puter.com)

@@ -2129,7 +2129,7 @@ body.classic-cursors-enabled .force-move-cursor * {
         transform: none !important; position: absolute; top: 0; left: 0;
     }
     #paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .element-quick-actions, #selection-overlay-container, .selected-overlay { display: none !important; }
+    .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .element-quick-actions, .op-floating-css-color-pill, #op-floating-css-color-pill, #selection-overlay-container, .selected-overlay { display: none !important; }
     .page-header.visible, .page-footer.visible { display: flex !important; }
     .page-header:not(.visible), .page-footer:not(.visible) { display: none !important; }
 }
@@ -5776,18 +5776,23 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
 }
 
 /* ==========================================================================
-   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.16.11)
-   Subtle resting appearance, proximity illumination, and drag-hiding parity
+   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.16.12)
+   Attached to Selected Element Overlay (Top-Left, Opposite Quick Actions)
+   Subtle resting appearance, proximity illumination, and transform tracking
    ========================================================================== */
+.selected-overlay .op-floating-css-color-pill,
 #op-floating-css-color-pill,
 .op-floating-css-color-pill {
-    position: fixed;
-    z-index: 99990;
-    display: none;
-    align-items: center;
-    gap: 3px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: auto;
     height: 28px;
     padding: 2px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.45);
     border-radius: 14px;
@@ -5799,16 +5804,19 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto;
-    opacity: 0.88;
-    transform: translateY(0);
+    opacity: 0.92;
+    z-index: 1005;
+    transform-origin: 0% 0%;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 6px));
     transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
 }
 
 /* Expanded invisible hover trigger zone so pill illuminates smoothly when cursor approaches */
+.selected-overlay .op-floating-css-color-pill::before,
 #op-floating-css-color-pill::before,
 .op-floating-css-color-pill::before {
     content: '';
@@ -5818,11 +5826,12 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
     left: -10px;
     right: -10px;
     pointer-events: auto;
-    border-radius: 20px;
+    border-radius: 18px;
     z-index: -1;
 }
 
 /* Proximity & Hover state: Crisp, bright, elevated */
+.selected-overlay .op-floating-css-color-pill:hover,
 #op-floating-css-color-pill:hover,
 .op-floating-css-color-pill:hover {
     opacity: 1.0;
@@ -5830,19 +5839,83 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
     border-color: rgba(0, 118, 112, 0.35);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 8px));
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* While actively dragging, resizing, or transforming an element, smoothly hide the floating pill */
-body.is-dragging-element #op-floating-css-color-pill,
+.selected-overlay.is-transforming .op-floating-css-color-pill,
 body.is-dragging-element .op-floating-css-color-pill,
+body.is-dragging-element #op-floating-css-color-pill,
 .selected-overlay.is-transforming ~ #op-floating-css-color-pill,
-body.is-transforming #op-floating-css-color-pill {
+body.is-transforming #op-floating-css-color-pill,
+body.is-transforming .op-floating-css-color-pill {
     opacity: 0 !important;
     pointer-events: none !important;
-    transform: translateY(4px) scale(0.92) !important;
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(-100% - 4px)) scale(0.92) !important;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* When element screen width is narrow, offset Colors & Style to the left of the rotate handle (symmetrical mirror with Quick Actions) */
+.selected-overlay .op-floating-css-color-pill.offset-from-rotate,
+#op-floating-css-color-pill.offset-from-rotate,
+.op-floating-css-color-pill.offset-from-rotate {
+    left: auto !important;
+    right: 50% !important;
+    transform-origin: 100% 0% !important;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 6px)) !important;
+}
+.selected-overlay .op-floating-css-color-pill.offset-from-rotate:hover,
+#op-floating-css-color-pill.offset-from-rotate:hover,
+.op-floating-css-color-pill.offset-from-rotate:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 8px)) !important;
+}
+.selected-overlay.is-transforming .op-floating-css-color-pill.offset-from-rotate,
+body.is-dragging-element .op-floating-css-color-pill.offset-from-rotate {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(-14px, calc(-100% - 4px)) scale(0.92) !important;
+}
+
+/* When flipped to bottom (near top edge of document or narrow element) */
+.selected-overlay .op-floating-css-color-pill.flip-bottom,
+#op-floating-css-color-pill.flip-bottom,
+.op-floating-css-color-pill.flip-bottom {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    transform-origin: 0% 100%;
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 6px));
+}
+.selected-overlay .op-floating-css-color-pill.flip-bottom:hover,
+#op-floating-css-color-pill.flip-bottom:hover,
+.op-floating-css-color-pill.flip-bottom:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 8px));
+}
+.selected-overlay.is-transforming .op-floating-css-color-pill.flip-bottom,
+body.is-dragging-element .op-floating-css-color-pill.flip-bottom {
+    transform: scale(var(--ui-inv-zoom, 1)) translateY(calc(100% + 4px)) scale(0.92) !important;
+}
+
+/* Inside top (when element spans full page) */
+.selected-overlay .op-floating-css-color-pill.inside-top,
+#op-floating-css-color-pill.inside-top,
+.op-floating-css-color-pill.inside-top {
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: auto;
+    transform-origin: 0% 0%;
+    transform: scale(var(--ui-inv-zoom, 1)) translate(6px, 6px);
+}
+.selected-overlay .op-floating-css-color-pill.inside-top:hover,
+#op-floating-css-color-pill.inside-top:hover,
+.op-floating-css-color-pill.inside-top:hover {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(6px, 6px) scale(1.02);
+}
+.selected-overlay.is-transforming .op-floating-css-color-pill.inside-top,
+body.is-dragging-element .op-floating-css-color-pill.inside-top {
+    transform: scale(var(--ui-inv-zoom, 1)) translate(6px, 6px) scale(0.92) !important;
 }
 
 /* Floating pill action buttons (Colors & Style, Edit Chart, Edit Progress Bar) */
@@ -5863,18 +5936,23 @@ body.is-transforming #op-floating-css-color-pill {
     cursor: pointer;
     white-space: nowrap;
     opacity: 0.58;
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.96);
+    outline: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s ease,
+                color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* When the pill is hovered (or proximity triggered), button lights up with rich clarity and theme color */
+.selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-btn,
 #op-floating-css-color-pill:hover .cs-floating-pill-btn,
 .op-floating-css-color-pill:hover .cs-floating-pill-btn {
     opacity: 1.0;
     background: var(--ui-theme-color, #007670);
     color: #ffffff;
+    transform: scale(1);
     box-shadow: 0 1px 3px rgba(0, 118, 112, 0.25);
 }
 
@@ -5882,7 +5960,7 @@ body.is-transforming #op-floating-css-color-pill {
 .cs-floating-pill-btn:hover {
     background: var(--ui-theme-dark, #005a55) !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(0, 118, 112, 0.35) !important;
+    transform: scale(1.02);
 }
 
 .cs-floating-pill-btn:active {
@@ -5899,8 +5977,8 @@ body.is-transforming #op-floating-css-color-pill {
     border: 1px solid rgba(148, 163, 184, 0.45);
     cursor: pointer;
     flex-shrink: 0;
-    opacity: 0.50;
-    filter: saturate(0.5);
+    opacity: 0.40;
+    filter: saturate(0.3) grayscale(0.5);
     transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
                 filter 0.25s cubic-bezier(0.16, 1, 0.3, 1),
                 border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -5908,16 +5986,17 @@ body.is-transforming #op-floating-css-color-pill {
                 box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 #op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 .op-floating-css-color-pill:hover .cs-floating-pill-swatch {
     opacity: 1.0;
-    filter: saturate(1.0);
+    filter: saturate(1.0) grayscale(0);
     border-color: rgba(0, 0, 0, 0.25);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
 .cs-floating-pill-swatch:hover {
-    transform: scale(1.18) !important;
+    transform: scale(1.22) !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
     z-index: 2;
 }
@@ -5936,13 +6015,67 @@ body.is-transforming #op-floating-css-color-pill {
     transition: opacity 0.25s ease, background-color 0.25s ease;
 }
 
+.selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-divider,
 #op-floating-css-color-pill:hover .cs-floating-pill-divider,
 .op-floating-css-color-pill:hover .cs-floating-pill-divider {
     background: #cbd5e1;
     opacity: 0.8;
 }
 
+/* Compact mode: For default (200px) and small elements, hide the text label so only colors and icon show */
+.op-floating-css-color-pill.is-compact {
+    padding: 2px 5px !important;
+    gap: 3px !important;
+    min-width: 65px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.op-floating-css-color-pill.is-compact .cs-floating-pill-swatch.single-swatch,
+.op-floating-css-color-pill.is-compact .cs-floating-pill-swatch:first-child:nth-last-child(3),
+.op-floating-css-color-pill.is-compact.has-single-swatch .cs-floating-pill-swatch {
+    margin: 0 5px !important;
+    flex-shrink: 0 !important;
+}
+
+.op-floating-css-color-pill.is-compact .cs-floating-pill-swatch:not(.single-swatch):not(:first-child:nth-last-child(3)) {
+    margin: 0 1px !important;
+    flex-shrink: 0 !important;
+}
+
+.op-floating-css-color-pill.is-compact .cs-floating-pill-divider {
+    width: 1px !important;
+    height: 14px !important;
+    margin: 0 1px !important;
+    flex-shrink: 0 !important;
+}
+
+.op-floating-css-color-pill.is-compact .cs-floating-pill-btn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.op-floating-css-color-pill.is-compact .cs-floating-pill-btn-label {
+    display: none !important;
+}
+
+/* In compact mode, show at most 2 swatches so it never crowds small elements */
+.op-floating-css-color-pill.is-compact .cs-floating-pill-swatch:nth-child(n+3) {
+    display: none !important;
+}
+
 /* DARK MODE SUPPORT (body.dark-mode, html.dark-mode) */
+body.dark-mode .selected-overlay .op-floating-css-color-pill,
 body.dark-mode #op-floating-css-color-pill,
 html.dark-mode #op-floating-css-color-pill,
 body.dark-mode .op-floating-css-color-pill,
@@ -5952,6 +6085,7 @@ html.dark-mode .op-floating-css-color-pill {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
+body.dark-mode .selected-overlay .op-floating-css-color-pill:hover,
 body.dark-mode #op-floating-css-color-pill:hover,
 html.dark-mode #op-floating-css-color-pill:hover,
 body.dark-mode .op-floating-css-color-pill:hover,
@@ -5969,6 +6103,7 @@ html.dark-mode .cs-floating-pill-btn {
     opacity: 0.60;
 }
 
+body.dark-mode .selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-btn,
 body.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-btn,
 html.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-btn,
 body.dark-mode .op-floating-css-color-pill:hover .cs-floating-pill-btn,
@@ -5989,16 +6124,17 @@ html.dark-mode .cs-floating-pill-btn:hover {
 body.dark-mode .cs-floating-pill-swatch,
 html.dark-mode .cs-floating-pill-swatch {
     border: 1px solid rgba(255, 255, 255, 0.2);
-    opacity: 0.50;
-    filter: saturate(0.5);
+    opacity: 0.40;
+    filter: saturate(0.3) grayscale(0.5);
 }
 
+body.dark-mode .selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 body.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 html.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 body.dark-mode .op-floating-css-color-pill:hover .cs-floating-pill-swatch,
 html.dark-mode .op-floating-css-color-pill:hover .cs-floating-pill-swatch {
     opacity: 1.0;
-    filter: saturate(1.0);
+    filter: saturate(1.0) grayscale(0);
     border-color: rgba(255, 255, 255, 0.35);
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -6009,6 +6145,7 @@ html.dark-mode .cs-floating-pill-divider {
     opacity: 0.35;
 }
 
+body.dark-mode .selected-overlay .op-floating-css-color-pill:hover .cs-floating-pill-divider,
 body.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-divider,
 html.dark-mode #op-floating-css-color-pill:hover .cs-floating-pill-divider,
 body.dark-mode .op-floating-css-color-pill:hover .cs-floating-pill-divider,
