@@ -5594,7 +5594,7 @@ if (window.top !== window.self) {
   }
 
 // ==========================================
-// ANTI AD-OVERLAY SECURITY PATCH (v5.16.12)
+// ANTI AD-OVERLAY SECURITY PATCH (v5.16.13)
 // ==========================================
 
 // Helper to verify trusted cloud desktop platforms (e.g. puter.com)

@@ -221,7 +221,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.16.12');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.16.13');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -263,7 +263,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.16.12`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.16.13`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:#f4f4f4; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -277,7 +277,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.16.12`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.16.13`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -287,7 +287,11 @@ window.DashboardSystem = {
                 .then(res => res.json())
                 .then(opubData => {
                     this.hide();
-                    loadTemplate(opubData);
+                    if (typeof window.handlePublisherFileLoad === 'function') {
+                        window.handlePublisherFileLoad(opubData);
+                    } else if (typeof loadTemplate === 'function') {
+                        loadTemplate(opubData);
+                    }
                 })
                 .catch(err => {
                     console.error("Failed to load template project:", err);
@@ -302,7 +306,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.16.12`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.16.13`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -654,76 +658,33 @@ window.DashboardSystem = {
             
             card.onclick = () => {
                 this.hide();
-                
-                // Load from data
-                state.pages = [];
-                state.history = [];
-                state.historyIndex = -1;
-                
-                const fileData = file.data || {};
-                state.dpi = fileData.dpi || (fileData.pages && fileData.pages[0] && fileData.pages[0].dpi) || 96;
-                state.unit = fileData.unit || 'cm';
-                state.format = fileData.format || (fileData.pages && fileData.pages[0] && fileData.pages[0].format) || (file.pageSize !== 'Custom' ? file.pageSize : null) || null;
-                state.margins = fileData.margins;
-                state.marginsDpi = fileData.marginsDpi || state.dpi;
-                state.hasMasterPage = fileData.hasMasterPage || false;
-                state.isSpreadMode = !!fileData.isSpreadMode;
-                state.rulerOriginX = fileData.rulerOriginX || 0;
-                state.rulerOriginY = fileData.rulerOriginY || 0;
-                state.rulerUnit = fileData.rulerUnit || 'cm';
-                state._userExplicitRulerUnit = !!fileData.rulerUnitExplicit;
-                state.documentProperties = fileData.documentProperties || { author: '', company: '', subject: '', keywords: '' };
+                if (file.data && typeof window.handlePublisherFileLoad === 'function') {
+                    window.handlePublisherFileLoad(file.data);
+                } else if (file.data) {
+                    // Fallback direct load
+                    state.pages = [];
+                    state.history = [];
+                    state.historyIndex = -1;
+                    
+                    const fileData = file.data || {};
+                    state.dpi = fileData.dpi || (fileData.pages && fileData.pages[0] && fileData.pages[0].dpi) || 96;
+                    state.unit = fileData.unit || 'cm';
+                    state.format = fileData.format || (fileData.pages && fileData.pages[0] && fileData.pages[0].format) || (file.pageSize !== 'Custom' ? file.pageSize : null) || null;
+                    state.margins = fileData.margins;
+                    state.marginsDpi = fileData.marginsDpi || state.dpi;
+                    state.hasMasterPage = fileData.hasMasterPage || false;
+                    state.isSpreadMode = !!fileData.isSpreadMode;
+                    state.rulerOriginX = fileData.rulerOriginX || 0;
+                    state.rulerOriginY = fileData.rulerOriginY || 0;
+                    state.rulerUnit = fileData.rulerUnit || 'cm';
+                    state._userExplicitRulerUnit = !!fileData.rulerUnitExplicit;
+                    state.documentProperties = fileData.documentProperties || { author: '', company: '', subject: '', keywords: '' };
 
-                // Deep clone pages to avoid mutating recent files cache directly
-                state.pages = JSON.parse(JSON.stringify(fileData.pages || []));
-                state.currentPageIndex = 0;
-                
-                // Normalize and enforce orientation, dpi, and format on recent pages
-                if (!window._orientedPagesRegistry) window._orientedPagesRegistry = new Set();
-                state.pages.forEach(p => {
-                    if (!p.id) p.id = Date.now() + Math.random();
-                    if (!p.dpi) p.dpi = state.dpi;
-                    if (!p.format && state.format) p.format = state.format;
-                    if (!p.orientation && fileData.orientation) {
-                        p.orientation = fileData.orientation;
-                    }
-                    if (p.orientation) {
-                        let curW = parseFloat(p.width) || 794;
-                        let curH = parseFloat(p.height) || 1123;
-                        if (p.orientation === 'landscape' && curW < curH) {
-                            p.width = Math.max(curW, curH) + 'px';
-                            p.height = Math.min(curW, curH) + 'px';
-                        } else if (p.orientation === 'portrait' && curW > curH) {
-                            p.width = Math.min(curW, curH) + 'px';
-                            p.height = Math.max(curW, curH) + 'px';
-                        }
-                    } else {
-                        p.orientation = (parseFloat(p.width) >= parseFloat(p.height || '1123')) ? 'landscape' : 'portrait';
-                    }
-                    window._orientedPagesRegistry.add(p.id);
-                });
-                
-                document.getElementById('doc-title').innerText = file.name.replace('.opub', '');
-                
-                if (window._multiPageActive && typeof exitMultiPageView === 'function') {
-                    exitMultiPageView();
+                    state.pages = JSON.parse(JSON.stringify(fileData.pages || []));
+                    state.currentPageIndex = 0;
+                    renderPage(state.pages[0]);
+                    updateSidebar();
                 }
-                state.viewMode = 'single';
-                if (typeof window.updateViewModeUI === 'function') window.updateViewModeUI();
-
-                renderPage(state.pages[state.currentPageIndex]);
-                if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
-                if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
-                if (typeof window.focusPage === 'function') {
-                    window.focusPage(state.currentPageIndex);
-                }
-                setTimeout(() => {
-                    if (typeof window.focusPage === 'function') {
-                        window.focusPage(state.currentPageIndex);
-                    }
-                }, 100);
-                if(window.minimapSystem) minimapSystem.updateMinimap();
-                updateTitleBar();
             };
             
             recentContainer.appendChild(card);

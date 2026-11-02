@@ -5776,7 +5776,7 @@ html.dark-mode .emoji-skin-tone-actions .skin-tone-swatch.active .swatch-color {
 }
 
 /* ==========================================================================
-   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.16.12)
+   FLOATING COLORS & STYLE MICRO-TOOLBAR (v5.16.13)
    Attached to Selected Element Overlay (Top-Left, Opposite Quick Actions)
    Subtle resting appearance, proximity illumination, and transform tracking
    ========================================================================== */
@@ -8385,6 +8385,148 @@ body.dark-mode #chart-live-preview-box {
 body.dark-mode #chart-rows-list {
     background: #0f172a;
 }
+
+/* ==========================================================================
+   PUBLICATION LOADING MODAL (v5.16.13)
+   ========================================================================== */
+#op-pub-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 1;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#op-pub-loading-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.op-pub-loading-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.8);
+    width: 390px;
+    max-width: 90vw;
+    padding: 30px 24px 24px;
+    text-align: center;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    animation: opPubModalPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes opPubModalPop {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.op-pub-loading-icon-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(0, 118, 112, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    color: var(--ui-theme-color, #007670);
+    font-size: 24px;
+}
+
+.op-pub-loading-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.op-pub-loading-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 10px;
+}
+
+.op-pub-loading-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ui-theme-dark, #005a55);
+    min-height: 24px;
+}
+
+.op-pub-loading-progress-track {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.op-pub-loading-progress-bar {
+    width: 20%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--ui-theme-color, #007670), var(--ui-theme-dark, #005a55));
+    border-radius: 4px;
+    transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.op-pub-loading-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Dark Mode */
+body.dark-mode .op-pub-loading-card,
+html.dark-mode .op-pub-loading-card {
+    background: #1e293b !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+}
+
+body.dark-mode .op-pub-loading-title,
+html.dark-mode .op-pub-loading-title {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .op-pub-loading-subtitle,
+html.dark-mode .op-pub-loading-subtitle {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .op-pub-loading-status,
+html.dark-mode .op-pub-loading-status {
+    color: #38bdf8 !important;
+}
+
+body.dark-mode .op-pub-loading-progress-track,
+html.dark-mode .op-pub-loading-progress-track {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
 
 
 

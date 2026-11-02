@@ -1,5 +1,5 @@
 // ==========================================
-// APPLICATION BOOTSTRAPPER (v5.16.12)
+// APPLICATION BOOTSTRAPPER (v5.16.13)
 // ==========================================
 
 window.onload = function() {
@@ -23,12 +23,34 @@ window.onload = function() {
     // Set Default Zoom to 60%
     setZoom(0.6);
     
-    // Create initial page
-    addNewPage();
-    
-    // Show Dashboard on startup if enabled
-    if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
-        DashboardSystem.show();
+    // Check if an associated document was passed via NW.js startup arguments
+    if (typeof window.checkNwStartupArgv === 'function') {
+        window.checkNwStartupArgv();
+    }
+
+    // Process any deferred document loaded before DOM ready
+    if (window._pendingStartupPublication && typeof window.handlePublisherFileLoad === 'function') {
+        const pending = window._pendingStartupPublication;
+        window._pendingStartupPublication = null;
+        window.handlePublisherFileLoad(pending);
+    }
+
+    // Create initial page only if no document is already loaded or loading
+    const hasLoadedDoc = (window._documentLoadingActive || window._hasLoadedInitialDocument) ||
+        (state.pages && state.pages.length > 0 && state.pages.some(p => p.elements && p.elements.length > 0));
+
+    if (!hasLoadedDoc) {
+        addNewPage();
+        
+        // Show Dashboard on startup if enabled
+        if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
+            DashboardSystem.show();
+        }
+    } else {
+        // Document already loaded or loading: ensure dashboard is closed
+        if (window.DashboardSystem && typeof DashboardSystem.close === 'function') {
+            DashboardSystem.close();
+        }
     }
 
     // Classic MS Publisher Cursor Settings
