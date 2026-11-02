@@ -750,7 +750,8 @@
             part = part.replace(/inset/gi, '').trim();
             
             let color = 'rgba(0,0,0,0.5)';
-            const colorMatch = part.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}|[a-z]+)/i);
+            // Match rgb/rgba/hsl/hsla, hex colors (#fff, #123456), or valid named colors while strictly excluding CSS dimension units like px, em, rem, pt
+            const colorMatch = part.match(/(rgba?\s*\([^)]+\)|hsla?\s*\([^)]+\)|#[0-9a-fA-F]{3,8}|(?<![-\d.])\b(?!px\b|em\b|rem\b|pt\b|deg\b|rad\b|turn\b|inset\b)[a-z]+\b)/i);
             if (colorMatch) {
                 color = colorMatch[1];
                 part = part.replace(color, '').trim();
@@ -804,6 +805,10 @@
         const ctx = canvas.getContext('2d');
         ctx.scale(scale, scale);
         
+        // Use an offscreen caster coordinate (+5000px) so the solid caster shape is NEVER drawn
+        // onto the visible canvas area; only its blurred, authentically-tinted shadow lands on the canvas.
+        const offscreenDist = 5000;
+        
         shadows.forEach(s => {
             if (s.isInset) return;
             ctx.save();
@@ -814,10 +819,10 @@
             // Note: CSS filter: drop-shadow uses sigma = blur, whereas CSS box-shadow and Canvas shadowBlur use sigma = blur / 2.
             const blurMultiplier = s.isDropShadow ? 2 : 1;
             ctx.shadowBlur = Math.round(s.blur * blurMultiplier * scale);
-            ctx.shadowOffsetX = Math.round(s.ox * scale);
+            ctx.shadowOffsetX = Math.round((offscreenDist + s.ox) * scale);
             ctx.shadowOffsetY = Math.round(s.oy * scale);
             
-            const sx = pad - s.spread;
+            const sx = pad - s.spread - offscreenDist;
             const sy = pad - s.spread;
             const sw = w + s.spread * 2;
             const sh = h + s.spread * 2;
@@ -825,8 +830,6 @@
             
             ctx.beginPath();
             drawRoundRectPath(ctx, sx, sy, sw, sh, sr);
-            // Use opaque caster fill so Canvas does not multiply fillStyle alpha by shadowColor alpha;
-            // the interior box is punched out cleanly below via destination-out.
             ctx.fillStyle = '#000000';
             ctx.fill();
             ctx.restore();

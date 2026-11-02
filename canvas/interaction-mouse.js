@@ -56,6 +56,40 @@ window.handleMouseDown = function(e) {
         return;
     }
 
+    if(e.target.classList.contains('text-margin-handle')) {
+        state.dragMode = 'text-margin';
+        const handle = e.target;
+        const overlay = handle.closest('.selected-overlay');
+        const textEl = (overlay && overlay._boundEl) || state.selectedEl;
+        if(textEl) {
+            const curW = parseFloat(textEl.style.width) || textEl.offsetWidth;
+            const curH = parseFloat(textEl.style.height) || textEl.offsetHeight;
+            const pad = (typeof window.getTextBoxPadding === 'function') ? window.getTextBoxPadding(textEl) : { top: 0, right: 0, bottom: 0, left: 0 };
+            state.dragData = {
+                startX: e.clientX,
+                startY: e.clientY,
+                dir: handle.dataset.marginDir,
+                startPad: { ...pad },
+                w: curW,
+                h: curH,
+                el: textEl,
+                target: (typeof window.getTextBoxPaddingTarget === 'function') ? window.getTextBoxPaddingTarget(textEl) : null,
+                handle: handle
+            };
+            handle.classList.add('dragging');
+            if (overlay) {
+                const cont = overlay.querySelector('.text-margin-container');
+                if (cont) cont.classList.add('dragging');
+            }
+            if (typeof window.showTextMarginBadge === 'function') {
+                window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, pad[handle.dataset.marginDir]);
+            }
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+    }
+
     if(e.target.classList.contains('selection-edge-drag')) {
             const overlay = e.target.closest('.selected-overlay');
             const isGroup = overlay && overlay.classList.contains('group-selection-overlay');
@@ -584,6 +618,87 @@ window.handleMouseMove = function(e) {
             window.updateArrowTipOverlay(overlay, d.el, newHead);
         }
     }
+    else if(state.dragMode === 'text-margin') {
+        const d = state.dragData;
+        let curDx = dx;
+        let curDy = dy;
+        if (d.el && d.el.style && d.el.style.transform) {
+            const rotMatch = d.el.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+            if (rotMatch) {
+                const rotDeg = parseFloat(rotMatch[1]) || 0;
+                const rad = rotDeg * (Math.PI / 180);
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                curDx = dx * cos + dy * sin;
+                curDy = -dx * sin + dy * cos;
+            }
+        }
+        if (d.el) {
+            const sxAttr = d.el.getAttribute('data-scaleX');
+            const syAttr = d.el.getAttribute('data-scaleY');
+            const isFlipX = (sxAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleX(-1)') || d.el.style.transform.includes('scale(-1)')));
+            const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
+            if (isFlipX) curDx = -curDx;
+            if (isFlipY) curDy = -curDy;
+        }
+
+        const isAlt = !!e.altKey;
+        const target = d.target;
+        if (target) {
+            target.style.boxSizing = 'border-box';
+            target.style.height = '100%';
+            
+            if (d.dir === 'top') {
+                let newTop = Math.max(0, Math.min(d.h - 16, Math.round(d.startPad.top + curDy)));
+                const textH = (typeof window.getEditableTextHeight === 'function') ? window.getEditableTextHeight(target) : Math.max(16, target.scrollHeight - (d.startPad.top + d.startPad.bottom));
+                const centerTop = Math.max(0, Math.round((d.h - textH) / 2));
+                let isCentered = false;
+                if (Math.abs(newTop - centerTop) <= 4) {
+                    newTop = centerTop;
+                    isCentered = true;
+                }
+                target.style.paddingTop = newTop + 'px';
+                if (isAlt) {
+                    target.style.paddingBottom = newTop + 'px';
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, 'top', newTop, isCentered, isAlt);
+                }
+            } else if (d.dir === 'bottom') {
+                let newBottom = Math.max(0, Math.min(d.h - 16, Math.round(d.startPad.bottom - curDy)));
+                target.style.paddingBottom = newBottom + 'px';
+                if (isAlt) {
+                    target.style.paddingTop = newBottom + 'px';
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, 'bottom', newBottom, false, isAlt);
+                }
+            } else if (d.dir === 'left') {
+                let newLeft = Math.max(0, Math.min(d.w - 16, Math.round(d.startPad.left + curDx)));
+                target.style.paddingLeft = newLeft + 'px';
+                if (isAlt) {
+                    target.style.paddingRight = newLeft + 'px';
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, 'left', newLeft, false, isAlt);
+                }
+            } else if (d.dir === 'right') {
+                let newRight = Math.max(0, Math.min(d.w - 16, Math.round(d.startPad.right - curDx)));
+                target.style.paddingRight = newRight + 'px';
+                if (isAlt) {
+                    target.style.paddingLeft = newRight + 'px';
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, 'right', newRight, false, isAlt);
+                }
+            }
+            
+            const overlay = document.querySelector('.selected-overlay');
+            if (overlay && typeof window.updateTextMarginControlsPositions === 'function') {
+                window.updateTextMarginControlsPositions(overlay, d.el);
+            }
+        }
+    }
     else if(state.dragMode === 'resize') {
         const d = state.dragData;
         const dx = (e.clientX - d.startX) / zoom;
@@ -916,6 +1031,16 @@ window.handleMouseUp = function() {
                 state.selectedEl.setAttribute('data-arrow-head-custom', 'true');
             }
             if (typeof pushHistory === 'function') pushHistory();
+            state.dragMode = null;
+            return;
+        }
+        if (state.dragMode === 'text-margin') {
+            document.querySelectorAll('.text-margin-handle.dragging').forEach(h => h.classList.remove('dragging'));
+            document.querySelectorAll('.text-margin-container.dragging').forEach(c => c.classList.remove('dragging'));
+            const badge = document.querySelector('.text-margin-badge');
+            if (badge) badge.style.display = 'none';
+            if (typeof pushHistory === 'function') pushHistory();
+            if (typeof updateThumbnails === 'function') updateThumbnails();
             state.dragMode = null;
             return;
         }

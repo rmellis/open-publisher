@@ -5257,6 +5257,8 @@ body.dark-mode .wa-sidebar-input::-moz-range-thumb {
 .pub-element:not(.selected-overlay):not(.cropping):not(.editing-shape).selected::after { display: none !important; }
 
 .selected-overlay .resize-handle, .selected-overlay .rotate-handle, .selected-overlay .rotate-stick { display: block !important; pointer-events: auto; }
+.selected-overlay .resize-handle { z-index: 100005 !important; }
+.selected-overlay .rotate-handle { z-index: 100006 !important; }
 .selected-overlay .rotate-stick { pointer-events: none !important; }
 
 .group-selection-overlay {
@@ -6232,6 +6234,172 @@ html.dark-mode .op-floating-css-color-pill:hover .cs-floating-pill-divider {
 
 /* Reset default margins for headings and paragraphs inside elements */
 .element-content h1, .element-content h2, .element-content h3, .element-content h4, .element-content h5, .element-content h6, .element-content p { margin-top: 0; margin-bottom: 0; }
+
+/* =========================================================
+   TEXT BOX MARGIN & INSET CONTROLS (v5.17.1)
+   Smaller, discrete drag handles to adjust text padding/insets
+   ========================================================= */
+.text-margin-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.text-margin-guide-box {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px dashed rgba(0, 118, 112, 0.28);
+    background: transparent;
+    pointer-events: none;
+    border-radius: 2px;
+    opacity: 0.35;
+    transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Stable reveal on overlay / element hover or when dragging - completely eliminates flickering */
+.selected-overlay.is-hovered .text-margin-guide-box,
+.selected-overlay:hover .text-margin-guide-box,
+.text-margin-container.is-hovered .text-margin-guide-box,
+.text-margin-container:hover .text-margin-guide-box,
+.text-margin-container.dragging .text-margin-guide-box {
+    opacity: 0.85;
+    border-color: rgba(0, 118, 112, 0.55);
+    background: rgba(0, 118, 112, 0.02);
+}
+
+.text-margin-handle {
+    position: absolute;
+    pointer-events: auto !important;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(0, 118, 112, 0.42);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    z-index: 100001 !important;
+    opacity: 0.48;
+    transform: translate(-50%, -50%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 50%;
+    transition: opacity 0.2s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Extended transparent hit area for effortless grabbing */
+.text-margin-handle::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: -6px;
+    right: -6px;
+    cursor: inherit;
+}
+
+/* When handle sits at outer edge boundary, constrain hit area so outer resize handle is never occluded */
+.text-margin-handle.at-edge::before {
+    top: -2px;
+    bottom: -2px;
+    left: -2px;
+    right: -2px;
+}
+
+/* Horizontal handles (Top & Bottom) - Slim, discrete 12px x 3.5px */
+.text-margin-handle.tmh-top,
+.text-margin-handle.tmh-bottom {
+    width: 12px;
+    height: 3.5px;
+    border-radius: 2px;
+    cursor: ns-resize;
+}
+
+/* Vertical handles (Left & Right) - Slim, discrete 3.5px x 12px */
+.text-margin-handle.tmh-left,
+.text-margin-handle.tmh-right {
+    width: 3.5px;
+    height: 12px;
+    border-radius: 2px;
+    cursor: ew-resize;
+}
+
+/* Reveal gracefully when cursor enters the element or overlay */
+.selected-overlay.is-hovered .text-margin-handle,
+.selected-overlay:hover .text-margin-handle,
+.text-margin-container.is-hovered .text-margin-handle,
+.text-margin-container:hover .text-margin-handle {
+    opacity: 0.85;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 118, 112, 0.7);
+}
+
+/* Active hover and dragging states - keep scale constant to prevent hit boundary oscillation / chattering */
+.text-margin-handle:hover,
+.text-margin-handle.dragging {
+    opacity: 1 !important;
+    background: var(--ui-theme-color, #007670) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0, 118, 112, 0.4) !important;
+}
+
+/* Discrete floating measurement badge */
+.text-margin-badge {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    z-index: 100005;
+    transform: translate(-50%, -100%) scale(var(--ui-inv-zoom, 1));
+    transform-origin: 50% 100%;
+    margin-top: -6px;
+    display: none;
+    letter-spacing: 0.2px;
+}
+
+/* Dark mode overrides */
+body.dark-mode .text-margin-guide-box {
+    border-color: rgba(45, 212, 191, 0.25);
+    background: transparent;
+    opacity: 0.35;
+}
+body.dark-mode .selected-overlay.is-hovered .text-margin-guide-box,
+body.dark-mode .selected-overlay:hover .text-margin-guide-box,
+body.dark-mode .text-margin-container.is-hovered .text-margin-guide-box,
+body.dark-mode .text-margin-container:hover .text-margin-guide-box,
+body.dark-mode .text-margin-container.dragging .text-margin-guide-box {
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(45, 212, 191, 0.02);
+    opacity: 0.85;
+}
+body.dark-mode .text-margin-handle {
+    background: rgba(30, 41, 59, 0.78);
+    border-color: rgba(45, 212, 191, 0.45);
+}
+body.dark-mode .selected-overlay.is-hovered .text-margin-handle,
+body.dark-mode .selected-overlay:hover .text-margin-handle,
+body.dark-mode .text-margin-container.is-hovered .text-margin-handle,
+body.dark-mode .text-margin-container:hover .text-margin-handle {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: var(--ui-theme-color, #007670);
+    opacity: 0.85;
+}
+body.dark-mode .text-margin-handle:hover,
+body.dark-mode .text-margin-handle.dragging {
+    background: var(--ui-theme-color, #007670) !important;
+    border-color: #ffffff !important;
+}
+body.dark-mode .text-margin-badge {
+    background: rgba(2, 6, 23, 0.94);
+    border: 1px solid #334155;
+    color: #f8fafc;
+}
 
 /* Smart Arrow Parametric Tip Adjustment Overlay */
 .arrow-tip-container {

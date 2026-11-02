@@ -268,6 +268,9 @@ if (!window._sliderFillListenerInstalled) {
                         window.renderSmartArrowTipControls(existing, el);
                     }
                 }
+                if (typeof window.renderTextMarginControls === 'function') {
+                    window.renderTextMarginControls(existing, el);
+                }
                 let qaPill = existing.querySelector('.element-quick-actions');
                 if (!qaPill && el.getAttribute('data-is-theme') !== 'true' && el.getAttribute('data-is-border') !== 'true' && el.id !== 'native-border-art-border' && el.id !== 'native-blueprint-border') {
                     if (typeof window.renderElementQuickActions === 'function') {
@@ -374,6 +377,11 @@ if (!window._sliderFillListenerInstalled) {
                     if (typeof window.renderSmartArrowTipControls === 'function') {
                         window.renderSmartArrowTipControls(overlay, el);
                     }
+                }
+
+                // --- TEXT BOX MARGIN & INSET CONTROLS (v5.17.1) ---
+                if (typeof window.renderTextMarginControls === 'function') {
+                    window.renderTextMarginControls(overlay, el);
                 }
 
                 // --- FLOATING MICRO-ACTION PILL (Clone & Delete) ---
@@ -957,6 +965,236 @@ if (!window._sliderFillListenerInstalled) {
                 }
             }
         }
+    };
+
+    /**
+     * TEXT BOX MARGIN & INSET CONTROLS (v5.17.1)
+     * Provides smaller, discrete drag handles to adjust text padding / insets in real time.
+     */
+    window.isTextBoxElement = function(el) {
+        if (!el || !el.classList || !el.classList.contains('pub-element')) return false;
+        if (el.classList.contains('wa-wrapper') || el.querySelector('.wa-wrapper') || el.querySelector('.wa-text') || el.querySelector('.beta-wa-img')) return false;
+        if (el.querySelector('table')) return false;
+        if (el.getAttribute('data-type') === 'smart-arrow' || el.querySelector('.smart-arrow-svg') || el.querySelector('.smart-arrow-baked-img')) return false;
+        if (el.getAttribute('data-type') === 'progress-bar' || el.getAttribute('data-type') === 'chart') return false;
+        if (el.getAttribute('data-type') === 'shape' && !el.querySelector('[contenteditable="true"]')) return false;
+        if (el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border') return false;
+        return !!(el.querySelector('[contenteditable="true"]') || el.querySelector('.text-content') || el.getAttribute('data-type') === 'text');
+    };
+
+    window.getTextBoxPaddingTarget = function(el) {
+        if (!el) return null;
+        const editable = el.querySelector('[contenteditable="true"]');
+        if (editable) return editable;
+        const content = el.querySelector('.element-content');
+        if (content) return content;
+        return el;
+    };
+
+    window.getTextBoxPadding = function(el) {
+        const target = window.getTextBoxPaddingTarget(el);
+        if (!target) return { top: 0, right: 0, bottom: 0, left: 0 };
+        const style = target.style;
+        const comp = window.getComputedStyle ? window.getComputedStyle(target) : {};
+        const top = parseFloat(style.paddingTop) || parseFloat(comp.paddingTop) || 0;
+        const right = parseFloat(style.paddingRight) || parseFloat(comp.paddingRight) || 0;
+        const bottom = parseFloat(style.paddingBottom) || parseFloat(comp.paddingBottom) || 0;
+        const left = parseFloat(style.paddingLeft) || parseFloat(comp.paddingLeft) || 0;
+        return {
+            top: Math.round(top),
+            right: Math.round(right),
+            bottom: Math.round(bottom),
+            left: Math.round(left)
+        };
+    };
+
+    window.getEditableTextHeight = function(target) {
+        if (!target) return 16;
+        try {
+            const range = document.createRange();
+            range.selectNodeContents(target);
+            const rect = range.getBoundingClientRect();
+            const zoom = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+            if (rect && rect.height > 0) {
+                return Math.max(12, Math.round(rect.height / zoom));
+            }
+        } catch (e) {}
+        if (target.firstElementChild && target.firstElementChild.offsetHeight > 0) {
+            return target.firstElementChild.offsetHeight;
+        }
+        const fs = parseFloat(window.getComputedStyle(target).fontSize) || 16;
+        const lh = parseFloat(window.getComputedStyle(target).lineHeight) || (fs * 1.25);
+        return Math.round(lh);
+    };
+
+    window.updateTextMarginControlsPositions = function(overlay, el) {
+        if (!overlay || !el) return;
+        const container = overlay.querySelector('.text-margin-container');
+        if (!container) return;
+        const elW = parseFloat(el.style.width) || el.offsetWidth;
+        const elH = parseFloat(el.style.height) || el.offsetHeight;
+        const pad = window.getTextBoxPadding(el);
+
+        const guideBox = container.querySelector('.text-margin-guide-box');
+        if (guideBox) {
+            guideBox.style.left = Math.min(pad.left, elW) + 'px';
+            guideBox.style.top = Math.min(pad.top, elH) + 'px';
+            guideBox.style.width = Math.max(0, elW - pad.left - pad.right) + 'px';
+            guideBox.style.height = Math.max(0, elH - pad.top - pad.bottom) + 'px';
+        }
+
+        // Separate margin handles laterally from the 8 outer element resize handles (which sit at 50% midpoint).
+        // By offsetting the margin handles by 22-28px, they never sit in the same place as outer handles even when margin is 0.
+        const lateralOffset = Math.min(28, Math.max(16, elW * 0.16));
+        const verticalOffset = Math.min(28, Math.max(16, elH * 0.16));
+
+        // When margin is 0 or very small (<= 6px), clamp visual handle inward by 5px so it never overlaps the outer box border
+        const hTop = container.querySelector('.tmh-top');
+        if (hTop) {
+            hTop.style.left = (elW / 2 + lateralOffset) + 'px';
+            const vTop = (pad.top <= 6) ? Math.max(pad.top, 5) : pad.top;
+            hTop.style.top = Math.max(0, Math.min(elH, vTop)) + 'px';
+            hTop.classList.toggle('at-edge', pad.top <= 6);
+        }
+        const hBottom = container.querySelector('.tmh-bottom');
+        if (hBottom) {
+            hBottom.style.left = (elW / 2 + lateralOffset) + 'px';
+            const vBottom = (pad.bottom <= 6) ? Math.max(pad.bottom, 5) : pad.bottom;
+            hBottom.style.top = Math.max(0, Math.min(elH, elH - vBottom)) + 'px';
+            hBottom.classList.toggle('at-edge', pad.bottom <= 6);
+        }
+        const hLeft = container.querySelector('.tmh-left');
+        if (hLeft) {
+            const vLeft = (pad.left <= 6) ? Math.max(pad.left, 5) : pad.left;
+            hLeft.style.left = Math.max(0, Math.min(elW, vLeft)) + 'px';
+            hLeft.style.top = (elH / 2 + verticalOffset) + 'px';
+            hLeft.classList.toggle('at-edge', pad.left <= 6);
+        }
+        const hRight = container.querySelector('.tmh-right');
+        if (hRight) {
+            const vRight = (pad.right <= 6) ? Math.max(pad.right, 5) : pad.right;
+            hRight.style.left = Math.max(0, Math.min(elW, elW - vRight)) + 'px';
+            hRight.style.top = (elH / 2 + verticalOffset) + 'px';
+            hRight.classList.toggle('at-edge', pad.right <= 6);
+        }
+    };
+
+    window.showTextMarginBadge = function(handle, el, dir, val) {
+        if (!handle || !el) return;
+        const overlay = handle.closest('.selected-overlay');
+        if (!overlay) return;
+        let badge = overlay.querySelector('.text-margin-badge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'text-margin-badge';
+            const container = overlay.querySelector('.text-margin-container') || overlay;
+            container.appendChild(badge);
+        }
+        badge.style.display = 'block';
+        window.updateTextMarginBadge(el, dir, val, false, false);
+    };
+
+    window.updateTextMarginBadge = function(el, dir, val, isCentered, isAlt) {
+        const overlay = document.querySelector('.selected-overlay');
+        if (!overlay) return;
+        const badge = overlay.querySelector('.text-margin-badge');
+        const container = overlay.querySelector('.text-margin-container');
+        if (!badge || !container) return;
+
+        const dirName = dir.charAt(0).toUpperCase() + dir.slice(1);
+        let label = `${dirName}: ${val}px`;
+        if (isCentered) {
+            label += ' (Centered)';
+        } else if (isAlt) {
+            label += ' (Symmetrical)';
+        }
+        badge.innerText = label;
+
+        const handle = container.querySelector(`.tmh-${dir}`);
+        if (handle) {
+            const hLeft = parseFloat(handle.style.left) || 0;
+            const hTop = parseFloat(handle.style.top) || 0;
+            badge.style.left = hLeft + 'px';
+            badge.style.top = (hTop - 6) + 'px';
+        }
+    };
+
+    window.renderTextMarginControls = function(overlay, el) {
+        if (!overlay || !el) return;
+        if (!window.isTextBoxElement(el)) {
+            const oldCont = overlay.querySelector('.text-margin-container');
+            if (oldCont) oldCont.remove();
+            return;
+        }
+
+        let container = overlay.querySelector('.text-margin-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'text-margin-container';
+            container.innerHTML = `
+                <div class="text-margin-guide-box"></div>
+                <div class="text-margin-handle tmh-top" data-margin-dir="top" title="Drag to adjust top text margin (Double-click to center vertically, Alt+Drag for symmetrical)"></div>
+                <div class="text-margin-handle tmh-bottom" data-margin-dir="bottom" title="Drag to adjust bottom text margin (Alt+Drag for symmetrical)"></div>
+                <div class="text-margin-handle tmh-left" data-margin-dir="left" title="Drag to adjust left text margin (Alt+Drag for symmetrical)"></div>
+                <div class="text-margin-handle tmh-right" data-margin-dir="right" title="Drag to adjust right text margin (Alt+Drag for symmetrical)"></div>
+                <div class="text-margin-badge"></div>
+            `;
+            overlay.appendChild(container);
+
+            // Stable hover tracking between el and overlay to completely eliminate flickering
+            if (!container._hoverBound) {
+                container._hoverBound = true;
+                const setHover = (val) => {
+                    overlay.classList.toggle('is-hovered', val);
+                    container.classList.toggle('is-hovered', val);
+                };
+                el.addEventListener('mouseenter', () => setHover(true));
+                el.addEventListener('mouseleave', (e) => {
+                    if (!overlay.contains(e.relatedTarget)) {
+                        setHover(false);
+                    }
+                });
+                overlay.addEventListener('mouseenter', () => setHover(true));
+                overlay.addEventListener('mouseleave', (e) => {
+                    if (!el.contains(e.relatedTarget)) {
+                        setHover(false);
+                    }
+                });
+            }
+
+            const hTop = container.querySelector('.tmh-top');
+            const hBottom = container.querySelector('.tmh-bottom');
+            const autoCenterVertical = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const target = window.getTextBoxPaddingTarget(el);
+                if (!target) return;
+                const elH = parseFloat(el.style.height) || el.offsetHeight;
+                
+                target.style.boxSizing = 'border-box';
+                target.style.height = '100%';
+                const textH = (typeof window.getEditableTextHeight === 'function') ? window.getEditableTextHeight(target) : 24;
+                const centerPad = Math.max(0, Math.round((elH - textH) / 2));
+                
+                target.style.paddingTop = centerPad + 'px';
+                target.style.paddingBottom = centerPad + 'px';
+                window.updateTextMarginControlsPositions(overlay, el);
+                window.showTextMarginBadge(hTop, el, 'top', centerPad);
+                window.updateTextMarginBadge(el, 'top', centerPad, true, false);
+                setTimeout(() => {
+                    const b = overlay.querySelector('.text-margin-badge');
+                    if (b) b.style.display = 'none';
+                }, 1200);
+
+                if (typeof pushHistory === 'function') pushHistory();
+                if (typeof updateThumbnails === 'function') updateThumbnails();
+            };
+
+            if (hTop) hTop.addEventListener('dblclick', autoCenterVertical);
+            if (hBottom) hBottom.addEventListener('dblclick', autoCenterVertical);
+        }
+
+        window.updateTextMarginControlsPositions(overlay, el);
     };
 
     /**
@@ -4492,6 +4730,40 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             return;
         }
 
+        if(e.target.classList.contains('text-margin-handle')) {
+            state.dragMode = 'text-margin';
+            const handle = e.target;
+            const overlay = handle.closest('.selected-overlay');
+            const textEl = (overlay && overlay._boundEl) || state.selectedEl;
+            if(textEl) {
+                const curW = parseFloat(textEl.style.width) || textEl.offsetWidth;
+                const curH = parseFloat(textEl.style.height) || textEl.offsetHeight;
+                const pad = (typeof window.getTextBoxPadding === 'function') ? window.getTextBoxPadding(textEl) : { top: 0, right: 0, bottom: 0, left: 0 };
+                state.dragData = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    dir: handle.dataset.marginDir,
+                    startPad: { ...pad },
+                    w: curW,
+                    h: curH,
+                    el: textEl,
+                    target: (typeof window.getTextBoxPaddingTarget === 'function') ? window.getTextBoxPaddingTarget(textEl) : null,
+                    handle: handle
+                };
+                handle.classList.add('dragging');
+                if (overlay) {
+                    const cont = overlay.querySelector('.text-margin-container');
+                    if (cont) cont.classList.add('dragging');
+                }
+                if (typeof window.showTextMarginBadge === 'function') {
+                    window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, pad[handle.dataset.marginDir]);
+                }
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
 
         if(state.cropMode && state.selectedEl) {
             if(e.target.classList.contains('resize-handle')) {
@@ -4971,6 +5243,89 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
             return;
         }
+
+        if(state.dragMode === 'text-margin') {
+            const d = state.dragData;
+            let curDx = dx;
+            let curDy = dy;
+            if (d.el && d.el.style && d.el.style.transform) {
+                const rotMatch = d.el.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+                if (rotMatch) {
+                    const rotDeg = parseFloat(rotMatch[1]) || 0;
+                    const rad = rotDeg * (Math.PI / 180);
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    curDx = dx * cos + dy * sin;
+                    curDy = -dx * sin + dy * cos;
+                }
+            }
+            if (d.el) {
+                const sxAttr = d.el.getAttribute('data-scaleX');
+                const syAttr = d.el.getAttribute('data-scaleY');
+                const isFlipX = (sxAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleX(-1)') || d.el.style.transform.includes('scale(-1)')));
+                const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
+                if (isFlipX) curDx = -curDx;
+                if (isFlipY) curDy = -curDy;
+            }
+
+            const isAlt = !!e.altKey;
+            const target = d.target;
+            if (target) {
+                target.style.boxSizing = 'border-box';
+                target.style.height = '100%';
+                
+                if (d.dir === 'top') {
+                    let newTop = Math.max(0, Math.min(d.h - 16, Math.round(d.startPad.top + curDy)));
+                    const textH = (typeof window.getEditableTextHeight === 'function') ? window.getEditableTextHeight(target) : Math.max(16, target.scrollHeight - (d.startPad.top + d.startPad.bottom));
+                    const centerTop = Math.max(0, Math.round((d.h - textH) / 2));
+                    let isCentered = false;
+                    if (Math.abs(newTop - centerTop) <= 4) {
+                        newTop = centerTop;
+                        isCentered = true;
+                    }
+                    target.style.paddingTop = newTop + 'px';
+                    if (isAlt) {
+                        target.style.paddingBottom = newTop + 'px';
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, 'top', newTop, isCentered, isAlt);
+                    }
+                } else if (d.dir === 'bottom') {
+                    let newBottom = Math.max(0, Math.min(d.h - 16, Math.round(d.startPad.bottom - curDy)));
+                    target.style.paddingBottom = newBottom + 'px';
+                    if (isAlt) {
+                        target.style.paddingTop = newBottom + 'px';
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, 'bottom', newBottom, false, isAlt);
+                    }
+                } else if (d.dir === 'left') {
+                    let newLeft = Math.max(0, Math.min(d.w - 16, Math.round(d.startPad.left + curDx)));
+                    target.style.paddingLeft = newLeft + 'px';
+                    if (isAlt) {
+                        target.style.paddingRight = newLeft + 'px';
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, 'left', newLeft, false, isAlt);
+                    }
+                } else if (d.dir === 'right') {
+                    let newRight = Math.max(0, Math.min(d.w - 16, Math.round(d.startPad.right - curDx)));
+                    target.style.paddingRight = newRight + 'px';
+                    if (isAlt) {
+                        target.style.paddingLeft = newRight + 'px';
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, 'right', newRight, false, isAlt);
+                    }
+                }
+                
+                const overlay = document.querySelector('.selected-overlay');
+                if (overlay && typeof window.updateTextMarginControlsPositions === 'function') {
+                    window.updateTextMarginControlsPositions(overlay, d.el);
+                }
+            }
+            return;
+        }
         
         if(state.dragMode === 'shape-point') {
             const w = state.selectedEl.offsetWidth;
@@ -5355,6 +5710,18 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             window.syncRealtimeThumbnailDrag();
         }
     };
+
+    window.addEventListener('mouseup', function() {
+        if (typeof state !== 'undefined' && state.dragMode === 'text-margin') {
+            document.querySelectorAll('.text-margin-handle.dragging').forEach(h => h.classList.remove('dragging'));
+            document.querySelectorAll('.text-margin-container.dragging').forEach(c => c.classList.remove('dragging'));
+            const badge = document.querySelector('.text-margin-badge');
+            if (badge) badge.style.display = 'none';
+            if (typeof pushHistory === 'function') pushHistory();
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            state.dragMode = null;
+        }
+    }, true);
 
     console.log("✅ Definitive Crop Anchor Fix installed.");
 })();
