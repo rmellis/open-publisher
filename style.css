@@ -1,4 +1,11 @@
 /* OpenPublisher - A free desktop publishing tool */
+/* Chalkboard Typography Aliasing & Multi-Platform Compatibility */
+@font-face {
+    font-family: 'Chalkboard';
+    src: local('Chalkboard'), local('Chalkboard SE'), local('Schoolbell');
+    font-display: swap;
+}
+
 :root {
     --pub-color: #007670;
     --pub-dark: #005a55;
@@ -8696,7 +8703,7 @@ html.dark-mode .op-pub-loading-progress-track {
 }
 
 /* ==========================================
-   LINE SPACING & TYPOGRAPHY MODAL (v5.17.5)
+   LINE SPACING & TYPOGRAPHY MODAL (v5.17.6)
    ========================================== */
 
 ::highlight(line-spacing-selection) {

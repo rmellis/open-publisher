@@ -95,8 +95,8 @@ function handleMouseDown(e) {
 
     const el = e.target.closest('.pub-element');
     if(el) {
-        // --- v5.4.8: Text Drag & Drop Check ---
-        if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+        // --- v5.4.8: Text Drag & Drop Check (single-click only) ---
+        if (e.detail === 1 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             window.TextDragSystem.startDrag(e);
             return;
         }
@@ -143,7 +143,7 @@ function handleMouseDown(e) {
         const activeEl = document.activeElement;
         const isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
 
-        if (nearEdge || !isEditingText) {
+        if (e.detail <= 1 && (nearEdge || !isEditingText)) {
             state.dragMode = 'drag';
             state.dragData = {
                 startX: e.clientX, startY: e.clientY,

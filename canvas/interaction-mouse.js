@@ -362,8 +362,8 @@ window.handleMouseDown = function(e) {
         }
     }
     if(el) {
-        // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
-        if (window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
+        // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select, single-click only) ---
+        if (e.detail === 1 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             window.TextDragSystem.startDrag(e);
             return;
         }
@@ -432,7 +432,7 @@ window.handleMouseDown = function(e) {
         const nearEdge = (e.clientX < rect.left + edgeSize) || (e.clientX > rect.right - edgeSize) || (e.clientY < rect.top + edgeSize) || (e.clientY > rect.bottom - edgeSize);
         const activeEl = document.activeElement, isEditingText = (activeEl && el.contains(activeEl) && activeEl.isContentEditable) || hasEditableText;
 
-        if (nearEdge || !isEditingText) {
+        if (e.detail <= 1 && (nearEdge || !isEditingText)) {
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));

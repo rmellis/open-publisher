@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.17.5)
+// Open Publisher UI Interactions (v5.17.6)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.17.5)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.17.6)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -765,6 +765,34 @@
         }
     });
 
+    // 3. Triple-click in a text box: Select all text in the textbox (v5.17.6)
+    document.addEventListener('click', function(e) {
+        if (e.detail >= 3 && e.button === 0) {
+            let pubEl = e.target.closest('.pub-element') || e.target.closest('.page-header') || e.target.closest('.page-footer');
+            if (pubEl && typeof state !== 'undefined' && state.selectedEl && state.selectedEl !== pubEl && state.selectedEl.classList.contains('pub-element')) {
+                pubEl = state.selectedEl;
+            }
+            if (pubEl) {
+                const editable = e.target.closest('[contenteditable="true"]') || pubEl.querySelector('[contenteditable="true"]') || (pubEl.getAttribute('contenteditable') === 'true' ? pubEl : null);
+                if (editable && !e.target.closest('.resize-handle') && !e.target.closest('.rotate-handle')) {
+                    editable.focus();
+                    const range = document.createRange();
+                    range.selectNodeContents(editable);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    if (typeof state !== 'undefined') {
+                        state.lastRange = range.cloneRange();
+                    }
+                    if (typeof updateFloatToolbarValues === 'function') {
+                        updateFloatToolbarValues();
+                    }
+                    e.preventDefault();
+                }
+            }
+        }
+    }, true);
+
     console.log("✅ Smart Text Interaction (Stable) added successfully.");
 })();
 
@@ -1097,7 +1125,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.17.5</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.17.6</div>
                 </div>
                 
                 <div class="about-desc">

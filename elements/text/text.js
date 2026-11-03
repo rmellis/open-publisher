@@ -1114,13 +1114,13 @@ window.isTextEditing = isTextEditing;
 const fontList = [
     "Arial", "Segoe UI", "Times New Roman", "Courier New", "Verdana", "Georgia", "Comic Sans MS", "Impact", "Trebuchet MS",
     "Abril Fatface", "Acme", "Alex Brush", "Anton", "Architects Daughter", "Archivo Black", "Arvo", "Bangers", "Barlow", "Bebas Neue", "Bitter",
-    "Bodoni Moda", "Bree Serif", "Bungee", "Bungee Shade", "Cabin", "Cairo", "Caveat", "Cinzel", "Cinzel Decorative", "Comfortaa", "Comic Neue", "Concert One", "Cookie", "Courgette", "Creepster",
-    "Crimson Text", "Dancing Script", "DM Sans", "Dosis", "EB Garamond", "Exo 2", "Fira Sans", "Fjalla One", "Fredoka One",
+    "Bodoni Moda", "Bree Serif", "Bungee", "Bungee Shade", "Cabin", "Cabin Sketch", "Cairo", "Caveat", "Caveat Brush", "Chalkboard", "Cinzel", "Cinzel Decorative", "Comfortaa", "Comic Neue", "Concert One", "Cookie", "Courgette", "Creepster",
+    "Crimson Text", "Dancing Script", "DM Sans", "Dosis", "EB Garamond", "Exo 2", "Fira Sans", "Fjalla One", "Fredoka One", "Fredericka the Great",
     "Gloria Hallelujah", "Great Vibes", "Heebo", "Hind", "IBM Plex Sans", "Inconsolata", "Indie Flower", "Inter", "Josefin Sans", "Kanit",
     "Karla", "Lato", "Libre Baskerville", "Lobster", "Lora", "Manrope", "Maven Pro", "Merriweather", "Monoton", "Montserrat", "Mukta",
     "Nanum Gothic", "Noto Sans", "Nunito", "Old Standard TT", "Open Sans", "Orbitron", "Oswald", "Outfit", "Oxygen", "Pacifico", "Passion One",
     "Patrick Hand", "Permanent Marker", "Playfair Display", "Plus Jakarta Sans", "Poppins", "Press Start 2P", "Prompt", "PT Sans", "PT Serif", "Quicksand",
-    "Rajdhani", "Raleway", "Righteous", "Roboto", "Roboto Condensed", "Roboto Mono", "Roboto Slab", "Rubik", "Sacramento", "Satisfy",
+    "Rajdhani", "Raleway", "Righteous", "Roboto", "Roboto Condensed", "Roboto Mono", "Roboto Slab", "Rubik", "Sacramento", "Satisfy", "Schoolbell",
     "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Grotesk", "Space Mono", "Syne", "Teko", "Titillium Web",
     "Ubuntu", "Varela Round", "Vollkorn", "Work Sans", "Yanone Kaffeesatz", "Zilla Slab"
 ];
