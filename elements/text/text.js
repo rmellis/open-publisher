@@ -3599,7 +3599,11 @@ window.TextBoxStylesSystem = {
         if (s.borderTop) target.style.borderTop = s.borderTop;
         if (s.borderRight) target.style.borderRight = s.borderRight;
         if (s.borderBottom) target.style.borderBottom = s.borderBottom;
-        if (s.borderRadius) target.style.borderRadius = s.borderRadius;
+        if (s.borderRadius) {
+            target.style.borderRadius = s.borderRadius;
+            if (target !== content) content.style.borderRadius = s.borderRadius;
+            el.setAttribute('data-rounded-corners', s.borderRadius);
+        }
         if (s.boxShadow) target.style.boxShadow = s.boxShadow;
         if (s.outline) target.style.outline = s.outline;
         if (s.outlineOffset) target.style.outlineOffset = s.outlineOffset;
@@ -3928,6 +3932,10 @@ window.TextBoxStylesSystem = {
         const rVal = px > 0 ? (px >= 900 ? '999px' : `${px}px`) : '0px';
         target.style.borderRadius = rVal;
         if (target !== content) content.style.borderRadius = rVal;
+        el.style.borderRadius = rVal;
+        el.setAttribute('data-rounded-corners', rVal);
+        const tbl = el.querySelector('table');
+        if (tbl) tbl.style.borderRadius = rVal;
 
         if (typeof pushHistory === 'function') pushHistory();
         if (typeof updateThumbnails === 'function') updateThumbnails();

@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Export Template Package Modal (v5.17.4)
+ * OpenPublisher Export Template Package Modal (v5.17.5)
  * Recreates the modern template package exporter dialog with metadata,
  * live high-DPI thumbnail preview, package options, and ZIP packaging.
  */
@@ -1144,7 +1144,7 @@
                         category: category,
                         description: description,
                         exportDate: new Date().toISOString(),
-                        version: '5.17.4',
+                        version: '5.17.5',
                         format: state.format || 'A4',
                         dpi: state.dpi || 96,
                         pageCount: clonedPages.length,
@@ -1199,7 +1199,7 @@
                         zip.file('manifest.json', JSON.stringify(templateMetadata, null, 2));
 
                         // Add README
-                        const readmeContent = `Template: ${templateTitle}\nCreator: ${creator}\nCategory: ${category}\nDescription: ${description}\nExported with Open Publisher v5.17.4\nWebsite: https://openpublisher.app\nGitHub: https://github.com/rmellis/open-publisher`;
+                        const readmeContent = `Template: ${templateTitle}\nCreator: ${creator}\nCategory: ${category}\nDescription: ${description}\nExported with Open Publisher v5.17.5\nWebsite: https://openpublisher.app\nGitHub: https://github.com/rmellis/open-publisher`;
                         zip.file('README.txt', readmeContent);
 
                         const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });

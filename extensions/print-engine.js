@@ -223,8 +223,9 @@
                         }
                         elDiv.appendChild(img);
                     } else {
-                        const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, page, null) : { boxShadow: '', filter: '' };
-                        const brPx = window.extractBorderRadiusForPrint ? window.extractBorderRadiusForPrint(el, el.contentCssText, null) : 0;
+                        const livePaper = (typeof document !== 'undefined') ? document.getElementById('paper') : null;
+                        const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, page, livePaper) : { boxShadow: '', filter: '' };
+                        const brPx = window.extractBorderRadiusForPrint ? window.extractBorderRadiusForPrint(el, el.contentCssText, livePaper) : 0;
                         const elW = parseFloat(el.width) || 260;
                         const elH = parseFloat(el.height) || 100;
                         
@@ -250,6 +251,8 @@
                         if (underlay) {
                             css = css.replace(/box-shadow:\s*[^;]+;?/gi, '').replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '');
                             css += '; box-shadow: none !important;';
+                            cleanHTML = cleanHTML.replace(/box-shadow:\s*[^;"]+;?/gi, 'box-shadow: none !important;');
+                            cleanHTML = cleanHTML.replace(/filter:\s*[^;"]*drop-shadow\((?:[^)(]+|\([^)(]*\))*\)[^;"]*;?/gi, '');
                             underlayHTML = `<img class="op-print-shadow-underlay" src="${underlay.dataUrl}" style="position: absolute; left: -${underlay.pad}px; top: -${underlay.pad}px; width: ${underlay.totalW}px; height: ${underlay.totalH}px; pointer-events: none; z-index: 0; display: block; border: none; outline: none; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">`;
                         }
 
@@ -826,7 +829,7 @@
             const sy = pad - s.spread;
             const sw = w + s.spread * 2;
             const sh = h + s.spread * 2;
-            const sr = borderRadiusPx >= 900 ? Math.min(sw, sh) / 2 : Math.max(0, borderRadiusPx + s.spread);
+            const sr = borderRadiusPx >= 900 ? Math.min(sw, sh) / 2 : Math.min(Math.min(sw, sh) / 2, Math.max(0, borderRadiusPx + s.spread));
             
             ctx.beginPath();
             drawRoundRectPath(ctx, sx, sy, sw, sh, sr);
@@ -838,7 +841,7 @@
         // Punch out the inner box area so background stays transparent/clean
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
-        const innerRadius = borderRadiusPx >= 900 ? Math.min(w, h) / 2 : borderRadiusPx;
+        const innerRadius = borderRadiusPx >= 900 ? Math.min(w, h) / 2 : Math.min(Math.min(w, h) / 2, Math.max(0, borderRadiusPx));
         ctx.beginPath();
         drawRoundRectPath(ctx, pad, pad, w, h, innerRadius);
         ctx.fillStyle = '#000000';
@@ -856,7 +859,7 @@
     window.extractElementShadowForPrint = function(el, page, livePaper) {
         if (!el) return { boxShadow: '', filter: '' };
 
-        // Rectangular shadow underlay baking is strictly reserved for styled text boxes and card panels.
+        // Rectangular shadow underlay baking is strictly reserved for styled text boxes, tables, and card panels.
         // It must NEVER be applied to Smart Arrows, vector shapes, or image elements (which have their own dedicated high-res vector/image renderers).
         const elType = el.type || (el.getAttribute && el.getAttribute('data-type'));
         const isArrow = elType === 'smart-arrow' || el.arrowStyle || (el.getAttribute && el.getAttribute('data-arrow-style'));
@@ -884,6 +887,73 @@
                 filterStr = fMatch[1].trim();
             }
         }
+
+        // Direct DOM element inspections
+        if (el.nodeType === 1 || (typeof el.querySelector === 'function')) {
+            if (!shadowStr && el.style && el.style.boxShadow && el.style.boxShadow !== 'none') {
+                shadowStr = el.style.boxShadow;
+            }
+            const content = el.querySelector ? el.querySelector('.element-content') : null;
+            if (content) {
+                if (!shadowStr && content.style && content.style.boxShadow && content.style.boxShadow !== 'none') {
+                    shadowStr = content.style.boxShadow;
+                }
+                if (!filterStr && content.style && content.style.filter && content.style.filter.includes('drop-shadow')) {
+                    filterStr = content.style.filter;
+                }
+                if (!shadowStr || !filterStr) {
+                    try {
+                        const comp = window.getComputedStyle(content);
+                        if (!shadowStr && comp.boxShadow && comp.boxShadow !== 'none') shadowStr = comp.boxShadow;
+                        if (!filterStr && comp.filter && comp.filter.includes('drop-shadow')) filterStr = comp.filter;
+                    } catch (e) {}
+                }
+                if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getVisualBoxTarget === 'function') {
+                    try {
+                        const target = window.TextBoxStylesSystem.getVisualBoxTarget(el);
+                        if (target && target !== content) {
+                            if (!shadowStr && target.style && target.style.boxShadow && target.style.boxShadow !== 'none') {
+                                shadowStr = target.style.boxShadow;
+                            }
+                            if (!filterStr && target.style && target.style.filter && target.style.filter.includes('drop-shadow')) {
+                                filterStr = target.style.filter;
+                            }
+                            if (!shadowStr || !filterStr) {
+                                const compT = window.getComputedStyle(target);
+                                if (!shadowStr && compT.boxShadow && compT.boxShadow !== 'none') shadowStr = compT.boxShadow;
+                                if (!filterStr && compT.filter && compT.filter.includes('drop-shadow')) filterStr = compT.filter;
+                            }
+                        }
+                    } catch (e) {}
+                }
+                const innerTbl = el.querySelector ? el.querySelector('table') : null;
+                if (innerTbl) {
+                    if (!shadowStr && innerTbl.style && innerTbl.style.boxShadow && innerTbl.style.boxShadow !== 'none') {
+                        shadowStr = innerTbl.style.boxShadow;
+                    }
+                    if (!shadowStr) {
+                        try {
+                            const compTbl = window.getComputedStyle(innerTbl);
+                            if (compTbl.boxShadow && compTbl.boxShadow !== 'none') shadowStr = compTbl.boxShadow;
+                        } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        // InnerHTML inspection for serialized or cloned boxes/tables
+        if (!shadowStr && el.innerHTML) {
+            const bsMatch = el.innerHTML.match(/box-shadow:\s*([^;"]+)/i);
+            if (bsMatch && bsMatch[1] && bsMatch[1].trim() !== 'none') {
+                shadowStr = bsMatch[1].trim();
+            }
+        }
+        if (!filterStr && el.innerHTML) {
+            const fMatch = el.innerHTML.match(/filter:\s*([^;"]+)/i);
+            if (fMatch && fMatch[1] && fMatch[1].includes('drop-shadow')) {
+                filterStr = fMatch[1].trim();
+            }
+        }
         
         // Preset definition check
         let styleId = el.textboxStyle;
@@ -896,7 +966,7 @@
         }
         
         if ((!shadowStr && !filterStr) && livePaper) {
-            const matchEl = (el.id ? livePaper.querySelector('#' + el.id) : null) ||
+            const matchEl = (el.id ? livePaper.querySelector('#' + CSS.escape(el.id)) : null) ||
                 Array.from(livePaper.querySelectorAll('.pub-element')).find(e => {
                     const l1 = parseFloat(el.left) || 0;
                     const t1 = parseFloat(el.top) || 0;
@@ -923,11 +993,28 @@
                             if (comp.filter && comp.filter.includes('drop-shadow')) filterStr = comp.filter;
                         } catch (e) {}
                     }
+                    if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getVisualBoxTarget === 'function') {
+                        try {
+                            const target = window.TextBoxStylesSystem.getVisualBoxTarget(matchEl);
+                            if (target && target !== content) {
+                                if (!shadowStr && target.style.boxShadow && target.style.boxShadow !== 'none') {
+                                    shadowStr = target.style.boxShadow;
+                                }
+                                if (!filterStr && target.style.filter && target.style.filter.includes('drop-shadow')) {
+                                    filterStr = target.style.filter;
+                                }
+                                if (!shadowStr) {
+                                    const compT = window.getComputedStyle(target);
+                                    if (compT.boxShadow && compT.boxShadow !== 'none') shadowStr = compT.boxShadow;
+                                }
+                            }
+                        } catch (e) {}
+                    }
                 }
             }
         }
 
-        if (!shadowStr && styleId && window.TextBoxStylesSystem) {
+        if (!shadowStr && styleId && window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getPreset === 'function') {
             const preset = window.TextBoxStylesSystem.getPreset(styleId);
             if (preset && preset.containerStyle && preset.containerStyle.boxShadow && preset.containerStyle.boxShadow !== 'none') {
                 shadowStr = preset.containerStyle.boxShadow;
@@ -937,28 +1024,233 @@
         return { boxShadow: shadowStr, filter: filterStr };
     };
 
+    function parseRadiusValueForPrint(str) {
+        if (!str || typeof str !== 'string') return 0;
+        const s = str.trim().toLowerCase();
+        if (s === '0' || s === '0px' || s === 'none') return 0;
+        if (s.includes('999') || s.includes('9999')) return 9999;
+        if (s.includes('%')) {
+            const pct = parseFloat(s);
+            if (pct >= 50) return 9999;
+        }
+        const m = s.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:px|%|$)/);
+        if (m) {
+            const v = parseFloat(m[1]);
+            if (v >= 900) return 9999;
+            return v || 0;
+        }
+        return 0;
+    }
+
     window.extractBorderRadiusForPrint = function(el, contentCssText, livePaper) {
+        if (!el && !contentCssText && !livePaper) return 0;
+
+        // 1. Check contentCssText (e.g. "border-radius: 999px;")
         if (contentCssText) {
             const brMatch = contentCssText.match(/border-radius:\s*([^;]+)/i);
             if (brMatch && brMatch[1]) {
-                const val = brMatch[1].trim();
-                if (val.includes('999') || parseFloat(val) >= 900) return 9999;
-                return parseFloat(val) || 0;
+                const r = parseRadiusValueForPrint(brMatch[1]);
+                if (r > 0) return r;
             }
         }
-        if (livePaper) {
-            const matchEl = el.id ? livePaper.querySelector('#' + el.id) : null;
-            const content = matchEl ? matchEl.querySelector('.element-content') : null;
+
+        // 2. Direct DOM inspections (live node or cloned node in container)
+        if (el && (el.nodeType === 1 || (typeof el.querySelector === 'function'))) {
+            if (el.style && el.style.borderRadius) {
+                const r = parseRadiusValueForPrint(el.style.borderRadius);
+                if (r > 0) return r;
+            }
+            if (el.getAttribute && el.getAttribute('data-rounded-corners')) {
+                const r = parseRadiusValueForPrint(el.getAttribute('data-rounded-corners'));
+                if (r > 0) return r;
+            }
+            const content = el.querySelector ? el.querySelector('.element-content') : null;
             if (content) {
+                if (content.style && content.style.borderRadius) {
+                    const r = parseRadiusValueForPrint(content.style.borderRadius);
+                    if (r > 0) return r;
+                }
                 try {
                     const comp = window.getComputedStyle(content);
                     if (comp.borderRadius && comp.borderRadius !== '0px') {
-                        if (comp.borderRadius.includes('999') || parseFloat(comp.borderRadius) >= 900) return 9999;
-                        return parseFloat(comp.borderRadius) || 0;
+                        const r = parseRadiusValueForPrint(comp.borderRadius);
+                        if (r > 0) return r;
                     }
                 } catch (e) {}
             }
+            if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getVisualBoxTarget === 'function') {
+                try {
+                    const target = window.TextBoxStylesSystem.getVisualBoxTarget(el);
+                    if (target && target !== content) {
+                        if (target.style && target.style.borderRadius) {
+                            const r = parseRadiusValueForPrint(target.style.borderRadius);
+                            if (r > 0) return r;
+                        }
+                        try {
+                            const comp = window.getComputedStyle(target);
+                            if (comp.borderRadius && comp.borderRadius !== '0px') {
+                                const r = parseRadiusValueForPrint(comp.borderRadius);
+                                if (r > 0) return r;
+                            }
+                        } catch (e) {}
+                    }
+                } catch (e) {}
+            }
+            const tbl = el.querySelector ? el.querySelector('table') : null;
+            if (tbl) {
+                if (tbl.style && tbl.style.borderRadius) {
+                    const r = parseRadiusValueForPrint(tbl.style.borderRadius);
+                    if (r > 0) return r;
+                }
+                if (tbl.className && tbl.className.includes('pt-r-')) {
+                    return 24;
+                }
+                try {
+                    const comp = window.getComputedStyle(tbl);
+                    if (comp.borderRadius && comp.borderRadius !== '0px') {
+                        const r = parseRadiusValueForPrint(comp.borderRadius);
+                        if (r > 0) return r;
+                    }
+                } catch (e) {}
+            }
+            const childWithRadius = el.querySelector ? el.querySelector('[data-rounded-corners]') : null;
+            if (childWithRadius) {
+                const r = parseRadiusValueForPrint(childWithRadius.getAttribute('data-rounded-corners'));
+                if (r > 0) return r;
+            }
+            const childDiv = el.querySelector ? el.querySelector('.element-content > div') : null;
+            if (childDiv && childDiv.style && childDiv.style.borderRadius) {
+                const r = parseRadiusValueForPrint(childDiv.style.borderRadius);
+                if (r > 0) return r;
+            }
         }
+
+        // 3. Check el object properties (for serialized elements in pages)
+        if (el) {
+            if (el.borderRadius) {
+                const r = parseRadiusValueForPrint(el.borderRadius);
+                if (r > 0) return r;
+            }
+            if (el.imgStyle && el.imgStyle.borderRadius) {
+                const r = parseRadiusValueForPrint(el.imgStyle.borderRadius);
+                if (r > 0) return r;
+            }
+            if (el.filterAttributes && el.filterAttributes['data-rounded-corners']) {
+                const r = parseRadiusValueForPrint(el.filterAttributes['data-rounded-corners']);
+                if (r > 0) return r;
+            }
+            if (el.clipPath) {
+                const rMatch = el.clipPath.match(/round\s+([^)]+)/i);
+                if (rMatch) {
+                    const r = parseRadiusValueForPrint(rMatch[1]);
+                    if (r > 0) return r;
+                }
+            }
+        }
+
+        // 4. Check el.innerHTML (covers inline styles on child containers, tables, or buttons)
+        if (el && el.innerHTML) {
+            const brMatches = el.innerHTML.matchAll(/border-radius:\s*([^;"]+)/gi);
+            for (const m of brMatches) {
+                const r = parseRadiusValueForPrint(m[1]);
+                if (r > 0) return r;
+            }
+            if (el.innerHTML.includes('pt-r-')) {
+                return 24;
+            }
+            const dataRcMatch = el.innerHTML.match(/data-rounded-corners="([^"]+)"/i);
+            if (dataRcMatch) {
+                const r = parseRadiusValueForPrint(dataRcMatch[1]);
+                if (r > 0) return r;
+            }
+        }
+
+        // 5. Preset definition check
+        let styleId = el ? (el.textboxStyle || (el.getAttribute && el.getAttribute('data-textbox-style'))) : null;
+        if (!styleId && el && el.innerHTML) {
+            const m = el.innerHTML.match(/data-textbox-style="([^"]+)"/);
+            if (m) styleId = m[1];
+        }
+        if (styleId && window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getPreset === 'function') {
+            const preset = window.TextBoxStylesSystem.getPreset(styleId);
+            if (preset && preset.containerStyle && preset.containerStyle.borderRadius) {
+                const r = parseRadiusValueForPrint(preset.containerStyle.borderRadius);
+                if (r > 0) return r;
+            }
+        }
+
+        // 6. Check livePaper fallback
+        if (livePaper) {
+            const matchEl = (el && el.id ? livePaper.querySelector('#' + CSS.escape(el.id)) : null) ||
+                (el ? Array.from(livePaper.querySelectorAll('.pub-element')).find(e => {
+                    const l1 = parseFloat(el.left) || 0;
+                    const t1 = parseFloat(el.top) || 0;
+                    const l2 = parseFloat(e.style.left) || 0;
+                    const t2 = parseFloat(e.style.top) || 0;
+                    return Math.abs(l1 - l2) < 2 && Math.abs(t1 - t2) < 2;
+                }) : null);
+
+            if (matchEl) {
+                if (matchEl.style && matchEl.style.borderRadius) {
+                    const r = parseRadiusValueForPrint(matchEl.style.borderRadius);
+                    if (r > 0) return r;
+                }
+                if (matchEl.getAttribute && matchEl.getAttribute('data-rounded-corners')) {
+                    const r = parseRadiusValueForPrint(matchEl.getAttribute('data-rounded-corners'));
+                    if (r > 0) return r;
+                }
+                const content = matchEl.querySelector('.element-content');
+                if (content) {
+                    if (content.style && content.style.borderRadius) {
+                        const r = parseRadiusValueForPrint(content.style.borderRadius);
+                        if (r > 0) return r;
+                    }
+                    try {
+                        const comp = window.getComputedStyle(content);
+                        if (comp.borderRadius && comp.borderRadius !== '0px') {
+                            const r = parseRadiusValueForPrint(comp.borderRadius);
+                            if (r > 0) return r;
+                        }
+                    } catch (e) {}
+                }
+                if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getVisualBoxTarget === 'function') {
+                    try {
+                        const target = window.TextBoxStylesSystem.getVisualBoxTarget(matchEl);
+                        if (target && target !== content) {
+                            if (target.style && target.style.borderRadius) {
+                                const r = parseRadiusValueForPrint(target.style.borderRadius);
+                                if (r > 0) return r;
+                            }
+                            try {
+                                const comp = window.getComputedStyle(target);
+                                if (comp.borderRadius && comp.borderRadius !== '0px') {
+                                    const r = parseRadiusValueForPrint(comp.borderRadius);
+                                    if (r > 0) return r;
+                                }
+                            } catch (e) {}
+                        }
+                    } catch (e) {}
+                }
+                const tbl = matchEl.querySelector('table');
+                if (tbl) {
+                    if (tbl.style && tbl.style.borderRadius) {
+                        const r = parseRadiusValueForPrint(tbl.style.borderRadius);
+                        if (r > 0) return r;
+                    }
+                    if (tbl.className && tbl.className.includes('pt-r-')) {
+                        return 24;
+                    }
+                    try {
+                        const comp = window.getComputedStyle(tbl);
+                        if (comp.borderRadius && comp.borderRadius !== '0px') {
+                            const r = parseRadiusValueForPrint(comp.borderRadius);
+                            if (r > 0) return r;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+
         return 0;
     };
 
@@ -994,6 +1286,22 @@
                 if (content.style.filter && content.style.filter.includes('drop-shadow')) {
                     const cleanedFilter = content.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '').trim();
                     content.style.filter = cleanedFilter || 'none';
+                }
+                if (window.TextBoxStylesSystem && typeof window.TextBoxStylesSystem.getVisualBoxTarget === 'function') {
+                    try {
+                        const target = window.TextBoxStylesSystem.getVisualBoxTarget(el);
+                        if (target && target !== content) {
+                            target.style.setProperty('box-shadow', 'none', 'important');
+                            if (target.style.filter && target.style.filter.includes('drop-shadow')) {
+                                const cleanedFilter = target.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '').trim();
+                                target.style.filter = cleanedFilter || 'none';
+                            }
+                        }
+                    } catch (e) {}
+                }
+                const tbl = el.querySelector('table');
+                if (tbl) {
+                    tbl.style.setProperty('box-shadow', 'none', 'important');
                 }
                 el.style.overflow = 'visible';
                 el.insertBefore(glowImg, content);
@@ -2469,6 +2777,8 @@
                         if (underlay) {
                             css = css.replace(/box-shadow:\s*[^;]+;?/gi, '').replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/gi, '');
                             css += '; box-shadow: none !important;';
+                            cleanHTML = cleanHTML.replace(/box-shadow:\s*[^;"]+;?/gi, 'box-shadow: none !important;');
+                            cleanHTML = cleanHTML.replace(/filter:\s*[^;"]*drop-shadow\((?:[^)(]+|\([^)(]*\))*\)[^;"]*;?/gi, '');
                             const pad = underlay.pad;
                             elDiv.style.left = `${elLeft - pad}px`;
                             elDiv.style.top = `${elTop - pad}px`;
