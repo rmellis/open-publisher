@@ -153,6 +153,14 @@ window.DashboardSystem = {
         const wa = document.getElementById('wa-float-toolbar');
         if (wa) wa.style.display = 'none';
 
+        // Reset any card titles that may have been left in 'Opening...' state
+        document.querySelectorAll('.dashboard-template-card').forEach(card => {
+            const titleEl = card.querySelector('.dashboard-template-title');
+            if (titleEl && card.dataset.templateName) {
+                titleEl.textContent = card.dataset.templateName;
+            }
+        });
+
         const overlay = document.getElementById('dashboard-overlay');
         overlay.style.display = 'flex';
         if (window.innerWidth <= 768) {
@@ -221,7 +229,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.17.6');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.17.7');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -236,6 +244,7 @@ window.DashboardSystem = {
     createTemplateCard: function(t, isExpanded = false) {
         const div = document.createElement('div');
         div.className = 'dashboard-template-card';
+        div.dataset.templateName = t.name;
 
         const isMobile = window.innerWidth <= 768;
         const baseCardW = isMobile 
@@ -255,6 +264,9 @@ window.DashboardSystem = {
                 sizeLabel = (w > h) ? 'Landscape' : 'A4';
             }
         }
+        if (sizeLabel && /^a\d+$/i.test(sizeLabel)) {
+            sizeLabel = sizeLabel.toUpperCase();
+        }
         const sizeBadge = `<div class="dashboard-template-badge">${sizeLabel}</div>`;
 
         // Check if pre-rendered WebP thumbnail is available
@@ -263,7 +275,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.17.6`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.17.7`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:#f4f4f4; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -277,7 +289,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.17.6`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.17.7`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -296,6 +308,12 @@ window.DashboardSystem = {
                 .catch(err => {
                     console.error("Failed to load template project:", err);
                     if (titleEl) titleEl.textContent = origTitle;
+                })
+                .finally(() => {
+                    // Reset card title after overlay transition completes
+                    setTimeout(() => {
+                        if (titleEl) titleEl.textContent = origTitle;
+                    }, 350);
                 });
         };
         
@@ -306,7 +324,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.17.6`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.17.7`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -333,6 +351,9 @@ window.DashboardSystem = {
                     } else {
                         badge = `${w}x${h}`;
                     }
+                }
+                if (badge && /^a\d+$/i.test(badge)) {
+                    badge = badge.toUpperCase();
                 }
 
                 previewContainer.style.height = `${cardHeight}px`;
@@ -429,22 +450,23 @@ window.DashboardSystem = {
         // Curated hand-picked featured templates: the best of the premium collection
         const featured = [
             { name: 'Dear Santa Letter',                      file: 'letterheads_dear_santa.opub',             category: 'Letterheads' },
+            { name: 'Your Elf is Back Letter',                file: 'letterheads_your_elf_is_back.opub',       category: 'Letterheads' },
             { name: 'Gardening Club Event Flyer',             file: 'flyers_gardening_club.opub',              category: 'Flyers' },
             { name: 'After School Art Club Flyer',            file: 'flyers_after_school_art_club.opub',       category: 'Flyers' },
             { name: 'After School IT Club Flyer',             file: 'flyers_it_club.opub',                     category: 'Flyers' },
+            { name: 'Electrician Services Flyer',             file: 'flyers_electrician.opub',                 category: 'Flyers' },
+            { name: 'Auto Repair & Service Flyer',            file: 'flyers_auto_repair.opub',                 category: 'Flyers' },
+            { name: 'Music Lessons Academy Flyer',            file: 'flyers_music_lessons.opub',               category: 'Flyers' },
+            { name: 'Dog Groomer Flyer',                      file: 'flyers_dog_groomer.opub',                 category: 'Flyers' },
+            { name: 'Exploring Abstract Concepts Flyer',      file: 'flyers_exploring_abstract_concepts.opub', category: 'Flyers' },
             { name: 'Executive Summary',                      file: 'reports_executive_summary.opub',         category: 'Reports' },
-            { name: 'Luxury Wedding',                         file: 'invitations_luxury_wedding.opub',         category: 'Invitations' },
-            { name: 'Michelin Fine Dining',                   file: 'menus_michelin_fine_dining.opub',         category: 'Menus' },
             { name: 'Black Tie Gala',                         file: 'invitations_black_tie_gala.opub',         category: 'Invitations' },
-            { name: 'Film Festival',                          file: 'posters_film_festival.opub',              category: 'Posters' },
             { name: 'Nightclub Event',                        file: 'flyers_nightclub_event.opub',             category: 'Flyers' },
             { name: 'Creative Director',                      file: 'resumes_creative_director.opub',          category: 'Resumes' },
             { name: 'Gaming Magazine',                        file: 'magazines_gaming_cover.opub',             category: 'Magazines' },
-            { name: 'Luxury Brand Post',                      file: 'social_media_luxury_brand.opub',          category: 'Social Media' },
-            { name: 'Gold Excellence Award',                  file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
-            { name: 'Vintage Concert',                        file: 'posters_vintage_concert.opub',            category: 'Posters' },
             { name: 'Yacht Charter',                          file: 'brochures_yacht_charter.opub',            category: 'Brochures' },
             { name: "Santa's Official Nice List Certificate", file: 'certificates_santa_nice_list.opub',       category: 'Certificates' },
+            { name: 'Gold Excellence Award',                  file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
         ];
 
         featured.forEach(item => {

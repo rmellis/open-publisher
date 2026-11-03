@@ -1,6 +1,6 @@
 {
   "title": "After School Art Club Flyer",
-  "format": "a4",
+  "format": "A4",
   "dpi": 96,
   "unit": "cm",
   "rulerUnit": "cm",
@@ -14,7 +14,7 @@
       "width": "794px",
       "height": "1123px",
       "dpi": 96,
-      "format": "a4",
+      "format": "A4",
       "background": "rgb(255, 255, 255)",
       "header": "Header (Type here)",
       "footer": "Footer (Type here)",

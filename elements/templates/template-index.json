@@ -1,2118 +1,2153 @@
 {
-  "Resumes": [
-    {
-      "name": "Clean Executive Resume",
-      "file": "resumes_clean_executive_resume.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Modern Minimal",
-      "file": "resumes_modern_minimal.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Corporate Blue",
-      "file": "resumes_corporate_blue.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Creative Splash",
-      "file": "resumes_creative_splash.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Executive",
-      "file": "resumes_executive.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Simple Lines",
-      "file": "resumes_simple_lines.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Creative Minimalist",
-      "file": "resumes_creative_minimalist.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Dark Mode Developer",
-      "file": "resumes_dark_mode_developer.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Nurse & Healthcare",
-      "file": "resumes_nurse_healthcare.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Teacher & Educator",
-      "file": "resumes_teacher.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Graphic Designer",
-      "file": "resumes_graphic_designer.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Marketing Manager",
-      "file": "resumes_marketing_manager.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Project Manager",
-      "file": "resumes_project_manager.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Software Engineer",
-      "file": "resumes_software_engineer.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Chef & Culinary",
-      "file": "resumes_chef_culinary.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Creative Director",
-      "file": "resumes_creative_director.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Attorney & Law",
-      "file": "resumes_attorney_law.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Medical Doctor",
-      "file": "resumes_medical_doctor.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Fashion Designer",
-      "file": "resumes_fashion_designer.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Data Scientist",
-      "file": "resumes_data_scientist.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Architect",
-      "file": "resumes_architect.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dark Mode",
-      "file": "resumes_dark_mode.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Invitations": [
-    {
-      "name": "Dark Mode",
-      "file": "invitations_dark_mode.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Floral Wedding",
-      "file": "invitations_floral_wedding.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Kids Birthday",
-      "file": "invitations_kids_birthday.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Elegant Gold",
-      "file": "invitations_elegant_gold.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Baby Shower",
-      "file": "invitations_baby_shower.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Retirement Party",
-      "file": "invitations_retirement_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Elegant Wedding",
-      "file": "invitations_elegant_wedding.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Kids Birthday (A4)",
-      "file": "invitations_kids_birthday_a4.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Corporate Gala",
-      "file": "invitations_corporate_gala.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Sweet Sixteen",
-      "file": "invitations_sweet_sixteen.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Class of 2026 Graduation Gala",
-      "file": "invitations_graduation_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Anniversary",
-      "file": "invitations_anniversary.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "VIP Holiday Soirée Invitation",
-      "file": "invitations_holiday_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dinner Party",
-      "file": "invitations_dinner_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Engagement Party",
-      "file": "invitations_engagement_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "House Warming",
-      "file": "invitations_house_warming.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Black Tie Gala",
-      "file": "invitations_black_tie_gala.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Masquerade Ball",
-      "file": "invitations_masquerade_ball.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Wedding",
-      "file": "invitations_luxury_wedding.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Cocktail Party",
-      "file": "invitations_cocktail_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Graduation Open House Invite",
-      "file": "invitations_graduation.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Flyers": [
-    {
-      "name": "Modern Tech Flyer (NEW)",
-      "file": "flyers_modern_tech_flyer.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Commencement Ceremony Flyer",
-      "file": "flyers_graduation.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Lost Dog Urgent Flyer",
-      "file": "flyers_lost_dog.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Classic Lost Dog Flyer",
-      "file": "flyers_lost_dog_classic.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Concert Gig",
-      "file": "flyers_concert_gig.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Real Estate",
-      "file": "flyers_real_estate.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Grand Opening",
-      "file": "flyers_grand_opening.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Food Truck Fair",
-      "file": "flyers_food_truck.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Winter Sale",
-      "file": "flyers_winter_sale.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Charity Run",
-      "file": "flyers_charity_run.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Modern Gallery Opening Flyer",
-      "file": "flyers_art_exhibition.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Music Lessons",
-      "file": "flyers_music_lessons.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Tech Conference",
-      "file": "flyers_tech_conference.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Winter Holiday Bash Flyer",
-      "file": "flyers_holiday_party.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Book Fair",
-      "file": "flyers_book_fair.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Sports Camp",
-      "file": "flyers_sports_camp.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Garage Sale",
-      "file": "flyers_garage_sale.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Real Estate",
-      "file": "flyers_luxury_real_estate.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Corporate Seminar",
-      "file": "flyers_corporate_seminar.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Mindful Flow Yoga Studio Flyer",
-      "file": "flyers_yoga_studio.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Summer Festival",
-      "file": "flyers_summer_festival.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Tutoring Services",
-      "file": "flyers_tutoring_services.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Pet Grooming",
-      "file": "flyers_pet_grooming.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "House Cleaning",
-      "file": "flyers_house_cleaning.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Photography Services",
-      "file": "flyers_photography_services.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Nightclub Event",
-      "file": "flyers_nightclub_event.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Spa Day",
-      "file": "flyers_luxury_spa.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Startup Pitch Event",
-      "file": "flyers_startup_pitch.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Car Wash",
-      "file": "flyers_car_wash.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "School Library Opening Times",
-      "file": "flyers_school_library_opening.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Gardening Club Event Flyer",
-      "file": "flyers_gardening_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "a4"
-    },
-    {
-      "name": "After School Art Club Flyer",
-      "file": "flyers_after_school_art_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "a4"
-    },
-    {
-      "name": "After School IT Club Flyer",
-      "file": "flyers_it_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Magazines": [
-    {
-      "name": "Car Wash",
-      "file": "magazines_car_wash.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Fashion Cover",
-      "file": "magazines_fashion_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Tech Monthly",
-      "file": "magazines_tech_monthly.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Foodie",
-      "file": "magazines_foodie.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Aura Style Cover",
-      "file": "magazines_aura_style_cover.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Tech Innovator",
-      "file": "magazines_tech_innovator.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Food & Living",
-      "file": "magazines_food___living.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Travel Escapes",
-      "file": "magazines_travel_escapes.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Health & Fitness",
-      "file": "magazines_health___fitness.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Wellness & Mindfulness",
-      "file": "magazines_wellness_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Architecture & Design",
-      "file": "magazines_architecture_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Sports",
-      "file": "magazines_sports_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Wedding & Bridal",
-      "file": "magazines_wedding_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Business & Finance",
-      "file": "magazines_business_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Travel Adventure",
-      "file": "magazines_travel_adventure.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Gaming",
-      "file": "magazines_gaming_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Living",
-      "file": "magazines_luxury_living.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Nature",
-      "file": "magazines_nature.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Brochures": [
-    {
-      "name": "Nature",
-      "file": "brochures_nature.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Tri-Fold Layout",
-      "file": "brochures_tri_fold_layout.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Travel Brochure",
-      "file": "brochures_travel_brochure.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Bi-Fold Medical",
-      "file": "brochures_bi_fold_medical.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Nova Tech Handout",
-      "file": "brochures_nova_tech_handout.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Travel Agency",
-      "file": "brochures_travel_agency.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Medical Clinic",
-      "file": "brochures_medical_clinic.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "University Prospectus",
-      "file": "brochures_university_prospectus.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Eco Foundation",
-      "file": "brochures_eco_foundation.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Spa & Wellness",
-      "file": "brochures_spa_wellness.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Estate Property Brochure",
-      "file": "brochures_real_estate_listing.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Gym Membership",
-      "file": "brochures_gym_membership.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Restaurant Takeaway",
-      "file": "brochures_restaurant_takeaway.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Summer Camp",
-      "file": "brochures_summer_camp.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dog Grooming",
-      "file": "brochures_dog_grooming.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Financial Services",
-      "file": "brochures_financial_services.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Hotel & Resort",
-      "file": "brochures_hotel_resort.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Forma Studio Architecture Brochure",
-      "file": "brochures_architecture_firm.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Car",
-      "file": "brochures_luxury_car.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Travel",
-      "file": "brochures_luxury_travel.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Private School",
-      "file": "brochures_private_school.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Yacht Charter",
-      "file": "brochures_yacht_charter.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Fine Art Gallery",
-      "file": "brochures_fine_art_gallery.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Boutique Hotel",
-      "file": "brochures_boutique_hotel.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Corporate",
-      "file": "brochures_corporate.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Certificates": [
-    {
-      "name": "Corporate",
-      "file": "certificates_corporate.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Classic Award",
-      "file": "certificates_classic_award.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Diploma",
-      "file": "certificates_diploma.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Gift Certificate",
-      "file": "certificates_gift_certificate.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Academic Excellence",
-      "file": "certificates_academic_excellence.opub",
-      "width": 1056,
-      "height": 816,
-      "format": "1056x816"
-    },
-    {
-      "name": "Modern Corporate",
-      "file": "certificates_modern_corporate.opub",
-      "width": 1056,
-      "height": 816,
-      "format": "1056x816"
-    },
-    {
-      "name": "Employee of the Month",
-      "file": "certificates_employee_of_the_month.opub",
-      "width": 1056,
-      "height": 816,
-      "format": "1056x816"
-    },
-    {
-      "name": "Graduation Diploma",
-      "file": "certificates_graduation_diploma.opub",
-      "width": 1056,
-      "height": 816,
-      "format": "1056x816"
-    },
-    {
-      "name": "Kids Superstar Award",
-      "file": "certificates_kids_superstar_award.opub",
-      "width": 1056,
-      "height": 816,
-      "format": "1056x816"
-    },
-    {
-      "name": "Sports Achievement",
-      "file": "certificates_sports_achievement.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Volunteer Service",
-      "file": "certificates_volunteer_service.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Course Completion",
-      "file": "certificates_course_completion.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Safety Training",
-      "file": "certificates_safety_training.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Appreciation",
-      "file": "certificates_appreciation.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Best Employee of the Year",
-      "file": "certificates_best_employee.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Gold Excellence Award",
-      "file": "certificates_excellence_gold.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Premium Graduation",
-      "file": "certificates_graduation_premium.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Champion",
-      "file": "certificates_champion.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Employee of Month",
-      "file": "certificates_employee_of_month.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    },
-    {
-      "name": "Santa's Official Nice List Certificate",
-      "file": "certificates_santa_nice_list.opub",
-      "width": 1123,
-      "height": 794,
-      "format": "A4"
-    }
-  ],
-  "Menus": [
-    {
-      "name": "Chalkboard Menu",
-      "file": "menus_chalkboard_menu.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Fine Dining",
-      "file": "menus_fine_dining.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Coffee Shop",
-      "file": "menus_coffee_shop.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Cafe Noir Coffee",
-      "file": "menus_cafe_noir_coffee.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Rustic Italian",
-      "file": "menus_rustic_italian.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Cocktail Lounge",
-      "file": "menus_cocktail_lounge.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Burger Joint",
-      "file": "menus_burger_joint.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Sushi Restaurant",
-      "file": "menus_sushi_restaurant.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "BBQ & Grill",
-      "file": "menus_bbq_restaurant.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Vegan Cafe",
-      "file": "menus_vegan_cafe.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Pizza Place",
-      "file": "menus_pizza_place.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Breakfast Diner",
-      "file": "menus_breakfast_diner.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Cocktail Menu",
-      "file": "menus_cocktail_menu.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Sunday Brunch",
-      "file": "menus_sunday_brunch.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Steakhouse",
-      "file": "menus_luxury_steakhouse.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Michelin Fine Dining",
-      "file": "menus_michelin_fine_dining.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Cocktail Bar",
-      "file": "menus_cocktail_bar.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Employee of Month",
-      "file": "menus_employee_of_month.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Calendars": [
-    {
-      "name": "Cocktail Bar",
-      "file": "calendars_cocktail_bar.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Monthly Planner",
-      "file": "calendars_monthly_planner.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Weekly Schedule",
-      "file": "calendars_weekly_schedule.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Minimalist Wall",
-      "file": "calendars_minimalist_wall.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Corporate Desk",
-      "file": "calendars_corporate_desk.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Botanical Planner",
-      "file": "calendars_botanical_planner.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Fitness Tracker",
-      "file": "calendars_fitness_tracker.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Family Organizer",
-      "file": "calendars_family_organizer.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Year-at-a-Glance",
-      "file": "calendars_year_at_a_glance.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Wedding Planning",
-      "file": "calendars_wedding_planning.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Editorial Planner",
-      "file": "calendars_editorial_planner.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Academic Year",
-      "file": "calendars_academic_year.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Yearly View",
-      "file": "calendars_yearly_view.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Executive Monthly Wall Calendar",
-      "file": "calendars_monthly_grid.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Strategic Weekly Desk Planner",
-      "file": "calendars_weekly_planner.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Letterheads": [
-    {
-      "name": "Yearly View",
-      "file": "letterheads_yearly_view.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Modern Geo",
-      "file": "letterheads_modern_geo.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Minimal Black",
-      "file": "letterheads_minimal_black.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Corporate Red",
-      "file": "letterheads_corporate_red.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Executive Corporate",
-      "file": "letterheads_executive_corporate.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Creative Agency",
-      "file": "letterheads_creative_agency.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Medical Clinic",
-      "file": "letterheads_medical_clinic.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Law Firm",
-      "file": "letterheads_law_firm.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Tech Startup",
-      "file": "letterheads_tech_startup.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dental Clinic",
-      "file": "letterheads_dental_clinic.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Monolith Architecture Letterhead",
-      "file": "letterheads_architecture_firm.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Beauty Salon",
-      "file": "letterheads_beauty_salon.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Accounting Firm",
-      "file": "letterheads_accounting_firm.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Global Earth Foundation Letterhead",
-      "file": "letterheads_nonprofit.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Construction",
-      "file": "letterheads_construction.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Photography Studio",
-      "file": "letterheads_photography_studio.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Florist",
-      "file": "letterheads_florist.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Luxury Hotel",
-      "file": "letterheads_luxury_hotel.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Fashion Brand",
-      "file": "letterheads_fashion_brand.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Legal Contract Letterhead",
-      "file": "letterheads_legal.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dear Santa Letter",
-      "file": "letterheads_dear_santa.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Newsletters": [
-    {
-      "name": "Corporate Legal Briefing",
-      "file": "newsletters_legal.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Classic 2-Col",
-      "file": "newsletters_classic_2_col.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "School Update",
-      "file": "newsletters_school_update.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Corporate Brief",
-      "file": "newsletters_corporate_brief.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Startup Brief",
-      "file": "newsletters_startup_brief.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Tech Update",
-      "file": "newsletters_tech_update.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Real Estate Market",
-      "file": "newsletters_real_estate_market.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Community Update",
-      "file": "newsletters_community_update.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Modern Minimal",
-      "file": "newsletters_modern_minimal.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Fitness Club",
-      "file": "newsletters_fitness_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Church Bulletin",
-      "file": "newsletters_church_bulletin.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Photography Club",
-      "file": "newsletters_photography_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Book Club",
-      "file": "newsletters_book_club.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Parents Association",
-      "file": "newsletters_parents_association.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Restaurant Update",
-      "file": "newsletters_restaurant_update.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Lotus Sanctuary Yoga Digest",
-      "file": "newsletters_yoga_studio.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Travel Agency",
-      "file": "newsletters_travel_agency.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Verde Earth Impact Newsletter",
-      "file": "newsletters_nonprofit.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dark Tech",
-      "file": "newsletters_dark_tech.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Luxury Brand",
-      "file": "newsletters_luxury_brand.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Tech Startup Dark",
-      "file": "newsletters_tech_startup_dark.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Wellness Premium",
-      "file": "newsletters_wellness_premium.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Luxury Real Estate",
-      "file": "newsletters_real_estate_luxury.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Photography Premium",
-      "file": "newsletters_photography_premium.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Tech Digest",
-      "file": "newsletters_tech_digest.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Business Cards": [
-    {
-      "name": "Tech Digest",
-      "file": "business_cards_tech_digest.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    },
-    {
-      "name": "Modern (10up)",
-      "file": "business_cards_modern__10up_.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Dark (10up)",
-      "file": "business_cards_dark__10up_.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Photo (10up)",
-      "file": "business_cards_photo__10up_.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Bold (10up)",
-      "file": "business_cards_bold__10up_.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Real Estate Agent",
-      "file": "business_cards_real_estate_agent.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    },
-    {
-      "name": "Photographer",
-      "file": "business_cards_photographer.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    },
-    {
-      "name": "Consultant",
-      "file": "business_cards_consultant.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    },
-    {
-      "name": "Chef",
-      "file": "business_cards_chef.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    },
-    {
-      "name": "Lawyer",
-      "file": "business_cards_lawyer.opub",
-      "width": 336,
-      "height": 192,
-      "format": "Business Card"
-    }
-  ],
-  "Posters": [
-    {
-      "name": "Bold Sale Poster",
-      "file": "posters_bold_sale_poster.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Motivational",
-      "file": "posters_motivational.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Movie Poster",
-      "file": "posters_movie_poster.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Yoga Class",
-      "file": "posters_yoga_class.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Missing Person",
-      "file": "posters_missing_person.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Indie Film Poster",
-      "file": "posters_indie_film_poster.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Gallery Exhibition",
-      "file": "posters_gallery_exhibition.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Boutique Sale",
-      "file": "posters_boutique_sale.opub",
-      "width": 816,
-      "height": 1056,
-      "format": "Letter"
-    },
-    {
-      "name": "Sport Championship",
-      "file": "posters_sport_championship.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Halloween",
-      "file": "posters_halloween.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Christmas",
-      "file": "posters_christmas.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "New Year",
-      "file": "posters_new_year.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Spring Sale",
-      "file": "posters_spring_sale.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Art Show",
-      "file": "posters_art_show.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Marathon",
-      "file": "posters_marathon.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Vintage Concert",
-      "file": "posters_vintage_concert.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Neon Gig",
-      "file": "posters_neon_gig.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Film Festival",
-      "file": "posters_film_festival.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Wellness Retreat",
-      "file": "posters_wellness_retreat.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Music Festival Lineup",
-      "file": "posters_music_festival_lineup.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Charity Gala",
-      "file": "posters_charity_gala.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Product Launch Event",
-      "file": "posters_product_launch.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Chromatic Art Exhibition Poster",
-      "file": "posters_art_exhibition.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Social Media": [
-    {
-      "name": "Gallery Exhibition Social Post",
-      "file": "social_media_art_exhibition.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Instagram Quote",
-      "file": "social_media_instagram_quote.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "YouTube Thumb",
-      "file": "social_media_youtube_thumb.opub",
-      "width": 960,
-      "height": 540,
-      "format": "960x540"
-    },
-    {
-      "name": "Sale Story",
-      "file": "social_media_sale_story.opub",
-      "width": 600,
-      "height": 1067,
-      "format": "600x1067"
-    },
-    {
-      "name": "Event Post",
-      "file": "social_media_event_post.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Pinterest Pin",
-      "file": "social_media_pinterest_pin.opub",
-      "width": 600,
-      "height": 900,
-      "format": "600x900"
-    },
-    {
-      "name": "Sale Announcement",
-      "file": "social_media_sale_announcement.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Inspirational Quote",
-      "file": "social_media_inspirational_quote.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Podcast Promo",
-      "file": "social_media_podcast_promo.opub",
-      "width": 800,
-      "height": 800,
-      "format": "800x800"
-    },
-    {
-      "name": "Product Drop",
-      "file": "social_media_product_drop.opub",
-      "width": 800,
-      "height": 800,
-      "format": "800x800"
-    },
-    {
-      "name": "Twitter/X Header",
-      "file": "social_media_twitter_header.opub",
-      "width": 1024,
-      "height": 341,
-      "format": "1024x341"
-    },
-    {
-      "name": "Facebook Cover",
-      "file": "social_media_facebook_cover.opub",
-      "width": 820,
-      "height": 312,
-      "format": "820x312"
-    },
-    {
-      "name": "LinkedIn Banner",
-      "file": "social_media_linkedin_banner.opub",
-      "width": 794,
-      "height": 199,
-      "format": "Banner"
-    },
-    {
-      "name": "TikTok Thumbnail",
-      "file": "social_media_tiktok_thumbnail.opub",
-      "width": 540,
-      "height": 960,
-      "format": "Story"
-    },
-    {
-      "name": "Instagram/Facebook Reel",
-      "file": "social_media_reel_story.opub",
-      "width": 540,
-      "height": 960,
-      "format": "Story"
-    },
-    {
-      "name": "Business Announcement",
-      "file": "social_media_business_announcement.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Countdown Post",
-      "file": "social_media_countdown_post.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Customer Review Card",
-      "file": "social_media_review_card.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "New Product Launch",
-      "file": "social_media_new_product.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Motivational Quote",
-      "file": "social_media_motivational_quote2.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Luxury Brand Post",
-      "file": "social_media_luxury_brand.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Dark Mode Quote",
-      "file": "social_media_dark_quote.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Giveaway Post",
-      "file": "social_media_giveaway.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Event Countdown",
-      "file": "social_media_event_countdown.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Before & After",
-      "file": "social_media_before_after.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Team Spotlight",
-      "file": "social_media_team_spotlight.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Portfolio Showcase",
-      "file": "social_media_portfolio_showcase.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Product Feature",
-      "file": "social_media_product_feature.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Services Menu",
-      "file": "social_media_services_menu.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Luxury Property Social Listing",
-      "file": "social_media_real_estate_listing.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    },
-    {
-      "name": "Food Menu Post",
-      "file": "social_media_food_menu.opub",
-      "width": 794,
-      "height": 794,
-      "format": "Square"
-    }
-  ],
-  "Reports": [
-    {
-      "name": "Annual Report Cover",
-      "file": "reports_annual_report_cover.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Business Proposal",
-      "file": "reports_business_proposal.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Project Report",
-      "file": "reports_project_report.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Sales Report",
-      "file": "reports_sales_report.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Financial Report",
-      "file": "reports_financial_report.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Nonprofit Impact Report",
-      "file": "reports_nonprofit_impact.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Executive Summary",
-      "file": "reports_executive_summary.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    },
-    {
-      "name": "Market Research",
-      "file": "reports_market_research.opub",
-      "width": 794,
-      "height": 1123,
-      "format": "A4"
-    }
-  ],
-  "Labels": [
-    {
-      "name": "Wine Bottle",
-      "file": "labels_wine_bottle.opub",
-      "width": 300,
-      "height": 450,
-      "format": "300x450"
-    },
-    {
-      "name": "Product Jar",
-      "file": "labels_product_jar.opub",
-      "width": 300,
-      "height": 300,
-      "format": "300x300"
-    },
-    {
-      "name": "Gift Tag",
-      "file": "labels_gift_tag.opub",
-      "width": 250,
-      "height": 400,
-      "format": "250x400"
-    },
-    {
-      "name": "Price Tag",
-      "file": "labels_price_tag.opub",
-      "width": 200,
-      "height": 300,
-      "format": "200x300"
-    },
-    {
-      "name": "Address Label",
-      "file": "labels_address_label.opub",
-      "width": 350,
-      "height": 150,
-      "format": "350x150"
-    },
-    {
-      "name": "Food Product",
-      "file": "labels_food_product.opub",
-      "width": 350,
-      "height": 250,
-      "format": "350x250"
-    },
-    {
-      "name": "Premium Wine Label",
-      "file": "labels_premium_wine.opub",
-      "width": 300,
-      "height": 450,
-      "format": "300x450"
-    },
-    {
-      "name": "Luxury Cosmetic",
-      "file": "labels_luxury_cosmetic.opub",
-      "width": 300,
-      "height": 400,
-      "format": "300x400"
-    }
-  ]
+    "Resumes": [
+        {
+            "name": "Clean Executive Resume",
+            "file": "resumes_clean_executive_resume.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Modern Minimal",
+            "file": "resumes_modern_minimal.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Corporate Blue",
+            "file": "resumes_corporate_blue.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Creative Splash",
+            "file": "resumes_creative_splash.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Executive",
+            "file": "resumes_executive.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Simple Lines",
+            "file": "resumes_simple_lines.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Creative Minimalist",
+            "file": "resumes_creative_minimalist.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Dark Mode Developer",
+            "file": "resumes_dark_mode_developer.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Nurse & Healthcare",
+            "file": "resumes_nurse_healthcare.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Teacher & Educator",
+            "file": "resumes_teacher.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Graphic Designer",
+            "file": "resumes_graphic_designer.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Marketing Manager",
+            "file": "resumes_marketing_manager.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Project Manager",
+            "file": "resumes_project_manager.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Software Engineer",
+            "file": "resumes_software_engineer.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Chef & Culinary",
+            "file": "resumes_chef_culinary.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Creative Director",
+            "file": "resumes_creative_director.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Attorney & Law",
+            "file": "resumes_attorney_law.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Medical Doctor",
+            "file": "resumes_medical_doctor.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Fashion Designer",
+            "file": "resumes_fashion_designer.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Data Scientist",
+            "file": "resumes_data_scientist.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Architect",
+            "file": "resumes_architect.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dark Mode",
+            "file": "resumes_dark_mode.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Invitations": [
+        {
+            "name": "Dark Mode",
+            "file": "invitations_dark_mode.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Floral Wedding",
+            "file": "invitations_floral_wedding.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Kids Birthday",
+            "file": "invitations_kids_birthday.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Elegant Gold",
+            "file": "invitations_elegant_gold.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Baby Shower",
+            "file": "invitations_baby_shower.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Retirement Party",
+            "file": "invitations_retirement_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Elegant Wedding",
+            "file": "invitations_elegant_wedding.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Kids Birthday (A4)",
+            "file": "invitations_kids_birthday_a4.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Corporate Gala",
+            "file": "invitations_corporate_gala.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Sweet Sixteen",
+            "file": "invitations_sweet_sixteen.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Class of 2026 Graduation Gala",
+            "file": "invitations_graduation_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Anniversary",
+            "file": "invitations_anniversary.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "VIP Holiday Soir\u00e9e Invitation",
+            "file": "invitations_holiday_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dinner Party",
+            "file": "invitations_dinner_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Engagement Party",
+            "file": "invitations_engagement_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "House Warming",
+            "file": "invitations_house_warming.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Black Tie Gala",
+            "file": "invitations_black_tie_gala.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Masquerade Ball",
+            "file": "invitations_masquerade_ball.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Wedding",
+            "file": "invitations_luxury_wedding.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Cocktail Party",
+            "file": "invitations_cocktail_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Graduation Open House Invite",
+            "file": "invitations_graduation.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Flyers": [
+        {
+            "name": "Modern Tech Flyer (NEW)",
+            "file": "flyers_modern_tech_flyer.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Commencement Ceremony Flyer",
+            "file": "flyers_graduation.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Lost Dog Urgent Flyer",
+            "file": "flyers_lost_dog.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Classic Lost Dog Flyer",
+            "file": "flyers_lost_dog_classic.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Concert Gig",
+            "file": "flyers_concert_gig.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Real Estate",
+            "file": "flyers_real_estate.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Grand Opening",
+            "file": "flyers_grand_opening.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Food Truck Fair",
+            "file": "flyers_food_truck.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Winter Sale",
+            "file": "flyers_winter_sale.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Charity Run",
+            "file": "flyers_charity_run.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Modern Gallery Opening Flyer",
+            "file": "flyers_art_exhibition.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Music Lessons Academy Flyer",
+            "file": "flyers_music_lessons.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Tech Conference",
+            "file": "flyers_tech_conference.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Winter Holiday Bash Flyer",
+            "file": "flyers_holiday_party.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Book Fair",
+            "file": "flyers_book_fair.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Sports Camp",
+            "file": "flyers_sports_camp.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Garage Sale",
+            "file": "flyers_garage_sale.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Real Estate",
+            "file": "flyers_luxury_real_estate.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Corporate Seminar",
+            "file": "flyers_corporate_seminar.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Mindful Flow Yoga Studio Flyer",
+            "file": "flyers_yoga_studio.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Summer Festival",
+            "file": "flyers_summer_festival.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Tutoring Services",
+            "file": "flyers_tutoring_services.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Pet Grooming",
+            "file": "flyers_pet_grooming.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "House Cleaning",
+            "file": "flyers_house_cleaning.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Photography Services",
+            "file": "flyers_photography_services.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Nightclub Event",
+            "file": "flyers_nightclub_event.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Spa Day",
+            "file": "flyers_luxury_spa.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Startup Pitch Event",
+            "file": "flyers_startup_pitch.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Car Wash",
+            "file": "flyers_car_wash.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "School Library Opening Times",
+            "file": "flyers_school_library_opening.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Gardening Club Event Flyer",
+            "file": "flyers_gardening_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "After School Art Club Flyer",
+            "file": "flyers_after_school_art_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "After School IT Club Flyer",
+            "file": "flyers_it_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Electrician Services Flyer",
+            "file": "flyers_electrician.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Auto Repair & Service Flyer",
+            "file": "flyers_auto_repair.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dog Groomer Flyer",
+            "file": "flyers_dog_groomer.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Exploring Abstract Concepts Flyer",
+            "file": "flyers_exploring_abstract_concepts.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Magazines": [
+        {
+            "name": "Car Wash",
+            "file": "magazines_car_wash.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Fashion Cover",
+            "file": "magazines_fashion_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Tech Monthly",
+            "file": "magazines_tech_monthly.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Foodie",
+            "file": "magazines_foodie.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Aura Style Cover",
+            "file": "magazines_aura_style_cover.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Tech Innovator",
+            "file": "magazines_tech_innovator.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Food & Living",
+            "file": "magazines_food___living.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Travel Escapes",
+            "file": "magazines_travel_escapes.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Health & Fitness",
+            "file": "magazines_health___fitness.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Wellness & Mindfulness",
+            "file": "magazines_wellness_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Architecture & Design",
+            "file": "magazines_architecture_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Sports",
+            "file": "magazines_sports_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Wedding & Bridal",
+            "file": "magazines_wedding_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Business & Finance",
+            "file": "magazines_business_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Travel Adventure",
+            "file": "magazines_travel_adventure.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Gaming",
+            "file": "magazines_gaming_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Living",
+            "file": "magazines_luxury_living.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Nature",
+            "file": "magazines_nature.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Brochures": [
+        {
+            "name": "Nature",
+            "file": "brochures_nature.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Tri-Fold Layout",
+            "file": "brochures_tri_fold_layout.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Travel Brochure",
+            "file": "brochures_travel_brochure.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Bi-Fold Medical",
+            "file": "brochures_bi_fold_medical.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Nova Tech Handout",
+            "file": "brochures_nova_tech_handout.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Travel Agency",
+            "file": "brochures_travel_agency.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Medical Clinic",
+            "file": "brochures_medical_clinic.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "University Prospectus",
+            "file": "brochures_university_prospectus.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Eco Foundation",
+            "file": "brochures_eco_foundation.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Spa & Wellness",
+            "file": "brochures_spa_wellness.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Estate Property Brochure",
+            "file": "brochures_real_estate_listing.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Gym Membership",
+            "file": "brochures_gym_membership.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Restaurant Takeaway",
+            "file": "brochures_restaurant_takeaway.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Summer Camp",
+            "file": "brochures_summer_camp.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dog Grooming",
+            "file": "brochures_dog_grooming.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Financial Services",
+            "file": "brochures_financial_services.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Hotel & Resort",
+            "file": "brochures_hotel_resort.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Forma Studio Architecture Brochure",
+            "file": "brochures_architecture_firm.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Car",
+            "file": "brochures_luxury_car.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Travel",
+            "file": "brochures_luxury_travel.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Private School",
+            "file": "brochures_private_school.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Yacht Charter",
+            "file": "brochures_yacht_charter.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Fine Art Gallery",
+            "file": "brochures_fine_art_gallery.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Boutique Hotel",
+            "file": "brochures_boutique_hotel.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Corporate",
+            "file": "brochures_corporate.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Certificates": [
+        {
+            "name": "Corporate",
+            "file": "certificates_corporate.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Classic Award",
+            "file": "certificates_classic_award.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Diploma",
+            "file": "certificates_diploma.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Gift Certificate",
+            "file": "certificates_gift_certificate.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Academic Excellence",
+            "file": "certificates_academic_excellence.opub",
+            "width": 1056,
+            "height": 816,
+            "format": "1056x816"
+        },
+        {
+            "name": "Modern Corporate",
+            "file": "certificates_modern_corporate.opub",
+            "width": 1056,
+            "height": 816,
+            "format": "1056x816"
+        },
+        {
+            "name": "Employee of the Month",
+            "file": "certificates_employee_of_the_month.opub",
+            "width": 1056,
+            "height": 816,
+            "format": "1056x816"
+        },
+        {
+            "name": "Graduation Diploma",
+            "file": "certificates_graduation_diploma.opub",
+            "width": 1056,
+            "height": 816,
+            "format": "1056x816"
+        },
+        {
+            "name": "Kids Superstar Award",
+            "file": "certificates_kids_superstar_award.opub",
+            "width": 1056,
+            "height": 816,
+            "format": "1056x816"
+        },
+        {
+            "name": "Sports Achievement",
+            "file": "certificates_sports_achievement.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Volunteer Service",
+            "file": "certificates_volunteer_service.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Course Completion",
+            "file": "certificates_course_completion.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Safety Training",
+            "file": "certificates_safety_training.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Appreciation",
+            "file": "certificates_appreciation.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Best Employee of the Year",
+            "file": "certificates_best_employee.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Gold Excellence Award",
+            "file": "certificates_excellence_gold.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Premium Graduation",
+            "file": "certificates_graduation_premium.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Champion",
+            "file": "certificates_champion.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Employee of Month",
+            "file": "certificates_employee_of_month.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        },
+        {
+            "name": "Santa's Official Nice List Certificate",
+            "file": "certificates_santa_nice_list.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4"
+        }
+    ],
+    "Menus": [
+        {
+            "name": "Chalkboard Menu",
+            "file": "menus_chalkboard_menu.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Fine Dining",
+            "file": "menus_fine_dining.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Coffee Shop",
+            "file": "menus_coffee_shop.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Cafe Noir Coffee",
+            "file": "menus_cafe_noir_coffee.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Rustic Italian",
+            "file": "menus_rustic_italian.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Cocktail Lounge",
+            "file": "menus_cocktail_lounge.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Burger Joint",
+            "file": "menus_burger_joint.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Sushi Restaurant",
+            "file": "menus_sushi_restaurant.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "BBQ & Grill",
+            "file": "menus_bbq_restaurant.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Vegan Cafe",
+            "file": "menus_vegan_cafe.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Pizza Place",
+            "file": "menus_pizza_place.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Breakfast Diner",
+            "file": "menus_breakfast_diner.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Cocktail Menu",
+            "file": "menus_cocktail_menu.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Sunday Brunch",
+            "file": "menus_sunday_brunch.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Steakhouse",
+            "file": "menus_luxury_steakhouse.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Michelin Fine Dining",
+            "file": "menus_michelin_fine_dining.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Cocktail Bar",
+            "file": "menus_cocktail_bar.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Employee of Month",
+            "file": "menus_employee_of_month.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Calendars": [
+        {
+            "name": "Cocktail Bar",
+            "file": "calendars_cocktail_bar.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Monthly Planner",
+            "file": "calendars_monthly_planner.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Weekly Schedule",
+            "file": "calendars_weekly_schedule.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Minimalist Wall",
+            "file": "calendars_minimalist_wall.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Corporate Desk",
+            "file": "calendars_corporate_desk.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Botanical Planner",
+            "file": "calendars_botanical_planner.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Fitness Tracker",
+            "file": "calendars_fitness_tracker.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Family Organizer",
+            "file": "calendars_family_organizer.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Year-at-a-Glance",
+            "file": "calendars_year_at_a_glance.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Wedding Planning",
+            "file": "calendars_wedding_planning.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Editorial Planner",
+            "file": "calendars_editorial_planner.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Academic Year",
+            "file": "calendars_academic_year.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Yearly View",
+            "file": "calendars_yearly_view.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Executive Monthly Wall Calendar",
+            "file": "calendars_monthly_grid.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Strategic Weekly Desk Planner",
+            "file": "calendars_weekly_planner.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Letterheads": [
+        {
+            "name": "Yearly View",
+            "file": "letterheads_yearly_view.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Modern Geo",
+            "file": "letterheads_modern_geo.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Minimal Black",
+            "file": "letterheads_minimal_black.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Corporate Red",
+            "file": "letterheads_corporate_red.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Executive Corporate",
+            "file": "letterheads_executive_corporate.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Creative Agency",
+            "file": "letterheads_creative_agency.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Medical Clinic",
+            "file": "letterheads_medical_clinic.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Law Firm",
+            "file": "letterheads_law_firm.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Tech Startup",
+            "file": "letterheads_tech_startup.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dental Clinic",
+            "file": "letterheads_dental_clinic.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Monolith Architecture Letterhead",
+            "file": "letterheads_architecture_firm.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Beauty Salon",
+            "file": "letterheads_beauty_salon.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Accounting Firm",
+            "file": "letterheads_accounting_firm.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Global Earth Foundation Letterhead",
+            "file": "letterheads_nonprofit.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Construction",
+            "file": "letterheads_construction.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Photography Studio",
+            "file": "letterheads_photography_studio.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Florist",
+            "file": "letterheads_florist.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Luxury Hotel",
+            "file": "letterheads_luxury_hotel.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Fashion Brand",
+            "file": "letterheads_fashion_brand.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Legal Contract Letterhead",
+            "file": "letterheads_legal.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dear Santa Letter",
+            "file": "letterheads_dear_santa.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Your Elf is Back Letter",
+            "file": "letterheads_your_elf_is_back.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Newsletters": [
+        {
+            "name": "Corporate Legal Briefing",
+            "file": "newsletters_legal.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Classic 2-Col",
+            "file": "newsletters_classic_2_col.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "School Update",
+            "file": "newsletters_school_update.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Corporate Brief",
+            "file": "newsletters_corporate_brief.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Startup Brief",
+            "file": "newsletters_startup_brief.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Tech Update",
+            "file": "newsletters_tech_update.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Real Estate Market",
+            "file": "newsletters_real_estate_market.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Community Update",
+            "file": "newsletters_community_update.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Modern Minimal",
+            "file": "newsletters_modern_minimal.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Fitness Club",
+            "file": "newsletters_fitness_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Church Bulletin",
+            "file": "newsletters_church_bulletin.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Photography Club",
+            "file": "newsletters_photography_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Book Club",
+            "file": "newsletters_book_club.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Parents Association",
+            "file": "newsletters_parents_association.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Restaurant Update",
+            "file": "newsletters_restaurant_update.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Lotus Sanctuary Yoga Digest",
+            "file": "newsletters_yoga_studio.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Travel Agency",
+            "file": "newsletters_travel_agency.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Verde Earth Impact Newsletter",
+            "file": "newsletters_nonprofit.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dark Tech",
+            "file": "newsletters_dark_tech.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Luxury Brand",
+            "file": "newsletters_luxury_brand.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Tech Startup Dark",
+            "file": "newsletters_tech_startup_dark.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Wellness Premium",
+            "file": "newsletters_wellness_premium.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Luxury Real Estate",
+            "file": "newsletters_real_estate_luxury.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Photography Premium",
+            "file": "newsletters_photography_premium.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Tech Digest",
+            "file": "newsletters_tech_digest.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Business Cards": [
+        {
+            "name": "Tech Digest",
+            "file": "business_cards_tech_digest.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        },
+        {
+            "name": "Modern (10up)",
+            "file": "business_cards_modern__10up_.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Dark (10up)",
+            "file": "business_cards_dark__10up_.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Photo (10up)",
+            "file": "business_cards_photo__10up_.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Bold (10up)",
+            "file": "business_cards_bold__10up_.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Real Estate Agent",
+            "file": "business_cards_real_estate_agent.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        },
+        {
+            "name": "Photographer",
+            "file": "business_cards_photographer.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        },
+        {
+            "name": "Consultant",
+            "file": "business_cards_consultant.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        },
+        {
+            "name": "Chef",
+            "file": "business_cards_chef.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        },
+        {
+            "name": "Lawyer",
+            "file": "business_cards_lawyer.opub",
+            "width": 336,
+            "height": 192,
+            "format": "Business Card"
+        }
+    ],
+    "Posters": [
+        {
+            "name": "Bold Sale Poster",
+            "file": "posters_bold_sale_poster.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Motivational",
+            "file": "posters_motivational.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Movie Poster",
+            "file": "posters_movie_poster.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Yoga Class",
+            "file": "posters_yoga_class.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Missing Person",
+            "file": "posters_missing_person.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Indie Film Poster",
+            "file": "posters_indie_film_poster.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Gallery Exhibition",
+            "file": "posters_gallery_exhibition.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Boutique Sale",
+            "file": "posters_boutique_sale.opub",
+            "width": 816,
+            "height": 1056,
+            "format": "Letter"
+        },
+        {
+            "name": "Sport Championship",
+            "file": "posters_sport_championship.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Halloween",
+            "file": "posters_halloween.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Christmas",
+            "file": "posters_christmas.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "New Year",
+            "file": "posters_new_year.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Spring Sale",
+            "file": "posters_spring_sale.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Art Show",
+            "file": "posters_art_show.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Marathon",
+            "file": "posters_marathon.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Vintage Concert",
+            "file": "posters_vintage_concert.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Neon Gig",
+            "file": "posters_neon_gig.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Film Festival",
+            "file": "posters_film_festival.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Wellness Retreat",
+            "file": "posters_wellness_retreat.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Music Festival Lineup",
+            "file": "posters_music_festival_lineup.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Charity Gala",
+            "file": "posters_charity_gala.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Product Launch Event",
+            "file": "posters_product_launch.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Chromatic Art Exhibition Poster",
+            "file": "posters_art_exhibition.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Social Media": [
+        {
+            "name": "Gallery Exhibition Social Post",
+            "file": "social_media_art_exhibition.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Instagram Quote",
+            "file": "social_media_instagram_quote.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "YouTube Thumb",
+            "file": "social_media_youtube_thumb.opub",
+            "width": 960,
+            "height": 540,
+            "format": "960x540"
+        },
+        {
+            "name": "Sale Story",
+            "file": "social_media_sale_story.opub",
+            "width": 600,
+            "height": 1067,
+            "format": "600x1067"
+        },
+        {
+            "name": "Event Post",
+            "file": "social_media_event_post.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Pinterest Pin",
+            "file": "social_media_pinterest_pin.opub",
+            "width": 600,
+            "height": 900,
+            "format": "600x900"
+        },
+        {
+            "name": "Sale Announcement",
+            "file": "social_media_sale_announcement.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Inspirational Quote",
+            "file": "social_media_inspirational_quote.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Podcast Promo",
+            "file": "social_media_podcast_promo.opub",
+            "width": 800,
+            "height": 800,
+            "format": "800x800"
+        },
+        {
+            "name": "Product Drop",
+            "file": "social_media_product_drop.opub",
+            "width": 800,
+            "height": 800,
+            "format": "800x800"
+        },
+        {
+            "name": "Twitter/X Header",
+            "file": "social_media_twitter_header.opub",
+            "width": 1024,
+            "height": 341,
+            "format": "1024x341"
+        },
+        {
+            "name": "Facebook Cover",
+            "file": "social_media_facebook_cover.opub",
+            "width": 820,
+            "height": 312,
+            "format": "820x312"
+        },
+        {
+            "name": "LinkedIn Banner",
+            "file": "social_media_linkedin_banner.opub",
+            "width": 794,
+            "height": 199,
+            "format": "Banner"
+        },
+        {
+            "name": "TikTok Thumbnail",
+            "file": "social_media_tiktok_thumbnail.opub",
+            "width": 540,
+            "height": 960,
+            "format": "Story"
+        },
+        {
+            "name": "Instagram/Facebook Reel",
+            "file": "social_media_reel_story.opub",
+            "width": 540,
+            "height": 960,
+            "format": "Story"
+        },
+        {
+            "name": "Business Announcement",
+            "file": "social_media_business_announcement.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Countdown Post",
+            "file": "social_media_countdown_post.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Customer Review Card",
+            "file": "social_media_review_card.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "New Product Launch",
+            "file": "social_media_new_product.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Motivational Quote",
+            "file": "social_media_motivational_quote2.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Luxury Brand Post",
+            "file": "social_media_luxury_brand.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Dark Mode Quote",
+            "file": "social_media_dark_quote.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Giveaway Post",
+            "file": "social_media_giveaway.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Event Countdown",
+            "file": "social_media_event_countdown.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Before & After",
+            "file": "social_media_before_after.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Team Spotlight",
+            "file": "social_media_team_spotlight.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Portfolio Showcase",
+            "file": "social_media_portfolio_showcase.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Product Feature",
+            "file": "social_media_product_feature.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Services Menu",
+            "file": "social_media_services_menu.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Luxury Property Social Listing",
+            "file": "social_media_real_estate_listing.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        },
+        {
+            "name": "Food Menu Post",
+            "file": "social_media_food_menu.opub",
+            "width": 794,
+            "height": 794,
+            "format": "Square"
+        }
+    ],
+    "Reports": [
+        {
+            "name": "Annual Report Cover",
+            "file": "reports_annual_report_cover.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Business Proposal",
+            "file": "reports_business_proposal.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Project Report",
+            "file": "reports_project_report.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Sales Report",
+            "file": "reports_sales_report.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Financial Report",
+            "file": "reports_financial_report.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Nonprofit Impact Report",
+            "file": "reports_nonprofit_impact.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Executive Summary",
+            "file": "reports_executive_summary.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
+            "name": "Market Research",
+            "file": "reports_market_research.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        }
+    ],
+    "Labels": [
+        {
+            "name": "Wine Bottle",
+            "file": "labels_wine_bottle.opub",
+            "width": 300,
+            "height": 450,
+            "format": "300x450"
+        },
+        {
+            "name": "Product Jar",
+            "file": "labels_product_jar.opub",
+            "width": 300,
+            "height": 300,
+            "format": "300x300"
+        },
+        {
+            "name": "Gift Tag",
+            "file": "labels_gift_tag.opub",
+            "width": 250,
+            "height": 400,
+            "format": "250x400"
+        },
+        {
+            "name": "Price Tag",
+            "file": "labels_price_tag.opub",
+            "width": 200,
+            "height": 300,
+            "format": "200x300"
+        },
+        {
+            "name": "Address Label",
+            "file": "labels_address_label.opub",
+            "width": 350,
+            "height": 150,
+            "format": "350x150"
+        },
+        {
+            "name": "Food Product",
+            "file": "labels_food_product.opub",
+            "width": 350,
+            "height": 250,
+            "format": "350x250"
+        },
+        {
+            "name": "Premium Wine Label",
+            "file": "labels_premium_wine.opub",
+            "width": 300,
+            "height": 450,
+            "format": "300x450"
+        },
+        {
+            "name": "Luxury Cosmetic",
+            "file": "labels_luxury_cosmetic.opub",
+            "width": 300,
+            "height": 400,
+            "format": "300x400"
+        }
+    ]
 }

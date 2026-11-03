@@ -1,6 +1,6 @@
 {
   "title": "Gardening Club Event Flyer",
-  "format": "a4",
+  "format": "A4",
   "dpi": 96,
   "unit": "cm",
   "rulerUnit": "cm",
@@ -14,7 +14,7 @@
       "width": "794px",
       "height": "1123px",
       "dpi": 96,
-      "format": "a4",
+      "format": "A4",
       "background": "rgb(244, 241, 234)",
       "header": "",
       "footer": "",
