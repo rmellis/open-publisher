@@ -3968,7 +3968,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             // --- REBUILD: Table Design ---
             designTab.innerHTML = `${clipGroup}
                 <div class="group">
-                    <div class="tool-btn" onclick="ContextRibbonActions.tableStyle()"><i class="fas fa-paint-roller" style="color:var(--ui-theme-color)"></i>Zebra</div>
+                    <div class="tool-btn" onclick="if(window.openTableTemplatesModal) window.openTableTemplatesModal({mode:'apply'})" title="Apply a table style"><i class="fas fa-table" style="color:var(--ui-theme-color)"></i>Table<br>Styles</div>
                     <div class="group-label">Styles</div>
                 </div>
                 <div class="group">

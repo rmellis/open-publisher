@@ -8894,3 +8894,311 @@ body.dark-mode .custom-dialog .op-ls-number-input:focus {
 
 
 
+/* =========================================================================
+   STYLED TABLES GALLERY (v5.17.9)
+   Modern insert / apply dialog for elements/table/table-styles.js
+   ========================================================================= */
+.custom-dialog.op-tbl-modal {
+    width: min(1040px, 96vw);
+    max-width: 96vw;
+    background: var(--ui-panel-bg);
+}
+.custom-dialog.op-tbl-modal .custom-dialog-body {
+    padding: 0;
+    gap: 0;
+    height: min(660px, calc(100vh - 120px));
+    overflow: hidden;
+}
+/* The gallery supplies its own footer row */
+.custom-dialog.op-tbl-modal .custom-dialog-footer { display: none; }
+
+.optm {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 100%;
+    color: var(--ui-text);
+    font-size: 13px;
+    background: var(--ui-panel-bg);
+}
+.optm * { box-sizing: border-box; }
+
+/* ---- Left: search, categories, colours, design grid ---- */
+.optm-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid var(--ui-border);
+}
+.optm-top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--ui-border);
+}
+.optm-search { position: relative; }
+.optm-search i {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--ui-text-muted);
+    pointer-events: none;
+}
+.optm .optm-search input {
+    width: 100%;
+    padding: 8px 14px 8px 34px;
+    border: 1px solid var(--ui-border);
+    border-radius: 20px;
+    background: var(--ui-panel-bg);
+    color: var(--ui-text);
+    font: inherit;
+}
+.optm .optm-search input:focus {
+    outline: 2px solid var(--ui-theme-color);
+    border-color: transparent;
+}
+
+.optm-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.optm-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+}
+.optm-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ui-text);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.optm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.optm-chip {
+    padding: 4px 12px;
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    background: var(--ui-panel-bg);
+    color: var(--ui-text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.optm-chip:hover,
+.optm-chip:focus-visible { border-color: var(--ui-theme-color); }
+.optm-chip.on {
+    background: var(--ui-theme-color);
+    border-color: var(--ui-theme-color);
+    color: #ffffff;
+}
+
+.optm-pal { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.optm-sw {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    outline: none;
+    border: 2px solid var(--ui-panel-bg);
+    box-shadow: 0 0 0 1px var(--ui-border);
+    transition: transform 0.12s;
+}
+.optm-sw:hover,
+.optm-sw:focus-visible { transform: scale(1.2); }
+.optm-sw.sel {
+    box-shadow: 0 0 0 2px var(--ui-theme-color), 0 0 0 4px color-mix(in srgb, var(--ui-theme-color) 25%, transparent);
+}
+.optm-sw-div { width: 1px; height: 18px; margin: 0 4px; background: var(--ui-border); }
+
+.optm-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+    gap: 12px;
+    padding: 14px 16px 18px;
+}
+.optm-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    border: 2px solid var(--ui-border);
+    border-radius: 12px;
+    background: var(--ui-panel-bg);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.optm-tile:hover,
+.optm-tile:focus-visible {
+    border-color: var(--ui-theme-color);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px var(--ui-shadow);
+}
+.optm-tile.sel {
+    border-color: var(--ui-theme-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-theme-color) 22%, transparent);
+}
+/* Thumbnail always sits on white "paper" so it matches how it looks on the page */
+.optm-tile-pv {
+    position: relative;
+    height: 104px;
+    padding: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #ffffff;
+}
+.optm-tile-scale {
+    width: 330px;
+    transform: scale(var(--optm-k, 0.5));
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+.optm .optm-tile-scale .op-tbl,
+.optm .optm-pv-fit .op-tbl { height: auto; pointer-events: none; }
+.optm-tile-name { margin-top: 4px; font-size: 12.5px; font-weight: 700; text-align: center; }
+.optm-tile-cat {
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--ui-text-muted);
+}
+.optm-check {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--ui-theme-color);
+    color: #ffffff;
+    font-size: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.optm-tile.sel .optm-check { display: flex; }
+.optm-empty {
+    grid-column: 1 / -1;
+    padding: 48px 12px;
+    text-align: center;
+    color: var(--ui-text-muted);
+}
+
+/* ---- Right: live preview + options ---- */
+.optm-side {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: color-mix(in srgb, var(--ui-theme-color) 4%, var(--ui-panel-bg));
+}
+.optm-side-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px 16px;
+}
+.optm-pv {
+    max-height: 290px;
+    padding: 14px;
+    overflow: auto;
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    background: #ffffff;
+}
+.optm-pv-box { position: relative; overflow: hidden; }
+.optm-pv-fit { transform-origin: 0 0; pointer-events: none; }
+
+.optm-row { display: flex; gap: 12px; }
+.optm-field { display: flex; flex-direction: column; flex: 1; gap: 5px; }
+.optm .optm-field input[type="number"] {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--ui-border);
+    border-radius: 8px;
+    background: var(--ui-panel-bg);
+    color: var(--ui-text);
+    font: inherit;
+}
+.optm .optm-field input[type="number"]:focus {
+    outline: 2px solid var(--ui-theme-color);
+    border-color: transparent;
+}
+.optm-opts { display: flex; flex-direction: column; gap: 8px; }
+.optm-switch {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.optm-switch input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--ui-theme-color);
+    cursor: pointer;
+}
+/* Apply mode edits an existing table, so size and sample content are not relevant */
+.optm-apply-mode .optm-insert-only { display: none; }
+
+/* ---- Footer ---- */
+.optm-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--ui-border);
+    background: var(--ui-panel-bg);
+}
+.optm-count { font-size: 12px; color: var(--ui-text-muted); }
+.optm-actions { display: flex; gap: 10px; }
+
+@media (max-width: 860px) {
+    .optm { grid-template-columns: minmax(0, 1fr); }
+    .optm-side { display: none; }
+    .optm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Dark mode ---- */
+body.dark-mode .custom-dialog.op-tbl-modal { border-color: var(--ui-border); }
+body.dark-mode .optm-side { background: color-mix(in srgb, var(--ui-theme-color) 8%, var(--ui-panel-bg)); }
+body.dark-mode .optm-tile:hover,
+body.dark-mode .optm-tile:focus-visible { background: var(--ui-hover-bg); }
+body.dark-mode.dark-ui-theme .optm-chip.on,
+body.dark-mode.dark-ui-theme .optm-check { color: #111111; }
+body.dark-mode .custom-dialog.op-tbl-modal .btn-secondary {
+    background: transparent;
+    color: var(--ui-text);
+    border-color: var(--ui-border);
+}
+body.dark-mode .custom-dialog.op-tbl-modal .btn-secondary:hover { background: var(--ui-hover-bg); }
