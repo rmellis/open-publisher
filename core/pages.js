@@ -729,6 +729,8 @@ function handleNewDocument() {
             state.historyIndex = -1;
             state.dpi = d;
             state.unit = u;
+            window._wrapperBoundTitle = null;
+            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
 
             let pageW = finalW + 'px';
             let pageH = finalH + 'px';

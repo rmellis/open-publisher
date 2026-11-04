@@ -138,9 +138,14 @@
         if (data.isTemplate) {
             const titleEl = document.getElementById('doc-title');
             if (titleEl) titleEl.innerText = "Untitled Publication";
+            window._wrapperBoundTitle = null;
+            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
         } else {
             const titleEl = document.getElementById('doc-title');
-            if (titleEl) titleEl.innerText = data.title || "Untitled Publication";
+            const docTitle = (data.title || "Untitled Publication").replace(/ \*$/, '').trim();
+            if (titleEl) titleEl.innerText = docTitle;
+            window._wrapperBoundTitle = docTitle;
+            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = docTitle;
         }
         
         state.pages = data.pages;

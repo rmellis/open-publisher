@@ -89,7 +89,7 @@ window.saveDocumentAs = function() {
         if (input && input.value.trim() !== '') {
             document.getElementById('doc-title').innerText = input.value.trim();
             if (typeof window.saveDocument === 'function') {
-                window.saveDocument();
+                window.saveDocument(false, true);
             } else {
                 saveDocument();
             }

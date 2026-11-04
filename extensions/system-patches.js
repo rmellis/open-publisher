@@ -1762,7 +1762,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     }
     window.isDesktopApp = isDesktopEnvironment;
 
-    async function masterSaveDocument(isTemplate = false) {
+    async function masterSaveDocument(isTemplate = false, forceSaveAs = false) {
         if (isTemplate && typeof window.showExportTemplateModal === 'function') {
             window.showExportTemplateModal();
             return;
@@ -1839,14 +1839,30 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
         }
 
+        // Determine if this save should trigger Save As
+        const boundTitle = window._wrapperBoundTitle || (typeof state !== 'undefined' && state ? state._wrapperBoundTitle : null);
+        const isRenamed = !!(boundTitle && currentTitle !== boundTitle);
+        const shouldSaveAs = !!(forceSaveAs || isRenamed || isTemplate || !boundTitle);
+
         // DESKTOP WRAPPER PATH:
         // Safely bridges directly to wrapper.html atomicSave with full AES-GCM encryption & rich metadata
         if (isDesktopEnvironment()) {
+            if (shouldSaveAs) {
+                // Detach wrapper's activeFilePath so OP_SAVE_DATA triggers native Save As dialog
+                // and prevents overwriting the original document or template on disk
+                console.log('OP_IPC:' + JSON.stringify({ type: 'OP_NEW_DOC' }));
+            }
             if (typeof window._updateDirtyBaseline === 'function') {
                 try { window._updateDirtyBaseline(); } catch(e) {}
             }
             const payloadStr = JSON.stringify(savePayload);
             console.log('OP_IPC:' + JSON.stringify({ type: 'OP_SAVE_DATA', payload: payloadStr }));
+
+            // Update bound title to current title
+            window._wrapperBoundTitle = currentTitle;
+            if (typeof state !== 'undefined' && state) {
+                state._wrapperBoundTitle = currentTitle;
+            }
             return;
         }
         
@@ -1879,6 +1895,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     document.getElementById('doc-title').innerText = "Untitled " + newName;
                 } else {
                     document.getElementById('doc-title').innerText = newName;
+                }
+
+                window._wrapperBoundTitle = newName;
+                if (typeof state !== 'undefined' && state) {
+                    state._wrapperBoundTitle = newName;
                 }
                 
                 // Optional: Flash a quick success message
@@ -1962,6 +1983,68 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         });
     } catch(e) {
         window.saveDocument = masterSaveDocument;
+    }
+
+    async function masterSaveDocumentAs() {
+        if (isDesktopEnvironment()) {
+            return masterSaveDocument(false, true);
+        }
+
+        if (window.showSaveFilePicker) {
+            return masterSaveDocument(false, true);
+        }
+
+        const titleEl = document.getElementById('doc-title');
+        const currentTitle = titleEl ? titleEl.innerText.replace(/ \*$/, '').trim() : 'Untitled Document';
+        if (typeof DialogSystem !== 'undefined') {
+            const html = `
+                <div style="margin-bottom:15px; font-size:14px; color:#555;">
+                    Enter a new name for your document.
+                </div>
+                <input type="text" id="save-as-filename" class="op-input-field" value="${currentTitle}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-family:inherit;" />
+            `;
+            DialogSystem.show('Save As', html, () => {
+                const input = document.getElementById('save-as-filename');
+                if (input && input.value.trim() !== '') {
+                    if (titleEl) titleEl.innerText = input.value.trim();
+                    masterSaveDocument(false, true);
+                }
+            }, false, 'Save As');
+        } else {
+            masterSaveDocument(false, true);
+        }
+    }
+
+    try {
+        Object.defineProperty(window, 'saveDocumentAs', {
+            get: function() {
+                return masterSaveDocumentAs;
+            },
+            set: function(newFn) {
+                // Lock definition against external tampering
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } catch(e) {
+        window.saveDocumentAs = masterSaveDocumentAs;
+    }
+
+    // Desktop save animation callbacks to ensure title alignment
+    window.finishDesktopSaveAnimation = function() {
+        setTimeout(() => {
+            const dt = document.getElementById('doc-title');
+            const finalTitle = dt ? dt.innerText.replace(/ \*$/, '').trim() : (state && state.title ? state.title : '');
+            if (finalTitle) {
+                window._wrapperBoundTitle = finalTitle;
+                if (typeof state !== 'undefined' && state) {
+                    state._wrapperBoundTitle = finalTitle;
+                }
+            }
+        }, 50);
+    };
+    if (typeof window.startDesktopSaveAnimation !== 'function') {
+        window.startDesktopSaveAnimation = function() {};
     }
 
     try {
