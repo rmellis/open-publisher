@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.11.9)
+// Open Publisher Text Engine (v5.17.10)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -117,6 +117,212 @@ function initFontDropdownKeyNav() {
     fontKeyNavInitialized = true;
 }
 
+// --- DOCUMENT FONTS EXTRACTION & DROPDOWN MANAGEMENT (v5.17.10) ---
+let _lastDocFontsKey = null;
+
+function getDocumentFonts() {
+    const used = new Set();
+    const fontLookup = new Map();
+    if (typeof fontList !== 'undefined' && Array.isArray(fontList)) {
+        fontList.forEach(f => fontLookup.set(f.toLowerCase(), f));
+    }
+
+    const cleanFontName = (raw) => {
+        if (!raw || typeof raw !== 'string') return null;
+        let cleaned = raw.replace(/&quot;/g, '').replace(/&#39;/g, '').replace(/&apos;/g, '').replace(/["']/g, '').trim();
+        if (!cleaned) return null;
+        const low = cleaned.toLowerCase();
+        // Ignore generic CSS fallback keywords
+        const generic = new Set([
+            'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 
+            'system-ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded', 
+            'inherit', 'initial', 'unset', 'auto', 'none', 'var(--ui-theme-font)'
+        ]);
+        if (generic.has(low)) return null;
+        // If matches known font list, use canonical casing
+        if (fontLookup.has(low)) return fontLookup.get(low);
+        // Filter out CSS declarations, measurements, or color codes
+        if (/\d+px|\d+pt|!important|rgba?\(|#|;|:|\//i.test(cleaned)) return null;
+        // Clean single font name (capitalize words)
+        return cleaned.replace(/\b[a-z]/g, c => c.toUpperCase());
+    };
+
+    const addFontStack = (stack) => {
+        if (!stack || typeof stack !== 'string') return;
+        // Normalize any encoded quotes
+        const normalized = stack.replace(/&quot;/g, "'").replace(/&#39;/g, "'");
+        const parts = normalized.split(',');
+        for (const p of parts) {
+            const font = cleanFontName(p);
+            if (font) {
+                if (fontLookup.has(font.toLowerCase())) {
+                    used.add(fontLookup.get(font.toLowerCase()));
+                    break; // Primary matched font from stack
+                } else if (!used.has(font)) {
+                    used.add(font);
+                    break;
+                }
+            }
+        }
+    };
+
+    // 1. Scan live elements on the active paper canvas
+    if (typeof paper !== 'undefined' && paper) {
+        const elements = paper.querySelectorAll('.pub-element');
+        elements.forEach(el => {
+            // Check direct element style
+            if (el.style && el.style.fontFamily) {
+                addFontStack(el.style.fontFamily);
+            }
+            // Check WordArt
+            const wa = el.querySelector('.wa-text');
+            if (wa && wa.style && wa.style.fontFamily) {
+                addFontStack(wa.style.fontFamily);
+            }
+            // Check content wrapper & descendants
+            const content = el.querySelector('.element-content') || el;
+            if (content.style && content.style.fontFamily) {
+                addFontStack(content.style.fontFamily);
+            }
+            const styledDescendants = content.querySelectorAll('[style*="font-family"], font[face], .shape-text, td, th');
+            styledDescendants.forEach(node => {
+                if (node.tagName === 'FONT' && node.getAttribute('face')) {
+                    addFontStack(node.getAttribute('face'));
+                }
+                if (node.style && node.style.fontFamily) {
+                    addFontStack(node.style.fontFamily);
+                }
+            });
+        });
+
+        // Scan header and footer on active paper
+        ['.page-header', '.page-footer'].forEach(sel => {
+            const hf = paper.querySelector(sel);
+            if (hf && hf.innerHTML && hf.innerHTML.trim()) {
+                const nodes = hf.querySelectorAll('[style*="font-family"], font[face]');
+                nodes.forEach(node => {
+                    if (node.tagName === 'FONT' && node.getAttribute('face')) {
+                        addFontStack(node.getAttribute('face'));
+                    }
+                    if (node.style && node.style.fontFamily) {
+                        addFontStack(node.style.fontFamily);
+                    }
+                });
+            }
+        });
+    }
+
+    // 2. Scan other pages in multi-page publications (state.pages)
+    if (typeof state !== 'undefined' && Array.isArray(state.pages)) {
+        state.pages.forEach((p, pIdx) => {
+            if (pIdx === (state.currentPageIndex || 0)) return; // Already scanned live above
+            if (p && Array.isArray(p.elements)) {
+                p.elements.forEach(e => {
+                    if (e.fontFamily) addFontStack(e.fontFamily);
+                    if (e.contentCssText && /font-family\s*:/i.test(e.contentCssText)) {
+                        const m = e.contentCssText.match(/font-family\s*:\s*([^;]+)/i);
+                        if (m) addFontStack(m[1]);
+                    }
+                    if (e.innerHTML) {
+                        const norm = e.innerHTML.replace(/&quot;/g, "'").replace(/&#39;/g, "'");
+                        const ffMatches = norm.match(/font-family\s*:\s*([^;"]+)/gi);
+                        if (ffMatches) {
+                            ffMatches.forEach(m => addFontStack(m.replace(/font-family\s*:\s*/i, '')));
+                        }
+                        const faceMatches = norm.match(/<font[^>]+face\s*=\s*["']?([^"'>]+)/gi);
+                        if (faceMatches) {
+                            faceMatches.forEach(m => addFontStack(m.replace(/<font[^>]+face\s*=\s*["']?/i, '')));
+                        }
+                    }
+                });
+            }
+            if (p && p.header) {
+                const norm = p.header.replace(/&quot;/g, "'").replace(/&#39;/g, "'");
+                const ffMatches = norm.match(/font-family\s*:\s*([^;"]+)/gi);
+                if (ffMatches) ffMatches.forEach(m => addFontStack(m.replace(/font-family\s*:\s*/i, '')));
+            }
+            if (p && p.footer) {
+                const norm = p.footer.replace(/&quot;/g, "'").replace(/&#39;/g, "'");
+                const ffMatches = norm.match(/font-family\s*:\s*([^;"]+)/gi);
+                if (ffMatches) ffMatches.forEach(m => addFontStack(m.replace(/font-family\s*:\s*/i, '')));
+            }
+        });
+    }
+
+    const result = Array.from(used);
+    result.sort((a, b) => a.localeCompare(b));
+    return result;
+}
+
+function updateDocumentFontsSection(force = false) {
+    const ribbonList = document.getElementById('ribbon-font-list');
+    const floatList = document.getElementById('float-font-list');
+    if (!ribbonList && !floatList) return;
+
+    const docFonts = getDocumentFonts();
+    const key = docFonts.join('|');
+    if (!force && key === _lastDocFontsKey) return;
+    _lastDocFontsKey = key;
+
+    [ribbonList, floatList].forEach(list => {
+        if (!list) return;
+        let docSection = list.querySelector('.font-dropdown-doc-section');
+
+        if (docFonts.length === 0) {
+            if (docSection) {
+                docSection.style.display = 'none';
+                docSection.innerHTML = '';
+            }
+            return;
+        }
+
+        if (!docSection) {
+            docSection = document.createElement('div');
+            docSection.className = 'font-dropdown-doc-section';
+            list.prepend(docSection);
+        }
+
+        docSection.innerHTML = '';
+        docSection.style.display = 'block';
+
+        // 1. Header: Document Fonts
+        const docHeader = document.createElement('div');
+        docHeader.className = 'font-dropdown-section-header';
+        docHeader.innerHTML = '<i class="fas fa-file-alt" style="font-size:10px; margin-right:6px; opacity:0.75;"></i>Document Fonts';
+        docSection.appendChild(docHeader);
+
+        // 2. Document Font Items
+        docFonts.forEach(font => {
+            const item = document.createElement('div');
+            item.className = 'font-item font-item-doc';
+            item.setAttribute('data-doc-font', 'true');
+            item.innerText = font;
+            item.style.fontFamily = font;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                selectFont(font);
+            };
+            item.onmouseenter = () => {
+                if (typeof window.highlightFontItem === 'function') {
+                    window.highlightFontItem(list, item, false);
+                }
+            };
+            docSection.appendChild(item);
+        });
+
+        // 3. Divider
+        const div = document.createElement('div');
+        div.className = 'font-dropdown-divider';
+        docSection.appendChild(div);
+
+        // 4. Header: All Fonts
+        const allHeader = document.createElement('div');
+        allHeader.className = 'font-dropdown-section-header';
+        allHeader.innerText = 'All Fonts';
+        docSection.appendChild(allHeader);
+    });
+}
+
 function initFontPickers() {
     const ribbonList = document.getElementById('ribbon-font-list');
     const floatList = document.getElementById('float-font-list');
@@ -162,6 +368,9 @@ function initFontPickers() {
     }
 
     initFontDropdownKeyNav();
+    window.getDocumentFonts = getDocumentFonts;
+    window.updateDocumentFontsSection = updateDocumentFontsSection;
+    updateDocumentFontsSection();
 }
 
 
@@ -191,6 +400,11 @@ function selectFont(fontName) {
         setFloatFont(fontName);
     }
     
+    // Refresh document fonts section now that font was chosen
+    if (typeof updateDocumentFontsSection === 'function') {
+        updateDocumentFontsSection(true);
+    }
+
     // Hide Menus & reset navigation state
     document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
     window.resetFontNavState();

@@ -1339,6 +1339,9 @@ if (!window._sliderFillListenerInstalled) {
         const isVisible = menu && menu.style.display === 'block';
         document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
         if (!isVisible && menu) {
+            if (typeof window.updateDocumentFontsSection === 'function') {
+                window.updateDocumentFontsSection();
+            }
             menu.style.display = 'block';
             menu.style.top = '28px';
             menu.style.bottom = 'auto';

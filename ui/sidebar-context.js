@@ -355,6 +355,11 @@ function toggleCustomDropdown(type) {
     }
     
     if (!isVisible) {
+        // Dynamically update document fonts section before opening
+        if (typeof window.updateDocumentFontsSection === 'function') {
+            window.updateDocumentFontsSection();
+        }
+
         // Calculate position to prevent clipping in Ribbon overflow
         if(type === 'ribbon') {
             const btn = document.getElementById('ribbon-font-btn');

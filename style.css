@@ -9202,3 +9202,39 @@ body.dark-mode .custom-dialog.op-tbl-modal .btn-secondary {
     border-color: var(--ui-border);
 }
 body.dark-mode .custom-dialog.op-tbl-modal .btn-secondary:hover { background: var(--ui-hover-bg); }
+
+
+/* =========================================================================
+   DOCUMENT FONTS SECTION IN FONT DROPDOWNS (v5.17.10)
+   ========================================================================= */
+.font-dropdown-doc-section {
+    position: relative;
+    padding-bottom: 2px;
+}
+.font-dropdown-section-header {
+    padding: 7px 10px 4px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--ui-text-muted, #71717a);
+    user-select: none;
+    pointer-events: none;
+    background: var(--ui-panel-bg, #ffffff);
+    line-height: 1.2;
+}
+body.dark-mode .font-dropdown-section-header {
+    color: #9ca3af !important;
+    background: var(--ui-panel-bg, #1e1e1e) !important;
+}
+.font-dropdown-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: var(--ui-border, #e4e4e7);
+}
+body.dark-mode .font-dropdown-divider {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+.font-item-doc {
+    position: relative;
+}
