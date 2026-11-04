@@ -130,18 +130,30 @@ document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B') && isTextEditing()) {
             e.preventDefault();
             document.execCommand('bold');
+            if (typeof window.syncFormatButtonHighlights === 'function') window.syncFormatButtonHighlights();
             pushHistory();
             return;
         }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'I') && isTextEditing()) {
             e.preventDefault();
             document.execCommand('italic');
+            if (typeof window.syncFormatButtonHighlights === 'function') window.syncFormatButtonHighlights();
             pushHistory();
             return;
         }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U') && isTextEditing()) {
             e.preventDefault();
             document.execCommand('underline');
+            if (typeof window.syncFormatButtonHighlights === 'function') window.syncFormatButtonHighlights();
+            pushHistory();
+            return;
+        }
+
+        // Strikethrough (Alt+Shift+5 or Ctrl+Shift+X)
+        if (((e.altKey && e.shiftKey && (e.key === '5' || e.code === 'Digit5')) || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'x' || e.key === 'X'))) && isTextEditing()) {
+            e.preventDefault();
+            document.execCommand('strikeThrough');
+            if (typeof window.syncFormatButtonHighlights === 'function') window.syncFormatButtonHighlights();
             pushHistory();
             return;
         }

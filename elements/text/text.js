@@ -716,6 +716,9 @@ function execCmd(cmd, val) {
     }
     
     if(!state.isProgrammaticUpdate) updateFloatToolbarValues();
+    if (typeof window.syncFormatButtonHighlights === 'function') {
+        window.syncFormatButtonHighlights();
+    }
     if (typeof updateThumbnails === 'function') updateThumbnails();
 }
 
@@ -728,7 +731,13 @@ function execFloatCmd(cmd, val) {
         sel.addRange(state.lastRange);
     }
     execCmd(cmd, val);
-    setTimeout(() => { state.isProgrammaticUpdate = false; }, 100);
+    if (typeof window.syncFormatButtonHighlights === 'function') {
+        window.syncFormatButtonHighlights();
+    }
+    setTimeout(() => { 
+        state.isProgrammaticUpdate = false; 
+        updateFloatToolbarValues();
+    }, 100);
 }
 
 
@@ -763,6 +772,105 @@ function openThesaurus() {
 }
 
 
+window.syncFormatButtonHighlights = function(customNode) {
+    let node = customNode;
+    if (node === undefined) {
+        const rangeIsInsideSelected = state.lastRange &&
+            state.lastRange.startContainer &&
+            state.lastRange.startContainer.isConnected &&
+            (!state.selectedEl || state.selectedEl.contains(state.lastRange.startContainer));
+
+        if (rangeIsInsideSelected) {
+            node = state.lastRange.startContainer;
+            if (node.nodeType === 3) {
+                node = node.parentNode;
+            } else {
+                const offset = state.lastRange.startOffset;
+                if (node.childNodes.length > offset) {
+                    let child = node.childNodes[offset];
+                    if (child.nodeType === 3) child = child.parentNode;
+                    if (child && child.nodeType === 1) node = child;
+                }
+            }
+        } else if (state.selectedEl && state.selectedEl.nodeType === 1) {
+            const editable = state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
+                             state.selectedEl.querySelector('.element-content > div') ||
+                             state.selectedEl;
+            const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face], b, strong, i, em, u, s, strike, del, [style*="line-through"]') : null;
+            node = styledChild || editable;
+        }
+    }
+
+    let isBold = false;
+    let isItalic = false;
+    let isUnderline = false;
+    let isStrike = false;
+
+    const hasTextContext = !!(state.selectedEl && (
+        state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
+        state.selectedEl.getAttribute('contenteditable') === 'true'
+    ));
+
+    if (hasTextContext && node && node.nodeType === 1) {
+        try { isBold = document.queryCommandState('bold'); } catch(e) {}
+        try { isItalic = document.queryCommandState('italic'); } catch(e) {}
+        try { isUnderline = document.queryCommandState('underline'); } catch(e) {}
+        try { isStrike = document.queryCommandState('strikeThrough'); } catch(e) {}
+
+        const computed = window.getComputedStyle(node);
+        if (!isBold && computed) {
+            const fw = computed.fontWeight;
+            const isWeightBold = fw === 'bold' || fw === 'bolder' || (parseInt(fw, 10) >= 600);
+            const hasBoldAncestor = !!(node.closest && node.closest('b, strong, [style*="font-weight: bold"], [style*="font-weight: 700"], [style*="font-weight: 800"], [style*="font-weight: 900"]'));
+            isBold = isWeightBold || hasBoldAncestor;
+        }
+        if (!isItalic && computed) {
+            const fs = computed.fontStyle;
+            const hasItalicAncestor = !!(node.closest && node.closest('i, em, [style*="font-style: italic"], [style*="font-style: oblique"]'));
+            isItalic = fs === 'italic' || fs === 'oblique' || hasItalicAncestor;
+        }
+        if (!isUnderline && computed) {
+            const td = computed.textDecorationLine || computed.textDecoration || '';
+            const hasUnderlineAncestor = !!(node.closest && node.closest('u, ins, [style*="text-decoration: underline"]'));
+            isUnderline = td.includes('underline') || hasUnderlineAncestor;
+        }
+        if (!isStrike && computed) {
+            const td = computed.textDecorationLine || computed.textDecoration || '';
+            const hasStrikeAncestor = !!(node.closest && node.closest('s, strike, del, [style*="line-through"]'));
+            isStrike = td.includes('line-through') || hasStrikeAncestor;
+        }
+    }
+
+    const boldBtns = document.querySelectorAll('#ribbon-bold-btn, #float-bold-btn, #template-float-bold-btn, #float-fallback-bold-btn, .modern-format-btn[onclick*="bold"], .float-mini-btn[onclick*="bold"], #float-toolbar .mini-btn[onclick*="bold"]');
+    boldBtns.forEach(btn => {
+        btn.classList.toggle('active', !!isBold);
+        btn.classList.toggle('active-tool', !!isBold);
+        btn.setAttribute('aria-pressed', isBold ? 'true' : 'false');
+    });
+
+    const italicBtns = document.querySelectorAll('#ribbon-italic-btn, #float-italic-btn, #template-float-italic-btn, #float-fallback-italic-btn, .modern-format-btn[onclick*="italic"], .float-mini-btn[onclick*="italic"], #float-toolbar .mini-btn[onclick*="italic"]');
+    italicBtns.forEach(btn => {
+        btn.classList.toggle('active', !!isItalic);
+        btn.classList.toggle('active-tool', !!isItalic);
+        btn.setAttribute('aria-pressed', isItalic ? 'true' : 'false');
+    });
+
+    const underlineBtns = document.querySelectorAll('#ribbon-underline-btn, #float-underline-btn, #template-float-underline-btn, #float-fallback-underline-btn, .modern-format-btn[onclick*="underline"], .float-mini-btn[onclick*="underline"], #float-toolbar .mini-btn[onclick*="underline"]');
+    underlineBtns.forEach(btn => {
+        btn.classList.toggle('active', !!isUnderline);
+        btn.classList.toggle('active-tool', !!isUnderline);
+        btn.setAttribute('aria-pressed', isUnderline ? 'true' : 'false');
+    });
+
+    const strikeBtns = document.querySelectorAll('#ribbon-strikethrough-btn, #float-strikethrough-btn, #template-float-strikethrough-btn, #float-fallback-strikethrough-btn, .modern-format-btn[onclick*="strikeThrough"], .float-mini-btn[onclick*="strikeThrough"], #float-toolbar .mini-btn[onclick*="strikeThrough"]');
+    strikeBtns.forEach(btn => {
+        btn.classList.toggle('active', !!isStrike);
+        btn.classList.toggle('active-tool', !!isStrike);
+        btn.setAttribute('aria-pressed', isStrike ? 'true' : 'false');
+    });
+};
+
+
 function updateFloatToolbarValues() {
     const activeId = document.activeElement ? document.activeElement.id : null;
     if(['float-font', 'float-size', 'font-size', 'ribbon-font-btn'].includes(activeId)) return;
@@ -791,71 +899,85 @@ function updateFloatToolbarValues() {
         const editable = state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
                          state.selectedEl.querySelector('.element-content > div') ||
                          state.selectedEl;
-        const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face]') : null;
+        const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face], b, strong, i, em, u, s, strike, del, [style*="line-through"]') : null;
         node = styledChild || editable;
     }
 
-    if (node && node.nodeType === 1) {
-        const computed = window.getComputedStyle(node);
-        const fam = computed.fontFamily.replace(/['"]/g, '').split(',')[0].trim() || 'Segoe UI';
-        
-        // Update Font Family Labels
-        const ribbonLbl = document.getElementById('ribbon-font-label');
-        const floatLbl = document.getElementById('float-font-label');
-        const ctxTextLbl = document.getElementById('ctx-font-label-text');
-        const ctxWaLbl = document.getElementById('ctx-font-label-wa');
-        if (ribbonLbl) ribbonLbl.innerText = fam;
-        if (floatLbl) floatLbl.innerText = fam;
-        if (ctxTextLbl) ctxTextLbl.innerText = fam;
-        if (ctxWaLbl) ctxWaLbl.innerText = fam;
+    if (typeof window.syncFormatButtonHighlights === 'function') {
+        window.syncFormatButtonHighlights(node);
+    }
 
-        if (computed && computed.color && typeof window.syncTextColorIndicators === 'function') {
-            window.syncTextColorIndicators(computed.color);
-        }
-
-        const fSize = parseInt(computed.fontSize);
-        
-        const floatSelect = document.getElementById('float-size');
-        const ribbonInput = document.getElementById('font-size');
-
-        // Force the float dropdown to accept custom numbers
-        if (floatSelect && !isNaN(fSize)) {
-            let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === fSize);
-            if(!optionExists) {
-                const newOpt = document.createElement('option');
-                newOpt.value = fSize;
-                newOpt.innerText = fSize;
-                floatSelect.appendChild(newOpt);
-                
-                // Sort options so the new number fits in naturally
-                const opts = Array.from(floatSelect.options);
-                opts.sort((a,b) => parseInt(a.value) - parseInt(b.value));
-                floatSelect.innerHTML = '';
-                opts.forEach(o => floatSelect.appendChild(o));
-            }
-            floatSelect.value = fSize;
-        }
-        
-        // Update the Ribbon Input
-        if (ribbonInput && !isNaN(fSize)) {
-            ribbonInput.value = fSize;
-        }
-
-        // Update Text Direction and Alignment UI indicators
-        const dirVal = node.getAttribute('dir') || computed.direction || 'ltr';
-        if (typeof window.updateTextDirectionUI === 'function') {
-            window.updateTextDirectionUI(dirVal);
-        }
-
-        const align = computed.textAlign || 'left';
+    if (!node || node.nodeType !== 1) {
         const alignL = document.getElementById('btn-align-left');
         const alignC = document.getElementById('btn-align-center');
         const alignR = document.getElementById('btn-align-right');
-        if (alignL) alignL.classList.toggle('active-tool', align === 'left' || align === 'start');
-        if (alignC) alignC.classList.toggle('active-tool', align === 'center');
-        if (alignR) alignR.classList.toggle('active-tool', align === 'right' || align === 'end');
+        if (alignL) alignL.classList.remove('active-tool');
+        if (alignC) alignC.classList.remove('active-tool');
+        if (alignR) alignR.classList.remove('active-tool');
+        return;
     }
+
+    const computed = window.getComputedStyle(node);
+    const fam = computed.fontFamily.replace(/['"]/g, '').split(',')[0].trim() || 'Segoe UI';
+    
+    // Update Font Family Labels
+    const ribbonLbl = document.getElementById('ribbon-font-label');
+    const floatLbl = document.getElementById('float-font-label');
+    const ctxTextLbl = document.getElementById('ctx-font-label-text');
+    const ctxWaLbl = document.getElementById('ctx-font-label-wa');
+    if (ribbonLbl) ribbonLbl.innerText = fam;
+    if (floatLbl) floatLbl.innerText = fam;
+    if (ctxTextLbl) ctxTextLbl.innerText = fam;
+    if (ctxWaLbl) ctxWaLbl.innerText = fam;
+
+    if (computed && computed.color && typeof window.syncTextColorIndicators === 'function') {
+        window.syncTextColorIndicators(computed.color);
+    }
+
+    const fSize = parseInt(computed.fontSize);
+    
+    const floatSelect = document.getElementById('float-size');
+    const ribbonInput = document.getElementById('font-size');
+
+    // Force the float dropdown to accept custom numbers
+    if (floatSelect && !isNaN(fSize)) {
+        let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === fSize);
+        if(!optionExists) {
+            const newOpt = document.createElement('option');
+            newOpt.value = fSize;
+            newOpt.innerText = fSize;
+            floatSelect.appendChild(newOpt);
+            
+            // Sort options so the new number fits in naturally
+            const opts = Array.from(floatSelect.options);
+            opts.sort((a,b) => parseInt(a.value) - parseInt(b.value));
+            floatSelect.innerHTML = '';
+            opts.forEach(o => floatSelect.appendChild(o));
+        }
+        floatSelect.value = fSize;
+    }
+    
+    // Update the Ribbon Input
+    if (ribbonInput && !isNaN(fSize)) {
+        ribbonInput.value = fSize;
+    }
+
+    // Update Text Direction and Alignment UI indicators
+    const dirVal = node.getAttribute('dir') || computed.direction || 'ltr';
+    if (typeof window.updateTextDirectionUI === 'function') {
+        window.updateTextDirectionUI(dirVal);
+    }
+
+    const align = computed.textAlign || 'left';
+    const alignL = document.getElementById('btn-align-left');
+    const alignC = document.getElementById('btn-align-center');
+    const alignR = document.getElementById('btn-align-right');
+    if (alignL) alignL.classList.toggle('active-tool', align === 'left' || align === 'start');
+    if (alignC) alignC.classList.toggle('active-tool', align === 'center');
+    if (alignR) alignR.classList.toggle('active-tool', align === 'right' || align === 'end');
 }
+
+window.updateFloatToolbarValues = updateFloatToolbarValues;
 
 window.setTextDirection = function(dir) {
     const targetDir = (dir === 'rtl' || dir === 'auto') ? dir : 'ltr';

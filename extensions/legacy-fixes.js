@@ -1441,10 +1441,10 @@ if (!window._sliderFillListenerInstalled) {
             </div>
 
             <div class="float-tool-row">
-                <div class="float-mini-btn" onclick="execCmd('bold')" title="Bold"><strong>B</strong></div>
-                <div class="float-mini-btn" onclick="execCmd('italic')" title="Italic"><strong><em>I</em></strong></div>
-                <div class="float-mini-btn" onclick="execCmd('underline')" title="Underline"><strong style="text-decoration: underline;">U</strong></div>
-                <div class="float-mini-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><strong style="text-decoration: line-through;">S</strong></div>
+                <div class="float-mini-btn" id="float-bold-btn" onclick="execCmd('bold')" title="Bold"><strong>B</strong></div>
+                <div class="float-mini-btn" id="float-italic-btn" onclick="execCmd('italic')" title="Italic"><strong><em>I</em></strong></div>
+                <div class="float-mini-btn" id="float-underline-btn" onclick="execCmd('underline')" title="Underline"><strong style="text-decoration: underline;">U</strong></div>
+                <div class="float-mini-btn" id="float-strikethrough-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><strong style="text-decoration: line-through;">S</strong></div>
                 
                 <div class="float-divider"></div>
                 

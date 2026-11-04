@@ -775,7 +775,31 @@ body.dark-mode .tab.active {
     color: var(--ui-theme-dark); font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid transparent;
 }
 .modern-format-btn:hover { background-color: color-mix(in srgb, var(--ui-theme-color) 15%, transparent); }
-.modern-format-btn.active { background-color: var(--ui-theme-dark); color: white; }
+.modern-format-btn.active,
+.modern-format-btn.active-tool {
+    background-color: color-mix(in srgb, var(--ui-theme-color) 25%, transparent) !important;
+    border: 1px solid var(--ui-theme-color) !important;
+    color: var(--ui-theme-dark) !important;
+    border-radius: 4px;
+}
+.modern-format-btn.active i,
+.modern-format-btn.active-tool i {
+    color: var(--ui-theme-dark) !important;
+}
+body.dark-mode .modern-format-btn.active,
+body.dark-mode .modern-format-btn.active-tool,
+body.dark-mode.dark-ui-theme .modern-format-btn.active,
+body.dark-mode.dark-ui-theme .modern-format-btn.active-tool {
+    background-color: color-mix(in srgb, var(--ui-theme-color) 35%, transparent) !important;
+    border: 1px solid var(--ui-theme-color) !important;
+    color: #ffffff !important;
+}
+body.dark-mode .modern-format-btn.active i,
+body.dark-mode .modern-format-btn.active-tool i,
+body.dark-mode.dark-ui-theme .modern-format-btn.active i,
+body.dark-mode.dark-ui-theme .modern-format-btn.active-tool i {
+    color: #ffffff !important;
+}
 
 .modern-color-picker {
     width: 22px; height: 22px; border: none; padding: 0; cursor: pointer;
@@ -3656,9 +3680,23 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
             font-size: 13px; 
             transition: all 0.15s;
             position: relative;
+            border: 1px solid transparent;
         }
         .float-mini-btn:hover { background: rgba(255, 255, 255, 0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .float-mini-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.9); }
+        .float-mini-btn.active,
+        .float-mini-btn.active-tool {
+            background: color-mix(in srgb, var(--ui-theme-color) 25%, transparent) !important;
+            border: 1px solid var(--ui-theme-color) !important;
+            color: var(--ui-theme-dark) !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .float-mini-btn.active strong,
+        .float-mini-btn.active-tool strong,
+        .float-mini-btn.active i,
+        .float-mini-btn.active-tool i {
+            color: var(--ui-theme-dark) !important;
+        }
         .float-mini-btn strong { font-family: 'Times New Roman', serif; font-size: 14px; }
 
         /* Dividers & Color Pickers */
@@ -3787,6 +3825,34 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
         
         body.dark-mode .float-mini-btn:hover, body.dark-mode .float-font-btn:hover { background: rgba(255, 255, 255, 0.1); }
         body.dark-mode .float-mini-btn:active, body.dark-mode .float-font-btn:active { background: rgba(255, 255, 255, 0.2); }
+        
+        body.dark-mode .float-mini-btn.active,
+        body.dark-mode .float-mini-btn.active-tool,
+        body.dark-mode.dark-ui-theme .float-mini-btn.active,
+        body.dark-mode.dark-ui-theme .float-mini-btn.active-tool {
+            background: color-mix(in srgb, var(--ui-theme-color) 35%, transparent) !important;
+            border: 1px solid var(--ui-theme-color) !important;
+            color: #ffffff !important;
+            filter: none !important;
+        }
+        body.dark-mode .float-mini-btn.active *,
+        body.dark-mode .float-mini-btn.active-tool *,
+        body.dark-mode.dark-ui-theme .float-mini-btn.active *,
+        body.dark-mode.dark-ui-theme .float-mini-btn.active-tool * {
+            color: #ffffff !important;
+        }
+
+        #float-toolbar .mini-btn.active,
+        #float-toolbar .mini-btn.active-tool {
+            background: color-mix(in srgb, var(--ui-theme-color) 25%, transparent) !important;
+            border: 1px solid var(--ui-theme-color) !important;
+        }
+        body.dark-mode #float-toolbar .mini-btn.active,
+        body.dark-mode #float-toolbar .mini-btn.active-tool {
+            background: color-mix(in srgb, var(--ui-theme-color) 35%, transparent) !important;
+            border: 1px solid var(--ui-theme-color) !important;
+            color: #ffffff !important;
+        }
 
 /* Extracted Block 16 */
 .op-group * {
@@ -8703,7 +8769,7 @@ html.dark-mode .op-pub-loading-progress-track {
 }
 
 /* ==========================================
-   LINE SPACING & TYPOGRAPHY MODAL (v5.17.7)
+   LINE SPACING & TYPOGRAPHY MODAL (v5.17.8)
    ========================================== */
 
 ::highlight(line-spacing-selection) {

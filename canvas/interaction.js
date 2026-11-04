@@ -544,6 +544,7 @@ function deselect() {
         }
     }
     state.selectedEl = null;
+    if (typeof window.syncFormatButtonHighlights === 'function') window.syncFormatButtonHighlights(null);
     if (window._isTransitioningSelection) return;
     document.getElementById('status-msg').innerText = "Ready";
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }

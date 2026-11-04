@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Line Spacing & Typography Options Modal (v5.17.7)
+ * OpenPublisher Line Spacing & Typography Options Modal (v5.17.8)
  * Provides real-time interactive line spacing adjustment with presets,
  * dual slider/stepper controls, persistent selection protection,
  * and live canvas/preview synchronization.

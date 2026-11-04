@@ -1,6 +1,6 @@
-// Open Publisher UI Interactions (v5.17.7)
+// Open Publisher UI Interactions (v5.17.8)
 (function installRulerTrackingEngine() {
-    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.17.7)...");
+    console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.17.8)...");
 
     let rulerH = null;
     let rulerV = null;
@@ -387,10 +387,10 @@
                     </div>
                     
                     <div style="display:flex; gap: 4px; align-items: center;">
-                        <div class="modern-format-btn" onclick="execCmd('bold')" title="Bold"><i class="fas fa-bold"></i></div>
-                        <div class="modern-format-btn" style="font-family: serif; font-style: italic; font-weight: bold; font-size: 18px; padding-top: 2px;" onclick="execCmd('italic')" title="Italic">I</div>
-                        <div class="modern-format-btn" onclick="execCmd('underline')" title="Underline"><i class="fas fa-underline"></i></div>
-                        <div class="modern-format-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></div>
+                        <div class="modern-format-btn" onmousedown="event.preventDefault()" onclick="execCmd('bold')" title="Bold"><i class="fas fa-bold"></i></div>
+                        <div class="modern-format-btn" onmousedown="event.preventDefault()" style="font-family: serif; font-style: italic; font-weight: bold; font-size: 18px; padding-top: 2px;" onclick="execCmd('italic')" title="Italic">I</div>
+                        <div class="modern-format-btn" onmousedown="event.preventDefault()" onclick="execCmd('underline')" title="Underline"><i class="fas fa-underline"></i></div>
+                        <div class="modern-format-btn" onmousedown="event.preventDefault()" onclick="execCmd('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></div>
                         
                         <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('subscript')" title="Subscript"><i class="fas fa-subscript"></i></div>
                         <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('superscript')" title="Superscript"><i class="fas fa-superscript"></i></div>
@@ -1125,7 +1125,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.17.7</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.17.8</div>
                 </div>
                 
                 <div class="about-desc">

@@ -93,6 +93,10 @@ document.addEventListener('selectionchange', () => {
         }
     }
 
+    if(state.selectedEl && typeof window.syncFormatButtonHighlights === 'function') {
+        window.syncFormatButtonHighlights();
+    }
+
     // Clear the timer if the user is still actively highlighting
     if (selectionTimer) clearTimeout(selectionTimer);
     
