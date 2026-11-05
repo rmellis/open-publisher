@@ -17,6 +17,10 @@
   <a href="https://openpublisher.app/documentation.pdf"><img src="https://img.shields.io/badge/Documentation (old)-PDF-teal?style=flat-square&logo=adobeacrobatreader&logoColor=white"/></a>
 </p>
 
+<p align="center">
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png" alt="Facebook Page" height="28"/></a>
+</p>
+
 ---
 
 ## Overview
