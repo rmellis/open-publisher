@@ -848,7 +848,7 @@
                 const rowDiv = document.createElement('div');
                 rowDiv.style.cssText = 'display:grid; grid-template-columns:34px minmax(0, 1fr) 86px 28px; gap:8px; align-items:center; box-sizing:border-box;';
                 rowDiv.innerHTML = `
-                    <input type="color" class="chart-row-color" data-index="${idx}" value="${row.color}" style="width:32px; height:26px; border:none; border-radius:4px; cursor:pointer; padding:0; background:none;">
+                    <div class="chart-row-color-swatch" data-index="${idx}" title="Choose Color" style="width:32px; height:26px; border:1px solid var(--ui-border, #cbd5e1); border-radius:4px; cursor:pointer; background-color:${row.color}; box-sizing:border-box; box-shadow:0 1px 2px rgba(0,0,0,0.1); transition:transform 0.1s ease;"></div>
                     <input type="text" class="chart-row-label" data-index="${idx}" value="${escapeXml(row.label)}" placeholder="Label" style="width:100%; min-width:0; padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; box-sizing:border-box;">
                     <div class="chart-modern-spinner" title="Adjust Value">
                         <input type="text" class="chart-row-val" data-index="${idx}" value="${row.value}">
@@ -864,12 +864,21 @@
                 rowsList.appendChild(rowDiv);
             });
 
-            // Wire input listeners on rows
-            rowsList.querySelectorAll('.chart-row-color').forEach(input => {
-                input.oninput = (e) => {
-                    const idx = parseInt(e.target.dataset.index);
-                    currentConfig.data[idx].color = e.target.value;
-                    updatePreview();
+            // Wire color swatch listeners on rows using CustomColorPicker
+            rowsList.querySelectorAll('.chart-row-color-swatch').forEach(swatch => {
+                swatch.onclick = (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(swatch.dataset.index);
+                    const currentColor = (currentConfig.data[idx] && currentConfig.data[idx].color) || '#000000';
+                    if (window.CustomColorPicker) {
+                        window.CustomColorPicker.open(swatch, currentColor, (chosenColor) => {
+                            if (currentConfig.data[idx]) {
+                                currentConfig.data[idx].color = chosenColor;
+                            }
+                            swatch.style.backgroundColor = chosenColor;
+                            updatePreview();
+                        });
+                    }
                 };
             });
 
