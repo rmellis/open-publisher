@@ -3,6 +3,19 @@
 // ==========================================
 
 function deselect() {
+    if (document.activeElement && document.activeElement !== document.body) {
+        const isEditable = document.activeElement.isContentEditable || 
+                           document.activeElement.tagName === 'INPUT' || 
+                           document.activeElement.tagName === 'TEXTAREA' ||
+                           (document.activeElement.closest && document.activeElement.closest('[contenteditable="true"]'));
+        if (isEditable) {
+            try { document.activeElement.blur(); } catch(err) {}
+            if (window.getSelection) {
+                try { window.getSelection().removeAllRanges(); } catch(err) {}
+            }
+        }
+    }
+
     if(state.cropMode && typeof toggleCrop === 'function') toggleCrop(); 
     if(state.shapeEditMode && typeof window.exitShapeEditMode === 'function') window.exitShapeEditMode();
     if(state.multiSelected) { state.multiSelected.forEach(el => el.classList.remove('selected')); state.multiSelected = []; }

@@ -510,6 +510,20 @@ function selectElement(el) {
         return;
     }
 
+    // Ensure any previously focused text box/input is blurred when selecting a different element
+    if (document.activeElement && document.activeElement !== document.body) {
+        const isEditable = document.activeElement.isContentEditable || 
+                           document.activeElement.tagName === 'INPUT' || 
+                           document.activeElement.tagName === 'TEXTAREA' ||
+                           (document.activeElement.closest && document.activeElement.closest('[contenteditable="true"]'));
+        if (isEditable && (!el || !el.contains(document.activeElement))) {
+            try { document.activeElement.blur(); } catch(err) {}
+            if (window.getSelection) {
+                try { window.getSelection().removeAllRanges(); } catch(err) {}
+            }
+        }
+    }
+
     window._isTransitioningSelection = true;
     try {
         if(state.selectedEl && state.selectedEl !== el) deselect();
@@ -531,6 +545,19 @@ function selectElement(el) {
 }
 
 function deselect() {
+    if (document.activeElement && document.activeElement !== document.body) {
+        const isEditable = document.activeElement.isContentEditable || 
+                           document.activeElement.tagName === 'INPUT' || 
+                           document.activeElement.tagName === 'TEXTAREA' ||
+                           (document.activeElement.closest && document.activeElement.closest('[contenteditable="true"]'));
+        if (isEditable) {
+            try { document.activeElement.blur(); } catch(err) {}
+            if (window.getSelection) {
+                try { window.getSelection().removeAllRanges(); } catch(err) {}
+            }
+        }
+    }
+
     if(state.cropMode) toggleCrop(); 
     if(state.shapeEditMode && typeof window.exitShapeEditMode === 'function') window.exitShapeEditMode();
 

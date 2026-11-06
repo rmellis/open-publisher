@@ -1,5 +1,23 @@
 window.handleMouseDown = function(e) {
     if (e.button !== 0) return;
+
+    // Explicitly blur any currently active editable element if the user clicked outside of it
+    if (document.activeElement && document.activeElement !== document.body) {
+        const isEditable = document.activeElement.isContentEditable || 
+                           document.activeElement.tagName === 'INPUT' || 
+                           document.activeElement.tagName === 'TEXTAREA' ||
+                           (document.activeElement.closest && document.activeElement.closest('[contenteditable="true"]'));
+        if (isEditable) {
+            const targetEditable = e.target.closest && (e.target.closest('[contenteditable="true"]') || e.target.closest('input, textarea'));
+            if (!targetEditable || (targetEditable !== document.activeElement && !targetEditable.contains(document.activeElement))) {
+                try { document.activeElement.blur(); } catch(err) {}
+                if (window.getSelection) {
+                    try { window.getSelection().removeAllRanges(); } catch(err) {}
+                }
+            }
+        }
+    }
+
     if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
         window.deselect();
         state.dragMode = 'marquee';
