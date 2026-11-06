@@ -231,7 +231,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.18.1');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.18.2');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -243,6 +243,54 @@ window.DashboardSystem = {
             .catch(err => console.error("Dashboard failed to load templates:", err));
     },
     
+    lazyObserver: null,
+    getLazyObserver: function() {
+        if (this.lazyObserver) return this.lazyObserver;
+        if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return null;
+        this.lazyObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const previewEl = entry.target;
+                    observer.unobserve(previewEl);
+                    DashboardSystem.loadTemplatePreview(previewEl);
+                }
+            });
+        }, {
+            root: null,
+            rootMargin: '120px 180px'
+        });
+        return this.lazyObserver;
+    },
+
+    loadTemplatePreview: function(previewContainer) {
+        if (!previewContainer || previewContainer.dataset.loaded === 'true') return;
+        previewContainer.dataset.loaded = 'true';
+
+        const img = previewContainer.querySelector('img[data-src]');
+        const spinner = previewContainer.querySelector('.dashboard-preview-spinner');
+        if (!img) return;
+
+        const src = img.dataset.src;
+        if (!src) return;
+
+        img.onload = () => {
+            if (spinner) spinner.style.display = 'none';
+            img.style.opacity = '1';
+        };
+
+        img.onerror = () => {
+            if (spinner) spinner.style.display = 'none';
+            const file = img.dataset.file;
+            const w = parseInt(img.dataset.w) || 794;
+            const h = parseInt(img.dataset.h) || 1123;
+            const sizeLabel = img.dataset.sizeLabel || '';
+            const isExpanded = img.dataset.isExpanded === 'true';
+            DashboardSystem.renderDynamicFallback(previewContainer, file, w, h, sizeLabel, isExpanded);
+        };
+
+        img.src = src;
+    },
+
     createTemplateCard: function(t, isExpanded = false) {
         const div = document.createElement('div');
         div.className = 'dashboard-template-card';
@@ -277,21 +325,30 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.18.1`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.18.2`);
 
         div.innerHTML = `
-            <div class="dashboard-template-preview" style="height:${cardHeight}px; background:#f4f4f4; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                <img src="${thumbUrl}" loading="lazy" decoding="async" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="DashboardSystem.renderDynamicFallback(this.parentElement, '${t.file}', ${w}, ${h}, '${sizeLabel}', ${isExpanded});">
+            <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                <div class="dashboard-preview-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+                <img data-src="${thumbUrl}" data-file="${t.file}" data-w="${w}" data-h="${h}" data-size-label="${sizeLabel}" data-is-expanded="${isExpanded}" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity 0.25s ease;">
                 ${sizeBadge}
             </div>
             <div class="dashboard-template-title">${t.name}</div>
         `;
 
+        const previewEl = div.querySelector('.dashboard-template-preview');
+        const observer = this.getLazyObserver();
+        if (observer && previewEl) {
+            observer.observe(previewEl);
+        } else if (previewEl) {
+            this.loadTemplatePreview(previewEl);
+        }
+
         // Load project on-demand ONLY when the user clicks!
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.18.1`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.18.2`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -326,7 +383,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.18.1`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.18.2`);
 
         fetch(fileUrl)
             .then(res => res.json())

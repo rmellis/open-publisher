@@ -383,6 +383,37 @@ body.dark-mode .dashboard-template-preview {
     text-overflow: ellipsis;
 }
 
+
+.dashboard-preview-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--ui-theme-color, #007670);
+    font-size: 1.4rem;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.dashboard-preview-spinner i {
+    display: inline-block !important;
+    animation: dashboard-spinner-spin 0.8s linear infinite !important;
+    transform-origin: 50% 50% !important;
+}
+
+@keyframes dashboard-spinner-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .dashboard-template-badge {
     position: absolute;
     bottom: 5px;
