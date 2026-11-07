@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Line Spacing & Typography Options Modal (v5.18.5)
+ * OpenPublisher Line Spacing & Typography Options Modal (v5.18.6)
  * Provides real-time interactive line spacing adjustment with presets,
  * dual slider/stepper controls, persistent selection protection,
  * and live canvas/preview synchronization.
@@ -72,7 +72,7 @@ window.showLineSpacingModal = function() {
     targetEl.classList.add('selected', 'op-line-spacing-active-target');
     state.selectedEl = targetEl;
 
-    const minPt = Math.max(4, Math.round(computedFsPt * 0.5));
+    const minPt = 1;
     const maxPt = Math.max(140, Math.round(Math.max(currentPt * 2.2, computedFsPt * 3.5)));
 
     const html = `
@@ -134,11 +134,11 @@ window.showLineSpacingModal = function() {
             </div>
 
             <!-- In-Dialog Live Preview Card -->
-            <div style="background: var(--ui-panel-bg, #f8fafc); border: 1px dashed var(--ui-border, #cbd5e1); border-radius: 6px; padding: 10px 14px; margin-bottom: 10px;">
-                <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#94a3b8; margin-bottom:4px;">
+            <div style="background: var(--ui-panel-bg, #f8fafc); border: 1px dashed var(--ui-border, #cbd5e1); border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; height: 125px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#94a3b8; margin-bottom:4px; flex-shrink: 0;">
                     Typography Preview
                 </div>
-                <div id="op-ls-preview-box" style="font-size: 13px; line-height: ${isNormal ? 'normal' : currentPt + 'pt'}; color: var(--ui-text, #1e293b); transition: line-height 0.05s ease; user-select: none;">
+                <div id="op-ls-preview-box" style="flex: 1; font-size: 13px; line-height: ${isNormal ? 'normal' : currentPt + 'pt'}; color: var(--ui-text, #1e293b); transition: line-height 0.05s ease; user-select: none; overflow: hidden;">
                     <div>Open Publisher precision typographic line spacing.</div>
                     <div>Watch text vertical rhythm adjust smoothly in real time.</div>
                 </div>
@@ -168,9 +168,13 @@ window.showLineSpacingModal = function() {
         // 1. Apply to canvas text element
         content.style.lineHeight = isNormalSpacing ? 'normal' : val;
 
-        // Also update any child nodes with explicit inline line-height to maintain consistency
+        // Also update any child nodes with explicit inline line-height to maintain consistency (preserving strikethrough nodes)
         const styledChildren = content.querySelectorAll('[style*="line-height"]');
         styledChildren.forEach(child => {
+            if (child.matches && child.matches('s, strike, del, [style*="line-through"], [style*="text-decoration-line: line-through"]')) {
+                child.style.lineHeight = 'normal';
+                return;
+            }
             child.style.lineHeight = isNormalSpacing ? 'normal' : val;
         });
 
@@ -311,6 +315,10 @@ window.showLineSpacingModal = function() {
             content.style.lineHeight = initialLineHeight;
             const styledChildren = content.querySelectorAll('[style*="line-height"]');
             styledChildren.forEach(child => {
+                if (child.matches && child.matches('s, strike, del, [style*="line-through"], [style*="text-decoration-line: line-through"]')) {
+                    child.style.lineHeight = 'normal';
+                    return;
+                }
                 child.style.lineHeight = initialLineHeight;
             });
 
@@ -357,6 +365,10 @@ window.applyExactLineSpacing = function(val) {
             content.style.lineHeight = val;
             const styledChildren = content.querySelectorAll('[style*="line-height"]');
             styledChildren.forEach(child => {
+                if (child.matches && child.matches('s, strike, del, [style*="line-through"], [style*="text-decoration-line: line-through"]')) {
+                    child.style.lineHeight = 'normal';
+                    return;
+                }
                 child.style.lineHeight = val;
             });
 

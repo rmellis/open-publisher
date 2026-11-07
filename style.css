@@ -1,4 +1,4 @@
-/* OpenPublisher - A free desktop publishing tool (v5.18.5) */
+/* OpenPublisher - A free desktop publishing tool (v5.18.6) */
 /* Chalkboard Typography Aliasing & Multi-Platform Compatibility */
 @font-face {
     font-family: 'Chalkboard';
@@ -1561,6 +1561,27 @@ body.classic-cursors-enabled .force-move-cursor * {
 .element-content,
 .element-content [contenteditable="true"] {
     text-decoration-skip-ink: none !important;
+}
+
+/* =========================================================================
+   Strikethrough Line-Height Stabilization (v5.18.6)
+   Prevents strikethrough lines from becoming vertically misaligned/offset
+   when text box line-height is adjusted.
+   ========================================================================= */
+[contenteditable="true"] s,
+[contenteditable="true"] strike,
+[contenteditable="true"] del,
+[contenteditable="true"] [style*="line-through"],
+.element-content s,
+.element-content strike,
+.element-content del,
+.element-content [style*="line-through"],
+.pub-element s,
+.pub-element strike,
+.pub-element del,
+.pub-element [style*="line-through"] {
+    line-height: normal !important;
+    display: inline;
 }
 /* --- Disable Native Browser Underlining (v5.7.9) --- */
 ::spelling-error,
