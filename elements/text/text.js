@@ -411,6 +411,121 @@ function selectFont(fontName) {
 }
 
 
+function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
+    if (!root) return;
+
+    let fontTags = targetFontTags;
+    if (!fontTags || fontTags.length === 0) {
+        if (wasCollapsed) {
+            fontTags = Array.from(root.querySelectorAll('font[style*="font-size"], span[style*="font-size"]'));
+        } else {
+            return;
+        }
+    }
+    
+    fontTags.forEach(f => {
+        const tagFontSize = f.style.fontSize || val;
+        if (!tagFontSize) return;
+
+        let curr = f.parentElement;
+        let hiliteAncestor = null;
+        while (curr && curr !== root && root.contains(curr)) {
+            if (curr.hasAttribute('data-opub-hilite') || 
+                (curr.style && curr.style.backgroundColor && curr.style.backgroundColor !== 'transparent' && curr.style.backgroundColor !== 'rgba(0, 0, 0, 0)')) {
+                hiliteAncestor = curr;
+                break;
+            }
+            curr = curr.parentElement;
+        }
+
+        if (hiliteAncestor) {
+            const bg = hiliteAncestor.style.backgroundColor;
+            if (hiliteAncestor.textContent.trim() === f.textContent.trim()) {
+                hiliteAncestor.style.fontSize = tagFontSize;
+                if (!wasCollapsed) {
+                    const newR = document.createRange();
+                    newR.selectNodeContents(f);
+                    const sel = window.getSelection();
+                    if (sel) {
+                        sel.removeAllRanges();
+                        sel.addRange(newR);
+                    }
+                    if (typeof state !== 'undefined') {
+                        state.lastRange = newR.cloneRange();
+                    }
+                }
+            } else {
+                let topChild = f;
+                while (topChild.parentElement && topChild.parentElement !== hiliteAncestor) {
+                    topChild = topChild.parentElement;
+                }
+
+                const rangeBefore = document.createRange();
+                rangeBefore.setStart(hiliteAncestor, 0);
+                rangeBefore.setEndBefore(topChild);
+
+                const rangeAfter = document.createRange();
+                rangeAfter.setStartAfter(topChild);
+                rangeAfter.setEnd(hiliteAncestor, hiliteAncestor.childNodes.length);
+
+                const fragBefore = rangeBefore.cloneContents();
+                const fragAfter = rangeAfter.cloneContents();
+                const parent = hiliteAncestor.parentNode;
+
+                const hasBefore = fragBefore.textContent && fragBefore.textContent.length > 0;
+                const hasAfter = fragAfter.textContent && fragAfter.textContent.length > 0;
+
+                const currentSpan = document.createElement('span');
+                currentSpan.style.backgroundColor = bg;
+                currentSpan.style.fontSize = tagFontSize;
+                currentSpan.setAttribute('data-opub-hilite', 'true');
+
+                if (hasBefore) {
+                    const spanBefore = hiliteAncestor.cloneNode(false);
+                    spanBefore.appendChild(fragBefore);
+                    parent.insertBefore(spanBefore, hiliteAncestor);
+                }
+
+                parent.insertBefore(currentSpan, hiliteAncestor);
+                currentSpan.appendChild(topChild);
+
+                if (hasAfter) {
+                    const spanAfter = hiliteAncestor.cloneNode(false);
+                    spanAfter.appendChild(fragAfter);
+                    parent.insertBefore(spanAfter, hiliteAncestor);
+                }
+
+                hiliteAncestor.remove();
+
+                if (!wasCollapsed) {
+                    const newR = document.createRange();
+                    newR.selectNodeContents(topChild);
+                    const sel = window.getSelection();
+                    if (sel) {
+                        sel.removeAllRanges();
+                        sel.addRange(newR);
+                    }
+                    if (typeof state !== 'undefined') {
+                        state.lastRange = newR.cloneRange();
+                    }
+                }
+            }
+        }
+
+        const innerHilites = f.querySelectorAll('[data-opub-hilite="true"], [data-opub-hilite]');
+        innerHilites.forEach(h => {
+            h.style.fontSize = tagFontSize;
+        });
+    });
+
+    if (wasCollapsed) {
+        root.querySelectorAll('[data-opub-hilite="true"], [data-opub-hilite]').forEach(h => {
+            h.style.fontSize = val;
+        });
+    }
+}
+window.syncHighlightWithFontSize = syncHighlightWithFontSize;
+
 function setTrueFontSize(val) {
     if (state.selectedEl) {
         const waText = state.selectedEl.querySelector('.wa-text');
@@ -438,7 +553,7 @@ function setTrueFontSize(val) {
             document.execCommand("fontSize", false, "7"); 
             
             // Catch both standard <font> tags and browser-generated <span> tags
-            const fontTags = state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]');
+            const fontTags = Array.from(state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]'));
             fontTags.forEach(f => {
                 f.removeAttribute("size");
                 f.style.fontSize = val;
@@ -446,9 +561,12 @@ function setTrueFontSize(val) {
             
             // Fallback for collapsed selections
             const sel = window.getSelection();
-            if(sel.isCollapsed) {
-                 const content = state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
-                 if(content) content.style.fontSize = val;
+            const content = state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
+            if(sel.isCollapsed && content) {
+                 content.style.fontSize = val;
+            }
+            if (content) {
+                syncHighlightWithFontSize(content, fontTags, val, sel.isCollapsed);
             }
         }
         
@@ -639,6 +757,12 @@ function applySeamlessHighlight(editableRoot, val) {
                 }
             } catch (e) {
                 el.setAttribute('data-opub-hilite', 'true');
+            }
+            const innerFont = el.querySelector('font[style*="font-size"], span[style*="font-size"]');
+            if (innerFont && innerFont.style && innerFont.style.fontSize) {
+                if (el.textContent.trim() === innerFont.textContent.trim()) {
+                    el.style.fontSize = innerFont.style.fontSize;
+                }
             }
         }
     });

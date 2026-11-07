@@ -1801,15 +1801,28 @@ if (!window._sliderFillListenerInstalled) {
                         wasCollapsed = true;
                     }
 
-                    if (wasCollapsed) document.execCommand("selectAll");
+                    if (wasCollapsed) {
+                        try {
+                            sel.selectAllChildren(editableContent);
+                        } catch (e) {
+                            document.execCommand("selectAll");
+                        }
+                    }
                     
                     document.execCommand("fontSize", false, "7"); 
                     
-                    const fontTags = state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]');
+                    const fontTags = Array.from(state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]'));
                     fontTags.forEach(f => {
                         f.removeAttribute("size");
                         f.style.fontSize = val;
                     });
+
+                    if (typeof window.syncHighlightWithFontSize === 'function') {
+                        window.syncHighlightWithFontSize(editableContent, fontTags, val, wasCollapsed);
+                    }
+                    if (wasCollapsed) {
+                        editableContent.style.fontSize = val;
+                    }
 
                     if (sel.rangeCount > 0 && !wasCollapsed) {
                         state.lastRange = sel.getRangeAt(0).cloneRange();

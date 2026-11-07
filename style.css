@@ -1,4 +1,4 @@
-/* OpenPublisher - A free desktop publishing tool (v5.18.6) */
+/* OpenPublisher - A free desktop publishing tool (v5.18.7) */
 /* Chalkboard Typography Aliasing & Multi-Platform Compatibility */
 @font-face {
     font-family: 'Chalkboard';
@@ -1564,7 +1564,7 @@ body.classic-cursors-enabled .force-move-cursor * {
 }
 
 /* =========================================================================
-   Strikethrough Line-Height Stabilization (v5.18.6)
+   Strikethrough Line-Height Stabilization (v5.18.7)
    Prevents strikethrough lines from becoming vertically misaligned/offset
    when text box line-height is adjusted.
    ========================================================================= */

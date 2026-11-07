@@ -231,7 +231,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.18.6');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.18.7');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -325,7 +325,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.18.6`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.18.7`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -348,7 +348,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.18.6`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.18.7`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -383,7 +383,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.18.6`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.18.7`);
 
         fetch(fileUrl)
             .then(res => res.json())
