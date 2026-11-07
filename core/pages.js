@@ -409,7 +409,19 @@ function renderPage(pageData) {
         if (data.growFit) applyGrowFit(el);
         if (data.type === 'emoji') applyEmojiStretch(el.querySelector('.element-content'));
         if (data.type === 'smart-arrow' && typeof window.refreshSmartArrow === 'function') window.refreshSmartArrow(el);
+        if (data.pictureFrame || (data.filterAttributes && data.filterAttributes['data-picture-frame'])) {
+            const pfVal = data.pictureFrame || data.filterAttributes['data-picture-frame'];
+            el.setAttribute('data-picture-frame', pfVal);
+            el.classList.add('has-picture-frame');
+            if (data.frameOrigW) el.setAttribute('data-frame-orig-w', data.frameOrigW);
+            if (data.frameOrigH) el.setAttribute('data-frame-orig-h', data.frameOrigH);
+            if (data.frameOrigX) el.setAttribute('data-frame-orig-x', data.frameOrigX);
+            if (data.frameOrigY) el.setAttribute('data-frame-orig-y', data.frameOrigY);
+        }
         paper.appendChild(el);
+        if (el.hasAttribute('data-picture-frame') && window.PictureFrameEngine) {
+            window.PictureFrameEngine.refreshElement(el);
+        }
         if (data.type === 'progress-bar' && window.ProgressBarEngine) {
             if (typeof window.ProgressBarEngine.initElement === 'function') window.ProgressBarEngine.initElement(el);
             else if (typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
@@ -1019,6 +1031,32 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 thumbImg.src = data.imgSrc;
                 if (data.altText) thumbImg.alt = data.altText;
                 scaleBox.appendChild(thumbImg);
+
+                const frameAttr = data.pictureFrame || (data.filterAttributes && data.filterAttributes['data-picture-frame']) || (data.innerHTML && data.innerHTML.includes('data-picture-frame') ? (data.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
+                if (frameAttr && window.PictureFrameEngine) {
+                    const frameParts = frameAttr.split(':');
+                    const fId = frameParts[0] || 'oak_wood';
+                    const fWidth = parseInt(frameParts[1]) || 24;
+                    const mId = frameParts[2] || 'none';
+                    const mWidth = parseInt(frameParts[3]) || 0;
+                    const fShadow = frameParts[4] === '1';
+                    const numW = parseFloat(data.width) || 300;
+                    const numH = parseFloat(data.height) || 200;
+                    const totalInset = fWidth + (mId !== 'none' ? mWidth : 0);
+
+                    if (thumbImg && (!s.left || s.left === '0px' || s.left === 0) && totalInset > 0) {
+                        thumbImg.style.left = totalInset + 'px';
+                        thumbImg.style.top = totalInset + 'px';
+                        thumbImg.style.width = Math.max(10, numW - 2 * totalInset) + 'px';
+                        thumbImg.style.height = Math.max(10, numH - 2 * totalInset) + 'px';
+                    }
+
+                    const frameOverlay = document.createElement('div');
+                    frameOverlay.className = 'element-picture-frame';
+                    frameOverlay.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: visible;';
+                    frameOverlay.innerHTML = window.PictureFrameEngine.generateFrameSVG(fId, numW, numH, fWidth, mId, mWidth, fShadow);
+                    scaleBox.appendChild(frameOverlay);
+                }
 
             } else if (data.clipPath && !data.innerHTML) {
                 const clipDiv = document.createElement('div');

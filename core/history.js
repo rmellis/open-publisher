@@ -131,7 +131,12 @@ function serializeCurrentPage() {
             arrowStrokeWidth: el.getAttribute('data-arrow-stroke-width') || null,
             textboxStyle: el.getAttribute('data-textbox-style') || null,
             chartConfig: el.getAttribute('data-chart-config') || null,
-            isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border'
+            isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border',
+            pictureFrame: el.getAttribute('data-picture-frame') || null,
+            frameOrigW: el.getAttribute('data-frame-orig-w') || null,
+            frameOrigH: el.getAttribute('data-frame-orig-h') || null,
+            frameOrigX: el.getAttribute('data-frame-orig-x') || null,
+            frameOrigY: el.getAttribute('data-frame-orig-y') || null
         };
 
         const content = el.querySelector('.element-content');
@@ -156,7 +161,9 @@ function serializeCurrentPage() {
                 attr.name === 'data-is-border' ||
                 attr.name === 'data-aspect-lock' || 
                 attr.name === 'data-aspect-ratio' ||
-                attr.name === 'data-rounded-corners') {
+                attr.name === 'data-rounded-corners' ||
+                attr.name.startsWith('data-picture-frame') ||
+                attr.name.startsWith('data-frame-')) {
                 filterAttrs[attr.name] = attr.value;
             }
         }
@@ -173,7 +180,7 @@ function serializeCurrentPage() {
         const svg = content ? content.querySelector('svg') : null;
         const shapeDiv = content ? content.querySelector('div') : null;
         const isBetaWordArt = img && (img.classList.contains('beta-wa-img') || img.hasAttribute('data-beta-wa-text') || data.type === 'beta-wordart');
-        const isTrueImage = !isBetaWordArt && (img || (svg && data.type === 'emoji')) && (data.type === 'image' || data.type === 'emoji' || (content && content.children.length === 1 && content.children[0].tagName === 'IMG'));
+        const isTrueImage = !isBetaWordArt && (img || (svg && data.type === 'emoji')) && (data.type === 'image' || data.type === 'emoji' || el.hasAttribute('data-picture-frame') || (content && ((content.children.length === 1 && content.children[0].tagName === 'IMG') || (content.querySelector('img') && content.querySelector('.element-picture-frame')))));
 
         if (isBetaWordArt) {
             data.type = 'beta-wordart';

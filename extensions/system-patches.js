@@ -2102,63 +2102,228 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             </div>
         </div>
 
-        <div class="op-sidebar-section">
-            <span class="op-section-label">Visibility</span>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-transparency">0%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="transparency" min="0" max="100" value="0">
+        <!-- Sidebar Section Navigation Tabs -->
+        <div class="op-sidebar-tab-bar" id="op-format-pic-tabs">
+            <button type="button" class="op-sidebar-tab-btn active" id="op-tab-pic-btn"><i class="fas fa-image"></i> Picture</button>
+            <button type="button" class="op-sidebar-tab-btn" id="op-tab-frame-btn"><i class="fas fa-border-style"></i> Frame <span id="op-frame-tab-indicator" class="op-sidebar-frame-badge" style="display:none;"></span></button>
+        </div>
+
+        <!-- Tab 1: Picture Filters & Adjustments -->
+        <div id="op-sidebar-pic-tab-pane">
+            <div class="op-sidebar-section">
+                <span class="op-section-label">Visibility</span>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Transparency</span><span class="op-slider-num" id="val-transparency">0%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="transparency" min="0" max="100" value="0">
+                </div>
+            </div>
+
+            <div class="op-sidebar-section">
+                <span class="op-section-label">Light & Tone</span>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Brightness</span><span class="op-slider-num" id="val-brightness">100%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="brightness" min="0" max="200" value="100">
+                </div>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Contrast</span><span class="op-slider-num" id="val-contrast">100%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="contrast" min="0" max="200" value="100">
+                </div>
+            </div>
+
+            <div class="op-sidebar-section">
+                <span class="op-section-label">Color Settings</span>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-saturate">100%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
+                </div>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
+                </div>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Grayscale</span><span class="op-slider-num" id="val-grayscale">0%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="grayscale" min="0" max="100" value="0">
+                </div>
+            </div>
+
+            <div class="op-sidebar-section">
+                <span class="op-section-label">Effects</span>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Blur</span><span class="op-slider-num" id="val-blur">0px</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="blur" min="0" max="10" value="0" step="0.5">
+                </div>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Sepia</span><span class="op-slider-num" id="val-sepia">0%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="sepia" min="0" max="100" value="0">
+                </div>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Invert</span><span class="op-slider-num" id="val-invert">0%</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="invert" min="0" max="100" value="0">
+                </div>
+            </div>
+            
+            <div class="op-sidebar-section">
+                <span class="op-section-label">Corners</span>
+                <div class="op-slider-row">
+                    <div class="op-slider-meta"><span class="op-slider-name">Rounded Corners</span><span class="op-slider-num" id="val-rounded-corners">0px</span></div>
+                    <input type="range" class="op-sidebar-slider" data-filter="rounded-corners" min="0" max="100" value="0">
+                </div>
             </div>
         </div>
 
-        <div class="op-sidebar-section">
-            <span class="op-section-label">Light & Tone</span>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Brightness</span><span class="op-slider-num" id="val-brightness">100%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="brightness" min="0" max="200" value="100">
-            </div>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Contrast</span><span class="op-slider-num" id="val-contrast">100%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="contrast" min="0" max="200" value="100">
-            </div>
-        </div>
+        <!-- Tab 2: Picture Frame Settings (Separate Section) -->
+        <div id="op-sidebar-frame-tab-pane" style="display:none;">
+            <!-- Active Frame Controls -->
+            <div id="op-frame-active-controls">
+                <!-- Frame Style -->
+                <div class="op-sidebar-section">
+                    <span class="op-section-label">Frame Style</span>
+                    <div class="op-custom-dropdown-container">
+                        <div class="op-custom-select-trigger" id="op-frame-style-trigger" tabindex="0">
+                            <span id="op-frame-style-label">Classic Natural Oak</span>
+                            <div class="drop-arrow"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                        <div class="custom-dropdown op-frame-custom-dropdown" id="op-frame-style-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; z-index:999999;">
+                            <div class="op-dropdown-group-header">Wood & Timber</div>
+                            <div class="op-frame-item font-item" data-value="oak_wood">Classic Natural Oak</div>
+                            <div class="op-frame-item font-item" data-value="dark_walnut">Dark Walnut & Mahogany</div>
+                            <div class="op-frame-item font-item" data-value="blonde_maple">Blonde Natural Maple</div>
+                            <div class="op-frame-item font-item" data-value="shabby_chic">Distressed Barnwood</div>
+                            <div class="op-frame-item font-item" data-value="cherry_wood">American Cherrywood</div>
 
-        <div class="op-sidebar-section">
-            <span class="op-section-label">Color Settings</span>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Saturation</span><span class="op-slider-num" id="val-saturate">100%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="saturate" min="0" max="200" value="100">
-            </div>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Hue</span><span class="op-slider-num" id="val-hue-rotate">0°</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="hue-rotate" min="-180" max="180" value="0">
-            </div>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Grayscale</span><span class="op-slider-num" id="val-grayscale">0%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="grayscale" min="0" max="100" value="0">
-            </div>
-        </div>
+                            <div class="op-dropdown-group-header">Ornate & Metal</div>
+                            <div class="op-frame-item font-item" data-value="baroque_gold">Ornate Baroque Gold</div>
+                            <div class="op-frame-item font-item" data-value="antique_silver">Burnished Antique Silver</div>
+                            <div class="op-frame-item font-item" data-value="brushed_aluminum">Brushed Champagne Metal</div>
+                            <div class="op-frame-item font-item" data-value="art_deco">Art Deco Brass & Enamel</div>
 
-        <div class="op-sidebar-section">
-            <span class="op-section-label">Effects</span>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Blur</span><span class="op-slider-num" id="val-blur">0px</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="blur" min="0" max="10" value="0" step="0.5">
+                            <div class="op-dropdown-group-header">Modern Gallery</div>
+                            <div class="op-frame-item font-item" data-value="gallery_black">Museum Gallery Box (Black)</div>
+                            <div class="op-frame-item font-item" data-value="studio_white">Studio Gallery Float (White)</div>
+                            <div class="op-frame-item font-item" data-value="espresso_box">Espresso Gallery Shadowbox</div>
+
+                            <div class="op-dropdown-group-header">Artistic & Novelty</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_teal">Retro Molded Plastic (Publisher Teal)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_red">Retro Molded Plastic (Cherry Red)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_yellow">Retro Molded Plastic (Sunshine Yellow)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_blue">Retro Molded Plastic (Electric Blue)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_green">Retro Molded Plastic (Emerald Green)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_purple">Retro Molded Plastic (Royal Purple)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_orange">Retro Molded Plastic (Tangerine Orange)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_white">Retro Molded Plastic (Glossy White)</div>
+                            <div class="op-frame-item font-item" data-value="retro_plastic_black">Retro Molded Plastic (Glossy Jet Black)</div>
+                            <div class="op-frame-item font-item" data-value="scalloped_stamp">Vintage Postage Stamp</div>
+                        </div>
+                        <select class="op-sidebar-select" id="op-frame-style-select" style="display:none;">
+                            <optgroup label="Wood & Timber">
+                                <option value="oak_wood">Classic Natural Oak</option>
+                                <option value="dark_walnut">Dark Walnut & Mahogany</option>
+                                <option value="blonde_maple">Blonde Natural Maple</option>
+                                <option value="shabby_chic">Distressed Barnwood</option>
+                                <option value="cherry_wood">American Cherrywood</option>
+                            </optgroup>
+                            <optgroup label="Ornate & Metal">
+                                <option value="baroque_gold">Ornate Baroque Gold</option>
+                                <option value="antique_silver">Burnished Antique Silver</option>
+                                <option value="brushed_aluminum">Brushed Champagne Metal</option>
+                                <option value="art_deco">Art Deco Brass & Enamel</option>
+                            </optgroup>
+                            <optgroup label="Modern Gallery">
+                                <option value="gallery_black">Museum Gallery Box (Black)</option>
+                                <option value="studio_white">Studio Gallery Float (White)</option>
+                                <option value="espresso_box">Espresso Gallery Shadowbox</option>
+                            </optgroup>
+                            <optgroup label="Artistic & Novelty">
+                                <option value="retro_plastic_teal">Retro Molded Plastic (Publisher Teal)</option>
+                                <option value="retro_plastic_red">Retro Molded Plastic (Cherry Red)</option>
+                                <option value="retro_plastic_yellow">Retro Molded Plastic (Sunshine Yellow)</option>
+                                <option value="retro_plastic_blue">Retro Molded Plastic (Electric Blue)</option>
+                                <option value="retro_plastic_green">Retro Molded Plastic (Emerald Green)</option>
+                                <option value="retro_plastic_purple">Retro Molded Plastic (Royal Purple)</option>
+                                <option value="retro_plastic_orange">Retro Molded Plastic (Tangerine Orange)</option>
+                                <option value="retro_plastic_white">Retro Molded Plastic (Glossy White)</option>
+                                <option value="retro_plastic_black">Retro Molded Plastic (Glossy Jet Black)</option>
+                                <option value="scalloped_stamp">Vintage Postage Stamp</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button type="button" id="op-frame-browse-gallery-btn" style="width:100%; margin-top:8px; padding:6px 10px; font-size:11px; font-weight:600; color:var(--ui-theme-color, #0f766e); background:rgba(15,118,110,0.08); border:1px dashed var(--ui-theme-color, #0f766e); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <i class="fas fa-th-large"></i> Browse Full Frame Gallery...
+                    </button>
+                </div>
+
+                <!-- Frame Dimensions -->
+                <div class="op-sidebar-section">
+                    <span class="op-section-label">Frame Dimensions</span>
+                    <div class="op-slider-row">
+                        <div class="op-slider-meta">
+                            <span class="op-slider-name">Frame Width</span>
+                            <span class="op-slider-num" id="val-frame-width">24px</span>
+                        </div>
+                        <input type="range" class="op-sidebar-slider" id="op-frame-width-slider" min="8" max="54" step="2" value="24">
+                    </div>
+                </div>
+
+                <!-- Matboard (Passe-Partout) -->
+                <div class="op-sidebar-section">
+                    <span class="op-section-label">Matboard (Passe-Partout)</span>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; margin-bottom:10px;">
+                        <input type="checkbox" id="op-frame-mat-toggle" style="accent-color:var(--ui-theme-color, #0f766e);">
+                        <span>Inner Matboard (Margin)</span>
+                    </label>
+                    <div id="op-frame-mat-details" style="display:none; flex-direction:column; gap:10px;">
+                        <select class="op-sidebar-select" id="op-frame-mat-select">
+                            <option value="studio_white">Studio White (Beveled)</option>
+                            <option value="warm_cream">Warm Cream Linen</option>
+                            <option value="charcoal">Museum Charcoal</option>
+                            <option value="white_gold">White Mat with Gold Fillet</option>
+                        </select>
+                        <div class="op-slider-row">
+                            <div class="op-slider-meta">
+                                <span class="op-slider-name">Mat Width</span>
+                                <span class="op-slider-num" id="val-frame-mat-width">16px</span>
+                            </div>
+                            <input type="range" class="op-sidebar-slider" id="op-frame-mat-slider" min="6" max="36" step="2" value="16">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lighting & Fitting -->
+                <div class="op-sidebar-section">
+                    <span class="op-section-label">Lighting & Fitting</span>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; margin-bottom:12px;">
+                        <input type="checkbox" id="op-frame-shadow-toggle" style="accent-color:var(--ui-theme-color, #0f766e);">
+                        <span>3D Wall Drop Shadow</span>
+                    </label>
+                    <div style="display:flex; align-items:center; gap:12px; font-size:11px; color:#475569;">
+                        <span style="font-weight:700;">Fitting:</span>
+                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="radio" name="op-sidebar-fit" value="outside" style="accent-color:var(--ui-theme-color, #0f766e);"> Outside
+                        </label>
+                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="radio" name="op-sidebar-fit" value="inside" style="accent-color:var(--ui-theme-color, #0f766e);"> Inside
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Remove Frame Action -->
+                <div class="op-sidebar-section" style="padding:12px;">
+                    <button type="button" id="op-frame-remove-btn" style="width:100%; padding:8px 12px; background:#fff1f2; color:#e11d48; border:1px solid #fecdd3; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.15s ease;">
+                        <i class="fas fa-trash-alt"></i> Remove Frame
+                    </button>
+                </div>
             </div>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Sepia</span><span class="op-slider-num" id="val-sepia">0%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="sepia" min="0" max="100" value="0">
-            </div>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Invert</span><span class="op-slider-num" id="val-invert">0%</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="invert" min="0" max="100" value="0">
-            </div>
-        </div>
-        
-        <div class="op-sidebar-section">
-            <span class="op-section-label">Corners</span>
-            <div class="op-slider-row">
-                <div class="op-slider-meta"><span class="op-slider-name">Rounded Corners</span><span class="op-slider-num" id="val-rounded-corners">0px</span></div>
-                <input type="range" class="op-sidebar-slider" data-filter="rounded-corners" min="0" max="100" value="0">
+
+            <!-- Empty State (when image has NO frame) -->
+            <div id="op-frame-empty-controls" style="display:none; text-align:center; padding:10px 0;">
+                <div class="op-sidebar-section" style="padding:22px 14px;">
+                    <i class="fas fa-border-style" style="font-size:32px; color:var(--ui-theme-color, #0f766e); opacity:0.6; margin-bottom:12px; display:block;"></i>
+                    <div style="font-size:13px; font-weight:700; color:#1e293b; margin-bottom:6px;">No Frame Attached</div>
+                    <div style="font-size:11px; color:#64748b; line-height:1.4; margin-bottom:16px;">Add a realistic wood, metallic, gallery, or plastic artistic frame to this image.</div>
+                    <button type="button" id="op-frame-add-dialog-btn" style="width:100%; padding:9px 14px; background:var(--ui-theme-color, #0f766e); color:#ffffff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 6px rgba(15,118,110,0.25);">
+                        <i class="fas fa-plus"></i> Choose Picture Frame...
+                    </button>
+                </div>
             </div>
         </div>`;
     document.body.appendChild(panel);
@@ -2205,6 +2370,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 if(txt) txt.innerText = v + (f==='hue-rotate'?'°':(f==='blur'||f==='rounded-corners')?'px':'%');
                 if (typeof window.updateSliderFill === 'function') window.updateSliderFill(s);
             });
+            syncFrameInputs(el);
         } else {
             if (panel.classList.contains('visible')) panel.classList.remove('visible');
             if (expander.classList.contains('visible')) expander.classList.remove('visible');
@@ -2341,6 +2507,322 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         userCollapsed = false; 
         refreshVisibility(state.selectedEl);
     });
+
+
+    // Tab switching logic for Format Picture sidebar
+    const tabPicBtn = panel.querySelector('#op-tab-pic-btn');
+    const tabFrameBtn = panel.querySelector('#op-tab-frame-btn');
+    const picTabPane = panel.querySelector('#op-sidebar-pic-tab-pane');
+    const frameTabPane = panel.querySelector('#op-sidebar-frame-tab-pane');
+
+    const switchSidebarTab = (tab) => {
+        if (tab === 'frame') {
+            if (tabFrameBtn) tabFrameBtn.classList.add('active');
+            if (tabPicBtn) tabPicBtn.classList.remove('active');
+            if (frameTabPane) frameTabPane.style.display = 'block';
+            if (picTabPane) picTabPane.style.display = 'none';
+            if (state.selectedEl) syncFrameInputs(state.selectedEl);
+        } else {
+            if (tabPicBtn) tabPicBtn.classList.add('active');
+            if (tabFrameBtn) tabFrameBtn.classList.remove('active');
+            if (picTabPane) picTabPane.style.display = 'block';
+            if (frameTabPane) frameTabPane.style.display = 'none';
+        }
+    };
+
+    if (tabPicBtn) tabPicBtn.onclick = () => switchSidebarTab('pic');
+    if (tabFrameBtn) tabFrameBtn.onclick = () => switchSidebarTab('frame');
+
+    // Sync frame inputs helper
+    const syncFrameInputs = (el) => {
+        if (!el || !panel) return;
+        const config = window.PictureFrameEngine ? window.PictureFrameEngine.getFrameConfig(el) : null;
+        const activeBlock = panel.querySelector('#op-frame-active-controls');
+        const emptyBlock = panel.querySelector('#op-frame-empty-controls');
+        const tabIndicator = panel.querySelector('#op-frame-tab-indicator');
+
+        if (config) {
+            if (activeBlock) activeBlock.style.display = 'block';
+            if (emptyBlock) emptyBlock.style.display = 'none';
+            if (tabIndicator) tabIndicator.style.display = 'inline-block';
+
+            const styleSelect = panel.querySelector('#op-frame-style-select');
+            const canonicalId = (window.PictureFrameEngine && window.PictureFrameEngine.normalizeFrameId) ? window.PictureFrameEngine.normalizeFrameId(config.frameId) : config.frameId;
+            if (styleSelect) styleSelect.value = canonicalId;
+
+            const triggerLabel = panel.querySelector('#op-frame-style-label');
+            const presetObj = window.PictureFrameEngine ? window.PictureFrameEngine.getPresetById(canonicalId) : null;
+            if (triggerLabel && presetObj) {
+                triggerLabel.innerText = presetObj.name;
+            }
+            const frameDropdown = panel.querySelector('#op-frame-style-dropdown');
+            if (frameDropdown) {
+                frameDropdown.querySelectorAll('.op-frame-item').forEach(it => {
+                    if (it.getAttribute('data-value') === canonicalId) it.classList.add('highlighted');
+                    else it.classList.remove('highlighted');
+                });
+            }
+
+            const wSlider = panel.querySelector('#op-frame-width-slider');
+            const wVal = panel.querySelector('#val-frame-width');
+            if (wSlider) {
+                wSlider.value = config.frameWidth;
+                if (typeof window.updateSliderFill === 'function') window.updateSliderFill(wSlider);
+            }
+            if (wVal) wVal.innerText = config.frameWidth + 'px';
+
+            const matToggle = panel.querySelector('#op-frame-mat-toggle');
+            const matDetails = panel.querySelector('#op-frame-mat-details');
+            const hasMat = (config.matId && config.matId !== 'none' && config.matWidth > 0);
+            if (matToggle) matToggle.checked = hasMat;
+            if (matDetails) matDetails.style.display = hasMat ? 'flex' : 'none';
+
+            const matSelect = panel.querySelector('#op-frame-mat-select');
+            if (matSelect && config.matId && config.matId !== 'none') matSelect.value = config.matId;
+
+            const matLabel = panel.querySelector('#op-frame-mat-label');
+            const matPresets = window.PictureFrameEngine ? window.PictureFrameEngine.getMatPresets() : [];
+            const currentMatObj = matPresets.find(m => m.id === (config.matId || 'studio_white')) || matPresets[1];
+            if (matLabel && currentMatObj) {
+                matLabel.innerText = currentMatObj.name;
+            }
+            const matDropdown = panel.querySelector('#op-frame-mat-dropdown');
+            if (matDropdown) {
+                matDropdown.querySelectorAll('.op-frame-mat-item').forEach(it => {
+                    if (it.getAttribute('data-value') === config.matId) it.classList.add('highlighted');
+                    else it.classList.remove('highlighted');
+                });
+            }
+
+            const matSlider = panel.querySelector('#op-frame-mat-slider');
+            const matVal = panel.querySelector('#val-frame-mat-width');
+            if (matSlider) {
+                matSlider.value = config.matWidth || 16;
+                if (typeof window.updateSliderFill === 'function') window.updateSliderFill(matSlider);
+            }
+            if (matVal) matVal.innerText = (config.matWidth || 16) + 'px';
+
+            const shadowToggle = panel.querySelector('#op-frame-shadow-toggle');
+            if (shadowToggle) shadowToggle.checked = !!config.hasShadow;
+
+            const fitRadios = panel.querySelectorAll('input[name="op-sidebar-fit"]');
+            fitRadios.forEach(r => { r.checked = (r.value === config.fitMode); });
+        } else {
+            if (activeBlock) activeBlock.style.display = 'none';
+            if (emptyBlock) emptyBlock.style.display = 'block';
+            if (tabIndicator) tabIndicator.style.display = 'none';
+        }
+    };
+
+    window.syncFormatPictureSidebarFrame = function(el) {
+        if (el && el === state.selectedEl) {
+            syncFrameInputs(el);
+            if (el.classList.contains('has-picture-frame') && panel.classList.contains('visible')) {
+                switchSidebarTab('frame');
+            } else if (!el.classList.contains('has-picture-frame')) {
+                switchSidebarTab('pic');
+            }
+        }
+    };
+
+    // Frame Style Trigger & Custom Dropdown (matching Font dropdown UI)
+    const frameStyleTrigger = panel.querySelector('#op-frame-style-trigger');
+    const frameStyleDropdown = panel.querySelector('#op-frame-style-dropdown');
+    const frameSelect = panel.querySelector('#op-frame-style-select');
+
+    if (frameStyleTrigger && frameStyleDropdown) {
+        frameStyleTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = frameStyleDropdown.style.display === 'block';
+            document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
+            panel.querySelectorAll('.op-custom-select-trigger').forEach(t => t.classList.remove('active'));
+            if (!isOpen) {
+                frameStyleDropdown.style.display = 'block';
+                frameStyleTrigger.classList.add('active');
+                const hl = frameStyleDropdown.querySelector('.op-frame-item.highlighted');
+                if (hl) hl.scrollIntoView({ block: 'nearest' });
+            }
+        });
+
+        frameStyleDropdown.querySelectorAll('.op-frame-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const val = item.getAttribute('data-value');
+                frameStyleDropdown.style.display = 'none';
+                frameStyleTrigger.classList.remove('active');
+                if (frameSelect) {
+                    frameSelect.value = val;
+                    frameSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+
+    if (frameSelect) {
+        frameSelect.addEventListener('change', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl) || { frameWidth: 24, matId: 'none', matWidth: 0, hasShadow: true, fitMode: 'outside' };
+            cfg.frameId = (window.PictureFrameEngine && window.PictureFrameEngine.normalizeFrameId) ? window.PictureFrameEngine.normalizeFrameId(e.target.value) : e.target.value;
+            window.PictureFrameEngine.applyFrame(state.selectedEl, cfg);
+        });
+    }
+
+    // Matboard Style Trigger & Custom Dropdown
+    const matTrigger = panel.querySelector('#op-frame-mat-trigger');
+    const matDropdown = panel.querySelector('#op-frame-mat-dropdown');
+    const matSelect = panel.querySelector('#op-frame-mat-select');
+
+    if (matTrigger && matDropdown) {
+        matTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = matDropdown.style.display === 'block';
+            document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
+            panel.querySelectorAll('.op-custom-select-trigger').forEach(t => t.classList.remove('active'));
+            if (!isOpen) {
+                matDropdown.style.display = 'block';
+                matTrigger.classList.add('active');
+                const hl = matDropdown.querySelector('.op-frame-mat-item.highlighted');
+                if (hl) hl.scrollIntoView({ block: 'nearest' });
+            }
+        });
+
+        matDropdown.querySelectorAll('.op-frame-mat-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const val = item.getAttribute('data-value');
+                matDropdown.style.display = 'none';
+                matTrigger.classList.remove('active');
+                if (matSelect) {
+                    matSelect.value = val;
+                    matSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+
+    // Frame Width Slider
+    const frameWidthSlider = panel.querySelector('#op-frame-width-slider');
+    if (frameWidthSlider) {
+        if (typeof window.updateSliderFill === 'function') window.updateSliderFill(frameWidthSlider);
+        frameWidthSlider.addEventListener('input', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const val = parseInt(e.target.value) || 24;
+            const txt = panel.querySelector('#val-frame-width');
+            if (txt) txt.innerText = val + 'px';
+            if (typeof window.updateSliderFill === 'function') window.updateSliderFill(e.target);
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                cfg.frameWidth = val;
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg, true);
+            }
+        });
+        frameWidthSlider.addEventListener('change', () => {
+            if (typeof window.pushHistory === 'function') window.pushHistory();
+        });
+    }
+
+    // Matboard Toggle
+    const matToggle = panel.querySelector('#op-frame-mat-toggle');
+    const matDetails = panel.querySelector('#op-frame-mat-details');
+    if (matToggle) {
+        matToggle.addEventListener('change', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const isChecked = e.target.checked;
+            if (matDetails) matDetails.style.display = isChecked ? 'flex' : 'none';
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                if (isChecked) {
+                    const sel = panel.querySelector('#op-frame-mat-select');
+                    const slider = panel.querySelector('#op-frame-mat-slider');
+                    cfg.matId = (sel && sel.value) ? sel.value : 'studio_white';
+                    cfg.matWidth = (slider && parseInt(slider.value)) ? parseInt(slider.value) : 16;
+                } else {
+                    cfg.matId = 'none';
+                    cfg.matWidth = 0;
+                }
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg);
+            }
+        });
+    }
+
+    // Matboard Select
+    if (matSelect) {
+        matSelect.addEventListener('change', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                cfg.matId = e.target.value;
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg);
+            }
+        });
+    }
+
+    // Matboard Width Slider
+    const matSlider = panel.querySelector('#op-frame-mat-slider');
+    if (matSlider) {
+        if (typeof window.updateSliderFill === 'function') window.updateSliderFill(matSlider);
+        matSlider.addEventListener('input', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const val = parseInt(e.target.value) || 16;
+            const txt = panel.querySelector('#val-frame-mat-width');
+            if (txt) txt.innerText = val + 'px';
+            if (typeof window.updateSliderFill === 'function') window.updateSliderFill(e.target);
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                cfg.matWidth = val;
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg, true);
+            }
+        });
+        matSlider.addEventListener('change', () => {
+            if (typeof window.pushHistory === 'function') window.pushHistory();
+        });
+    }
+
+    // Shadow Toggle
+    const shadowToggle = panel.querySelector('#op-frame-shadow-toggle');
+    if (shadowToggle) {
+        shadowToggle.addEventListener('change', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                cfg.hasShadow = e.target.checked;
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg);
+            }
+        });
+    }
+
+    // Fitting Radio
+    panel.querySelectorAll('input[name="op-sidebar-fit"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            const cfg = window.PictureFrameEngine.getFrameConfig(state.selectedEl);
+            if (cfg) {
+                cfg.fitMode = e.target.value;
+                window.PictureFrameEngine.applyFrame(state.selectedEl, cfg);
+            }
+        });
+    });
+
+    // Remove Frame Button
+    const removeBtn = panel.querySelector('#op-frame-remove-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            if (!state.selectedEl || !window.PictureFrameEngine) return;
+            window.PictureFrameEngine.removeFrame(state.selectedEl);
+            syncFrameInputs(state.selectedEl);
+        });
+    }
+
+    // Browse Gallery Buttons
+    const openGalleryHandler = () => {
+        if (typeof showPictureFrameModal === 'function') {
+            showPictureFrameModal();
+        }
+    };
+    const browseBtn = panel.querySelector('#op-frame-browse-gallery-btn');
+    const addDialogBtn = panel.querySelector('#op-frame-add-dialog-btn');
+    if (browseBtn) browseBtn.addEventListener('click', openGalleryHandler);
+    if (addDialogBtn) addDialogBtn.addEventListener('click', openGalleryHandler);
 
     const hookSelection = () => {
         if(window.selectElement && !window.selectElement._filterHookedSys) {

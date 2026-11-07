@@ -169,6 +169,33 @@ window.exportAsHTML = async function(opts = {}) {
                             img.style.borderRadius = effectiveRadius;
                         }
                         contentDiv.appendChild(img);
+
+                        const frameAttr = data.pictureFrame || (data.filterAttributes && data.filterAttributes['data-picture-frame']) || (data.innerHTML && data.innerHTML.includes('data-picture-frame') ? (data.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
+                        if (frameAttr && window.PictureFrameEngine) {
+                            const frameParts = frameAttr.split(':');
+                            const fId = frameParts[0] || 'oak_wood';
+                            const fWidth = parseInt(frameParts[1]) || 24;
+                            const mId = frameParts[2] || 'none';
+                            const mWidth = parseInt(frameParts[3]) || 0;
+                            const fShadow = frameParts[4] === '1';
+                            const numW = parseFloat(data.width) || parseFloat(elDiv.style.width) || 300;
+                            const numH = parseFloat(data.height) || parseFloat(elDiv.style.height) || 200;
+                            const totalInset = fWidth + (mId !== 'none' ? mWidth : 0);
+
+                            if ((!data.imgStyle || !data.imgStyle.left || data.imgStyle.left === '0px' || data.imgStyle.left === 0) && totalInset > 0) {
+                                img.style.left = totalInset + 'px';
+                                img.style.top = totalInset + 'px';
+                                img.style.width = Math.max(10, numW - 2 * totalInset) + 'px';
+                                img.style.height = Math.max(10, numH - 2 * totalInset) + 'px';
+                                img.style.position = 'absolute';
+                            }
+
+                            const frameDiv = document.createElement('div');
+                            frameDiv.className = 'element-picture-frame';
+                            frameDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: visible;';
+                            frameDiv.innerHTML = window.PictureFrameEngine.generateFrameSVG(fId, numW, numH, fWidth, mId, mWidth, fShadow);
+                            contentDiv.appendChild(frameDiv);
+                        }
                     } else if (data.clipPath) {
                         let bgDiv = document.createElement('div');
                         bgDiv.style.width = '100%';

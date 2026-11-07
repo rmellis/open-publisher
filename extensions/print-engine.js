@@ -222,6 +222,33 @@
                             img.style.transformOrigin = 'center center';
                         }
                         elDiv.appendChild(img);
+
+                        const frameAttr = el.pictureFrame || (el.filterAttributes && el.filterAttributes['data-picture-frame']) || (el.innerHTML && el.innerHTML.includes('data-picture-frame') ? (el.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
+                        if (frameAttr && window.PictureFrameEngine) {
+                            const frameParts = frameAttr.split(':');
+                            const fId = frameParts[0] || 'oak_wood';
+                            const fWidth = parseInt(frameParts[1]) || 24;
+                            const mId = frameParts[2] || 'none';
+                            const mWidth = parseInt(frameParts[3]) || 0;
+                            const fShadow = frameParts[4] === '1';
+                            const numW = parseFloat(el.width) || parseFloat(elDiv.style.width) || 300;
+                            const numH = parseFloat(el.height) || parseFloat(elDiv.style.height) || 200;
+                            const totalInset = fWidth + (mId !== 'none' ? mWidth : 0);
+
+                            if ((!el.imgStyle || !el.imgStyle.left || el.imgStyle.left === '0px' || el.imgStyle.left === 0) && totalInset > 0) {
+                                img.style.left = totalInset + 'px';
+                                img.style.top = totalInset + 'px';
+                                img.style.width = Math.max(10, numW - 2 * totalInset) + 'px';
+                                img.style.height = Math.max(10, numH - 2 * totalInset) + 'px';
+                                img.style.position = 'absolute';
+                            }
+
+                            const frameDiv = document.createElement('div');
+                            frameDiv.className = 'element-picture-frame';
+                            frameDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: visible; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;';
+                            frameDiv.innerHTML = window.PictureFrameEngine.generateFrameSVG(fId, numW, numH, fWidth, mId, mWidth, fShadow);
+                            elDiv.appendChild(frameDiv);
+                        }
                     } else {
                         const livePaper = (typeof document !== 'undefined') ? document.getElementById('paper') : null;
                         const shadowInfo = window.extractElementShadowForPrint ? window.extractElementShadowForPrint(el, page, livePaper) : { boxShadow: '', filter: '' };
@@ -2736,6 +2763,33 @@
                         
                         cropDiv.appendChild(img);
                         elDiv.appendChild(cropDiv);
+
+                        const frameAttr = el.pictureFrame || (el.filterAttributes && el.filterAttributes['data-picture-frame']) || (activeEl && activeEl.getAttribute('data-picture-frame')) || (el.innerHTML && el.innerHTML.includes('data-picture-frame') ? (el.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
+                        if (frameAttr && window.PictureFrameEngine) {
+                            const frameParts = frameAttr.split(':');
+                            const fId = frameParts[0] || 'oak_wood';
+                            const fWidth = parseInt(frameParts[1]) || 24;
+                            const mId = frameParts[2] || 'none';
+                            const mWidth = parseInt(frameParts[3]) || 0;
+                            const fShadow = frameParts[4] === '1';
+                            const numW = parseFloat(el.width) || parseFloat(elDiv.style.width) || 300;
+                            const numH = parseFloat(el.height) || parseFloat(elDiv.style.height) || 200;
+                            const totalInset = fWidth + (mId !== 'none' ? mWidth : 0);
+
+                            if ((!savedImgStyle.left || savedImgStyle.left === '0px' || savedImgStyle.left === 0) && totalInset > 0) {
+                                img.style.left = totalInset + 'px';
+                                img.style.top = totalInset + 'px';
+                                img.style.width = Math.max(10, numW - 2 * totalInset) + 'px';
+                                img.style.height = Math.max(10, numH - 2 * totalInset) + 'px';
+                                img.style.position = 'absolute';
+                            }
+
+                            const frameDiv = document.createElement('div');
+                            frameDiv.className = 'element-picture-frame';
+                            frameDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: visible; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;';
+                            frameDiv.innerHTML = window.PictureFrameEngine.generateFrameSVG(fId, numW, numH, fWidth, mId, mWidth, fShadow);
+                            elDiv.appendChild(frameDiv);
+                        }
                         
                     } else if (el.clipPath) {
                         const sX = el.scaleX || "1";
