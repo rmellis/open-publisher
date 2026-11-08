@@ -557,37 +557,114 @@ function addMasterPage() {
         else if (typeof pushHistory === 'function') pushHistory();
     }
 
-    let defaultW = '794px'; 
-    let defaultH = '1123px';
-    try {
-        const locale = navigator.language || navigator.userLanguage || '';
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
-        
-        let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
-        
-        if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
-            if (tz !== 'Asia/Manila') {
-                isLetter = false;
+    // Inherit page dimensions, format, dpi, and orientation from the active/existing document page
+    const refPage = (state.pages && state.pages.length > 0)
+        ? (state.pages[state.currentPageIndex] || state.pages[0])
+        : null;
+
+    let targetFormat = (refPage && refPage.format) || (typeof state !== 'undefined' && state.format) || null;
+    let targetDpi = (refPage && refPage.dpi) || (typeof state !== 'undefined' && state.dpi) || 96;
+    let targetOrientation = (refPage && refPage.orientation) || null;
+    let defaultW = null;
+    let defaultH = null;
+
+    if (refPage && refPage.width && refPage.height) {
+        defaultW = refPage.width;
+        defaultH = refPage.height;
+        if (state.isSpreadMode) {
+            defaultW = (parseInt(defaultW) / 2) + 'px';
+        }
+    } else {
+        const paperElem = document.getElementById('paper');
+        if (paperElem && paperElem.style.width && paperElem.style.height) {
+            defaultW = paperElem.style.width;
+            defaultH = paperElem.style.height;
+            if (state.isSpreadMode) {
+                defaultW = (parseInt(defaultW) / 2) + 'px';
             }
         }
-        
-        if (isLetter) {
-            defaultW = '816px'; 
-            defaultH = '1056px';
+    }
+
+    const standardSizes96 = {
+        'A4': { w: '794px', h: '1123px' },
+        'Letter': { w: '816px', h: '1056px' },
+        'A3': { w: '1123px', h: '1587px' },
+        'A5': { w: '559px', h: '794px' },
+        'Legal': { w: '816px', h: '1344px' },
+        'Tabloid': { w: '1056px', h: '1632px' },
+        'BusinessCard': { w: '336px', h: '192px' },
+        'Square': { w: '794px', h: '794px' }
+    };
+
+    if (!defaultW || !defaultH) {
+        if (targetFormat && standardSizes96[targetFormat]) {
+            defaultW = standardSizes96[targetFormat].w;
+            defaultH = standardSizes96[targetFormat].h;
+            if (targetOrientation === 'landscape') {
+                const maxD = Math.max(parseFloat(defaultW), parseFloat(defaultH)) + 'px';
+                const minD = Math.min(parseFloat(defaultW), parseFloat(defaultH)) + 'px';
+                defaultW = maxD;
+                defaultH = minD;
+            }
+        } else {
+            defaultW = '794px'; 
+            defaultH = '1123px';
+            try {
+                const locale = navigator.language || navigator.userLanguage || '';
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                const letterRegions = ['en-US', 'es-MX', 'en-CA', 'fr-CA', 'es-CO', 'es-VE', 'es-CL', 'en-PH', 'es-PR', 'en-BZ'];
+                let isLetter = letterRegions.includes(locale) || locale.endsWith('-US') || locale.endsWith('-CA') || locale.endsWith('-MX');
+                if (tz.startsWith('Europe/') || tz.startsWith('Australia/') || tz.startsWith('Africa/') || tz.startsWith('Asia/')) {
+                    if (tz !== 'Asia/Manila') isLetter = false;
+                }
+                if (isLetter) {
+                    defaultW = '816px'; 
+                    defaultH = '1056px';
+                    targetFormat = 'Letter';
+                } else {
+                    targetFormat = 'A4';
+                }
+            } catch(e) {
+                targetFormat = 'A4';
+            }
         }
-    } catch(e) {}
+    }
+
+    if (!targetOrientation) {
+        targetOrientation = parseFloat(defaultW) >= parseFloat(defaultH) ? 'landscape' : 'portrait';
+    }
+    if (!targetFormat || targetFormat === 'Custom') {
+        if (window.UnitConversionService && window.UnitConversionService.detectFormat) {
+            targetFormat = window.UnitConversionService.detectFormat(parseFloat(defaultW), parseFloat(defaultH), targetDpi);
+        } else {
+            let w = parseFloat(defaultW);
+            let h = parseFloat(defaultH);
+            let shortEdge = Math.min(w, h);
+            let longEdge = Math.max(w, h);
+            if (Math.abs(w - h) <= 10) targetFormat = 'Square';
+            else if (shortEdge >= 1100) targetFormat = 'A3';
+            else if (shortEdge >= 1000) targetFormat = 'Tabloid';
+            else if (shortEdge >= 810 && longEdge > 1100) targetFormat = 'Legal';
+            else if (shortEdge > 800) targetFormat = 'Letter';
+            else if (shortEdge < 400) targetFormat = 'BusinessCard';
+            else if (shortEdge < 600) targetFormat = 'A5';
+            else targetFormat = 'A4';
+        }
+    }
 
     let pageW = defaultW;
     if (typeof state !== 'undefined' && state.isSpreadMode) {
         pageW = (parseInt(defaultW) * 2) + 'px';
     }
 
-    const isMasterLand = parseFloat(pageW) >= parseFloat(defaultH);
+    const isMasterLand = targetOrientation === 'landscape' || (parseFloat(pageW) >= parseFloat(defaultH));
     const newPage = {
         id: Date.now() + '-master',
         orientation: isMasterLand ? 'landscape' : 'portrait',
-        width: pageW, height: defaultH,
+        width: pageW,
+        height: defaultH,
+        dpi: targetDpi,
+        format: targetFormat,
         background: '#ffffff',
         header: 'Header (Type here)', 
         footer: 'Footer (Type here)',
@@ -598,6 +675,7 @@ function addMasterPage() {
     state.hasMasterPage = true;
     state.pages.unshift(newPage);
     state.currentPageIndex = 0;
+    if (typeof state !== 'undefined') state.format = targetFormat;
     
     renderPage(newPage);
     updateSidebar();
