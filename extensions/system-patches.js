@@ -979,6 +979,9 @@ if (!window._sliderFillListenerInstalled) {
         if (el.getAttribute('data-type') === 'progress-bar' || el.getAttribute('data-type') === 'chart') return false;
         if (el.getAttribute('data-type') === 'shape' && !el.querySelector('[contenteditable="true"]')) return false;
         if (el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border') return false;
+        if (el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset') || el.querySelector('.element-advertisement')) {
+            return true;
+        }
         return !!(el.querySelector('[contenteditable="true"]') || el.querySelector('.text-content') || el.getAttribute('data-type') === 'text');
     };
 
@@ -992,6 +995,22 @@ if (!window._sliderFillListenerInstalled) {
     };
 
     window.getTextBoxPadding = function(el) {
+        if (!el) return { top: 0, right: 0, bottom: 0, left: 0 };
+        const isAd = el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset') || el.querySelector('.element-advertisement');
+        if (isAd) {
+            const offX = parseFloat(el.getAttribute('data-ad-offset-x')) || 0;
+            const offY = parseFloat(el.getAttribute('data-ad-offset-y')) || 0;
+            const elW = parseFloat(el.style.width) || el.offsetWidth || 180;
+            const elH = parseFloat(el.style.height) || el.offsetHeight || 180;
+            const basePadX = Math.round(elW * 0.15);
+            const basePadY = Math.round(elH * 0.15);
+            return {
+                top: Math.max(5, Math.min(elH - 10, basePadY + offY)),
+                bottom: Math.max(5, Math.min(elH - 10, basePadY - offY)),
+                left: Math.max(5, Math.min(elW - 10, basePadX + offX)),
+                right: Math.max(5, Math.min(elW - 10, basePadX - offX))
+            };
+        }
         const target = window.getTextBoxPaddingTarget(el);
         if (!target) return { top: 0, right: 0, bottom: 0, left: 0 };
         const style = target.style;
@@ -1035,12 +1054,18 @@ if (!window._sliderFillListenerInstalled) {
         const elH = parseFloat(el.style.height) || el.offsetHeight;
         const pad = window.getTextBoxPadding(el);
 
+        const isAd = el && (el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset') || el.querySelector('.element-advertisement'));
         const guideBox = container.querySelector('.text-margin-guide-box');
         if (guideBox) {
-            guideBox.style.left = Math.min(pad.left, elW) + 'px';
-            guideBox.style.top = Math.min(pad.top, elH) + 'px';
-            guideBox.style.width = Math.max(0, elW - pad.left - pad.right) + 'px';
-            guideBox.style.height = Math.max(0, elH - pad.top - pad.bottom) + 'px';
+            if (isAd) {
+                guideBox.style.display = 'none';
+            } else {
+                guideBox.style.display = 'block';
+                guideBox.style.left = Math.min(pad.left, elW) + 'px';
+                guideBox.style.top = Math.min(pad.top, elH) + 'px';
+                guideBox.style.width = Math.max(0, elW - pad.left - pad.right) + 'px';
+                guideBox.style.height = Math.max(0, elH - pad.top - pad.bottom) + 'px';
+            }
         }
 
         // Separate margin handles laterally from the 8 outer element resize handles (which sit at 50% midpoint).
@@ -1077,6 +1102,13 @@ if (!window._sliderFillListenerInstalled) {
             hRight.style.top = (elH / 2 + verticalOffset) + 'px';
             hRight.classList.toggle('at-edge', pad.right <= 6);
         }
+
+        if (isAd) {
+            if (hTop) hTop.title = 'Drag to adjust vertical text position inside badge (Double-click to center)';
+            if (hBottom) hBottom.title = 'Drag to adjust vertical text position inside badge (Double-click to center)';
+            if (hLeft) hLeft.title = 'Drag to adjust horizontal text position inside badge (Double-click to center)';
+            if (hRight) hRight.title = 'Drag to adjust horizontal text position inside badge (Double-click to center)';
+        }
     };
 
     window.showTextMarginBadge = function(handle, el, dir, val) {
@@ -1101,12 +1133,22 @@ if (!window._sliderFillListenerInstalled) {
         const container = overlay.querySelector('.text-margin-container');
         if (!badge || !container) return;
 
-        const dirName = dir.charAt(0).toUpperCase() + dir.slice(1);
-        let label = `${dirName}: ${val}px`;
-        if (isCentered) {
-            label += ' (Centered)';
-        } else if (isAlt) {
-            label += ' (Symmetrical)';
+        const isAd = el && (el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset') || el.querySelector('.element-advertisement'));
+        let label;
+        if (isAd) {
+            if (dir === 'top' || dir === 'bottom') {
+                label = `↕ Text Y: ${val > 0 ? '+' : ''}${val}px`;
+            } else {
+                label = `↔ Text X: ${val > 0 ? '+' : ''}${val}px`;
+            }
+        } else {
+            const dirName = dir.charAt(0).toUpperCase() + dir.slice(1);
+            label = `${dirName}: ${val}px`;
+            if (isCentered) {
+                label += ' (Centered)';
+            } else if (isAlt) {
+                label += ' (Symmetrical)';
+            }
         }
         badge.innerText = label;
 
@@ -1164,9 +1206,33 @@ if (!window._sliderFillListenerInstalled) {
 
             const hTop = container.querySelector('.tmh-top');
             const hBottom = container.querySelector('.tmh-bottom');
+            const hLeft = container.querySelector('.tmh-left');
+            const hRight = container.querySelector('.tmh-right');
+
+            const isAd = el && (el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset') || el.querySelector('.element-advertisement'));
+
             const autoCenterVertical = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (isAd) {
+                    const content = el.querySelector('.element-content');
+                    if (content) content.style.padding = '';
+                    el.style.padding = '';
+                    el.setAttribute('data-ad-offset-y', '0');
+                    if (window.AdvertisementEngine) {
+                        window.AdvertisementEngine.updateAdvertisement(el, { offsetY: 0 });
+                    }
+                    window.updateTextMarginControlsPositions(overlay, el);
+                    window.showTextMarginBadge(hTop, el, 'top', 0);
+                    window.updateTextMarginBadge(el, 'top', 0, true, false);
+                    setTimeout(() => {
+                        const b = overlay.querySelector('.text-margin-badge');
+                        if (b) b.style.display = 'none';
+                    }, 1200);
+                    if (typeof pushHistory === 'function') pushHistory();
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    return;
+                }
                 const target = window.getTextBoxPaddingTarget(el);
                 if (!target) return;
                 const elH = parseFloat(el.style.height) || el.offsetHeight;
@@ -1190,8 +1256,34 @@ if (!window._sliderFillListenerInstalled) {
                 if (typeof updateThumbnails === 'function') updateThumbnails();
             };
 
+            const autoCenterHorizontal = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isAd) {
+                    const content = el.querySelector('.element-content');
+                    if (content) content.style.padding = '';
+                    el.style.padding = '';
+                    el.setAttribute('data-ad-offset-x', '0');
+                    if (window.AdvertisementEngine) {
+                        window.AdvertisementEngine.updateAdvertisement(el, { offsetX: 0 });
+                    }
+                    window.updateTextMarginControlsPositions(overlay, el);
+                    window.showTextMarginBadge(hLeft, el, 'left', 0);
+                    window.updateTextMarginBadge(el, 'left', 0, true, false);
+                    setTimeout(() => {
+                        const b = overlay.querySelector('.text-margin-badge');
+                        if (b) b.style.display = 'none';
+                    }, 1200);
+                    if (typeof pushHistory === 'function') pushHistory();
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                    return;
+                }
+            };
+
             if (hTop) hTop.addEventListener('dblclick', autoCenterVertical);
             if (hBottom) hBottom.addEventListener('dblclick', autoCenterVertical);
+            if (hLeft) hLeft.addEventListener('dblclick', autoCenterHorizontal);
+            if (hRight) hRight.addEventListener('dblclick', autoCenterHorizontal);
         }
 
         window.updateTextMarginControlsPositions(overlay, el);
@@ -5301,13 +5393,19 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const overlay = handle.closest('.selected-overlay');
             const textEl = (overlay && overlay._boundEl) || state.selectedEl;
             if(textEl) {
+                const isAd = textEl && (textEl.getAttribute('data-type') === 'advertisement' || textEl.classList.contains('has-advertisement') || textEl.hasAttribute('data-ad-preset') || textEl.querySelector('.element-advertisement'));
                 const curW = parseFloat(textEl.style.width) || textEl.offsetWidth;
                 const curH = parseFloat(textEl.style.height) || textEl.offsetHeight;
                 const pad = (typeof window.getTextBoxPadding === 'function') ? window.getTextBoxPadding(textEl) : { top: 0, right: 0, bottom: 0, left: 0 };
+                const startOffsetX = parseFloat(textEl.getAttribute('data-ad-offset-x')) || 0;
+                const startOffsetY = parseFloat(textEl.getAttribute('data-ad-offset-y')) || 0;
                 state.dragData = {
                     startX: e.clientX,
                     startY: e.clientY,
                     dir: handle.dataset.marginDir,
+                    isAd: isAd,
+                    startOffsetX: startOffsetX,
+                    startOffsetY: startOffsetY,
                     startPad: { ...pad },
                     w: curW,
                     h: curH,
@@ -5321,7 +5419,8 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                     if (cont) cont.classList.add('dragging');
                 }
                 if (typeof window.showTextMarginBadge === 'function') {
-                    window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, pad[handle.dataset.marginDir]);
+                    const initVal = isAd ? ((handle.dataset.marginDir === 'left' || handle.dataset.marginDir === 'right') ? startOffsetX : startOffsetY) : pad[handle.dataset.marginDir];
+                    window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, initVal);
                 }
             }
             e.preventDefault();
@@ -5831,6 +5930,41 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
                 if (isFlipX) curDx = -curDx;
                 if (isFlipY) curDy = -curDy;
+            }
+
+            if (d.isAd && d.el) {
+                // Clean any stray inline padding off element-content so badge shape is NEVER moved or squished!
+                const content = d.el.querySelector('.element-content');
+                if (content && content.style.padding) content.style.padding = '';
+                d.el.style.padding = '';
+
+                let newOffsetX = d.startOffsetX;
+                let newOffsetY = d.startOffsetY;
+                if (d.dir === 'top' || d.dir === 'bottom') {
+                    newOffsetY = Math.round(Math.max(-60, Math.min(60, d.startOffsetY + curDy)));
+                    d.el.setAttribute('data-ad-offset-y', String(newOffsetY));
+                    if (window.AdvertisementEngine) {
+                        window.AdvertisementEngine.updateAdvertisement(d.el, { offsetY: newOffsetY });
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, d.dir, newOffsetY, false, false);
+                    }
+                } else if (d.dir === 'left' || d.dir === 'right') {
+                    newOffsetX = Math.round(Math.max(-60, Math.min(60, d.startOffsetX + curDx)));
+                    d.el.setAttribute('data-ad-offset-x', String(newOffsetX));
+                    if (window.AdvertisementEngine) {
+                        window.AdvertisementEngine.updateAdvertisement(d.el, { offsetX: newOffsetX });
+                    }
+                    if (typeof window.updateTextMarginBadge === 'function') {
+                        window.updateTextMarginBadge(d.el, d.dir, newOffsetX, false, false);
+                    }
+                }
+
+                const overlay = document.querySelector('.selected-overlay');
+                if (overlay && typeof window.updateTextMarginControlsPositions === 'function') {
+                    window.updateTextMarginControlsPositions(overlay, d.el);
+                }
+                return;
             }
 
             const isAlt = !!e.altKey;

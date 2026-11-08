@@ -146,6 +146,8 @@ function serializeCurrentPage() {
         for (let aIdx = 0; aIdx < el.attributes.length; aIdx++) {
             const attr = el.attributes[aIdx];
             if (attr.name.startsWith('data-filter-') || 
+                attr.name.startsWith('data-ad-') ||
+                attr.name === 'data-lock-aspect' ||
                 attr.name.startsWith('data-waf-') || 
                 attr.name.startsWith('data-pb-') || 
                 attr.name.startsWith('data-chart-') || 

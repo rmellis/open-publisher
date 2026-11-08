@@ -80,13 +80,19 @@ window.handleMouseDown = function(e) {
         const overlay = handle.closest('.selected-overlay');
         const textEl = (overlay && overlay._boundEl) || state.selectedEl;
         if(textEl) {
+            const isAd = textEl && (textEl.getAttribute('data-type') === 'advertisement' || textEl.classList.contains('has-advertisement') || textEl.hasAttribute('data-ad-preset') || textEl.querySelector('.element-advertisement'));
             const curW = parseFloat(textEl.style.width) || textEl.offsetWidth;
             const curH = parseFloat(textEl.style.height) || textEl.offsetHeight;
             const pad = (typeof window.getTextBoxPadding === 'function') ? window.getTextBoxPadding(textEl) : { top: 0, right: 0, bottom: 0, left: 0 };
+            const startOffsetX = parseFloat(textEl.getAttribute('data-ad-offset-x')) || 0;
+            const startOffsetY = parseFloat(textEl.getAttribute('data-ad-offset-y')) || 0;
             state.dragData = {
                 startX: e.clientX,
                 startY: e.clientY,
                 dir: handle.dataset.marginDir,
+                isAd: isAd,
+                startOffsetX: startOffsetX,
+                startOffsetY: startOffsetY,
                 startPad: { ...pad },
                 w: curW,
                 h: curH,
@@ -100,7 +106,8 @@ window.handleMouseDown = function(e) {
                 if (cont) cont.classList.add('dragging');
             }
             if (typeof window.showTextMarginBadge === 'function') {
-                window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, pad[handle.dataset.marginDir]);
+                const initVal = isAd ? ((handle.dataset.marginDir === 'left' || handle.dataset.marginDir === 'right') ? startOffsetX : startOffsetY) : pad[handle.dataset.marginDir];
+                window.showTextMarginBadge(handle, textEl, handle.dataset.marginDir, initVal);
             }
         }
         e.preventDefault();
@@ -341,7 +348,7 @@ window.handleMouseDown = function(e) {
     if (el && !e.ctrlKey && !e.metaKey) {
         // Click-through hollow decorative border frames when clicking inside their empty interior (> 16px from edges)
         const isHollowFrame = (elem) => {
-            if (!elem || elem.getAttribute('data-type') === 'image' || elem.getAttribute('data-type') === 'chart' || elem.getAttribute('data-type') === 'progress-bar' || elem.getAttribute('data-type') === 'smart-arrow') return false;
+            if (!elem || elem.getAttribute('data-type') === 'image' || elem.getAttribute('data-type') === 'chart' || elem.getAttribute('data-type') === 'progress-bar' || elem.getAttribute('data-type') === 'smart-arrow' || elem.getAttribute('data-type') === 'advertisement') return false;
             if (elem.textContent && elem.textContent.replace(/@import[^;]+;/g, '').trim().length > 0) return false;
             if (elem.querySelector('img, svg, canvas, table')) return false;
             const c = elem.querySelector('.element-content');
@@ -658,6 +665,41 @@ window.handleMouseMove = function(e) {
             const isFlipY = (syAttr === '-1') || (d.el.style && d.el.style.transform && (d.el.style.transform.includes('scaleY(-1)') || d.el.style.transform.includes(', -1)')));
             if (isFlipX) curDx = -curDx;
             if (isFlipY) curDy = -curDy;
+        }
+
+        if (d.isAd && d.el) {
+            // Clean any stray inline padding off element-content so badge shape is NEVER moved or squished!
+            const content = d.el.querySelector('.element-content');
+            if (content && content.style.padding) content.style.padding = '';
+            d.el.style.padding = '';
+
+            let newOffsetX = d.startOffsetX;
+            let newOffsetY = d.startOffsetY;
+            if (d.dir === 'top' || d.dir === 'bottom') {
+                newOffsetY = Math.round(Math.max(-60, Math.min(60, d.startOffsetY + curDy)));
+                d.el.setAttribute('data-ad-offset-y', String(newOffsetY));
+                if (window.AdvertisementEngine) {
+                    window.AdvertisementEngine.updateAdvertisement(d.el, { offsetY: newOffsetY });
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, d.dir, newOffsetY, false, false);
+                }
+            } else if (d.dir === 'left' || d.dir === 'right') {
+                newOffsetX = Math.round(Math.max(-60, Math.min(60, d.startOffsetX + curDx)));
+                d.el.setAttribute('data-ad-offset-x', String(newOffsetX));
+                if (window.AdvertisementEngine) {
+                    window.AdvertisementEngine.updateAdvertisement(d.el, { offsetX: newOffsetX });
+                }
+                if (typeof window.updateTextMarginBadge === 'function') {
+                    window.updateTextMarginBadge(d.el, d.dir, newOffsetX, false, false);
+                }
+            }
+
+            const overlay = document.querySelector('.selected-overlay');
+            if (overlay && typeof window.updateTextMarginControlsPositions === 'function') {
+                window.updateTextMarginControlsPositions(overlay, d.el);
+            }
+            return;
         }
 
         const isAlt = !!e.altKey;

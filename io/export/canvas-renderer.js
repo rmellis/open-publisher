@@ -163,6 +163,13 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         }
     }
 
+    // Vector Advertisement Print Overflow Allowance (v5.19.1)
+    if (typeof window.prepareAdvertisementsForPrint === 'function') {
+        await window.prepareAdvertisementsForPrint(clone, (scaleMultiplier || 2) * 1.5);
+    } else if (window.AdvertisementEngine && typeof window.AdvertisementEngine.prepareForPrint === 'function') {
+        await window.AdvertisementEngine.prepareForPrint(clone, (scaleMultiplier || 2) * 1.5);
+    }
+
     // Bake Theme Background (saturation, brightness, texture) for html2canvas export
     const themeContainer = clone.querySelector('.op-theme-container');
     if (themeContainer && typeof window.bakeThemeBackgroundForPrint === 'function') {

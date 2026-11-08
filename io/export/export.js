@@ -262,6 +262,13 @@ window.exportAsHTML = async function(opts = {}) {
                         } catch (e) {}
                     }
                 }
+
+                // Vector Advertisement Print Overflow Allowance (v5.19.1)
+                if (typeof window.prepareAdvertisementsForPrint === 'function') {
+                    await window.prepareAdvertisementsForPrint(pageWrapper, 3.0);
+                } else if (window.AdvertisementEngine && typeof window.AdvertisementEngine.prepareForPrint === 'function') {
+                    await window.AdvertisementEngine.prepareForPrint(pageWrapper, 3.0);
+                }
                 const emailBg = (typeof window.sanitizeH2cBackgroundColor === 'function')
                     ? window.sanitizeH2cBackgroundColor(page.background || '#ffffff', !!(page.themeSettings?.saved))
                     : null;

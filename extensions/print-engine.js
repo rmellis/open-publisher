@@ -156,6 +156,12 @@
                     elDiv.className = 'pub-element';
                     if (el.id) elDiv.id = el.id;
                     if (el.type) elDiv.setAttribute('data-type', el.type);
+                    if (el.type === 'advertisement') elDiv.classList.add('has-advertisement');
+                    if (el.filterAttributes) {
+                        for (const [attrName, attrVal] of Object.entries(el.filterAttributes)) {
+                            elDiv.setAttribute(attrName, attrVal);
+                        }
+                    }
                     if (el.arrowStyle) elDiv.setAttribute('data-arrow-style', el.arrowStyle);
                     if (el.arrowHead) {
                         elDiv.setAttribute('data-arrow-head', el.arrowHead);
@@ -404,6 +410,13 @@
                     } else if (typeof window.bakeLegacyWordArtForPrintSync === 'function') {
                         window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
                     }
+                }
+
+                // Vector Advertisement Print Overflow Allowance (v5.19.1)
+                if (typeof window.prepareAdvertisementsForPrint === 'function') {
+                    await window.prepareAdvertisementsForPrint(scaler, 3.0);
+                } else if (window.AdvertisementEngine && typeof window.AdvertisementEngine.prepareForPrint === 'function') {
+                    await window.AdvertisementEngine.prepareForPrint(scaler, 3.0);
                 }
 
                 // ✨ NORMALIZE MULTI-LINE INLINE TEXT BACKGROUNDS (Pasted CSS / Highlights) FOR PRINT SPOOLER ✨
@@ -3041,6 +3054,14 @@
                             console.warn('[Print Engine] Failed to bake Legacy WordArt for export:', err);
                         }
                     }
+                }
+
+                // Vector Advertisement Print Overflow Allowance (v5.19.1)
+                if (typeof window.prepareAdvertisementsForPrint === 'function') {
+                    if (statusEl) statusEl.innerText = `Baking vector advertisements on page ${i + 1}...`;
+                    await window.prepareAdvertisementsForPrint(pageWrapper, targetScale || 3.0);
+                } else if (window.AdvertisementEngine && typeof window.AdvertisementEngine.prepareForPrint === 'function') {
+                    await window.AdvertisementEngine.prepareForPrint(pageWrapper, targetScale || 3.0);
                 }
 
                 if (statusEl) statusEl.innerText = `Applying color filters on page ${i + 1}...`;

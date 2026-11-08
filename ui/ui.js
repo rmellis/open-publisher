@@ -1118,6 +1118,13 @@ window.ContextMenuActions = {
             }
         }
 
+        // Vector Advertisement Print Overflow Allowance (v5.19.1)
+        if (typeof window.prepareAdvertisementsForPrint === 'function') {
+            await window.prepareAdvertisementsForPrint(clone, 3.0);
+        } else if (window.AdvertisementEngine && typeof window.AdvertisementEngine.prepareForPrint === 'function') {
+            await window.AdvertisementEngine.prepareForPrint(clone, 3.0);
+        }
+
         if (typeof window.bakeSVGFiltersForHtml2Canvas === 'function') {
             await window.bakeSVGFiltersForHtml2Canvas(clone, content);
         }

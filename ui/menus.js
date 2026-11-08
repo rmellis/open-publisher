@@ -251,10 +251,11 @@ const ContextMenuSystem = {
                 const isTable = el.querySelector('table') !== null;
                 const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget') !== null;
                 const isChart = el.getAttribute('data-type') === 'chart' || el.hasAttribute('data-chart-config');
-                const isShape = !isProgressBar && !isChart && (el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow');
-                const isWordArt = !isProgressBar && !isChart && el.querySelector('.wa-text') !== null;
-                const isText = !isProgressBar && !isChart && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
-                const isImage = !isProgressBar && !isChart && !isText && !!contentImg;
+                const isAdvertisement = el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset');
+                const isShape = !isProgressBar && !isChart && !isAdvertisement && (el.getAttribute('data-type') === 'shape' || el.getAttribute('data-type') === 'smart-arrow');
+                const isWordArt = !isProgressBar && !isChart && !isAdvertisement && el.querySelector('.wa-text') !== null;
+                const isText = !isProgressBar && !isChart && !isAdvertisement && ((el.querySelector('[contenteditable="true"]') !== null && !isTable) || (!contentImg && !isShape && !isWordArt && !isTable));
+                const isImage = !isProgressBar && !isChart && !isAdvertisement && !isText && !!contentImg;
 
                 let clickedWord = "";
                 let clickedWordRange = null;
@@ -465,6 +466,22 @@ const ContextMenuSystem = {
                 // 4.6. CHART CONTEXT MENU
                 else if (isChart) {
                     html += this.buildItem('Edit Chart Data...', 'fa-chart-pie', 'if(window.showChartModal) window.showChartModal(state.selectedEl)');
+                    html += this.buildDivider();
+                }
+                // 4.7. ADVERTISEMENT CONTEXT MENU
+                else if (isAdvertisement) {
+                    html += this.buildItem('Edit Advertisement Badge...', 'fa-ad', 'if(window.showAdModal) window.showAdModal(state.selectedEl)');
+                    html += this.buildFlyoutItem('Change Color Palette', 'fa-palette', `
+                        ${this.buildItem('Publisher Teal', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'publisher-teal'}); pushHistory(); }")}
+                        ${this.buildItem('Ruby Crimson', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'ruby-crimson'}); pushHistory(); }")}
+                        ${this.buildItem('Electric Cobalt', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'electric-cobalt'}); pushHistory(); }")}
+                        ${this.buildItem('Sunset Tangerine', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'sunset-tangerine'}); pushHistory(); }")}
+                        ${this.buildItem('Emerald Deal', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'emerald-deal'}); pushHistory(); }")}
+                        ${this.buildItem('Royal Purple', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'royal-purple'}); pushHistory(); }")}
+                        ${this.buildItem('Luxury Gold', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'luxury-gold'}); pushHistory(); }")}
+                        ${this.buildItem('Cyber Neon', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'neon-cyber'}); pushHistory(); }")}
+                        ${this.buildItem('Dark Titanium', 'fa-circle', "if(window.AdvertisementEngine){ AdvertisementEngine.updateAdvertisement(state.selectedEl, {paletteId:'dark-titanium'}); pushHistory(); }")}
+                    `);
                     html += this.buildDivider();
                 }
 

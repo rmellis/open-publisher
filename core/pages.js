@@ -429,6 +429,7 @@ function renderPage(pageData) {
     });
     if (typeof window.initChartElements === 'function') window.initChartElements();
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
+    if (window.AdvertisementEngine && typeof window.AdvertisementEngine.init === 'function') window.AdvertisementEngine.init();
     if (typeof window.ensureTemplateElementsEditable === 'function') window.ensureTemplateElementsEditable(paper);
     
     toggleHeaderFooter(state.headersVisible);

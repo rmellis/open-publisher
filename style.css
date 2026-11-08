@@ -9522,3 +9522,97 @@ body.dark-mode .op-frame-item.highlighted, body.dark-mode .op-frame-mat-item.hig
     background: var(--ui-theme-color, #0f766e) !important;
     color: #ffffff !important;
 }
+
+/* ==========================================================================
+   OpenPublisher Advertisement & Promotional Badge Studio (v5.19.1)
+   ========================================================================== */
+.element-advertisement {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.pub-element[data-type="advertisement"],
+.pub-element.has-advertisement {
+    user-select: none;
+    overflow: visible !important;
+}
+.pub-element.has-advertisement .element-content,
+.pub-element[data-type="advertisement"] .element-content {
+    overflow: visible !important;
+}
+@media print {
+    .pub-element.has-advertisement,
+    .pub-element[data-type="advertisement"],
+    .pub-element.has-advertisement .element-content,
+    .pub-element[data-type="advertisement"] .element-content,
+    .element-advertisement,
+    .element-advertisement svg {
+        overflow: visible !important;
+    }
+}
+.ad-baked-img {
+    max-width: none !important;
+    max-height: none !important;
+    pointer-events: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+.ad-preset-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+body.dark-mode .ad-studio-modal-container {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .ad-studio-modal-container > div:first-child {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.dark-mode #ad-preview-stage {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+}
+body.dark-mode .ad-preset-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+body.dark-mode .ad-preset-card:hover {
+    border-color: #64748b !important;
+}
+body.dark-mode .ad-preset-card.selected {
+    border-color: var(--ui-theme-color, #0f766e) !important;
+}
+body.dark-mode .ad-preset-card div {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .ad-cat-tab:not(.active) {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+}
+body.dark-mode #ad-search-input,
+body.dark-mode #ad-input-text,
+body.dark-mode #ad-input-subtext,
+body.dark-mode #ad-select-font,
+body.dark-mode #ad-select-size {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+.ad-studio-modal-container .custom-dom-select-list {
+    z-index: 100000 !important;
+    max-height: 240px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.22) !important;
+}
+body.dark-mode #ad-solid-swatch {
+    border-color: #475569 !important;
+}
+body.dark-mode #ad-btn-pick-solid {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #f1f5f9 !important;
+}

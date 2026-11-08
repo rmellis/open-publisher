@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Picture Frame Engine (v5.19.0)
+ * OpenPublisher Professional Picture Frame Engine (v5.19.1)
  * Authentic, high-fidelity frame borders for images and photographs:
  *  - Wood & Timber: Classic Natural Oak, Dark Walnut/Mahogany, Distressed Barnwood, American Cherry
  *  - Ornate & Metallic: Baroque Gilded Gold, Burnished Antique Silver, Brushed Aluminum, Art Deco

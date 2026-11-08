@@ -816,6 +816,11 @@ document.addEventListener('dblclick', (e) => {
             return;
         }
 
+        if (el.getAttribute('data-type') === 'advertisement' || el.classList.contains('has-advertisement') || el.hasAttribute('data-ad-preset')) {
+            if (typeof window.showAdModal === 'function') window.showAdModal(el);
+            return;
+        }
+
         if (isShape && typeof ContextMenuActions !== 'undefined' && typeof ContextMenuActions.formatTextBox === 'function') {
             ContextMenuActions.formatTextBox();
             return;

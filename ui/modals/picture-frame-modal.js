@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Picture Frame & Borders Modal (v5.19.0)
+ * OpenPublisher Picture Frame & Borders Modal (v5.19.1)
  * Rich interactive frame picker with category filtering, real-time visual preview,
  * custom rail width and matting sliders, 3D shadow controls, and 1-click frame removal.
  */
