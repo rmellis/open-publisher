@@ -271,7 +271,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.19.1`;
+    return `${path}?v=5.19.2`;
 };
 
 function initTemplates() {

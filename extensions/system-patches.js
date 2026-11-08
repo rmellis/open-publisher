@@ -2002,9 +2002,17 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             } catch (err) {
                 // If they clicked "Cancel" in the OS dialog, an AbortError is thrown.
                 // We can safely ignore it.
-                if (err.name !== 'AbortError') {
-                    console.error('Save failed:', err);
+                if (err.name === 'AbortError') {
+                    return;
                 }
+                console.warn('showSaveFilePicker failed, falling back to download:', err);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = currentTitle + '.opub';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
             }
         } 
         // 3. FALLBACK for Firefox/Safari (They don't fully support the new API yet)
@@ -2012,10 +2020,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = currentTitle + '.opub';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             
             // Clean up the memory leak 
-            setTimeout(() => URL.revokeObjectURL(a.href), 100);
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         }
     }
 
