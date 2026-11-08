@@ -137,7 +137,47 @@ Spanning over a month of focused engineering (including two weeks of intensive A
 
 ---
 
-## 🎯 Next Steps & Milestones
+## 🎯 Next Steps & Milestones (Argon Action Items)
+
+### 1. Window Ergonomics & Drag Zone Mechanics
+- [ ] **Double-Click Caption to Maximize / Restore**:
+  - Implement standard Win32 double-click detection on the custom top-bar drag zone.
+  - Double-clicking empty areas of the title bar should toggle between maximized and restored window states.
+- [ ] **Full-Window Drag Zone During Splash / Loading**:
+  - Make the entire application window draggable while the loading splash screen is active (initial ~5 seconds of startup).
+  - Transition drag mechanics back to the top-bar header once the main workspace has initialized.
+- [ ] **Workspace Centering on Window Resize & Maximize**:
+  - Resolve the viewport bug where resizing or maximizing the window causes the canvas paper to jump to the far-left edge of the screen, requiring manual horizontal scrolling.
+  - Recalculate paper centering and scroll anchors dynamically during window resize events.
+
+### 2. Print Preview Viewport & Sizing Corrections
+- [ ] **Print Preview Layout & Scrollbar Remediation**:
+  - Fix cropped content and large horizontal bottom scrollbars inside the Gecko print preview window.
+  - Adjust preview iframe flex boundaries, overflow clipping, and canvas scaling to display the full sheet without unnecessary scrollbars.
+
+### 3. Application Branding & Icon Uniformity
+- [ ] **Eliminate Remaining Firefox Runtime Icons**:
+  - Investigate and replace remaining Mozilla/Firefox branding icons displayed when the application is running (e.g. taskbar window badge, Alt+Tab app switcher, and window title icon).
+  - Since `OpenPublisher.exe` resources already show the OpenPublisher icon in Resource Hacker, trace secondary runtime icon assets:
+    - Check Gecko chrome icon paths (e.g. `chrome/icons/default/main-window.ico` and `browser/chrome/icons/default/default.ico`).
+    - Inspect branding packages within `omni.ja`.
+    - Verify Windows Application User Model ID (AUMID) assignment in the C# launcher to decouple the window from the default Firefox taskbar group.
+
+### 4. Networking & Feature Parity
+- [ ] **Broadcast to Classroom Service Wiring**:
+  - Resolve the non-functional "Start Broadcast" button in the Classroom broadcasting tool.
+  - Verify and bridge required WebSocket, WebRTC, or local network socket APIs missing from the Gecko guest environment.
+- [ ] **First Run Wizard Trigger File Parity**:
+  - Replicate the NW.js onboarding workflow: check for the presence of a specific marker file in the application directory on launch to trigger the First Run Wizard.
+  - Automatically delete the marker file upon wizard completion so subsequent launches boot directly into the standard workspace.
+
+### 5. Dashboard Touch / Kinetic Drag-to-Scroll
+- [ ] **Template Gallery Mouse Drag-Scrolling vs Image Dragging**:
+  - Fix template browsing on the dashboard screen: clicking and dragging should scroll through templates smoothly (like touch/kinetic panning).
+  - Suppress native HTML5 image dragging (`ondragstart="return false"` or CSS `user-drag: none; pointer-events: none;` on preview images).
+  - Implement a drag movement threshold (e.g. >5px) to prevent accidental template selection and loading upon mouse release after a scroll gesture.
+
+### 6. Packaging & Performance Profiling
 - [ ] Memory footprint optimization during high-DPI export batching.
 - [ ] Accelerated hardware canvas rendering profiling across varied GPU configurations.
 - [ ] Automated installer and portable package generation for OpenPublisher Lite testing builds.
