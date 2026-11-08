@@ -493,6 +493,8 @@ const ContextMenuSystem = {
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
                 html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
                 html += this.buildItem('Duplicate', 'fa-clone', 'if(window.duplicateSelected) window.duplicateSelected(); else if(typeof duplicateSelected === "function") duplicateSelected();');
+                const isElLocked = (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true');
+                html += this.buildItem(isElLocked ? 'Unlock Object' : 'Lock in Place', isElLocked ? 'fa-lock-open' : 'fa-lock', 'if(window.toggleElementLock) window.toggleElementLock();');
                 html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
                 if (isText) {
                     html += this.buildItem('Paste Without Formatting', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteWithoutFormatting()');

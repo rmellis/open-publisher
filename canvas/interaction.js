@@ -67,6 +67,10 @@ function handleMouseDown(e) {
 
     // Standard Logic (Resize/Rotate)
     if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
+        if (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true') {
+            e.preventDefault();
+            return;
+        }
         if(e.target.classList.contains('rotate-handle')) {
             state.dragMode = 'rotate';
             const rect = state.selectedEl.getBoundingClientRect();
@@ -118,6 +122,10 @@ function handleMouseDown(e) {
         
         // 1. NON-TEXT ITEMS: Always drag immediately
         if(isClipart || isImage || isShape) {
+             if (el.getAttribute('data-locked') === 'true') {
+                 e.preventDefault();
+                 return;
+             }
              state.dragMode = 'drag';
              state.dragData = {
                 startX: e.clientX, startY: e.clientY,
@@ -144,6 +152,10 @@ function handleMouseDown(e) {
         const isEditingText = activeEl && el.contains(activeEl) && (activeEl.isContentEditable);
 
         if (e.detail <= 1 && (nearEdge || !isEditingText)) {
+            if (el.getAttribute('data-locked') === 'true') {
+                if(!isEditingText) e.preventDefault();
+                return;
+            }
             state.dragMode = 'drag';
             state.dragData = {
                 startX: e.clientX, startY: e.clientY,
@@ -161,6 +173,12 @@ function handleMouseMove(e) {
     if(!state.dragMode && !state.cropMode) {
         const el = e.target.closest('.pub-element');
         if(el) {
+            if (el.getAttribute('data-locked') === 'true') {
+                el.style.cursor = 'default';
+                const editable = el.querySelector('[contenteditable="true"]');
+                if (editable) editable.style.cursor = 'default';
+                return;
+            }
             const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
             const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
             const rect = el.getBoundingClientRect();

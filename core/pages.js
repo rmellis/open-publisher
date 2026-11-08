@@ -245,6 +245,11 @@ function renderPage(pageData) {
         el.setAttribute('data-scaleX', sX);
         el.setAttribute('data-scaleY', sY);
         if (data.shrinkOverflow) el.setAttribute('data-shrink-overflow', 'true');
+        if (data.isLocked || el.getAttribute('data-locked') === 'true') {
+            el.setAttribute('data-locked', 'true');
+            el.classList.add('is-locked');
+            el.style.cursor = 'default';
+        }
 
         let inner = '';
         let finalFilter = '';

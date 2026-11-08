@@ -152,6 +152,7 @@ function serializeCurrentPage() {
             textboxStyle: el.getAttribute('data-textbox-style') || null,
             chartConfig: el.getAttribute('data-chart-config') || null,
             isBorder: el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border',
+            isLocked: el.getAttribute('data-locked') === 'true',
             pictureFrame: el.getAttribute('data-picture-frame') || null,
             frameOrigW: el.getAttribute('data-frame-orig-w') || null,
             frameOrigH: el.getAttribute('data-frame-orig-h') || null,
@@ -167,6 +168,7 @@ function serializeCurrentPage() {
             const attr = el.attributes[aIdx];
             if (attr.name.startsWith('data-filter-') || 
                 attr.name.startsWith('data-ad-') ||
+                attr.name === 'data-locked' ||
                 attr.name === 'data-lock-aspect' ||
                 attr.name.startsWith('data-waf-') || 
                 attr.name.startsWith('data-pb-') || 

@@ -119,6 +119,10 @@ window.handleMouseDown = function(e) {
             const overlay = e.target.closest('.selected-overlay');
             const isGroup = overlay && overlay.classList.contains('group-selection-overlay');
             const targetEl = (overlay && overlay._boundEl && overlay._boundEl !== overlay) ? overlay._boundEl : state.selectedEl;
+            if (targetEl && targetEl.getAttribute('data-locked') === 'true') {
+                e.preventDefault();
+                return;
+            }
             if (isGroup && state.multiSelected && state.multiSelected.length > 0) {
                 state.dragMode = 'drag';
                 state.dragData = {
@@ -146,6 +150,10 @@ window.handleMouseDown = function(e) {
         }
 
     if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
+        if (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true') {
+            e.preventDefault();
+            return;
+        }
         if(e.target.classList.contains('rotate-handle')) {
             state.dragMode = 'rotate';
             
@@ -445,6 +453,10 @@ window.handleMouseDown = function(e) {
         const clickedEditable = e.target.closest && e.target.closest('[contenteditable="true"]');
         const hasEditableText = clickedEditable && el.contains(clickedEditable) && (el.textContent && el.textContent.replace(/@import[^;]+;/g, '').trim().length > 0);
         if((el.querySelector('svg') || contentImg || el.getAttribute('data-type') === 'shape') && !hasEditableText) {
+            if (el.getAttribute('data-locked') === 'true') {
+                e.preventDefault();
+                return;
+            }
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -458,6 +470,10 @@ window.handleMouseDown = function(e) {
         const activeEl = document.activeElement, isEditingText = (activeEl && el.contains(activeEl) && activeEl.isContentEditable) || hasEditableText;
 
         if (e.detail <= 1 && (nearEdge || !isEditingText)) {
+            if (el.getAttribute('data-locked') === 'true') {
+                if(!isEditingText) e.preventDefault();
+                return;
+            }
             state.dragMode = 'drag';
             state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
             if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));

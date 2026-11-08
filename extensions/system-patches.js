@@ -244,6 +244,7 @@ if (!window._sliderFillListenerInstalled) {
             const existing = container.firstElementChild;
             if (existing && existing.classList.contains('selected-overlay') && existing._boundEl === el && container.children.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 existing.classList.toggle('is-transforming', isTransforming);
+                existing.classList.toggle('is-locked', el.getAttribute('data-locked') === 'true');
                 existing.style.left = el.style.left;
                 existing.style.top = el.style.top;
                 existing.style.width = el.style.width;
@@ -324,7 +325,7 @@ if (!window._sliderFillListenerInstalled) {
         if (els.length === 1) {
             const el = els[0];
             const overlay = document.createElement('div');
-            overlay.className = 'selected-overlay' + (isTransforming ? ' is-transforming' : '') + (el.classList.contains('cropping') ? ' is-cropping' : ''); 
+            overlay.className = 'selected-overlay' + (isTransforming ? ' is-transforming' : '') + (el.classList.contains('cropping') ? ' is-cropping' : '') + (el.getAttribute('data-locked') === 'true' ? ' is-locked' : ''); 
             overlay._boundEl = el;
             overlay._lastRot = el.style.transform; 
             overlay.style.cssText = `
@@ -1292,13 +1293,61 @@ if (!window._sliderFillListenerInstalled) {
     /**
      * Render Floating Micro-Action Pill (Clone & Delete) on Selected Element Overlay.
      */
+    window.toggleElementLock = function(targetEl) {
+        const el = targetEl || state.selectedEl;
+        if (!el) return;
+
+        const isCurrentlyLocked = el.getAttribute('data-locked') === 'true';
+        const willBeLocked = !isCurrentlyLocked;
+
+        if (willBeLocked) {
+            el.setAttribute('data-locked', 'true');
+            el.classList.add('is-locked');
+            el.style.cursor = 'default';
+        } else {
+            el.removeAttribute('data-locked');
+            el.classList.remove('is-locked');
+        }
+
+        if (state.multiSelected && state.multiSelected.length > 0 && state.multiSelected.includes(el)) {
+            state.multiSelected.forEach(m => {
+                if (willBeLocked) {
+                    m.setAttribute('data-locked', 'true');
+                    m.classList.add('is-locked');
+                    m.style.cursor = 'default';
+                } else {
+                    m.removeAttribute('data-locked');
+                    m.classList.remove('is-locked');
+                }
+            });
+        }
+
+        const overlay = document.querySelector('.selected-overlay');
+        if (overlay && overlay._boundEl === el) {
+            overlay.classList.toggle('is-locked', willBeLocked);
+            if (typeof window.renderElementQuickActions === 'function') {
+                window.renderElementQuickActions(overlay, el);
+            }
+        }
+
+        if (typeof window.renderSelectionOverlays === 'function') {
+            window.renderSelectionOverlays();
+        }
+
+        if (typeof pushHistory === 'function') {
+            pushHistory();
+        }
+    };
+
     window.renderElementQuickActions = function(overlay, el) {
         if (!overlay || !el) return;
 
         const oldPill = overlay.querySelector('.element-quick-actions');
         if (oldPill) oldPill.remove();
 
+        const isLocked = el.getAttribute('data-locked') === 'true';
         const isTextBox = !!(el.querySelector('[contenteditable="true"], .text-content') || el.getAttribute('data-type') === 'text');
+        const lockTooltip = isLocked ? 'Unlock Object' : 'Lock in Place';
         const cloneTooltip = isTextBox ? 'Clone Text Box (Ctrl+D)' : 'Duplicate Element (Ctrl+D)';
         const deleteTooltip = isTextBox ? 'Delete Text Box (Del)' : 'Delete Element (Del)';
 
@@ -1308,6 +1357,10 @@ if (!window._sliderFillListenerInstalled) {
         pill.setAttribute('aria-label', 'Element Quick Actions');
 
         pill.innerHTML = `
+            <button type="button" class="quick-action-btn quick-action-lock ${isLocked ? 'is-locked' : ''}" title="${lockTooltip}" aria-label="${lockTooltip}">
+                <i class="fas ${isLocked ? 'fa-lock' : 'fa-lock-open'}"></i>
+            </button>
+            <div class="quick-action-divider"></div>
             <button type="button" class="quick-action-btn quick-action-clone" title="${cloneTooltip}" aria-label="${cloneTooltip}">
                 <i class="fas fa-clone"></i>
             </button>
@@ -1316,6 +1369,21 @@ if (!window._sliderFillListenerInstalled) {
                 <i class="fas fa-trash-alt"></i>
             </button>
         `;
+
+        const lockBtn = pill.querySelector('.quick-action-lock');
+        if (lockBtn) {
+            lockBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            lockBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.toggleElementLock === 'function') {
+                    window.toggleElementLock(el);
+                }
+            });
+        }
 
         const cloneBtn = pill.querySelector('.quick-action-clone');
         if (cloneBtn) {
@@ -5489,6 +5557,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const overlay = e.target.closest('.selected-overlay');
             const isGroup = overlay && overlay.classList.contains('group-selection-overlay');
             const targetEl = (overlay && overlay._boundEl && overlay._boundEl !== overlay) ? overlay._boundEl : state.selectedEl;
+            if (targetEl && targetEl.getAttribute('data-locked') === 'true') {
+                e.preventDefault();
+                return;
+            }
             if (isGroup && state.multiSelected && state.multiSelected.length > 0) {
                 state.dragMode = 'drag';
                 state.dragData = {
@@ -5516,6 +5588,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         }
 
         if(e.target.classList.contains('rotate-handle') || e.target.classList.contains('resize-handle')) {
+            if (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true') {
+                e.preventDefault();
+                return;
+            }
             document.querySelectorAll('.selected-overlay').forEach(o => o.classList.add('is-transforming'));
             if(e.target.classList.contains('rotate-handle')) {
                 state.dragMode = 'rotate';
@@ -5761,6 +5837,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             const hasEditableText = !!(clickedEditable && el.contains(clickedEditable) && (el.textContent || '').replace(/@import[^;]+;/g, '').trim().length > 0);
             const isChartEl = window.isChartElement ? window.isChartElement(el) : (el.getAttribute('data-type') === 'chart');
             if ((el.querySelector('svg') && !hasEditableText) || isChartEl || (contentImg && !hasEditableText) || el.getAttribute('data-type') === 'shape') {
+                if (el.getAttribute('data-locked') === 'true') {
+                    e.preventDefault();
+                    return;
+                }
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -5786,6 +5866,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
 
             if (nearEdge || !isEditingText) {
+                if (el.getAttribute('data-locked') === 'true') {
+                    if(!isEditingText) e.preventDefault();
+                    return;
+                }
                 state.dragMode = 'drag';
                 state.dragData = { startX: e.clientX, startY: e.clientY, l: parseFloat(el.style.left), t: parseFloat(el.style.top) };
                 if(isMulti) state.dragData.multi = state.multiSelected.map(m => ({ el: m, l: parseFloat(m.style.left), t: parseFloat(m.style.top) }));
@@ -5804,6 +5888,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         if(!state.dragMode && !state.cropMode) {
             const el = e.target.closest('.pub-element');
             if(el) {
+                if (el.getAttribute('data-locked') === 'true') {
+                    el.style.cursor = 'default';
+                    const editable = el.querySelector('[contenteditable="true"]');
+                    if (editable) editable.style.cursor = 'default';
+                    return;
+                }
                 const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
                 const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
                 const rect = el.getBoundingClientRect();

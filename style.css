@@ -5529,6 +5529,67 @@ body.is-dragging-element .element-quick-actions {
                 color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.element-quick-actions .quick-action-lock {
+    color: #64748b;
+}
+
+.element-quick-actions .quick-action-lock.is-locked {
+    color: #d97706;
+    opacity: 0.95;
+}
+
+.element-quick-actions:hover .quick-action-lock:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: var(--ui-theme-color);
+}
+
+.element-quick-actions:hover .quick-action-lock.is-locked:hover {
+    background-color: rgba(217, 119, 6, 0.12);
+    color: #b45309;
+}
+
+body.dark-mode .element-quick-actions .quick-action-lock,
+html.dark-mode .element-quick-actions .quick-action-lock {
+    color: #94a3b8;
+}
+
+body.dark-mode .element-quick-actions .quick-action-lock.is-locked,
+html.dark-mode .element-quick-actions .quick-action-lock.is-locked {
+    color: #f59e0b;
+    opacity: 1;
+}
+
+body.dark-mode .element-quick-actions:hover .quick-action-lock.is-locked:hover,
+html.dark-mode .element-quick-actions:hover .quick-action-lock.is-locked:hover {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+/* Locked element overlay: hide handles and show locked border */
+.selected-overlay.is-locked .resize-handle,
+.selected-overlay.is-locked .rotate-handle,
+.selected-overlay.is-locked .rotate-stick,
+.selected-overlay.is-locked .selection-edge-drag,
+.selected-overlay.is-locked .text-margin-handle,
+.selected-overlay.is-locked .arrow-tip-handle {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+.selected-overlay.is-locked .selection-border-box {
+    border-style: dashed !important;
+    border-color: #d97706 !important;
+}
+
+body.dark-mode .selected-overlay.is-locked .selection-border-box,
+html.dark-mode .selected-overlay.is-locked .selection-border-box {
+    border-color: #f59e0b !important;
+}
+
+.pub-element.is-locked {
+    cursor: default !important;
+}
+
 .element-quick-actions .quick-action-clone {
     color: #64748b;
 }
