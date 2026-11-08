@@ -151,6 +151,7 @@
         state.pages = data.pages;
         state.currentPageIndex = 0;
         state.hasMasterPage = data.hasMasterPage || false;
+        state.headersVisible = typeof data.headersVisible === 'boolean' ? data.headersVisible : (state.hasMasterPage || false);
         state.rulerOriginX = data.rulerOriginX || 0;
         state.rulerOriginY = data.rulerOriginY || 0;
         state.dpi = data.dpi || (data.pages && data.pages[0] && data.pages[0].dpi) || 96;
@@ -271,6 +272,9 @@
         }
         if (typeof updateSidebar === 'function') {
             updateSidebar();
+        }
+        if (typeof toggleHeaderFooter === 'function') {
+            toggleHeaderFooter(state.headersVisible, true);
         }
     }
 

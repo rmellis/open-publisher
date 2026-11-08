@@ -1905,6 +1905,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             pages: state.pages,
             isTemplate: isTemplate,
             hasMasterPage: state.hasMasterPage || false,
+            headersVisible: state.headersVisible || false,
             isSpreadMode: state.isSpreadMode || false,
             rulerOriginX: state.rulerOriginX || 0,
             rulerOriginY: state.rulerOriginY || 0,
@@ -6460,18 +6461,22 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 const originalPushHistory = pushHistory;
 let historyTimer;
 let lastSavedHistoryState = "";
+let lastSavedHistoryStructure = "";
 
 window.originalPushHistory = originalPushHistory;
 window.syncLastSavedHistory = function() {
     lastSavedHistoryState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+    lastSavedHistoryStructure = (typeof state !== 'undefined') ? `${state.pages.length}_${state.hasMasterPage}_${state.headersVisible}_${state.currentPageIndex}` : "";
 };
 
 window.flushHistory = function() {
     clearTimeout(historyTimer);
     const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
-    if (currentState !== lastSavedHistoryState) {
+    const currentStructure = (typeof state !== 'undefined') ? `${state.pages.length}_${state.hasMasterPage}_${state.headersVisible}_${state.currentPageIndex}` : "";
+    if (currentState !== lastSavedHistoryState || currentStructure !== lastSavedHistoryStructure) {
         originalPushHistory();
         lastSavedHistoryState = currentState;
+        lastSavedHistoryStructure = currentStructure;
     }
 };
 
@@ -6485,12 +6490,14 @@ pushHistory = function(immediate = false) {
     
     // 2. Wait 250ms after the user finishes dragging/typing to save
     historyTimer = setTimeout(() => {
-        // 3. SPAM FILTER: Only save if the canvas HTML actually changed!
+        // 3. SPAM FILTER: Only save if canvas HTML or document structure actually changed!
         const currentState = document.getElementById('paper') ? document.getElementById('paper').innerHTML : "";
+        const currentStructure = (typeof state !== 'undefined') ? `${state.pages.length}_${state.hasMasterPage}_${state.headersVisible}_${state.currentPageIndex}` : "";
         
-        if (currentState !== lastSavedHistoryState) {
+        if (currentState !== lastSavedHistoryState || currentStructure !== lastSavedHistoryStructure) {
             originalPushHistory();
             lastSavedHistoryState = currentState;
+            lastSavedHistoryStructure = currentStructure;
         }
     }, 250); 
 };

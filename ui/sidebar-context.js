@@ -13,6 +13,16 @@ function showMinimapContextMenu(e, index) {
         if(ignoreMasterIcon) ignoreMasterIcon.style.opacity = '0';
         if(defaultMasterIcon) defaultMasterIcon.style.opacity = '1';
     }
+
+    const cmDel = menu.querySelector('#cm-delete-page');
+    const cmRemMaster = menu.querySelector('#cm-remove-master');
+    if (index === 0 && state.hasMasterPage) {
+        if (cmDel) cmDel.style.display = 'none';
+        if (cmRemMaster) cmRemMaster.style.display = 'flex';
+    } else {
+        if (cmDel) cmDel.style.display = 'flex';
+        if (cmRemMaster) cmRemMaster.style.display = 'none';
+    }
     
     menu.style.display = 'flex';
     
@@ -137,6 +147,15 @@ function contextMoveDown() {
 function contextDeletePage() {
     deletePage(state.contextMenuTargetIndex, { stopPropagation: () => {} });
 }
+
+function contextRemoveMasterPage() {
+    const menu = document.getElementById('minimap-context-menu');
+    if (menu) menu.style.display = 'none';
+    if (typeof removeMasterPage === 'function') {
+        removeMasterPage();
+    }
+}
+window.contextRemoveMasterPage = contextRemoveMasterPage;
 
 function contextSetIgnoreMaster(ignore) {
     const idx = state.contextMenuTargetIndex;
@@ -326,22 +345,28 @@ function createWrapper(htmlContent) {
 }
 window.createWrapper = createWrapper;
 
-function toggleHeaderFooter(forceState) {
+function toggleHeaderFooter(forceState, skipHistory = false) {
     if (typeof forceState === 'boolean') {
         state.headersVisible = forceState;
     } else {
         state.headersVisible = !state.headersVisible;
     }
-    const hdr = paper.querySelector('.page-header');
-    const ftr = paper.querySelector('.page-footer');
-    if(state.headersVisible) {
-        hdr.classList.add('visible');
-        ftr.classList.add('visible');
-    } else {
-        hdr.classList.remove('visible');
-        ftr.classList.remove('visible');
+    const currentPaper = document.getElementById('paper');
+    if (currentPaper) {
+        const hdr = currentPaper.querySelector('.page-header');
+        const ftr = currentPaper.querySelector('.page-footer');
+        if (hdr) hdr.classList.toggle('visible', !!state.headersVisible);
+        if (ftr) ftr.classList.toggle('visible', !!state.headersVisible);
+    }
+    document.querySelectorAll('.hf-toggle-btn, #ribbon-design-hf-btn, #ribbon-insert-hf-btn').forEach(btn => {
+        btn.classList.toggle('active', !!state.headersVisible);
+    });
+    if (!skipHistory) {
+        if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
+        else if (typeof pushHistory === 'function') pushHistory();
     }
 }
+window.toggleHeaderFooter = toggleHeaderFooter;
 
 function toggleCustomDropdown(type) {
     const id = type === 'ribbon' ? 'ribbon-font-list' : 'float-font-list';

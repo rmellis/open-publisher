@@ -8,7 +8,9 @@ function pushHistory() {
     const snapshot = JSON.parse(JSON.stringify({
         pages: state.pages,
         idx: state.currentPageIndex,
-        isSpreadMode: state.isSpreadMode
+        isSpreadMode: state.isSpreadMode,
+        hasMasterPage: !!state.hasMasterPage,
+        headersVisible: !!state.headersVisible
     }));
 
     state.history.push(snapshot);
@@ -49,8 +51,26 @@ function restoreSnapshot(snap) {
     state.isSpreadMode = snap.isSpreadMode || false;
     const btn = document.getElementById('spread-mode-btn');
     if (btn) btn.classList.toggle('active', state.isSpreadMode);
+
+    // Restore Master Page & Header/Footer visibility state
+    if (typeof snap.hasMasterPage === 'boolean') {
+        state.hasMasterPage = snap.hasMasterPage;
+    } else {
+        state.hasMasterPage = state.pages.length > 0 && !!(state.pages[0] && state.pages[0].id && String(state.pages[0].id).includes('master'));
+    }
+
+    if (typeof snap.headersVisible === 'boolean') {
+        state.headersVisible = snap.headersVisible;
+    } else {
+        state.headersVisible = false;
+    }
+
+    if (typeof toggleHeaderFooter === 'function') {
+        toggleHeaderFooter(state.headersVisible, true);
+    }
     
     renderPage(state.pages[state.currentPageIndex]);
+    if (typeof updateSidebar === 'function') updateSidebar();
     if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
     setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
 }

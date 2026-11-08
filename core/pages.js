@@ -432,7 +432,7 @@ function renderPage(pageData) {
     if (window.AdvertisementEngine && typeof window.AdvertisementEngine.init === 'function') window.AdvertisementEngine.init();
     if (typeof window.ensureTemplateElementsEditable === 'function') window.ensureTemplateElementsEditable(paper);
     
-    toggleHeaderFooter(state.headersVisible);
+    toggleHeaderFooter(state.headersVisible, true);
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
     if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(pageDpi);
     updatePageNumbers();
@@ -544,8 +544,17 @@ function addMasterPage() {
         return;
     }
 
-    if(state.pages.length > 0) {
+    if (state.pages.length > 0) {
         state.pages[state.currentPageIndex] = serializeCurrentPage();
+    }
+
+    // Ensure pre-master state is recorded in history before modifying pages
+    if (typeof window.flushHistory === 'function') {
+        window.flushHistory();
+    }
+    if (state.history.length === 0) {
+        if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
+        else if (typeof pushHistory === 'function') pushHistory();
     }
 
     let defaultW = '794px'; 
@@ -593,11 +602,60 @@ function addMasterPage() {
     renderPage(newPage);
     updateSidebar();
     
+    // Immediately record Master Page state in history
+    if (typeof window.originalPushHistory === 'function') {
+        window.originalPushHistory();
+    } else if (typeof pushHistory === 'function') {
+        pushHistory();
+    }
+    if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
+    
     setTimeout(() => {
         updateThumbnails();
-        pushHistory(); 
     }, 50);
 }
+
+function removeMasterPage(skipConfirm = false) {
+    if (!state.hasMasterPage) return;
+    const doRemove = () => {
+        state.hasMasterPage = false;
+        if (state.pages.length > 1) {
+            state.pages.splice(0, 1);
+            let nextIdx = state.currentPageIndex > 0 ? state.currentPageIndex - 1 : 0;
+            if (nextIdx >= state.pages.length) nextIdx = state.pages.length - 1;
+            state.currentPageIndex = nextIdx;
+        } else {
+            state.currentPageIndex = 0;
+            if (state.pages[0] && state.pages[0].id && String(state.pages[0].id).includes('master')) {
+                state.pages[0].id = Date.now();
+            }
+        }
+        state.headersVisible = false;
+        if (typeof toggleHeaderFooter === 'function') {
+            toggleHeaderFooter(false, true);
+        }
+        renderPage(state.pages[state.currentPageIndex]);
+        updateSidebar();
+        if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
+        else if (typeof pushHistory === 'function') pushHistory();
+        if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
+        setTimeout(() => {
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
+        }, 100);
+    };
+
+    if (skipConfirm) {
+        doRemove();
+    } else {
+        if (typeof DialogSystem !== 'undefined') {
+            DialogSystem.show('Remove Master Page', '<p>Are you sure you want to remove the Master Page? Its repeated headers, footers, and elements will be removed from all pages.</p>', doRemove);
+        } else {
+            doRemove();
+        }
+    }
+}
+window.removeMasterPage = removeMasterPage;
 
 function switchPage(newIndex) {
     if (newIndex === state.currentPageIndex) return;
@@ -614,12 +672,16 @@ function switchPage(newIndex) {
 }
 
 function deletePage(index, event) {
-    event.stopPropagation();
+    if (event && typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+    }
+    
+    if (state.hasMasterPage && index === 0) {
+        removeMasterPage();
+        return;
+    }
     
     DialogSystem.show('Delete Page', '<p>Are you sure you want to permanently delete this page?</p>', () => {
-        if (state.hasMasterPage && index === 0) {
-            state.hasMasterPage = false;
-        }
         state.pages.splice(index, 1);
         if(state.pages.length === 0) {
             addNewPage();
@@ -629,7 +691,8 @@ function deletePage(index, event) {
             }
             renderPage(state.pages[state.currentPageIndex]);
             updateSidebar();
-            pushHistory();
+            if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
+            else pushHistory();
         }
     });
 }
@@ -1137,8 +1200,10 @@ function updateSidebar() {
         const thumbHeight = pH * (100 / pW);
         
         let labelText = state.isSpreadMode ? `Page ${(i*2)+1} - ${(i*2)+2}` : `Page ${i+1}`;
+        let delTitle = 'Delete Page';
         if (state.hasMasterPage && i === 0) {
             labelText = 'Master Page';
+            delTitle = 'Remove Master Page';
         }
         const pDpi = parseFloat(p.dpi) || (typeof state !== 'undefined' && parseFloat(state.dpi)) || 96;
         const pW_Inches = (pW / pDpi).toFixed(1);
@@ -1146,7 +1211,7 @@ function updateSidebar() {
         let sizeText = `<span style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">${pW_Inches} x ${pH_Inches} in</span>`;
         
         div.innerHTML = `
-            <div class="page-del-btn" onclick="deletePage(${i}, event)" title="Delete Page"><i class="fas fa-times"></i></div>
+            <div class="page-del-btn" onclick="deletePage(${i}, event)" title="${delTitle}"><i class="fas fa-times"></i></div>
             <div class="page-thumb" id="thumb-${i}" style="height: ${thumbHeight}px;">
                 ${sizeText}
             </div>

@@ -31,6 +31,7 @@ window.saveDocument = function() {
         rulerUnitExplicit: !!state._userExplicitRulerUnit,
         pages: state.pages,
         hasMasterPage: state.hasMasterPage || false,
+        headersVisible: state.headersVisible || false,
         isSpreadMode: state.isSpreadMode || false,
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
