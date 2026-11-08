@@ -345,6 +345,7 @@ Open Publisher ships in three primary distribution formats for Windows:
 - **Standard Installer (`.exe`)** - Full installer with Start Menu and Desktop shortcuts, multi-resolution 10-frame high-DPI icon embedding (up to 256x256), and `.opub` registry file association.
 - **Portable Version (`.exe`)** - Self-contained zero-install executable. Ideal for USB drives, restricted workstations, or running without administrator rights.
 - **Windows XP Client (`.exe`)** - Dedicated standalone client for Windows XP SP3, featuring a customized chromeless runtime, integrated window controls, and full native branding.
+- **OpenPublisher Lite (Gecko Runtime)** - In-progress lightweight native port optimized for multicore scaling and low-spec hardware (see [Gecko Port Progress](gekkoPortInfo.md)).
 - **Safe Mode Startup** - Launch with `--safe-mode` or `--reset` from the command line to purge cached data, reset layout bounds, and troubleshoot faulty extensions.
 - MyDockFinder native menu bar integration support.
 
