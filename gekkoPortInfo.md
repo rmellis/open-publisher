@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/screenshots/op-GeckoPortTechnicalArchitectureAndMilestones.webp" alt="OpenPublisher Gecko Port: Technical Architecture, Progress and Milestones" width="100%"/>
+</p>
+
 # OpenPublisher Gecko Port: Technical Architecture, Progress & Milestones
 
 ## 📌 Executive Overview & Core Mission
