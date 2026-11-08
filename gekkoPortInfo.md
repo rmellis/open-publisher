@@ -1,8 +1,7 @@
+# OpenPublisher Gecko Port: Technical Architecture, Progress & Milestones
 <p align="center">
   <img src="docs/screenshots/op-GeckoPortTechnicalArchitectureAndMilestones.webp" alt="OpenPublisher Gecko Port: Technical Architecture, Progress and Milestones" width="100%"/>
 </p>
-
-# OpenPublisher Gecko Port: Technical Architecture, Progress & Milestones
 
 ## 📌 Executive Overview & Core Mission
 The **Gecko Port of OpenPublisher** is an active development initiative aimed at delivering **OpenPublisher Lite Edition**: a lightweight, native, and high-performance desktop runtime on Windows powered by the Mozilla Gecko engine, engineered to provide the complete OpenPublisher feature suite with zero compromises.
