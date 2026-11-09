@@ -38,6 +38,10 @@ window.saveDocument = function() {
         margins: state.margins || {top: 48, right: 48, bottom: 48, left: 48},
         colorModel: document.getElementById('paper').classList.contains('cmyk-mode') ? 'CMYK' : 'RGB'
     };
+
+    if (state.watermark) {
+        docData.watermark = JSON.parse(JSON.stringify(state.watermark));
+    }
     
     const paperEl = document.getElementById('paper');
     if (paperEl && paperEl.getAttribute('data-theme-saved') === 'true') {

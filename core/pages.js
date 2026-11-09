@@ -456,6 +456,9 @@ function renderPage(pageData) {
             window.restoreThemeFromSave();
         }
     }
+    if (typeof window.WatermarkEngine !== 'undefined' && typeof window.WatermarkEngine.renderWatermarkOnCanvas === 'function') {
+        window.WatermarkEngine.renderWatermarkOnCanvas();
+    }
     if (typeof window.SpellCheckEngine !== 'undefined') window.SpellCheckEngine.trigger(100);
 }
 

@@ -252,6 +252,11 @@
         if (typeof window.updateViewModeUI === 'function') window.updateViewModeUI();
         state.history = [];
         state.historyIndex = -1;
+        if (data.watermark) {
+            state.watermark = JSON.parse(JSON.stringify(data.watermark));
+        } else {
+            delete state.watermark;
+        }
         if (data.themeSettings && data.themeSettings.saved) {
             if (state.pages && state.pages[0] && !state.pages[0].themeSettings) {
                 state.pages[0].themeSettings = Object.assign({}, data.themeSettings);

@@ -10,7 +10,8 @@ function pushHistory() {
         idx: state.currentPageIndex,
         isSpreadMode: state.isSpreadMode,
         hasMasterPage: !!state.hasMasterPage,
-        headersVisible: !!state.headersVisible
+        headersVisible: !!state.headersVisible,
+        watermark: state.watermark ? state.watermark : null
     }));
 
     state.history.push(snapshot);
@@ -67,6 +68,12 @@ function restoreSnapshot(snap) {
 
     if (typeof toggleHeaderFooter === 'function') {
         toggleHeaderFooter(state.headersVisible, true);
+    }
+
+    if (snap.watermark) {
+        state.watermark = JSON.parse(JSON.stringify(snap.watermark));
+    } else {
+        delete state.watermark;
     }
     
     renderPage(state.pages[state.currentPageIndex]);
