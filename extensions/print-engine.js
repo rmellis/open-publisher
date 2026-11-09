@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.19.10)
+// OpenPublisher Print Engine (v5.19.11)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -1464,7 +1464,7 @@
                 isSettled = true;
                 reject(new Error("bakeImageForPrint timeout"));
             }
-        }, 5000);
+        }, 15000);
 
         const safeResolve = (val) => {
             if (!isSettled) {
@@ -1490,7 +1490,11 @@
             }
             tempImg.onload = () => {
                 if (isSettled) return;
-                const scale = Math.max(2, targetScale || 2);
+                let scale = Math.max(1.5, targetScale || 2);
+                const maxBakePixels = 8000000;
+                if (displayW * scale * displayH * scale > maxBakePixels) {
+                    scale = Math.max(1, Math.min(2, Math.floor(Math.sqrt(maxBakePixels / (displayW * displayH)) * 10) / 10));
+                }
                 
                 let finalFilter = (filter || '').replace(/\bnone\b/g, '').trim();
                 let padX = 0, padY = 0, padW = 0, padH = 0;
@@ -2623,8 +2627,21 @@
                 const pW = parseFloat(page.width) || 794;
                 const pH = parseFloat(page.height) || 1123;
                 const pageDpi = parseFloat(page.dpi) || masterDpi || 96;
-                const targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
-                const fallbackScale = Math.max(1, targetScale - 1);
+                let targetScale = Math.max(1, Math.min(3, Math.round(300 / pageDpi)));
+
+                // ✨ DYNAMIC CANVAS PIXEL BUDGET & LARGE FORMAT NORMALIZATION (v5.19.11) ✨
+                // For large paper formats (such as A3, Tabloid, Posters, A2, A1), rendering at scale 3
+                // creates a massive 16M+ pixel canvas which exhausts browser GPU/canvas memory limits
+                // and causes catastrophic html2canvas timeouts. Dynamically clamp the scale so total
+                // canvas pixels remain within a safe, high-quality budget (<= 10 megapixels).
+                const totalMegaPixels = (pW * targetScale * pH * targetScale) / 1000000;
+                if (totalMegaPixels > 10) {
+                    targetScale = Math.max(1.5, Math.min(2, Math.floor(Math.sqrt(9500000 / (pW * pH)) * 10) / 10));
+                }
+                let fallbackScale = Math.max(1, Math.min(targetScale, (targetScale > 2 ? 2 : (targetScale > 1.5 ? 1.5 : 1))));
+                if (fallbackScale >= targetScale) {
+                    fallbackScale = Math.max(1, targetScale - 0.5);
+                }
 
                 let pageWrapper = document.createElement('div');
                 pageWrapper.style.width = pW + 'px';
@@ -2855,11 +2872,12 @@
                         }
                         currentFilter = (currentFilter || '').replace(/\bnone\b/g, '').trim();
 
+                        let activeEl = null;
                         if (page === state.pages[state.currentPageIndex] && livePaper) {
                             const l1 = parseFloat(el.left) || 0;
                             const t1 = parseFloat(el.top) || 0;
                             const liveEls = Array.from(livePaper.querySelectorAll('.pub-element'));
-                            const activeEl = (el.id ? livePaper.querySelector('#' + CSS.escape(el.id)) : null) ||
+                            activeEl = (el.id ? livePaper.querySelector('#' + CSS.escape(el.id)) : null) ||
                                 liveEls.find(e => Math.abs((parseFloat(e.style.left)||0) - l1) < 2 && Math.abs((parseFloat(e.style.top)||0) - t1) < 2);
                             
                             if (activeEl) {
@@ -3046,7 +3064,7 @@
                         cropDiv.appendChild(img);
                         elDiv.appendChild(cropDiv);
 
-                        const frameAttr = el.pictureFrame || (el.filterAttributes && el.filterAttributes['data-picture-frame']) || (activeEl && activeEl.getAttribute('data-picture-frame')) || (el.innerHTML && el.innerHTML.includes('data-picture-frame') ? (el.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
+                        const frameAttr = el.pictureFrame || (el.filterAttributes && el.filterAttributes['data-picture-frame']) || (typeof activeEl !== 'undefined' && activeEl && activeEl.getAttribute && activeEl.getAttribute('data-picture-frame')) || (el.innerHTML && el.innerHTML.includes('data-picture-frame') ? (el.innerHTML.match(/data-picture-frame="([^"]+)"/) || [])[1] : null);
                         if (frameAttr && window.PictureFrameEngine) {
                             const frameParts = frameAttr.split(':');
                             const fId = frameParts[0] || 'oak_wood';
@@ -3617,26 +3635,38 @@
                         scale: targetScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 4000,
                         ignoreElements: pageIgnoreFn
                     });
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`html2canvas scale ${targetScale} timeout`)), 12000));
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`html2canvas scale ${targetScale} timeout`)), 25000));
                     canvas = await Promise.race([h2cPromise, timeoutPromise]);
                 } catch (h2cErr) {
                     console.warn(`[Print Engine] html2canvas scale ${targetScale} failed or timed out, falling back to scale ${fallbackScale}:`, h2cErr);
                     try {
                         const fbPromise1 = html2canvas(pageWrapper, { 
-                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 3000,
+                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: h2cBg, imageTimeout: 4000,
                             ignoreElements: pageIgnoreFn
                         });
-                        const fbTimeout1 = new Promise((_, reject) => setTimeout(() => reject(new Error(`fallback scale ${fallbackScale} timeout`)), 6000));
+                        const fbTimeout1 = new Promise((_, reject) => setTimeout(() => reject(new Error(`fallback scale ${fallbackScale} timeout`)), 20000));
                         canvas = await Promise.race([fbPromise1, fbTimeout1]);
                     } catch (fallbackErr) {
                         console.warn(`[Print Engine] html2canvas fallback scale ${fallbackScale} with bg failed, retrying with transparent background:`, fallbackErr);
-                        const fbPromise2 = html2canvas(pageWrapper, { 
-                            scale: fallbackScale, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 3000,
-                            ignoreElements: pageIgnoreFn
-                        });
-                        const fbTimeout2 = new Promise((_, reject) => setTimeout(() => reject(new Error('fallback transparent timeout')), 6000));
-                        canvas = await Promise.race([fbPromise2, fbTimeout2]);
+                        try {
+                            const fbPromise2 = html2canvas(pageWrapper, { 
+                                scale: fallbackScale, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 4000,
+                                ignoreElements: pageIgnoreFn
+                            });
+                            const fbTimeout2 = new Promise((_, reject) => setTimeout(() => reject(new Error('fallback transparent timeout')), 15000));
+                            canvas = await Promise.race([fbPromise2, fbTimeout2]);
+                        } catch (fb2Err) {
+                            console.warn('[Print Engine] html2canvas scale fallback 2 failed, attempting emergency scale 1.0 fallback:', fb2Err);
+                            canvas = await html2canvas(pageWrapper, { 
+                                scale: 1, useCORS: true, logging: false, backgroundColor: null, imageTimeout: 4000,
+                                ignoreElements: pageIgnoreFn
+                            });
+                        }
                     }
+                }
+
+                if (!canvas) {
+                    throw new Error(`Failed to generate raster canvas for page ${i + 1}`);
                 }
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
