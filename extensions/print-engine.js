@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.17.0)
+// OpenPublisher Print Engine (v5.19.9)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -463,6 +463,12 @@
 
                 // Pre-flight: Strip interactive handles and non-printable elements
                 scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
+                scaler.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());
+
+                // ✨ UNIVERSAL IMAGE ASPECT RATIO & OBJECT-FIT NORMALIZATION FOR PRINT SPOOLER (v5.19.9) ✨
+                if (typeof normalizeObjectFitImagesForPrint === 'function') {
+                    await normalizeObjectFitImagesForPrint(scaler, 2);
+                }
 
                 // ✨ PROGRESS BAR STRIPE NORMALIZATION FOR PRINT SPOOLER (v5.17.0) ✨
                 if (window.ProgressBarEngine && typeof window.ProgressBarEngine.createStripePatternDataURL === 'function') {
@@ -970,7 +976,15 @@
             (el.innerHTML && el.innerHTML.includes('beta-wa-img')) ||
             (el.querySelector && el.querySelector('.beta-wa-img')) ||
             !!el.waText;
-        if (isArrow || isShape || isImage || isBetaWA) {
+        const isProgressBar = elType === 'progress-bar' ||
+            (el.getAttribute && el.getAttribute('data-type') === 'progress-bar') ||
+            (el.innerHTML && el.innerHTML.includes('progress-bar-widget')) ||
+            (el.querySelector && el.querySelector('.progress-bar-widget'));
+        const isChart = elType === 'chart' ||
+            (el.getAttribute && el.getAttribute('data-type') === 'chart') ||
+            (el.innerHTML && el.innerHTML.includes('chart-widget')) ||
+            (el.querySelector && el.querySelector('.chart-widget'));
+        if (isArrow || isShape || isImage || isBetaWA || isProgressBar || isChart) {
             return { boxShadow: '', filter: '' };
         }
 
@@ -1043,13 +1057,15 @@
 
         // InnerHTML inspection for serialized or cloned boxes/tables
         if (!shadowStr && el.innerHTML) {
-            const bsMatch = el.innerHTML.match(/box-shadow:\s*([^;"]+)/i);
+            const cleanInner = el.innerHTML.replace(/<[^>]+class=["'][^"']*no-print[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, '');
+            const bsMatch = cleanInner.match(/box-shadow:\s*([^;"]+)/i);
             if (bsMatch && bsMatch[1] && bsMatch[1].trim() !== 'none') {
                 shadowStr = bsMatch[1].trim();
             }
         }
         if (!filterStr && el.innerHTML) {
-            const fMatch = el.innerHTML.match(/filter:\s*([^;"]+)/i);
+            const cleanInner = el.innerHTML.replace(/<[^>]+class=["'][^"']*no-print[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, '');
+            const fMatch = cleanInner.match(/filter:\s*([^;"]+)/i);
             if (fMatch && fMatch[1] && fMatch[1].includes('drop-shadow')) {
                 filterStr = fMatch[1].trim();
             }
@@ -1144,6 +1160,23 @@
 
     window.extractBorderRadiusForPrint = function(el, contentCssText, livePaper) {
         if (!el && !contentCssText && !livePaper) return 0;
+
+        // Progress bars and charts have internal component border radiuses (e.g. 999px tracks/capsules)
+        // that must NEVER be extracted as the container element's card shadow radius.
+        if (el) {
+            const elType = el.type || (el.getAttribute && el.getAttribute('data-type'));
+            const isProgressBar = elType === 'progress-bar' ||
+                (el.getAttribute && el.getAttribute('data-type') === 'progress-bar') ||
+                (el.innerHTML && el.innerHTML.includes('progress-bar-widget')) ||
+                (el.querySelector && el.querySelector('.progress-bar-widget'));
+            const isChart = elType === 'chart' ||
+                (el.getAttribute && el.getAttribute('data-type') === 'chart') ||
+                (el.innerHTML && el.innerHTML.includes('chart-widget')) ||
+                (el.querySelector && el.querySelector('.chart-widget'));
+            if (isProgressBar || isChart) {
+                return 0;
+            }
+        }
 
         // 1. Check contentCssText (e.g. "border-radius: 999px;")
         if (contentCssText) {
@@ -2257,6 +2290,167 @@
 
     window.normalizeTextBackgroundsForPrint = normalizeTextBackgroundsForPrint;
 
+    // ✨ UNIVERSAL IMAGE ASPECT RATIO & OBJECT-FIT NORMALIZATION FOR PRINT & HTML2CANVAS (v5.19.9) ✨
+    // html2canvas completely ignores CSS 'object-fit: cover' and 'object-fit: contain', drawing the raw source image 
+    // stretched directly into the element's bounding box. For portrait photos in square/circular frames (like resume avatars),
+    // this severely distorts human proportions (stretching them horizontally and compressing vertically).
+    // Pre-rasterizing object-fit images onto a high-DPI canvas cropped to exact container proportions eliminates this distortion.
+    async function normalizeObjectFitImagesForPrint(container, targetScale = 2) {
+        if (!container) return;
+        const imgs = Array.from(container.querySelectorAll('img'));
+        if (!imgs.length) return;
+
+        for (const img of imgs) {
+            if (img.classList.contains('op-print-shadow-underlay') ||
+                img.classList.contains('op-theme-baked-bg') ||
+                img.classList.contains('wa-baked-img') ||
+                img.hasAttribute('data-op-crop-normalized')) {
+                continue;
+            }
+
+            const fit = img.style.objectFit || (window.getComputedStyle ? window.getComputedStyle(img).objectFit : '');
+            const parent = img.parentElement;
+            const parentRadius = parent ? (parent.style.borderRadius || (window.getComputedStyle ? window.getComputedStyle(parent).borderRadius : '')) : '';
+            const isCircularAvatar = parentRadius === '50%' || parentRadius.includes('50%');
+
+            if (fit !== 'cover' && fit !== 'contain' && !isCircularAvatar) {
+                continue;
+            }
+
+            const effectiveFit = (fit === 'cover' || isCircularAvatar) ? 'cover' : fit;
+
+            try {
+                let dw = (img.getBoundingClientRect ? img.getBoundingClientRect().width : 0) || img.offsetWidth || 0;
+                let dh = (img.getBoundingClientRect ? img.getBoundingClientRect().height : 0) || img.offsetHeight || 0;
+
+                if (!dw || !dh) {
+                    if (parent) {
+                        dw = (parent.getBoundingClientRect ? parent.getBoundingClientRect().width : 0) || parent.offsetWidth || parseFloat(parent.style.width) || 0;
+                        dh = (parent.getBoundingClientRect ? parent.getBoundingClientRect().height : 0) || parent.offsetHeight || parseFloat(parent.style.height) || 0;
+                    }
+                }
+                if (!dw || !dh) {
+                    const pubEl = img.closest('.pub-element');
+                    if (pubEl) {
+                        dw = parseFloat(pubEl.style.width) || parseFloat(pubEl.getAttribute('data-width')) || 0;
+                        dh = parseFloat(pubEl.style.height) || parseFloat(pubEl.getAttribute('data-height')) || 0;
+                    }
+                }
+
+                if (!dw || !dh) continue;
+
+                const src = img.src;
+                if (!src || src.startsWith('data:image/svg')) continue;
+
+                await new Promise((resolve) => {
+                    const helper = new Image();
+                    if (typeof shouldApplyCors === 'function' && shouldApplyCors(src)) {
+                        helper.crossOrigin = 'anonymous';
+                    }
+
+                    const processHelper = (loadedImg) => {
+                        try {
+                            const nw = loadedImg.naturalWidth;
+                            const nh = loadedImg.naturalHeight;
+                            if (!nw || !nh || !dw || !dh) { resolve(); return; }
+
+                            const rSrc = nw / nh;
+                            const rDst = dw / dh;
+
+                            if (Math.abs(rSrc - rDst) < 0.005) { resolve(); return; }
+
+                            let sw = nw;
+                            let sh = nh;
+
+                            if (effectiveFit === 'cover') {
+                                if (rSrc > rDst) {
+                                    sw = nh * rDst;
+                                    sh = nh;
+                                } else {
+                                    sw = nw;
+                                    sh = nw / rDst;
+                                }
+
+                                let posX = 0.5;
+                                let posY = 0.5;
+                                const pos = img.style.objectPosition || (window.getComputedStyle ? window.getComputedStyle(img).objectPosition : '') || '';
+                                if (pos) {
+                                    const parts = pos.trim().split(/\s+/);
+                                    if (parts.length >= 1) {
+                                        if (parts[0] === 'left') posX = 0;
+                                        else if (parts[0] === 'right') posX = 1;
+                                        else if (parts[0] === 'center') posX = 0.5;
+                                        else if (parts[0].endsWith('%')) posX = parseFloat(parts[0]) / 100;
+                                    }
+                                    if (parts.length >= 2) {
+                                        if (parts[1] === 'top') posY = 0;
+                                        else if (parts[1] === 'bottom') posY = 1;
+                                        else if (parts[1] === 'center') posY = 0.5;
+                                        else if (parts[1].endsWith('%')) posY = parseFloat(parts[1]) / 100;
+                                    }
+                                }
+
+                                const sx = Math.max(0, Math.min(nw - sw, (nw - sw) * posX));
+                                const sy = Math.max(0, Math.min(nh - sh, (nh - sh) * posY));
+
+                                const scale = targetScale || 2;
+                                const cvs = document.createElement('canvas');
+                                cvs.width = Math.max(1, Math.round(dw * scale));
+                                cvs.height = Math.max(1, Math.round(dh * scale));
+                                const ctx = cvs.getContext('2d');
+                                if (ctx) {
+                                    ctx.imageSmoothingEnabled = true;
+                                    ctx.imageSmoothingQuality = 'high';
+                                    ctx.drawImage(loadedImg, sx, sy, sw, sh, 0, 0, cvs.width, cvs.height);
+                                    const croppedDataUrl = cvs.toDataURL('image/png');
+                                    img.src = croppedDataUrl;
+                                    img.style.objectFit = 'fill';
+                                    img.setAttribute('data-op-crop-normalized', 'true');
+                                    if (img.complete) {
+                                        resolve();
+                                    } else {
+                                        img.onload = () => resolve();
+                                        img.onerror = () => resolve();
+                                        setTimeout(resolve, 300);
+                                    }
+                                    return;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('[Print Engine] Pre-flight object-fit rasterization error:', e);
+                        }
+                        resolve();
+                    };
+
+                    helper.onload = () => processHelper(helper);
+                    helper.onerror = () => {
+                        if (typeof shouldApplyCors === 'function' && shouldApplyCors(src) && !src.includes('wsrv.nl')) {
+                            const proxyHelper = new Image();
+                            proxyHelper.crossOrigin = 'anonymous';
+                            proxyHelper.onload = () => processHelper(proxyHelper);
+                            proxyHelper.onerror = () => resolve();
+                            proxyHelper.src = `https://wsrv.nl/?url=${encodeURIComponent(src)}`;
+                            setTimeout(resolve, 2500);
+                            return;
+                        }
+                        resolve();
+                    };
+
+                    helper.src = src;
+                    if (helper.complete && helper.naturalWidth > 0) {
+                        processHelper(helper);
+                    } else {
+                        setTimeout(resolve, 3000);
+                    }
+                });
+            } catch (err) {
+                console.warn('[Print Engine] Object-fit crop error for image:', err);
+            }
+        }
+    }
+
+    window.normalizeObjectFitImagesForPrint = normalizeObjectFitImagesForPrint;
+
     window.printFullDocument = async function(isBooklet = false) {
         // Smart pre-flight detection for business card sized pages
         if (!isBooklet && !window._isMultiUpPrinting && typeof state !== 'undefined' && state.pages && state.pages.length > 0) {
@@ -3294,6 +3488,9 @@
                 // Pre-flight: Remove interactive elements that should never appear on print (progress bar drag handles, selection handles, floating toolbars, etc.)
                 pageWrapper.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
 
+                // Strip any rogue shadow underlays accidentally placed on progress bar or chart elements
+                pageWrapper.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());
+
                 // Pre-flight: Normalize progress bar repeating gradients for html2canvas
                 // html2canvas fails to parse CSS repeating-linear-gradient(), causing striped bars to render empty.
                 // Convert any repeating-linear-gradient backgrounds into canvas-backed seamless repeating pattern data URLs.
@@ -3355,6 +3552,12 @@
                     } catch(svgRasterErr) {
                         console.warn('[Print Engine] Pre-flight SVG rasterization fallback error:', svgRasterErr);
                     }
+                }
+
+                // ✨ UNIVERSAL IMAGE ASPECT RATIO & OBJECT-FIT NORMALIZATION FOR PRINT & HTML2CANVAS (v5.19.9) ✨
+                if (typeof normalizeObjectFitImagesForPrint === 'function') {
+                    if (statusEl) statusEl.innerText = `Normalizing image aspect ratios on page ${i + 1}...`;
+                    await normalizeObjectFitImagesForPrint(pageWrapper, targetScale);
                 }
 
                 // Universal pre-flight: verify external <img> elements in pageWrapper have crossOrigin set for html2canvas
