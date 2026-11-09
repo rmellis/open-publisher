@@ -2830,6 +2830,12 @@ if (!window._sliderFillListenerInstalled) {
         const allElements = document.querySelectorAll('.pub-element *');
 
         allElements.forEach(el => {
+            // Guard: Never override WordArt text or wrappers with computed styles,
+            // as WordArt styles (e.g. .wa-style-9) have default colors like white that would wipe user colors
+            if (el.closest && (el.closest('.wa-wrapper') || el.closest('.wa-text') || el.classList.contains('wa-text') || el.classList.contains('wa-wrapper'))) {
+                return;
+            }
+
             // Filter down to elements that actually contain readable text
             // (Ignoring empty wrappers, SVG paths, or image containers)
             if (el.innerText && el.innerText.trim() !== '' && el.children.length === 0) {

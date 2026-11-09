@@ -940,6 +940,43 @@ function execCmd(cmd, val) {
         pushHistory();
         return;
     }
+
+    if (cmd === 'foreColor' && state.selectedEl) {
+        const waText = state.selectedEl.querySelector ? (state.selectedEl.querySelector('.wa-text') || (state.selectedEl.classList.contains('wa-text') ? state.selectedEl : null)) : null;
+        if (waText) {
+            const sel = window.getSelection();
+            const hasActiveHighlight = sel && sel.rangeCount > 0 && !sel.isCollapsed && waText.contains(sel.getRangeAt(0).commonAncestorContainer);
+            if (hasActiveHighlight) {
+                try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
+                document.execCommand('foreColor', false, val);
+                try { document.execCommand('styleWithCSS', false, false); } catch(e) {}
+                waText.querySelectorAll('[style*="color"]').forEach(el => {
+                    if (el.style && el.style.color) {
+                        el.style.setProperty('color', el.style.color, 'important');
+                        el.style.setProperty('-webkit-text-fill-color', el.style.color, 'important');
+                    }
+                });
+                waText.querySelectorAll('font[color]').forEach(f => {
+                    const c = f.getAttribute('color');
+                    f.style.setProperty('color', c, 'important');
+                    f.style.setProperty('-webkit-text-fill-color', c, 'important');
+                });
+            } else {
+                waText.querySelectorAll('[style*="color"], font[color]').forEach(child => {
+                    child.style.setProperty('color', val, 'important');
+                    child.style.setProperty('-webkit-text-fill-color', val, 'important');
+                    if (child.hasAttribute('color')) child.removeAttribute('color');
+                });
+            }
+            waText.style.setProperty('color', val, 'important');
+            waText.style.setProperty('-webkit-text-fill-color', val, 'important');
+            if (typeof syncWordArt === 'function') syncWordArt(state.selectedEl);
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof pushHistory === 'function') pushHistory();
+            if (!state.isProgrammaticUpdate && typeof updateFloatToolbarValues === 'function') updateFloatToolbarValues();
+            return;
+        }
+    }
     
     // --- NEW: Multi-Cell Table Formatting ---
     // If the user has multiple table cells selected (e.g. via the green cross), apply the formatting to all of them.

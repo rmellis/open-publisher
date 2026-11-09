@@ -135,16 +135,27 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
     stagingArea.appendChild(clone);
     document.body.appendChild(stagingArea);
 
-    if (typeof flattenWaTextForPrint === 'function') {
-        clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
-    }
-
     // High-resolution Smart Arrow print baking for canvas capture
     const arrowTargets = Array.from(clone.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
     const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
     smartArrows.forEach(arrowEl => {
         if (typeof window.bakeSmartArrowForPrint === 'function') {
             window.bakeSmartArrowForPrint(arrowEl, Math.max(3.0, (scaleMultiplier || 2) * 1.5));
+        }
+    });
+
+    // Hoist custom WordArt colors onto .wa-text with !important before baking
+    clone.querySelectorAll('.wa-text').forEach(wa => {
+        let col = wa.style.color;
+        if (!col) {
+            const cChild = wa.querySelector('[style*="color"], font[color]');
+            if (cChild) {
+                col = (cChild.style && cChild.style.color) ? cChild.style.color : (cChild.getAttribute && cChild.getAttribute('color'));
+            }
+        }
+        if (col) {
+            wa.style.setProperty('color', col, 'important');
+            wa.style.setProperty('-webkit-text-fill-color', col, 'important');
         }
     });
 
@@ -161,6 +172,10 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
                 console.warn('[Canvas Renderer] Failed to bake Legacy WordArt:', e);
             }
         }
+    }
+
+    if (typeof flattenWaTextForPrint === 'function') {
+        clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
     }
 
     // Vector Advertisement Print Overflow Allowance (v5.19.1)

@@ -394,12 +394,51 @@
                 });
 
                 // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Native Browser Print Spooler) (v5.11.16) ✨
+                // 1. Immediately hoist any custom text colors directly onto .wa-text with !important
+                scaler.querySelectorAll('.wa-text').forEach(wa => {
+                    let col = wa.style.color;
+                    if (!col) {
+                        const cChild = wa.querySelector('[style*="color"], font[color]');
+                        if (cChild) {
+                            col = (cChild.style && cChild.style.color) ? cChild.style.color : (cChild.getAttribute && cChild.getAttribute('color'));
+                        }
+                    }
+                    if (col) {
+                        wa.style.setProperty('color', col, 'important');
+                        wa.style.setProperty('-webkit-text-fill-color', col, 'important');
+                    }
+                    wa.querySelectorAll('[style*="color"]').forEach(el => {
+                        if (el.style && el.style.color) {
+                            el.style.setProperty('color', el.style.color, 'important');
+                            el.style.setProperty('-webkit-text-fill-color', el.style.color, 'important');
+                        }
+                    });
+                    wa.querySelectorAll('font[color]').forEach(f => {
+                        const fc = f.getAttribute('color');
+                        if (fc) {
+                            f.style.setProperty('color', fc, 'important');
+                            f.style.setProperty('-webkit-text-fill-color', fc, 'important');
+                        }
+                    });
+                });
+
                 const legacyWordArtNodes = Array.from(scaler.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
                 const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
                     return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
                 });
+
+                // Synchronous Fast-Path: Immediately rasterize supported styles before any microtask yields
                 for (const waEl of uniqueLegacyWordArts) {
-                    if (typeof window.bakeLegacyWordArtForPrint === 'function') {
+                    if (typeof window.bakeLegacyWordArtForPrintSync === 'function') {
+                        try {
+                            window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
+                        } catch (e) {}
+                    }
+                }
+
+                // Asynchronous Engine: High-fidelity SVG ForeignObject for complex gradients/stripes
+                for (const waEl of uniqueLegacyWordArts) {
+                    if (waEl.querySelector && !waEl.querySelector('img.wa-baked-img') && typeof window.bakeLegacyWordArtForPrint === 'function') {
                         try {
                             await window.bakeLegacyWordArtForPrint(waEl, 4.0);
                         } catch (e) {
@@ -407,8 +446,6 @@
                                 window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
                             }
                         }
-                    } else if (typeof window.bakeLegacyWordArtForPrintSync === 'function') {
-                        window.bakeLegacyWordArtForPrintSync(waEl, 4.0);
                     }
                 }
 
@@ -550,6 +587,23 @@
     const PRINT_MATH_SPACE = '\u205F';
 
     const flattenWaTextForPrint = (wa) => {
+        if (!wa) return;
+        if (wa.closest('[data-wa-print-baked="true"]') || wa.querySelector('img.wa-baked-img')) return;
+
+        // If wa contains formatted child nodes (spans with colors, fonts, line breaks),
+        // preserve child elements and do NOT wipe with textContent = ''!
+        if (wa.children && wa.children.length > 0) {
+            const walk = document.createTreeWalker(wa, NodeFilter.SHOW_TEXT, null, false);
+            let textNode;
+            while ((textNode = walk.nextNode())) {
+                if (textNode.nodeValue) {
+                    textNode.nodeValue = textNode.nodeValue.replace(/ /g, PRINT_MATH_SPACE);
+                }
+            }
+            wa.style.setProperty('word-spacing', '0', 'important');
+            return;
+        }
+
         const text = (wa.innerText || wa.textContent || '').replace(/\s+/g, ' ').trim();
         wa.textContent = '';
         if (text) {
@@ -562,8 +616,14 @@
     const fixWordArtSpacesInHtml = (html) => {
         if (!html || !html.includes('wa-text')) return html;
         return html.replace(/(<[^>]*\bwa-text\b[^>]*>)([\s\S]*?)(<\/div>)/gi, (_, open, body, close) => {
-            const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            return open + text.split(' ').join(PRINT_MATH_SPACE) + close;
+            // Replace spaces with PRINT_MATH_SPACE outside of HTML tags,
+            // strictly preserving all child spans, fonts, styles, and custom colors
+            const tokens = body.split(/(<[^>]+>)/g);
+            const fixedBody = tokens.map(token => {
+                if (token.startsWith('<') && token.endsWith('>')) return token;
+                return token.replace(/ /g, PRINT_MATH_SPACE);
+            }).join('');
+            return open + fixedBody + close;
         });
     };
 
@@ -2939,6 +2999,53 @@
                     });
                 });
 
+                                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.16) ✨
+                // 1. Immediately hoist any custom text colors directly onto .wa-text with !important
+                pageWrapper.querySelectorAll('.wa-text').forEach(wa => {
+                    let col = wa.style.color;
+                    if (!col) {
+                        const cChild = wa.querySelector('[style*="color"], font[color]');
+                        if (cChild) {
+                            col = (cChild.style && cChild.style.color) ? cChild.style.color : (cChild.getAttribute && cChild.getAttribute('color'));
+                        }
+                    }
+                    if (col) {
+                        wa.style.setProperty('color', col, 'important');
+                        wa.style.setProperty('-webkit-text-fill-color', col, 'important');
+                    }
+                    wa.querySelectorAll('[style*="color"]').forEach(el => {
+                        if (el.style && el.style.color) {
+                            el.style.setProperty('color', el.style.color, 'important');
+                            el.style.setProperty('-webkit-text-fill-color', el.style.color, 'important');
+                        }
+                    });
+                    wa.querySelectorAll('font[color]').forEach(f => {
+                        const fc = f.getAttribute('color');
+                        if (fc) {
+                            f.style.setProperty('color', fc, 'important');
+                            f.style.setProperty('-webkit-text-fill-color', fc, 'important');
+                        }
+                    });
+                });
+
+                const legacyWordArtNodes = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
+                const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
+                    return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
+                });
+                if (uniqueLegacyWordArts.length > 0 && typeof window.bakeLegacyWordArtForPrint === 'function') {
+                    if (statusEl) statusEl.innerText = `Baking high-resolution Legacy WordArt on page ${i + 1}...`;
+                    for (const waEl of uniqueLegacyWordArts) {
+                        try {
+                            const bakedImg = await window.bakeLegacyWordArtForPrint(waEl, 4.0);
+                            if (bakedImg && typeof loadImageStrict === 'function') {
+                                await loadImageStrict(bakedImg, bakedImg.src);
+                            }
+                        } catch (err) {
+                            console.warn('[Print Engine] Failed to bake Legacy WordArt for export:', err);
+                        }
+                    }
+                }
+
                 pageWrapper.querySelectorAll('.wa-text').forEach(flattenWaTextForPrint);
 
                 // ✨ HIGH-RES WORDART PRINT BAKING (Physical Print & PDF Export) ✨
@@ -3033,25 +3140,6 @@
                             }
                         } catch (err) {
                             console.warn('[Print Engine] Failed to bake Smart Arrow for export:', err);
-                        }
-                    }
-                }
-
-                // ✨ HIGH-RES LEGACY WORDART PRINT BAKING (Physical Print & PDF Export) (v5.11.16) ✨
-                const legacyWordArtNodes = Array.from(pageWrapper.querySelectorAll('.wa-wrapper, .wa-text')).map(el => el.closest('.pub-element') || el.closest('.element-content') || el);
-                const uniqueLegacyWordArts = Array.from(new Set(legacyWordArtNodes)).filter(el => {
-                    return el && el.querySelector && el.querySelector('.wa-text') && !el.querySelector('img.wa-baked-img');
-                });
-                if (uniqueLegacyWordArts.length > 0 && typeof window.bakeLegacyWordArtForPrint === 'function') {
-                    if (statusEl) statusEl.innerText = `Baking high-resolution Legacy WordArt on page ${i + 1}...`;
-                    for (const waEl of uniqueLegacyWordArts) {
-                        try {
-                            const bakedImg = await window.bakeLegacyWordArtForPrint(waEl, 4.0);
-                            if (bakedImg && typeof loadImageStrict === 'function') {
-                                await loadImageStrict(bakedImg, bakedImg.src);
-                            }
-                        } catch (err) {
-                            console.warn('[Print Engine] Failed to bake Legacy WordArt for export:', err);
                         }
                     }
                 }

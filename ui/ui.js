@@ -1096,15 +1096,25 @@ window.ContextMenuActions = {
         stagingArea.appendChild(clone);
         document.body.appendChild(stagingArea);
         
-        if (typeof flattenWaTextForPrint === 'function') {
-            clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
-        }
-
         const arrowTargets = Array.from(clone.querySelectorAll('[data-type="smart-arrow"], .pub-element[data-type="smart-arrow"], svg.smart-arrow-svg'));
         const smartArrows = Array.from(new Set(arrowTargets.map(el => (el.classList && el.classList.contains('smart-arrow-svg')) ? (el.closest('[data-type="smart-arrow"]') || el.closest('.pub-element') || el) : el)));
         smartArrows.forEach(arrowEl => {
             if (typeof window.bakeSmartArrowForPrint === 'function') {
                 window.bakeSmartArrowForPrint(arrowEl, 4.0);
+            }
+        });
+
+        clone.querySelectorAll('.wa-text').forEach(wa => {
+            let col = wa.style.color;
+            if (!col) {
+                const cChild = wa.querySelector('[style*="color"], font[color]');
+                if (cChild) {
+                    col = (cChild.style && cChild.style.color) ? cChild.style.color : (cChild.getAttribute && cChild.getAttribute('color'));
+                }
+            }
+            if (col) {
+                wa.style.setProperty('color', col, 'important');
+                wa.style.setProperty('-webkit-text-fill-color', col, 'important');
             }
         });
 
@@ -1116,6 +1126,10 @@ window.ContextMenuActions = {
                     await window.bakeLegacyWordArtForPrint(waEl, 4.0);
                 } catch (e) {}
             }
+        }
+
+        if (typeof flattenWaTextForPrint === 'function') {
+            clone.querySelectorAll('.wa-text').forEach(node => flattenWaTextForPrint(node));
         }
 
         // Vector Advertisement Print Overflow Allowance (v5.19.1)

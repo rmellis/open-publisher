@@ -301,6 +301,55 @@ function parseDropShadowFilters(filterStr) {
  * - Path 2 (Canvas 2D Precision Engine): Renders authentic typography styles with Google Fonts,
  *   multi-tier ambient neon glows, 3D text extrusion shadows, and outline strokes with zero font fallback.
  */
+
+function getWordArtXhtmlContent(waText, safeFallback) {
+    if (!waText) return safeFallback || '';
+    try {
+        const clone = waText.cloneNode(true);
+        clone.querySelectorAll('.no-print, .spell-error, .ui-handle').forEach(el => el.remove());
+
+        clone.querySelectorAll('font[color]').forEach(f => {
+            const span = document.createElement('span');
+            const color = f.getAttribute('color');
+            span.style.setProperty('color', color, 'important');
+            span.style.setProperty('-webkit-text-fill-color', color, 'important');
+            if (f.getAttribute('face')) span.style.fontFamily = f.getAttribute('face');
+            if (f.getAttribute('size')) span.style.fontSize = f.getAttribute('size');
+            while (f.firstChild) span.appendChild(f.firstChild);
+            f.parentNode.replaceChild(span, f);
+        });
+
+        clone.querySelectorAll('[style*="color"]').forEach(el => {
+            if (el.style && el.style.color) {
+                el.style.setProperty('color', el.style.color, 'important');
+                el.style.setProperty('-webkit-text-fill-color', el.style.color, 'important');
+            }
+        });
+
+        let xml = '';
+        try {
+            const serializer = new XMLSerializer();
+            for (let i = 0; i < clone.childNodes.length; i++) {
+                xml += serializer.serializeToString(clone.childNodes[i]);
+            }
+        } catch (e) {
+            xml = clone.innerHTML;
+        }
+
+        if (!xml || !xml.trim()) return safeFallback || '';
+
+        xml = xml.replace(/<br\s*(?:\/?>|>)/gi, '<br/>');
+        xml = xml.replace(/<hr\s*(?:\/?>|>)/gi, '<hr/>');
+        xml = xml.replace(/<img([^>]*?)(?:\/?>|>)/gi, '<img$1/>');
+        xml = xml.replace(/&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+
+        return xml;
+    } catch (err) {
+        console.warn('[WordArt XHTML] Error preparing XHTML content:', err);
+        return safeFallback || '';
+    }
+}
+
 function resolveWordArtTargets(targetEl) {
     if (!targetEl) return null;
     if (targetEl.tagName && targetEl.tagName.toLowerCase() === 'img' && targetEl.classList.contains('wa-baked-img')) {
@@ -400,7 +449,10 @@ function resolveWordArtTargets(targetEl) {
     // SVG foreignObject is the primary high-fidelity engine for all system-font styles (Impact, Arial, etc.),
     // all gradient styles, all 3D extrusions, and all box/border styles.
     // Canvas 2D is reserved for pure-typography Google Fonts styles that don't use gradients.
-    const isGradientOrBoxStyle = !hasWebFont || hasComplexCss;
+    const hasFormattedChildren = Boolean(waText.querySelector && (waText.querySelector('br') || waText.querySelectorAll('[style*="color"], font[color]').length > 1));
+    const isGradientOrBoxStyle = !hasWebFont || hasComplexCss || hasFormattedChildren;
+
+    const xhtmlContent = getWordArtXhtmlContent(waText, safeText);
 
     return {
         isAlreadyBaked: false,
@@ -411,6 +463,7 @@ function resolveWordArtTargets(targetEl) {
         specificRule,
         rawText,
         safeText,
+        xhtmlContent,
         isGradientOrBoxStyle
     };
 }
@@ -569,16 +622,22 @@ function renderCanvas2DWordArt(waText, pubEl, waWrapper, styleId, specificRule, 
     let textColor = '';
     if (waText.style && waText.style.color) {
         textColor = waText.style.color;
-    } else if (comp && comp.color && comp.color !== 'rgb(0, 0, 0)' && comp.color !== '#000000') {
+    }
+    const coloredChild = waText.querySelector ? waText.querySelector('[style*="color"], font[color]') : null;
+    if (!textColor && coloredChild) {
+        if (coloredChild.style && coloredChild.style.color) textColor = coloredChild.style.color;
+        else if (coloredChild.getAttribute && coloredChild.getAttribute('color')) textColor = coloredChild.getAttribute('color');
+    }
+    if (!textColor && comp && comp.color && comp.color !== 'rgb(0, 0, 0)' && comp.color !== '#000000') {
         textColor = comp.color;
     }
-    if (specificRule) {
+    if (specificRule && !textColor) {
         const cm = specificRule.match(/(?:^|[^-\w])color:\s*([^;]+)/i);
         if (cm) {
             const ruleColor = cm[1].trim();
             if (ruleColor === 'transparent') {
                 textColor = 'transparent';
-            } else if (!textColor || textColor === 'rgb(0, 0, 0)' || textColor === '#000000') {
+            } else {
                 textColor = ruleColor;
             }
         }
@@ -895,7 +954,7 @@ async function getEmbeddedFontCss(fontFamily, fontWeight = '') {
     }
 }
 
-async function renderSvgWordArt(waText, pubEl, waWrapper, styleId, specificRule, safeText, rawText, scaleMultiplier) {
+async function renderSvgWordArt(waText, pubEl, waWrapper, styleId, specificRule, safeText, rawText, scaleMultiplier, xhtmlContent = '') {
     let dispW = parseFloat(pubEl && pubEl.style ? pubEl.style.width : 0);
     if (!dispW || isNaN(dispW) || dispW <= 0) {
         dispW = (pubEl ? pubEl.offsetWidth : 0) || (waWrapper ? waWrapper.offsetWidth : 0) || (waText ? waText.offsetWidth : 0) || 300;
@@ -1025,7 +1084,14 @@ async function renderSvgWordArt(waText, pubEl, waWrapper, styleId, specificRule,
     }
     if (waText.style) {
         if (waText.style.fontFamily) inlineExtraStyles += `font-family: ${waText.style.fontFamily.replace(/"/g, "'")} !important; `;
-        if (waText.style.color) inlineExtraStyles += `color: ${waText.style.color} !important; `;
+        let effectiveColor = waText.style.color;
+        if (!effectiveColor) {
+            const cChild = waText.querySelector ? waText.querySelector('[style*="color"], font[color]') : null;
+            if (cChild) {
+                effectiveColor = (cChild.style && cChild.style.color) ? cChild.style.color : (cChild.getAttribute && cChild.getAttribute('color'));
+            }
+        }
+        if (effectiveColor) inlineExtraStyles += `color: ${effectiveColor} !important; -webkit-text-fill-color: ${effectiveColor} !important; `;
         if (waText.style.fontSize) inlineExtraStyles += `font-size: ${waText.style.fontSize} !important; `;
         if (waText.style.fontWeight) inlineExtraStyles += `font-weight: ${waText.style.fontWeight} !important; `;
         if (waText.style.fontStyle) inlineExtraStyles += `font-style: ${waText.style.fontStyle} !important; `;
@@ -1046,7 +1112,7 @@ async function renderSvgWordArt(waText, pubEl, waWrapper, styleId, specificRule,
                 ${effectiveRule}
             </style>
             <div class="wa-wrapper">
-                <div class="wa-text wa-style-${styleId}" style="${inlineExtraStyles}">${safeText}</div>
+                <div class="wa-text wa-style-${styleId}" style="${inlineExtraStyles}">${xhtmlContent || safeText}</div>
             </div>
         </div>
     </foreignObject>
@@ -1151,7 +1217,7 @@ window.bakeLegacyWordArtForPrint = async function(targetEl, scaleMultiplier = 4.
     // ✨ PATH 1 (PRIMARY): SVG FOREIGNOBJECT ENGINE (With Base64 Embedded Web Fonts) ✨
     // High-fidelity vector layout: preserves 3D extrusions, chromatic planes, ambient glows, gradients, boxes, and Google Fonts
     try {
-        const res = await renderSvgWordArt(info.waText, info.pubEl, info.waWrapper, info.styleId, info.specificRule, info.safeText, info.rawText, scaleMultiplier);
+        const res = await renderSvgWordArt(info.waText, info.pubEl, info.waWrapper, info.styleId, info.specificRule, info.safeText, info.rawText, scaleMultiplier, info.xhtmlContent);
         if (res && res.pngUrl) {
             return attachBakedWordArtImage(info.pubEl, info.waWrapper, info.waText, info.styleId, info.rawText, res.pngUrl, res.padX, res.padY, res.totalW, res.totalH);
         }
