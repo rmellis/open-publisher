@@ -218,12 +218,33 @@ document.addEventListener('keydown', (e) => {
                 e.preventDefault();
                 const increase = (e.key === '>' || e.key === '.');
                 let currentSize = 12;
-                if (state.lastRange) {
-                    let node = state.lastRange.startContainer;
+                let refRange = null;
+                const liveSel = window.getSelection();
+                const liveRange = (liveSel && liveSel.rangeCount > 0) ? liveSel.getRangeAt(0) : null;
+                const isRangeUsable = (r) => {
+                    if (!r) return false;
+                    const sc = r.startContainer;
+                    const ec = r.endContainer;
+                    if (!sc || !ec || !sc.isConnected || !ec.isConnected) return false;
+                    const se = sc.nodeType === 3 ? sc.parentNode : sc;
+                    const ee = ec.nodeType === 3 ? ec.parentNode : ec;
+                    return !!(se && ee && state.selectedEl.contains(se) && state.selectedEl.contains(ee));
+                };
+                if (isRangeUsable(liveRange) && !liveRange.collapsed) {
+                    refRange = liveRange;
+                } else if (isRangeUsable(state.lastRange) && !state.lastRange.collapsed) {
+                    refRange = state.lastRange;
+                } else if (isRangeUsable(liveRange)) {
+                    refRange = liveRange;
+                } else if (isRangeUsable(state.lastRange)) {
+                    refRange = state.lastRange;
+                }
+                if (refRange) {
+                    let node = refRange.startContainer;
                     if (node.nodeType === 3) {
                         node = node.parentNode;
                     } else {
-                        const offset = state.lastRange.startOffset;
+                        const offset = refRange.startOffset;
                         if (node.childNodes.length > offset) {
                             let child = node.childNodes[offset];
                             if (child.nodeType === 3) child = child.parentNode;
@@ -233,6 +254,9 @@ document.addEventListener('keydown', (e) => {
                     if (node && node.nodeType === 1) {
                         currentSize = parseInt(window.getComputedStyle(node).fontSize) || 12;
                     }
+                } else {
+                    const ed = state.selectedEl.querySelector('[contenteditable="true"]');
+                    if (ed) currentSize = parseInt(window.getComputedStyle(ed).fontSize) || 12;
                 }
                 const newSize = increase ? currentSize + 1 : Math.max(1, currentSize - 1);
                 setTrueFontSize(newSize + 'px');

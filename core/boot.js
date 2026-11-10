@@ -2,7 +2,11 @@
 // APPLICATION BOOTSTRAPPER (v5.17.0)
 // ==========================================
 
-window.onload = function() {
+let _opBooted = false;
+function bootOpenPublisher() {
+    if (_opBooted) return;
+    _opBooted = true;
+    window._opBootSelectionChangeActive = true;
     DialogSystem.init(); // Initialize the Modal System
     initRulers();
     initColorSchemes();
@@ -85,6 +89,8 @@ let selectionTimer = null;
 document.addEventListener('selectionchange', () => {
     if(state.isProgrammaticUpdate) return; 
 
+    const activePre = document.activeElement;
+    if (activePre && (activePre.tagName === 'INPUT' || activePre.tagName === 'TEXTAREA' || activePre.tagName === 'SELECT')) return;
     const selNow = window.getSelection();
     if(selNow && selNow.rangeCount > 0) {
         const rangeNow = selNow.getRangeAt(0);
@@ -102,6 +108,8 @@ document.addEventListener('selectionchange', () => {
     
     // Wait 150ms after they stop dragging before updating the UI
     selectionTimer = setTimeout(() => {
+        const activeDelayed = document.activeElement;
+        if (activeDelayed && (activeDelayed.tagName === 'INPUT' || activeDelayed.tagName === 'TEXTAREA' || activeDelayed.tagName === 'SELECT')) return;
         const sel = window.getSelection();
         if(sel.rangeCount > 0) {
             const range = sel.getRangeAt(0);
@@ -185,6 +193,13 @@ document.addEventListener('selectionchange', () => {
         });
     }, 500);
 }
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootOpenPublisher);
+} else {
+    bootOpenPublisher();
+}
+window.addEventListener('load', bootOpenPublisher);
 
 // --- MINIMAP CONTEXT MENU ---
 document.addEventListener('click', () => {

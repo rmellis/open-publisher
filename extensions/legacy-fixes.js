@@ -2072,6 +2072,26 @@ if (!window._sliderFillListenerInstalled) {
         }
     };
 
+    window._opSyncTextUndoBefore = function(el) {
+        if (!el) return false;
+        const hist = getHist(el);
+        const cur = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? el.value : el.innerHTML;
+        if (hist.undo.length > 0) {
+            hist.undo.push(cur);
+            if (hist.undo.length > 200) hist.undo.shift();
+            hist.redo = [];
+            hist.lastState = cur;
+            return true;
+        }
+        return false;
+    };
+
+    window._opSyncTextUndoAfter = function(el) {
+        if (!el) return;
+        const hist = getHist(el);
+        hist.lastState = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? el.value : el.innerHTML;
+    };
+
     // Forces the cursor to the end of the text so it doesn't snap to the beginning
     function setCursorToEnd(el) {
         try {
@@ -2251,94 +2271,208 @@ if (!window._sliderFillListenerInstalled) {
 
     // --- 4. THE BULLETPROOF FONT SIZE ENGINE ---
     if (typeof window.setTrueFontSize !== 'undefined') {
+        const getEditableHostNode = (node) => {
+            if (!node || !node.isConnected) return null;
+            const el = node.nodeType === 3 ? node.parentNode : node;
+            if (!el || !el.closest) return null;
+            const ed = el.closest('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]');
+            return (ed && ed.closest('#paper')) ? ed : null;
+        };
+
+        const isValidRangeInEl = (range, root) => {
+            if (!range || !root) return false;
+            const startNode = range.startContainer;
+            const endNode = range.endContainer;
+            if (!startNode || !endNode || !startNode.isConnected || !endNode.isConnected) return false;
+            const startEl = startNode.nodeType === 3 ? startNode.parentNode : startNode;
+            const endEl = endNode.nodeType === 3 ? endNode.parentNode : endNode;
+            return !!(startEl && endEl && root.contains(startEl) && root.contains(endEl));
+        };
+
+        const isLivePaperEditableRange = (range) => {
+            if (!range) return false;
+            const startEd = getEditableHostNode(range.startContainer);
+            const endEd = getEditableHostNode(range.endContainer);
+            return !!(startEd && endEd && startEd === endEd);
+        };
+
+        const findEditableHost = (range, root) => {
+            const walkForEditable = (startNode) => {
+                let cur = startNode && startNode.nodeType === 3 ? startNode.parentNode : startNode;
+                while (cur && cur !== root) {
+                    if (cur.nodeType === 1 && cur.getAttribute && cur.getAttribute('contenteditable') === 'true') {
+                        return cur;
+                    }
+                    cur = cur.parentNode;
+                }
+                return null;
+            };
+            if (range) {
+                const found = (root ? walkForEditable(range.commonAncestorContainer) || walkForEditable(range.startContainer) : null) ||
+                              getEditableHostNode(range.startContainer);
+                if (found) return found;
+            }
+            if (!root) return null;
+            return root.querySelector('[contenteditable="true"]') ||
+                   root.querySelector('.element-content > div') ||
+                   root.querySelector('.element-content');
+        };
+
+        if (!window._fontSizeRangeCaptureInstalled) {
+            window._fontSizeRangeCaptureInstalled = true;
+
+            const snapshotEditableSelection = (allowCollapsed) => {
+                if (typeof state === 'undefined' || state.isProgrammaticUpdate) return;
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return;
+                if (!allowCollapsed && sel.isCollapsed) return;
+                const r = sel.getRangeAt(0);
+                if (isLivePaperEditableRange(r)) {
+                    state.lastRange = r.cloneRange();
+                }
+            };
+
+            const preBlurSnapshot = (e) => {
+                if (!e || !e.target || !e.target.closest) return;
+                if (!e.target.closest('#paper') || e.target.closest('input, select, .modern-spinner, .spin-btns, #float-toolbar, #float-size-btn, .ribbon-container, .custom-dropdown')) {
+                    snapshotEditableSelection(false);
+                }
+            };
+
+            document.addEventListener('pointerdown', preBlurSnapshot, true);
+            document.addEventListener('mousedown', preBlurSnapshot, true);
+            document.addEventListener('selectionchange', () => {
+                if (window._opBootSelectionChangeActive) return;
+                const active = document.activeElement;
+                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+                snapshotEditableSelection(true);
+            });
+        }
+
+        let _inSetTrueFontSize = false;
         window.setTrueFontSize = function(val) {
-            if (!state.selectedEl) return;
-            
+            if (_inSetTrueFontSize || !val) return;
+            const parsedNum = parseFloat(val);
+            if (isNaN(parsedNum) || parsedNum <= 0) return;
+
+            const activeInput = document.activeElement;
+            const liveSelPre = window.getSelection();
+            const liveRangePre = (liveSelPre && liveSelPre.rangeCount > 0) ? liveSelPre.getRangeAt(0) : null;
+            const hasLivePaperNonCollapsed = isLivePaperEditableRange(liveRangePre) && !liveRangePre.collapsed;
+
+            if (!state.selectedEl && !hasLivePaperNonCollapsed && !(isLivePaperEditableRange(state.lastRange) && !state.lastRange.collapsed)) {
+                return;
+            }
+
+            _inSetTrueFontSize = true;
+
+            if (window._fontSizeProgTimer) {
+                clearTimeout(window._fontSizeProgTimer);
+                window._fontSizeProgTimer = null;
+            }
             state.isProgrammaticUpdate = true;
-            const waText = state.selectedEl.querySelector('.wa-text');
-            const activeInput = document.activeElement; 
-            
-            if (waText) {
-                waText.style.fontSize = val;
-                waText.style.transform = 'none'; 
-                state.selectedEl.style.width = (waText.offsetWidth + 8) + 'px';
-                state.selectedEl.style.height = (waText.offsetHeight + 8) + 'px';
-                if (typeof syncWordArt === 'function') syncWordArt(state.selectedEl); 
-            } else {
-                const editableContent = state.selectedEl.querySelector('[contenteditable="true"]') || 
-                                        state.selectedEl.querySelector('.element-content > div') || 
-                                        state.selectedEl.querySelector('.element-content');
-                
-                if (editableContent) {
-                    editableContent.focus(); 
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
 
-                    let wasCollapsed = false;
+            try {
+                const waText = state.selectedEl ? state.selectedEl.querySelector('.wa-text') : null;
 
-                    if (state.lastRange) {
-                        sel.addRange(state.lastRange);
-                        if (sel.isCollapsed) wasCollapsed = true;
-                    } else {
-                        wasCollapsed = true;
+                if (waText) {
+                    waText.style.fontSize = val;
+                    waText.style.transform = 'none';
+                    state.selectedEl.style.width = (waText.offsetWidth + 8) + 'px';
+                    state.selectedEl.style.height = (waText.offsetHeight + 8) + 'px';
+                    if (typeof syncWordArt === 'function') syncWordArt(state.selectedEl);
+                } else {
+                    const selEl = state.selectedEl;
+                    const liveValid = isValidRangeInEl(liveRangePre, selEl);
+                    const savedValid = isValidRangeInEl(state.lastRange, selEl);
+                    const savedInPaperEditable = isLivePaperEditableRange(state.lastRange);
+
+                    let targetRange = null;
+                    if (liveValid && !liveRangePre.collapsed) {
+                        targetRange = liveRangePre.cloneRange();
+                    } else if (savedValid && !state.lastRange.collapsed) {
+                        targetRange = state.lastRange.cloneRange();
+                    } else if (hasLivePaperNonCollapsed) {
+                        targetRange = liveRangePre.cloneRange();
+                    } else if (savedInPaperEditable && !state.lastRange.collapsed) {
+                        targetRange = state.lastRange.cloneRange();
+                    } else if (liveValid) {
+                        targetRange = liveRangePre.cloneRange();
+                    } else if (savedValid) {
+                        targetRange = state.lastRange.cloneRange();
+                    } else if (!selEl && isLivePaperEditableRange(liveRangePre)) {
+                        targetRange = liveRangePre.cloneRange();
                     }
 
-                    if (wasCollapsed) {
-                        try {
-                            sel.selectAllChildren(editableContent);
-                        } catch (e) {
-                            document.execCommand("selectAll");
+                    const editableContent = findEditableHost(targetRange, selEl);
+                    const validationRoot = editableContent || selEl;
+
+                    if (editableContent) {
+                        const wasCollapsed = !targetRange || targetRange.collapsed;
+                        const activeIsControl = !!(activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'TEXTAREA' || activeInput.tagName === 'SELECT'));
+                        if (typeof window._opSyncTextUndoBefore === 'function') window._opSyncTextUndoBefore(editableContent);
+                        if (typeof pushHistory === 'function') pushHistory(true);
+
+                        const sel = window.getSelection();
+                        let res = { fontTags: [], firstText: null, lastText: null };
+                        if (typeof window.applyPureFontSizeToEditable === 'function') {
+                            res = window.applyPureFontSizeToEditable(editableContent, targetRange, val, wasCollapsed);
+                        }
+
+                        if (!wasCollapsed && res.firstText && res.lastText) {
+                            const rebuilt = document.createRange();
+                            rebuilt.setStart(res.firstText, 0);
+                            rebuilt.setEnd(res.lastText, res.lastText.length);
+                            state.lastRange = rebuilt.cloneRange();
+                            if (!activeIsControl && sel) {
+                                sel.removeAllRanges();
+                                sel.addRange(rebuilt);
+                            }
+                        } else if (wasCollapsed && !activeIsControl && sel) {
+                            sel.removeAllRanges();
+                        }
+
+                        if (typeof window._opSyncTextUndoAfter === 'function') {
+                            window._opSyncTextUndoAfter(editableContent);
                         }
                     }
-                    
-                    document.execCommand("fontSize", false, "7"); 
-                    
-                    const fontTags = Array.from(state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]'));
-                    fontTags.forEach(f => {
-                        f.removeAttribute("size");
-                        f.style.fontSize = val;
-                    });
-
-                    if (typeof window.syncHighlightWithFontSize === 'function') {
-                        window.syncHighlightWithFontSize(editableContent, fontTags, val, wasCollapsed);
-                    }
-                    if (wasCollapsed) {
-                        editableContent.style.fontSize = val;
-                    }
-
-                    if (sel.rangeCount > 0 && !wasCollapsed) {
-                        state.lastRange = sel.getRangeAt(0).cloneRange();
-                    } else if (wasCollapsed) {
-                        sel.removeAllRanges(); 
-                    }
                 }
-            }
-            
-            if (activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'SELECT')) {
-                activeInput.focus();
-            }
 
-            const numVal = parseInt(val);
-            const floatSelect = document.getElementById('float-size');
-            const ribbonInput = document.getElementById('font-size');
-            const ctxRibbonInput = document.getElementById('ctx-font-size-text'); 
-            
-            if (ribbonInput) ribbonInput.value = numVal;
-            if (ctxRibbonInput) ctxRibbonInput.value = numVal;
-            
-            if (floatSelect) {
-                let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === numVal);
-                if (!optionExists) {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = numVal;
-                    newOpt.innerText = numVal;
-                    floatSelect.appendChild(newOpt);
+                if (activeInput && (activeInput.id === 'font-size' || activeInput.id === 'ctx-font-size-text' || activeInput.id === 'ctx-font-size-wa') && typeof window.clearTextHistory === 'function') {
+                    window.clearTextHistory(activeInput);
                 }
-                floatSelect.value = numVal;
+
+                const numVal = parseInt(val);
+                const floatSelect = document.getElementById('float-size');
+                const floatSizeLabel = document.getElementById('float-size-label');
+                const ribbonInput = document.getElementById('font-size');
+                const ctxRibbonInput = document.getElementById('ctx-font-size-text');
+                const ctxWaInput = document.getElementById('ctx-font-size-wa');
+
+                if (ribbonInput && !isNaN(numVal)) ribbonInput.value = numVal;
+                if (ctxRibbonInput && !isNaN(numVal)) ctxRibbonInput.value = numVal;
+                if (ctxWaInput && waText && !isNaN(numVal)) ctxWaInput.value = numVal;
+                if (floatSizeLabel && !isNaN(numVal)) floatSizeLabel.innerText = numVal;
+
+                if (floatSelect && !isNaN(numVal)) {
+                    let optionExists = Array.from(floatSelect.options).some(opt => parseInt(opt.value) === numVal);
+                    if (!optionExists) {
+                        const newOpt = document.createElement('option');
+                        newOpt.value = numVal;
+                        newOpt.innerText = numVal;
+                        floatSelect.appendChild(newOpt);
+                    }
+                    floatSelect.value = numVal;
+                }
+
+                if (typeof pushHistory === 'function') pushHistory(true);
+            } finally {
+                _inSetTrueFontSize = false;
+                window._fontSizeProgTimer = setTimeout(() => {
+                    state.isProgrammaticUpdate = false;
+                    window._fontSizeProgTimer = null;
+                }, 100);
             }
-            
-            if (typeof pushHistory === 'function') pushHistory();
-            setTimeout(() => { state.isProgrammaticUpdate = false; }, 100);
         };
     }
 })();

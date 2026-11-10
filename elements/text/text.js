@@ -423,14 +423,16 @@ function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
         }
     }
     
+    const updatedTargets = [];
     fontTags.forEach(f => {
+        if (!f || !f.isConnected) return;
         const tagFontSize = f.style.fontSize || val;
         if (!tagFontSize) return;
 
         let curr = f.parentElement;
         let hiliteAncestor = null;
         while (curr && curr !== root && root.contains(curr)) {
-            if (curr.hasAttribute('data-opub-hilite') || 
+            if (curr.hasAttribute('data-opub-hilite') ||
                 (curr.style && curr.style.backgroundColor && curr.style.backgroundColor !== 'transparent' && curr.style.backgroundColor !== 'rgba(0, 0, 0, 0)')) {
                 hiliteAncestor = curr;
                 break;
@@ -442,18 +444,7 @@ function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
             const bg = hiliteAncestor.style.backgroundColor;
             if (hiliteAncestor.textContent.trim() === f.textContent.trim()) {
                 hiliteAncestor.style.fontSize = tagFontSize;
-                if (!wasCollapsed) {
-                    const newR = document.createRange();
-                    newR.selectNodeContents(f);
-                    const sel = window.getSelection();
-                    if (sel) {
-                        sel.removeAllRanges();
-                        sel.addRange(newR);
-                    }
-                    if (typeof state !== 'undefined') {
-                        state.lastRange = newR.cloneRange();
-                    }
-                }
+                updatedTargets.push(f);
             } else {
                 let topChild = f;
                 while (topChild.parentElement && topChild.parentElement !== hiliteAncestor) {
@@ -496,19 +487,7 @@ function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
                 }
 
                 hiliteAncestor.remove();
-
-                if (!wasCollapsed) {
-                    const newR = document.createRange();
-                    newR.selectNodeContents(topChild);
-                    const sel = window.getSelection();
-                    if (sel) {
-                        sel.removeAllRanges();
-                        sel.addRange(newR);
-                    }
-                    if (typeof state !== 'undefined') {
-                        state.lastRange = newR.cloneRange();
-                    }
-                }
+                updatedTargets.push(topChild);
             }
         }
 
@@ -518,6 +497,29 @@ function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
         });
     });
 
+    if (!wasCollapsed && updatedTargets.length > 0) {
+        const connected = updatedTargets.filter(el => el && el.isConnected);
+        if (connected.length > 0) {
+            const newR = document.createRange();
+            if (connected.length === 1) {
+                newR.selectNodeContents(connected[0]);
+            } else {
+                newR.setStartBefore(connected[0]);
+                newR.setEndAfter(connected[connected.length - 1]);
+            }
+            const ae = document.activeElement;
+            const aeIsControl = !!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT'));
+            const sel = window.getSelection();
+            if (sel && !aeIsControl) {
+                sel.removeAllRanges();
+                sel.addRange(newR);
+            }
+            if (typeof state !== 'undefined') {
+                state.lastRange = newR.cloneRange();
+            }
+        }
+    }
+
     if (wasCollapsed) {
         root.querySelectorAll('[data-opub-hilite="true"], [data-opub-hilite]').forEach(h => {
             h.style.fontSize = val;
@@ -525,6 +527,96 @@ function syncHighlightWithFontSize(root, targetFontTags, val, wasCollapsed) {
     }
 }
 window.syncHighlightWithFontSize = syncHighlightWithFontSize;
+
+function applyPureFontSizeToEditable(editableContent, targetRange, val, wasCollapsed) {
+    if (!editableContent || !val) return { fontTags: [], firstText: null, lastText: null };
+
+    if (wasCollapsed || !targetRange || targetRange.collapsed) {
+        const targetNum = parseFloat(val);
+        editableContent.style.fontSize = val;
+        editableContent.querySelectorAll('font[size]').forEach(f => f.removeAttribute('size'));
+        editableContent.querySelectorAll('*').forEach(el => {
+            if (el.hasAttribute('data-opub-hilite')) {
+                el.style.fontSize = val;
+            } else if (el.style && el.style.fontSize) {
+                el.style.fontSize = '';
+            }
+        });
+        if (!isNaN(targetNum)) {
+            editableContent.querySelectorAll('*').forEach(el => {
+                if (el.hasAttribute('data-opub-hilite')) return;
+                const hasDirectText = Array.from(el.childNodes).some(n => n.nodeType === 3 && n.nodeValue.trim().length > 0);
+                if (hasDirectText) {
+                    const compSize = parseFloat(window.getComputedStyle(el).fontSize);
+                    if (!isNaN(compSize) && Math.abs(compSize - targetNum) > 0.5) {
+                        el.style.fontSize = val;
+                    }
+                }
+            });
+        }
+        if (typeof window.syncHighlightWithFontSize === 'function') {
+            window.syncHighlightWithFontSize(editableContent, [], val, true);
+        }
+        return { fontTags: [], firstText: null, lastText: null };
+    }
+
+    const walker = document.createTreeWalker(editableContent, NodeFilter.SHOW_TEXT, null);
+    const slices = [];
+    let node;
+    while ((node = walker.nextNode())) {
+        if (!node.nodeValue || node.nodeValue.length === 0) continue;
+        let cStart, cEnd;
+        try {
+            cStart = targetRange.comparePoint(node, 0);
+            cEnd = targetRange.comparePoint(node, node.length);
+        } catch (e) { continue; }
+        if (cEnd === -1 || cStart === 1) continue;
+        const startOff = (node === targetRange.startContainer) ? targetRange.startOffset : 0;
+        const endOff = (node === targetRange.endContainer) ? targetRange.endOffset : node.length;
+        if (endOff > startOff) {
+            slices.push({ node, startOff, endOff });
+        }
+    }
+
+    const fontTags = [];
+    const targetTexts = [];
+    slices.forEach(({ node: tOrig, startOff, endOff }) => {
+        if (!tOrig || !tOrig.isConnected) return;
+        if (endOff < tOrig.length) tOrig.splitText(endOff);
+        const tNode = startOff > 0 ? tOrig.splitText(startOff) : tOrig;
+        targetTexts.push(tNode);
+        const p = tNode.parentElement;
+        if (p && p !== editableContent && editableContent.contains(p) && p.childNodes.length === 1 && p.hasAttribute('data-opub-size')) {
+            p.style.fontSize = val;
+            fontTags.push(p);
+        } else if (p && p !== editableContent && editableContent.contains(p) && p.childNodes.length === 1 &&
+                   p.tagName === 'SPAN' && !p.className && !p.hasAttribute('data-opub-hilite') &&
+                   p.style.fontSize && p.style.length === 1) {
+            p.style.fontSize = val;
+            p.setAttribute('data-opub-size', '1');
+            fontTags.push(p);
+        } else {
+            const span = document.createElement('span');
+            span.setAttribute('data-opub-size', '1');
+            span.style.fontSize = val;
+            tNode.parentNode.insertBefore(span, tNode);
+            span.appendChild(tNode);
+            fontTags.push(span);
+        }
+    });
+
+    if (typeof window.syncHighlightWithFontSize === 'function') {
+        window.syncHighlightWithFontSize(editableContent, fontTags, val, false);
+    }
+
+    const connectedTexts = targetTexts.filter(t => t && t.isConnected);
+    return {
+        fontTags,
+        firstText: connectedTexts[0] || null,
+        lastText: connectedTexts[connectedTexts.length - 1] || null
+    };
+}
+window.applyPureFontSizeToEditable = applyPureFontSizeToEditable;
 
 function setTrueFontSize(val) {
     if (state.selectedEl) {
@@ -543,30 +635,42 @@ function setTrueFontSize(val) {
             
         } else {
             // STANDARD TEXT LOGIC
-            if (state.lastRange) {
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(state.lastRange);
-            }
-            
-            // Trigger the browser's native resize
-            document.execCommand("fontSize", false, "7"); 
-            
-            // Catch both standard <font> tags and browser-generated <span> tags
-            const fontTags = Array.from(state.selectedEl.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="48px"]'));
-            fontTags.forEach(f => {
-                f.removeAttribute("size");
-                f.style.fontSize = val;
-            });
-            
-            // Fallback for collapsed selections
+            if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) return;
             const sel = window.getSelection();
-            const content = state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
-            if(sel.isCollapsed && content) {
-                 content.style.fontSize = val;
-            }
+            const liveRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0) : null;
+            const isValid = (r) => {
+                if (!r) return false;
+                const sc = r.startContainer, ec = r.endContainer;
+                if (!sc || !ec || !sc.isConnected || !ec.isConnected) return false;
+                const se = sc.nodeType === 3 ? sc.parentNode : sc;
+                const ee = ec.nodeType === 3 ? ec.parentNode : ec;
+                return !!(se && ee && state.selectedEl.contains(se) && state.selectedEl.contains(ee));
+            };
+            let targetRange = null;
+            if (isValid(liveRange) && !liveRange.collapsed) targetRange = liveRange.cloneRange();
+            else if (isValid(state.lastRange) && !state.lastRange.collapsed) targetRange = state.lastRange.cloneRange();
+            else if (isValid(liveRange)) targetRange = liveRange.cloneRange();
+            else if (isValid(state.lastRange)) targetRange = state.lastRange.cloneRange();
+
+            const activeEl = document.activeElement;
+            const activeIsControl = !!(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT'));
+            const content = state.selectedEl.querySelector('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]') || state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
             if (content) {
-                syncHighlightWithFontSize(content, fontTags, val, sel.isCollapsed);
+                if (typeof pushHistory === 'function') pushHistory(true);
+                const wasCollapsed = !targetRange || targetRange.collapsed;
+                const res = applyPureFontSizeToEditable(content, targetRange, val, wasCollapsed);
+                if (!wasCollapsed && res.firstText && res.lastText) {
+                    const rebuilt = document.createRange();
+                    rebuilt.setStart(res.firstText, 0);
+                    rebuilt.setEnd(res.lastText, res.lastText.length);
+                    state.lastRange = rebuilt.cloneRange();
+                    if (!activeIsControl && sel) {
+                        sel.removeAllRanges();
+                        sel.addRange(rebuilt);
+                    }
+                } else if (wasCollapsed && !activeIsControl && sel) {
+                    sel.removeAllRanges();
+                }
             }
         }
         
@@ -588,13 +692,7 @@ function setTrueFontSize(val) {
             floatSelect.value = numVal;
         }
         
-        // Immediately capture the new selection range so rapid consecutive font changes (or shortcuts) don't fail
-        const currentSel = window.getSelection();
-        if (currentSel.rangeCount > 0) {
-            state.lastRange = currentSel.getRangeAt(0).cloneRange();
-        }
-        
-        pushHistory();
+        pushHistory(true);
     }
 }
 
@@ -1248,7 +1346,7 @@ window.syncFormatButtonHighlights = function(customNode) {
 
 function updateFloatToolbarValues() {
     const activeId = document.activeElement ? document.activeElement.id : null;
-    if(['float-font', 'float-size', 'font-size', 'ribbon-font-btn'].includes(activeId)) return;
+    if(['float-font', 'float-size', 'font-size', 'ribbon-font-btn', 'ctx-font-size-text', 'ctx-font-size-wa'].includes(activeId)) return;
 
     let node = null;
     const rangeIsInsideSelected = state.lastRange &&
