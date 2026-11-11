@@ -18,9 +18,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.19.12" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.20.0" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.19.12" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.20.0" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---
@@ -128,6 +128,7 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 - [WordArt](#wordart)
 - [Clipart, Emojis, and Symbols](#clipart-emojis-and-symbols)
 - [Marketing and Promotional Tools](#marketing-and-promotional-tools)
+- [AI Layout & Command Assistant](#ai-layout-and-command-assistant)
 - [Layout and Workspace Tools](#layout-and-workspace-tools)
 - [Export, Presentation and Multi-Page Output](#export-presentation-and-multi-page-output)
 - [Developer Tools and Diagnostics](#developer-tools-and-diagnostics)
@@ -327,6 +328,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 | **Tables** | 100 styled templates, multi-cell selection, Excel import (xlsx/xls), convert to text, line height control |
 | **WordArt** | 214 creative styles (Curved, Neon, 3D Extrusion, Holographic, Vaporwave), live hue shifting, high-DPI vector font print baking |
 | **Clipart and Emojis** | 3,403 high-quality transparent images, searchable Twemoji gallery with skin tone picker, symbol inserter, QR code generator |
+| **AI Layout & Command Assistant** | Prompt-driven layout creation, theme/page setup, workspace commands, 21 native element types, and single-step undo (no sign-up or API keys required) |
 | **File Import** | Open and edit PDFs directly, plus dual-canvas Microsoft Publisher (`.pub`) and Word (`.doc`/`.docx`) import with editable text & preserved background graphics |
 | **Multi-Page Overview** | Decoupled from zoom, explicit toggle, keyboard navigation, thumbnail grid with double-click to edit |
 | **Security and Recovery** | AES-GCM password encryption, Document Inspector, automated crash dumps, safe mode launch flags |
@@ -801,6 +803,16 @@ The **WordArt Studio** generates styled typographic art across **214 creative st
 
 ---
 
+<a id="ai-layout-and-command-assistant"></a>
+## AI Layout & Command Assistant
+
+- **Natural-Language Page Design** - Generate complete, editable page layouts or add elements to an existing page from a plain-English prompt, with no sign-ups, API keys, or ads required.
+- **21 Editable Canvas Elements** - Create and position text boxes, styled callouts, WordArt, clipart, emojis, symbols, tables, charts, shapes, smart arrows, ad badges, page parts, progress bars, coupons, QR codes, business info blocks, vector drawings, and custom HTML/CSS cards.
+- **Page Setup and Workspace Control** - Adjust paper size, orientation, margins, colour schemes, Theme Studio backgrounds, Border Art, watermarks, headers/footers, UI themes, grid/guides, colour proofing, and review tools from one prompt.
+- **Quick Access & Single-Step Undo** - Launch from **Home > AI Studio > AI Assistant**, **Insert > AI Studio > AI Layout**, or the title-bar **AI** button, and revert an entire AI generation in one step with `Ctrl+Z`.
+
+---
+
 <a id="layout-and-workspace-tools"></a>
 ## Layout and Workspace Tools
 
@@ -987,6 +999,7 @@ Open Publisher's native format is `.opub`:
 | `Ctrl/Cmd + Shift + drag` | Proportional scale from centre |
 | `Arrow keys` (Multi-Page Overview) | Cycle page selection |
 | `Enter` (Multi-Page Overview) | Open selected page for editing |
+| `Ctrl + Enter` (AI Assistant) | Generate AI layout |
 | `Escape` | Exit text editing mode / return to Single-Page from Overview |
 
 ---

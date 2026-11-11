@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.19.12)
+// OpenPublisher Print Engine (v5.20.0)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
