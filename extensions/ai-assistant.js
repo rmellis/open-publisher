@@ -1,9 +1,10 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.20.1)
+   OpenPublisher AI Layout & Command Assistant (v5.20.2)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
+   - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
    - Compact Dynamic System Prompt Builder (buildAISystemPrompt)
-   - Full Native OpenPublisher Command, PageConfig & 21-Element Executor
+   - Full Native OpenPublisher Command, PageConfig & 23-Element Executor
    - Atomic Single-Step Undo/Redo Integration & Scoped Custom HTML/CSS Hatch
    ============================================================================ */
 (function (global) {
@@ -19,6 +20,8 @@
         'https://openpub-ai-7.openpublisher.workers.dev'
     ];
 
+    const AI_IMAGE_WORKER_URL = 'https://openpub-img-1.openpublisher.workers.dev';
+
     const DEVICE_ID_STORAGE_KEY = 'opub_device_id';
     const COOLDOWN_STORAGE_KEY = 'opub_ai_last_gen_ts';
     const COOLDOWN_MS = 20000;
@@ -26,6 +29,9 @@
 
     let _cooldownTicker = null;
     let _templateIndexCache = null;
+    let _currentActiveTab = 'layout';
+    let _selectedImgPreset = '';
+    let _selectedVecPreset = '';
 
     /* ------------------------------------------------------------------------
        1. DEVICE UUID, VALIDATION, COOLDOWN & WORKER ROLLOVER CLIENT
@@ -249,6 +255,258 @@
     }
 
     /* ------------------------------------------------------------------------
+       1B. AI IMAGE (FLUX.1) & AI VECTOR (SVG) ENGINES
+       ------------------------------------------------------------------------ */
+
+    function buildAIVectorSVGSystemPrompt(stylePreset) {
+        return [
+            'You are OpenPublisher\'s specialized AI Vector & SVG Graphic Generator.',
+            'Given a user request, generate a rich, beautiful, self-contained SVG illustration for publication layouts.',
+            '',
+            'CRITICAL RULES:',
+            '1. Return ONLY a single valid JSON object with EXACTLY this structure:',
+            '{',
+            '  "summary": "Short 1-sentence description of what was drawn",',
+            '  "svg": "<svg viewBox=\\"0 0 512 512\\" xmlns=\\"http://www.w3.org/2000/svg\\">...</svg>"',
+            '}',
+            '2. The SVG MUST have viewBox="0 0 512 512" and xmlns="http://www.w3.org/2000/svg".',
+            '3. Use rich, layered vector elements: <path>, <circle>, <rect>, <polygon>, <polyline>, <ellipse>, <defs>, <linearGradient>, <radialGradient>, <g>.',
+            '4. Give shapes clean fill and stroke colors with appealing color harmony. Transparent background by default so it can overlay any page background.',
+            '5. NEVER include <script> tags, foreignObject, or external <image> links.',
+            '6. The graphic must look professional, balanced, centered within the 512x512 canvas, and highly detailed.',
+            stylePreset ? `7. Target style preset: "${stylePreset}".` : '7. Support standard presets: Flat Illustration, Logo / Emblem, Line Art / Stencil, Isometric Icon, Sticker / Badge.',
+            '',
+            'Output ONLY valid, parseable JSON. Do not include markdown code fences or conversational prose.'
+        ].filter(Boolean).join('\n');
+    }
+
+    function sanitizeSvgMarkup(rawSvg) {
+        let svg = String(rawSvg || '').trim();
+        svg = svg.replace(/^```(?:svg|xml|html)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        const firstSvg = svg.indexOf('<svg');
+        const lastSvg = svg.lastIndexOf('</svg>');
+        if (firstSvg !== -1 && lastSvg !== -1) {
+            svg = svg.slice(firstSvg, lastSvg + 6);
+        }
+        // Strip scripts and dangerous inline event handlers
+        svg = svg.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        svg = svg.replace(/\bon\w+\s*=\s*(["'][^"']*["']|[^\s>]+)/gi, '');
+        svg = svg.replace(/<foreignObject\b[^<]*(?:(?!<\/foreignObject>)<[^<]*)*<\/foreignObject>/gi, '');
+        svg = svg.replace(/<image\b[^>]*>/gi, '');
+        if (!/viewBox\s*=/i.test(svg)) {
+            svg = svg.replace(/<svg\b/i, '<svg viewBox="0 0 512 512"');
+        }
+        if (!/xmlns\s*=/i.test(svg)) {
+            svg = svg.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        return svg;
+    }
+
+    async function generateAIVectorSVG(prompt, stylePreset, onStatus) {
+        const check = validatePrompt(prompt);
+        if (!check.valid) throw new Error(check.reason);
+
+        const remMs = getCooldownRemainingMs();
+        if (remMs > 0) {
+            const secs = Math.ceil(remMs / 1000);
+            throw new Error(`Please wait ${secs}s before generating again (20s cooldown).`);
+        }
+
+        const fullPrompt = stylePreset ? `${check.prompt} (Style: ${stylePreset})` : check.prompt;
+        const sysPrompt = buildAIVectorSVGSystemPrompt(stylePreset);
+
+        const res = await sendAIWorkerRequest(sysPrompt, fullPrompt, onStatus);
+        const plan = res.plan || {};
+        let svgMarkup = plan.svg;
+        if (!svgMarkup && typeof plan.markup === 'string') svgMarkup = plan.markup;
+        if (!svgMarkup && typeof plan.content === 'string') svgMarkup = plan.content;
+
+        if (!svgMarkup || typeof svgMarkup !== 'string' || !svgMarkup.includes('<svg')) {
+            throw new Error('AI worker did not return valid SVG vector markup.');
+        }
+
+        const cleanSvg = sanitizeSvgMarkup(svgMarkup);
+        return {
+            status: 'ok',
+            svg: cleanSvg,
+            summary: plan.summary || 'Vector Graphic',
+            nodeUrl: res.nodeUrl
+        };
+    }
+
+    async function generateAIImage(prompt, stylePreset, options) {
+        options = options || {};
+        const check = validatePrompt(prompt);
+        if (!check.valid) throw new Error(check.reason);
+
+        const remMs = getCooldownRemainingMs();
+        if (remMs > 0) {
+            const secs = Math.ceil(remMs / 1000);
+            throw new Error(`Please wait ${secs}s before generating again (20s cooldown).`);
+        }
+
+        const deviceId = getDeviceId();
+        let finalPrompt = check.prompt;
+        if (stylePreset) {
+            finalPrompt += `, ${stylePreset}`;
+        }
+
+        if (typeof options.onStatus === 'function') {
+            options.onStatus({ phase: 'requesting', url: AI_IMAGE_WORKER_URL });
+        }
+
+        let res;
+        try {
+            res = await fetch(AI_IMAGE_WORKER_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Device-ID': deviceId
+                },
+                body: JSON.stringify({ prompt: finalPrompt })
+            });
+        } catch (netErr) {
+            throw new Error(`Network error connecting to AI image worker: ${netErr?.message || netErr}`);
+        }
+
+        if (res.status === 429) {
+            let msg = 'Rate limit reached (HTTP 429). Please wait a moment before sending another AI image request.';
+            try {
+                const errData = await res.json();
+                if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
+            } catch (_) {}
+            const rateErr = new Error(msg);
+            rateErr.code = 'RATE_LIMIT';
+            rateErr.status = 429;
+            throw rateErr;
+        }
+
+        if (res.status === 503) {
+            // Daily GPU quota reached - automatically fall back to vector SVG illustration
+            if (typeof options.onStatus === 'function') {
+                options.onStatus({ phase: 'fallback', reason: 'gpu_quota_503' });
+            }
+            const svgRes = await generateAIVectorSVG(prompt, stylePreset, options.onStatus);
+            return {
+                status: 'ok',
+                fallbackToSvg: true,
+                svg: svgRes.svg,
+                summary: svgRes.summary,
+                message: 'FLUX.1 GPU quota exceeded (503). Automatically fell back to generating a scalable vector SVG graphic!'
+            };
+        }
+
+        if (!res.ok) {
+            let msg = `Image worker error (${res.status})`;
+            try {
+                const errData = await res.json();
+                if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
+            } catch (_) {}
+            const httpErr = new Error(msg);
+            httpErr.code = 'HTTP_ERROR';
+            httpErr.status = res.status;
+            throw httpErr;
+        }
+
+        const data = await res.json();
+        markGenerationTimestamp();
+
+        const dataUrl = data.dataUrl || data.image || data.url;
+        if (!dataUrl) {
+            throw new Error('Image worker did not return a valid image data URL.');
+        }
+
+        return {
+            status: 'ok',
+            fallbackToSvg: false,
+            dataUrl,
+            prompt: finalPrompt
+        };
+    }
+
+    function ensureBaselineHistory() {
+        if (typeof global.deselect === 'function') global.deselect();
+        if (global.state) {
+            const hasSnap = Array.isArray(global.state.history) && global.state.history.length > 0 && global.state.historyIndex >= 0;
+            if (!hasSnap) {
+                if (typeof global.originalPushHistory === 'function') {
+                    global.originalPushHistory();
+                    if (typeof global.syncLastSavedHistory === 'function') global.syncLastSavedHistory();
+                } else if (typeof global.pushHistory === 'function') {
+                    global.pushHistory(true);
+                }
+            }
+        }
+    }
+
+    function insertAIImageToCanvas(dataUrl, options) {
+        options = options || {};
+        const paper = document.getElementById('paper');
+        if (!paper) return null;
+
+        ensureBaselineHistory();
+
+        if (options.asBackground) {
+            paper.style.background = `url("${dataUrl}") center center / cover no-repeat`;
+            if (typeof global.updateThumbnails === 'function') global.updateThumbnails();
+            if (typeof global.originalPushHistory === 'function') {
+                global.originalPushHistory();
+                if (typeof global.syncLastSavedHistory === 'function') global.syncLastSavedHistory();
+            } else if (typeof global.pushHistory === 'function') {
+                global.pushHistory(true);
+            }
+            return null;
+        }
+
+        const imgHtml = `<img src="${dataUrl}" alt="AI Generated Image" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+        const el = global.createWrapper(imgHtml);
+        if (el) {
+            el.setAttribute('data-type', 'image');
+            const paperW = parseFloat(paper.style.width) || 794;
+            const paperH = parseFloat(paper.style.height) || 1123;
+            const w = Math.round(Math.min(360, paperW * 0.7));
+            const h = Math.round(Math.min(270, paperH * 0.45));
+            el.style.width = w + 'px';
+            el.style.height = h + 'px';
+            el.style.left = Math.max(20, Math.round((paperW - w) / 2)) + 'px';
+            el.style.top = Math.max(20, Math.round((paperH - h) / 3)) + 'px';
+            if (typeof global.selectElement === 'function') global.selectElement(el);
+            if (typeof global.updateThumbnails === 'function') global.updateThumbnails();
+        }
+        return el;
+    }
+
+    function insertAIVectorToCanvas(cleanSvg, options) {
+        options = options || {};
+        const paper = document.getElementById('paper');
+        if (!paper) return null;
+
+        ensureBaselineHistory();
+
+        const innerHtml = `<div class="ai-vector-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">${cleanSvg}</div>`;
+        const el = global.createWrapper(innerHtml);
+        if (el) {
+            el.setAttribute('data-type', 'shape');
+            const svgInside = el.querySelector('svg');
+            if (svgInside) {
+                svgInside.style.width = '100%';
+                svgInside.style.height = '100%';
+                svgInside.style.display = 'block';
+            }
+            const paperW = parseFloat(paper.style.width) || 794;
+            const paperH = parseFloat(paper.style.height) || 1123;
+            const size = Math.round(Math.min(280, Math.min(paperW * 0.5, paperH * 0.5)));
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            el.style.left = Math.max(20, Math.round((paperW - size) / 2)) + 'px';
+            el.style.top = Math.max(20, Math.round((paperH - size) / 3)) + 'px';
+            if (typeof global.selectElement === 'function') global.selectElement(el);
+            if (typeof global.updateThumbnails === 'function') global.updateThumbnails();
+        }
+        return el;
+    }
+
+    /* ------------------------------------------------------------------------
        2. LIVE PAGE CONTEXT & COMPACT SYSTEM PROMPT GENERATOR
        ------------------------------------------------------------------------ */
 
@@ -375,7 +633,7 @@
             '  },',
             '  "elements": [',
             '    {',
-            '      "type": "text_box|styled_text_box|wordart_beta|wordart_legacy|clipart|table|styled_table|chart|ad_badge|page_part|emoji|symbol|shape|smart_arrow|border|progress_bar|coupon|qr_code|business_info|drawing_path|custom_html",',
+            '      "type": "text_box|styled_text_box|wordart_beta|wordart_legacy|clipart|table|styled_table|chart|ad_badge|page_part|emoji|symbol|shape|smart_arrow|border|progress_bar|coupon|qr_code|business_info|drawing_path|custom_html|ai_image|ai_vector",',
             '      "x_mm": 20, "y_mm": 20, "width_mm": 100, "height_mm": 40, "rotation": 0, "zIndex": 10,',
             '      "props": {}',
             '    }',
@@ -383,6 +641,8 @@
             '}',
             '',
             'ELEMENT PROPS GUIDE:',
+            '- ai_image: { prompt: "detailed image description", stylePreset?: "Photorealistic|Watercolor|3D Render|Digital Painting|Cinematic|Page Texture", borderRadiusPx?: number }',
+            '- ai_vector: { svg?: "inline SVG markup", stylePreset?: "Flat Illustration|Logo / Emblem|Line Art|Sticker Badge|Detailed Scene" }',
             '- text_box: { text, html, fontFamily, fontSizePx (10-120), color, backgroundColor, bold, italic, underline, align ("left|center|right|justify"), lineHeight, paddingPx, border, borderRadius }',
             '- styled_text_box: { styleId ("quote-teal|quote-gold|callout-soft|callout-tip|card-dark|card-elevated|card-frosted|card-header|stat-highlight|pill-vibrant|pill-dark|ticket-coupon|frame-classic|accent-top|solid-theme|quote-modern|callout-warning|callout-success|card-sunset|card-ocean|card-neon-cyber|pill-gold|stat-glass|ticket-retro|frame-certificate|accent-left-bold|quote-crimson|quote-emerald|quote-navy-academic|callout-danger|callout-info|callout-note"), text, html, fontSizePx, align, color }',
             '- wordart_beta: { text, styleId (1-200: 1=Gold/Blue, 2=Chrome, 3=Rainbow, 4=Pink/Black, 30=GoldArch, 31=CyanGlow, 33=Fire, 34=Ice, 41=CircleGold, 43=PurpleNeon, 47=TealPink) }',
@@ -1778,6 +2038,41 @@
                 return applyPlacement(el, item, dpi, 300, 160);
             }
 
+            case 'ai_image': {
+                const dataUrl = item._resolvedDataUrl || props.dataUrl || props.src;
+                if (dataUrl) {
+                    const br = props.borderRadiusPx ? `border-radius:${props.borderRadiusPx}px;` : '';
+                    const op = props.opacity !== undefined ? `opacity:${props.opacity};` : '';
+                    el = global.createWrapper(`<img src="${dataUrl}" alt="AI Generated Image" style="width:100%; height:100%; object-fit:cover; display:block; ${br}${op}">`);
+                    el.setAttribute('data-type', 'image');
+                    return applyPlacement(el, item, dpi, 240, 180);
+                }
+                if (item._resolvedSvg) {
+                    return createAIElement(Object.assign({}, item, {
+                        type: 'ai_vector',
+                        props: { svg: item._resolvedSvg }
+                    }), dpi);
+                }
+                return null;
+            }
+
+            case 'ai_vector': {
+                const svgCode = item._resolvedSvg || props.svg;
+                if (svgCode) {
+                    const cleanSvg = sanitizeSvgMarkup(svgCode);
+                    el = global.createWrapper(`<div class="ai-vector-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">${cleanSvg}</div>`);
+                    el.setAttribute('data-type', 'shape');
+                    const svgInside = el.querySelector('svg');
+                    if (svgInside) {
+                        svgInside.style.width = '100%';
+                        svgInside.style.height = '100%';
+                        svgInside.style.display = 'block';
+                    }
+                    return applyPlacement(el, item, dpi, 200, 200);
+                }
+                return null;
+            }
+
             default:
                 return null;
         }
@@ -1836,6 +2131,24 @@
 
             if (Array.isArray(plan.elements)) {
                 await resolveClipartSources(plan.elements);
+
+                // Pre-resolve any ai_image elements before synchronous DOM placement so Ctrl+Z remains atomic
+                for (let i = 0; i < plan.elements.length; i++) {
+                    const item = plan.elements[i];
+                    if (item && item.type === 'ai_image' && item.props && item.props.prompt) {
+                        try {
+                            const imgRes = await generateAIImage(item.props.prompt, item.props.stylePreset || '');
+                            if (imgRes && imgRes.dataUrl) {
+                                item._resolvedDataUrl = imgRes.dataUrl;
+                            } else if (imgRes && imgRes.fallbackToSvg && imgRes.svg) {
+                                item._resolvedSvg = imgRes.svg;
+                            }
+                        } catch (imgErr) {
+                            console.warn('[AI Assistant] Pre-resolving ai_image failed:', imgErr);
+                        }
+                    }
+                }
+
                 let lastCreatedEl = null;
                 for (let i = 0; i < plan.elements.length; i++) {
                     try {
@@ -1882,7 +2195,7 @@
     }
 
     /* ------------------------------------------------------------------------
-       6. OPENPUBLISHER-STYLED DRAGGABLE MODAL UI
+       6. OPENPUBLISHER-STYLED DRAGGABLE 3-TAB MODAL UI
        ------------------------------------------------------------------------ */
 
     const SAMPLE_PROMPTS = [
@@ -1891,6 +2204,26 @@
         { label: 'Data Report', text: 'Add a styled financial summary table, column chart comparing Q1 to Q4 revenue, and progress bar KPI indicator' },
         { label: 'Certificate', text: 'Create an Achievement Certificate layout with ornate certificate border, floral border art, gold WordArt title, and signature block' },
         { label: 'Dark & Grid', text: 'Switch UI to Dark Mode and turn on Grid and Baselines' }
+    ];
+
+    const IMAGE_PRESETS = ['Photorealistic', 'Watercolor', '3D Render', 'Digital Painting', 'Cinematic', 'Page Texture'];
+
+    const IMAGE_SAMPLES = [
+        { label: 'Mountain Cabin', text: 'Snowy mountain cabin at sunrise with glowing windows, photorealistic, warm lighting' },
+        { label: 'Watercolor Flowers', text: 'Vibrant watercolor floral bouquet with gentle pastel washes and delicate leaves' },
+        { label: '3D Gold Trophy', text: 'Glossy 3D gold champion trophy with sparkling studio reflection and dramatic shadow' },
+        { label: 'Silk Waves', text: 'Elegant abstract silk ribbons undulating in rich teal and golden waves' },
+        { label: 'Parchment Texture', text: 'Antique textured parchment paper with subtle tea-stain edges and fine grain' }
+    ];
+
+    const VECTOR_PRESETS = ['Flat Illustration', 'Logo / Emblem', 'Line Art / Stencil', 'Sticker / Badge', 'Detailed Scene'];
+
+    const VECTOR_SAMPLES = [
+        { label: 'Rocket Launch', text: 'Retro space rocket launching into stars with fiery flame trail, vibrant flat illustration' },
+        { label: 'Coffee Emblem', text: 'Modern minimalist coffee shop emblem with steaming cup, coffee beans, and circular ribbon' },
+        { label: 'Origami Swan', text: 'Geometric origami swan floating on subtle geometric water ripple, clean vector' },
+        { label: 'Security Shield', text: 'Cybersecurity shield badge with padlock, metallic gradient, and safety stars' },
+        { label: 'Tree of Life', text: 'Spreading tree of life with swirling roots and leaves, stencil line art graphic' }
     ];
 
     function ensureModalMarkup() {
@@ -1902,43 +2235,136 @@
         overlay.className = 'custom-dialog-overlay op-ai-overlay';
         overlay.style.display = 'none';
 
-        const chipsHtml = SAMPLE_PROMPTS.map((sp, idx) =>
+        const layoutChipsHtml = SAMPLE_PROMPTS.map((sp, idx) =>
             `<button type="button" class="op-ai-chip" data-sample-idx="${idx}" title="${escapeHtml(sp.text)}">${escapeHtml(sp.label)}</button>`
+        ).join('');
+
+        const imgPresetsHtml = IMAGE_PRESETS.map(p =>
+            `<button type="button" class="op-ai-chip op-ai-preset-chip" data-type="img" data-preset="${escapeHtml(p)}">${escapeHtml(p)}</button>`
+        ).join('');
+
+        const imgSamplesHtml = IMAGE_SAMPLES.map(s =>
+            `<button type="button" class="op-ai-chip op-ai-sample-chip" data-target="img" data-text="${escapeHtml(s.text)}" title="${escapeHtml(s.text)}">${escapeHtml(s.label)}</button>`
+        ).join('');
+
+        const vecPresetsHtml = VECTOR_PRESETS.map(p =>
+            `<button type="button" class="op-ai-chip op-ai-preset-chip" data-type="vec" data-preset="${escapeHtml(p)}">${escapeHtml(p)}</button>`
+        ).join('');
+
+        const vecSamplesHtml = VECTOR_SAMPLES.map(s =>
+            `<button type="button" class="op-ai-chip op-ai-sample-chip" data-target="vec" data-text="${escapeHtml(s.text)}" title="${escapeHtml(s.text)}">${escapeHtml(s.label)}</button>`
         ).join('');
 
         overlay.innerHTML = `
             <div class="custom-dialog op-ai-dialog" id="op-ai-dialog" style="transform: translate(0px, 0px);">
                 <div class="custom-dialog-header" id="op-ai-dialog-header">
-                    <span><i class="fas fa-wand-magic-sparkles" style="margin-right:8px;"></i>OpenPublisher AI Assistant</span>
+                    <span><i class="fas fa-wand-magic-sparkles" style="margin-right:8px;"></i>OpenPublisher AI Studio</span>
                     <span class="custom-dialog-close" id="op-ai-close-btn" title="Close (Esc)"><i class="fas fa-times"></i></span>
                 </div>
                 <div class="custom-dialog-body op-ai-body">
-                    <div class="op-ai-context-bar" id="op-ai-context-bar">Loading page context...</div>
+                    <!-- Tab Strip -->
+                    <div class="op-ai-tab-strip" role="tablist">
+                        <button type="button" class="op-ai-tab active" data-tab="layout" role="tab" aria-selected="true"><i class="fas fa-layer-group"></i>Page Layout</button>
+                        <button type="button" class="op-ai-tab" data-tab="image" role="tab" aria-selected="false"><i class="fas fa-image"></i>AI Image (Photo & Art)</button>
+                        <button type="button" class="op-ai-tab" data-tab="vector" role="tab" aria-selected="false"><i class="fas fa-bezier-curve"></i>AI Vector (Crisp SVG)</button>
+                    </div>
 
-                    <div class="op-ai-field-wrap">
-                        <div class="op-ai-label-row">
-                            <label for="op-ai-prompt" class="op-ai-label">Describe a layout, element, or app command:</label>
-                            <span class="op-ai-char-hint" id="op-ai-char-hint">Min 8 chars, multi-word</span>
+                    <!-- TAB 1: Page Layout -->
+                    <div class="op-ai-tab-panel" id="op-ai-tab-layout">
+                        <div class="op-ai-context-bar" id="op-ai-context-bar">Loading page context...</div>
+
+                        <div class="op-ai-field-wrap">
+                            <div class="op-ai-label-row">
+                                <label for="op-ai-prompt" class="op-ai-label">Describe a layout, element, or app command:</label>
+                                <span class="op-ai-char-hint" id="op-ai-char-hint">Min 8 chars, multi-word</span>
+                            </div>
+                            <textarea id="op-ai-prompt" class="op-ai-textarea" rows="3" placeholder="e.g., Create an autumn farmer's market flyer with a ribbon ad badge, orange gradient background, styled callout box, and QR code..."></textarea>
                         </div>
-                        <textarea id="op-ai-prompt" class="op-ai-textarea" rows="4" placeholder="e.g., Create an autumn farmer's market flyer with a ribbon ad badge, orange gradient background, styled callout box, and QR code..."></textarea>
+
+                        <div class="op-ai-chips-row">
+                            <span class="op-ai-chips-title">Quick ideas:</span>
+                            <div class="op-ai-chips-list">${layoutChipsHtml}</div>
+                        </div>
+
+                        <label class="op-ai-checkbox-row">
+                            <input type="checkbox" id="op-ai-clear-checkbox">
+                            <span>Clear current page elements before generating layout</span>
+                        </label>
                     </div>
 
-                    <div class="op-ai-chips-row">
-                        <span class="op-ai-chips-title">Quick ideas:</span>
-                        <div class="op-ai-chips-list">${chipsHtml}</div>
+                    <!-- TAB 2: AI Image (Photo & Art) -->
+                    <div class="op-ai-tab-panel hidden" id="op-ai-tab-image">
+                        <div class="op-ai-info-badge op-ai-info-image">
+                            <i class="fas fa-camera" style="font-size:16px; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong>🖼️ AI Image (Pixel Artwork & Photos):</strong> Generates rich, detailed raster images (JPEG) such as photographs, watercolors, 3D renders, and textured backgrounds. Best for realistic scenes and posters. Need a crisp logo, icon, or illustration that scales to any print size without blurring? Switch to <strong>AI Vector (SVG)</strong>.</div>
+                        </div>
+
+                        <div class="op-ai-field-wrap">
+                            <div class="op-ai-label-row">
+                                <label for="op-ai-img-prompt" class="op-ai-label">Describe the image to generate:</label>
+                                <span class="op-ai-char-hint" id="op-ai-img-char-hint">Min 8 chars, multi-word</span>
+                            </div>
+                            <textarea id="op-ai-img-prompt" class="op-ai-textarea" rows="3" placeholder="e.g., A cozy wooden cabin in the snowy mountains at sunrise with warm glowing windows..."></textarea>
+                        </div>
+
+                        <div class="op-ai-chips-row">
+                            <span class="op-ai-chips-title">Style preset:</span>
+                            <div class="op-ai-chips-list" id="op-ai-img-presets">${imgPresetsHtml}</div>
+                        </div>
+
+                        <div class="op-ai-field-wrap">
+                            <span class="op-ai-chips-title" style="margin-bottom:2px;">Placement:</span>
+                            <div class="op-ai-radio-group">
+                                <label class="op-ai-radio-option">
+                                    <input type="radio" name="op-ai-img-placement" value="canvas" checked>
+                                    <span>Insert as Canvas Picture</span>
+                                </label>
+                                <label class="op-ai-radio-option">
+                                    <input type="radio" name="op-ai-img-placement" value="background">
+                                    <span>Set as Page Background</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="op-ai-chips-row">
+                            <span class="op-ai-chips-title">Quick ideas:</span>
+                            <div class="op-ai-chips-list">${imgSamplesHtml}</div>
+                        </div>
                     </div>
 
-                    <label class="op-ai-checkbox-row">
-                        <input type="checkbox" id="op-ai-clear-checkbox">
-                        <span>Clear current page elements before generating layout</span>
-                    </label>
+                    <!-- TAB 3: AI Vector (Crisp SVG) -->
+                    <div class="op-ai-tab-panel hidden" id="op-ai-tab-vector">
+                        <div class="op-ai-info-badge op-ai-info-vector">
+                            <i class="fas fa-bezier-curve" style="font-size:16px; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong>✒️ What is an AI Vector (SVG)?</strong> Unlike standard pixel images that can get blurry when stretched, <strong>SVG (Scalable Vector Graphics)</strong> are drawn using mathematical shapes, curves, and gradients. They stay <strong>100% razor-sharp at any print size</strong> (from a business card to a giant poster), have transparent backgrounds, and let you recolor individual shapes using OpenPublisher's <strong>CSS Colors & Style</strong> tool! Best for logos, clipart, icons, badges, and flat illustrations.</div>
+                        </div>
 
+                        <div class="op-ai-field-wrap">
+                            <div class="op-ai-label-row">
+                                <label for="op-ai-vec-prompt" class="op-ai-label">Describe the vector graphic or illustration:</label>
+                                <span class="op-ai-char-hint" id="op-ai-vec-char-hint">Min 8 chars, multi-word</span>
+                            </div>
+                            <textarea id="op-ai-vec-prompt" class="op-ai-textarea" rows="3" placeholder="e.g., A modern coffee shop logo with a steaming mug, coffee beans, and circular ribbon banner..."></textarea>
+                        </div>
+
+                        <div class="op-ai-chips-row">
+                            <span class="op-ai-chips-title">Vector style:</span>
+                            <div class="op-ai-chips-list" id="op-ai-vec-presets">${vecPresetsHtml}</div>
+                        </div>
+
+                        <div class="op-ai-chips-row">
+                            <span class="op-ai-chips-title">Quick ideas:</span>
+                            <div class="op-ai-chips-list">${vecSamplesHtml}</div>
+                        </div>
+                    </div>
+
+                    <!-- Shared Status Box -->
                     <div class="op-ai-status" id="op-ai-status" style="display:none;"></div>
                 </div>
                 <div class="custom-dialog-footer op-ai-footer">
                     <button type="button" class="btn-secondary op-ai-undo-btn" id="op-ai-undo-btn" style="display:none; margin-right:auto;" title="Undo last AI generation in one step (Ctrl+Z)"><i class="fas fa-undo" style="margin-right:5px;"></i>Undo AI Action</button>
                     <button type="button" class="btn-secondary" id="op-ai-cancel-btn">Close</button>
-                    <button type="button" class="btn-primary op-ai-submit-btn" id="op-ai-submit-btn"><i class="fas fa-wand-magic-sparkles" style="margin-right:6px;"></i>Generate</button>
+                    <button type="button" class="btn-primary op-ai-submit-btn" id="op-ai-submit-btn"><i class="fas fa-wand-magic-sparkles" style="margin-right:6px;"></i>Generate Layout</button>
                 </div>
             </div>
         `;
@@ -1955,6 +2381,60 @@
         document.getElementById('op-ai-cancel-btn').onclick = closeModal;
         document.getElementById('op-ai-submit-btn').onclick = handleSubmit;
 
+        // Tab switching
+        overlay.querySelectorAll('.op-ai-tab').forEach(tabBtn => {
+            tabBtn.onclick = () => {
+                const target = tabBtn.getAttribute('data-tab');
+                switchTab(target);
+            };
+        });
+
+        // Preset chip toggles
+        overlay.querySelectorAll('.op-ai-preset-chip').forEach(btn => {
+            btn.onclick = () => {
+                const type = btn.getAttribute('data-type');
+                const preset = btn.getAttribute('data-preset') || '';
+                const container = btn.parentElement;
+                const wasActive = btn.classList.contains('active-preset');
+
+                if (container) {
+                    container.querySelectorAll('.op-ai-preset-chip').forEach(b => b.classList.remove('active-preset'));
+                }
+
+                if (!wasActive) {
+                    btn.classList.add('active-preset');
+                    if (type === 'img') _selectedImgPreset = preset;
+                    else _selectedVecPreset = preset;
+                } else {
+                    if (type === 'img') _selectedImgPreset = '';
+                    else _selectedVecPreset = '';
+                }
+            };
+        });
+
+        // Sample prompt chips
+        overlay.querySelectorAll('.op-ai-sample-chip').forEach(btn => {
+            btn.onclick = () => {
+                const target = btn.getAttribute('data-target');
+                const txt = btn.getAttribute('data-text') || '';
+                if (target === 'img') {
+                    const inp = document.getElementById('op-ai-img-prompt');
+                    if (inp) {
+                        inp.value = txt;
+                        updateValidationHint('image');
+                        inp.focus();
+                    }
+                } else if (target === 'vec') {
+                    const inp = document.getElementById('op-ai-vec-prompt');
+                    if (inp) {
+                        inp.value = txt;
+                        updateValidationHint('vector');
+                        inp.focus();
+                    }
+                }
+            };
+        });
+
         const undoBtn = document.getElementById('op-ai-undo-btn');
         undoBtn.onclick = () => {
             if (typeof global.undo === 'function') {
@@ -1964,25 +2444,46 @@
             }
         };
 
-        const promptInput = document.getElementById('op-ai-prompt');
-        promptInput.addEventListener('keydown', (e) => {
+        // Textarea keydown and input listeners
+        const layoutInput = document.getElementById('op-ai-prompt');
+        layoutInput.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 handleSubmit();
             }
         });
-        promptInput.addEventListener('input', updateValidationHint);
+        layoutInput.addEventListener('input', () => updateValidationHint('layout'));
+
+        const imgInput = document.getElementById('op-ai-img-prompt');
+        imgInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        });
+        imgInput.addEventListener('input', () => updateValidationHint('image'));
+
+        const vecInput = document.getElementById('op-ai-vec-prompt');
+        vecInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        });
+        vecInput.addEventListener('input', () => updateValidationHint('vector'));
+
         overlay.addEventListener('focusout', (e) => {
             e.stopPropagation();
         });
 
-        overlay.querySelectorAll('.op-ai-chip').forEach(btn => {
+        // Tab 1 layout samples
+        overlay.querySelectorAll('#op-ai-tab-layout .op-ai-chip[data-sample-idx]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.getAttribute('data-sample-idx'), 10);
                 if (SAMPLE_PROMPTS[idx]) {
-                    promptInput.value = SAMPLE_PROMPTS[idx].text;
-                    updateValidationHint();
-                    promptInput.focus();
+                    layoutInput.value = SAMPLE_PROMPTS[idx].text;
+                    updateValidationHint('layout');
+                    layoutInput.focus();
                 }
             });
         });
@@ -1996,6 +2497,50 @@
         return overlay;
     }
 
+    function switchTab(tabId) {
+        const valid = ['layout', 'image', 'vector'];
+        const activeTab = valid.includes(tabId) ? tabId : 'layout';
+        _currentActiveTab = activeTab;
+
+        const overlay = document.getElementById('op-ai-modal-overlay');
+        if (!overlay) return;
+
+        overlay.querySelectorAll('.op-ai-tab').forEach(tb => {
+            const isTarget = tb.getAttribute('data-tab') === activeTab;
+            tb.classList.toggle('active', isTarget);
+            tb.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        });
+
+        const panels = {
+            layout: document.getElementById('op-ai-tab-layout'),
+            image: document.getElementById('op-ai-tab-image'),
+            vector: document.getElementById('op-ai-tab-vector')
+        };
+        Object.keys(panels).forEach(k => {
+            if (panels[k]) {
+                panels[k].classList.toggle('hidden', k !== activeTab);
+            }
+        });
+
+        refreshCooldownUI();
+
+        setTimeout(() => {
+            if (activeTab === 'layout') {
+                const p = document.getElementById('op-ai-prompt');
+                if (p) p.focus();
+                updateValidationHint('layout');
+            } else if (activeTab === 'image') {
+                const p = document.getElementById('op-ai-img-prompt');
+                if (p) p.focus();
+                updateValidationHint('image');
+            } else if (activeTab === 'vector') {
+                const p = document.getElementById('op-ai-vec-prompt');
+                if (p) p.focus();
+                updateValidationHint('vector');
+            }
+        }, 50);
+    }
+
     function updateContextBar() {
         const bar = document.getElementById('op-ai-context-bar');
         if (!bar) return;
@@ -2003,23 +2548,27 @@
         bar.innerHTML = `<i class="fas fa-file-alt" style="margin-right:6px; color:var(--ui-theme-color);"></i><strong>${escapeHtml(ctx.format)}</strong> &bull; ${ctx.width_mm} &times; ${ctx.height_mm} mm (${ctx.orientation}) &bull; Units: ${escapeHtml(ctx.activeUnit)} &bull; Scheme: <strong>${escapeHtml(ctx.colorScheme)}</strong>`;
     }
 
-    function updateValidationHint() {
-        const hint = document.getElementById('op-ai-char-hint');
-        const input = document.getElementById('op-ai-prompt');
-        if (!hint || !input) return;
-        const val = input.value.trim();
+    function updateValidationHint(tabId = _currentActiveTab) {
+        const inputs = {
+            layout: { input: document.getElementById('op-ai-prompt'), hint: document.getElementById('op-ai-char-hint') },
+            image: { input: document.getElementById('op-ai-img-prompt'), hint: document.getElementById('op-ai-img-char-hint') },
+            vector: { input: document.getElementById('op-ai-vec-prompt'), hint: document.getElementById('op-ai-vec-char-hint') }
+        };
+        const target = inputs[tabId] || inputs.layout;
+        if (!target.input || !target.hint) return;
+        const val = target.input.value.trim();
         if (!val) {
-            hint.textContent = 'Min 8 chars, multi-word';
-            hint.className = 'op-ai-char-hint';
+            target.hint.textContent = 'Min 8 chars, multi-word';
+            target.hint.className = 'op-ai-char-hint';
             return;
         }
         const check = validatePrompt(val);
         if (check.valid) {
-            hint.textContent = `${val.length} chars (ready)`;
-            hint.className = 'op-ai-char-hint ok';
+            target.hint.textContent = `${val.length} chars (ready)`;
+            target.hint.className = 'op-ai-char-hint ok';
         } else {
-            hint.textContent = `${val.length} chars`;
-            hint.className = 'op-ai-char-hint warn';
+            target.hint.textContent = `${val.length} chars`;
+            target.hint.className = 'op-ai-char-hint warn';
         }
     }
 
@@ -2040,13 +2589,21 @@
         const btn = document.getElementById('op-ai-submit-btn');
         if (!btn || btn.dataset.busy === 'true') return;
         const remMs = getCooldownRemainingMs();
+
+        const labels = {
+            layout: '<i class="fas fa-wand-magic-sparkles" style="margin-right:6px;"></i>Generate Layout',
+            image: '<i class="fas fa-image" style="margin-right:6px;"></i>Generate Image',
+            vector: '<i class="fas fa-bezier-curve" style="margin-right:6px;"></i>Generate Vector (SVG)'
+        };
+        const defaultLabel = labels[_currentActiveTab] || labels.layout;
+
         if (remMs > 0) {
             const secs = Math.ceil(remMs / 1000);
             btn.disabled = true;
             btn.innerHTML = `<i class="fas fa-hourglass-half" style="margin-right:6px;"></i>Wait ${secs}s`;
         } else {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-wand-magic-sparkles" style="margin-right:6px;"></i>Generate';
+            btn.innerHTML = defaultLabel;
         }
     }
 
@@ -2069,6 +2626,16 @@
     }
 
     async function handleSubmit() {
+        if (_currentActiveTab === 'image') {
+            return handleSubmitImage();
+        }
+        if (_currentActiveTab === 'vector') {
+            return handleSubmitVector();
+        }
+        return handleSubmitLayout();
+    }
+
+    async function handleSubmitLayout() {
         const input = document.getElementById('op-ai-prompt');
         const submitBtn = document.getElementById('op-ai-submit-btn');
         const clearCheckbox = document.getElementById('op-ai-clear-checkbox');
@@ -2091,11 +2658,13 @@
 
         submitBtn.dataset.busy = 'true';
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i>Generating...';
+        submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i>Generating Layout...';
 
         const clearPage = !!(clearCheckbox && clearCheckbox.checked);
         const userPrompt = clearPage
-            ? `${check.prompt}\n\n(Note: clearCurrentPage is requested so start from a clean page.)`
+            ? `${check.prompt}
+
+(Note: clearCurrentPage is requested so start from a clean page.)`
             : check.prompt;
         const systemPrompt = buildAISystemPrompt(getCurrentPageContext());
 
@@ -2126,14 +2695,113 @@
         }
     }
 
-    function showModal() {
+    async function handleSubmitImage() {
+        const input = document.getElementById('op-ai-img-prompt');
+        const submitBtn = document.getElementById('op-ai-submit-btn');
+        const undoBtn = document.getElementById('op-ai-undo-btn');
+        if (!input || !submitBtn) return;
+
+        const check = validatePrompt(input.value);
+        if (!check.valid) {
+            showStatus('error', escapeHtml(check.reason));
+            return;
+        }
+
+        const remMs = getCooldownRemainingMs();
+        if (remMs > 0) {
+            const secs = Math.ceil(remMs / 1000);
+            showStatus('error', `Please wait ${secs} second${secs === 1 ? '' : 's'} before generating again (20s cooldown).`);
+            startCooldownTicker();
+            return;
+        }
+
+        submitBtn.dataset.busy = 'true';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i>Generating Image...';
+
+        const placementRadio = document.querySelector('input[name="op-ai-img-placement"]:checked');
+        const asBackground = placementRadio && placementRadio.value === 'background';
+
+        try {
+            showStatus('info', 'Connecting to FLUX.1 AI Image Worker (openpub-img-1)...');
+            const result = await generateAIImage(check.prompt, _selectedImgPreset, {
+                onStatus: (st) => {
+                    if (st.phase === 'fallback') {
+                        showStatus('info', 'GPU quota reached (503) - falling back to SVG vector graphic...');
+                    }
+                }
+            });
+
+            if (result.fallbackToSvg) {
+                insertAIVectorToCanvas(result.svg);
+                showStatus('info', `<strong>FLUX.1 Notice:</strong> Daily GPU quota reached (503). Automatically fell back to generating a scalable vector SVG graphic!`);
+            } else {
+                insertAIImageToCanvas(result.dataUrl, { asBackground });
+                const locMsg = asBackground ? 'set as page background' : 'added to canvas';
+                showStatus('success', `<strong>Done:</strong> AI Image generated and ${locMsg}.`);
+            }
+
+            if (undoBtn) undoBtn.style.display = 'inline-flex';
+            startCooldownTicker();
+        } catch (err) {
+            showStatus('error', escapeHtml(err?.message || 'Unable to generate AI image.'));
+        } finally {
+            delete submitBtn.dataset.busy;
+            refreshCooldownUI();
+        }
+    }
+
+    async function handleSubmitVector() {
+        const input = document.getElementById('op-ai-vec-prompt');
+        const submitBtn = document.getElementById('op-ai-submit-btn');
+        const undoBtn = document.getElementById('op-ai-undo-btn');
+        if (!input || !submitBtn) return;
+
+        const check = validatePrompt(input.value);
+        if (!check.valid) {
+            showStatus('error', escapeHtml(check.reason));
+            return;
+        }
+
+        const remMs = getCooldownRemainingMs();
+        if (remMs > 0) {
+            const secs = Math.ceil(remMs / 1000);
+            showStatus('error', `Please wait ${secs} second${secs === 1 ? '' : 's'} before generating again (20s cooldown).`);
+            startCooldownTicker();
+            return;
+        }
+
+        submitBtn.dataset.busy = 'true';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;"></i>Generating Vector...';
+
+        try {
+            showStatus('info', 'Generating scalable vector artwork across AI cluster...');
+            const result = await generateAIVectorSVG(check.prompt, _selectedVecPreset, (st) => {
+                if (st.phase === 'rollover') {
+                    showStatus('info', `Worker node ${st.nodeIndex}/${st.totalNodes} busy (503) - rolling over...`);
+                }
+            });
+
+            insertAIVectorToCanvas(result.svg);
+            showStatus('success', `<strong>Done:</strong> ${escapeHtml(result.summary || 'Scalable Vector SVG added to canvas.')}`);
+
+            if (undoBtn) undoBtn.style.display = 'inline-flex';
+            startCooldownTicker();
+        } catch (err) {
+            showStatus('error', escapeHtml(err?.message || 'Unable to generate AI vector.'));
+        } finally {
+            delete submitBtn.dataset.busy;
+            refreshCooldownUI();
+        }
+    }
+
+    function showModal(initialTab = 'layout') {
         const overlay = ensureModalMarkup();
         updateContextBar();
-        updateValidationHint();
+        switchTab(initialTab || 'layout');
         overlay.style.display = 'flex';
         startCooldownTicker();
-        const input = document.getElementById('op-ai-prompt');
-        if (input) setTimeout(() => input.focus(), 60);
     }
 
     function closeModal() {
@@ -2147,10 +2815,14 @@
        ------------------------------------------------------------------------ */
 
     global.buildAISystemPrompt = buildAISystemPrompt;
+    global.buildAIVectorSVGSystemPrompt = buildAIVectorSVGSystemPrompt;
     global.applyAILayoutResponse = applyAILayoutResponse;
+    global.generateAIImage = generateAIImage;
+    global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.20.1',
+        VERSION: '5.20.2',
         WORKER_NODES: AI_WORKER_NODES.slice(),
+        IMAGE_WORKER_URL: AI_IMAGE_WORKER_URL,
         COOLDOWN_MS,
         MIN_PROMPT_LENGTH,
         getDeviceId,
@@ -2159,12 +2831,19 @@
         shuffleNodes,
         getCurrentPageContext,
         buildAISystemPrompt,
+        buildAIVectorSVGSystemPrompt,
+        sanitizeSvgMarkup,
         requestLayout: sendAIWorkerRequest,
+        generateAIImage,
+        generateAIVectorSVG,
+        insertAIImageToCanvas,
+        insertAIVectorToCanvas,
         applyLayout: applyAILayoutResponse,
         ensureReadableContrast,
         gateAppCommands,
         showModal,
-        closeModal
+        closeModal,
+        switchTab
     };
 
 })(window);

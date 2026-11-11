@@ -1,5 +1,5 @@
-// Open Publisher Service Worker (v5.20.1)
-const CACHE_NAME = 'open-publisher-v5-20-1-1';
+// Open Publisher Service Worker (v5.20.2)
+const CACHE_NAME = 'open-publisher-v5-20-2-1';
 
 self.addEventListener('install', (event) => {
     // Activate worker immediately once installed
@@ -22,6 +22,7 @@ self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     const url = new URL(event.request.url);
     if (!url.protocol.startsWith('http')) return;
+    if (url.origin !== self.location.origin) return;
 
     event.respondWith(
         fetch(event.request, { cache: 'no-cache' })
