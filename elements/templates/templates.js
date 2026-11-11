@@ -271,7 +271,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.20.0`;
+    return `${path}?v=5.20.1`;
 };
 
 function initTemplates() {
@@ -440,6 +440,7 @@ function initTemplates() {
 function loadTemplate(opubData) {
     const doWipeAndLoad = () => {
         state.pages = []; // Wipe document
+        if (typeof window.resetDocumentWatermark === 'function') window.resetDocumentWatermark(); else delete state.watermark;
         state.history = [];
         state.historyIndex = -1;
         state.dpi = opubData.dpi || (opubData.pages && opubData.pages[0] && opubData.pages[0].dpi) || 96;

@@ -1,10 +1,10 @@
 // ========================================================
-// Open Publisher Watermark Engine (v5.20.0)
+// Open Publisher Watermark Engine (v5.20.1)
 // Document Watermark Stamps & Tiled Security Patterns
 // ========================================================
 
 (function initWatermarkEngine() {
-    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.20.0)...");
+    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.20.1)...");
 
     const PRESETS = {
         draft: {
@@ -1046,10 +1046,13 @@
         }
     }
 
-    function remove() {
+    function remove(silent) {
         if (typeof state === 'undefined') return;
         delete state.watermark;
         renderWatermarkOnCanvas();
+
+        // Silent mode (new document / template load / AI page clear): no history entry, modal close or toast
+        if (silent === true) return;
 
         if (typeof pushHistory === 'function') {
             pushHistory();
@@ -1084,6 +1087,13 @@
         shouldApplyToPage,
         generateWatermarkHTML,
         renderWatermarkOnCanvas
+    };
+
+    // Clears any active watermark (state + #page-watermark DOM) when a brand new document or template is started
+    window.resetDocumentWatermark = function() {
+        remove(true);
+        const stale = document.getElementById('page-watermark');
+        if (stale) stale.remove();
     };
 
     window.showWatermarkModal = showModal;

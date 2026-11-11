@@ -1,5 +1,5 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.20.0)
+   OpenPublisher AI Layout & Command Assistant (v5.20.1)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
    - Compact Dynamic System Prompt Builder (buildAISystemPrompt)
@@ -337,6 +337,8 @@
             `ACTIVE DOCUMENT CONTEXT: Format=${ctx.format}, Size=${ctx.width_mm}x${ctx.height_mm}mm (${ctx.width_active}x${ctx.height_active}${ctx.activeUnit}), Orientation=${ctx.orientation}, ActiveUnits=${ctx.activeUnit}, Margins_mm=${JSON.stringify(ctx.margins_mm)}, ColorScheme="${ctx.colorScheme}" [${schemePaletteStr}], DarkMode=${!!ctx.isDarkMode}, ExistingElements=${ctx.elementCount}.`,
             'COORDINATES: Always use millimeters (x_mm, y_mm, width_mm, height_mm) relative to top-left (0,0). Keep elements cleanly inside page dimensions with good typography, visual hierarchy, and no unintended overlap.',
             '- SPACING RULE: Leave at least 10mm of vertical gap between stacked elements so headings, badges, and boxes never overlap. When borderArt is used, keep all elements at least 20mm away from the page edges (x_mm >= 20, y_mm >= 20).',
+            '- APP COMMANDS RULE: Leave "appCommands" empty ({}) UNLESS the user explicitly asks to change the app UI theme, dark/light mode, guides, grid, baselines, bounds, spreads, proofing, or tools. Colorful or themed layouts MUST use pageConfig.colorScheme or pageConfig.pageTheme, NEVER appCommands.uiTheme.',
+            '- CONTRAST RULE: Dark backgrounds (page or element fill) require light text (#ffffff or #f8fafc); light backgrounds require dark text (#0f172a or #1e293b). Light cards placed on dark pages must use dark text. Never place similar-toned text on a background.',
             '',
             'REQUIRED 3-PART JSON SCHEMA:',
             '{',
@@ -518,34 +520,332 @@
         return el;
     }
 
-    function findClipartFilename(query, explicitFilename) {
-        const lib = Array.isArray(global.webClipartLibrary) ? global.webClipartLibrary : [];
-        if (explicitFilename && lib.includes(explicitFilename)) return explicitFilename;
-        if (explicitFilename && !query) return explicitFilename;
+    /* ------------------------------------------------------------------------
+       Command gating, WCAG contrast guard & real clipart lookup
+       ------------------------------------------------------------------------ */
 
-        if (!lib.length) return explicitFilename || null;
-        const q = String(query || '').toLowerCase().trim();
-        if (!q) return lib[0];
+    const UI_THEME_INTENT_RE = /\b(ui\s*theme|dark\s*mode|light\s*mode|app\s*theme|interface)\b/i;
+    const GUIDES_INTENT_RE = /\b(guide|guides|margin\s*guides)\b/i;
+    const VIEW_AID_INTENT_RE = /\b(grid|baseline|baselines|bound|bounds|boundaries|spread|spreads)\b/i;
+    const CONTRAST_MIN = 4.2;
+    const CONTRAST_CHECKED_TYPES = new Set(['text_box', 'styled_text_box', 'table', 'styled_table', 'coupon', 'page_part', 'custom_html', 'business_info', 'symbol']);
 
-        const tokens = q.split(/[^a-z0-9]+/).filter(Boolean);
-        let bestFile = null;
-        let bestScore = 0;
-        for (let i = 0; i < lib.length; i++) {
-            const fname = lib[i];
-            const lower = fname.toLowerCase();
-            let score = 0;
-            for (let t = 0; t < tokens.length; t++) {
-                if (lower.includes(tokens[t])) score++;
-            }
-            if (score === tokens.length && tokens.length > 0) {
-                return fname;
-            }
-            if (score > bestScore) {
-                bestScore = score;
-                bestFile = fname;
+    /** Drops app-level UI/view commands the user did not explicitly ask for. */
+    function gateAppCommands(cmds, userPrompt) {
+        if (!cmds || typeof cmds !== 'object') return null;
+        const text = String(userPrompt || '');
+        const gated = Object.assign({}, cmds);
+        if (!UI_THEME_INTENT_RE.test(text)) delete gated.uiTheme;
+        if (!GUIDES_INTENT_RE.test(text)) delete gated.toggleGuides;
+        if (!VIEW_AID_INTENT_RE.test(text)) {
+            delete gated.toggleGrid;
+            delete gated.toggleBaselines;
+            delete gated.toggleBounds;
+            delete gated.toggleSpreads;
+        }
+        return gated;
+    }
+
+    function parseColor(str) {
+        if (typeof str !== 'string') return null;
+        let s = str.trim();
+        const vm = s.match(/^var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)$/);
+        if (vm) {
+            const resolved = getComputedStyle(document.documentElement).getPropertyValue(vm[1]).trim();
+            s = resolved || (vm[2] ? vm[2].trim() : '');
+        }
+        s = s.toLowerCase();
+        if (!s) return null;
+        if (s === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+        if (s === 'white') return { r: 255, g: 255, b: 255, a: 1 };
+        if (s === 'black') return { r: 0, g: 0, b: 0, a: 1 };
+        let m = s.match(/#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3})\b/);
+        if (m) {
+            let h = m[1];
+            if (h.length === 3) h = h.split('').map(c => c + c).join('');
+            return {
+                r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16),
+                a: h.length === 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1
+            };
+        }
+        m = s.match(/rgba?\(([^)]+)\)/);
+        if (m) {
+            const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+            if (p.length >= 3 && p.slice(0, 3).every(n => !isNaN(n))) {
+                let a = p.length > 3 && !isNaN(p[3]) ? p[3] : 1;
+                if (a > 1) a = a / 100;
+                return { r: p[0], g: p[1], b: p[2], a };
             }
         }
-        return bestFile || explicitFilename || null;
+        return null;
+    }
+
+    function averageGradientColor(str) {
+        if (typeof str !== 'string' || !str.includes('gradient')) return null;
+        const found = str.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g);
+        if (!found) return null;
+        const cols = found.map(parseColor).filter(c => c && c.a > 0);
+        if (!cols.length) return null;
+        const n = cols.length;
+        return {
+            r: cols.reduce((s, c) => s + c.r, 0) / n,
+            g: cols.reduce((s, c) => s + c.g, 0) / n,
+            b: cols.reduce((s, c) => s + c.b, 0) / n,
+            a: Math.min(1, cols.reduce((s, c) => s + c.a, 0) / n)
+        };
+    }
+
+    function relLuminance(c) {
+        const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    }
+
+    function contrastRatio(a, b) {
+        const l1 = relLuminance(a), l2 = relLuminance(b);
+        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    }
+
+    function compositeOver(top, base) {
+        const a = top.a === undefined ? 1 : top.a;
+        return { r: top.r * a + base.r * (1 - a), g: top.g * a + base.g * (1 - a), b: top.b * a + base.b * (1 - a), a: 1 };
+    }
+
+    function rgbToCss(c) {
+        return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+    }
+
+    function getPageBackgroundRgb() {
+        const white = { r: 255, g: 255, b: 255, a: 1 };
+        const paper = document.getElementById('paper');
+        if (!paper) return white;
+        if (paper.getAttribute('data-theme-saved') === 'true') {
+            const c1 = parseColor(paper.getAttribute('data-theme-c1') || '');
+            const c2 = parseColor(paper.getAttribute('data-theme-c2') || '');
+            if (c1) {
+                if (c2 && paper.getAttribute('data-theme-type') === 'gradient') {
+                    return { r: (c1.r + c2.r) / 2, g: (c1.g + c2.g) / 2, b: (c1.b + c2.b) / 2, a: 1 };
+                }
+                return compositeOver(c1, white);
+            }
+        }
+        const cs = getComputedStyle(paper);
+        const grad = averageGradientColor(cs.backgroundImage);
+        if (grad) return compositeOver(grad, white);
+        const c = parseColor(cs.backgroundColor);
+        return c && c.a > 0 ? compositeOver(c, white) : white;
+    }
+
+    /**
+     * WCAG-based guard: returns fgHex unchanged when it already reads well on bgHex (null bg = page background),
+     * otherwise returns white (dark background) or near-black (light background).
+     */
+    function ensureReadableContrast(fgHex, bgHex) {
+        const fg = parseColor(String(fgHex || ''));
+        if (!fg) return fgHex;
+        let bg = parseColor(String(bgHex || ''));
+        const page = getPageBackgroundRgb();
+        bg = bg ? (bg.a < 0.99 ? compositeOver(bg, page) : bg) : page;
+        const fgSolid = fg.a < 1 ? compositeOver(fg, bg) : fg;
+        if (contrastRatio(fgSolid, bg) >= CONTRAST_MIN) return fgHex;
+        return relLuminance(bg) < 0.42 ? '#ffffff' : '#0f172a';
+    }
+
+    function getEffectiveBackgroundRgb(node, paper, pageRgb) {
+        const layers = [];
+        let cur = node;
+        while (cur && cur !== paper && cur.nodeType === 1) {
+            const cs = getComputedStyle(cur);
+            let layer = averageGradientColor(cs.backgroundImage);
+            if (!layer) {
+                const c = parseColor(cs.backgroundColor);
+                if (c && c.a > 0) layer = c;
+            }
+            if (layer) {
+                layers.push(layer);
+                if (layer.a >= 0.99) break;
+            }
+            cur = cur.parentElement;
+        }
+        let result = pageRgb;
+        for (let i = layers.length - 1; i >= 0; i--) result = compositeOver(layers[i], result);
+        return result;
+    }
+
+    /** Walks every text-bearing node in a created element and fixes unreadable text/background combinations. */
+    function fixElementContrast(root) {
+        const paper = document.getElementById('paper');
+        if (!root || !paper) return 0;
+        const pageRgb = getPageBackgroundRgb();
+        const nodes = [root].concat(Array.from(root.querySelectorAll('*'))).slice(0, 600);
+        let fixed = 0;
+        nodes.forEach(n => {
+            if (n.namespaceURI && n.namespaceURI.indexOf('svg') !== -1) return;
+            if (n.classList && (n.classList.contains('resize-handle') || n.classList.contains('rotate-handle') || n.classList.contains('rotate-stick'))) return;
+            if (!Array.from(n.childNodes).some(t => t.nodeType === 3 && t.textContent.trim())) return;
+            const curColor = getComputedStyle(n).color;
+            const fg = parseColor(curColor);
+            if (!fg || fg.a < 0.1) return;
+            const bg = getEffectiveBackgroundRgb(n, paper, pageRgb);
+            const out = ensureReadableContrast(curColor, rgbToCss(bg));
+            if (out !== curColor) {
+                n.style.setProperty('color', out, 'important');
+                fixed++;
+            }
+        });
+        return fixed;
+    }
+
+    /* ---- Clipart: local library fuzzy match -> built-in illustrations -> Iconify -> generic (never text) ---- */
+
+    const CLIPART_STOPWORDS = new Set(['a', 'an', 'the', 'of', 'and', 'for', 'with', 'icon', 'icons', 'picture', 'image', 'images', 'clipart', 'clip', 'art', 'illustration', 'png', 'small', 'big', 'large', 'simple', 'cute', 'little']);
+    let _clipartIndex = null;
+    let _clipartIndexSize = -1;
+
+    function stemWord(w) {
+        w = String(w).toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (w.length > 4 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+        if (w.length > 5 && w.endsWith('ing')) return w.slice(0, -3);
+        if (w.length > 4 && /(ches|shes|sses|xes)$/.test(w)) return w.slice(0, -2);
+        if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) return w.slice(0, -1);
+        return w;
+    }
+
+    function tokenizeWords(text) {
+        return String(text || '').toLowerCase().split(/[^a-z0-9]+/).filter(t => t && !CLIPART_STOPWORDS.has(t) && !/^\d+$/.test(t)).map(stemWord).filter(t => t.length > 1);
+    }
+
+    function getClipartLibrary() {
+        let lib = null;
+        try { if (typeof webClipartLibrary !== 'undefined' && Array.isArray(webClipartLibrary)) lib = webClipartLibrary; } catch (e) { /* not loaded */ }
+        if (!lib && Array.isArray(global.CLIPART_DATA)) lib = global.CLIPART_DATA;
+        return (lib || []).map(i => (typeof i === 'string' ? i : (i && (i.file || i.filename)) || '')).filter(Boolean);
+    }
+
+    function getClipartBaseUrl() {
+        try { if (typeof webClipartBaseUrl === 'string') return webClipartBaseUrl; } catch (e) { /* not loaded */ }
+        return 'https://wsrv.nl/?url=acr.floydcraft.co.uk/clipart/';
+    }
+
+    function buildClipartIndex(lib) {
+        if (_clipartIndex && _clipartIndexSize === lib.length) return _clipartIndex;
+        _clipartIndex = lib.map(file => {
+            const name = file.replace(/\.png$/i, '').replace(/-\d+$/, '')
+                .replace(/_PNG_Clip_Art|_PNG_Clipart|_PNG_Image|_Clip_Art_PNG_Image|_Clip_Art|_Clipart|_PNG/gi, '').replace(/_/g, ' ');
+            return { file, tokens: tokenizeWords(name) };
+        });
+        _clipartIndexSize = lib.length;
+        return _clipartIndex;
+    }
+
+    function findLocalClipart(query, explicitFilename) {
+        const lib = getClipartLibrary();
+        if (!lib.length) return null;
+        if (explicitFilename && lib.includes(explicitFilename)) return explicitFilename;
+        const qStems = tokenizeWords(query);
+        if (!qStems.length) return null;
+        const need = Math.max(1, Math.ceil(qStems.length / 2));
+        let best = null;
+        let bestScore = -Infinity;
+        buildClipartIndex(lib).forEach(entry => {
+            let matched = 0;
+            let score = 0;
+            qStems.forEach(q => {
+                if (entry.tokens.includes(q)) { matched++; score += 4; }
+                else if (q.length >= 4 && entry.tokens.some(t => t.startsWith(q))) { matched++; score += 2; }
+            });
+            if (matched < need) return;
+            score = score * 10 - entry.tokens.length + (matched === qStems.length ? 100 : 0);
+            if (score > bestScore) { bestScore = score; best = entry.file; }
+        });
+        return best;
+    }
+
+    function svgToDataUri(svg) {
+        return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    const SVG_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
+    const BUILTIN_CLIPART = {
+        tree: SVG_OPEN + '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#047857"/></linearGradient></defs><rect x="44" y="78" width="12" height="16" rx="2" fill="#92400e"/><polygon points="50,6 74,38 62,38 82,62 66,62 90,84 10,84 34,62 18,62 38,38 26,38" fill="url(#g)" stroke="#065f46" stroke-width="2" stroke-linejoin="round"/><circle cx="42" cy="58" r="3" fill="#fde047"/><circle cx="60" cy="72" r="3" fill="#f87171"/><circle cx="52" cy="40" r="3" fill="#60a5fa"/></svg>',
+        star: SVG_OPEN + '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde047"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38" fill="url(#g)" stroke="#d97706" stroke-width="3" stroke-linejoin="round"/></svg>',
+        gift: SVG_OPEN + '<rect x="14" y="44" width="72" height="46" rx="4" fill="#ef4444"/><rect x="10" y="32" width="80" height="16" rx="4" fill="#dc2626"/><rect x="44" y="32" width="12" height="58" fill="#fde047"/><path d="M50 32C38 10 20 16 28 28C34 34 46 32 50 32Z" fill="#fde047" stroke="#eab308" stroke-width="2"/><path d="M50 32C62 10 80 16 72 28C66 34 54 32 50 32Z" fill="#facc15" stroke="#eab308" stroke-width="2"/></svg>',
+        heart: SVG_OPEN + '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient></defs><path d="M50 90C10 60 6 30 26 20C38 14 47 22 50 30C53 22 62 14 74 20C94 30 90 60 50 90Z" fill="url(#g)"/><ellipse cx="33" cy="32" rx="7" ry="4" fill="#fff" opacity="0.35" transform="rotate(-30 33 32)"/></svg>',
+        trophy: SVG_OPEN + '<path d="M30 20H16c0 16 8 24 18 26M70 20h14c0 16-8 24-18 26" fill="none" stroke="#eab308" stroke-width="5" stroke-linecap="round"/><path d="M30 12h40v30c0 14-9 24-20 24s-20-10-20-24Z" fill="#facc15" stroke="#ca8a04" stroke-width="3"/><rect x="45" y="66" width="10" height="12" fill="#ca8a04"/><rect x="32" y="78" width="36" height="10" rx="3" fill="#a16207"/><polygon points="50,24 54,34 65,34 56,40 59,50 50,44 41,50 44,40 35,34 46,34" fill="#fff7ae"/></svg>',
+        rocket: SVG_OPEN + '<path d="M34 58L16 78L36 72Z" fill="#ef4444"/><path d="M66 58L84 78L64 72Z" fill="#ef4444"/><path d="M42 72C44 84 50 96 50 96C50 96 56 84 58 72Z" fill="#f59e0b"/><path d="M50 4C68 20 72 48 66 72H34C28 48 32 20 50 4Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="3"/><circle cx="50" cy="38" r="9" fill="#38bdf8" stroke="#0369a1" stroke-width="3"/></svg>',
+        sun: SVG_OPEN + '<g stroke="#f59e0b" stroke-width="6" stroke-linecap="round"><path d="M50 6v12M50 82v12M6 50h12M82 50h12M19 19l9 9M72 72l9 9M81 19l-9 9M28 72l-9 9"/></g><circle cx="50" cy="50" r="22" fill="#fbbf24" stroke="#f59e0b" stroke-width="3"/></svg>',
+        flower: SVG_OPEN + '<path d="M50 60V94" stroke="#16a34a" stroke-width="5" stroke-linecap="round"/><path d="M50 82C62 74 72 78 76 70C64 68 56 74 50 82Z" fill="#22c55e"/><g fill="#f472b6" stroke="#db2777" stroke-width="2"><circle cx="50" cy="24" r="14"/><circle cx="72" cy="40" r="14"/><circle cx="64" cy="64" r="14"/><circle cx="36" cy="64" r="14"/><circle cx="28" cy="40" r="14"/></g><circle cx="50" cy="48" r="11" fill="#fde047" stroke="#eab308" stroke-width="2"/></svg>',
+        balloon: SVG_OPEN + '<path d="M50 78q-8 8 0 12t0 8" fill="none" stroke="#64748b" stroke-width="2"/><ellipse cx="50" cy="38" rx="26" ry="32" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/><polygon points="45,70 55,70 50,77" fill="#b91c1c"/><ellipse cx="40" cy="24" rx="6" ry="10" fill="#fff" opacity="0.35" transform="rotate(25 40 24)"/></svg>',
+        lightbulb: SVG_OPEN + '<path d="M50 8C32 8 20 21 20 37c0 12 6 18 11 24 3 4 4 7 4 11h30c0-4 1-7 4-11 5-6 11-12 11-24C80 21 68 8 50 8Z" fill="#fde047" stroke="#eab308" stroke-width="3"/><rect x="36" y="76" width="28" height="7" rx="3" fill="#94a3b8"/><rect x="40" y="85" width="20" height="6" rx="3" fill="#64748b"/></svg>'
+    };
+    const BUILTIN_CLIPART_ALIASES = {
+        xmas: 'tree', pine: 'tree', fir: 'tree', oak: 'tree', forest: 'tree', plant: 'tree',
+        stars: 'star', favourite: 'star', favorite: 'star', rating: 'star',
+        present: 'gift', gifts: 'gift', birthday: 'balloon', party: 'balloon', celebration: 'balloon',
+        love: 'heart', romance: 'heart', valentine: 'heart',
+        award: 'trophy', winner: 'trophy', champion: 'trophy', prize: 'trophy', cup: 'trophy',
+        launch: 'rocket', space: 'rocket', startup: 'rocket', spaceship: 'rocket',
+        sunshine: 'sun', summer: 'sun', blossom: 'flower', rose: 'flower', daisy: 'flower', floral: 'flower',
+        idea: 'lightbulb', bulb: 'lightbulb', light: 'lightbulb'
+    };
+
+    function findBuiltinClipart(query) {
+        const stems = tokenizeWords(query);
+        for (let i = 0; i < stems.length; i++) {
+            const key = BUILTIN_CLIPART[stems[i]] ? stems[i] : BUILTIN_CLIPART_ALIASES[stems[i]];
+            if (key && BUILTIN_CLIPART[key]) return svgToDataUri(BUILTIN_CLIPART[key]);
+        }
+        return null;
+    }
+
+    const GENERIC_CLIPART_SVG = SVG_OPEN + '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs><path d="M50 6L60 38L94 50L60 62L50 94L40 62L6 50L40 38Z" fill="url(#g)" stroke="#0f766e" stroke-width="2" stroke-linejoin="round"/></svg>';
+
+    async function fetchIconifyDataUri(query) {
+        const q = encodeURIComponent(String(query || '').trim());
+        if (!q) return null;
+        const scheme = global.colorSchemes && global.state && global.colorSchemes[global.state.currentScheme];
+        const tint = (scheme && /^#[0-9a-f]{3,8}$/i.test(scheme[3] || '')) ? scheme[3] : '#0f766e';
+        const searches = [
+            `https://api.iconify.design/search?query=${q}&limit=1&prefixes=noto,twemoji,fluent-emoji-flat,openmoji`,
+            `https://api.iconify.design/search?query=${q}&limit=1`
+        ];
+        for (let s = 0; s < searches.length; s++) {
+            try {
+                const sr = await fetch(searches[s]);
+                if (!sr.ok) continue;
+                const data = await sr.json();
+                const icon = data && Array.isArray(data.icons) ? data.icons[0] : null;
+                if (!icon || icon.indexOf(':') < 0) continue;
+                const parts = icon.split(':');
+                const svgRes = await fetch(`https://api.iconify.design/${parts[0]}/${parts[1]}.svg`);
+                if (!svgRes.ok) continue;
+                let svg = await svgRes.text();
+                if (!/<svg[\s>]/i.test(svg)) continue;
+                svg = svg.replace(/currentColor/g, tint);
+                if (!/\sxmlns=/.test(svg)) svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+                return svgToDataUri(svg);
+            } catch (e) { /* try next source */ }
+        }
+        return null;
+    }
+
+    async function resolveClipartSource(item) {
+        const props = (item && item.props) || {};
+        const query = props.query || props.name || props.keyword || '';
+        const file = findLocalClipart(query, props.filename);
+        if (file) return { src: getClipartBaseUrl() + encodeURIComponent(file), kind: 'library', file };
+        const builtin = findBuiltinClipart(query);
+        if (builtin) return { src: builtin, kind: 'builtin' };
+        const iconify = await fetchIconifyDataUri(query);
+        if (iconify) return { src: iconify, kind: 'iconify' };
+        return { src: svgToDataUri(GENERIC_CLIPART_SVG), kind: 'generic' };
+    }
+
+    async function resolveClipartSources(elements) {
+        await Promise.all(elements.map(async item => {
+            if (item && String(item.type).toLowerCase().trim() === 'clipart') {
+                item._resolvedClipart = await resolveClipartSource(item);
+            }
+        }));
     }
 
     function buildShapeFallbackSvg(shapeName) {
@@ -792,6 +1092,11 @@
             ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'con', 'hue', 'tex', 'size'].forEach(a => {
                 paper.removeAttribute(`data-theme-${a}`);
             });
+            // Reset any previous watermark unless this plan explicitly supplies a new one
+            if (!cfg.watermark) {
+                if (global.WatermarkEngine && typeof global.WatermarkEngine.remove === 'function') global.WatermarkEngine.remove(true);
+                if (global.state) delete global.state.watermark;
+            }
             stats.pageChanges.push('cleared');
         }
 
@@ -1104,13 +1409,12 @@
             }
 
             case 'clipart': {
-                const fname = findClipartFilename(props.query, props.filename);
-                const highResBase = 'https://wsrv.nl/?url=acr.floydcraft.co.uk/clipart/';
-                const safeTitle = escapeHtml(props.query || fname || 'ClipArt');
-                const fallbackSvg = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="16" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="4"/><text x="60" y="64" font-size="14" font-family="Segoe UI,sans-serif" font-weight="700" text-anchor="middle" fill="#334155">${safeTitle.slice(0, 14)}</text></svg>`)}`;
-                const imgSrc = fname ? `${highResBase}${encodeURIComponent(fname)}` : fallbackSvg;
+                const res = item._resolvedClipart || { src: svgToDataUri(GENERIC_CLIPART_SVG), kind: 'generic' };
+                const genericUri = svgToDataUri(GENERIC_CLIPART_SVG);
+                const altText = escapeHtml(props.query || 'Clipart');
+                const corsAttr = res.kind === 'library' ? ' crossorigin="anonymous"' : '';
                 el = global.createWrapper(
-                    `<div style="width:100%; height:100%; position:relative;"><img src="${imgSrc}" data-clipart-file="${escapeHtml(fname || '')}" data-clipart-query="${safeTitle}" crossorigin="anonymous" draggable="false" onerror="this.onerror=null;this.src='${fallbackSvg}';" style="width:100%; height:100%; object-fit:contain; display:block; ${props.opacity !== undefined ? `opacity:${props.opacity};` : ''}"></div>`
+                    `<div style="width:100%; height:100%; position:relative;"><img src="${res.src}" alt="${altText}" data-clipart-kind="${res.kind}" data-clipart-file="${escapeHtml(res.file || '')}"${corsAttr} draggable="false" onerror="this.onerror=null;this.src='${genericUri}';" style="width:100%; height:100%; object-fit:contain; display:block; ${props.opacity !== undefined ? `opacity:${props.opacity};` : ''}"></div>`
                 );
                 el.setAttribute('data-type', 'image');
                 return applyPlacement(el, item, dpi, 160, 160);
@@ -1286,7 +1590,7 @@
                 const innerMarkup = resolveShapeInnerMarkup(props.shapeName || 'Rectangle');
                 const svgHtml = `<svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible; position:absolute; top:0; left:0; ${opacity}"><g class="shape-path" vector-effect="non-scaling-stroke" fill="${fill}" stroke="${stroke}" stroke-width="${sw}">${innerMarkup}</g></svg>`;
                 const labelOverlay = props.text
-                    ? `<div style="position:relative; z-index:2; width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:8px; box-sizing:border-box; color:${props.textColor || '#ffffff'}; font-weight:600; font-size:${props.fontSizePx || 16}px; outline:none;" contenteditable="true">${escapeHtml(props.text).replace(/\n/g, '<br>')}</div>`
+                    ? `<div style="position:relative; z-index:2; width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:8px; box-sizing:border-box; color:${ensureReadableContrast(props.textColor || '#ffffff', fill)}; font-weight:600; font-size:${props.fontSizePx || 16}px; outline:none;" contenteditable="true">${escapeHtml(props.text).replace(/\n/g, '<br>')}</div>`
                     : '';
                 el = global.createWrapper(`${svgHtml}${labelOverlay}`);
                 el.setAttribute('data-type', 'shape');
@@ -1479,7 +1783,12 @@
         }
     }
 
-    async function applyAILayoutResponse(plan, options = {}) {
+    async function applyAILayoutResponse(plan, userPrompt, options) {
+        if (userPrompt && typeof userPrompt === 'object') {
+            options = userPrompt;
+            userPrompt = '';
+        }
+        options = options || {};
         if (!plan || typeof plan !== 'object') {
             throw new Error('Invalid AI layout payload.');
         }
@@ -1512,8 +1821,9 @@
         const dpi = (global.state && global.state.dpi) || 96;
 
         try {
-            if (plan.appCommands) {
-                executeAppCommands(plan.appCommands, stats);
+            const gatedCommands = gateAppCommands(plan.appCommands, userPrompt);
+            if (gatedCommands) {
+                executeAppCommands(gatedCommands, stats);
             }
 
             const pageCfg = Object.assign({}, plan.pageConfig || {});
@@ -1525,11 +1835,15 @@
             }
 
             if (Array.isArray(plan.elements)) {
+                await resolveClipartSources(plan.elements);
                 let lastCreatedEl = null;
                 for (let i = 0; i < plan.elements.length; i++) {
                     try {
                         const created = createAIElement(plan.elements[i], dpi);
                         if (created) {
+                            if (CONTRAST_CHECKED_TYPES.has(String(plan.elements[i].type).toLowerCase().trim())) {
+                                fixElementContrast(created);
+                            }
                             lastCreatedEl = created;
                             stats.elementsCreated++;
                         } else {
@@ -1794,7 +2108,7 @@
                 }
             });
 
-            const stats = await applyAILayoutResponse(result.plan, { forceClear: clearPage });
+            const stats = await applyAILayoutResponse(result.plan, check.prompt, { forceClear: clearPage });
             updateContextBar();
 
             const summaryText = result.plan.summary
@@ -1835,7 +2149,7 @@
     global.buildAISystemPrompt = buildAISystemPrompt;
     global.applyAILayoutResponse = applyAILayoutResponse;
     global.AIAssistant = {
-        VERSION: '5.20.0',
+        VERSION: '5.20.1',
         WORKER_NODES: AI_WORKER_NODES.slice(),
         COOLDOWN_MS,
         MIN_PROMPT_LENGTH,
@@ -1847,6 +2161,8 @@
         buildAISystemPrompt,
         requestLayout: sendAIWorkerRequest,
         applyLayout: applyAILayoutResponse,
+        ensureReadableContrast,
+        gateAppCommands,
         showModal,
         closeModal
     };

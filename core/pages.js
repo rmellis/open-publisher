@@ -887,6 +887,7 @@ function handleNewDocument() {
             const isLand = finalW >= finalH;
 
             state.pages = [];
+            if (typeof window.resetDocumentWatermark === 'function') window.resetDocumentWatermark(); else delete state.watermark;
             state.history = [];
             state.historyIndex = -1;
             state.dpi = d;
