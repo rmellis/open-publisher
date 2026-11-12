@@ -1,5 +1,5 @@
 /**
- * OpenPublisher Professional Comprehensive English Dictionary (v5.20.2)
+ * OpenPublisher Professional Comprehensive English Dictionary (v5.20.3)
  * Combines SCOWL (Spell Checking Oriented Word Lists), ENABLE1, standard UK/US/Commonwealth
  * vocabularies, graphic design / DTP / typography terminology, and common contractions.
  * Total vocabulary: 274,760 words.
@@ -35,5 +35,5 @@
         }
     });
 
-    console.log('[OpenPublisher] Comprehensive Proofing Dictionary v5.20.2 loaded (' + window.OPUB_DICTIONARY.size.toLocaleString() + ' words).');
+    console.log('[OpenPublisher] Comprehensive Proofing Dictionary v5.20.3 loaded (' + window.OPUB_DICTIONARY.size.toLocaleString() + ' words).');
 })();

@@ -4774,8 +4774,10 @@ body.linking-mode, body.linking-mode * {
 }
 
 .color-hex-input-wrapper input[type="text"] {
-    flex: 1;
+    flex: 1 1 0;
     width: auto;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 6px 8px;
     font-size: 13px;
     border: 1px solid #ccc;
@@ -4791,7 +4793,8 @@ body.linking-mode, body.linking-mode * {
 }
 
 .ccp-eyedropper {
-    margin-left: 10px;
+    flex: 0 0 auto;
+    margin-left: 8px;
     color: #555;
     font-size: 16px;
     cursor: pointer;
@@ -9679,7 +9682,7 @@ body.dark-mode #ad-btn-pick-solid {
 }
 
 /* =========================================================================
-   AI LAYOUT & COMMAND ASSISTANT MODAL & RIBBON CONTROLS (v5.20.2)
+   AI LAYOUT & COMMAND ASSISTANT MODAL & RIBBON CONTROLS (v5.20.3)
    ========================================================================= */
 .op-ai-btn-img {
     width: 28px;
