@@ -328,7 +328,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 | **Tables** | 100 styled templates, multi-cell selection, Excel import (xlsx/xls), convert to text, line height control |
 | **WordArt** | 214 creative styles (Curved, Neon, 3D Extrusion, Holographic, Vaporwave), live hue shifting, high-DPI vector font print baking |
 | **Clipart and Emojis** | 3,403 high-quality transparent images, searchable Twemoji gallery with skin tone picker, symbol inserter, QR code generator |
-| **AI Studio & Assistant** | Prompt-driven page layouts, FLUX.1 raster image generation, scalable vector SVG graphics, workspace commands, and single-step undo (no sign-up or API keys required) |
+| **AI Studio & Assistant** | Prompt-driven page layouts and scalable SVG vectors via a 7-node AI cluster, FLUX.1 raster image generation across a 7-node image cluster, workspace commands, and single-step undo (no sign-up or API keys required) |
 | **File Import** | Open and edit PDFs directly, plus dual-canvas Microsoft Publisher (`.pub`) and Word (`.doc`/`.docx`) import with editable text & preserved background graphics |
 | **Multi-Page Overview** | Decoupled from zoom, explicit toggle, keyboard navigation, thumbnail grid with double-click to edit |
 | **Security and Recovery** | AES-GCM password encryption, Document Inspector, automated crash dumps, safe mode launch flags |
@@ -808,8 +808,9 @@ The **WordArt Studio** generates styled typographic art across **214 creative st
 
 - **Natural-Language Page Design** - Generate complete, editable page layouts or add elements to an existing page from a plain-English prompt, with no sign-ups, API keys, or ads required.
 - **21 Editable Canvas Elements** - Create and position text boxes, styled callouts, WordArt, clipart, emojis, symbols, tables, charts, shapes, smart arrows, ad badges, page parts, progress bars, coupons, QR codes, business info blocks, vector drawings, and custom HTML/CSS cards.
-- **AI Image Generator** - Generate high-resolution photos, watercolors, 3D renders, and seamless page background textures powered by FLUX.1 with style presets and automatic SVG fallback.
+- **AI Image Generator** - Generate high-resolution photos, watercolors, 3D renders, and seamless page background textures powered by a 7-node FLUX.1 image cluster with automatic failover, style presets, and automatic SVG fallback.
 - **AI Vector (SVG) Generator** - Create crisp, scalable vector graphics, icons, badges, and illustrations that scale infinitely to any print size with transparent backgrounds and customizable styles.
+- **Dual 7-Node AI Infrastructure** - Backed by a 7-node layout and vector cluster (Gemini, Qwen, and GPT-OSS) alongside a separate 7-node FLUX.1 image cluster for reliable, zero-setup generation.
 - **Page Setup and Workspace Control** - Adjust paper size, orientation, margins, colour schemes, Theme Studio backgrounds, Border Art, watermarks, headers/footers, UI themes, grid/guides, colour proofing, and review tools from one prompt.
 - **Quick Access & Single-Step Undo** - Launch from **Home > AI Studio** or **Insert > AI Studio** (`AI Layout Assistant`, `AI Image`, or `AI Vector`), and revert any generation in one step with `Ctrl+Z`.
 
