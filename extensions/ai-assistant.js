@@ -1,5 +1,5 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.20.3)
+   OpenPublisher AI Layout & Command Assistant (v5.20.4)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
@@ -20,7 +20,10 @@
         'https://openpub-ai-7.openpublisher.workers.dev'
     ];
 
-    const AI_IMAGE_WORKER_URL = 'https://openpub-img-1.openpublisher.workers.dev';
+    const AI_IMAGE_WORKER_NODES = [
+        'https://openpub-img-1.openpublisher.workers.dev'
+        // Additional team Cloudflare Workers AI nodes (e.g. openpub-img-2) can be added here
+    ];
 
     const DEVICE_ID_STORAGE_KEY = 'opub_device_id';
     const COOLDOWN_STORAGE_KEY = 'opub_ai_last_gen_ts';
@@ -351,38 +354,82 @@
             finalPrompt += `, ${stylePreset}`;
         }
 
-        if (typeof options.onStatus === 'function') {
-            options.onStatus({ phase: 'requesting', url: AI_IMAGE_WORKER_URL });
-        }
+        const nodes = shuffleNodes(AI_IMAGE_WORKER_NODES);
+        let lastError = null;
+        let all503 = true;
 
-        let res;
-        try {
-            res = await fetch(AI_IMAGE_WORKER_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Device-ID': deviceId
-                },
-                body: JSON.stringify({ prompt: finalPrompt })
-            });
-        } catch (netErr) {
-            throw new Error(`Network error connecting to AI image worker: ${netErr?.message || netErr}`);
-        }
+        for (let i = 0; i < nodes.length; i++) {
+            const nodeUrl = nodes[i];
+            if (typeof options.onStatus === 'function') {
+                options.onStatus({ phase: 'requesting', url: nodeUrl, attempt: i + 1, total: nodes.length });
+            }
 
-        if (res.status === 429) {
-            let msg = 'Rate limit reached (HTTP 429). Please wait a moment before sending another AI image request.';
+            let res;
             try {
-                const errData = await res.json();
-                if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
-            } catch (_) {}
-            const rateErr = new Error(msg);
-            rateErr.code = 'RATE_LIMIT';
-            rateErr.status = 429;
-            throw rateErr;
+                res = await fetch(nodeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Device-ID': deviceId
+                    },
+                    body: JSON.stringify({ prompt: finalPrompt })
+                });
+            } catch (netErr) {
+                all503 = false;
+                lastError = new Error(`Network error connecting to AI image worker: ${netErr?.message || netErr}`);
+                continue;
+            }
+
+            if (res.status === 429) {
+                let msg = 'Rate limit reached (HTTP 429). Please wait a moment before sending another AI image request.';
+                try {
+                    const errData = await res.json();
+                    if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
+                } catch (_) {}
+                const rateErr = new Error(msg);
+                rateErr.code = 'RATE_LIMIT';
+                rateErr.status = 429;
+                throw rateErr;
+            }
+
+            if (res.status === 503) {
+                lastError = new Error('FLUX.1 GPU quota exceeded (503).');
+                continue;
+            }
+
+            all503 = false;
+            if (!res.ok) {
+                let msg = `Image worker error (${res.status})`;
+                try {
+                    const errData = await res.json();
+                    if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
+                } catch (_) {}
+                const httpErr = new Error(msg);
+                httpErr.code = 'HTTP_ERROR';
+                httpErr.status = res.status;
+                lastError = httpErr;
+                continue;
+            }
+
+            const data = await res.json();
+            const dataUrl = data.dataUrl || data.image || data.url;
+            if (!dataUrl) {
+                lastError = new Error('Image worker did not return a valid image data URL.');
+                continue;
+            }
+
+            markGenerationTimestamp();
+            return {
+                status: 'ok',
+                fallbackToSvg: false,
+                dataUrl,
+                prompt: finalPrompt,
+                nodeUrl
+            };
         }
 
-        if (res.status === 503) {
-            // Daily GPU quota reached - automatically fall back to vector SVG illustration
+        if (all503) {
+            // Daily GPU quota reached across all image nodes - automatically fall back to vector SVG illustration
             if (typeof options.onStatus === 'function') {
                 options.onStatus({ phase: 'fallback', reason: 'gpu_quota_503' });
             }
@@ -396,32 +443,7 @@
             };
         }
 
-        if (!res.ok) {
-            let msg = `Image worker error (${res.status})`;
-            try {
-                const errData = await res.json();
-                if (errData && (errData.message || errData.error)) msg = errData.message || errData.error;
-            } catch (_) {}
-            const httpErr = new Error(msg);
-            httpErr.code = 'HTTP_ERROR';
-            httpErr.status = res.status;
-            throw httpErr;
-        }
-
-        const data = await res.json();
-        markGenerationTimestamp();
-
-        const dataUrl = data.dataUrl || data.image || data.url;
-        if (!dataUrl) {
-            throw new Error('Image worker did not return a valid image data URL.');
-        }
-
-        return {
-            status: 'ok',
-            fallbackToSvg: false,
-            dataUrl,
-            prompt: finalPrompt
-        };
+        throw lastError || new Error('All AI image worker nodes failed.');
     }
 
     function ensureBaselineHistory() {
@@ -633,7 +655,7 @@
             '  },',
             '  "elements": [',
             '    {',
-            '      "type": "text_box|styled_text_box|wordart_beta|wordart_legacy|clipart|table|styled_table|chart|ad_badge|page_part|emoji|symbol|shape|smart_arrow|border|progress_bar|coupon|qr_code|business_info|drawing_path|custom_html|ai_image|ai_vector",',
+            '      "type": "text_box|styled_text_box|wordart_beta|wordart_legacy|clipart|table|styled_table|chart|ad_badge|page_part|emoji|symbol|shape|smart_arrow|border|progress_bar|coupon|qr_code|business_info|drawing_path|custom_html|ai_vector",',
             '      "x_mm": 20, "y_mm": 20, "width_mm": 100, "height_mm": 40, "rotation": 0, "zIndex": 10,',
             '      "props": {}',
             '    }',
@@ -641,7 +663,6 @@
             '}',
             '',
             'ELEMENT PROPS GUIDE:',
-            '- ai_image: { prompt: "detailed image description", stylePreset?: "Photorealistic|Watercolor|3D Render|Digital Painting|Cinematic|Page Texture", borderRadiusPx?: number }',
             '- ai_vector: { svg?: "inline SVG markup", stylePreset?: "Flat Illustration|Logo / Emblem|Line Art|Sticker Badge|Detailed Scene" }',
             '- text_box: { text, html, fontFamily, fontSizePx (10-120), color, backgroundColor, bold, italic, underline, align ("left|center|right|justify"), lineHeight, paddingPx, border, borderRadius }',
             '- styled_text_box: { styleId ("quote-teal|quote-gold|callout-soft|callout-tip|card-dark|card-elevated|card-frosted|card-header|stat-highlight|pill-vibrant|pill-dark|ticket-coupon|frame-classic|accent-top|solid-theme|quote-modern|callout-warning|callout-success|card-sunset|card-ocean|card-neon-cyber|pill-gold|stat-glass|ticket-retro|frame-certificate|accent-left-bold|quote-crimson|quote-emerald|quote-navy-academic|callout-danger|callout-info|callout-note"), text, html, fontSizePx, align, color }',
@@ -2820,9 +2841,9 @@
     global.generateAIImage = generateAIImage;
     global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.20.3',
+        VERSION: '5.20.4',
         WORKER_NODES: AI_WORKER_NODES.slice(),
-        IMAGE_WORKER_URL: AI_IMAGE_WORKER_URL,
+        IMAGE_WORKER_NODES: AI_IMAGE_WORKER_NODES.slice(),
         COOLDOWN_MS,
         MIN_PROMPT_LENGTH,
         getDeviceId,
