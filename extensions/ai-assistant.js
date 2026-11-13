@@ -1,5 +1,5 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.20.4)
+   OpenPublisher AI Layout & Command Assistant (v5.20.5)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
@@ -21,8 +21,13 @@
     ];
 
     const AI_IMAGE_WORKER_NODES = [
-        'https://openpub-img-1.openpublisher.workers.dev'
-        // Additional team Cloudflare Workers AI nodes (e.g. openpub-img-2) can be added here
+        'https://openpub-img-1.openpublisher.workers.dev',
+        'https://steep-cloud-9cd1.openpublisher-dev2.workers.dev',
+        'https://publisher-forest-d1c9.openpublisher-dev3.workers.dev',
+        'https://sky-publisher-c011.openpublisher-dev4.workers.dev',
+        'https://publication-bill-4ff6.openpublisher-dev5.workers.dev',
+        'https://jolly-publisher-a9fe.openpublisher-dev6.workers.dev',
+        'https://silent-publisher-b409.tallulah95.workers.dev'
     ];
 
     const DEVICE_ID_STORAGE_KEY = 'opub_device_id';
@@ -2841,7 +2846,7 @@
     global.generateAIImage = generateAIImage;
     global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.20.4',
+        VERSION: '5.20.5',
         WORKER_NODES: AI_WORKER_NODES.slice(),
         IMAGE_WORKER_NODES: AI_IMAGE_WORKER_NODES.slice(),
         COOLDOWN_MS,
