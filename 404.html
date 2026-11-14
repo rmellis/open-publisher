@@ -121,7 +121,7 @@
                 return;
             }
 
-            fetch('/elements/templates/template-index.json?v=5.20.6')
+            fetch('/elements/templates/template-index.json?v=5.20.7')
                 .then(function(res) {
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     return res.json();
@@ -162,6 +162,8 @@
                         [
                             it.template.name.trim().toLowerCase(),
                             it.cleanSlug,
+                            it.canonical.replace(/-/g, ''),
+                            it.cleanSlug.replace(/-/g, ''),
                             slugify(it.template.name, { stripNew: false }),
                             slugify(it.template.name, { expandAnd: true }),
                             slugify(it.template.name, { keepApostrophe: true })

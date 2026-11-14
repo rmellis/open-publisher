@@ -271,7 +271,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.20.6`;
+    return `${path}?v=5.20.7`;
 };
 
 function initTemplates() {
@@ -1042,7 +1042,7 @@ function showAdModal() { document.getElementById('ad-modal').style.display = 'fl
 function showTemplateModal() { document.getElementById('template-modal').style.display = 'flex'; }
 
 // ==========================================
-// STATIC TEMPLATE LINKS & DEEP-LINK ROUTER (v5.20.6)
+// STATIC TEMPLATE LINKS & DEEP-LINK ROUTER (v5.20.7)
 // ==========================================
 (function() {
     const RESERVED_QUERY_KEYS = new Set([
@@ -1179,7 +1179,7 @@ function showTemplateModal() { document.getElementById('template-modal').style.d
             const keepAposSlug = window.slugifyTemplateToken(t.name, { keepApostrophe: true });
             const bothAposAnd = window.slugifyTemplateToken(t.name, { expandAnd: true, keepApostrophe: true });
 
-            [withNewSlug, andSlug, keepAposSlug, bothAposAnd].forEach(alias => {
+            [withNewSlug, andSlug, keepAposSlug, bothAposAnd, record.canonicalSlug.replace(/-/g, ''), item.cleanSlug.replace(/-/g, '')].forEach(alias => {
                 if (!alias) return;
                 registerAlias(alias, record);
                 if (catSlug) {

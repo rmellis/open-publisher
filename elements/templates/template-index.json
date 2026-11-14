@@ -306,6 +306,13 @@
     ],
     "Flyers": [
         {
+            "name": "Winter Wonderland Workshop",
+            "file": "flyers_winter_wonderland_workshop.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
+        {
             "name": "Modern Tech Flyer (NEW)",
             "file": "flyers_modern_tech_flyer.opub",
             "width": 794,
@@ -1653,6 +1660,13 @@
         }
     ],
     "Posters": [
+        {
+            "name": "Back To School",
+            "file": "posters_back_to_school.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4"
+        },
         {
             "name": "Bold Sale Poster",
             "file": "posters_bold_sale_poster.opub",
