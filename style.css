@@ -2061,7 +2061,7 @@ body.classic-cursors-enabled .force-move-cursor * {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.35);
     box-shadow: 0 12px 28px -4px rgba(0, 45, 42, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    z-index: 10000;
+    z-index: 1000000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -3489,6 +3489,36 @@ body.dark-mode .ruler-selection-marker-v.is-marquee {
             box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-theme-color) 30%, transparent) !important; 
             transform: translateY(-2px);
             border-color: var(--ui-theme-dark) !important; 
+        }
+
+        .tp-link-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.72);
+            color: #ffffff;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            opacity: 0;
+            padding: 0;
+            transition: opacity 0.16s ease, background-color 0.16s ease;
+        }
+        .tp-item:hover .tp-link-btn,
+        .tp-item:focus-within .tp-link-btn {
+            opacity: 1;
+        }
+        .tp-link-btn:hover,
+        .tp-link-btn.copied {
+            opacity: 1;
+            background: var(--ui-theme-color, #007670);
         }
 
         /* Double Scrollbar & Modal Height Lock */
@@ -8600,7 +8630,7 @@ body.dark-mode .template-multipage-banner div > div:nth-child(2) {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.35);
     box-shadow: 0 12px 28px -4px rgba(0, 45, 42, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    z-index: 10000;
+    z-index: 1000000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);

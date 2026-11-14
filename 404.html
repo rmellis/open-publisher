@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Open Publisher</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f4f7f6;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #111827; color: #f1f5f9; }
+            .card { background: #1e293b !important; border-color: #334155 !important; }
+            .muted { color: #94a3b8 !important; }
+            .btn-secondary { background: #334155 !important; color: #f1f5f9 !important; border-color: #475569 !important; }
+        }
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 32px 28px;
+            text-align: center;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto 16px;
+            border: 3px solid rgba(0, 118, 112, 0.2);
+            border-top-color: #007670;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h1 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
+        .muted { margin: 0 0 22px; font-size: 14px; line-height: 1.5; color: #64748b; }
+        .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-primary { background: #007670; color: #ffffff; border: 1px solid #005a55; }
+        .btn-secondary { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div class="card" id="status-card">
+        <div class="spinner" id="loading-spinner"></div>
+        <h1 id="status-title">Loading Open Publisher...</h1>
+        <p class="muted" id="status-desc">Checking template link...</p>
+        <div class="actions" id="not-found-actions" style="display: none;">
+            <a href="/" class="btn btn-primary">Open Publisher</a>
+            <a href="/?templates" class="btn btn-secondary">Browse Templates</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            function slugify(str, opts) {
+                var o = opts || {};
+                var s = String(str || '');
+                if (typeof s.normalize === 'function') {
+                    s = s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+                }
+                if (o.stripNew !== false) s = s.replace(/\(\s*new\s*\)/gi, '');
+                if (!o.keepApostrophe) s = s.replace(/['\u2019`]/g, '');
+                if (o.expandAnd) s = s.replace(/&/g, ' and ');
+                return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            }
+
+            function showNotFound() {
+                var sp = document.getElementById('loading-spinner');
+                var title = document.getElementById('status-title');
+                var desc = document.getElementById('status-desc');
+                var actions = document.getElementById('not-found-actions');
+                if (sp) sp.style.display = 'none';
+                if (title) title.textContent = 'Page Not Found';
+                if (desc) desc.textContent = 'We could not find that page or template link. Open the editor or browse all templates below.';
+                if (actions) actions.style.display = 'flex';
+                document.title = 'Page Not Found | Open Publisher';
+            }
+
+            var rawPath = (window.location.pathname || '/').replace(/^\/+|\/+$/g, '');
+            try { rawPath = decodeURIComponent(rawPath); } catch (e) {}
+
+            if (!rawPath) {
+                window.location.replace('/' + (window.location.search || '') + (window.location.hash || ''));
+                return;
+            }
+
+            if (/\.(?:png|jpe?g|webp|gif|svg|ico|css|js|json|pdf|woff2?|ttf|map|txt|xml|webmanifest)$/i.test(rawPath)) {
+                showNotFound();
+                return;
+            }
+
+            var stripped = rawPath.replace(/^(?:templates?|t)\//i, '').replace(/^\/+|\/+$/g, '');
+            if (rawPath.toLowerCase() === 'templates' || stripped.toLowerCase() === 'templates') {
+                window.location.replace('/?templates' + (window.location.hash || ''));
+                return;
+            }
+
+            fetch('/elements/templates/template-index.json?v=5.20.6')
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(indexData) {
+                    var counts = Object.create(null);
+                    var items = [];
+                    Object.keys(indexData).forEach(function(cat) {
+                        var arr = Array.isArray(indexData[cat]) ? indexData[cat] : [];
+                        var catSlug = slugify(cat);
+                        arr.forEach(function(t) {
+                            if (!t || !t.name || !t.file) return;
+                            var ns = slugify(t.name);
+                            if (ns) counts[ns] = (counts[ns] || 0) + 1;
+                            items.push({ category: cat, catSlug: catSlug, template: t, cleanSlug: ns });
+                        });
+                    });
+
+                    var byKey = new Map();
+                    items.forEach(function(it) {
+                        var canonical = (it.cleanSlug && counts[it.cleanSlug] === 1)
+                            ? it.cleanSlug
+                            : (it.catSlug && it.cleanSlug ? it.catSlug + '-' + it.cleanSlug : slugify(it.template.file.replace(/\.opub$/i, '')));
+                        it.canonical = canonical;
+                        [
+                            canonical,
+                            it.catSlug + '/' + it.cleanSlug,
+                            it.catSlug + '-' + it.cleanSlug,
+                            it.template.file.toLowerCase(),
+                            it.template.file.toLowerCase().replace(/\.opub$/i, ''),
+                            slugify(it.template.file.replace(/\.opub$/i, ''))
+                        ].forEach(function(k) {
+                            if (k && !byKey.has(k)) byKey.set(k, it.canonical);
+                        });
+                    });
+
+                    items.forEach(function(it) {
+                        [
+                            it.template.name.trim().toLowerCase(),
+                            it.cleanSlug,
+                            slugify(it.template.name, { stripNew: false }),
+                            slugify(it.template.name, { expandAnd: true }),
+                            slugify(it.template.name, { keepApostrophe: true })
+                        ].forEach(function(k) {
+                            if (k && !byKey.has(k)) byKey.set(k, it.canonical);
+                            if (k && it.catSlug && !byKey.has(it.catSlug + '/' + k)) byKey.set(it.catSlug + '/' + k, it.canonical);
+                        });
+                    });
+
+                    var lookup = stripped;
+                    var lower = lookup.toLowerCase();
+                    var parts = lookup.split('/').map(function(p) { return p.trim(); }).filter(Boolean);
+                    var resolved = null;
+                    if (parts.length >= 2) {
+                        var catPart = slugify(parts[0]);
+                        var namePart = slugify(parts.slice(1).join(' '));
+                        var nameAnd = slugify(parts.slice(1).join(' '), { expandAnd: true });
+                        resolved = byKey.get(catPart + '/' + namePart) || byKey.get(catPart + '/' + nameAnd) || byKey.get(catPart + '-' + namePart);
+                    }
+                    if (!resolved) {
+                        var slugLookup = slugify(lookup);
+                        var slugAnd = slugify(lookup, { expandAnd: true });
+                        resolved = byKey.get(lower) || byKey.get(slugLookup) || byKey.get(slugAnd);
+                    }
+
+                    if (resolved) {
+                        var extraSearch = window.location.search ? '&' + window.location.search.slice(1) : '';
+                        window.location.replace('/?' + encodeURIComponent(resolved) + extraSearch + (window.location.hash || ''));
+                    } else {
+                        showNotFound();
+                    }
+                })
+                .catch(function() {
+                    showNotFound();
+                });
+        })();
+    </script>
+</body>
+</html>

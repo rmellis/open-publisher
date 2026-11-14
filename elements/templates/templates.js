@@ -271,7 +271,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.20.5`;
+    return `${path}?v=5.20.6`;
 };
 
 function initTemplates() {
@@ -425,7 +425,17 @@ function initTemplates() {
                         </div>
                     `;
                     const sizeBadge = `<div style="position:absolute; bottom:5px; right:5px; z-index:999; background:rgba(13,158,143,0.72); color:#fff; font-size:10px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:3px 8px; border-radius:20px; pointer-events:none; letter-spacing:0.5px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.2); backdrop-filter:blur(3px);">${sizeLabel}</div>`;
-                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}${sizeBadge}</div><div style="margin-top:10px;">${t.name}</div>`;
+                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}${sizeBadge}<button type="button" class="tp-link-btn" title="Copy static link" aria-label="Copy static link to ${t.name}"><i class="fas fa-link"></i></button></div><div style="margin-top:10px;">${t.name}</div>`;
+                    const linkBtn = div.querySelector('.tp-link-btn');
+                    if (linkBtn) {
+                        linkBtn.onclick = (ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            if (typeof window.copyTemplateStaticLink === 'function') {
+                                window.copyTemplateStaticLink(t, cat, linkBtn);
+                            }
+                        };
+                    }
                     div.onclick = () => loadTemplate(opubData);
                 })
                 .catch(err => {
@@ -1030,4 +1040,454 @@ window.showToastNotification = function(message, icon = 'fa-check-circle') {
 
 function showAdModal() { document.getElementById('ad-modal').style.display = 'flex'; }
 function showTemplateModal() { document.getElementById('template-modal').style.display = 'flex'; }
+
+// ==========================================
+// STATIC TEMPLATE LINKS & DEEP-LINK ROUTER (v5.20.6)
+// ==========================================
+(function() {
+    const RESERVED_QUERY_KEYS = new Set([
+        'source', 'v', 'ver', 'version',
+        'fbclid', 'gclid', 'dclid', 'gbraid', 'wbraid', 'msclkid',
+        'mc_cid', 'mc_eid', 'igshid', 'si', 'feature', 'ref', 'referrer',
+        '_hsenc', '_hsmi', 'mkt_tok', 'yclid', 'ttclid', 'li_fat_id', 'twclid',
+        'category', 'cat', 'mode', 'lang', 'locale', 'theme', 'debug',
+        'cache', 'nocache', 'bust', 'cb'
+    ]);
+
+    function escapeHtmlText(str) {
+        return String(str || '').replace(/[&<>"']/g, function(ch) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+        });
+    }
+
+    function isReservedQueryKey(key) {
+        const lower = String(key || '').trim().toLowerCase();
+        if (!lower) return true;
+        if (RESERVED_QUERY_KEYS.has(lower)) return true;
+        return lower.startsWith('utm_') || lower.startsWith('pk_') || lower.startsWith('mtm_');
+    }
+
+    window.slugifyTemplateToken = function(str, opts) {
+        const options = opts || {};
+        let s = String(str || '');
+        if (typeof s.normalize === 'function') {
+            s = s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+        }
+        if (options.stripNew !== false) {
+            s = s.replace(/\(\s*new\s*\)/gi, '');
+        }
+        if (!options.keepApostrophe) {
+            s = s.replace(/['’`]/g, '');
+        }
+        if (options.expandAnd) {
+            s = s.replace(/&/g, ' and ');
+        }
+        return s
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    };
+
+    window.buildTemplateStaticRegistry = function(indexData) {
+        if (!indexData || typeof indexData !== 'object') return null;
+        if (window._templateStaticRegistry && window._templateStaticRegistry.source === indexData) {
+            return window._templateStaticRegistry;
+        }
+
+        const slugCounts = Object.create(null);
+        const flatEntries = [];
+
+        Object.keys(indexData).forEach(cat => {
+            const arr = Array.isArray(indexData[cat]) ? indexData[cat] : [];
+            const catSlug = window.slugifyTemplateToken(cat);
+            arr.forEach(t => {
+                if (!t || !t.name || !t.file) return;
+                const cleanSlug = window.slugifyTemplateToken(t.name);
+                if (cleanSlug) {
+                    slugCounts[cleanSlug] = (slugCounts[cleanSlug] || 0) + 1;
+                }
+                flatEntries.push({
+                    category: cat,
+                    catSlug: catSlug,
+                    template: t,
+                    cleanSlug: cleanSlug
+                });
+            });
+        });
+
+        const byKey = new Map();
+        const byFile = new Map();
+        const byCategory = new Map();
+
+        const registerPrimary = (key, record) => {
+            if (!key || byKey.has(key)) return;
+            byKey.set(key, record);
+        };
+        const registerAlias = (key, record) => {
+            if (!key || byKey.has(key)) return;
+            byKey.set(key, record);
+        };
+
+        // Pass 1: Register unique canonical slugs, category/slug pairs, and filenames first
+        flatEntries.forEach(item => {
+            const t = item.template;
+            const cat = item.category;
+            const catSlug = item.catSlug;
+            const isUniqueName = item.cleanSlug && slugCounts[item.cleanSlug] === 1;
+            const canonicalSlug = isUniqueName
+                ? item.cleanSlug
+                : (catSlug && item.cleanSlug ? `${catSlug}-${item.cleanSlug}` : window.slugifyTemplateToken(t.file.replace(/\.opub$/i, '')));
+
+            const record = {
+                category: cat,
+                catSlug: catSlug,
+                template: t,
+                canonicalSlug: canonicalSlug
+            };
+            item.record = record;
+            byFile.set(t.file.toLowerCase(), record);
+
+            if (!byCategory.has(catSlug)) {
+                byCategory.set(catSlug, []);
+            }
+            byCategory.get(catSlug).push(record);
+
+            registerPrimary(canonicalSlug, record);
+            if (catSlug && item.cleanSlug) {
+                registerPrimary(`${catSlug}/${item.cleanSlug}`, record);
+                registerPrimary(`${catSlug}-${item.cleanSlug}`, record);
+                registerPrimary(`${catSlug}:${item.cleanSlug}`, record);
+            }
+            const fileLower = t.file.toLowerCase();
+            const fileStem = fileLower.replace(/\.opub$/i, '');
+            registerPrimary(fileLower, record);
+            registerPrimary(fileStem, record);
+            registerPrimary(window.slugifyTemplateToken(fileStem), record);
+        });
+
+        // Pass 2: Register flexible human-friendly aliases (stripped (NEW), & -> and, raw names, category-less fallback)
+        flatEntries.forEach(item => {
+            const record = item.record;
+            const t = item.template;
+            const catSlug = item.catSlug;
+            const nameRaw = t.name.trim().toLowerCase();
+            registerAlias(nameRaw, record);
+            registerAlias(item.cleanSlug, record);
+
+            const withNewSlug = window.slugifyTemplateToken(t.name, { stripNew: false });
+            const andSlug = window.slugifyTemplateToken(t.name, { expandAnd: true });
+            const keepAposSlug = window.slugifyTemplateToken(t.name, { keepApostrophe: true });
+            const bothAposAnd = window.slugifyTemplateToken(t.name, { expandAnd: true, keepApostrophe: true });
+
+            [withNewSlug, andSlug, keepAposSlug, bothAposAnd].forEach(alias => {
+                if (!alias) return;
+                registerAlias(alias, record);
+                if (catSlug) {
+                    registerAlias(`${catSlug}/${alias}`, record);
+                    registerAlias(`${catSlug}-${alias}`, record);
+                }
+            });
+        });
+
+        const registry = {
+            source: indexData,
+            entries: flatEntries.map(e => e.record),
+            byKey: byKey,
+            byFile: byFile,
+            byCategory: byCategory
+        };
+        window._templateStaticRegistry = registry;
+        return registry;
+    };
+
+    window.getTemplateStaticSlug = function(templateOrFile, category, indexData) {
+        const data = indexData || window._templateIndexData || (window.DashboardSystem && window.DashboardSystem.templateData);
+        const registry = window.buildTemplateStaticRegistry(data);
+        const fileName = (typeof templateOrFile === 'string') ? templateOrFile : (templateOrFile && templateOrFile.file);
+        if (registry && fileName) {
+            const rec = registry.byFile.get(String(fileName).toLowerCase());
+            if (rec) return rec.canonicalSlug;
+        }
+        const name = (typeof templateOrFile === 'object' && templateOrFile && templateOrFile.name) || fileName || '';
+        return window.slugifyTemplateToken(String(name).replace(/\.opub$/i, ''));
+    };
+
+    window.getTemplateStaticUrl = function(templateOrFile, category, indexData) {
+        const slug = window.getTemplateStaticSlug(templateOrFile, category, indexData);
+        if (typeof window !== 'undefined' && window.location && window.location.protocol !== 'file:') {
+            let basePath = window.location.pathname || '/';
+            basePath = basePath.replace(/\/index\.html$/i, '/');
+            if (!basePath.endsWith('/')) basePath += '/';
+            return `${window.location.origin}${basePath}?${encodeURIComponent(slug)}`;
+        }
+        return `https://openpublisher.app/?${encodeURIComponent(slug)}`;
+    };
+
+    window.copyTemplateStaticLink = function(templateOrFile, category, triggerBtn) {
+        const url = window.getTemplateStaticUrl(templateOrFile, category);
+        const slug = window.getTemplateStaticSlug(templateOrFile, category);
+        const tmplName = (typeof templateOrFile === 'object' && templateOrFile && templateOrFile.name) ? templateOrFile.name : slug;
+
+        const onCopied = () => {
+            if (triggerBtn) {
+                const icon = triggerBtn.querySelector('i');
+                triggerBtn.classList.add('copied');
+                if (icon) {
+                    icon.className = 'fas fa-check';
+                }
+                setTimeout(() => {
+                    if (triggerBtn) triggerBtn.classList.remove('copied');
+                    if (icon) icon.className = 'fas fa-link';
+                }, 1500);
+            }
+            if (typeof window.showToastNotification === 'function') {
+                window.showToastNotification(`Static link copied: ?${escapeHtmlText(slug)}`, 'fa-link');
+            }
+        };
+
+        const fallbackCopy = () => {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                onCopied();
+            } catch (err) {
+                if (typeof window.showToastNotification === 'function') {
+                    window.showToastNotification(`Link: ${escapeHtmlText(url)}`, 'fa-link');
+                }
+            }
+        };
+
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(url).then(onCopied).catch(fallbackCopy);
+        } else {
+            fallbackCopy();
+        }
+        return url;
+    };
+
+    window.resolveTemplateQuery = function(query, indexData, categoryHint) {
+        const data = indexData || window._templateIndexData || (window.DashboardSystem && window.DashboardSystem.templateData);
+        const registry = window.buildTemplateStaticRegistry(data);
+        if (!registry || !query) return null;
+
+        let raw = String(query).trim();
+        try {
+            raw = decodeURIComponent(raw);
+        } catch (e) {}
+        raw = raw.replace(/^\/+|\/+$/g, '').trim();
+        if (!raw) return null;
+
+        let effectiveCat = categoryHint ? window.slugifyTemplateToken(categoryHint) : '';
+        let lookupPart = raw;
+
+        if (raw.includes('/')) {
+            const parts = raw.split('/').map(p => p.trim()).filter(Boolean);
+            if (parts.length >= 2) {
+                const maybeCat = window.slugifyTemplateToken(parts[0]);
+                const maybeName = parts.slice(1).join(' ');
+                if (registry.byCategory.has(maybeCat)) {
+                    const catSlugMatch = `${maybeCat}/${window.slugifyTemplateToken(maybeName)}`;
+                    if (registry.byKey.has(catSlugMatch)) return registry.byKey.get(catSlugMatch);
+                    effectiveCat = maybeCat;
+                    lookupPart = maybeName;
+                }
+            }
+        }
+
+        const lowerRaw = lookupPart.toLowerCase();
+        const slugRaw = window.slugifyTemplateToken(lookupPart);
+        const slugAnd = window.slugifyTemplateToken(lookupPart, { expandAnd: true });
+
+        if (effectiveCat) {
+            const catCandidates = [
+                `${effectiveCat}/${slugRaw}`,
+                `${effectiveCat}/${slugAnd}`,
+                `${effectiveCat}-${slugRaw}`,
+                `${effectiveCat}-${slugAnd}`
+            ];
+            for (let i = 0; i < catCandidates.length; i++) {
+                if (registry.byKey.has(catCandidates[i])) {
+                    return registry.byKey.get(catCandidates[i]);
+                }
+            }
+            const catEntries = registry.byCategory.get(effectiveCat) || [];
+            const catHit = catEntries.find(rec => {
+                const ns = window.slugifyTemplateToken(rec.template.name);
+                return ns === slugRaw || ns === slugAnd || rec.template.file.toLowerCase() === lowerRaw;
+            });
+            if (catHit) return catHit;
+        }
+
+        const directCandidates = [lowerRaw, slugRaw, slugAnd];
+        for (let i = 0; i < directCandidates.length; i++) {
+            const k = directCandidates[i];
+            if (k && registry.byKey.has(k)) {
+                return registry.byKey.get(k);
+            }
+        }
+        return null;
+    };
+
+    window.extractTemplateRouteFromLocation = function(loc) {
+        const targetLoc = loc || (typeof window !== 'undefined' ? window.location : null);
+        if (!targetLoc) return null;
+
+        const search = targetLoc.search || '';
+        const hash = targetLoc.hash || '';
+
+        if (search && search.length > 1) {
+            const params = new URLSearchParams(search);
+            const catHint = params.get('category') || params.get('cat') || null;
+            const rawPairs = search.slice(1).split('&').filter(Boolean);
+
+            // 1. Explicit template / tmpl / t query parameters
+            const explicitKeys = ['template', 'tmpl', 't'];
+            for (let i = 0; i < explicitKeys.length; i++) {
+                const k = explicitKeys[i];
+                if (!params.has(k)) continue;
+                const val = (params.get(k) || '').trim();
+                const hasEquals = rawPairs.some(pair => {
+                    const eqIdx = pair.indexOf('=');
+                    const pk = decodeURIComponent((eqIdx === -1 ? pair : pair.slice(0, eqIdx)).replace(/\+/g, ' ')).trim().toLowerCase();
+                    return pk === k && eqIdx !== -1;
+                });
+                if (val) {
+                    return { query: val, category: catHint, explicit: true };
+                }
+                if (k === 'template' && !hasEquals) {
+                    return { query: 'template', category: catHint, explicit: false, bareKey: true, dashboardFallback: true };
+                }
+                return { openTemplatesGallery: true, category: catHint };
+            }
+
+            if (params.has('templates')) {
+                return { openTemplatesGallery: true, category: catHint };
+            }
+
+            // 2. Bare query key format: https://openpublisher.app/?clean-executive-resume
+            for (let i = 0; i < rawPairs.length; i++) {
+                const pair = rawPairs[i];
+                const eqIdx = pair.indexOf('=');
+                const rawKey = eqIdx === -1 ? pair : pair.slice(0, eqIdx);
+                const rawVal = eqIdx === -1 ? '' : pair.slice(eqIdx + 1);
+                let decodedKey = rawKey;
+                try {
+                    decodedKey = decodeURIComponent(rawKey.replace(/\+/g, ' ')).trim();
+                } catch (e) {}
+                if (!decodedKey || isReservedQueryKey(decodedKey)) continue;
+                if (eqIdx === -1 || rawVal === '') {
+                    return { query: decodedKey, category: catHint, explicit: true, bareKey: true };
+                }
+            }
+        }
+
+        // 3. Hash fallback: #template=slug or #t=slug
+        if (hash && hash.length > 1) {
+            const cleanHash = hash.replace(/^#/, '');
+            const hashParams = new URLSearchParams(cleanHash);
+            const hVal = hashParams.get('template') || hashParams.get('tmpl') || hashParams.get('t');
+            if (hVal && hVal.trim()) {
+                const hCat = hashParams.get('category') || hashParams.get('cat') || null;
+                return { query: hVal.trim(), category: hCat, explicit: true, fromHash: true };
+            }
+        }
+
+        return null;
+    };
+
+    window.openTemplateFromRoute = function(route) {
+        if (!route) return Promise.resolve(false);
+
+        const fallbackToDashboard = (notFoundQuery) => {
+            window._documentLoadingActive = false;
+            window._hasLoadedInitialDocument = false;
+            if (typeof state !== 'undefined' && (!state.pages || state.pages.length === 0) && typeof addNewPage === 'function') {
+                addNewPage();
+            }
+            const splash = document.getElementById('splash-screen');
+            if (splash) splash.remove();
+            if (window.DashboardSystem && typeof window.DashboardSystem.show === 'function') {
+                window.DashboardSystem.show();
+            }
+            if (notFoundQuery && !route.dashboardFallback && typeof window.showToastNotification === 'function') {
+                window.showToastNotification(`Template "${escapeHtmlText(notFoundQuery)}" was not found.`, 'fa-exclamation-triangle');
+            }
+        };
+
+        if (route.openTemplatesGallery) {
+            fallbackToDashboard(null);
+            return Promise.resolve(false);
+        }
+
+        const cachedIndex = window._templateIndexData || (window.DashboardSystem && window.DashboardSystem.templateData);
+        const indexPromise = cachedIndex
+            ? Promise.resolve(cachedIndex)
+            : fetch(window.getTemplateAssetUrl('elements/templates/template-index.json')).then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            });
+
+        return indexPromise.then(indexData => {
+            if (!window._templateIndexData) window._templateIndexData = indexData;
+            const match = window.resolveTemplateQuery(route.query, indexData, route.category);
+            if (!match) {
+                fallbackToDashboard(route.query);
+                return false;
+            }
+
+            const fileUrl = window.getTemplateAssetUrl(`elements/templates/files/${match.template.file}`);
+            return fetch(fileUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(opubData => {
+                    if (window.DashboardSystem && typeof window.DashboardSystem.hide === 'function') {
+                        window.DashboardSystem.hide();
+                    }
+                    try {
+                        document.title = `${match.template.name} | Open Publisher`;
+                    } catch (e) {}
+                    if (typeof window.handlePublisherFileLoad === 'function') {
+                        window.handlePublisherFileLoad(opubData);
+                    } else if (typeof loadTemplate === 'function') {
+                        loadTemplate(opubData);
+                    }
+                    return true;
+                });
+        }).catch(err => {
+            console.error('Failed to open template from static URL:', err);
+            fallbackToDashboard(route.query);
+            return false;
+        });
+    };
+
+    window.processStartupTemplateRoute = function() {
+        if (window._startupTemplateRouteProcessed) return;
+        const route = window._pendingTemplateRoute || window.extractTemplateRouteFromLocation();
+        if (!route) return;
+        window._startupTemplateRouteProcessed = true;
+        window._pendingTemplateRoute = null;
+        window.openTemplateFromRoute(route);
+    };
+
+    // Detect startup template route synchronously before core/boot.js decides whether to show Dashboard
+    const initialRoute = window.extractTemplateRouteFromLocation();
+    if (initialRoute) {
+        window._pendingTemplateRoute = initialRoute;
+        if (!initialRoute.openTemplatesGallery) {
+            window._hasLoadedInitialDocument = true;
+            window._documentLoadingActive = true;
+        }
+    }
+})();
+
 

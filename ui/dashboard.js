@@ -232,7 +232,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.20.5');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.20.6');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -326,16 +326,28 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.20.5`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.20.6`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                 <div class="dashboard-preview-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
                 <img data-src="${thumbUrl}" data-file="${t.file}" data-w="${w}" data-h="${h}" data-size-label="${sizeLabel}" data-is-expanded="${isExpanded}" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity 0.25s ease;">
+                <button type="button" class="dashboard-template-link-btn" title="Copy static link" aria-label="Copy static link to ${t.name}"><i class="fas fa-link"></i></button>
                 ${sizeBadge}
             </div>
             <div class="dashboard-template-title">${t.name}</div>
         `;
+
+        const linkBtn = div.querySelector('.dashboard-template-link-btn');
+        if (linkBtn) {
+            linkBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.copyTemplateStaticLink === 'function') {
+                    window.copyTemplateStaticLink(t, null, linkBtn);
+                }
+            };
+        }
 
         const previewEl = div.querySelector('.dashboard-template-preview');
         const observer = this.getLazyObserver();
@@ -349,7 +361,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.20.5`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.20.6`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -384,7 +396,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.20.5`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.20.6`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -416,6 +428,7 @@ window.DashboardSystem = {
                     badge = badge.toUpperCase();
                 }
 
+                const existingLinkBtn = previewContainer.querySelector('.dashboard-template-link-btn');
                 previewContainer.style.height = `${cardHeight}px`;
                 previewContainer.innerHTML = `
                     <div style="
@@ -433,6 +446,9 @@ window.DashboardSystem = {
                     </div>
                     <div class="dashboard-template-badge">${badge}</div>
                 `;
+                if (existingLinkBtn) {
+                    previewContainer.appendChild(existingLinkBtn);
+                }
             })
             .catch(err => {
                 previewContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.75rem;height:100%;">Preview Unavailable</div>`;

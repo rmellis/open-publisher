@@ -57,6 +57,11 @@ function bootOpenPublisher() {
         }
     }
 
+    // Load template directly if requested via static template URL query/hash
+    if (typeof window.processStartupTemplateRoute === 'function') {
+        window.processStartupTemplateRoute();
+    }
+
     // Classic MS Publisher Cursor Settings
     window.useClassicCursors = (localStorage.getItem('opub_classic_cursors') !== 'false');
     if (document.body) {

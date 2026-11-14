@@ -515,6 +515,54 @@ body.dark-mode .dashboard-template-preview {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
+.dashboard-template-link-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 4;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    padding: 0;
+}
+
+.dashboard-template-card:hover .dashboard-template-link-btn,
+.dashboard-template-card:focus-within .dashboard-template-link-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dashboard-template-link-btn:hover {
+    background: var(--ui-theme-color, #007670);
+}
+
+.dashboard-template-link-btn.copied {
+    opacity: 1;
+    background: #0d9e8f;
+    color: #ffffff;
+}
+
+@media (hover: none) {
+    .dashboard-template-link-btn {
+        opacity: 0.85;
+        transform: none;
+    }
+}
+
 /* Open Tab */
 .dashboard-open-area {
     display: flex;
