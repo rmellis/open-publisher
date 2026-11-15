@@ -1,10 +1,10 @@
 // ========================================================
-// Open Publisher Watermark Engine (v5.21.2)
+// Open Publisher Watermark Engine (v5.21.3)
 // Document Watermark Stamps & Tiled Security Patterns
 // ========================================================
 
 (function initWatermarkEngine() {
-    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.21.2)...");
+    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.21.3)...");
 
     const PRESETS = {
         draft: {
@@ -155,13 +155,30 @@
             totalPages = pageIndexOrTotal || 1;
             config = totalPagesOrConfig;
         }
-        if (!config) return false;
+        if (!config || config.removed) return false;
         const scope = config.scope || 'all';
         if (scope === 'all') return true;
         if (scope === 'first-only') return pageIndex === 0;
         if (scope === 'except-first') return pageIndex > 0;
         if (scope === 'current') return pageIndex === (config.targetPageIndex !== undefined ? config.targetPageIndex : 0);
         return true;
+    }
+
+    function getWatermarkForPage(pageIndex, totalPages, pageObj) {
+        if (typeof state === 'undefined') return null;
+        const idx = (typeof pageIndex === 'number') ? pageIndex : (state.currentPageIndex || 0);
+        const total = (typeof totalPages === 'number') ? totalPages : ((state.pages && state.pages.length) ? state.pages.length : 1);
+        const page = pageObj || (state.pages && state.pages[idx]) || null;
+
+        if (page && page.watermark) {
+            if (page.watermark.removed) return null;
+            return page.watermark;
+        }
+
+        if (state.watermark && shouldApplyToPage(state.watermark, idx, total)) {
+            return state.watermark;
+        }
+        return null;
     }
 
     function calculateAutoFontSize(text, width, height, mode) {
@@ -291,24 +308,25 @@
         const existing = paper.querySelector('#page-watermark');
         if (existing) existing.remove();
 
-        if (typeof state === 'undefined' || !state.watermark) return;
+        if (typeof state === 'undefined') return;
 
         const totalPages = (state.pages && state.pages.length) ? state.pages.length : 1;
         const curIdx = state.currentPageIndex || 0;
-        if (!shouldApplyToPage(state.watermark, curIdx, totalPages)) return;
+        const activeWm = getWatermarkForPage(curIdx, totalPages);
+        if (!activeWm) return;
 
         const pW = parseFloat(paper.style.width) || 794;
         const pH = parseFloat(paper.style.height) || 1123;
-        const html = generateWatermarkHTML(state.watermark, pW, pH);
+        const html = generateWatermarkHTML(activeWm, pW, pH);
         if (!html) return;
 
         const wmContainer = document.createElement('div');
         wmContainer.id = 'page-watermark';
         wmContainer.className = 'no-select';
-        wmContainer.style.cssText = `position: absolute; inset: 0; pointer-events: none; z-index: ${state.watermark.layer === 'front' ? 998 : 0}; overflow: hidden;`;
+        wmContainer.style.cssText = `position: absolute; inset: 0; pointer-events: none; z-index: ${activeWm.layer === 'front' ? 998 : 0}; overflow: hidden;`;
         wmContainer.innerHTML = html;
 
-        if (state.watermark.layer === 'front') {
+        if (activeWm.layer === 'front') {
             paper.appendChild(wmContainer);
         } else {
             // Insert behind elements (before first pub-element or after background theme)
@@ -581,9 +599,12 @@
     function showModal() {
         ensureModalStyles();
 
-        // Initialize state from existing document watermark or default
-        const existing = (typeof state !== 'undefined' && state.watermark)
-            ? JSON.parse(JSON.stringify(state.watermark))
+        // Initialize state from active watermark on the current page (per-page or document-wide) or default
+        const curIdx = (typeof state !== 'undefined' && state.currentPageIndex) ? state.currentPageIndex : 0;
+        const totalPages = (typeof state !== 'undefined' && state.pages && state.pages.length) ? state.pages.length : 1;
+        const pageWatermark = getWatermarkForPage(curIdx, totalPages);
+        const existing = pageWatermark
+            ? JSON.parse(JSON.stringify(pageWatermark))
             : Object.assign({}, PRESETS.draft);
 
         activeConfig = Object.assign({
@@ -777,7 +798,8 @@
             if (dialogBox) {
                 dialogBox.classList.add('watermark-dialog-box');
                 const footer = dialogBox.querySelector('.custom-dialog-footer');
-                if (footer && typeof state !== 'undefined' && state.watermark) {
+                const hasRemovableWatermark = !!getWatermarkForPage(curIdx, totalPages);
+                if (footer && hasRemovableWatermark) {
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'btn-secondary';
@@ -1023,16 +1045,53 @@
         overlay.innerHTML = generateWatermarkHTML(activeConfig, w, h);
     }
 
+    function migrateLegacyCurrentWatermark() {
+        if (typeof state === 'undefined' || !state.watermark) return;
+        if (state.watermark.scope === 'current' && Array.isArray(state.pages)) {
+            const legacyIdx = state.watermark.targetPageIndex !== undefined ? state.watermark.targetPageIndex : 0;
+            if (state.pages[legacyIdx] && !state.pages[legacyIdx].watermark) {
+                state.pages[legacyIdx].watermark = JSON.parse(JSON.stringify(state.watermark));
+            }
+            delete state.watermark;
+        }
+    }
+
+    function applyConfigToState(config) {
+        if (!config || typeof state === 'undefined') return;
+        migrateLegacyCurrentWatermark();
+
+        const curIdx = state.currentPageIndex || 0;
+        if (config.scope === 'current') {
+            const pageWm = JSON.parse(JSON.stringify(config));
+            pageWm.scope = 'current';
+            pageWm.targetPageIndex = curIdx;
+            if (Array.isArray(state.pages)) {
+                if (!state.pages[curIdx] && typeof serializeCurrentPage === 'function') {
+                    state.pages[curIdx] = serializeCurrentPage();
+                }
+                if (state.pages[curIdx]) {
+                    state.pages[curIdx].watermark = pageWm;
+                    return;
+                }
+            }
+            // Fallback when pages array is unavailable
+            state.watermark = pageWm;
+        } else {
+            // Document-wide watermark overrides any prior per-page stamps
+            if (Array.isArray(state.pages)) {
+                state.pages.forEach(p => {
+                    if (p && p.watermark) delete p.watermark;
+                });
+            }
+            state.watermark = JSON.parse(JSON.stringify(config));
+        }
+    }
+
     function applyCurrent() {
         if (!activeConfig) return;
         if (typeof state === 'undefined') return;
 
-        // Remember current page index if scope is 'current'
-        if (activeConfig.scope === 'current') {
-            activeConfig.targetPageIndex = state.currentPageIndex || 0;
-        }
-
-        state.watermark = JSON.parse(JSON.stringify(activeConfig));
+        applyConfigToState(activeConfig);
         renderWatermarkOnCanvas();
 
         if (typeof pushHistory === 'function') {
@@ -1042,17 +1101,50 @@
         closeModal();
 
         if (typeof DialogSystem !== 'undefined' && DialogSystem.toast) {
-            DialogSystem.toast('Watermark applied to document');
+            const msg = activeConfig.scope === 'current'
+                ? `Watermark applied to Page ${(state.currentPageIndex || 0) + 1}`
+                : 'Watermark applied to document';
+            DialogSystem.toast(msg);
         }
     }
 
     function remove(silent) {
         if (typeof state === 'undefined') return;
-        delete state.watermark;
-        renderWatermarkOnCanvas();
+        if (silent === true) {
+            delete state.watermark;
+            if (Array.isArray(state.pages)) {
+                state.pages.forEach(p => {
+                    if (p && p.watermark) delete p.watermark;
+                });
+            }
+            renderWatermarkOnCanvas();
+            return;
+        }
 
-        // Silent mode (new document / template load / AI page clear): no history entry, modal close or toast
-        if (silent === true) return;
+        const curIdx = state.currentPageIndex || 0;
+        const totalPages = (state.pages && state.pages.length) ? state.pages.length : 1;
+        const curPage = Array.isArray(state.pages) ? state.pages[curIdx] : null;
+        let removedMsg = 'Watermark removed';
+
+        if (curPage && curPage.watermark && !curPage.watermark.removed) {
+            delete curPage.watermark;
+            if (state.watermark && shouldApplyToPage(state.watermark, curIdx, totalPages)) {
+                curPage.watermark = { removed: true };
+            }
+            removedMsg = `Watermark removed from Page ${curIdx + 1}`;
+        } else if (activeConfig && activeConfig.scope === 'current' && curPage && state.watermark && shouldApplyToPage(state.watermark, curIdx, totalPages)) {
+            curPage.watermark = { removed: true };
+            removedMsg = `Watermark removed from Page ${curIdx + 1}`;
+        } else {
+            delete state.watermark;
+            if (Array.isArray(state.pages)) {
+                state.pages.forEach(p => {
+                    if (p && p.watermark) delete p.watermark;
+                });
+            }
+        }
+
+        renderWatermarkOnCanvas();
 
         if (typeof pushHistory === 'function') {
             pushHistory();
@@ -1061,7 +1153,7 @@
         closeModal();
 
         if (typeof DialogSystem !== 'undefined' && DialogSystem.toast) {
-            DialogSystem.toast('Watermark removed');
+            DialogSystem.toast(removedMsg);
         }
     }
 
@@ -1078,13 +1170,14 @@
         updateModalPreview,
         applyCurrent,
         apply: function(config) {
-            if (typeof state === 'undefined') return;
-            state.watermark = JSON.parse(JSON.stringify(config));
+            if (typeof state === 'undefined' || !config) return;
+            applyConfigToState(config);
             renderWatermarkOnCanvas();
             if (typeof pushHistory === 'function') pushHistory();
         },
         remove,
         shouldApplyToPage,
+        getWatermarkForPage,
         generateWatermarkHTML,
         renderWatermarkOnCanvas
     };

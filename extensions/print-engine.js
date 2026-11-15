@@ -1,4 +1,4 @@
-// OpenPublisher Print Engine (v5.21.2)
+// OpenPublisher Print Engine (v5.21.3)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -145,16 +145,19 @@
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10) ✨
-                if (window.WatermarkEngine && state && state.watermark) {
-                    if (window.WatermarkEngine.shouldApplyToPage(state.watermark, pageIdx, pagesToPrint.length)) {
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.21.3 per-page support) ✨
+                if (window.WatermarkEngine) {
+                    const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
+                        ? window.WatermarkEngine.getWatermarkForPage(pageIdx, pagesToPrint.length, page)
+                        : ((state && state.watermark && window.WatermarkEngine.shouldApplyToPage(state.watermark, pageIdx, pagesToPrint.length)) ? state.watermark : null);
+                    if (wmConfig) {
                         const wmDiv = document.createElement('div');
                         wmDiv.className = 'op-print-watermark';
-                        const z = (state.watermark.layer === 'front') ? 2400 : 0;
+                        const z = (wmConfig.layer === 'front') ? 2400 : 0;
                         wmDiv.style.cssText = `position: absolute; inset: 0; pointer-events: none; z-index: ${z}; overflow: hidden;`;
                         const pwNum = parseFloat(page.width) || 794;
                         const phNum = parseFloat(page.height) || 1123;
-                        wmDiv.innerHTML = window.WatermarkEngine.generateWatermarkHTML(state.watermark, pwNum, phNum, false);
+                        wmDiv.innerHTML = window.WatermarkEngine.generateWatermarkHTML(wmConfig, pwNum, phNum, false);
                         scaler.appendChild(wmDiv);
                     }
                 }
@@ -3197,14 +3200,17 @@
                     if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
                 }
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10) ✨
-                if (window.WatermarkEngine && state && state.watermark) {
-                    if (window.WatermarkEngine.shouldApplyToPage(state.watermark, i, totalPages)) {
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.21.3 per-page support) ✨
+                if (window.WatermarkEngine) {
+                    const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
+                        ? window.WatermarkEngine.getWatermarkForPage(i, totalPages, page)
+                        : ((state && state.watermark && window.WatermarkEngine.shouldApplyToPage(state.watermark, i, totalPages)) ? state.watermark : null);
+                    if (wmConfig) {
                         const wmDiv = document.createElement('div');
                         wmDiv.className = 'op-print-watermark';
-                        const z = (state.watermark.layer === 'front') ? 2400 : 0;
+                        const z = (wmConfig.layer === 'front') ? 2400 : 0;
                         wmDiv.style.cssText = `position: absolute; inset: 0; pointer-events: none; z-index: ${z}; overflow: hidden;`;
-                        wmDiv.innerHTML = window.WatermarkEngine.generateWatermarkHTML(state.watermark, pW, pH, false);
+                        wmDiv.innerHTML = window.WatermarkEngine.generateWatermarkHTML(wmConfig, pW, pH, false);
                         pageWrapper.appendChild(wmDiv);
                     }
                 }

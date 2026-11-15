@@ -98,6 +98,7 @@ function serializeCurrentPage() {
         thumb: existingPage.thumb, // <--- PRESERVE THUMBNAIL
         ignoreMasterPage: existingPage.ignoreMasterPage || false,
         ignoreBackground: existingPage.ignoreBackground || false,
+        watermark: existingPage.watermark ? JSON.parse(JSON.stringify(existingPage.watermark)) : null,
         width: curW,
         height: curH,
         dpi: existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
