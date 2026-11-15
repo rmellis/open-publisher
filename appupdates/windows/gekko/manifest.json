@@ -1,8 +1,8 @@
 {
-  "version": 1,
+  "version": 3,
   "files": {
     "wrapper.html": {
-      "sha256": "d8c7d32e47ff89892f66fe58ea49c5eb6012623ada31911225c04a952bd90b45",
+      "sha256": "12d1afaa5de4812a0104da641e1aca4117a254cf54d2fc13e68a99839002a1e5",
       "url": "wrapper.html"
     },
     "gecko_nw_shim.js": {
@@ -10,7 +10,7 @@
       "url": "gecko_nw_shim.js"
     },
     "firefox/core/firefox.cfg": {
-      "sha256": "d440ac5f663393df2d5540816a69fa3bece8a219b874a59710cf495a1d0c51d9",
+      "sha256": "47cf8c5cdc3a94aa2791309941601e4bf958f3ff8c9cb93ae28777bf748f421b",
       "url": "firefox/core/firefox.cfg"
     },
     "windows/backup_mgr.html": {
