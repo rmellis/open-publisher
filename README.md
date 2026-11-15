@@ -822,7 +822,7 @@ See how Open Publisher's in-app AI tools and precision layout/layering controls 
 
 <p align="center">
   <a href="https://youtu.be/V4X0Q-dCXTQ" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.youtube.com/vi/V4X0Q-dCXTQ/hqdefault.jpg" alt="Watch Tutorial: Creating Layered Templates with Open Publisher AI Tools" width="520"/>
+    <img src="https://github.com/user-attachments/assets/62386eed-6aa9-4fb3-9cec-d7b8db1fe5cd" alt="Watch Tutorial: Creating Layered Templates with Open Publisher AI Tools" width="520"/>
   </a>
 </p>
 
