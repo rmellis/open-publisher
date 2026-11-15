@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="2">
-    <meta name="op-wrapper-date" content="2026-11-15T06:50:00Z">
+    <meta name="op-wrapper-version" content="4">
+    <meta name="op-wrapper-date" content="2026-11-15T19:25:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -9352,6 +9352,28 @@ function ensureClippyRibbonButton() {
                     body.mac-theme .undo-redo-controls {
                         margin-left: 104px !important;
                         font-size: 13px !important;
+                    }
+                    /* --- Preserve Existing CSS Text Highlights Under Gecko Selection --- */
+                    #paper [contenteditable="true"]::selection,
+                    #paper [contenteditable="true"] *::selection,
+                    #paper .element-content::selection,
+                    #paper .element-content *::selection,
+                    #paper .pub-element::selection,
+                    #paper .pub-element *::selection,
+                    #paper .wa-text::selection,
+                    #paper .wa-text *::selection,
+                    #paper [data-opub-hilite]::selection,
+                    #paper [data-opub-hilite] *::selection,
+                    #paper mark::selection,
+                    #paper mark *::selection,
+                    #paper td::selection,
+                    #paper td *::selection,
+                    #paper th::selection,
+                    #paper th *::selection,
+                    [data-opub-hilite]::selection,
+                    [data-opub-hilite] *::selection {
+                        background-color: rgba(0, 120, 215, 0.34) !important;
+                        color: inherit !important;
                     }
                 `
             });

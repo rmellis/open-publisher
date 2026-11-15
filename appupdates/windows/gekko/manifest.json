@@ -1,8 +1,8 @@
 {
-  "version": 3,
+  "version": 4,
   "files": {
     "wrapper.html": {
-      "sha256": "12d1afaa5de4812a0104da641e1aca4117a254cf54d2fc13e68a99839002a1e5",
+      "sha256": "95865490aadda55fcc8789fc63e7cda7e1c4c8ec72f95c5c05804b5efa45105c",
       "url": "wrapper.html"
     },
     "gecko_nw_shim.js": {
