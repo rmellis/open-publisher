@@ -1749,6 +1749,10 @@ window.ContextRibbonActions = {
     },
     linkTextBox: function() {
         if(!state.selectedEl) return;
+        if (typeof window.startTextBoxLinking === 'function') {
+            window.startTextBoxLinking(state.selectedEl);
+            return;
+        }
         if (typeof window.isValidFlowTextBox === 'function' && !window.isValidFlowTextBox(state.selectedEl)) {
             if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Link Text Box', 'Only text boxes can be linked for text flow.');
             return;

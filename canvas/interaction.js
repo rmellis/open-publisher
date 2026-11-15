@@ -492,7 +492,7 @@ window.healUncroppedImage = function(el) {
 function selectElement(el) {
     if (window.isLinkingTextBox) {
         if (typeof window.linkTextBoxes === 'function') {
-            const linked = window.linkTextBoxes(window.linkingSourceBox, el);
+            const linked = window.linkTextBoxes(window.linkingSourceBox || window.linkingSourceId, el);
             if (!linked) return;
         } else {
             if (typeof window.cancelTextBoxLinking === 'function') window.cancelTextBoxLinking();

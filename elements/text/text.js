@@ -710,6 +710,7 @@ function addTextBox() {
     const schemes = (typeof colorSchemes !== 'undefined') ? colorSchemes : (window.colorSchemes || {});
     const initialColor = (state.currentScheme && schemes[state.currentScheme] && schemes[state.currentScheme][0]) || '#000000';
     const el = createWrapper(`<div style="color:${initialColor}; padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif;${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
+    el.setAttribute('data-type', 'text');
     el.setAttribute('data-scheme-text', '0');
     el.setAttribute('data-text-direction', defaultDir);
     applySingleElementScheme(el, state.currentScheme);

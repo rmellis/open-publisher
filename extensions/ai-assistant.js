@@ -1,5 +1,5 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.21.0)
+   OpenPublisher AI Layout & Command Assistant (v5.21.2)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
@@ -342,6 +342,275 @@
         };
     }
 
+    async function removeSolidBackgroundToPng(dataUrl) {
+        if (!dataUrl || typeof document === 'undefined') return dataUrl;
+
+        const img = await new Promise((resolve, reject) => {
+            const image = new Image();
+            if (!/^data:/i.test(dataUrl)) {
+                image.crossOrigin = 'anonymous';
+            }
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error('Failed to load generated image for transparency cutout.'));
+            image.src = dataUrl;
+        });
+
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        if (!w || !h) return dataUrl;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return dataUrl;
+
+        ctx.drawImage(img, 0, 0, w, h);
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        const total = w * h;
+
+        // 1. Sample outer 2px perimeter to identify the dominant solid background RGB
+        const buckets = new Map();
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (x >= 2 && x < w - 2 && y >= 2 && y < h - 2) continue;
+                const p = (y * w + x) * 4;
+                if (data[p + 3] < 16) continue;
+                const r = data[p];
+                const g = data[p + 1];
+                const b = data[p + 2];
+                const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+                let bucket = buckets.get(key);
+                if (!bucket) {
+                    bucket = { count: 0, sumR: 0, sumG: 0, sumB: 0 };
+                    buckets.set(key, bucket);
+                }
+                bucket.count++;
+                bucket.sumR += r;
+                bucket.sumG += g;
+                bucket.sumB += b;
+            }
+        }
+
+        if (buckets.size === 0) return dataUrl;
+
+        let bestBucket = null;
+        buckets.forEach((bucket) => {
+            if (!bestBucket || bucket.count > bestBucket.count) {
+                bestBucket = bucket;
+            }
+        });
+
+        let bgR = Math.round(bestBucket.sumR / bestBucket.count);
+        let bgG = Math.round(bestBucket.sumG / bestBucket.count);
+        let bgB = Math.round(bestBucket.sumB / bestBucket.count);
+
+        // Refine dominant perimeter mean across all near-matching border pixels
+        let refR = 0, refG = 0, refB = 0, refCount = 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (x >= 2 && x < w - 2 && y >= 2 && y < h - 2) continue;
+                const p = (y * w + x) * 4;
+                if (data[p + 3] < 16) continue;
+                const d = Math.hypot(data[p] - bgR, data[p + 1] - bgG, data[p + 2] - bgB);
+                if (d <= 24) {
+                    refR += data[p];
+                    refG += data[p + 1];
+                    refB += data[p + 2];
+                    refCount++;
+                }
+            }
+        }
+        if (refCount > 0) {
+            bgR = refR / refCount;
+            bgG = refG / refCount;
+            bgB = refB / refCount;
+        }
+
+        // Precompute color distance to background for fast flood-fill and edge feathering
+        const dists = new Float32Array(total);
+        for (let i = 0; i < total; i++) {
+            const p = i * 4;
+            if (data[p + 3] === 0) {
+                dists[i] = 0;
+            } else {
+                dists[i] = Math.hypot(data[p] - bgR, data[p + 1] - bgG, data[p + 2] - bgB);
+            }
+        }
+
+        const FLOOD_MAX_DIST = 48;
+        const CORE_BG_DIST = 26;
+        const EDGE_MAX_DIST = 58;
+        const EDGE_SPAN = EDGE_MAX_DIST - CORE_BG_DIST; // 32
+        const HOLE_SEED_DIST = 14;
+        const HOLE_GRADIENT_MAX = 14;
+
+        const visited = new Uint8Array(total);
+        const queue = new Int32Array(total);
+        let qHead = 0;
+        let qTail = 0;
+
+        // 2. Seed BFS from all outer edge pixels (x=0, x=w-1, y=0, y=h-1)
+        const trySeedEdge = (idx) => {
+            if (!visited[idx] && dists[idx] <= FLOOD_MAX_DIST) {
+                visited[idx] = 1;
+                queue[qTail++] = idx;
+            }
+        };
+
+        for (let x = 0; x < w; x++) {
+            trySeedEdge(x);
+            trySeedEdge((h - 1) * w + x);
+        }
+        for (let y = 1; y < h - 1; y++) {
+            trySeedEdge(y * w);
+            trySeedEdge(y * w + (w - 1));
+        }
+
+        const runBfs = () => {
+            while (qHead < qTail) {
+                const idx = queue[qHead++];
+                const x = idx % w;
+                const y = (idx - x) / w;
+
+                if (x > 0) {
+                    const nIdx = idx - 1;
+                    if (!visited[nIdx] && dists[nIdx] <= FLOOD_MAX_DIST) {
+                        visited[nIdx] = 1;
+                        queue[qTail++] = nIdx;
+                    }
+                }
+                if (x + 1 < w) {
+                    const nIdx = idx + 1;
+                    if (!visited[nIdx] && dists[nIdx] <= FLOOD_MAX_DIST) {
+                        visited[nIdx] = 1;
+                        queue[qTail++] = nIdx;
+                    }
+                }
+                if (y > 0) {
+                    const nIdx = idx - w;
+                    if (!visited[nIdx] && dists[nIdx] <= FLOOD_MAX_DIST) {
+                        visited[nIdx] = 1;
+                        queue[qTail++] = nIdx;
+                    }
+                }
+                if (y + 1 < h) {
+                    const nIdx = idx + w;
+                    if (!visited[nIdx] && dists[nIdx] <= FLOOD_MAX_DIST) {
+                        visited[nIdx] = 1;
+                        queue[qTail++] = nIdx;
+                    }
+                }
+            }
+        };
+
+        runBfs();
+
+        // 3. Clear enclosed flat interior background holes (e.g. inside O, A, B, P, R counters)
+        for (let y = 1; y < h - 1; y++) {
+            const rowOffset = y * w;
+            for (let x = 1; x < w - 1; x++) {
+                const idx = rowOffset + x;
+                if (visited[idx] || dists[idx] > HOLE_SEED_DIST) continue;
+
+                const p = idx * 4;
+                const r = data[p];
+                const g = data[p + 1];
+                const b = data[p + 2];
+
+                const pL = (idx - 1) * 4;
+                const pR = (idx + 1) * 4;
+                const pU = (idx - w) * 4;
+                const pD = (idx + w) * 4;
+
+                const gL = Math.max(Math.abs(r - data[pL]), Math.abs(g - data[pL + 1]), Math.abs(b - data[pL + 2]));
+                const gR = Math.max(Math.abs(r - data[pR]), Math.abs(g - data[pR + 1]), Math.abs(b - data[pR + 2]));
+                const gU = Math.max(Math.abs(r - data[pU]), Math.abs(g - data[pU + 1]), Math.abs(b - data[pU + 2]));
+                const gD = Math.max(Math.abs(r - data[pD]), Math.abs(g - data[pD + 1]), Math.abs(b - data[pD + 2]));
+
+                if (Math.max(gL, gR, gU, gD) <= HOLE_GRADIENT_MAX) {
+                    visited[idx] = 1;
+                    queue[qTail++] = idx;
+                    runBfs();
+                }
+            }
+        }
+
+        // 4. Identify 1px immediate boundary of the flood-filled mask for neighbor feathering
+        const boundary = new Uint8Array(total);
+        const transparentNeighborCount = new Uint8Array(total);
+        for (let y = 0; y < h; y++) {
+            const rowOffset = y * w;
+            for (let x = 0; x < w; x++) {
+                const idx = rowOffset + x;
+                if (visited[idx]) continue;
+
+                let touchesVisited = false;
+                let coreNeighbors = 0;
+                if (x > 0 && visited[idx - 1]) {
+                    touchesVisited = true;
+                    if (dists[idx - 1] <= CORE_BG_DIST) coreNeighbors++;
+                }
+                if (x + 1 < w && visited[idx + 1]) {
+                    touchesVisited = true;
+                    if (dists[idx + 1] <= CORE_BG_DIST) coreNeighbors++;
+                }
+                if (y > 0 && visited[idx - w]) {
+                    touchesVisited = true;
+                    if (dists[idx - w] <= CORE_BG_DIST) coreNeighbors++;
+                }
+                if (y + 1 < h && visited[idx + w]) {
+                    touchesVisited = true;
+                    if (dists[idx + w] <= CORE_BG_DIST) coreNeighbors++;
+                }
+
+                if (touchesVisited) {
+                    boundary[idx] = 1;
+                    transparentNeighborCount[idx] = coreNeighbors;
+                }
+            }
+        }
+
+        const clampByte = (v) => (v < 0 ? 0 : (v > 255 ? 255 : Math.round(v)));
+        const decontaminate = (p, alphaVal) => {
+            const t = Math.max(0.28, alphaVal / 255);
+            data[p]     = clampByte((data[p]     - (1 - t) * bgR) / t);
+            data[p + 1] = clampByte((data[p + 1] - (1 - t) * bgG) / t);
+            data[p + 2] = clampByte((data[p + 2] - (1 - t) * bgB) / t);
+        };
+
+        // 5. Apply alpha matting, anti-aliasing ramp (26..58), de-haloing & 1px boundary feathering
+        for (let i = 0; i < total; i++) {
+            const p = i * 4;
+            if (visited[i]) {
+                const d = dists[i];
+                if (d <= CORE_BG_DIST) {
+                    data[p + 3] = 0;
+                } else if (d <= EDGE_MAX_DIST) {
+                    const alpha = Math.round(((d - CORE_BG_DIST) / EDGE_SPAN) * 255);
+                    if (alpha < data[p + 3]) data[p + 3] = alpha;
+                    decontaminate(p, alpha);
+                }
+            } else if (boundary[i]) {
+                const d = dists[i];
+                if (d <= CORE_BG_DIST) {
+                    data[p + 3] = 0;
+                } else if (d <= EDGE_MAX_DIST) {
+                    const alpha = Math.round(((d - CORE_BG_DIST) / EDGE_SPAN) * 255);
+                    if (alpha < data[p + 3]) data[p + 3] = alpha;
+                    decontaminate(p, alpha);
+                } else if (transparentNeighborCount[i] >= 2 && data[p + 3] > 0) {
+                    // Subtle 1px curve feathering on stair-stepped perimeter corners
+                    data[p + 3] = Math.round(data[p + 3] * 0.88);
+                }
+            }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        return canvas.toDataURL('image/png');
+    }
+
     async function generateAIImage(prompt, stylePreset, options) {
         options = options || {};
         const check = validatePrompt(prompt);
@@ -354,9 +623,13 @@
         }
 
         const deviceId = getDeviceId();
+        const wantTransparent = !!(options.transparent || options.transparentBackground);
         let finalPrompt = check.prompt;
         if (stylePreset) {
             finalPrompt += `, ${stylePreset}`;
+        }
+        if (wantTransparent) {
+            finalPrompt += ', isolated single subject centered on a solid flat pure white #FFFFFF background, clean crisp edges, no drop shadow on background, no scenery, sticker cutout style';
         }
 
         const nodes = shuffleNodes(AI_IMAGE_WORKER_NODES);
@@ -417,17 +690,31 @@
             }
 
             const data = await res.json();
-            const dataUrl = data.dataUrl || data.image || data.url;
-            if (!dataUrl) {
+            const rawDataUrl = data.dataUrl || data.image || data.url;
+            if (!rawDataUrl) {
                 lastError = new Error('Image worker did not return a valid image data URL.');
                 continue;
+            }
+
+            let finalDataUrl = rawDataUrl;
+            if (wantTransparent) {
+                if (typeof options.onStatus === 'function') {
+                    options.onStatus({ phase: 'matting', url: nodeUrl });
+                }
+                try {
+                    finalDataUrl = await removeSolidBackgroundToPng(rawDataUrl);
+                } catch (matteErr) {
+                    console.warn('[AI Assistant] Transparent background cutout fallback:', matteErr);
+                    finalDataUrl = rawDataUrl;
+                }
             }
 
             markGenerationTimestamp();
             return {
                 status: 'ok',
                 fallbackToSvg: false,
-                dataUrl,
+                transparent: wantTransparent,
+                dataUrl: finalDataUrl,
                 prompt: finalPrompt,
                 nodeUrl
             };
@@ -485,14 +772,22 @@
             return null;
         }
 
-        const imgHtml = `<img src="${dataUrl}" alt="AI Generated Image" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+        const fitMode = options.transparent ? 'contain' : 'cover';
+        const imgHtml = `<img src="${dataUrl}" alt="AI Generated Image" style="width:100%; height:100%; object-fit:${fitMode}; display:block;">`;
         const el = global.createWrapper(imgHtml);
         if (el) {
             el.setAttribute('data-type', 'image');
+            if (options.transparent) {
+                el.style.background = 'transparent';
+            }
             const paperW = parseFloat(paper.style.width) || 794;
             const paperH = parseFloat(paper.style.height) || 1123;
-            const w = Math.round(Math.min(360, paperW * 0.7));
-            const h = Math.round(Math.min(270, paperH * 0.45));
+            const w = options.transparent
+                ? Math.round(Math.min(300, paperW * 0.65, paperH * 0.45))
+                : Math.round(Math.min(360, paperW * 0.7));
+            const h = options.transparent
+                ? w
+                : Math.round(Math.min(270, paperH * 0.45));
             el.style.width = w + 'px';
             el.style.height = h + 'px';
             el.style.left = Math.max(20, Math.round((paperW - w) / 2)) + 'px';
@@ -2163,7 +2458,9 @@
                     const item = plan.elements[i];
                     if (item && item.type === 'ai_image' && item.props && item.props.prompt) {
                         try {
-                            const imgRes = await generateAIImage(item.props.prompt, item.props.stylePreset || '');
+                            const imgRes = await generateAIImage(item.props.prompt, item.props.stylePreset || '', {
+                                transparent: !!item.props.transparent
+                            });
                             if (imgRes && imgRes.dataUrl) {
                                 item._resolvedDataUrl = imgRes.dataUrl;
                             } else if (imgRes && imgRes.fallbackToSvg && imgRes.svg) {
@@ -2350,6 +2647,10 @@
                                     <span>Set as Page Background</span>
                                 </label>
                             </div>
+                            <label class="op-ai-checkbox-row" id="op-ai-img-transparent-wrap" style="margin-top:4px; display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                                <input type="checkbox" id="op-ai-img-transparent" checked>
+                                <span><strong>Transparent background</strong> (auto-cutout for stickers, objects &amp; titles)</span>
+                            </label>
                         </div>
 
                         <div class="op-ai-chips-row">
@@ -2413,6 +2714,17 @@
                 const target = tabBtn.getAttribute('data-tab');
                 switchTab(target);
             };
+        });
+
+        // Placement radio toggles default transparent background cutout state
+        const transparentCb = document.getElementById('op-ai-img-transparent');
+        const transparentWrap = document.getElementById('op-ai-img-transparent-wrap');
+        overlay.querySelectorAll('input[name="op-ai-img-placement"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const isCanvas = radio.value === 'canvas';
+                if (transparentCb) transparentCb.checked = isCanvas;
+                if (transparentWrap) transparentWrap.style.opacity = isCanvas ? '1' : '0.65';
+            });
         });
 
         // Preset chip toggles
@@ -2747,12 +3059,17 @@
 
         const placementRadio = document.querySelector('input[name="op-ai-img-placement"]:checked');
         const asBackground = placementRadio && placementRadio.value === 'background';
+        const transparentCb = document.getElementById('op-ai-img-transparent');
+        const transparentBg = !!(transparentCb && transparentCb.checked);
 
         try {
             showStatus('info', 'Connecting to FLUX.1 AI Image Worker (openpub-img-1)...');
             const result = await generateAIImage(check.prompt, _selectedImgPreset, {
+                transparent: transparentBg,
                 onStatus: (st) => {
-                    if (st.phase === 'fallback') {
+                    if (st.phase === 'matting') {
+                        showStatus('info', 'Applying smart background cutout for transparent PNG...');
+                    } else if (st.phase === 'fallback') {
                         showStatus('info', 'GPU quota reached (503) - falling back to SVG vector graphic...');
                     }
                 }
@@ -2762,8 +3079,10 @@
                 insertAIVectorToCanvas(result.svg);
                 showStatus('info', `<strong>FLUX.1 Notice:</strong> Daily GPU quota reached (503). Automatically fell back to generating a scalable vector SVG graphic!`);
             } else {
-                insertAIImageToCanvas(result.dataUrl, { asBackground });
-                const locMsg = asBackground ? 'set as page background' : 'added to canvas';
+                insertAIImageToCanvas(result.dataUrl, { asBackground, transparent: !!result.transparent });
+                const locMsg = asBackground
+                    ? 'set as page background'
+                    : (result.transparent ? 'added as transparent PNG cutout' : 'added to canvas');
                 showStatus('success', `<strong>Done:</strong> AI Image generated and ${locMsg}.`);
             }
 
@@ -2846,7 +3165,7 @@
     global.generateAIImage = generateAIImage;
     global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.21.0',
+        VERSION: '5.21.2',
         WORKER_NODES: AI_WORKER_NODES.slice(),
         IMAGE_WORKER_NODES: AI_IMAGE_WORKER_NODES.slice(),
         COOLDOWN_MS,
@@ -2859,6 +3178,7 @@
         buildAISystemPrompt,
         buildAIVectorSVGSystemPrompt,
         sanitizeSvgMarkup,
+        removeSolidBackgroundToPng,
         requestLayout: sendAIWorkerRequest,
         generateAIImage,
         generateAIVectorSVG,

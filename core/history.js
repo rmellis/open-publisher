@@ -327,7 +327,8 @@ function serializeCurrentPage() {
             }
         }
 
-        const isGhost = data.type === 'box' && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
+        const isLinkedFlow = !!(data.filterAttributes && (data.filterAttributes['data-next-box'] || data.filterAttributes['data-prev-box']));
+        const isGhost = data.type === 'box' && !isLinkedFlow && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
         if (!isGhost) {
             p.elements.push(data);
         }

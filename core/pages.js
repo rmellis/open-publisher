@@ -190,7 +190,8 @@ function renderPage(pageData) {
     // Filter out legacy orphaned theme containers or empty ghost boxes
     elementsToRender = elementsToRender.filter(data => {
         const isTheme = data.type === 'box' && data.innerHTML && data.innerHTML.includes('op-theme-container');
-        const isGhost = data.type === 'box' && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
+        const isLinkedFlow = !!(data.filterAttributes && (data.filterAttributes['data-next-box'] || data.filterAttributes['data-prev-box']));
+        const isGhost = data.type === 'box' && !isLinkedFlow && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
         return !isTheme && !isGhost;
     });
 
@@ -749,6 +750,10 @@ window.removeMasterPage = removeMasterPage;
 
 function switchPage(newIndex) {
     if (newIndex === state.currentPageIndex) return;
+    const preserveTextLink = !!(window.isLinkingTextBox && (window.linkingSourceBox || window.linkingSourceId));
+    if (preserveTextLink && window.linkingSourceBox && typeof window.ensureFlowBoxId === 'function') {
+        window.linkingSourceId = window.ensureFlowBoxId(window.linkingSourceBox);
+    }
     // Save current page state
     state.pages[state.currentPageIndex] = serializeCurrentPage();
     state.currentPageIndex = newIndex;
@@ -757,8 +762,17 @@ function switchPage(newIndex) {
         state.pages[newIndex]._needsRender = false;
     }
     
-    renderPage(state.pages[newIndex]);
-    updateSidebar();
+    window._preservingTextLinkOnPageSwitch = preserveTextLink;
+    try {
+        renderPage(state.pages[newIndex]);
+        updateSidebar();
+    } finally {
+        window._preservingTextLinkOnPageSwitch = false;
+    }
+
+    if (preserveTextLink && typeof window.syncTextBoxLinkingUI === 'function') {
+        window.syncTextBoxLinkingUI();
+    }
 }
 
 function deletePage(index, event) {

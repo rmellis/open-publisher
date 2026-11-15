@@ -241,8 +241,9 @@ if (!window._sliderFillListenerInstalled) {
 
         if (els.length === 1 && (!state.multiSelected || state.multiSelected.length === 0)) {
             const el = els[0];
-            const existing = container.firstElementChild;
-            if (existing && existing.classList.contains('selected-overlay') && existing._boundEl === el && container.children.length === 1 && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+            const selectedOverlays = container.querySelectorAll(':scope > .selected-overlay');
+            const existing = selectedOverlays.length === 1 ? selectedOverlays[0] : null;
+            if (existing && existing._boundEl === el && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 existing.classList.toggle('is-transforming', isTransforming);
                 existing.classList.toggle('is-locked', el.getAttribute('data-locked') === 'true');
                 existing.style.left = el.style.left;
