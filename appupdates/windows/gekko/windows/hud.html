@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>OpenPublisher Debug HUD</title>
+    <style>
+        :root {
+            --bg-color: #146F6E;
+            --accent-color: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+        #dev-mode-overlay {
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 24, 32, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #dev-mode-header {
+            background: var(--bg-color);
+            color: var(--accent-color);
+            padding: 5px 5px 5px 14px;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .dev-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .dev-header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .dev-pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #4ade80;
+            animation: devPulse 1.5s infinite;
+            pointer-events: none !important;
+        }
+        @keyframes devPulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+        .dev-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-app-region: no-drag !important;
+        }
+        #dev-mode-popout {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        #dev-mode-popout * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        #dev-mode-popout:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        #dev-mode-popout:active {
+            transform: scale(0.95);
+        }
+        #dev-mode-close {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        #dev-mode-close * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        #dev-mode-close:hover {
+            background: #d35450;
+            color: #ffffff;
+        }
+        #dev-mode-close:active {
+            transform: scale(0.95);
+        }
+        .dev-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            overflow-y: auto;
+            flex: 1;
+            -webkit-app-region: no-drag;
+        }
+        .dev-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dev-label {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+        .dev-val {
+            font-weight: 600;
+            color: #38bdf8;
+        }
+        .dev-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.18);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .dev-mem-chart-container {
+            background: #0b1120;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 5px 6px;
+            margin: 1px 0 3px 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            contain: paint;
+        }
+        .dev-mem-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 2px;
+            height: 30px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            contain: paint;
+            transform: translateZ(0);
+        }
+        .dev-mem-bar {
+            flex: 1;
+            height: 6%;
+            background: #38bdf8;
+            border-radius: 1px 1px 0 0;
+            transition: background-color 0.2s ease, filter 0.2s ease;
+            min-height: 2px;
+            cursor: default;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        .dev-mem-bar:hover {
+            filter: brightness(1.25);
+        }
+        .dev-section-title {
+            color: #4ade80;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 4px 0 0 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 2px;
+        }
+        .dev-section-title:first-child { margin-top: 0; }
+        .dev-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .dev-btn {
+            flex: 1 1 calc(50% - 4px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 4px 0;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            user-select: none;
+            -webkit-app-region: no-drag;
+        }
+        .dev-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+        .dev-switch {
+            position: relative;
+            display: inline-block;
+            width: 28px;
+            height: 15px;
+            margin-left: auto;
+            -webkit-app-region: no-drag;
+        }
+        .dev-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .dev-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: 0.2s;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .dev-slider:before {
+            position: absolute;
+            content: "";
+            height: 11px;
+            width: 11px;
+            left: 1px;
+            bottom: 1px;
+            background-color: #94a3b8;
+            transition: 0.2s;
+            border-radius: 50%;
+        }
+        .dev-switch input:checked + .dev-slider {
+            background-color: var(--bg-color);
+            border-color: var(--bg-color);
+        }
+        .dev-switch input:checked + .dev-slider:before {
+            transform: translateX(13px);
+            background-color: #ffffff;
+        }
+        .dev-log-container {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            height: 90px;
+            overflow-y: auto;
+            padding: 4px;
+            margin-top: 2px;
+            -webkit-app-region: no-drag;
+        }
+        .dev-log-container::-webkit-scrollbar { width: 6px; }
+        .dev-log-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .dev-log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 4px;
+            line-height: 1.3;
+            word-break: break-all;
+        }
+        .dev-log-time { color: #64748b; font-size: 9px; flex-shrink: 0; margin-top: 1px; }
+        .dev-log-badge {
+            flex-shrink: 0;
+            align-self: flex-start;
+            font-weight: bold;
+            font-size: 8.5px;
+            border-radius: 3px;
+            padding: 0 4px;
+            height: 14px;
+            line-height: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            box-sizing: border-box;
+            margin-top: 1px;
+        }
+        .dev-log-msg { color: #93c5fd; font-size: 10px; flex: 1; }
+    </style>
+</head>
+<body>
+    <div id="dev-mode-overlay">
+        <div id="dev-mode-header">
+            <div class="dev-header-left">
+                <span class="dev-pulse-dot"></span>
+                <span>OpenPublisher Debug HUD</span>
+            </div>
+            <div class="dev-header-actions">
+                <span id="dev-mode-popout" title="Dock into Main Window">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" style="display:block;">
+                        <path d="M4 14h6m0 0v6m0-6L3 21"></path>
+                        <path d="M20 10V4a2 2 0 0 0-2-2h-6"></path>
+                        <path d="M14 20h4a2 2 0 0 0 2-2v-6"></path>
+                    </svg>
+                </span>
+                <span id="dev-mode-close" title="Close (Ctrl+Shift+D)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" style="display:block;">
+                        <path d="M6 6L18 18M6 18L18 6"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+        <div class="dev-body">
+            <div class="dev-section-title">Performance & Status</div>
+            <div class="dev-row">
+                <span class="dev-label">Webview RAM:</span>
+                <span class="dev-val" id="dev-stat-ram">-- MB</span>
+            </div>
+            <div class="dev-row" style="margin-top: -2px;">
+                <span class="dev-label">App RSS Memory:</span>
+                <span class="dev-val" id="dev-stat-rss">-- MB</span>
+            </div>
+            <div class="dev-mem-chart-container" title="App Memory Footprint History (Last 20 Samples)">
+                <div class="dev-mem-chart" id="dev-mem-chart">
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                    <div class="dev-mem-bar"></div>
+                </div>
+            </div>
+            <div class="dev-row" style="margin-top: -2px; margin-bottom: 2px;">
+                <span class="dev-label">RSS Rate:</span>
+                <span class="dev-val" id="dev-stat-rss-rate" style="font-size: 10px; color: #94a3b8;">--</span>
+            </div>
+            <div class="dev-row">
+                <span class="dev-label">Webview FPS:</span>
+                <span class="dev-val" id="dev-stat-fps">-- FPS</span>
+            </div>
+            <div class="dev-row">
+                <span class="dev-label">DOM Nodes:</span>
+                <span class="dev-val" id="dev-stat-dom">--</span>
+            </div>
+            <div class="dev-row">
+                <span class="dev-label">UI Auto-Reload:</span>
+                <span class="dev-badge" id="dev-stat-watcher">Watching CSS/UI</span>
+            </div>
+
+            <div class="dev-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Quick Actions</span>
+                <span id="dev-popout-quick-actions" title="Detach as floating tool palette" style="cursor: pointer; font-size: 10px; font-weight: normal; color: #38bdf8; text-transform: none; display: flex; align-items: center; gap: 3px; -webkit-app-region: no-drag; padding: 1px 4px; border-radius: 3px;" onmouseover="this.style.background='rgba(56,189,248,0.15)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Float Palette
+                </span>
+            </div>
+            <div class="dev-toolbar">
+                <div class="dev-btn" id="dev-btn-reload-app">Reload App</div>
+                <div class="dev-btn" id="dev-btn-reload-view">Reload View</div>
+                <div class="dev-btn" id="dev-btn-tools-app">App DevTools</div>
+                <div class="dev-btn" id="dev-btn-tools-view">View DevTools</div>
+                <div class="dev-btn" id="dev-btn-open-appdata">Open AppData</div>
+                <div class="dev-btn" id="dev-btn-backup-mgr" style="flex: 1 1 calc(50% - 4px);">Backup Manager</div>
+                <div class="dev-btn" id="dev-btn-prev-versions" style="flex: 1 1 calc(50% - 4px);">Previous Versions</div>
+                <div class="dev-btn" id="dev-btn-doc-preview" style="flex: 1 1 calc(50% - 4px); margin-top: 2px;">Doc Preview</div>
+                <div class="dev-btn" id="dev-btn-export-queue" style="flex: 1 1 calc(50% - 4px); margin-top: 2px;">Export Queue</div>
+                <div class="dev-btn" id="dev-btn-reboot-safe" style="flex: 1 1 calc(50% - 4px); margin-top: 2px; background: rgba(220, 53, 69, 0.15); color: #fca5a5; border-color: rgba(220, 53, 69, 0.3);">Reboot Safe</div>
+                <div class="dev-btn" id="dev-btn-simulate-crash" style="flex: 1 1 calc(50% - 4px); margin-top: 2px; background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);">Crash Renderer</div>
+            </div>
+
+            <div class="dev-section-title">Preferences</div>
+            <div class="dev-row">
+                <span class="dev-label">Close to System Tray</span>
+                <label class="dev-switch" title="Close to System Tray">
+                    <input type="checkbox" id="dev-toggle-close-tray">
+                    <span class="dev-slider"></span>
+                </label>
+            </div>
+            <div class="dev-row">
+                <span class="dev-label">Log IPC Traffic</span>
+                <label class="dev-switch" title="Log IPC Traffic to DevTools Console">
+                    <input type="checkbox" id="dev-toggle-log-ipc">
+                    <span class="dev-slider"></span>
+                </label>
+            </div>
+
+            <div class="dev-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>IPC Event Logger</span>
+                <span id="dev-popout-ipc-sniffer" title="Pop out into full-size terminal" style="cursor: pointer; font-size: 10px; font-weight: normal; color: #38bdf8; text-transform: none; display: flex; align-items: center; gap: 3px; -webkit-app-region: no-drag; padding: 1px 4px; border-radius: 3px;" onmouseover="this.style.background='rgba(56,189,248,0.15)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Pop Out
+                </span>
+            </div>
+            <div class="dev-log-container" id="dev-log-terminal">
+                <div class="dev-log-placeholder" style="color: #64748b; font-style: italic; font-size: 10px; padding: 4px;">Waiting for IPC events...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Reference to parent OpenPublisher window
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed) return window.mainWin;
+            if (window.opener && !window.opener.closed) return window.opener;
+            return null;
+        }
+
+        // Apply theme from parent or storage
+        function syncTheme() {
+            const mw = getMainWin();
+            if (mw && mw.document) {
+                const bg = mw.document.documentElement.style.getPropertyValue('--bg-color') || '#146F6E';
+                const accent = mw.document.documentElement.style.getPropertyValue('--accent-color') || '#ffffff';
+                document.documentElement.style.setProperty('--bg-color', bg);
+                document.documentElement.style.setProperty('--accent-color', accent);
+            }
+        }
+        syncTheme();
+
+        // Dock button
+        document.getElementById('dev-mode-popout').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockDevHud) {
+                mw.dockDevHud(false);
+            } else {
+                window.close();
+            }
+        };
+
+        // Close button
+        document.getElementById('dev-mode-close').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockDevHud) {
+                mw.dockDevHud(true);
+            } else {
+                window.close();
+            }
+        };
+
+        // Window Drag Fallback: In addition to native -webkit-app-region: drag,
+        // this fallback ensures 100% responsiveness across every pixel of the header.
+        (function initWindowDragFallback() {
+            const header = document.getElementById('dev-mode-header');
+            if (!header) return;
+
+            let isDragging = false;
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let startWinX = 0;
+            let startWinY = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.dev-header-actions') || e.button !== 0) return;
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        const win = nw.Window.get();
+                        isDragging = true;
+                        startMouseX = e.screenX;
+                        startMouseY = e.screenY;
+                        startWinX = win.x;
+                        startWinY = win.y;
+
+                        function onMouseMove(moveEvent) {
+                            if (!isDragging) return;
+                            const dx = moveEvent.screenX - startMouseX;
+                            const dy = moveEvent.screenY - startMouseY;
+                            win.moveTo(startWinX + dx, startWinY + dy);
+                        }
+
+                        function onMouseUp() {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    }
+                } catch(err) {
+                    console.error('[HUD Drag Fallback] Error:', err);
+                }
+            });
+        })();
+
+        // Hotkey: Ctrl+Shift+D closes and deactivates Dev Mode
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd' || e.code === 'KeyD')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const mw = getMainWin();
+                if (mw && mw.dockDevHud) {
+                    mw.dockDevHud(true);
+                } else {
+                    window.close();
+                }
+            }
+        }, true);
+
+        // Quick Actions
+        document.getElementById('dev-btn-reload-app').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerReloadApp) mw.triggerReloadApp();
+            else if (mw) mw.location.reload();
+        };
+        document.getElementById('dev-btn-reload-view').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerReloadView) mw.triggerReloadView();
+        };
+        document.getElementById('dev-btn-tools-app').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerAppDevTools) mw.triggerAppDevTools();
+        };
+        document.getElementById('dev-btn-tools-view').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerViewDevTools) mw.triggerViewDevTools();
+        };
+        document.getElementById('dev-btn-open-appdata').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerOpenAppData) mw.triggerOpenAppData();
+        };
+        document.getElementById('dev-btn-backup-mgr').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerBackupMgr) mw.triggerBackupMgr();
+        };
+        document.getElementById('dev-btn-prev-versions').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerPrevVersions) mw.triggerPrevVersions();
+        };
+        document.getElementById('dev-btn-reboot-safe').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerRebootSafe) mw.triggerRebootSafe();
+        };
+        document.getElementById('dev-btn-simulate-crash').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerCrashRenderer) mw.triggerCrashRenderer();
+        };
+        const btnHudDocPreview = document.getElementById('dev-btn-doc-preview');
+        if (btnHudDocPreview) {
+            btnHudDocPreview.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutDocPreview) mw.popOutDocPreview();
+            };
+        }
+        const btnHudExportQueue = document.getElementById('dev-btn-export-queue');
+        if (btnHudExportQueue) {
+            btnHudExportQueue.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutExportQueue) mw.popOutExportQueue();
+            };
+        }
+
+        // Preferences
+        const toggleCloseTray = document.getElementById('dev-toggle-close-tray');
+        if (toggleCloseTray) {
+            toggleCloseTray.checked = localStorage.getItem('op_close_to_tray') === 'true';
+            toggleCloseTray.onchange = function() {
+                localStorage.setItem('op_close_to_tray', this.checked ? 'true' : 'false');
+                const mw = getMainWin();
+                if (mw && mw.document) {
+                    const mwToggle = mw.document.getElementById('dev-toggle-close-tray');
+                    if (mwToggle) mwToggle.checked = this.checked;
+                }
+            };
+        }
+
+        const toggleLogIpc = document.getElementById('dev-toggle-log-ipc');
+        if (toggleLogIpc) {
+            toggleLogIpc.checked = localStorage.getItem('op_log_ipc_traffic') === 'true';
+            toggleLogIpc.onchange = function() {
+                const mw = getMainWin();
+                if (mw && mw.setLogIpcTraffic) {
+                    mw.setLogIpcTraffic(this.checked);
+                } else {
+                    localStorage.setItem('op_log_ipc_traffic', this.checked ? 'true' : 'false');
+                }
+            };
+        }
+
+        // Float Palette & IPC Sniffer Pop Out Handlers
+        const popoutQuickActions = document.getElementById('dev-popout-quick-actions');
+        if (popoutQuickActions) {
+            popoutQuickActions.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutQuickActions) mw.popOutQuickActions();
+            };
+        }
+
+        const popoutIpcSniffer = document.getElementById('dev-popout-ipc-sniffer');
+        if (popoutIpcSniffer) {
+            popoutIpcSniffer.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutIpcSniffer) mw.popOutIpcSniffer();
+            };
+        }
+    </script>
+</body>
+</html>

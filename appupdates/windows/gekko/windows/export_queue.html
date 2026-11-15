@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>Export & Print Queue - OpenPublisher</title>
+    <style>
+        :root {
+            --bg-color: #007670;
+            --accent-color: #ffffff;
+            --scroll-track: #0b1120;
+            --scroll-border: #0b1120;
+            --main-scrollbar-thumb: #007670;
+            --main-scrollbar-thumb-hover: #009e94;
+        }
+        /* Custom Teal Green on Dark Scrollbars (Scoped to this window) */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+            scrollbar-color: var(--bg-color, #007670) #0b1120 !important;
+        }
+        ::-webkit-scrollbar {
+            width: 10px !important;
+            height: 10px !important;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1120 !important;
+            border-radius: 5px !important;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-color, #007670) !important;
+            border-radius: 5px !important;
+            border: 2px solid #0b1120 !important;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #009e94 !important;
+        }
+        ::-webkit-scrollbar-corner {
+            background: #0b1120 !important;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #e2e8f0;
+        }
+        #queue-window {
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(14px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        #queue-header {
+            background: var(--bg-color, #007670);
+            color: white;
+            padding: 7px 8px 7px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-icon {
+            display: flex;
+            align-items: center;
+            color: #a7f3d0;
+        }
+        .header-badge {
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        .header-btn * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .header-btn.close-btn:hover {
+            background: #d35450 !important;
+        }
+
+        /* ACTIVE PUBLICATION CONTROL PANEL */
+        #active-pub-panel {
+            background: #0d1527;
+            border-bottom: 1px solid #1e293b;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .pub-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .pub-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pub-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        .pub-status-pill {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .pub-meta {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .pub-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .export-action-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+        .export-action-btn:hover {
+            background: #334155;
+            color: #ffffff;
+            border-color: #475569;
+        }
+        .export-action-btn.primary {
+            background: var(--bg-color, #007670);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .export-action-btn.primary:hover {
+            filter: brightness(1.15);
+        }
+
+        /* METRICS STRIP */
+        #metrics-strip {
+            background: #090e17;
+            padding: 8px 14px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .metric-card {
+            background: #131d2e;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .metric-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* TOOLBAR */
+        #queue-toolbar {
+            background: #090e17;
+            padding: 6px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            gap: 10px;
+        }
+        .filter-group {
+            display: flex;
+            gap: 4px;
+        }
+        .filter-pill {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-pill:hover {
+            color: #ffffff;
+            border-color: #475569;
+        }
+        .filter-pill.active {
+            background: var(--bg-color, #007670);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .action-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        .action-btn:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+
+        /* JOB LIST */
+        #jobs-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .job-card {
+            background: #131d2e;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .job-card.running {
+            border-color: #0284c7;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
+        }
+        .job-card.completed {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .job-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .format-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .format-pdf { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .format-png { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .format-print { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+
+        .job-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .job-status-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+        .status-running { background: rgba(2, 132, 199, 0.25); color: #38bdf8; border: 1px solid #0284c7; }
+        .status-completed { background: rgba(34, 197, 94, 0.25); color: #4ade80; border: 1px solid #22c55e; }
+        .status-cancelled { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+        /* Progress Bar */
+        .progress-bar-wrap {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            border-radius: 3px;
+            transition: width 0.08s linear;
+            position: relative;
+        }
+        .progress-bar-fill.completed {
+            background: #22c55e;
+        }
+
+        .job-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #94a3b8;
+            gap: 12px;
+        }
+        .job-path-text {
+            max-width: 360px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+        }
+        .job-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .job-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .job-btn:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+        .job-btn.cancel-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border-color: #ef4444;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            gap: 8px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        /* FOOTER */
+        #queue-footer {
+            background: #090e17;
+            border-top: 1px solid #1e293b;
+            padding: 5px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div id="queue-window">
+        <!-- HEADER -->
+        <div id="queue-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                </div>
+                <span>Export & Print Queue Monitor</span>
+                <span class="header-badge" id="queue-doc-badge">Connected</span>
+            </div>
+            <div class="header-actions">
+                <div class="header-btn" id="btn-dock" title="Dock back into OpenPublisher (Esc)">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </div>
+                <div class="header-btn close-btn" id="btn-close" title="Close Queue">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVE PUBLICATION CONTROL PANEL -->
+        <div id="active-pub-panel">
+            <div class="pub-info">
+                <div class="pub-title-row">
+                    <span class="pub-title" id="panel-doc-title">Active Publication</span>
+                    <span class="pub-status-pill" id="panel-doc-status">Ready</span>
+                </div>
+                <span class="pub-meta" id="panel-doc-meta">1 Page - A4 Portrait (794 x 1123 px)</span>
+            </div>
+            <div class="pub-actions">
+                <button class="export-action-btn primary" id="btn-export-pdf" title="Export high-resolution vector PDF to Documents/OpenPublisher_Exports">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Export PDF
+                </button>
+                <button class="export-action-btn" id="btn-export-png" title="Export publication page as PNG image">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    Export PNG
+                </button>
+                <button class="export-action-btn" id="btn-print-doc" title="Send publication to native Windows printer spooler">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Print
+                </button>
+            </div>
+        </div>
+
+        <!-- METRICS STRIP -->
+        <div id="metrics-strip">
+            <div class="metric-card">
+                <span class="metric-label">Active Jobs</span>
+                <span class="metric-val" id="metric-active">0</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Completed</span>
+                <span class="metric-val" id="metric-completed" style="color: #4ade80;">0</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Pipeline Priority</span>
+                <span class="metric-val" id="metric-priority" style="font-size: 11px; color: #a7f3d0;">NORMAL</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Queue State</span>
+                <span class="metric-val" id="metric-state" style="font-size: 11px;">IDLE</span>
+            </div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div id="queue-toolbar">
+            <div class="filter-group">
+                <div class="filter-pill active" data-filter="all">All (<span id="count-all">0</span>)</div>
+                <div class="filter-pill" data-filter="active">Active (<span id="count-active">0</span>)</div>
+                <div class="filter-pill" data-filter="completed">Completed (<span id="count-completed">0</span>)</div>
+            </div>
+            <div class="filter-group">
+                <button class="action-btn" id="btn-open-export-dir" title="Open Documents/OpenPublisher_Exports in Windows File Explorer">Open Export Folder</button>
+                <button class="action-btn" id="btn-clear-completed" title="Clear completed export records from list">Clear History</button>
+            </div>
+        </div>
+
+        <!-- JOBS CONTAINER -->
+        <div id="jobs-container">
+            <div class="empty-state" id="empty-state">
+                <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>No active or queued exports</span>
+                <span style="font-size: 11px; color: #475569;">Click "Export PDF" or "Export PNG" above to start background rendering.</span>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div id="queue-footer">
+            <span id="footer-storage-path">Output Directory: Documents/OpenPublisher_Exports</span>
+            <span id="footer-pipeline-stat">Process: OpenPublisher Node Pipeline</span>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let jobs = [];
+        window.jobs = jobs;
+        window.getJobs = function() { return jobs; };
+        let currentFilter = 'all';
+        let activeDocTitle = 'Active Publication';
+        let activeDocPages = 1;
+
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed && (window.mainWin.isMainWindow || typeof window.mainWin.triggerDocumentExport === 'function' || (window.mainWin.document && window.mainWin.document.getElementById('app-view')))) {
+                return window.mainWin;
+            }
+            if (window.opener && !window.opener.closed && (window.opener.isMainWindow || typeof window.opener.triggerDocumentExport === 'function' || (window.opener.document && window.opener.document.getElementById('app-view')))) {
+                return window.opener;
+            }
+            try {
+                if (typeof nw !== 'undefined' && nw.Window && nw.Window.getAll) {
+                    const wins = nw.Window.getAll();
+                    for (let i = 0; i < wins.length; i++) {
+                        const w = wins[i] && wins[i].window;
+                        if (w && !w.closed && (w.isMainWindow || typeof w.triggerDocumentExport === 'function' || (w.document && w.document.getElementById('app-view')))) {
+                            window.mainWin = w;
+                            return w;
+                        }
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // Auto-close if the main OpenPublisher application window is closed or terminates
+        let hasSeenMainWindow = false;
+        setInterval(function() {
+            const mw = getMainWin();
+            if (mw && !mw.closed) {
+                hasSeenMainWindow = true;
+            } else if (hasSeenMainWindow) {
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window && typeof nw.Window.get === 'function') {
+                        nw.Window.get().close(true);
+                    } else {
+                        window.close();
+                    }
+                } catch(e) {}
+            }
+        }, 350);
+
+        function syncTheme() {
+            try {
+                const mw = getMainWin();
+                if (mw && mw.document && mw.document.documentElement) {
+                    const bgColor = mw.document.documentElement.style.getPropertyValue('--bg-color');
+                    const accentColor = mw.document.documentElement.style.getPropertyValue('--accent-color');
+                    if (bgColor) document.documentElement.style.setProperty('--bg-color', bgColor);
+                    if (accentColor) document.documentElement.style.setProperty('--accent-color', accentColor);
+                }
+            } catch(e) {}
+        }
+
+        // Live Document Info Callback from wrapper.html
+        window.updateActiveDocumentInfo = function(docData) {
+            if (!docData) return;
+            activeDocTitle = docData.title || 'Untitled Publication';
+            activeDocPages = (docData.pages && docData.pages.length) ? docData.pages.length : 1;
+
+            document.getElementById('panel-doc-title').textContent = activeDocTitle;
+            document.getElementById('queue-doc-badge').textContent = activeDocTitle;
+            
+            const w = (docData.liveCanvas && docData.liveCanvas.width) ? docData.liveCanvas.width : 794;
+            const h = (docData.liveCanvas && docData.liveCanvas.height) ? docData.liveCanvas.height : 1123;
+            document.getElementById('panel-doc-meta').textContent = `${activeDocPages} Page${activeDocPages > 1 ? 's' : ''} - (${w} x ${h} px)`;
+        };
+
+        // Populate Real History from Disk
+        window.populateHistory = function(historyList) {
+            if (!historyList || !Array.isArray(historyList)) return;
+            const clearedAt = parseInt(localStorage.getItem('op_export_history_cleared_at') || '0', 10);
+            const cleanItems = historyList
+                .filter(item => {
+                    if (!clearedAt) return true;
+                    const itemTime = item.startTime ? new Date(item.startTime).getTime() : 0;
+                    return itemTime > clearedAt;
+                })
+                .map(item => {
+                    if (!item.title && item.name) item.title = item.name;
+                    if (!item.title) item.title = 'Export Artifact';
+                    return item;
+                });
+            // Keep running jobs, merge completed history
+            const running = jobs.filter(j => j.status === 'running');
+            jobs = [...running, ...cleanItems];
+            window.jobs = jobs;
+            updateUI();
+        };
+
+        // Job Management APIs
+        window.onExportStart = function(jobInfo) {
+            const id = jobInfo.id || 'job_' + Date.now();
+            const job = {
+                id: id,
+                title: jobInfo.title || `${activeDocTitle}.pdf`,
+                format: jobInfo.format || 'PDF (300 DPI)',
+                formatClass: (jobInfo.format && jobInfo.format.includes('PNG')) ? 'format-png' : (jobInfo.format && jobInfo.format.includes('Print') ? 'format-print' : 'format-pdf'),
+                totalPages: jobInfo.totalPages || activeDocPages || 1,
+                currentPage: 1,
+                progress: 0,
+                status: 'running',
+                startTime: new Date(),
+                endTime: null,
+                outputPath: jobInfo.outputPath || '',
+                fileSize: '--'
+            };
+            jobs.unshift(job);
+            updateUI();
+            return id;
+        };
+
+        window.onExportProgress = function(progressInfo) {
+            const activeJob = jobs.find(j => j.status === 'running' && !j.isPrintSpool);
+            if (activeJob) {
+                if (typeof progressInfo === 'number') {
+                    activeJob.progress = Math.min(100, Math.max(0, progressInfo));
+                } else if (progressInfo) {
+                    if (progressInfo.percent !== undefined) activeJob.progress = progressInfo.percent;
+                    if (progressInfo.page !== undefined) activeJob.currentPage = progressInfo.page;
+                }
+                activeJob.currentPage = Math.min(activeJob.totalPages, Math.max(1, Math.ceil((activeJob.progress / 100) * activeJob.totalPages)));
+                updateUI();
+            }
+        };
+
+        window.onExportComplete = function(completeInfo) {
+            const activeJob = jobs.find(j => j.status === 'running' && !j.isPrintSpool);
+            if (activeJob) {
+                activeJob.progress = 100;
+                activeJob.status = 'completed';
+                activeJob.endTime = new Date();
+                if (completeInfo && completeInfo.outputPath) {
+                    activeJob.outputPath = completeInfo.outputPath;
+                }
+                updateUI();
+            }
+        };
+
+        function getPlatformSubsystemName() {
+            try {
+                if (typeof process !== 'undefined' && process.platform) {
+                    if (process.platform === 'darwin') return 'macOS CUPS Print Subsystem';
+                    if (process.platform === 'win32') return 'Windows Print Subsystem';
+                    return 'Linux CUPS Print Subsystem';
+                }
+            } catch(e) {}
+            if (navigator.platform && navigator.platform.indexOf('Mac') > -1) return 'macOS CUPS Print Subsystem';
+            if (navigator.platform && navigator.platform.indexOf('Win') > -1) return 'Windows Print Subsystem';
+            return 'Linux CUPS Print Subsystem';
+        }
+
+        window.onPrintJob = function(printInfo) {
+            const isPdf = printInfo && (printInfo.isPdf || (printInfo.format && printInfo.format.includes('PDF')));
+            const subsystemName = getPlatformSubsystemName();
+            const formatName = isPdf ? 'PDF Print Engine' : 'Print Spooler';
+            const formatClass = isPdf ? 'format-pdf' : 'format-print';
+            const jobId = 'print_' + Date.now();
+            const job = {
+                id: jobId,
+                title: printInfo.title || activeDocTitle,
+                format: formatName,
+                formatClass: formatClass,
+                totalPages: activeDocPages,
+                currentPage: activeDocPages,
+                progress: 1,
+                status: 'running',
+                isPrintSpool: true,
+                statusMsg: isPdf ? 'Preparing Publication in Print Engine...' : 'Spooling to ' + subsystemName + '...',
+                startTime: new Date(),
+                endTime: null,
+                outputPath: isPdf ? 'Print Engine (Save as PDF)' : subsystemName,
+                fileSize: isPdf ? 'Vector Spool' : 'Spool Output'
+            };
+
+            // Cancel any previously running print animation timer to prevent dual-timer contention
+            if (window._activePrintSpoolTimer) {
+                clearInterval(window._activePrintSpoolTimer);
+                window._activePrintSpoolTimer = null;
+            }
+
+            jobs.unshift(job);
+            updateUI();
+
+            // Ultra-smooth linear progression over 2 seconds (50ms interval = 40 discrete steps)
+            const durationMs = 2000;
+            const startTime = Date.now();
+            let lastCalculatedProgress = 1;
+            let lastRenderedProgress = -1;
+            const timer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const ratio = Math.min(1, elapsed / durationMs);
+                // Monotonic calculation guarantees progress never stutters backwards
+                const calcProgress = Math.min(100, Math.max(1, Math.round(ratio * 100)));
+                if (calcProgress > lastCalculatedProgress) {
+                    lastCalculatedProgress = calcProgress;
+                }
+                job.progress = lastCalculatedProgress;
+                
+                const isFinished = ratio >= 1 || job.progress >= 100;
+                if (isFinished) {
+                    clearInterval(timer);
+                    window._activePrintSpoolTimer = null;
+                    job.progress = 100;
+                    job.status = 'completed';
+                    job.endTime = new Date();
+                    job.statusMsg = isPdf ? 'Print Dialog Ready' : 'Sent to Print Spooler';
+                }
+                // Throttle DOM repaints to actual progress changes to eliminate serializer lag spikes
+                if (job.progress !== lastRenderedProgress || isFinished) {
+                    lastRenderedProgress = job.progress;
+                    requestAnimationFrame(updateUI);
+                }
+            }, 50);
+            window._activePrintSpoolTimer = timer;
+        };
+
+        function updateUI() {
+            const container = document.getElementById('jobs-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            const activeJobs = jobs.filter(j => j.status === 'running');
+            const completedJobs = jobs.filter(j => j.status === 'completed');
+
+            // Update metrics
+            document.getElementById('metric-active').textContent = activeJobs.length;
+            document.getElementById('metric-completed').textContent = completedJobs.length;
+            document.getElementById('metric-priority').textContent = activeJobs.length > 0 ? 'ABOVE_NORMAL' : 'NORMAL';
+            document.getElementById('metric-priority').style.color = activeJobs.length > 0 ? '#f59e0b' : '#a7f3d0';
+            document.getElementById('metric-state').textContent = activeJobs.length > 0 ? 'PROCESSING' : 'IDLE';
+
+            // Counts
+            document.getElementById('count-all').textContent = jobs.length;
+            document.getElementById('count-active').textContent = activeJobs.length;
+            document.getElementById('count-completed').textContent = completedJobs.length;
+
+            // Filter jobs
+            const filteredJobs = jobs.filter(j => {
+                if (currentFilter === 'active') return j.status === 'running';
+                if (currentFilter === 'completed') return j.status === 'completed';
+                return true;
+            });
+
+            if (filteredJobs.length === 0) {
+                if (emptyState) emptyState.style.display = 'flex';
+                const cards = container.querySelectorAll('.job-card');
+                cards.forEach(c => c.remove());
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = 'none';
+
+            // In-place DOM update so CSS transitions animate smoothly without element thrashing
+            filteredJobs.forEach(job => {
+                let card = container.querySelector(`[data-job-id="${job.id}"]`);
+                const isRunning = job.status === 'running';
+                const statusBadgeClass = isRunning ? 'status-running' : (job.status === 'completed' ? 'status-completed' : 'status-cancelled');
+                
+                let statusText = '';
+                if (isRunning) {
+                    if (job.statusMsg) {
+                        statusText = `${job.statusMsg} (${Math.round(job.progress)}%)`;
+                    } else {
+                        statusText = `Rendering Page ${job.currentPage} / ${job.totalPages} (${Math.round(job.progress)}%)`;
+                    }
+                } else if (job.status === 'completed') {
+                    statusText = job.statusMsg || 'Export Completed';
+                } else {
+                    statusText = 'Cancelled';
+                }
+
+                const cleanPath = job.outputPath || '';
+                const isFileOnDisk = !job.isPrintSpool && cleanPath && !cleanPath.includes('Subsystem') && !cleanPath.includes('Spool') && !cleanPath.includes('Print Engine');
+
+                if (card) {
+                    if (card.className !== `job-card ${job.status}`) {
+                        card.className = `job-card ${job.status}`;
+                    }
+                    const badge = card.querySelector('.job-status-badge');
+                    if (badge && badge.textContent !== statusText) {
+                        badge.textContent = statusText;
+                        badge.className = `job-status-badge ${statusBadgeClass}`;
+                    }
+                    const fill = card.querySelector('.progress-bar-fill');
+                    if (fill) {
+                        fill.style.width = `${job.progress}%`;
+                        if (job.status === 'completed') fill.classList.add('completed');
+                        else fill.classList.remove('completed');
+                    }
+                    const pathEl = card.querySelector('.job-path-text');
+                    if (pathEl && cleanPath && pathEl.textContent !== cleanPath) {
+                        pathEl.textContent = cleanPath;
+                        pathEl.title = cleanPath;
+                    }
+                    const actionsEl = card.querySelector('.job-actions');
+                    if (actionsEl && actionsEl.dataset.status !== job.status) {
+                        actionsEl.dataset.status = job.status;
+                        actionsEl.innerHTML = `
+                            ${isRunning ? `<button class="job-btn cancel-btn" onclick="cancelJob('${job.id}')">Cancel</button>` : ''}
+                            ${job.status === 'completed' && isFileOnDisk ? `
+                                <button class="job-btn" onclick="openJobById('${job.id}')">Open File</button>
+                                <button class="job-btn" onclick="showJobFolderById('${job.id}')">Show in Folder</button>
+                            ` : ''}
+                        `;
+                    }
+                } else {
+                    card = document.createElement('div');
+                    card.className = `job-card ${job.status}`;
+                    card.setAttribute('data-job-id', job.id);
+                    card.innerHTML = `
+                        <div class="job-header">
+                            <div class="job-title-group">
+                                <span class="format-badge ${job.formatClass}">${job.format}</span>
+                                <span class="job-name">${job.title}</span>
+                                ${job.fileSize && job.fileSize !== '--' ? `<span style="font-size:10px; color:#64748b;">(${job.fileSize})</span>` : ''}
+                            </div>
+                            <span class="job-status-badge ${statusBadgeClass}">${statusText}</span>
+                        </div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill ${job.status === 'completed' ? 'completed' : ''}" style="width: ${job.progress}%;"></div>
+                        </div>
+                        <div class="job-details">
+                            <span class="job-path-text" title="${cleanPath}">${cleanPath || 'Output: Documents/OpenPublisher_Exports'}</span>
+                            <div class="job-actions" data-status="${job.status}">
+                                ${isRunning ? `<button class="job-btn cancel-btn" onclick="cancelJob('${job.id}')">Cancel</button>` : ''}
+                                ${job.status === 'completed' && isFileOnDisk ? `
+                                    <button class="job-btn" onclick="openJobById('${job.id}')">Open File</button>
+                                    <button class="job-btn" onclick="showJobFolderById('${job.id}')">Show in Folder</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+
+            // Clean up cards that no longer match the filter
+            const currentJobIds = new Set(filteredJobs.map(j => j.id));
+            container.querySelectorAll('.job-card').forEach(c => {
+                const id = c.getAttribute('data-job-id');
+                if (id && !currentJobIds.has(id)) {
+                    c.remove();
+                }
+            });
+        }
+
+        window.cancelJob = function(jobId) {
+            const j = jobs.find(x => x.id === jobId);
+            if (j && j.status === 'running') {
+                j.status = 'cancelled';
+                updateUI();
+            }
+        };
+
+        window.openJobById = function(jobId) {
+            const j = jobs.find(x => x.id === jobId);
+            if (j && j.outputPath) {
+                openFile(j.outputPath);
+            }
+        };
+
+        window.showJobFolderById = function(jobId) {
+            const j = jobs.find(x => x.id === jobId);
+            if (j && j.outputPath) {
+                showFolder(j.outputPath);
+            }
+        };
+
+        window.openFile = function(filePath) {
+            if (!filePath) return;
+            try {
+                const normPath = filePath.replace(/\//g, '\\');
+                const mw = getMainWin();
+                if (typeof nw !== 'undefined' && nw.Shell && typeof nw.Shell.openItem === 'function') {
+                    nw.Shell.openItem(normPath);
+                    return;
+                }
+                if (mw && mw.nw && mw.nw.Shell && typeof mw.nw.Shell.openItem === 'function') {
+                    mw.nw.Shell.openItem(normPath);
+                    return;
+                }
+                if (mw && typeof mw.openItem === 'function') {
+                    mw.openItem(normPath);
+                    return;
+                }
+                const req = (typeof require !== 'undefined') ? require : (mw && typeof mw.require !== 'undefined' ? mw.require : null);
+                if (req) {
+                    const cp = req('child_process');
+                    if (process.platform === 'win32') {
+                        cp.exec(`cmd /c start "" "${normPath}"`);
+                    } else if (process.platform === 'darwin') {
+                        cp.exec(`open "${normPath}"`);
+                    } else {
+                        cp.exec(`xdg-open "${normPath}"`);
+                    }
+                }
+            } catch(e) {
+                console.error('Failed to open file:', e);
+            }
+        };
+
+        window.showFolder = function(filePath) {
+            if (!filePath) return;
+            try {
+                const normPath = filePath.replace(/\//g, '\\');
+                const mw = getMainWin();
+                if (typeof nw !== 'undefined' && nw.Shell && typeof nw.Shell.showItemInFolder === 'function') {
+                    nw.Shell.showItemInFolder(normPath);
+                    return;
+                }
+                if (mw && mw.nw && mw.nw.Shell && typeof mw.nw.Shell.showItemInFolder === 'function') {
+                    mw.nw.Shell.showItemInFolder(normPath);
+                    return;
+                }
+                if (mw && typeof mw.showItemInFolder === 'function') {
+                    mw.showItemInFolder(normPath);
+                    return;
+                }
+                const req = (typeof require !== 'undefined') ? require : (mw && typeof mw.require !== 'undefined' ? mw.require : null);
+                if (req) {
+                    const cp = req('child_process');
+                    if (process.platform === 'win32') {
+                        cp.exec(`explorer.exe /select,"${normPath}"`);
+                    } else if (process.platform === 'darwin') {
+                        cp.exec(`open -R "${normPath}"`);
+                    }
+                }
+            } catch(e) {
+                console.error('Failed to show folder:', e);
+            }
+        };
+
+        // Real Export Handlers
+        function exportPDF() {
+            const mw = getMainWin();
+            if (mw && typeof mw.triggerDocumentExport === 'function') {
+                mw.triggerDocumentExport('pdf');
+            }
+        }
+
+        function exportPNG() {
+            const mw = getMainWin();
+            if (mw && typeof mw.triggerDocumentExport === 'function') {
+                mw.triggerDocumentExport('png');
+            }
+        }
+
+        function printDoc() {
+            const mw = getMainWin();
+            if (mw && typeof mw.triggerPrint === 'function') {
+                mw.triggerPrint();
+            }
+        }
+
+        function openExportFolder() {
+            try {
+                const mw = getMainWin();
+                const req = (typeof require !== 'undefined') ? require : (mw && typeof mw.require !== 'undefined' ? mw.require : null);
+                if (req) {
+                    const p = req('path').join(req('os').homedir(), 'Documents', 'OpenPublisher_Exports');
+                    if (typeof nw !== 'undefined' && nw.Shell && typeof nw.Shell.openItem === 'function') {
+                        nw.Shell.openItem(p);
+                    } else if (mw && mw.nw && mw.nw.Shell && typeof mw.nw.Shell.openItem === 'function') {
+                        mw.nw.Shell.openItem(p);
+                    } else if (process.platform === 'win32') {
+                        req('child_process').exec(`cmd /c start "" "${p}"`);
+                    } else if (process.platform === 'darwin') {
+                        req('child_process').exec(`open "${p}"`);
+                    } else {
+                        req('child_process').exec(`xdg-open "${p}"`);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            syncTheme();
+
+            const mw = getMainWin();
+            if (mw) {
+                if (typeof mw.requestLiveDocumentData === 'function') {
+                    mw.requestLiveDocumentData();
+                }
+                if (typeof mw.getExportHistory === 'function') {
+                    window.populateHistory(mw.getExportHistory());
+                }
+            }
+
+            // Real Action Triggers
+            document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
+            document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+            document.getElementById('btn-print-doc').addEventListener('click', printDoc);
+            document.getElementById('btn-open-export-dir').addEventListener('click', openExportFolder);
+
+            // Filter pills
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    currentFilter = pill.getAttribute('data-filter');
+                    updateUI();
+                });
+            });
+
+            document.getElementById('btn-clear-completed').addEventListener('click', () => {
+                jobs = jobs.filter(j => j.status !== 'completed');
+                localStorage.setItem('op_export_history_cleared_at', Date.now().toString());
+                updateUI();
+            });
+
+            // Close & Dock
+            function closeQueueWindow() {
+                try {
+                    const mw = getMainWin();
+                    if (mw && typeof mw.dockExportQueue === 'function') {
+                        mw.dockExportQueue(true);
+                    }
+                } catch(e) {}
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        nw.Window.get().close(true);
+                        return;
+                    }
+                } catch(e) {}
+                window.close();
+            }
+
+            document.getElementById('btn-dock').addEventListener('click', closeQueueWindow);
+            document.getElementById('btn-close').addEventListener('click', closeQueueWindow);
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeQueueWindow();
+                }
+            });
+
+            // Drag Handler with zero dead zones
+            const header = document.getElementById('queue-header');
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let initialWinX = 0, initialWinY = 0;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.header-btn') || e.target.closest('button')) return;
+                if (typeof nw === 'undefined' || !nw.Window) return;
+                const win = nw.Window.get();
+                isDragging = true;
+                startX = e.screenX;
+                startY = e.screenY;
+                initialWinX = win.x;
+                initialWinY = win.y;
+
+                const onMouseMove = (moveEv) => {
+                    if (!isDragging) return;
+                    const dx = moveEv.screenX - startX;
+                    const dy = moveEv.screenY - startY;
+                    win.moveTo(initialWinX + dx, initialWinY + dy);
+                };
+
+                const onMouseUp = () => {
+                    isDragging = false;
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                };
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>Backup Manager - OpenPublisher</title>
+    <style>
+        :root {
+            --bg-color: #007670;
+            --accent-color: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #1e293b;
+        }
+        #backup-mgr-window {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #custom-backup-mgr-header {
+            background: var(--bg-color, #007670);
+            color: white;
+            padding: 5px 6px 5px 14px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        #backup-count-badge {
+            background: rgba(255, 255, 255, 0.22);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        .header-btn * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .header-btn.close-btn:hover {
+            background: #d35450 !important;
+        }
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        .toolbar {
+            padding: 10px 14px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            -webkit-app-region: no-drag;
+        }
+        .toolbar input {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            outline: none;
+            background: #ffffff;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        .toolbar input:focus {
+            border-color: var(--bg-color, #007670);
+            box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.15);
+        }
+        .tool-btn {
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #334155;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .tool-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .tool-btn:active {
+            transform: scale(0.98);
+        }
+        #backup-list-container {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+            position: relative;
+            -webkit-app-region: no-drag;
+        }
+        .backup-table-header {
+            display: flex;
+            padding: 7px 14px;
+            background: #f1f5f9;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .backup-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            font-size: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .backup-row:hover {
+            background: #f8fafc;
+        }
+        .details-bar {
+            padding: 6px 14px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 11px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 22px;
+            -webkit-app-region: no-drag;
+        }
+        .footer {
+            padding: 10px 14px;
+            background: #ffffff;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: no-drag;
+        }
+        .btn-action-primary {
+            padding: 7px 18px;
+            background: var(--bg-color, #007670);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            transition: filter 0.2s, opacity 0.2s;
+        }
+        .btn-action-primary:hover:not(:disabled) {
+            filter: brightness(1.15);
+        }
+        .btn-action-primary:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .btn-action-secondary {
+            padding: 7px 16px;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #495057;
+            font-weight: 600;
+            font-size: 12px;
+            transition: background 0.15s;
+        }
+        .btn-action-secondary:hover {
+            background: #f1f5f9;
+        }
+        .btn-action-danger {
+            padding: 7px 12px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #e53e3e;
+            font-size: 11px;
+            font-weight: 600;
+            transition: background 0.15s, opacity 0.15s;
+        }
+        .btn-action-danger:hover:not(:disabled) {
+            background: #fee2e2;
+        }
+        .btn-action-danger:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="backup-mgr-window">
+        <!-- Draggable Standalone Header -->
+        <div id="custom-backup-mgr-header">
+            <div class="header-left">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="opacity: 0.95;">
+                    <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                </svg>
+                <span>Backup Manager</span>
+                <span id="backup-count-badge">0 backups</span>
+            </div>
+            <div class="header-actions">
+                <span id="backup-mgr-dock" title="Dock into Main Window" class="header-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </span>
+                <span id="backup-mgr-close" title="Close" class="header-btn close-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+                        <path d="M6 6L18 18M6 18L18 6"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="backup-search-input" placeholder="Search backups...">
+            <button id="backup-btn-refresh" title="Refresh backup list" class="tool-btn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
+            </button>
+            <button id="backup-btn-open-folder" title="Open Backup Folder in File Explorer" class="tool-btn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                Open Folder
+            </button>
+        </div>
+
+        <!-- Backups List Container -->
+        <div id="backup-list-container">
+            <!-- Table dynamically populated -->
+        </div>
+
+        <!-- Details Bar -->
+        <div class="details-bar">
+            <span id="backup-details-info">Select a backup to view details.</span>
+            <span id="backup-details-pages" style="font-weight: 600; color: #334155;"></span>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="footer">
+            <button id="backup-btn-delete" disabled class="btn-action-danger">Delete Backup</button>
+            <div style="display: flex; gap: 8px;">
+                <button id="backup-btn-close" class="btn-action-secondary">Close</button>
+                <button id="backup-btn-open" disabled class="btn-action-primary">Open as Backup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fs = typeof require !== 'undefined' ? require('fs') : null;
+        const path = typeof require !== 'undefined' ? require('path') : null;
+
+        let currentBackups = [];
+        let selectedBackup = null;
+
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed) return window.mainWin;
+            if (window.opener && !window.opener.closed) return window.opener;
+            return null;
+        }
+
+        // Auto-close if the main OpenPublisher application window is closed or terminates
+        let hasSeenMainWindow = false;
+        setInterval(function() {
+            const mw = getMainWin();
+            if (mw && !mw.closed) {
+                hasSeenMainWindow = true;
+            } else if (hasSeenMainWindow) {
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window && typeof nw.Window.get === 'function') {
+                        nw.Window.get().close(true);
+                    } else {
+                        window.close();
+                    }
+                } catch(e) {}
+            }
+        }, 350);
+
+        function syncTheme() {
+            const mw = getMainWin();
+            if (mw && mw.document) {
+                const bg = mw.document.documentElement.style.getPropertyValue('--bg-color') || '#007670';
+                const accent = mw.document.documentElement.style.getPropertyValue('--accent-color') || '#ffffff';
+                document.documentElement.style.setProperty('--bg-color', bg);
+                document.documentElement.style.setProperty('--accent-color', accent);
+            }
+        }
+        syncTheme();
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        function formatDate(mtime) {
+            try {
+                const d = new Date(mtime);
+                return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
+                       d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch(e) {
+                return 'Unknown date';
+            }
+        }
+
+        function getBackupDirectory() {
+            const mw = getMainWin();
+            if (mw && mw.getBackupDirectory) return mw.getBackupDirectory();
+            try {
+                if (typeof nw !== 'undefined' && nw.App && nw.App.dataPath && path) {
+                    return path.join(nw.App.dataPath, 'Backups');
+                }
+                const os = typeof require !== 'undefined' ? require('os') : null;
+                if (os && path) return path.join(os.tmpdir(), 'OpenPublisher-Backups');
+            } catch (err) {}
+            return '';
+        }
+
+        function scanBackups() {
+            const mw = getMainWin();
+            if (mw && mw.scanBackups) {
+                currentBackups = mw.scanBackups() || [];
+                return currentBackups;
+            }
+
+            // Fallback direct scan
+            currentBackups = [];
+            selectedBackup = null;
+            try {
+                const backupDir = getBackupDirectory();
+                if (!backupDir || !fs || !fs.existsSync(backupDir)) {
+                    return currentBackups;
+                }
+                const files = fs.readdirSync(backupDir);
+                for (const file of files) {
+                    if (!file.toLowerCase().endsWith('.bak')) continue;
+                    const fullPath = path.join(backupDir, file);
+                    try {
+                        const stat = fs.statSync(fullPath);
+                        if (!stat.isFile()) continue;
+
+                        let title = file.replace(/\.bak$/i, '');
+                        if (title.endsWith('.opub')) title = title.replace(/\.opub$/i, '');
+
+                        let pageCount = null;
+                        try {
+                            const raw = fs.readFileSync(fullPath, 'utf8');
+                            const parsed = JSON.parse(raw);
+                            if (parsed && parsed.title) title = parsed.title;
+                            if (parsed && Array.isArray(parsed.pages)) pageCount = parsed.pages.length;
+                        } catch(e) {}
+
+                        currentBackups.push({
+                            fileName: file,
+                            fullPath: fullPath,
+                            title: title,
+                            pageCount: pageCount,
+                            size: stat.size,
+                            sizeFormatted: formatBytes(stat.size),
+                            mtime: stat.mtime,
+                            dateFormatted: formatDate(stat.mtime)
+                        });
+                    } catch (statErr) {}
+                }
+                currentBackups.sort((a, b) => b.mtime - a.mtime);
+            } catch (err) {
+                console.error('Error scanning backup directory:', err);
+            }
+            return currentBackups;
+        }
+
+        function updateSelectionUI() {
+            const btnOpen = document.getElementById('backup-btn-open');
+            const btnDelete = document.getElementById('backup-btn-delete');
+            const detailsInfo = document.getElementById('backup-details-info');
+            const detailsPages = document.getElementById('backup-details-pages');
+
+            if (selectedBackup) {
+                if (btnOpen) btnOpen.disabled = false;
+                if (btnDelete) btnDelete.disabled = false;
+                if (detailsInfo) {
+                    detailsInfo.innerHTML = `<strong>${escapeHtml(selectedBackup.title)}</strong> &bull; ${selectedBackup.sizeFormatted} &bull; ${selectedBackup.dateFormatted}`;
+                }
+                if (detailsPages) {
+                    detailsPages.textContent = selectedBackup.pageCount !== null ? `${selectedBackup.pageCount} ${selectedBackup.pageCount === 1 ? 'Page' : 'Pages'}` : '';
+                }
+            } else {
+                if (btnOpen) btnOpen.disabled = true;
+                if (btnDelete) btnDelete.disabled = true;
+                if (detailsInfo) {
+                    detailsInfo.textContent = currentBackups.length > 0 ? 'Select a backup from the list to preview or open.' : 'No backups found.';
+                }
+                if (detailsPages) {
+                    detailsPages.textContent = '';
+                }
+            }
+        }
+
+        function renderBackups(filterQuery = '') {
+            const container = document.getElementById('backup-list-container');
+            const badge = document.getElementById('backup-count-badge');
+            if (!container) return;
+
+            const q = (filterQuery || '').trim().toLowerCase();
+            const filtered = currentBackups.filter(b => {
+                if (!q) return true;
+                return b.fileName.toLowerCase().includes(q) || b.title.toLowerCase().includes(q);
+            });
+
+            if (badge) {
+                badge.textContent = `${currentBackups.length} ${currentBackups.length === 1 ? 'backup' : 'backups'}`;
+            }
+
+            if (filtered.length === 0) {
+                if (currentBackups.length === 0) {
+                    container.innerHTML = `
+                        <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 13px; text-align: center; padding: 20px;">
+                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom: 10px; opacity: 0.7;"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+                            <span style="font-weight: 600; color: #475569; margin-bottom: 4px;">No Backups Found</span>
+                            <span style="font-size: 11px; color: #94a3b8; max-width: 320px;">Backups are automatically preserved in your system recovery folder each time you save an existing publication.</span>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-size: 12px; padding: 20px;">
+                            <span>No backups matching "${escapeHtml(filterQuery)}"</span>
+                        </div>
+                    `;
+                }
+                selectedBackup = null;
+                updateSelectionUI();
+                return;
+            }
+
+            let html = `
+                <div class="backup-table-header">
+                    <div style="flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Publication Name</div>
+                    <div style="width: 140px;">Date Modified</div>
+                    <div style="width: 70px; text-align: right;">Size</div>
+                </div>
+            `;
+
+            filtered.forEach((b, idx) => {
+                const isSelected = selectedBackup && selectedBackup.fullPath === b.fullPath;
+                const bg = isSelected ? '#e6f4f2' : (idx % 2 === 0 ? '#ffffff' : '#fcfcfc');
+                const textColor = isSelected ? 'var(--bg-color, #007670)' : '#1e293b';
+                const fontWeight = isSelected ? '600' : 'normal';
+                const border = isSelected ? 'border-left: 3px solid var(--bg-color, #007670);' : 'border-left: 3px solid transparent;';
+
+                html += `
+                    <div class="backup-row" data-path="${escapeHtml(b.fullPath)}" style="background: ${bg}; color: ${textColor}; font-weight: ${fontWeight}; ${border}">
+                        <div style="flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
+                            ${escapeHtml(b.title)}
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: normal; margin-left: 4px;">(${escapeHtml(b.fileName)})</span>
+                        </div>
+                        <div style="width: 140px; font-size: 11px; color: #64748b; white-space: nowrap;">${b.dateFormatted}</div>
+                        <div style="width: 70px; font-size: 11px; color: #64748b; text-align: right; white-space: nowrap;">${b.sizeFormatted}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            const rows = container.querySelectorAll('.backup-row');
+            rows.forEach(row => {
+                const rowPath = row.getAttribute('data-path');
+                row.addEventListener('click', () => {
+                    selectedBackup = currentBackups.find(b => b.fullPath === rowPath) || null;
+                    renderBackups(document.getElementById('backup-search-input') ? document.getElementById('backup-search-input').value : '');
+                });
+                row.addEventListener('dblclick', () => {
+                    selectedBackup = currentBackups.find(b => b.fullPath === rowPath) || null;
+                    if (selectedBackup) {
+                        openSelectedBackup();
+                    }
+                });
+            });
+
+            updateSelectionUI();
+        }
+
+        function refreshBackups() {
+            scanBackups();
+            const searchInput = document.getElementById('backup-search-input');
+            renderBackups(searchInput ? searchInput.value : '');
+        }
+
+        function openSelectedBackup() {
+            if (!selectedBackup) return;
+            const mw = getMainWin();
+            if (mw && mw.openBackupFile) {
+                mw.openBackupFile(selectedBackup.fullPath);
+            } else {
+                alert('Main window connection unavailable.');
+            }
+        }
+
+        function deleteSelectedBackup() {
+            if (!selectedBackup) return;
+            if (confirm(`Are you sure you want to permanently delete the backup "${selectedBackup.fileName}"?`)) {
+                try {
+                    const mw = getMainWin();
+                    if (fs && fs.existsSync(selectedBackup.fullPath)) {
+                        fs.unlinkSync(selectedBackup.fullPath);
+                    } else if (mw && mw.fs && mw.fs.existsSync(selectedBackup.fullPath)) {
+                        mw.fs.unlinkSync(selectedBackup.fullPath);
+                    }
+                    selectedBackup = null;
+                    refreshBackups();
+                    if (mw && mw.scanBackups && mw.renderBackups) {
+                        mw.scanBackups();
+                        mw.renderBackups();
+                    }
+                } catch(e) {
+                    alert('Could not delete backup: ' + e.message);
+                }
+            }
+        }
+
+        // Header and Footer action handlers
+        document.getElementById('backup-mgr-dock').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockBackupManager) {
+                mw.dockBackupManager(false);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('backup-mgr-close').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockBackupManager) {
+                mw.dockBackupManager(true);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('backup-btn-close').onclick = function() {
+            const mw = getMainWin();
+            if (mw && mw.dockBackupManager) {
+                mw.dockBackupManager(true);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('backup-btn-open').onclick = openSelectedBackup;
+        document.getElementById('backup-btn-delete').onclick = deleteSelectedBackup;
+
+        document.getElementById('backup-btn-refresh').onclick = refreshBackups;
+
+        document.getElementById('backup-btn-open-folder').onclick = function() {
+            const bDir = getBackupDirectory();
+            if (typeof nw !== 'undefined' && nw.Shell) {
+                if (nw.Shell.openItem) nw.Shell.openItem(bDir);
+                else if (nw.Shell.showItemInFolder) nw.Shell.showItemInFolder(bDir);
+            }
+        };
+
+        const searchInput = document.getElementById('backup-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                renderBackups(this.value);
+            });
+        }
+
+        // Window Drag Fallback: In addition to native -webkit-app-region: drag,
+        // this fallback ensures 100% responsiveness across every pixel of the header.
+        (function initWindowDragFallback() {
+            const header = document.getElementById('custom-backup-mgr-header');
+            if (!header) return;
+
+            let isDragging = false;
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let startWinX = 0;
+            let startWinY = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.header-actions') || e.button !== 0) return;
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        const win = nw.Window.get();
+                        isDragging = true;
+                        startMouseX = e.screenX;
+                        startMouseY = e.screenY;
+                        startWinX = win.x;
+                        startWinY = win.y;
+
+                        function onMouseMove(moveEvent) {
+                            if (!isDragging) return;
+                            const dx = moveEvent.screenX - startMouseX;
+                            const dy = moveEvent.screenY - startMouseY;
+                            win.moveTo(startWinX + dx, startWinY + dy);
+                        }
+
+                        function onMouseUp() {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    }
+                } catch(err) {
+                    console.error('[BackupMgr Drag Fallback] Error:', err);
+                }
+            });
+        })();
+
+        // Hotkey: Esc closes/docks window
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const mw = getMainWin();
+                if (mw && mw.dockBackupManager) {
+                    mw.dockBackupManager(true);
+                } else {
+                    window.close();
+                }
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            syncTheme();
+            refreshBackups();
+        });
+
+        window.refreshBackups = refreshBackups;
+        window.syncTheme = syncTheme;
+    </script>
+</body>
+</html>

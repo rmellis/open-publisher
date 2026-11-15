@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>Quick Actions - OpenPublisher</title>
+    <style>
+        :root {
+            --bg-color: #007670;
+            --accent-color: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+        #palette-window {
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 24, 38, 0.97);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #palette-header {
+            background: var(--bg-color, #007670);
+            color: white;
+            padding: 5px 6px 5px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        .header-btn * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .header-btn.close-btn:hover {
+            background: #d35450 !important;
+        }
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        .palette-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+            -webkit-app-region: no-drag;
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        .act-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f1f5f9;
+            padding: 7px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+            text-align: left;
+        }
+        .act-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .act-btn:active {
+            transform: scale(0.97);
+        }
+        .act-btn svg {
+            flex-shrink: 0;
+            opacity: 0.85;
+        }
+        .act-btn.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        .act-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fecaca;
+        }
+        .act-btn.accent {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: #7dd3fc;
+        }
+        .act-btn.accent:hover {
+            background: rgba(56, 189, 248, 0.25);
+            color: #bae6fd;
+        }
+    </style>
+</head>
+<body>
+    <div id="palette-window">
+        <!-- Draggable Standalone Header -->
+        <div id="palette-header">
+            <div class="header-left">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Quick Actions Palette</span>
+            </div>
+            <div class="header-actions">
+                <span id="palette-dock" title="Dock into Main Application" class="header-btn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </span>
+                <span id="palette-close" title="Close Palette" class="header-btn close-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+                        <path d="M6 6L18 18M6 18L18 6"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Palette Actions Body -->
+        <div class="palette-body">
+            <div class="btn-grid">
+                <button class="act-btn" id="qa-btn-reload-app" title="Reload entire OpenPublisher shell">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    Reload App
+                </button>
+                <button class="act-btn" id="qa-btn-reload-view" title="Reload webview document canvas">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                    Reload View
+                </button>
+                <button class="act-btn" id="qa-btn-tools-app" title="Open Chrome DevTools for wrapper shell">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    App DevTools
+                </button>
+                <button class="act-btn" id="qa-btn-tools-view" title="Open Chrome DevTools for active document webview">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    View DevTools
+                </button>
+                <button class="act-btn" id="qa-btn-appdata" title="Open AppData user data folder in File Explorer">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    Open AppData
+                </button>
+                <button class="act-btn accent" id="qa-btn-hud" title="Toggle Developer HUD">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg>
+                    Debug HUD
+                </button>
+                <button class="act-btn" id="qa-btn-backup-mgr" title="Open Backup Manager">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    Backup Mgr
+                </button>
+                <button class="act-btn" id="qa-btn-prev-versions" title="Open Previous Versions">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M19 3H9c-1.1 0-2 .9-2 2v2H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 16H5V9h10v10zm4-4h-2V9c0-1.1-.9-2-2-2H9V5h10v10z"/></svg>
+                    Versions
+                </button>
+                <button class="act-btn danger" id="qa-btn-reboot-safe" title="Restart in Safe Mode">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                    Safe Reboot
+                </button>
+                <button class="act-btn danger" id="qa-btn-crash" title="Simulate crash to verify recovery subsystem">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Sim Crash
+                </button>
+                <button class="act-btn" id="qa-btn-preview" title="Open Presentation Preview">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Presentation
+                </button>
+                <button class="act-btn" id="qa-btn-queue" title="Open Export & Print Queue">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Export Queue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed) return window.mainWin;
+            if (window.opener && !window.opener.closed) return window.opener;
+            return null;
+        }
+
+        // Auto-close if the main OpenPublisher application window is closed or terminates
+        let hasSeenMainWindow = false;
+        setInterval(function() {
+            const mw = getMainWin();
+            if (mw && !mw.closed) {
+                hasSeenMainWindow = true;
+            } else if (hasSeenMainWindow) {
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window && typeof nw.Window.get === 'function') {
+                        nw.Window.get().close(true);
+                    } else {
+                        window.close();
+                    }
+                } catch(e) {}
+            }
+        }, 350);
+
+        function syncTheme() {
+            const mw = getMainWin();
+            if (mw && mw.document) {
+                const bg = mw.document.documentElement.style.getPropertyValue('--bg-color') || '#007670';
+                const accent = mw.document.documentElement.style.getPropertyValue('--accent-color') || '#ffffff';
+                document.documentElement.style.setProperty('--bg-color', bg);
+                document.documentElement.style.setProperty('--accent-color', accent);
+            }
+        }
+        syncTheme();
+
+        // Action Buttons Wiring
+        document.getElementById('qa-btn-reload-app').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerReloadApp) mw.triggerReloadApp();
+            else if (mw) mw.location.reload();
+        };
+
+        document.getElementById('qa-btn-reload-view').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerReloadView) mw.triggerReloadView();
+        };
+
+        document.getElementById('qa-btn-tools-app').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerAppDevTools) mw.triggerAppDevTools();
+        };
+
+        document.getElementById('qa-btn-tools-view').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerViewDevTools) mw.triggerViewDevTools();
+        };
+
+        document.getElementById('qa-btn-appdata').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerOpenAppData) mw.triggerOpenAppData();
+        };
+
+        document.getElementById('qa-btn-hud').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.toggleDevMode) mw.toggleDevMode();
+        };
+
+        document.getElementById('qa-btn-backup-mgr').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerBackupMgr) mw.triggerBackupMgr();
+        };
+
+        document.getElementById('qa-btn-prev-versions').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerPrevVersions) mw.triggerPrevVersions();
+        };
+
+        document.getElementById('qa-btn-reboot-safe').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerRebootSafe) mw.triggerRebootSafe();
+        };
+
+        document.getElementById('qa-btn-crash').onclick = () => {
+            const mw = getMainWin();
+            if (mw && mw.triggerCrashRenderer) mw.triggerCrashRenderer();
+        };
+
+        const btnQaPreview = document.getElementById('qa-btn-preview');
+        if (btnQaPreview) {
+            btnQaPreview.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutDocPreview) mw.popOutDocPreview();
+            };
+        }
+
+        const btnQaQueue = document.getElementById('qa-btn-queue');
+        if (btnQaQueue) {
+            btnQaQueue.onclick = () => {
+                const mw = getMainWin();
+                if (mw && mw.popOutExportQueue) mw.popOutExportQueue();
+            };
+        }
+
+        // Header Actions
+        document.getElementById('palette-dock').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockQuickActions) {
+                mw.dockQuickActions(false);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('palette-close').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockQuickActions) {
+                mw.dockQuickActions(true);
+            } else {
+                window.close();
+            }
+        };
+
+        // Window Drag Fallback: In addition to native -webkit-app-region: drag,
+        // this fallback ensures 100% responsiveness across every pixel of the header.
+        (function initWindowDragFallback() {
+            const header = document.getElementById('palette-header');
+            if (!header) return;
+
+            let isDragging = false;
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let startWinX = 0;
+            let startWinY = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.header-actions') || e.button !== 0) return;
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        const win = nw.Window.get();
+                        isDragging = true;
+                        startMouseX = e.screenX;
+                        startMouseY = e.screenY;
+                        startWinX = win.x;
+                        startWinY = win.y;
+
+                        function onMouseMove(moveEvent) {
+                            if (!isDragging) return;
+                            const dx = moveEvent.screenX - startMouseX;
+                            const dy = moveEvent.screenY - startMouseY;
+                            win.moveTo(startWinX + dx, startWinY + dy);
+                        }
+
+                        function onMouseUp() {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    }
+                } catch(err) {
+                    console.error('[Palette Drag Fallback] Error:', err);
+                }
+            });
+        })();
+
+        // Hotkey: Esc closes/docks window
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const mw = getMainWin();
+                if (mw && mw.dockQuickActions) {
+                    mw.dockQuickActions(true);
+                } else {
+                    window.close();
+                }
+            }
+        });
+
+        window.syncTheme = syncTheme;
+    </script>
+</body>
+</html>

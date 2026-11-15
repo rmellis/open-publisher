@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "files": {
+    "wrapper.html": {
+      "sha256": "d8c7d32e47ff89892f66fe58ea49c5eb6012623ada31911225c04a952bd90b45",
+      "url": "wrapper.html"
+    },
+    "gecko_nw_shim.js": {
+      "sha256": "1f02404b55c9a9364947b485cd47379d63a5c8ae3636a53830f7eec0f4496593",
+      "url": "gecko_nw_shim.js"
+    },
+    "firefox/core/firefox.cfg": {
+      "sha256": "d440ac5f663393df2d5540816a69fa3bece8a219b874a59710cf495a1d0c51d9",
+      "url": "firefox/core/firefox.cfg"
+    },
+    "windows/backup_mgr.html": {
+      "sha256": "11b18686c51bc48f7e58d2c0dc5bc60e435e31ae6ca335620290c697a0931cdf",
+      "url": "windows/backup_mgr.html"
+    },
+    "windows/doc_preview.html": {
+      "sha256": "6153a602823bc608df164bafd461a19cdcbd37c77ba154f440a7245b9c19c148",
+      "url": "windows/doc_preview.html"
+    },
+    "windows/export_queue.html": {
+      "sha256": "9337587ddd0c88ad6c8996828b2b597e6396239d00f384e30bc49287e35f5d3d",
+      "url": "windows/export_queue.html"
+    },
+    "windows/hud.html": {
+      "sha256": "4b618fcacee7de6e9dccab8512ad20adf59f3257572c68f6e85b03aba665ac8b",
+      "url": "windows/hud.html"
+    },
+    "windows/ipc_sniffer.html": {
+      "sha256": "6ddddce6730d745f7faf2a979b276b95fcd820987d16d4a91c5ea0ad3ce61c59",
+      "url": "windows/ipc_sniffer.html"
+    },
+    "windows/prev_versions.html": {
+      "sha256": "019e4bf48758260446e1ebdd6edd570a8e481fa48fba6af04acc284fd1b0612d",
+      "url": "windows/prev_versions.html"
+    },
+    "windows/quick_actions.html": {
+      "sha256": "e9e7b07b15c8e008eaf48d24c5ae9e3193329af2c3eee2076019ac2998d98215",
+      "url": "windows/quick_actions.html"
+    },
+    "windows/wa_rules.css": {
+      "sha256": "431f712d552b7cc5ce289663c937e62d96d1be563f3bdefc4ec10d18e260b700",
+      "url": "windows/wa_rules.css"
+    }
+  }
+}

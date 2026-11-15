@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>IPC Event Sniffer & Console - OpenPublisher</title>
+    <style>
+        :root {
+            --bg-color: #007670;
+            --accent-color: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Segoe UI", monospace;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+        #sniffer-window {
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 14px 45px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #sniffer-header {
+            background: var(--bg-color, #007670);
+            color: white;
+            padding: 5px 6px 5px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #4ade80;
+            animation: snifferPulse 1.5s infinite;
+        }
+        @keyframes snifferPulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+        #sniffer-count-badge {
+            background: rgba(255, 255, 255, 0.22);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        .header-btn * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .header-btn.close-btn:hover {
+            background: #d35450 !important;
+        }
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        .toolbar {
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            -webkit-app-region: no-drag;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .filter-btn {
+            padding: 3px 8px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .filter-btn.active {
+            color: #ffffff;
+            background: var(--bg-color, #007670);
+        }
+        .search-box {
+            flex: 1;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #f1f5f9;
+            outline: none;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        .search-box input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px #38bdf8;
+        }
+        .tool-btn {
+            padding: 4px 8px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #94a3b8;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        .tool-btn:hover {
+            background: #1e293b;
+            color: #ffffff;
+            border-color: #475569;
+        }
+        .tool-btn:active {
+            transform: scale(0.97);
+        }
+        .tool-btn.active {
+            color: #38bdf8;
+            border-color: #38bdf8;
+        }
+        #sniffer-console {
+            flex: 1;
+            overflow-y: auto;
+            background: #0b0f19;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            -webkit-app-region: no-drag;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        #sniffer-console::-webkit-scrollbar { width: 8px; }
+        #sniffer-console::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: rgba(30, 41, 59, 0.4);
+            border-left: 3px solid #334155;
+            line-height: 1.35;
+            word-break: break-all;
+            transition: background 0.1s;
+        }
+        .log-entry:hover {
+            background: rgba(30, 41, 59, 0.85);
+        }
+        .log-entry.inbound {
+            border-left-color: #10b981;
+        }
+        .log-entry.outbound {
+            border-left-color: #38bdf8;
+        }
+        .log-time {
+            color: #64748b;
+            font-size: 10px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .log-badge {
+            flex-shrink: 0;
+            font-weight: 700;
+            font-size: 9px;
+            border-radius: 3px;
+            padding: 0 4px;
+            height: 16px;
+            line-height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+        }
+        .log-badge.in {
+            background: #065f46;
+            color: #a7f3d0;
+        }
+        .log-badge.out {
+            background: #075985;
+            color: #bae6fd;
+        }
+        .log-type {
+            font-weight: 600;
+            color: #f1f5f9;
+            flex-shrink: 0;
+        }
+        .log-payload {
+            flex: 1;
+            color: #94a3b8;
+            font-size: 10.5px;
+            word-break: break-word;
+        }
+        .status-bar {
+            padding: 5px 12px;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            font-size: 10px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: no-drag;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+        .status-dot.paused {
+            background: #facc15;
+        }
+    </style>
+</head>
+<body>
+    <div id="sniffer-window">
+        <!-- Draggable Standalone Header -->
+        <div id="sniffer-header">
+            <div class="header-left">
+                <span class="pulse-dot" id="sniffer-pulse-dot"></span>
+                <span style="font-weight: 700;">IPC Event Sniffer & Console</span>
+                <span id="sniffer-count-badge">0 events</span>
+            </div>
+            <div class="header-actions">
+                <span id="sniffer-dock" title="Dock into Main Application" class="header-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </span>
+                <span id="sniffer-close" title="Close Window" class="header-btn close-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+                        <path d="M6 6L18 18M6 18L18 6"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Toolbar & Filter Controls -->
+        <div class="toolbar">
+            <div class="filter-group">
+                <button class="filter-btn active" id="filter-all" onclick="setDirectionFilter('all')">All</button>
+                <button class="filter-btn" id="filter-in" onclick="setDirectionFilter('in')">IN (Webview -> App)</button>
+                <button class="filter-btn" id="filter-out" onclick="setDirectionFilter('out')">OUT (App -> Webview)</button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="sniffer-search" placeholder="Search events or payload...">
+            </div>
+
+            <button class="tool-btn active" id="btn-autoscroll" title="Toggle Auto-Scroll">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                Auto-Scroll
+            </button>
+            <button class="tool-btn" id="btn-pause" title="Pause / Resume Capture">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span id="btn-pause-text">Pause</span>
+            </button>
+            <button class="tool-btn" id="btn-clear" title="Clear Console">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Clear
+            </button>
+            <button class="tool-btn" id="btn-copy" title="Copy All Visible Logs">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy
+            </button>
+            <button class="tool-btn" id="btn-export" title="Export to JSON">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export
+            </button>
+        </div>
+
+        <!-- Terminal Console -->
+        <div id="sniffer-console">
+            <div id="sniffer-empty-msg" style="color: #64748b; font-style: italic; padding: 20px; text-align: center;">
+                Waiting for IPC events... Make interactions in OpenPublisher to view live messages.
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-pill">
+                <span class="status-dot" id="status-live-dot"></span>
+                <span id="status-live-text">Streaming Live</span>
+            </div>
+            <div id="status-buffer-info">Buffer: 0 / 500</div>
+        </div>
+    </div>
+
+    <script>
+        const fs = typeof require !== 'undefined' ? require('fs') : null;
+        const path = typeof require !== 'undefined' ? require('path') : null;
+
+        let events = [];
+        const MAX_BUFFER = 500;
+        let directionFilter = 'all'; // 'all', 'in', 'out'
+        let searchQuery = '';
+        let isPaused = false;
+        let autoScroll = true;
+
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed) return window.mainWin;
+            if (window.opener && !window.opener.closed) return window.opener;
+            return null;
+        }
+
+        function syncTheme() {
+            const mw = getMainWin();
+            if (mw && mw.document) {
+                const bg = mw.document.documentElement.style.getPropertyValue('--bg-color') || '#007670';
+                const accent = mw.document.documentElement.style.getPropertyValue('--accent-color') || '#ffffff';
+                document.documentElement.style.setProperty('--bg-color', bg);
+                document.documentElement.style.setProperty('--accent-color', accent);
+            }
+        }
+        syncTheme();
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function setDirectionFilter(dir) {
+            directionFilter = dir;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('filter-' + dir);
+            if (activeBtn) activeBtn.classList.add('active');
+            renderEvents();
+        }
+
+        function receiveIpcEvent(evt) {
+            if (isPaused) return;
+
+            const now = new Date();
+            const timeStr = evt.timeStr || (
+                String(now.getHours()).padStart(2, '0') + ':' + 
+                String(now.getMinutes()).padStart(2, '0') + ':' + 
+                String(now.getSeconds()).padStart(2, '0') + '.' + 
+                String(now.getMilliseconds()).padStart(3, '0')
+            );
+
+            const item = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                time: timeStr,
+                direction: evt.direction || 'in',
+                type: evt.type || 'UNKNOWN',
+                payload: evt.payload,
+                raw: evt.raw || null
+            };
+
+            events.push(item);
+            if (events.length > MAX_BUFFER) {
+                events.shift();
+            }
+
+            document.getElementById('sniffer-count-badge').textContent = `${events.length} events`;
+            document.getElementById('status-buffer-info').textContent = `Buffer: ${events.length} / ${MAX_BUFFER}`;
+
+            appendSingleEvent(item);
+        }
+
+        function appendSingleEvent(item) {
+            if (directionFilter !== 'all' && item.direction !== directionFilter) return;
+
+            if (searchQuery) {
+                const matchType = item.type.toLowerCase().includes(searchQuery);
+                const payloadStr = typeof item.payload === 'object' ? JSON.stringify(item.payload) : String(item.payload || '');
+                const matchPayload = payloadStr.toLowerCase().includes(searchQuery);
+                if (!matchType && !matchPayload) return;
+            }
+
+            const consoleEl = document.getElementById('sniffer-console');
+            const emptyMsg = document.getElementById('sniffer-empty-msg');
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            const row = createEventRow(item);
+            consoleEl.appendChild(row);
+
+            if (autoScroll) {
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        }
+
+        function createEventRow(item) {
+            const row = document.createElement('div');
+            row.className = `log-entry ${item.direction === 'out' ? 'outbound' : 'inbound'}`;
+
+            const badgeClass = item.direction === 'out' ? 'out' : 'in';
+            const badgeLabel = item.direction === 'out' ? 'OUT' : 'IN';
+
+            let payloadDisplay = '';
+            if (item.payload === undefined || item.payload === null) {
+                payloadDisplay = '<span style="color: #64748b; font-style: italic;">(none)</span>';
+            } else if (typeof item.payload === 'object') {
+                try {
+                    payloadDisplay = `<span style="color: #cbd5e1; font-family: monospace;">${escapeHtml(JSON.stringify(item.payload))}</span>`;
+                } catch(e) {
+                    payloadDisplay = '[Object]';
+                }
+            } else {
+                payloadDisplay = `<span style="color: #94a3b8;">${escapeHtml(String(item.payload))}</span>`;
+            }
+
+            row.innerHTML = `
+                <span class="log-time">[${item.time}]</span>
+                <span class="log-badge ${badgeClass}">${badgeLabel}</span>
+                <span class="log-type">${escapeHtml(item.type)}</span>
+                <span class="log-payload">${payloadDisplay}</span>
+            `;
+
+            row.title = "Click to copy event details";
+            row.style.cursor = "pointer";
+            row.onclick = () => {
+                const text = `[${item.time}] [${item.direction.toUpperCase()}] ${item.type}: ${typeof item.payload === 'object' ? JSON.stringify(item.payload, null, 2) : item.payload}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    row.style.background = 'rgba(56, 189, 248, 0.3)';
+                    setTimeout(() => { row.style.background = ''; }, 300);
+                });
+            };
+
+            return row;
+        }
+
+        function renderEvents() {
+            const consoleEl = document.getElementById('sniffer-console');
+            consoleEl.innerHTML = '';
+
+            const filtered = events.filter(item => {
+                if (directionFilter !== 'all' && item.direction !== directionFilter) return false;
+                if (searchQuery) {
+                    const matchType = item.type.toLowerCase().includes(searchQuery);
+                    const payloadStr = typeof item.payload === 'object' ? JSON.stringify(item.payload) : String(item.payload || '');
+                    const matchPayload = payloadStr.toLowerCase().includes(searchQuery);
+                    return matchType || matchPayload;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                consoleEl.innerHTML = `<div id="sniffer-empty-msg" style="color: #64748b; font-style: italic; padding: 20px; text-align: center;">No matching events recorded.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                consoleEl.appendChild(createEventRow(item));
+            });
+
+            if (autoScroll) {
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        }
+
+        // Toolbar Button Actions
+        document.getElementById('btn-autoscroll').onclick = function() {
+            autoScroll = !autoScroll;
+            this.classList.toggle('active', autoScroll);
+            if (autoScroll) {
+                const consoleEl = document.getElementById('sniffer-console');
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        };
+
+        document.getElementById('btn-pause').onclick = function() {
+            isPaused = !isPaused;
+            const textEl = document.getElementById('btn-pause-text');
+            const dot = document.getElementById('status-live-dot');
+            const pulse = document.getElementById('sniffer-pulse-dot');
+            const statusText = document.getElementById('status-live-text');
+
+            if (isPaused) {
+                this.classList.add('active');
+                textEl.textContent = 'Resume';
+                dot.classList.add('paused');
+                pulse.style.display = 'none';
+                statusText.textContent = 'Paused';
+            } else {
+                this.classList.remove('active');
+                textEl.textContent = 'Pause';
+                dot.classList.remove('paused');
+                pulse.style.display = 'inline-block';
+                statusText.textContent = 'Streaming Live';
+            }
+        };
+
+        document.getElementById('btn-clear').onclick = function() {
+            events = [];
+            document.getElementById('sniffer-count-badge').textContent = '0 events';
+            document.getElementById('status-buffer-info').textContent = `Buffer: 0 / ${MAX_BUFFER}`;
+            renderEvents();
+        };
+
+        document.getElementById('btn-copy').onclick = function() {
+            if (events.length === 0) return;
+            const lines = events.map(e => `[${e.time}] [${e.direction.toUpperCase()}] ${e.type}: ${typeof e.payload === 'object' ? JSON.stringify(e.payload) : e.payload}`);
+            navigator.clipboard.writeText(lines.join('\n')).then(() => {
+                const btn = document.getElementById('btn-copy');
+                const orig = btn.innerHTML;
+                btn.innerHTML = 'Copied!';
+                setTimeout(() => { btn.innerHTML = orig; }, 1200);
+            });
+        };
+
+        document.getElementById('btn-export').onclick = function() {
+            if (events.length === 0) {
+                alert('No events to export.');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(events, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `openpublisher_ipc_traffic_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        };
+
+        const searchInput = document.getElementById('sniffer-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                searchQuery = this.value.trim().toLowerCase();
+                renderEvents();
+            });
+        }
+
+        // Header Dock and Close Buttons
+        document.getElementById('sniffer-dock').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockIpcSniffer) {
+                mw.dockIpcSniffer(false);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('sniffer-close').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockIpcSniffer) {
+                mw.dockIpcSniffer(true);
+            } else {
+                window.close();
+            }
+        };
+
+        // Window Drag Fallback: In addition to native -webkit-app-region: drag,
+        // this fallback ensures 100% responsiveness across every pixel of the header.
+        (function initWindowDragFallback() {
+            const header = document.getElementById('sniffer-header');
+            if (!header) return;
+
+            let isDragging = false;
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let startWinX = 0;
+            let startWinY = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.header-actions') || e.button !== 0) return;
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        const win = nw.Window.get();
+                        isDragging = true;
+                        startMouseX = e.screenX;
+                        startMouseY = e.screenY;
+                        startWinX = win.x;
+                        startWinY = win.y;
+
+                        function onMouseMove(moveEvent) {
+                            if (!isDragging) return;
+                            const dx = moveEvent.screenX - startMouseX;
+                            const dy = moveEvent.screenY - startMouseY;
+                            win.moveTo(startWinX + dx, startWinY + dy);
+                        }
+
+                        function onMouseUp() {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    }
+                } catch(err) {
+                    console.error('[Sniffer Drag Fallback] Error:', err);
+                }
+            });
+        })();
+
+        // Hotkey: Esc closes/docks window
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const mw = getMainWin();
+                if (mw && mw.dockIpcSniffer) {
+                    mw.dockIpcSniffer(true);
+                } else {
+                    window.close();
+                }
+            }
+        });
+
+        window.receiveIpcEvent = receiveIpcEvent;
+        window.syncTheme = syncTheme;
+    </script>
+</body>
+</html>

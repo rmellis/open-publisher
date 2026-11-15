@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="../gecko_nw_shim.js"></script>
+    <title>Previous Versions - OpenPublisher</title>
+    <style>
+        :root {
+            --bg-color: #007670;
+            --accent-color: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #1e293b;
+        }
+        #prev-versions-window {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        #custom-prev-versions-header {
+            background: var(--bg-color, #007670);
+            color: white;
+            padding: 5px 6px 5px 14px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-app-region: drag !important;
+            cursor: default !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        .header-left * {
+            -webkit-app-region: drag !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: default !important;
+        }
+        #prev-versions-count-badge {
+            background: rgba(255, 255, 255, 0.22);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn {
+            cursor: pointer !important;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            -webkit-app-region: no-drag !important;
+            pointer-events: auto !important;
+        }
+        .header-btn * {
+            pointer-events: none !important;
+            -webkit-app-region: no-drag !important;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .header-btn.close-btn:hover {
+            background: #d35450 !important;
+        }
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        .scope-bar {
+            padding: 6px 14px;
+            background: #eef2f6;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #475569;
+            -webkit-app-region: no-drag;
+        }
+        #prev-versions-active-pill {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--bg-color, #007670);
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 220px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .toolbar {
+            padding: 10px 14px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            -webkit-app-region: no-drag;
+        }
+        .toolbar input {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            outline: none;
+            background: #ffffff;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        .toolbar input:focus {
+            border-color: var(--bg-color, #007670);
+            box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.15);
+        }
+        .tool-btn {
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #334155;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .tool-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .tool-btn:active {
+            transform: scale(0.98);
+        }
+        .tool-btn-accent {
+            color: var(--bg-color, #007670);
+        }
+        #prev-versions-list-container {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+            position: relative;
+            -webkit-app-region: no-drag;
+        }
+        .details-bar {
+            padding: 6px 14px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 11px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 22px;
+            -webkit-app-region: no-drag;
+        }
+        .footer {
+            padding: 10px 14px;
+            background: #ffffff;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+        .btn-action-primary {
+            padding: 7px 18px;
+            background: var(--bg-color, #007670);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            transition: filter 0.2s, opacity 0.2s;
+        }
+        .btn-action-primary:hover:not(:disabled) {
+            filter: brightness(1.15);
+        }
+        .btn-action-primary:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .btn-action-secondary {
+            padding: 7px 14px;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #495057;
+            font-weight: 600;
+            font-size: 12px;
+            transition: background 0.15s;
+        }
+        .btn-action-secondary:hover {
+            background: #f1f5f9;
+        }
+        .btn-action-copy {
+            padding: 7px 14px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.15s;
+        }
+        .btn-action-copy:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+        .btn-action-copy:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .btn-action-danger {
+            padding: 7px 12px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #e53e3e;
+            font-size: 11px;
+            font-weight: 600;
+            transition: background 0.15s, opacity 0.15s;
+        }
+        .btn-action-danger:hover:not(:disabled) {
+            background: #fee2e2;
+        }
+        .btn-action-danger:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .btn-action-subtle {
+            padding: 7px 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+        .btn-action-subtle:hover {
+            background: #f1f5f9;
+            color: #ef4444;
+        }
+        #custom-version-restore-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100005;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="prev-versions-window">
+        <!-- Draggable Standalone Header -->
+        <div id="custom-prev-versions-header">
+            <div class="header-left">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="opacity: 0.95;">
+                    <path d="M19 3H9c-1.1 0-2 .9-2 2v2H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 16H5V9h10v10zm4-4h-2V9c0-1.1-.9-2-2-2H9V5h10v10z"/>
+                </svg>
+                <span>Previous Versions</span>
+                <span id="prev-versions-count-badge">0 versions</span>
+            </div>
+            <div class="header-actions">
+                <span id="prev-versions-dock" title="Dock into Main Window" class="header-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </span>
+                <span id="prev-versions-close" title="Close" class="header-btn close-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+                        <path d="M6 6L18 18M6 18L18 6"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Target Publication Subheader / Scope Bar -->
+        <div class="scope-bar">
+            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">
+                <span style="font-weight: 600; color: #1e293b;">Active Document:</span>
+                <span id="prev-versions-active-pill">None (Unsaved)</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; font-weight: 500;">
+                <input type="checkbox" id="prev-versions-filter-current" checked style="cursor: pointer;">
+                <span>Only show current document</span>
+            </label>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="prev-versions-search-input" placeholder="Search version snapshots...">
+            <button id="prev-versions-btn-refresh" title="Refresh versions list" class="tool-btn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
+            </button>
+            <button id="prev-versions-btn-create-snapshot" title="Create a version snapshot of current document now" class="tool-btn tool-btn-accent">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Take Snapshot
+            </button>
+            <button id="prev-versions-btn-open-folder" title="Open Versions Folder in File Explorer" class="tool-btn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                Open Folder
+            </button>
+        </div>
+
+        <!-- Versions List Container -->
+        <div id="prev-versions-list-container">
+            <!-- Table dynamically populated -->
+        </div>
+
+        <!-- Details Bar -->
+        <div class="details-bar">
+            <span id="prev-versions-details-info">Select a version snapshot to preview or restore.</span>
+            <span id="prev-versions-details-pages" style="font-weight: 600; color: #334155;"></span>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="footer">
+            <div style="display: flex; gap: 6px;">
+                <button id="prev-versions-btn-delete" disabled class="btn-action-danger">Delete</button>
+                <button id="prev-versions-btn-clear-all" class="btn-action-subtle">Clear History</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button id="prev-versions-btn-close" class="btn-action-secondary">Close</button>
+                <button id="prev-versions-btn-open-copy" disabled class="btn-action-copy">Open as Copy</button>
+                <button id="prev-versions-btn-restore" disabled class="btn-action-primary">Restore...</button>
+            </div>
+        </div>
+
+        <!-- Embedded Restore Confirmation Modal -->
+        <div id="custom-version-restore-overlay">
+            <div style="width: 420px; max-width: 90vw; background: #ffffff; border-radius: 8px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; background: #fef2f2;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <div style="font-weight: 700; font-size: 15px; color: #991b1b;">Restore Previous Version?</div>
+                </div>
+                <div style="padding: 16px 18px; font-size: 13px; color: #334155; line-height: 1.5;">
+                    <p style="margin: 0 0 10px 0;">Restoring will <strong>overwrite</strong> your active publication file on disk:</p>
+                    <div id="restore-modal-target-path" style="background: #f1f5f9; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all; color: #0f172a; margin-bottom: 10px; border: 1px solid #e2e8f0;"></div>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Snapshot to restore: <span id="restore-modal-snapshot-time" style="font-weight: 600; color: #0f172a;"></span><br>Any unsaved changes in your current workspace will be replaced.</p>
+                </div>
+                <div style="padding: 12px 18px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button id="restore-modal-btn-cancel" class="btn-action-secondary">Cancel</button>
+                    <button id="restore-modal-btn-confirm" style="padding: 7px 18px; background: #dc2626; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; color: #ffffff; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter='none'">Overwrite & Restore</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fs = typeof require !== 'undefined' ? require('fs') : null;
+        const path = typeof require !== 'undefined' ? require('path') : null;
+
+        let currentVersions = [];
+        let selectedVersion = null;
+
+        function getMainWin() {
+            if (window.mainWin && !window.mainWin.closed) return window.mainWin;
+            if (window.opener && !window.opener.closed) return window.opener;
+            return null;
+        }
+
+        // Auto-close if the main OpenPublisher application window is closed or terminates
+        let hasSeenMainWindow = false;
+        setInterval(function() {
+            const mw = getMainWin();
+            if (mw && !mw.closed) {
+                hasSeenMainWindow = true;
+            } else if (hasSeenMainWindow) {
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window && typeof nw.Window.get === 'function') {
+                        nw.Window.get().close(true);
+                    } else {
+                        window.close();
+                    }
+                } catch(e) {}
+            }
+        }, 350);
+
+        function syncTheme() {
+            const mw = getMainWin();
+            if (mw && mw.document) {
+                const bg = mw.document.documentElement.style.getPropertyValue('--bg-color') || '#007670';
+                const accent = mw.document.documentElement.style.getPropertyValue('--accent-color') || '#ffffff';
+                document.documentElement.style.setProperty('--bg-color', bg);
+                document.documentElement.style.setProperty('--accent-color', accent);
+            }
+        }
+        syncTheme();
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        function formatDate(mtime) {
+            try {
+                const d = new Date(mtime);
+                return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + 
+                       d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch(e) {
+                return 'Unknown date';
+            }
+        }
+
+        function formatRelativeTime(mtime) {
+            try {
+                const diffMs = Date.now() - new Date(mtime).getTime();
+                const diffMin = Math.round(diffMs / 60000);
+                if (diffMin < 1) return 'Just now';
+                if (diffMin === 1) return '1 min ago';
+                if (diffMin < 60) return `${diffMin} mins ago`;
+                const diffHours = Math.round(diffMin / 60);
+                if (diffHours === 1) return '1 hour ago';
+                if (diffHours < 24) return `${diffHours} hours ago`;
+                const diffDays = Math.round(diffHours / 24);
+                if (diffDays === 1) return 'Yesterday';
+                return `${diffDays} days ago`;
+            } catch(e) {
+                return '';
+            }
+        }
+
+        function sanitizeTitleForFilename(title) {
+            if (!title || typeof title !== 'string') return 'Publication';
+            return title.replace(/[\\/:*?"<>|]/g, '_').trim() || 'Publication';
+        }
+
+        function getVersionsDirectory() {
+            const mw = getMainWin();
+            if (mw && mw.getVersionsDirectory) return mw.getVersionsDirectory();
+            try {
+                if (typeof nw !== 'undefined' && nw.App && nw.App.dataPath && path) {
+                    return path.join(nw.App.dataPath, 'Backups', 'Versions');
+                }
+                const os = typeof require !== 'undefined' ? require('os') : null;
+                if (os && path) return path.join(os.tmpdir(), 'OpenPublisher-Backups', 'Versions');
+            } catch (err) {}
+            return '';
+        }
+
+        function scanPreviousVersions(onlyCurrent = true) {
+            const mw = getMainWin();
+            if (mw && mw.scanPreviousVersions) {
+                currentVersions = mw.scanPreviousVersions(onlyCurrent) || [];
+                return currentVersions;
+            }
+
+            // Fallback direct scan
+            currentVersions = [];
+            selectedVersion = null;
+            try {
+                const versionsDir = getVersionsDirectory();
+                if (!versionsDir || !fs || !fs.existsSync(versionsDir)) return currentVersions;
+
+                let activeFilePath = mw && mw.getActiveFilePath ? mw.getActiveFilePath() : null;
+                const activeDocName = activeFilePath && path ? path.basename(activeFilePath, path.extname(activeFilePath)) : '';
+                const files = fs.readdirSync(versionsDir);
+
+                for (const file of files) {
+                    if (!file.toLowerCase().endsWith('.bak')) continue;
+                    const fullPath = path.join(versionsDir, file);
+                    try {
+                        const stat = fs.statSync(fullPath);
+                        if (!stat.isFile()) continue;
+
+                        const rawName = file.replace(/\.bak$/i, '');
+                        let parsedTitle = rawName;
+                        let pageCount = null;
+                        let originalPath = null;
+
+                        try {
+                            const rawContent = fs.readFileSync(fullPath, 'utf8');
+                            const parsed = JSON.parse(rawContent);
+                            if (parsed && parsed.title) parsedTitle = parsed.title;
+                            if (parsed && Array.isArray(parsed.pages)) pageCount = parsed.pages.length;
+                            if (parsed && parsed.originalFilePath) originalPath = parsed.originalFilePath;
+                        } catch(e) {}
+
+                        if (onlyCurrent && activeFilePath) {
+                            const cleanSafeActive = sanitizeTitleForFilename(activeDocName).toLowerCase();
+                            const cleanSafeParsed = sanitizeTitleForFilename(parsedTitle).toLowerCase();
+                            const fileLower = file.toLowerCase();
+
+                            const matches = fileLower.startsWith(cleanSafeActive + '_') || 
+                                            cleanSafeParsed === cleanSafeActive ||
+                                            (originalPath && originalPath.toLowerCase() === activeFilePath.toLowerCase());
+                            if (!matches) continue;
+                        }
+
+                        currentVersions.push({
+                            fileName: file,
+                            fullPath: fullPath,
+                            title: parsedTitle,
+                            pageCount: pageCount,
+                            size: stat.size,
+                            sizeFormatted: formatBytes(stat.size),
+                            mtime: stat.mtime,
+                            dateFormatted: formatDate(stat.mtime),
+                            ageFormatted: formatRelativeTime(stat.mtime)
+                        });
+                    } catch (err) {}
+                }
+
+                currentVersions.sort((a, b) => b.mtime - a.mtime);
+            } catch(err) {
+                console.error('Error scanning versions directory:', err);
+            }
+            return currentVersions;
+        }
+
+        function updateSelectionUI() {
+            const mw = getMainWin();
+            const activeFilePath = mw && mw.getActiveFilePath ? mw.getActiveFilePath() : null;
+
+            const btnRestore = document.getElementById('prev-versions-btn-restore');
+            const btnOpenCopy = document.getElementById('prev-versions-btn-open-copy');
+            const btnDelete = document.getElementById('prev-versions-btn-delete');
+            const detailsInfo = document.getElementById('prev-versions-details-info');
+            const detailsPages = document.getElementById('prev-versions-details-pages');
+
+            if (selectedVersion) {
+                if (btnRestore) {
+                    btnRestore.disabled = !activeFilePath;
+                    btnRestore.title = activeFilePath ? 'Overwrite currently open document with this version' : 'Cannot overwrite: no document currently open';
+                }
+                if (btnOpenCopy) btnOpenCopy.disabled = false;
+                if (btnDelete) btnDelete.disabled = false;
+                if (detailsInfo) {
+                    detailsInfo.innerHTML = `<strong>${escapeHtml(selectedVersion.title)}</strong> &bull; ${selectedVersion.sizeFormatted} &bull; ${selectedVersion.dateFormatted} (${selectedVersion.ageFormatted})`;
+                }
+                if (detailsPages) {
+                    detailsPages.textContent = selectedVersion.pageCount !== null ? `${selectedVersion.pageCount} ${selectedVersion.pageCount === 1 ? 'Page' : 'Pages'}` : '';
+                }
+            } else {
+                if (btnRestore) {
+                    btnRestore.disabled = true;
+                    btnRestore.title = '';
+                }
+                if (btnOpenCopy) btnOpenCopy.disabled = true;
+                if (btnDelete) btnDelete.disabled = true;
+                if (detailsInfo) {
+                    detailsInfo.textContent = currentVersions.length > 0 ? 'Select a version snapshot to preview, restore, or open as copy.' : 'No snapshots available.';
+                }
+                if (detailsPages) {
+                    detailsPages.textContent = '';
+                }
+            }
+
+            const btnTakeSnapshot = document.getElementById('prev-versions-btn-create-snapshot');
+            if (btnTakeSnapshot) {
+                btnTakeSnapshot.disabled = !activeFilePath;
+                btnTakeSnapshot.style.opacity = activeFilePath ? '1' : '0.5';
+                btnTakeSnapshot.style.cursor = activeFilePath ? 'pointer' : 'not-allowed';
+                btnTakeSnapshot.title = activeFilePath ? 'Create a version snapshot of current document' : 'Save the document first before taking snapshots';
+            }
+        }
+
+        function renderPreviousVersions(searchTerm = '') {
+            const listContainer = document.getElementById('prev-versions-list-container');
+            const badge = document.getElementById('prev-versions-count-badge');
+            if (!listContainer) return;
+
+            let filtered = currentVersions;
+            if (searchTerm && searchTerm.trim()) {
+                const term = searchTerm.toLowerCase().trim();
+                filtered = currentVersions.filter(v => 
+                    v.title.toLowerCase().includes(term) ||
+                    v.dateFormatted.toLowerCase().includes(term) ||
+                    v.fileName.toLowerCase().includes(term)
+                );
+            }
+
+            if (badge) {
+                badge.textContent = `${filtered.length} ${filtered.length === 1 ? 'version' : 'versions'}`;
+            }
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 40px 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                        <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none" style="margin-bottom: 8px; opacity: 0.6;">
+                            <path d="M19 3H9c-1.1 0-2 .9-2 2v2H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 16H5V9h10v10zm4-4h-2V9c0-1.1-.9-2-2-2H9V5h10v10z"/>
+                        </svg>
+                        <div>No previous version snapshots found.</div>
+                        <div style="font-size: 11px; margin-top: 4px; color: #cbd5e1;">Snapshots are automatically created every 15 minutes when working on saved documents.</div>
+                    </div>
+                `;
+                selectedVersion = null;
+                updateSelectionUI();
+                return;
+            }
+
+            let html = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                    <thead>
+                        <tr style="background: #f1f5f9; color: #475569; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid #cbd5e1;">
+                            <th style="padding: 8px 12px; font-weight: 600;">Snapshot Time</th>
+                            <th style="padding: 8px 12px; font-weight: 600;">Document Title</th>
+                            <th style="padding: 8px 12px; font-weight: 600;">Pages</th>
+                            <th style="padding: 8px 12px; font-weight: 600;">Size</th>
+                            <th style="padding: 8px 12px; font-weight: 600;">Age</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filtered.forEach((item, index) => {
+                const isSelected = selectedVersion && selectedVersion.fullPath === item.fullPath;
+                const bg = isSelected ? '#e0f2fe' : (index % 2 === 0 ? '#ffffff' : '#f8fafc');
+                const borderStyle = isSelected ? 'border-left: 3px solid var(--bg-color, #007670);' : 'border-left: 3px solid transparent;';
+                const pageText = item.pageCount !== null ? `${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}` : '--';
+
+                html += `
+                    <tr class="prev-version-row" data-path="${escapeHtml(item.fullPath)}" style="background: ${bg}; ${borderStyle} cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background 0.1s;">
+                        <td style="padding: 7px 12px; font-weight: 600; color: #0f172a; white-space: nowrap;">${escapeHtml(item.dateFormatted)}</td>
+                        <td style="padding: 7px 12px; color: #334155; font-weight: 500; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</td>
+                        <td style="padding: 7px 12px; color: #64748b;">${pageText}</td>
+                        <td style="padding: 7px 12px; color: #64748b; font-family: monospace; font-size: 11px;">${item.sizeFormatted}</td>
+                        <td style="padding: 7px 12px; color: #64748b; font-size: 11px; white-space: nowrap;">${escapeHtml(item.ageFormatted)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            listContainer.innerHTML = html;
+
+            const rows = listContainer.querySelectorAll('.prev-version-row');
+            rows.forEach(row => {
+                row.onclick = function() {
+                    const p = this.dataset.path;
+                    selectedVersion = currentVersions.find(v => v.fullPath === p) || null;
+                    renderPreviousVersions(document.getElementById('prev-versions-search-input') ? document.getElementById('prev-versions-search-input').value : '');
+                    updateSelectionUI();
+                };
+                row.ondblclick = function() {
+                    const p = this.dataset.path;
+                    const target = currentVersions.find(v => v.fullPath === p);
+                    if (target) {
+                        openSelectedCopy();
+                    }
+                };
+            });
+
+            updateSelectionUI();
+        }
+
+        function refreshVersions() {
+            const mw = getMainWin();
+            const activePill = document.getElementById('prev-versions-active-pill');
+            const filterCheckbox = document.getElementById('prev-versions-filter-current');
+            const activeFilePath = mw && mw.getActiveFilePath ? mw.getActiveFilePath() : null;
+
+            if (activeFilePath) {
+                const base = path ? path.basename(activeFilePath) : activeFilePath;
+                if (activePill) {
+                    activePill.textContent = base;
+                    activePill.title = activeFilePath;
+                }
+                if (filterCheckbox) {
+                    filterCheckbox.disabled = false;
+                }
+            } else {
+                if (activePill) {
+                    activePill.textContent = 'None (Unsaved Document)';
+                    activePill.title = 'Current document has not been saved to disk';
+                }
+                if (filterCheckbox) {
+                    filterCheckbox.checked = false;
+                    filterCheckbox.disabled = true;
+                }
+            }
+
+            const onlyCurrent = filterCheckbox ? filterCheckbox.checked : false;
+            scanPreviousVersions(onlyCurrent);
+            const searchInput = document.getElementById('prev-versions-search-input');
+            renderPreviousVersions(searchInput ? searchInput.value : '');
+            updateSelectionUI();
+        }
+
+        function openSelectedCopy() {
+            if (!selectedVersion) return;
+            const mw = getMainWin();
+            if (mw && mw.openVersionAsCopy) {
+                mw.openVersionAsCopy(selectedVersion.fullPath);
+            } else {
+                alert('Main window connection unavailable.');
+            }
+        }
+
+        function showRestoreDialog() {
+            if (!selectedVersion) return;
+            const mw = getMainWin();
+            const activeFilePath = mw && mw.getActiveFilePath ? mw.getActiveFilePath() : null;
+            if (!activeFilePath) {
+                alert('No active document open to restore over. Use "Open as Copy" instead.');
+                return;
+            }
+
+            const pathEl = document.getElementById('restore-modal-target-path');
+            const timeEl = document.getElementById('restore-modal-snapshot-time');
+            if (pathEl) pathEl.textContent = activeFilePath;
+            if (timeEl) timeEl.textContent = `${selectedVersion.title} (${selectedVersion.dateFormatted})`;
+
+            const overlay = document.getElementById('custom-version-restore-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function hideRestoreDialog() {
+            const overlay = document.getElementById('custom-version-restore-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function executeRestore() {
+            if (!selectedVersion) return;
+            hideRestoreDialog();
+            const mw = getMainWin();
+            if (mw && mw.executeRestoreOverwrite) {
+                mw.executeRestoreOverwrite(selectedVersion);
+            } else {
+                alert('Main window connection unavailable.');
+            }
+        }
+
+        function deleteSelectedVersion() {
+            if (!selectedVersion) return;
+            if (confirm(`Are you sure you want to permanently delete the snapshot "${selectedVersion.fileName}"?`)) {
+                try {
+                    const mw = getMainWin();
+                    if (fs && fs.existsSync(selectedVersion.fullPath)) {
+                        fs.unlinkSync(selectedVersion.fullPath);
+                    } else if (mw && mw.fs && mw.fs.existsSync(selectedVersion.fullPath)) {
+                        mw.fs.unlinkSync(selectedVersion.fullPath);
+                    }
+                    selectedVersion = null;
+                    refreshVersions();
+                    if (mw && mw.scanPreviousVersions && mw.renderPreviousVersions) {
+                        const fc = mw.document.getElementById('prev-versions-filter-current');
+                        mw.scanPreviousVersions(fc ? fc.checked : false);
+                        mw.renderPreviousVersions();
+                    }
+                } catch(err) {
+                    alert('Could not delete snapshot: ' + err.message);
+                }
+            }
+        }
+
+        function clearAllVersions() {
+            const filterCheckbox = document.getElementById('prev-versions-filter-current');
+            const mw = getMainWin();
+            const activeFilePath = mw && mw.getActiveFilePath ? mw.getActiveFilePath() : null;
+            const isOnlyCurrent = filterCheckbox && filterCheckbox.checked && activeFilePath;
+            const docName = (activeFilePath && path) ? path.basename(activeFilePath, path.extname(activeFilePath)) : '';
+
+            const confirmMsg = isOnlyCurrent 
+                ? `Are you sure you want to clear all previous versions for "${docName}"? This action cannot be undone.`
+                : "Are you sure you want to clear all previous versions across all projects? This action cannot be undone.";
+
+            if (confirm(confirmMsg)) {
+                try {
+                    const versionsDir = getVersionsDirectory();
+                    if (fs && fs.existsSync(versionsDir)) {
+                        const files = fs.readdirSync(versionsDir);
+                        const prefix = isOnlyCurrent ? sanitizeTitleForFilename(docName).toLowerCase() + '_' : null;
+                        for (const file of files) {
+                            if (!file.toLowerCase().endsWith('.bak')) continue;
+                            if (prefix && !file.toLowerCase().startsWith(prefix)) continue;
+                            try {
+                                fs.unlinkSync(path.join(versionsDir, file));
+                            } catch(e) {}
+                        }
+                    } else if (mw && mw.clearVersionsHistory) {
+                        mw.clearVersionsHistory();
+                    }
+                    selectedVersion = null;
+                    refreshVersions();
+                    if (mw && mw.scanPreviousVersions && mw.renderPreviousVersions) {
+                        const fc = mw.document.getElementById('prev-versions-filter-current');
+                        mw.scanPreviousVersions(fc ? fc.checked : false);
+                        mw.renderPreviousVersions();
+                    }
+                } catch(err) {
+                    alert('Could not clear version history: ' + err.message);
+                }
+            }
+        }
+
+        // Header and Footer action handlers
+        document.getElementById('prev-versions-dock').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockPreviousVersions) {
+                mw.dockPreviousVersions(false);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('prev-versions-close').onclick = function(e) {
+            e.stopPropagation();
+            const mw = getMainWin();
+            if (mw && mw.dockPreviousVersions) {
+                mw.dockPreviousVersions(true);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('prev-versions-btn-close').onclick = function() {
+            const mw = getMainWin();
+            if (mw && mw.dockPreviousVersions) {
+                mw.dockPreviousVersions(true);
+            } else {
+                window.close();
+            }
+        };
+
+        document.getElementById('prev-versions-btn-open-copy').onclick = openSelectedCopy;
+        document.getElementById('prev-versions-btn-restore').onclick = showRestoreDialog;
+        document.getElementById('prev-versions-btn-delete').onclick = deleteSelectedVersion;
+        document.getElementById('prev-versions-btn-clear-all').onclick = clearAllVersions;
+
+        document.getElementById('restore-modal-btn-cancel').onclick = hideRestoreDialog;
+        document.getElementById('restore-modal-btn-confirm').onclick = executeRestore;
+
+        document.getElementById('prev-versions-btn-refresh').onclick = refreshVersions;
+
+        document.getElementById('prev-versions-btn-create-snapshot').onclick = function() {
+            const mw = getMainWin();
+            if (mw && mw.createVersionSnapshot) {
+                const res = mw.createVersionSnapshot(null, 'ManualSnapshot');
+                if (res) {
+                    refreshVersions();
+                    if (typeof chrome !== 'undefined' && chrome.notifications) {
+                        chrome.notifications.create({
+                            type: 'basic',
+                            iconUrl: '../assets/icons/openoublisherv5st-icon.png',
+                            title: 'Snapshot Created',
+                            message: 'Manual version snapshot recorded.'
+                        });
+                    }
+                }
+            }
+        };
+
+        document.getElementById('prev-versions-btn-open-folder').onclick = function() {
+            const vDir = getVersionsDirectory();
+            if (typeof nw !== 'undefined' && nw.Shell) {
+                if (nw.Shell.openItem) nw.Shell.openItem(vDir);
+                else if (nw.Shell.showItemInFolder) nw.Shell.showItemInFolder(vDir);
+            }
+        };
+
+        const filterCheckbox = document.getElementById('prev-versions-filter-current');
+        if (filterCheckbox) {
+            filterCheckbox.addEventListener('change', function() {
+                refreshVersions();
+            });
+        }
+
+        const searchInput = document.getElementById('prev-versions-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                renderPreviousVersions(this.value);
+            });
+        }
+
+        // Window Drag Fallback: In addition to native -webkit-app-region: drag,
+        // this fallback ensures 100% responsiveness across every pixel of the header.
+        (function initWindowDragFallback() {
+            const header = document.getElementById('custom-prev-versions-header');
+            if (!header) return;
+
+            let isDragging = false;
+            let startMouseX = 0;
+            let startMouseY = 0;
+            let startWinX = 0;
+            let startWinY = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.header-actions') || e.button !== 0) return;
+                try {
+                    if (typeof nw !== 'undefined' && nw.Window) {
+                        const win = nw.Window.get();
+                        isDragging = true;
+                        startMouseX = e.screenX;
+                        startMouseY = e.screenY;
+                        startWinX = win.x;
+                        startWinY = win.y;
+
+                        function onMouseMove(moveEvent) {
+                            if (!isDragging) return;
+                            const dx = moveEvent.screenX - startMouseX;
+                            const dy = moveEvent.screenY - startMouseY;
+                            win.moveTo(startWinX + dx, startWinY + dy);
+                        }
+
+                        function onMouseUp() {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    }
+                } catch(err) {
+                    console.error('[PrevVersions Drag Fallback] Error:', err);
+                }
+            });
+        })();
+
+        // Hotkey: Esc closes/docks window or closes restore modal
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('custom-version-restore-overlay');
+                if (overlay && overlay.style.display === 'flex') {
+                    hideRestoreDialog();
+                    return;
+                }
+                const mw = getMainWin();
+                if (mw && mw.dockPreviousVersions) {
+                    mw.dockPreviousVersions(true);
+                } else {
+                    window.close();
+                }
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            syncTheme();
+            refreshVersions();
+        });
+
+        window.refreshVersions = refreshVersions;
+        window.syncTheme = syncTheme;
+    </script>
+</body>
+</html>
