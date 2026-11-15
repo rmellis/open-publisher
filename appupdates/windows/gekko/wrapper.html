@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="1">
-    <meta name="op-wrapper-date" content="2026-11-15T06:10:00Z">
+    <meta name="op-wrapper-version" content="2">
+    <meta name="op-wrapper-date" content="2026-11-15T06:50:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -1254,8 +1254,8 @@
 
         /* --- 4. Drag Zones --- */
         #drag-zone-left { position: absolute; top: 0; left: 0; width: 150px; height: 35px; z-index: 99990; cursor: default; }
-        #drag-zone-left2 { position: absolute; top: 0; left: 432px; width: 85px; height: 35px; z-index: 99990; cursor: default; }
-        #drag-zone-right { position: absolute; top: 0; right: 0; width: 392px; height: 35px; z-index: 99990; cursor: default; }
+        #drag-zone-left2 { display: none !important; pointer-events: none !important; }
+        #drag-zone-right { position: absolute; top: 0; right: 0; width: 210px; height: 35px; z-index: 99990; cursor: default; }
 
         /* --- 5. Controls --- */
         #controls-wrapper-left {
@@ -1364,8 +1364,8 @@
             display: none !important;
         }
         .mac-theme #drag-zone-left2 {
-            left: 395px !important;
-            width: 14% !important;
+            display: none !important;
+            pointer-events: none !important;
         }
 
         /* --- Far-Right App Brand in macOS Mode --- */
