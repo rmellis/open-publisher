@@ -306,7 +306,13 @@ document.addEventListener('keydown', (e) => {
             e.preventDefault();
             deleteSelected();
         }
-        if(e.key === 'Escape') deselect(); 
+        if(e.key === 'Escape') {
+            if (window.isLinkingTextBox && typeof window.cancelTextBoxLinking === 'function') {
+                window.cancelTextBoxLinking();
+                return;
+            }
+            deselect();
+        } 
     });
 
 

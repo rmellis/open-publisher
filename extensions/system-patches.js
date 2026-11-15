@@ -315,6 +315,9 @@ if (!window._sliderFillListenerInstalled) {
                 }
 
                 if (isTransforming || existing._lastRot === el.style.transform) {
+                    if (typeof window.renderTextFlowOverlays === 'function') {
+                        window.renderTextFlowOverlays(container);
+                    }
                     return;
                 }
             }
@@ -514,6 +517,9 @@ if (!window._sliderFillListenerInstalled) {
 
                 container.appendChild(groupOverlay);
             }
+        }
+        if (typeof window.renderTextFlowOverlays === 'function') {
+            window.renderTextFlowOverlays(container);
         }
     };
 
@@ -5793,6 +5799,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
         }
         if(el) {
+            if (window.isLinkingTextBox) {
+                e.preventDefault();
+                if (typeof window.selectElement === 'function') window.selectElement(el);
+                return;
+            }
             // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select) ---
             if (e.button === 0 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
                 window.TextDragSystem.startDrag(e);

@@ -439,6 +439,7 @@ function renderPage(pageData) {
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
     if (window.AdvertisementEngine && typeof window.AdvertisementEngine.init === 'function') window.AdvertisementEngine.init();
     if (typeof window.ensureTemplateElementsEditable === 'function') window.ensureTemplateElementsEditable(paper);
+    if (typeof window.initTextFlowLinks === 'function') window.initTextFlowLinks(paper);
     
     toggleHeaderFooter(state.headersVisible, true);
     document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;

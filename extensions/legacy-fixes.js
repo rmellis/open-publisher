@@ -1323,11 +1323,45 @@ if (!window._sliderFillListenerInstalled) {
 
     // --- 1. CTRL + A (Select All) ---
     window.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
-            // Don't intercept if the user is typing inside a text box (let them select their text!)
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'a' || e.key === 'A')) {
             const activeEl = document.activeElement;
-            const isTextEditing = activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-            if (isTextEditing) return;
+            if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+
+            const activeEditable = activeEl && (activeEl.isContentEditable
+                ? (activeEl.closest ? (activeEl.closest('[contenteditable="true"]') || activeEl) : activeEl)
+                : (activeEl.closest ? activeEl.closest('[contenteditable="true"]') : null));
+
+            let targetEditable = (activeEditable && !activeEditable.classList.contains('wa-text')) ? activeEditable : null;
+            if (!targetEditable && typeof state !== 'undefined' && state.selectedEl && (!state.multiSelected || state.multiSelected.length <= 1)) {
+                const candidate = state.selectedEl.querySelector('.element-content [contenteditable="true"]:not(.wa-text), [contenteditable="true"]:not(.wa-text)');
+                if (candidate) {
+                    const isPureGraphic = state.selectedEl.getAttribute('data-type') === 'shape' && !(candidate.textContent && candidate.textContent.trim().length > 0);
+                    if (!isPureGraphic) {
+                        targetEditable = candidate;
+                    }
+                }
+            }
+
+            if (targetEditable) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (document.activeElement !== targetEditable) {
+                    try { targetEditable.focus({ preventScroll: true }); } catch (err) {}
+                }
+                try {
+                    const range = document.createRange();
+                    range.selectNodeContents(targetEditable);
+                    const sel = window.getSelection();
+                    if (sel) {
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                    if (typeof state !== 'undefined') {
+                        state.lastRange = range.cloneRange();
+                    }
+                } catch (err) {}
+                return;
+            }
 
             e.preventDefault(); // Stop the browser from highlighting the UI text
 

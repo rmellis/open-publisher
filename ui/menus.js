@@ -380,6 +380,12 @@ const ContextMenuSystem = {
                     }
 
                     html += this.buildItem('Text Fit: Best Fit', 'fa-compress-arrows-alt', 'ContextMenuActions.bestFitText()');
+                    if (!isWordArt) {
+                        html += this.buildItem('Link Text Box...', 'fa-link', 'ContextRibbonActions.linkTextBox()');
+                        if (el.getAttribute('data-next-box') || el.getAttribute('data-prev-box')) {
+                            html += this.buildItem('Break Text Flow Link', 'fa-unlink', 'ContextRibbonActions.unlinkTextBox()');
+                        }
+                    }
                     html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
                     html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
                     if (window._contextTargetLink) {

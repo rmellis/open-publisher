@@ -193,6 +193,9 @@ function serializeCurrentPage() {
                 attr.name === 'data-aspect-lock' || 
                 attr.name === 'data-aspect-ratio' ||
                 attr.name === 'data-rounded-corners' ||
+                attr.name === 'data-next-box' ||
+                attr.name === 'data-prev-box' ||
+                attr.name === 'data-text-overflow' ||
                 attr.name.startsWith('data-picture-frame') ||
                 attr.name.startsWith('data-frame-')) {
                 filterAttrs[attr.name] = attr.value;

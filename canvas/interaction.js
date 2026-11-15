@@ -491,41 +491,13 @@ window.healUncroppedImage = function(el) {
 
 function selectElement(el) {
     if (window.isLinkingTextBox) {
-        window.isLinkingTextBox = false;
-        document.body.style.cursor = 'default';
-        const paper = document.getElementById('paper');
-        if (paper) paper.style.cursor = 'default';
-        document.body.classList.remove('linking-mode');
-
-        const isTextBox = el.querySelector('.text-content') !== null || el.querySelector('[contenteditable="true"]') !== null;
-        if (!isTextBox) {
-            if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Invalid Selection', 'Please select a text box to link to.');
+        if (typeof window.linkTextBoxes === 'function') {
+            const linked = window.linkTextBoxes(window.linkingSourceBox, el);
+            if (!linked) return;
+        } else {
+            if (typeof window.cancelTextBoxLinking === 'function') window.cancelTextBoxLinking();
             return;
         }
-
-        const textContent = el.querySelector('.text-content') || el.querySelector('[contenteditable="true"]');
-        if (textContent && textContent.innerText.trim() !== '' && textContent.innerText.trim() !== 'Click to edit text') {
-            if (typeof DialogSystem !== 'undefined') DialogSystem.alert('Link Text Box', 'You need to select an empty text box to pour the text into.');
-            return;
-        }
-
-        if (window.linkingSourceBox && window.linkingSourceBox !== el) {
-            if (!el.id) el.id = 'txt-' + Date.now();
-            window.linkingSourceBox.setAttribute('data-next-box', el.id);
-            el.setAttribute('data-prev-box', window.linkingSourceBox.id);
-
-            // Flow text visually
-            if (typeof flowTextBoxes === 'function') {
-                let headBox = window.linkingSourceBox;
-                while(headBox.getAttribute('data-prev-box')) {
-                    const prev = document.getElementById(headBox.getAttribute('data-prev-box'));
-                    if (prev) headBox = prev;
-                    else break;
-                }
-                flowTextBoxes(headBox);
-            }
-        }
-        return;
     }
 
     // Ensure any previously focused text box/input is blurred when selecting a different element

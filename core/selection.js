@@ -3,6 +3,9 @@
 // ==========================================
 
 function deselect() {
+    if (window.isLinkingTextBox && typeof window.cancelTextBoxLinking === 'function') {
+        window.cancelTextBoxLinking();
+    }
     if (document.activeElement && document.activeElement !== document.body) {
         const isEditable = document.activeElement.isContentEditable || 
                            document.activeElement.tagName === 'INPUT' || 
@@ -36,7 +39,11 @@ function deselect() {
 
 function deleteSelected() { 
     if(state.multiSelected && state.multiSelected.length > 0) {
-        state.multiSelected.forEach(el => el.remove());
+        const elsToRemove = state.multiSelected.slice();
+        if (typeof window.handleLinkedBoxesRemoved === 'function') {
+            window.handleLinkedBoxesRemoved(elsToRemove);
+        }
+        elsToRemove.forEach(el => el.remove());
         state.multiSelected = [];
         updateThumbnails();
         pushHistory();
@@ -44,7 +51,11 @@ function deleteSelected() {
         if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') window.ProgressBarEngine.hideToolbar();
         if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
     } else if(state.selectedEl) { 
-        state.selectedEl.remove(); 
+        const elToRemove = state.selectedEl;
+        if (typeof window.handleLinkedBoxesRemoved === 'function') {
+            window.handleLinkedBoxesRemoved([elToRemove]);
+        }
+        elToRemove.remove(); 
         state.selectedEl=null; 
         updateThumbnails();
         pushHistory();

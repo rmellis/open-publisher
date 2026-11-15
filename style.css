@@ -4725,6 +4725,41 @@ body.linking-mode, body.linking-mode * {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>') 12 12, crosshair !important;
 }
 
+/* Linked Text Flow Frames: enforce frame-bounded text height & clipping */
+.pub-element[data-next-box] .element-content > [contenteditable="true"],
+.pub-element[data-prev-box] .element-content > [contenteditable="true"],
+.pub-element[data-next-box] .element-content > .text-content,
+.pub-element[data-prev-box] .element-content > .text-content {
+    box-sizing: border-box !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Overflow indicator when the final box in a linked story still overflows */
+.pub-element[data-text-overflow="true"]::after {
+    content: "...";
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    padding: 0 4px;
+    height: 14px;
+    line-height: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: #dc2626;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 25;
+}
+
+@media print {
+    .op-textflow-overlay,
+    .pub-element[data-text-overflow="true"]::after {
+        display: none !important;
+    }
+}
+
 /* ========================================================= */
 /* Custom Color Picker Component                             */
 /* ========================================================= */

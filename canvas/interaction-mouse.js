@@ -395,6 +395,11 @@ window.handleMouseDown = function(e) {
         }
     }
     if(el) {
+        if (window.isLinkingTextBox) {
+            e.preventDefault();
+            if (typeof window.selectElement === 'function') window.selectElement(el);
+            return;
+        }
         // --- v5.4.8: Text Drag & Drop Check (Must run before Ctrl multi-select, single-click only) ---
         if (e.detail === 1 && window.TextDragSystem && window.TextDragSystem.isPointInSelection(e.clientX, e.clientY)) {
             window.TextDragSystem.startDrag(e);
