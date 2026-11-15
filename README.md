@@ -101,6 +101,8 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 >
 > 🚀 **[Visit the Open Publisher Knowledge Base (kb.openpublisher.app)](https://kb.openpublisher.app)**
 >
+> 🎬 **[Watch Video Tutorial: Creating Layered Templates with AI & Layout Tools](https://youtu.be/V4X0Q-dCXTQ)** · **[Open the Back To School Template](https://openpublisher.app/back-to-school)**
+>
 > <details>
 >   <summary><small>Looking for the legacy documentation? (PDF)</small></summary>
 >   <br/>
@@ -813,6 +815,19 @@ The **WordArt Studio** generates styled typographic art across **214 creative st
 - **Dual 7-Node AI Infrastructure** - Backed by a 7-node layout and vector cluster (Gemini, Qwen, and GPT-OSS) alongside a separate 7-node FLUX.1 image cluster for reliable, zero-setup generation.
 - **Page Setup and Workspace Control** - Adjust paper size, orientation, margins, colour schemes, Theme Studio backgrounds, Border Art, watermarks, headers/footers, UI themes, grid/guides, colour proofing, and review tools from one prompt.
 - **Quick Access & Single-Step Undo** - Launch from **Home > AI Studio** or **Insert > AI Studio** (`AI Layout Assistant`, `AI Image`, or `AI Vector`), and revert any generation in one step with `Ctrl+Z`.
+
+### Video Tutorial: Building Layered Templates with AI & Layout Tools
+
+See how Open Publisher's in-app AI tools and precision layout/layering controls work together to create a complete layered template from scratch:
+
+<p align="center">
+  <a href="https://youtu.be/V4X0Q-dCXTQ" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/V4X0Q-dCXTQ/hqdefault.jpg" alt="Watch Tutorial: Creating Layered Templates with Open Publisher AI Tools" width="520"/>
+  </a>
+</p>
+
+- **Watch the Tutorial**: [Create Layered Templates with Open Publisher AI & Layout Tools (YouTube)](https://youtu.be/V4X0Q-dCXTQ)
+- **Open the Finished Template Live**: [Back To School Template (openpublisher.app/back-to-school)](https://openpublisher.app/back-to-school)
 
 ---
 
