@@ -195,6 +195,8 @@ function renderPage(pageData) {
         return !isTheme && !isGhost;
     });
 
+    if (typeof window.beginPageLayerRender === 'function') window.beginPageLayerRender();
+    try {
     elementsToRender.forEach(data => {
         const el = document.createElement('div');
         el.className = 'pub-element';
@@ -436,6 +438,10 @@ function renderPage(pageData) {
             else if (typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
         }
     });
+    } finally {
+        if (typeof window.endPageLayerRender === 'function') window.endPageLayerRender();
+        else if (typeof window.normalizeCanvasLayers === 'function') window.normalizeCanvasLayers({ silent: true });
+    }
     if (typeof window.initChartElements === 'function') window.initChartElements();
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.rebindAll === 'function') window.ProgressBarEngine.rebindAll(paper);
     if (window.AdvertisementEngine && typeof window.AdvertisementEngine.init === 'function') window.AdvertisementEngine.init();

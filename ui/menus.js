@@ -494,6 +494,8 @@ const ContextMenuSystem = {
                 // 5. UNIVERSAL OBJECT FUNCTIONS
                 html += this.buildDivider();
                 html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
+                html += this.buildItem('Bring Forward', 'fa-arrow-up', 'bringForward()');
+                html += this.buildItem('Send Backward', 'fa-arrow-down', 'sendBackward()');
                 html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
                 html += this.buildDivider();
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');

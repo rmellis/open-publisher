@@ -1,22 +1,292 @@
 // layout.js - Z-Index, Alignment, Grouping, and Snapping logic
 
-window.bringFront = function() {
-    if(state.selectedEl) {
-        const els = Array.from(paper.querySelectorAll('.pub-element'));
-        const maxZ = els.reduce((max, el) => Math.max(max, parseInt(el.style.zIndex) || 10), 0);
-        state.selectedEl.style.zIndex = maxZ + 1;
-        if(typeof pushHistory === 'function') pushHistory();
-    }
-};
+(function installLayerManager() {
+    const BASE_LAYER_Z = 10;
 
-window.sendBack = function() {
-    if(state.selectedEl) {
-        const els = Array.from(paper.querySelectorAll('.pub-element'));
-        const minZ = els.reduce((min, el) => Math.min(min, parseInt(el.style.zIndex) || 10), 10000);
-        state.selectedEl.style.zIndex = Math.max(1, minZ - 1);
-        if(typeof pushHistory === 'function') pushHistory();
+    function isOrderableElement(el) {
+        if (!el || el.nodeType !== 1 || !el.classList || !el.classList.contains('pub-element')) return false;
+        if (el.getAttribute('data-is-theme') === 'true' || el.classList.contains('op-theme-container')) return false;
+        if (el.getAttribute('data-is-border') === 'true' || el.id === 'native-border-art-border' || el.id === 'native-blueprint-border') return false;
+        if (el.classList.contains('master-page-element')) return false;
+        const parentPub = el.parentElement && el.parentElement.closest ? el.parentElement.closest('.pub-element') : null;
+        if (parentPub) return false;
+        return true;
     }
-};
+
+    function readRawZIndex(el) {
+        if (!el) return BASE_LAYER_Z;
+        const inlineZ = parseInt(el.style && el.style.zIndex, 10);
+        if (!isNaN(inlineZ)) return inlineZ;
+        if (typeof window !== 'undefined' && window.getComputedStyle) {
+            const compZ = parseInt(window.getComputedStyle(el).zIndex, 10);
+            if (!isNaN(compZ)) return compZ;
+        }
+        return BASE_LAYER_Z;
+    }
+
+    function getPaperEl() {
+        return (typeof paper !== 'undefined' && paper) ? paper : document.getElementById('paper');
+    }
+
+    function getOrderableElements(paperEl) {
+        if (!paperEl) return [];
+        return Array.from(paperEl.querySelectorAll('.pub-element')).filter(isOrderableElement);
+    }
+
+    function getSortedLayerElements(paperEl) {
+        const els = getOrderableElements(paperEl);
+        const domIndexMap = new Map();
+        els.forEach((el, idx) => domIndexMap.set(el, idx));
+
+        return els.slice().sort((a, b) => {
+            const za = readRawZIndex(a);
+            const zb = readRawZIndex(b);
+            if (za !== zb) return za - zb;
+            return domIndexMap.get(a) - domIndexMap.get(b);
+        });
+    }
+
+    function applySequentialLayers(orderedEls) {
+        let changed = false;
+        window._isUpdatingLayers = true;
+        try {
+            for (let i = 0; i < orderedEls.length; i++) {
+                const targetZ = String(BASE_LAYER_Z + i);
+                if (orderedEls[i].style.zIndex !== targetZ) {
+                    orderedEls[i].style.zIndex = targetZ;
+                    changed = true;
+                }
+            }
+        } finally {
+            window._isUpdatingLayers = false;
+        }
+        return changed;
+    }
+
+    window.getNextLayerZIndex = function() {
+        const paperEl = getPaperEl();
+        const els = getOrderableElements(paperEl);
+        if (els.length === 0) return BASE_LAYER_Z;
+        let maxZ = BASE_LAYER_Z - 1;
+        els.forEach(el => {
+            const z = readRawZIndex(el);
+            if (z > maxZ) maxZ = z;
+        });
+        return Math.max(BASE_LAYER_Z, maxZ + 1);
+    };
+
+    window.normalizeCanvasLayers = function(options) {
+        const opts = options || {};
+        const paperEl = getPaperEl();
+        if (!paperEl || window._isUpdatingLayers) return false;
+        const ordered = getSortedLayerElements(paperEl);
+        if (ordered.length === 0) return false;
+
+        // Check if any duplicate/conflicting or non-normalized z-index exists
+        const seen = new Set();
+        let needsNormalize = false;
+        for (let i = 0; i < ordered.length; i++) {
+            const raw = ordered[i].style.zIndex;
+            const num = parseInt(raw, 10);
+            if (isNaN(num) || num < BASE_LAYER_Z || seen.has(num) || String(num) !== String(BASE_LAYER_Z + i)) {
+                needsNormalize = true;
+                break;
+            }
+            seen.add(num);
+        }
+
+        if (!needsNormalize) return false;
+        const changed = applySequentialLayers(ordered);
+        if (changed && !opts.silent) {
+            if (typeof window.refreshSelectionPane === 'function') window.refreshSelectionPane();
+        }
+        return changed;
+    };
+
+    function getActiveLayerTargets(paperEl, ordered) {
+        const targets = new Set();
+        if (typeof state !== 'undefined') {
+            if (Array.isArray(state.multiSelected) && state.multiSelected.length > 0) {
+                state.multiSelected.forEach(el => {
+                    if (isOrderableElement(el) && paperEl.contains(el)) targets.add(el);
+                });
+            } else if (state.selectedEl && isOrderableElement(state.selectedEl) && paperEl.contains(state.selectedEl)) {
+                targets.add(state.selectedEl);
+            }
+        }
+        return ordered.filter(el => targets.has(el));
+    }
+
+    window.orderSelectionLayer = function(mode) {
+        const paperEl = getPaperEl();
+        if (!paperEl) return false;
+
+        // Normalize existing conflicts/ties first so stacking matches visual paint order before stepping
+        const ordered = getSortedLayerElements(paperEl);
+        if (ordered.length === 0) return false;
+
+        const selectedList = getActiveLayerTargets(paperEl, ordered);
+        if (selectedList.length === 0) return false;
+
+        const selectedSet = new Set(selectedList);
+        let nextOrder = ordered.slice();
+
+        if (mode === 'front') {
+            const rest = ordered.filter(el => !selectedSet.has(el));
+            nextOrder = rest.concat(selectedList);
+        } else if (mode === 'back') {
+            const rest = ordered.filter(el => !selectedSet.has(el));
+            nextOrder = selectedList.concat(rest);
+        } else if (mode === 'forward') {
+            for (let i = nextOrder.length - 2; i >= 0; i--) {
+                if (selectedSet.has(nextOrder[i]) && !selectedSet.has(nextOrder[i + 1])) {
+                    const tmp = nextOrder[i];
+                    nextOrder[i] = nextOrder[i + 1];
+                    nextOrder[i + 1] = tmp;
+                }
+            }
+        } else if (mode === 'backward') {
+            for (let i = 1; i < nextOrder.length; i++) {
+                if (selectedSet.has(nextOrder[i]) && !selectedSet.has(nextOrder[i - 1])) {
+                    const tmp = nextOrder[i];
+                    nextOrder[i] = nextOrder[i - 1];
+                    nextOrder[i - 1] = tmp;
+                }
+            }
+        }
+
+        const changed = applySequentialLayers(nextOrder);
+        if (changed) {
+            if (typeof window.refreshSelectionPane === 'function') window.refreshSelectionPane();
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof pushHistory === 'function') pushHistory();
+        }
+        return changed;
+    };
+
+    window.bringFront = function() {
+        return window.orderSelectionLayer('front');
+    };
+
+    window.sendBack = function() {
+        return window.orderSelectionLayer('back');
+    };
+
+    window.bringForward = function() {
+        return window.orderSelectionLayer('forward');
+    };
+
+    window.sendBackward = function() {
+        return window.orderSelectionLayer('backward');
+    };
+
+    // Actively track #paper element additions / removals / z-index changes so layers stay conflict-free
+    let _layerSyncScheduled = false;
+    const pendingAddedEls = new Set();
+
+    function scheduleLayerSync() {
+        if (_layerSyncScheduled || window._isUpdatingLayers) return;
+        _layerSyncScheduled = true;
+        queueMicrotask(() => {
+            _layerSyncScheduled = false;
+            const paperEl = getPaperEl();
+            if (!paperEl || window._isUpdatingLayers || window._isRenderingPageLayers) {
+                pendingAddedEls.clear();
+                return;
+            }
+            const orderedExisting = getSortedLayerElements(paperEl);
+            if (pendingAddedEls.size > 0 && !window._isRestoringHistoryLayers) {
+                const existingSet = new Set(orderedExisting);
+                const newlyAdded = Array.from(pendingAddedEls).filter(n => existingSet.has(n));
+                pendingAddedEls.clear();
+
+                // If newly created/pasted/duplicated elements collide with an existing layer's z-index,
+                // bump them strictly above the current stack before normalizing sequentially.
+                const usedExistingZ = new Set();
+                let maxExistingZ = BASE_LAYER_Z - 1;
+                orderedExisting.forEach(el => {
+                    if (!newlyAdded.includes(el)) {
+                        const z = readRawZIndex(el);
+                        usedExistingZ.add(z);
+                        if (z > maxExistingZ) maxExistingZ = z;
+                    }
+                });
+
+                window._isUpdatingLayers = true;
+                try {
+                    newlyAdded.forEach(el => {
+                        const curZ = readRawZIndex(el);
+                        if (usedExistingZ.has(curZ) || curZ < BASE_LAYER_Z) {
+                            maxExistingZ = Math.max(BASE_LAYER_Z, maxExistingZ + 1);
+                            el.style.zIndex = String(maxExistingZ);
+                        }
+                    });
+                } finally {
+                    window._isUpdatingLayers = false;
+                }
+            } else {
+                pendingAddedEls.clear();
+            }
+
+            window.normalizeCanvasLayers({ silent: false });
+        });
+    }
+
+    let _paperLayerObs = null;
+
+    window.beginPageLayerRender = function() {
+        window._isRenderingPageLayers = true;
+        pendingAddedEls.clear();
+    };
+
+    window.endPageLayerRender = function() {
+        if (_paperLayerObs) {
+            try { _paperLayerObs.takeRecords(); } catch (err) {}
+        }
+        pendingAddedEls.clear();
+        window._isRenderingPageLayers = false;
+        window.normalizeCanvasLayers({ silent: true });
+    };
+
+    function attachPaperLayerObserver() {
+        const paperEl = getPaperEl();
+        if (!paperEl || paperEl._opLayerObserverAttached || typeof MutationObserver === 'undefined') return;
+        paperEl._opLayerObserverAttached = true;
+
+        const obs = new MutationObserver((mutations) => {
+            if (window._isUpdatingLayers || window._isRenderingPageLayers) return;
+            let shouldSync = false;
+            for (let i = 0; i < mutations.length; i++) {
+                const m = mutations[i];
+                if (m.type === 'childList') {
+                    m.addedNodes.forEach(n => {
+                        if (isOrderableElement(n)) {
+                            pendingAddedEls.add(n);
+                            shouldSync = true;
+                        }
+                    });
+                    m.removedNodes.forEach(n => {
+                        if (n && n.nodeType === 1 && n.classList && n.classList.contains('pub-element')) {
+                            shouldSync = true;
+                        }
+                    });
+                }
+            }
+            if (shouldSync) scheduleLayerSync();
+        });
+
+        _paperLayerObs = obs;
+        obs.observe(paperEl, { childList: true });
+        window.normalizeCanvasLayers({ silent: true });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachPaperLayerObserver);
+    } else {
+        attachPaperLayerObserver();
+    }
+    setTimeout(attachPaperLayerObserver, 300);
+})();
 
 window.toggleSnapMenu = function(btn) {
     const m = document.getElementById('snap-dropdown');

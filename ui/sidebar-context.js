@@ -313,7 +313,7 @@ function createWrapper(htmlContent) {
     el.style.top = '50px';
     el.style.width = '200px';
     el.style.height = '100px';
-    el.style.zIndex = 10;
+    el.style.zIndex = (typeof window.getNextLayerZIndex === 'function') ? window.getNextLayerZIndex() : 10;
     
     // Default scale
     el.setAttribute('data-scaleX', "1");

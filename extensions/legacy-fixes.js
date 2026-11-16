@@ -1948,13 +1948,25 @@ if (!window._sliderFillListenerInstalled) {
                 <div class="float-mini-btn" onclick="bringFront()" title="Bring to Front">
                     <div class="arrange-icon-wrapper">
                         <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-angle-double-up arrange-arrow"></i>
+                    </div>
+                </div>
+                <div class="float-mini-btn" onclick="bringForward()" title="Bring Forward (1 Layer)">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
                         <i class="fas fa-arrow-up arrange-arrow"></i>
+                    </div>
+                </div>
+                <div class="float-mini-btn" onclick="sendBackward()" title="Send Backward (1 Layer)">
+                    <div class="arrange-icon-wrapper">
+                        <i class="fas fa-layer-group"></i>
+                        <i class="fas fa-arrow-down arrange-arrow"></i>
                     </div>
                 </div>
                 <div class="float-mini-btn" onclick="sendBack()" title="Send to Back">
                     <div class="arrange-icon-wrapper">
                         <i class="fas fa-layer-group"></i>
-                        <i class="fas fa-arrow-down arrange-arrow"></i>
+                        <i class="fas fa-angle-double-down arrange-arrow"></i>
                     </div>
                 </div>
             </div>

@@ -101,7 +101,7 @@ window.refreshSelectionPane = function() {
         row.style.cssText = `display:flex; align-items:center; padding: 6px 10px; margin-bottom: 4px; background: ${isSelected ? 'color-mix(in srgb, var(--ui-theme-color) 10%, transparent)' : 'var(--ui-panel-bg, #f8fafc)'}; border: 1px solid ${isSelected ? 'var(--ui-theme-color)' : 'var(--ui-border, #e2e8f0)'}; color: var(--ui-text); border-radius: 4px; cursor: pointer; transition: 0.2s;`;
         
         row.onclick = (e) => {
-            if (e.target.closest('.selection-eye') || e.target.tagName === 'INPUT') return;
+            if (e.target.closest('.selection-eye') || e.target.closest('.selection-layer-btn') || e.target.tagName === 'INPUT') return;
             if (typeof selectElement === 'function' && !isHidden) {
                 selectElement(el);
             }
@@ -129,8 +129,41 @@ window.refreshSelectionPane = function() {
             if (typeof pushHistory === 'function') pushHistory();
         };
 
+        const layerBtns = document.createElement('div');
+        layerBtns.style.cssText = 'display:flex; align-items:center; gap:2px; margin-left:4px;';
+
+        const upBtn = document.createElement('button');
+        upBtn.type = 'button';
+        upBtn.className = 'selection-layer-btn';
+        upBtn.title = 'Bring Forward (1 Layer)';
+        upBtn.disabled = index === 0;
+        upBtn.style.cssText = `border:none; background:transparent; padding:3px 5px; cursor:${index === 0 ? 'default' : 'pointer'}; color:${index === 0 ? '#cbd5e1' : 'var(--ui-theme-color)'}; font-size:11px; border-radius:4px;`;
+        upBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        upBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (typeof selectElement === 'function' && (!state || state.selectedEl !== el)) selectElement(el);
+            if (typeof window.bringForward === 'function') window.bringForward();
+        };
+
+        const downBtn = document.createElement('button');
+        downBtn.type = 'button';
+        downBtn.className = 'selection-layer-btn';
+        downBtn.title = 'Send Backward (1 Layer)';
+        downBtn.disabled = index === els.length - 1;
+        downBtn.style.cssText = `border:none; background:transparent; padding:3px 5px; cursor:${index === els.length - 1 ? 'default' : 'pointer'}; color:${index === els.length - 1 ? '#cbd5e1' : 'var(--ui-theme-color)'}; font-size:11px; border-radius:4px;`;
+        downBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        downBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (typeof selectElement === 'function' && (!state || state.selectedEl !== el)) selectElement(el);
+            if (typeof window.sendBackward === 'function') window.sendBackward();
+        };
+
+        layerBtns.appendChild(upBtn);
+        layerBtns.appendChild(downBtn);
+
         row.appendChild(eye);
         row.appendChild(nameInput);
+        row.appendChild(layerBtns);
         list.appendChild(row);
     });
 };
