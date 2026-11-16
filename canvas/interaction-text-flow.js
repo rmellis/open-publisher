@@ -1023,7 +1023,116 @@
                 window.SpellCheckEngine.trigger(250);
             }
         }
+
+        // Auto-follow caret and page to the upstream box if user typed/pasted into an empty downstream box
+        followUpstreamBoxIfEmptied();
     };
+
+    function isFlowRefNonEmpty(ref) {
+        if (!ref) return false;
+        if (ref.kind === 'dom') {
+            const c = getEditableTextContent(ref.box);
+            return !!(c && !isEditableEmptyOrPlaceholder(c));
+        }
+        if (ref.kind === 'data' && ref.data) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = ref.data.innerHTML || '';
+            const c = tmp.querySelector('[contenteditable="true"]') || tmp;
+            return !isEditableEmptyOrPlaceholder(c);
+        }
+        return false;
+    }
+
+    function focusBoxAtEnd(domBox) {
+        if (!domBox || !document.contains(domBox)) return;
+        if (typeof window.selectElement === 'function') {
+            window.selectElement(domBox);
+        }
+        const editable = getEditableTextContent(domBox);
+        if (!editable) return;
+        try {
+            editable.focus({ preventScroll: false });
+        } catch (e) {
+            editable.focus();
+        }
+        if (typeof editable.scrollIntoView === 'function') {
+            try { editable.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+        }
+        try {
+            const range = document.createRange();
+            const walker = document.createTreeWalker(editable, NodeFilter.SHOW_TEXT, null, false);
+            let lastText = null;
+            let node;
+            while ((node = walker.nextNode())) {
+                if (node.nodeValue && node.nodeValue.length > 0) {
+                    lastText = node;
+                }
+            }
+            if (lastText) {
+                range.setStart(lastText, lastText.nodeValue.length);
+                range.collapse(true);
+            } else {
+                range.selectNodeContents(editable);
+                range.collapse(false);
+            }
+            const sel = window.getSelection ? window.getSelection() : null;
+            if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            if (typeof state !== 'undefined') {
+                state.lastRange = range.cloneRange();
+            }
+        } catch (err) {}
+    }
+
+    function followUpstreamBoxIfEmptied() {
+        const downstreamBox = window._pendingUpstreamFollowBox;
+        window._pendingUpstreamFollowBox = null;
+        if (!downstreamBox || !document.contains(downstreamBox) || !downstreamBox.getAttribute('data-prev-box')) {
+            return;
+        }
+        const downstreamContent = getEditableTextContent(downstreamBox);
+        if (!downstreamContent || !isEditableEmptyOrPlaceholder(downstreamContent)) {
+            return;
+        }
+
+        const headRef = getTextFlowHeadRef(downstreamBox);
+        const chainRefs = getTextFlowChainRefs(headRef);
+        if (chainRefs.length < 2) return;
+
+        const targetIdx = chainRefs.findIndex(r => r.kind === 'dom' && r.box === downstreamBox);
+        if (targetIdx <= 0) return;
+
+        // Locate the last non-empty upstream box in the chain (or fall back to head box #1)
+        let destRef = null;
+        for (let i = targetIdx - 1; i >= 0; i--) {
+            if (isFlowRefNonEmpty(chainRefs[i])) {
+                destRef = chainRefs[i];
+                break;
+            }
+        }
+        if (!destRef) {
+            destRef = chainRefs[0];
+        }
+        if (!destRef) return;
+
+        const currPageIdx = getCurrentPageIdxSafe();
+        if (typeof destRef.pageIndex === 'number' && destRef.pageIndex !== currPageIdx && typeof window.switchPage === 'function') {
+            const destId = ensureFlowRefId(destRef) || destRef.id;
+            window.switchPage(destRef.pageIndex);
+            const switchedNow = destId ? document.getElementById(destId) : null;
+            if (switchedNow) {
+                focusBoxAtEnd(switchedNow);
+            }
+            requestAnimationFrame(() => {
+                const switchedAfter = destId ? document.getElementById(destId) : null;
+                if (switchedAfter) focusBoxAtEnd(switchedAfter);
+            });
+        } else if (destRef.kind === 'dom' && document.contains(destRef.box)) {
+            focusBoxAtEnd(destRef.box);
+        }
+    }
 
     // --- Scheduled Coalesced Reflow (by chain head) ---
     window.scheduleTextFlow = function(boxOrEl, delayMs) {
@@ -1800,6 +1909,9 @@
             if (e.target && e.target.isContentEditable) {
                 const box = e.target.closest ? e.target.closest('.pub-element') : null;
                 if (box && (box.getAttribute('data-next-box') || box.getAttribute('data-prev-box'))) {
+                    if (box.getAttribute('data-prev-box')) {
+                        window._pendingUpstreamFollowBox = box;
+                    }
                     window.scheduleTextFlow(box, 16);
                 }
             }
@@ -1810,6 +1922,9 @@
             if (e.target && e.target.isContentEditable) {
                 const box = e.target.closest ? e.target.closest('.pub-element') : null;
                 if (box && (box.getAttribute('data-next-box') || box.getAttribute('data-prev-box'))) {
+                    if (box.getAttribute('data-prev-box')) {
+                        window._pendingUpstreamFollowBox = box;
+                    }
                     window.scheduleTextFlow(box, 20);
                 }
             }

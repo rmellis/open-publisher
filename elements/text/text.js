@@ -706,6 +706,15 @@ function addTextBox() {
     const dirStyle = (defaultDir === 'rtl') ? ' direction: rtl; text-align: right;' : ((defaultDir === 'ltr') ? ' direction: ltr; text-align: left;' : '');
     const spellAttrs = ` spellcheck="false" lang="${userLang}"`;
     state.lastRange = null;
+
+    // Capture any currently selected text box on the current page before createWrapper switches selection
+    const paperEl = document.getElementById('paper');
+    const prevSel = (typeof state !== 'undefined' && state.selectedEl && paperEl && paperEl.contains(state.selectedEl))
+        ? state.selectedEl
+        : null;
+    const isPrevTextBox = !!(prevSel && (prevSel.getAttribute('data-type') === 'text' || prevSel.querySelector('[contenteditable="true"]') !== null));
+    const prevLeft = isPrevTextBox ? (parseFloat(prevSel.style.left) || prevSel.offsetLeft || 50) : null;
+    const prevTop = isPrevTextBox ? (parseFloat(prevSel.style.top) || prevSel.offsetTop || 50) : null;
     
     const schemes = (typeof colorSchemes !== 'undefined') ? colorSchemes : (window.colorSchemes || {});
     const initialColor = (state.currentScheme && schemes[state.currentScheme] && schemes[state.currentScheme][0]) || '#000000';
@@ -713,6 +722,31 @@ function addTextBox() {
     el.setAttribute('data-type', 'text');
     el.setAttribute('data-scheme-text', '0');
     el.setAttribute('data-text-direction', defaultDir);
+
+    if (isPrevTextBox && prevLeft !== null && prevTop !== null) {
+        const paperW = (paperEl && (parseFloat(paperEl.style.width) || paperEl.clientWidth)) || 794;
+        const paperH = (paperEl && (parseFloat(paperEl.style.height) || paperEl.clientHeight)) || 1123;
+        const boxW = parseFloat(el.style.width) || 200;
+        const boxH = parseFloat(el.style.height) || 100;
+        const maxLeft = Math.max(16, paperW - boxW - 16);
+        const maxTop = Math.max(16, paperH - boxH - 16);
+        let nextLeft = Math.round(prevLeft + 24);
+        let nextTop = Math.round(prevTop + 24);
+        if (nextLeft > maxLeft) nextLeft = Math.min(maxLeft, 50 + ((nextLeft - 50) % Math.max(24, maxLeft - 50)));
+        if (nextTop > maxTop) nextTop = Math.min(maxTop, 50 + ((nextTop - 50) % Math.max(24, maxTop - 50)));
+        el.style.left = Math.max(10, nextLeft) + 'px';
+        el.style.top = Math.max(10, nextTop) + 'px';
+        if (typeof window.selectElement === 'function') window.selectElement(el);
+        if (typeof serializeCurrentPage === 'function' && typeof state.currentPageIndex === 'number' && state.pages) {
+            const updatedPage = serializeCurrentPage();
+            state.pages[state.currentPageIndex] = updatedPage;
+            if (state.history && state.history[state.historyIndex] && state.history[state.historyIndex].pages) {
+                state.history[state.historyIndex].pages[state.currentPageIndex] = JSON.parse(JSON.stringify(updatedPage));
+            }
+        }
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+    }
+
     applySingleElementScheme(el, state.currentScheme);
     updateFloatToolbarValues();
     if (typeof window.renderSelectionOverlays === 'function') {

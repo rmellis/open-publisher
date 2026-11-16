@@ -1,10 +1,10 @@
-// ========================================================
-// Open Publisher Watermark Engine (v5.22.0)
+﻿// ========================================================
+// Open Publisher Watermark Engine (v5.22.1)
 // Document Watermark Stamps & Tiled Security Patterns
 // ========================================================
 
 (function initWatermarkEngine() {
-    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.22.0)...");
+    console.log("🛠️ Watermark Engine initializing (Document Watermark Stamps & Tiled Security Patterns v5.22.1)...");
 
     const PRESETS = {
         draft: {
