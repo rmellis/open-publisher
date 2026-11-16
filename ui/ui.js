@@ -1790,55 +1790,40 @@ window.ContextRibbonActions = {
             const waModal = document.getElementById('wordart-modal'); if(waModal) { waModal.style.display = 'flex'; waModal.style.zIndex = '6000'; }
         }
     },
-    addDropShadow: function() { 
-        if(state.selectedEl) { 
-            const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
-            if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
-                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
+    _applyOrOpenShadowEffect: function(defaultDropShadow) {
+        if (!state.selectedEl) return;
+        const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
+        const existing = (typeof window.getElementDropShadowInfo === 'function')
+            ? window.getElementDropShadowInfo(state.selectedEl)
+            : null;
+
+        if (existing) {
+            if (existing.node !== inner && typeof window.normalizeDropShadowForElement === 'function') {
+                window.normalizeDropShadowForElement(state.selectedEl);
             }
-            const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
-            const currentFilter = (inner.style.filter || '').replace(/\bnone\b/g, '').trim();
-            if (currentFilter.includes('drop-shadow')) {
-                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
-                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(false);
-            } else {
-                inner.style.filter = (currentFilter + ' drop-shadow(5px 5px 10px rgba(0,0,0,0.6))').trim();
-                state.selectedEl.style.overflow = 'visible';
-                inner.style.overflow = 'visible';
-                const childImg = state.selectedEl.querySelector('img');
-                if (childImg) {
-                    inner.style.clipPath = '';
-                    inner.style.webkitClipPath = '';
-                }
-                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
-            }
-            if (typeof pushHistory === 'function') pushHistory(); 
-        } 
+            state.selectedEl.style.overflow = 'visible';
+            inner.style.overflow = 'visible';
+            if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true, state.selectedEl);
+            return;
+        }
+
+        const currentFilter = (inner.style.filter || '').replace(/\bnone\b/g, '').trim();
+        inner.style.filter = (currentFilter + ' ' + defaultDropShadow).trim();
+        state.selectedEl.style.overflow = 'visible';
+        inner.style.overflow = 'visible';
+        const childImg = state.selectedEl.querySelector('img');
+        if (childImg) {
+            inner.style.clipPath = '';
+            inner.style.webkitClipPath = '';
+        }
+        if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true, state.selectedEl);
+        if (typeof pushHistory === 'function') pushHistory();
     },
-    addGlow: function() { 
-        if(state.selectedEl) { 
-            const legacyInner = state.selectedEl.querySelector('img') || state.selectedEl.querySelector('svg');
-            if (legacyInner && legacyInner.style.filter.includes('drop-shadow')) {
-                legacyInner.style.filter = legacyInner.style.filter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
-            }
-            const inner = state.selectedEl.querySelector('.element-content') || state.selectedEl;
-            const currentFilter = (inner.style.filter || '').replace(/\bnone\b/g, '').trim();
-            if (currentFilter.includes('drop-shadow')) {
-                inner.style.filter = currentFilter.replace(/drop-shadow\((?:[^)(]+|\([^)(]*\))*\)/g, '').replace(/\bnone\b/g, '').trim();
-                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(false);
-            } else {
-                inner.style.filter = (currentFilter + ' drop-shadow(0px 0px 15px rgba(0,191,255,0.8))').trim();
-                state.selectedEl.style.overflow = 'visible';
-                inner.style.overflow = 'visible';
-                const childImg = state.selectedEl.querySelector('img');
-                if (childImg) {
-                    inner.style.clipPath = '';
-                    inner.style.webkitClipPath = '';
-                }
-                if (window.setShadowPaneVisibility) window.setShadowPaneVisibility(true);
-            }
-            if (typeof pushHistory === 'function') pushHistory(); 
-        } 
+    addDropShadow: function() {
+        this._applyOrOpenShadowEffect('drop-shadow(5px 5px 10px rgba(0,0,0,0.6))');
+    },
+    addGlow: function() {
+        this._applyOrOpenShadowEffect('drop-shadow(0px 0px 15px rgba(0,191,255,0.8))');
     },
     cropToShape: function() {
         if(state.selectedEl && state.selectedEl.querySelector('img') && typeof DialogSystem !== 'undefined') {

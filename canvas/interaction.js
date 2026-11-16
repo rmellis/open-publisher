@@ -522,7 +522,9 @@ function selectElement(el) {
         if (window.healUncroppedImage) window.healUncroppedImage(el);
         document.getElementById('status-msg').innerText = "Element Selected";
         
-        if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
+        if (typeof window.syncShadowPaneForSelection === 'function') {
+            window.syncShadowPaneForSelection(el);
+        } else if (window.parseShadowToSliders && document.getElementById('op-shadow-sidebar') && document.getElementById('op-shadow-sidebar').classList.contains('visible')) {
             window.parseShadowToSliders();
         }
         showFloatToolbar();

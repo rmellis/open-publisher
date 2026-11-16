@@ -33,6 +33,7 @@ function deselect() {
     document.getElementById('status-msg').innerText = "Ready";
     { floatToolbar.style.display = 'none'; const _wa = document.getElementById('wa-float-toolbar'); if(_wa) _wa.style.display = 'none'; }
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') window.ProgressBarEngine.hideToolbar();
+    if (typeof window.syncShadowPaneForSelection === 'function') window.syncShadowPaneForSelection(null);
     if (window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
     if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
@@ -62,6 +63,7 @@ function executeDeleteElements(elsToRemove) {
     const status = document.getElementById('status-msg');
     if (status) status.innerText = 'Ready';
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') window.ProgressBarEngine.hideToolbar();
+    if (typeof window.syncShadowPaneForSelection === 'function') window.syncShadowPaneForSelection(state.selectedEl);
     if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
 
