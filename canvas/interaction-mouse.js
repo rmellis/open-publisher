@@ -1,5 +1,6 @@
 window.handleMouseDown = function(e) {
     if (e.button !== 0) return;
+    if (e.target && e.target.closest && e.target.closest('.op-textflow-pill')) return;
 
     // Explicitly blur any currently active editable element if the user clicked outside of it
     if (document.activeElement && document.activeElement !== document.body) {

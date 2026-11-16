@@ -1487,7 +1487,24 @@ window.switchTab = function(t) {
             if (clickAction && clickAction.includes("'" + t + "'")) targetTab = tab;
         });
     }
-    if (targetTab) targetTab.classList.add('active');
+    if (targetTab) {
+        targetTab.classList.add('active');
+        if (!targetTab.classList.contains('contextual-tab')) {
+            window.lastStandardTab = t;
+            if (!window._isAutoRibbonSwitch) {
+                if (typeof state !== 'undefined' && state.selectedEl) {
+                    window._userManualTabForEl = state.selectedEl;
+                    window._userManualTabId = t;
+                } else {
+                    window._userManualTabForEl = null;
+                    window._userManualTabId = null;
+                }
+            }
+        } else if (!window._isAutoRibbonSwitch) {
+            window._userManualTabForEl = null;
+            window._userManualTabId = null;
+        }
+    }
     
     const toolbar = document.getElementById('ribbon-' + t);
     if(toolbar) {
@@ -2198,12 +2215,33 @@ window.ContextRibbonSystem = {
         if (!window.originalSelectElementForRibbon) {
             window.originalSelectElementForRibbon = window.selectElement;
             window.originalDeselectForRibbon = window.deselect;
-            window.selectElement = function(el) { if (window.originalSelectElementForRibbon) window.originalSelectElementForRibbon(el); window.ContextRibbonSystem.updateTabs(el); };
-            window.deselect = function() { if (window.originalDeselectForRibbon) window.originalDeselectForRibbon(); if (!window._isTransitioningSelection) window.ContextRibbonSystem.hideAllTabs(); };
+            window.selectElement = function(el) {
+                const wasSameElement = !!(el && window._lastRibbonSelectedEl === el);
+                if (window.originalSelectElementForRibbon) window.originalSelectElementForRibbon(el);
+                window._lastRibbonSelectedEl = el || null;
+                window.ContextRibbonSystem.updateTabs(el, wasSameElement);
+            };
+            window.deselect = function() {
+                if (window.originalDeselectForRibbon) window.originalDeselectForRibbon();
+                if (!window._isTransitioningSelection) {
+                    window._lastRibbonSelectedEl = null;
+                    window._userManualTabForEl = null;
+                    window._userManualTabId = null;
+                    window.ContextRibbonSystem.hideAllTabs(true);
+                }
+            };
         }
     },
-    updateTabs: function(el) {
-        this.hideAllTabs(false); if (!el) return;
+    updateTabs: function(el, preserveActiveTab) {
+        if (!el) {
+            this.hideAllTabs(true);
+            return;
+        }
+        if (window._userManualTabForEl && window._userManualTabForEl !== el) {
+            window._userManualTabForEl = null;
+            window._userManualTabId = null;
+        }
+        this.hideAllTabs(false);
         const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
         const isTable = el.querySelector('table') !== null;
         const isProgressBar = el.getAttribute('data-type') === 'progress-bar' || el.querySelector('.progress-bar-widget') !== null;
@@ -2262,7 +2300,18 @@ window.ContextRibbonSystem = {
                 window.updateTextFlowRibbonUI(el);
             }
         }
-        if (tabIdToOpen) window.switchTab(tabIdToOpen);
+        const activeTab = document.querySelector('.tab.active');
+        const activeIsVisible = activeTab && activeTab.style.display !== 'none';
+        const hasManualTabForEl = (window._userManualTabForEl === el && !!window._userManualTabId);
+        const keepCurrentTab = activeIsVisible && (preserveActiveTab || hasManualTabForEl);
+        if (tabIdToOpen && !keepCurrentTab) {
+            window._isAutoRibbonSwitch = true;
+            try {
+                window.switchTab(tabIdToOpen);
+            } finally {
+                window._isAutoRibbonSwitch = false;
+            }
+        }
         if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
             window.TemplateCSSColorEngine.refreshRibbonPanel(el);
         }
@@ -2277,7 +2326,7 @@ window.ContextRibbonSystem = {
             if (!el.hasAttribute('data-aspect-ratio')) el.setAttribute('data-aspect-ratio', (el.offsetWidth / el.offsetHeight) || 1);
         }
     },
-    hideAllTabs: function() {
+    hideAllTabs: function(restoreStandardTab) {
         document.querySelectorAll('.contextual-tab').forEach(tab => { tab.style.display = 'none'; });
         document.getElementById('op-table-sidebar')?.classList.remove('visible');
         const pbBtn = document.getElementById('btn-ribbon-pb-designer');
@@ -2285,9 +2334,16 @@ window.ContextRibbonSystem = {
         if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.hideFloatingPill === 'function') {
             window.TemplateCSSColorEngine.hideFloatingPill();
         }
-        let activeTab = document.querySelector('.tab.active');
-        if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
-            window.switchTab(window.lastStandardTab || 'home');
+        if (restoreStandardTab !== false) {
+            let activeTab = document.querySelector('.tab.active');
+            if (!activeTab || activeTab.classList.contains('contextual-tab') || activeTab.style.display === 'none') {
+                window._isAutoRibbonSwitch = true;
+                try {
+                    window.switchTab(window.lastStandardTab || 'home');
+                } finally {
+                    window._isAutoRibbonSwitch = false;
+                }
+            }
         }
 
         setTimeout(() => {

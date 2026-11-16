@@ -64,6 +64,14 @@ function executeDeleteElements(elsToRemove) {
     if (status) status.innerText = 'Ready';
     if (window.ProgressBarEngine && typeof window.ProgressBarEngine.hideToolbar === 'function') window.ProgressBarEngine.hideToolbar();
     if (typeof window.syncShadowPaneForSelection === 'function') window.syncShadowPaneForSelection(state.selectedEl);
+    if (!state.selectedEl && (!state.multiSelected || state.multiSelected.length === 0)) {
+        window._lastRibbonSelectedEl = null;
+        window._userManualTabForEl = null;
+        window._userManualTabId = null;
+        if (window.ContextRibbonSystem && typeof window.ContextRibbonSystem.hideAllTabs === 'function') {
+            window.ContextRibbonSystem.hideAllTabs(true);
+        }
+    }
     if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
 }
 

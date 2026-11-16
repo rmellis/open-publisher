@@ -105,13 +105,20 @@
         return isValidFlowTextBox(tempEl);
     }
 
+    function isLivePaperFlowEl(node) {
+        if (!node || node.nodeType !== 1 || !node.classList || !node.classList.contains('pub-element')) return false;
+        if (node.closest && node.closest('#op-textflow-measure-host')) return false;
+        const paperEl = document.getElementById('paper');
+        return !!(paperEl ? paperEl.contains(node) : document.contains(node));
+    }
+
     function locateFlowBox(idOrEl) {
         if (!idOrEl) return null;
         if (typeof idOrEl === 'object' && idOrEl.kind) return idOrEl;
 
         const currPageIdx = getCurrentPageIdxSafe();
         if (typeof idOrEl === 'object' && idOrEl.nodeType === 1) {
-            if (document.contains(idOrEl) && idOrEl.classList && idOrEl.classList.contains('pub-element')) {
+            if (isLivePaperFlowEl(idOrEl)) {
                 return { kind: 'dom', box: idOrEl, id: idOrEl.id || '', pageIndex: currPageIdx };
             }
             if (!idOrEl.id) return null;
@@ -121,9 +128,19 @@
         const id = (typeof idOrEl === 'string') ? idOrEl : (idOrEl && idOrEl.id);
         if (!id) return null;
 
-        const domEl = document.getElementById(id);
-        if (domEl && domEl.classList && domEl.classList.contains('pub-element')) {
-            return { kind: 'dom', box: domEl, id: id, pageIndex: currPageIdx };
+        const paperEl = document.getElementById('paper');
+        if (paperEl) {
+            const paperEls = paperEl.querySelectorAll('.pub-element');
+            for (let i = 0; i < paperEls.length; i++) {
+                if (paperEls[i].id === id) {
+                    return { kind: 'dom', box: paperEls[i], id: id, pageIndex: currPageIdx };
+                }
+            }
+        } else {
+            const domEl = document.getElementById(id);
+            if (isLivePaperFlowEl(domEl)) {
+                return { kind: 'dom', box: domEl, id: id, pageIndex: currPageIdx };
+            }
         }
 
         if (typeof state !== 'undefined' && Array.isArray(state.pages)) {
@@ -796,6 +813,8 @@
 
         // 1. Create off-screen measure host (also hosts hydrated off-page boxes so computed styles & overflow match)
         const measureHost = document.createElement('div');
+        measureHost.id = 'op-textflow-measure-host';
+        measureHost.setAttribute('data-textflow-measure', 'true');
         measureHost.style.cssText = 'position:fixed; left:-99999px; top:-99999px; width:0; height:0; visibility:hidden; pointer-events:none; overflow:visible;';
         document.body.appendChild(measureHost);
 
@@ -975,9 +994,6 @@
                 }
             }
 
-            if (typeof window.renderSelectionOverlays === 'function') {
-                window.renderSelectionOverlays();
-            }
         } finally {
             if (measureHost.parentNode) measureHost.parentNode.removeChild(measureHost);
             // Drain all DOM/style mutations caused by flowTextBoxes so textFlowMutationObserver does not self-trigger in a loop
@@ -985,6 +1001,10 @@
                 try { textFlowMutationObserver.takeRecords(); } catch (e) {}
             }
             window._isFlowingText = false;
+        }
+
+        if (typeof window.renderSelectionOverlays === 'function') {
+            window.renderSelectionOverlays();
         }
 
         if (modifiedOffPage && typeof window.updateSidebar === 'function') {
@@ -1635,7 +1655,8 @@
         const svgNS = 'http://www.w3.org/2000/svg';
         const layer = document.createElement('div');
         layer.className = 'op-textflow-overlay';
-        layer.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:999998;';
+        // Layer above .selected-overlay (999999) so cross-page navigation badges are never blocked by selection border drag bars
+        layer.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1000020;';
 
         const svg = document.createElementNS(svgNS, 'svg');
         svg.setAttribute('width', paper.style.width || String(paper.clientWidth));
@@ -1662,6 +1683,8 @@
             const r1 = chainRefs[i];
             const r2 = chainRefs[i + 1];
             if (r1.kind !== 'dom' || r2.kind !== 'dom') continue;
+            if (r1.pageIndex !== currPageIdx || r2.pageIndex !== currPageIdx) continue;
+            if (!isLivePaperFlowEl(r1.box) || !isLivePaperFlowEl(r2.box)) continue;
 
             const b1 = r1.box;
             const b2 = r2.box;
@@ -1685,9 +1708,32 @@
 
         layer.appendChild(svg);
 
+        const bindPillNavigation = (pillEl, targetRef) => {
+            let lastHandledTs = 0;
+            pillEl.className = 'op-textflow-pill';
+            pillEl.addEventListener('pointerdown', (ev) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+            });
+            pillEl.addEventListener('mousedown', (ev) => {
+                if (ev.button !== 0) return;
+                ev.stopPropagation();
+                ev.preventDefault();
+                lastHandledTs = Date.now();
+                navigateToLinkedBox(targetRef);
+            });
+            pillEl.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                if (Date.now() - lastHandledTs > 250) {
+                    navigateToLinkedBox(targetRef);
+                }
+            });
+        };
+
         // Outline on-page linked frames, add step chips (1, 2, 3...), and cross-page navigation pills
         chainRefs.forEach((itemRef, idx) => {
-            if (itemRef.kind !== 'dom' || !document.contains(itemRef.box)) return;
+            if (itemRef.kind !== 'dom' || itemRef.pageIndex !== currPageIdx || !isLivePaperFlowEl(itemRef.box)) return;
             const b = itemRef.box;
             const l = parseFloat(b.style.left) || b.offsetLeft;
             const t = parseFloat(b.style.top) || b.offsetTop;
@@ -1704,13 +1750,9 @@
             if (prevRef && prevRef.pageIndex !== currPageIdx) {
                 const prevPill = document.createElement('div');
                 prevPill.title = `Flows from Page ${prevRef.pageIndex + 1} (click to jump)`;
-                prevPill.style.cssText = `position:absolute; left:${l + 4}px; top:${t + 2}px; height:16px; padding:0 6px; border-radius:8px; background:#0f766e; color:#fff; font:700 10px/16px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);`;
+                prevPill.style.cssText = `position:absolute; left:${l + 10}px; top:${t + 6}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 prevPill.textContent = `\u2190 P${prevRef.pageIndex + 1}`;
-                prevPill.addEventListener('mousedown', (ev) => {
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    navigateToLinkedBox(prevRef);
-                });
+                bindPillNavigation(prevPill, prevRef);
                 layer.appendChild(prevPill);
             }
 
@@ -1718,24 +1760,16 @@
             if (nextRef && nextRef.pageIndex !== currPageIdx) {
                 const nextPill = document.createElement('div');
                 nextPill.title = `Continues on Page ${nextRef.pageIndex + 1} (click to jump)`;
-                nextPill.style.cssText = `position:absolute; left:${Math.max(l, l + w - 66)}px; top:${t + h - 18}px; height:16px; padding:0 6px; border-radius:8px; background:#0f766e; color:#fff; font:700 10px/16px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);`;
+                nextPill.style.cssText = `position:absolute; left:${Math.max(l + 8, l + w - 70)}px; top:${t + h - 22}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 nextPill.textContent = `#${idx + 1} \u2192 P${nextRef.pageIndex + 1}`;
-                nextPill.addEventListener('mousedown', (ev) => {
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    navigateToLinkedBox(nextRef);
-                });
+                bindPillNavigation(nextPill, nextRef);
                 layer.appendChild(nextPill);
             } else {
                 const chip = document.createElement('div');
                 chip.title = `Linked Story Box #${idx + 1}`;
-                chip.style.cssText = `position:absolute; left:${l + w - 20}px; top:${t + h - 18}px; min-width:18px; height:16px; padding:0 4px; border-radius:8px; background:${b.getAttribute('data-text-overflow') === 'true' ? '#dc2626' : '#007670'}; color:#fff; font:700 10px/16px 'Segoe UI',sans-serif; text-align:center; pointer-events:auto; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);`;
+                chip.style.cssText = `position:absolute; left:${l + w - 24}px; top:${t + h - 22}px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:${b.getAttribute('data-text-overflow') === 'true' ? '#dc2626' : '#007670'}; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; text-align:center; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 chip.textContent = (b.getAttribute('data-text-overflow') === 'true') ? `${idx + 1}+` : `${idx + 1}`;
-                chip.addEventListener('mousedown', (ev) => {
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    navigateToLinkedBox(itemRef);
-                });
+                bindPillNavigation(chip, itemRef);
                 layer.appendChild(chip);
             }
         });

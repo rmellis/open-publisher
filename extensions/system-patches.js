@@ -5421,6 +5421,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     // --- 1. MOUSE DOWN: Capture the starting coordinates of the image! ---
     window.handleMouseDown = function(e) {
         if (e.button !== 0) return;
+        if (e.target && e.target.closest && e.target.closest('.op-textflow-pill')) return;
         if(e.target === paper || e.target.classList.contains('margin-guides') || e.target.id === 'viewport' || e.target.classList.contains('viewport')) {
             if(state.shapeEditMode) window.exitShapeEditMode();
             if(typeof window.deselect === 'function') window.deselect();
