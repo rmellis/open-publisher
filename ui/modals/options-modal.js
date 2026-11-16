@@ -143,7 +143,7 @@ window.applyRibbonTabVisibility = function() {
     try {
         const hiddenRaw = localStorage.getItem('opub_hidden_ribbon_tabs');
         const hidden = hiddenRaw ? JSON.parse(hiddenRaw) : [];
-        const customizableTabs = ['insert', 'design', 'review', 'view'];
+        const customizableTabs = ['insert', 'design', 'review', 'view', 'fun'];
 
         customizableTabs.forEach(tabKey => {
             const tabEl = document.querySelector(`.ribbon-tabs .tab[onclick*="'${tabKey}'"]`) ||
@@ -168,7 +168,7 @@ window.applyRibbonTabVisibility = function() {
 // Record factory default group order on first run
 window._defaultRibbonGroupsOrder = window._defaultRibbonGroupsOrder || {};
 window._initDefaultRibbonOrder = function() {
-    ['home', 'insert', 'design', 'review', 'view'].forEach(tabKey => {
+    ['home', 'insert', 'design', 'review', 'view', 'fun'].forEach(tabKey => {
         const toolbar = document.getElementById('ribbon-' + tabKey);
         if (toolbar && !window._defaultRibbonGroupsOrder[tabKey]) {
             const groups = Array.from(toolbar.querySelectorAll(':scope > .group'));
@@ -318,7 +318,7 @@ window.moveSelectedRibbonItem = function(direction) {
 window.saveRibbonCustomOrder = function() {
     try {
         const orderData = {};
-        ['home', 'insert', 'design', 'review', 'view'].forEach(tabKey => {
+        ['home', 'insert', 'design', 'review', 'view', 'fun'].forEach(tabKey => {
             const toolbar = document.getElementById('ribbon-' + tabKey);
             if (!toolbar) return;
             const groups = Array.from(toolbar.querySelectorAll(':scope > .group'));
@@ -391,7 +391,7 @@ window.resetRibbonToDefaults = function() {
     localStorage.removeItem('opub_ribbon_custom_order');
     localStorage.removeItem('opub_hidden_ribbon_tabs');
 
-    ['home', 'insert', 'design', 'review', 'view'].forEach(tabKey => {
+    ['home', 'insert', 'design', 'review', 'view', 'fun'].forEach(tabKey => {
         const toolbar = document.getElementById('ribbon-' + tabKey);
         if (toolbar && window._defaultRibbonGroupsOrder && window._defaultRibbonGroupsOrder[tabKey]) {
             window._defaultRibbonGroupsOrder[tabKey].forEach(item => {
@@ -794,7 +794,7 @@ window.saveGlobalOptions = function(closeDialog = true) {
 
     // 6. Customize Ribbon Tab Settings
     const hiddenTabs = [];
-    ['insert', 'design', 'review', 'view'].forEach(tabKey => {
+    ['insert', 'design', 'review', 'view', 'fun'].forEach(tabKey => {
         const cb = document.getElementById('opt-ribbon-' + tabKey);
         if (cb && !cb.checked) {
             hiddenTabs.push(tabKey);
@@ -1154,6 +1154,7 @@ window.showOptionsModal = function() {
             const isDesignVisible = !hiddenRibbonTabs.includes('design');
             const isReviewVisible = !hiddenRibbonTabs.includes('review');
             const isViewVisible = !hiddenRibbonTabs.includes('view');
+            const isFunVisible = !hiddenRibbonTabs.includes('fun');
 
             tabContent = `
                 <strong style="${sectionHeadingStyle}">Customize Ribbon</strong>
@@ -1169,6 +1170,7 @@ window.showOptionsModal = function() {
                             <option value="design">Page Design</option>
                             <option value="review">Review</option>
                             <option value="view">View</option>
+                            <option value="fun">Fun</option>
                         </select>
                     </div>
                     <button type="button" class="btn-secondary" onclick="window.resetCurrentTabRibbonOrder()" style="padding: 3px 9px; font-size: 11px; cursor: pointer;">
@@ -1218,6 +1220,10 @@ window.showOptionsModal = function() {
                     <label style="display: flex; align-items: center; font-size: 12px; cursor: pointer; user-select: none;">
                         <input type="checkbox" id="opt-ribbon-view" ${isViewVisible ? 'checked' : ''} style="${checkboxStyle}; margin-right: 6px;">
                         View
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 12px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="opt-ribbon-fun" ${isFunVisible ? 'checked' : ''} style="${checkboxStyle}; margin-right: 6px;">
+                        Fun
                     </label>
                 </div>
 
