@@ -1,16 +1,16 @@
 {
-  "version": 4,
+  "version": 5,
   "files": {
     "wrapper.html": {
-      "sha256": "95865490aadda55fcc8789fc63e7cda7e1c4c8ec72f95c5c05804b5efa45105c",
+      "sha256": "3db5ff43a8c913e302b79b8aae7e6db852942feb66e46629632d6ba66cdacc74",
       "url": "wrapper.html"
     },
     "gecko_nw_shim.js": {
-      "sha256": "1f02404b55c9a9364947b485cd47379d63a5c8ae3636a53830f7eec0f4496593",
+      "sha256": "4bfe4a242194abfa375e509400d8bd6cf3414b4a84015d75a630fda807e9b591",
       "url": "gecko_nw_shim.js"
     },
     "firefox/core/firefox.cfg": {
-      "sha256": "47cf8c5cdc3a94aa2791309941601e4bf958f3ff8c9cb93ae28777bf748f421b",
+      "sha256": "3dfba8b88c46d0773b451268ebecbed94e975605273940cfff2087d1d9896f51",
       "url": "firefox/core/firefox.cfg"
     },
     "windows/backup_mgr.html": {

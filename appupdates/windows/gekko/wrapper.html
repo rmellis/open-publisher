@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="4">
-    <meta name="op-wrapper-date" content="2026-11-15T19:25:00Z">
+    <meta name="op-wrapper-version" content="5">
+    <meta name="op-wrapper-date" content="2026-11-16T04:26:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -4565,11 +4565,12 @@
                         transition: background 0.15s ease, transform 0.1s ease;
                     }
                     #ribbon-clippy-btn.active {
-                        background: rgba(20, 111, 110, 0.16) !important;
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 18%, transparent) !important;
+                        border: 1px solid color-mix(in srgb, var(--ui-theme-color, #007670) 55%, transparent);
                         border-radius: 4px;
                     }
                     body.dark-mode #ribbon-clippy-btn.active {
-                        background: rgba(45, 212, 191, 0.22) !important;
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 28%, transparent) !important;
                     }
                     .clippy-btn-icon-wrap {
                         width: 22px;
@@ -4578,23 +4579,28 @@
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        color: var(--ui-theme-dark, #007670) !important;
+                        color: var(--ui-theme-dark, var(--ui-theme-color, #007670)) !important;
                     }
                     #ribbon-clippy-btn .clippy-btn-icon-wrap svg {
-                        color: var(--ui-theme-dark, #007670) !important;
-                        stroke: var(--ui-theme-dark, #007670) !important;
+                        color: inherit !important;
+                        stroke: currentColor !important;
                     }
-                    body.dark-mode #ribbon-clippy-btn .clippy-btn-icon-wrap,
-                    body.dark-mode #ribbon-clippy-btn .clippy-btn-icon-wrap svg {
-                        color: var(--ui-theme-light, #2dd4bf) !important;
-                        stroke: var(--ui-theme-light, #2dd4bf) !important;
+                    body.dark-mode #ribbon-clippy-btn .clippy-btn-icon-wrap {
+                        color: var(--ui-theme-dark, var(--ui-theme-color, #007670)) !important;
+                        filter: brightness(1.5) saturate(1.2);
+                    }
+                    body.dark-mode.dark-ui-theme #ribbon-clippy-btn .clippy-btn-icon-wrap,
+                    body.dark-mode.dark-ui-theme #ribbon-clippy-btn .clippy-btn-icon-wrap svg {
+                        color: #e0e0e0 !important;
+                        stroke: #e0e0e0 !important;
+                        filter: none !important;
                     }
                     #ribbon-clippy-btn.clippy-connecting .clippy-btn-icon-wrap {
                         animation: clippyPulse 0.8s infinite alternate ease-in-out;
                     }
                     @keyframes clippyPulse {
                         from { transform: scale(0.92); opacity: 0.6; }
-                        to { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 4px var(--ui-theme, #14b8a6)); }
+                        to { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 4px var(--ui-theme-color, #007670)); }
                     }
                     .clippy, .clippy-balloon {
                         position: fixed !important;
@@ -4672,12 +4678,12 @@
                     }
                     .clippy-balloon-btn:hover {
                         background: #ffffff !important;
-                        border-color: #007670 !important;
-                        color: #007670 !important;
+                        border-color: var(--ui-theme-dark, #007670) !important;
+                        color: var(--ui-theme-dark, #007670) !important;
                     }
                     .clippy-balloon-btn-primary {
                         font-weight: 600 !important;
-                        border-color: rgba(0, 118, 112, 0.5) !important;
+                        border-color: color-mix(in srgb, var(--ui-theme-color, #007670) 50%, transparent) !important;
                     }
                     body.dark-mode .clippy-balloon-btn {
                         background: #334155 !important;
@@ -4686,12 +4692,12 @@
                     }
                     body.dark-mode .clippy-balloon-btn:hover {
                         background: #475569 !important;
-                        border-color: #2dd4bf !important;
-                        color: #2dd4bf !important;
+                        border-color: var(--ui-theme-color, #2dd4bf) !important;
+                        color: #ffffff !important;
                     }
                     .clippy-timer-bar {
                         height: 2px !important;
-                        background: rgba(0, 118, 112, 0.45) !important;
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 45%, transparent) !important;
                         margin-top: 6px !important;
                         border-radius: 1px !important;
                         transform-origin: left !important;
@@ -4863,7 +4869,7 @@
                     }
                     body.dark-mode #clippy-context-menu {
                         background: #1e293b;
-                        border-color: var(--ui-theme-light, #2dd4bf) !important;
+                        border-color: var(--ui-theme-color, #007670) !important;
                         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
                     }
                     .clippy-menu-item {
@@ -4884,15 +4890,15 @@
                         color: #e2e8f0;
                     }
                     body.dark-mode .clippy-menu-item i {
-                        color: var(--ui-theme-light, #2dd4bf);
+                        color: var(--ui-theme-color, #2dd4bf);
                     }
                     .clippy-menu-item:hover {
-                        background: rgba(20, 111, 110, 0.12);
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 14%, transparent);
                         color: var(--ui-theme-dark, #007670);
                     }
                     body.dark-mode .clippy-menu-item:hover {
-                        background: rgba(45, 212, 191, 0.18);
-                        color: var(--ui-theme-light, #2dd4bf);
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 24%, transparent);
+                        color: #ffffff;
                     }
                     #clippy-menu-hide {
                         color: #ef4444 !important;
@@ -5022,7 +5028,7 @@
                         align-items: baseline;
                     }
                     body.dark-mode .clippy-about-intro-text h3 {
-                        color: #2dd4bf;
+                        color: var(--ui-theme-color, #2dd4bf);
                     }
                     .clippy-about-title-tag {
                         font-size: 13px;
@@ -5055,8 +5061,8 @@
                         align-items: center;
                         margin-top: 5px;
                         padding: 3px 10px;
-                        background: rgba(0, 118, 112, 0.09);
-                        border: 1px solid rgba(0, 118, 112, 0.24);
+                        background: color-mix(in srgb, var(--ui-theme-color, #007670) 10%, transparent);
+                        border: 1px solid color-mix(in srgb, var(--ui-theme-color, #007670) 28%, transparent);
                         border-radius: 6px;
                         color: var(--ui-theme-dark, #007670);
                         font-size: 11.5px;
@@ -9438,6 +9444,7 @@ function ensureClippyRibbonButton() {
                         code: `(function() {
                             try {
                                 document.documentElement.style.setProperty('--ui-theme-color', ${JSON.stringify(targetBg)});
+                                document.documentElement.style.setProperty('--ui-theme-dark', ${JSON.stringify(targetBg)});
                             } catch(e) {}
                         })();`
                     });

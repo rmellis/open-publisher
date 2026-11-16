@@ -417,9 +417,27 @@
                 window.GeckoNative.setAlwaysOnTop(Boolean(bool));
             }
         },
-        show: function() { window.focus(); },
-        hide: function() { window.blur(); },
-        focus: function() { window.focus(); },
+        show: function() {
+            if (window.GeckoNative && typeof window.GeckoNative.showWindow === 'function') {
+                window.GeckoNative.showWindow();
+            } else {
+                window.focus();
+            }
+        },
+        hide: function() {
+            if (window.GeckoNative && typeof window.GeckoNative.hideWindow === 'function') {
+                window.GeckoNative.hideWindow();
+            } else {
+                window.blur();
+            }
+        },
+        focus: function() {
+            if (window.GeckoNative && typeof window.GeckoNative.focusWindow === 'function') {
+                window.GeckoNative.focusWindow();
+            } else {
+                window.focus();
+            }
+        },
         blur: function() { window.blur(); },
         resizeTo: function(w, h) {
             if (window.GeckoNative && typeof window.GeckoNative.resizeTo === 'function') {
@@ -448,7 +466,11 @@
                 document.exitFullscreen();
             }
         },
-        requestAttention: function(bool) {},
+        requestAttention: function(val) {
+            if (window.GeckoNative && typeof window.GeckoNative.requestAttention === 'function') {
+                window.GeckoNative.requestAttention(val === undefined ? true : Boolean(val));
+            }
+        },
         setShadow: function(bool) {},
         showDevTools: function() {},
         window: window,
@@ -958,12 +980,134 @@
             this.popup = function(x, y) {};
         },
         Tray: function(opts) {
-            this.title = opts && opts.title;
-            this.menu = null;
-            this.on = function(ev, fn) {};
-            this.remove = function() {};
+            const self = this;
+            this.title = (opts && opts.title) ? String(opts.title) : 'OpenPublisher';
+            this.icon = (opts && opts.icon) ? String(opts.icon) : '';
+            this.tooltip = (opts && opts.tooltip) ? String(opts.tooltip) : this.title;
+            let _menu = null;
+            this.on = function(ev, fn) {
+                if (ev === 'click' && typeof fn === 'function') {
+                    trayClickListeners.push(fn);
+                }
+            };
+            this.remove = function() {
+                if (window.GeckoNative && typeof window.GeckoNative.trayRemove === 'function') {
+                    window.GeckoNative.trayRemove();
+                }
+            };
+            Object.defineProperty(this, 'menu', {
+                get: function() { return _menu; },
+                set: function(m) {
+                    _menu = m;
+                    syncNativeTrayMenu(m);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            if (window.GeckoNative && typeof window.GeckoNative.trayInit === 'function') {
+                window.GeckoNative.trayInit({ title: self.tooltip || self.title, icon: self.icon });
+            }
         }
     };
+
+    const trayClickListeners = [];
+    const trayMenuHandlers = new Map();
+    let trayNextCmdId = 1001;
+
+    function serializeTrayMenuItems(menuObj) {
+        if (!menuObj || !Array.isArray(menuObj.items)) return [];
+        const out = [];
+        for (let i = 0; i < menuObj.items.length; i++) {
+            const it = menuObj.items[i];
+            if (!it) continue;
+            if (it.type === 'separator') {
+                out.push({ type: 'separator' });
+                continue;
+            }
+            const id = trayNextCmdId++;
+            if (typeof it.click === 'function') {
+                trayMenuHandlers.set(id, it.click);
+            }
+            const entry = {
+                id: id,
+                type: String(it.type || 'normal'),
+                label: String(it.label || ''),
+                enabled: it.enabled !== false,
+                checked: Boolean(it.checked)
+            };
+            if (it.submenu && Array.isArray(it.submenu.items)) {
+                entry.submenu = serializeTrayMenuItems(it.submenu);
+            }
+            out.push(entry);
+        }
+        return out;
+    }
+
+    function syncNativeTrayMenu(menuObj) {
+        trayMenuHandlers.clear();
+        trayNextCmdId = 1001;
+        const serialized = serializeTrayMenuItems(menuObj);
+        if (window.GeckoNative && typeof window.GeckoNative.trayUpdateMenu === 'function') {
+            window.GeckoNative.trayUpdateMenu(JSON.stringify(serialized));
+        }
+    }
+
+    // Native OpenPublisher-branded notifications (replaces Firefox's "Firefox" system toast)
+    function dispatchNativeNotification(title, message, icon) {
+        const cleanTitle = String(title || 'OpenPublisher');
+        const cleanMsg = String(message || '');
+        if (window.GeckoNative && typeof window.GeckoNative.showNotification === 'function') {
+            window.GeckoNative.showNotification({
+                title: cleanTitle,
+                message: cleanMsg,
+                icon: String(icon || '')
+            });
+            return true;
+        }
+        return false;
+    }
+
+    window.chrome = window.chrome || {};
+    window.chrome.notifications = window.chrome.notifications || {
+        create: function(notificationId, options, callback) {
+            let id = notificationId;
+            let opts = options;
+            let cb = callback;
+            if (typeof notificationId === 'object' && notificationId !== null) {
+                cb = options;
+                opts = notificationId;
+                id = 'op-noti-' + Date.now();
+            }
+            opts = opts || {};
+            dispatchNativeNotification(opts.title || 'OpenPublisher', opts.message || opts.body || '', opts.iconUrl || '');
+            if (typeof cb === 'function') {
+                setTimeout(function() { try { cb(String(id)); } catch(e) {} }, 0);
+            }
+        },
+        clear: function(notificationId, callback) {
+            if (typeof callback === 'function') {
+                setTimeout(function() { try { callback(true); } catch(e) {} }, 0);
+            }
+        }
+    };
+
+    try {
+        const WrappedNotification = function(title, options) {
+            const opts = options || {};
+            dispatchNativeNotification(title, opts.body || opts.message || '', opts.icon || '');
+            this.title = String(title || 'OpenPublisher');
+            this.body = String(opts.body || '');
+            this.close = function() {};
+            this.onclick = null;
+            this.onclose = null;
+        };
+        WrappedNotification.permission = 'granted';
+        WrappedNotification.requestPermission = function(cb) {
+            if (typeof cb === 'function') { try { cb('granted'); } catch(e) {} }
+            return Promise.resolve('granted');
+        };
+        window.Notification = WrappedNotification;
+    } catch(notiWrapErr) {}
 
     // 3. Node.js built-ins (100% dynamic paths + real disk fs via GeckoNative.fsOp)
     const pathShim = {
@@ -1588,6 +1732,47 @@
                     syncMaximizedUI(isMax);
                     nwWindowInstance._emit(isMax ? 'maximize' : 'restore');
                 }
+            } else if (e.data.type === 'tray_click') {
+                trayClickListeners.forEach(function(fn) {
+                    try { fn(); } catch(err) {}
+                });
+            } else if (e.data.type === 'tray_menu_click') {
+                const fn = trayMenuHandlers.get(Number(e.data.itemId || 0));
+                if (typeof fn === 'function') {
+                    try { fn(); } catch(err) {}
+                }
+            } else if (e.data.type === 'op_fallback_toast') {
+                try {
+                    let box = document.getElementById('op-native-fallback-toast');
+                    if (!box) {
+                        box = document.createElement('div');
+                        box.id = 'op-native-fallback-toast';
+                        box.style.cssText = 'position:fixed;right:18px;bottom:28px;z-index:2147483647;background:#1e293b;color:#f8fafc;border:1px solid rgba(255,255,255,0.16);border-radius:10px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,0.35);font-family:"Segoe UI",sans-serif;max-width:340px;display:flex;align-items:center;gap:12px;transition:opacity 0.25s;';
+                        document.body.appendChild(box);
+                    }
+                    box.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = 'assets/icons/openoublisherv5st-icon.png';
+                    img.style.cssText = 'width:28px;height:28px;object-fit:contain;flex-shrink:0;';
+                    const txt = document.createElement('div');
+                    const t1 = document.createElement('div');
+                    t1.style.cssText = 'font-weight:600;font-size:13px;';
+                    t1.textContent = String(e.data.title || 'OpenPublisher');
+                    const t2 = document.createElement('div');
+                    t2.style.cssText = 'font-size:12px;color:#cbd5e1;margin-top:2px;';
+                    t2.textContent = String(e.data.message || '');
+                    txt.appendChild(t1);
+                    txt.appendChild(t2);
+                    box.appendChild(img);
+                    box.appendChild(txt);
+                    box.style.opacity = '1';
+                    box.style.display = 'flex';
+                    clearTimeout(box._hideTimer);
+                    box._hideTimer = setTimeout(function() {
+                        box.style.opacity = '0';
+                        setTimeout(function() { box.style.display = 'none'; }, 250);
+                    }, 3500);
+                } catch(toastErr) {}
             }
         });
 
