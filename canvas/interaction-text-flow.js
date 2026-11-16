@@ -1746,11 +1746,25 @@
                 layer.appendChild(outline);
             }
 
+            const colorPillEl = (b === activeEl) ? overlayContainer.querySelector('.selected-overlay .op-floating-css-color-pill') : null;
+            const hasTopLeftColorPill = !!(colorPillEl && colorPillEl.style.display !== 'none');
+
             const prevRef = idx > 0 ? chainRefs[idx - 1] : null;
             if (prevRef && prevRef.pageIndex !== currPageIdx) {
                 const prevPill = document.createElement('div');
                 prevPill.title = `Flows from Page ${prevRef.pageIndex + 1} (click to jump)`;
-                prevPill.style.cssText = `position:absolute; left:${l + 10}px; top:${t + 6}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
+                let prevLeft = l;
+                let prevTop = t - 22;
+                if (hasTopLeftColorPill) {
+                    if (l >= 54) {
+                        prevLeft = l - 52;
+                        prevTop = t;
+                    } else {
+                        prevLeft = l;
+                        prevTop = t + h + 4;
+                    }
+                }
+                prevPill.style.cssText = `position:absolute; left:${prevLeft}px; top:${prevTop}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000025; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 prevPill.textContent = `\u2190 P${prevRef.pageIndex + 1}`;
                 bindPillNavigation(prevPill, prevRef);
                 layer.appendChild(prevPill);
@@ -1760,14 +1774,14 @@
             if (nextRef && nextRef.pageIndex !== currPageIdx) {
                 const nextPill = document.createElement('div');
                 nextPill.title = `Continues on Page ${nextRef.pageIndex + 1} (click to jump)`;
-                nextPill.style.cssText = `position:absolute; left:${Math.max(l + 8, l + w - 70)}px; top:${t + h - 22}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
+                nextPill.style.cssText = `position:absolute; left:${Math.max(l, l + w - 66)}px; top:${t + h + 4}px; height:18px; padding:0 7px; border-radius:9px; background:#0f766e; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; pointer-events:auto; cursor:pointer; z-index:1000025; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 nextPill.textContent = `#${idx + 1} \u2192 P${nextRef.pageIndex + 1}`;
                 bindPillNavigation(nextPill, nextRef);
                 layer.appendChild(nextPill);
             } else {
                 const chip = document.createElement('div');
                 chip.title = `Linked Story Box #${idx + 1}`;
-                chip.style.cssText = `position:absolute; left:${l + w - 24}px; top:${t + h - 22}px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:${b.getAttribute('data-text-overflow') === 'true' ? '#dc2626' : '#007670'}; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; text-align:center; pointer-events:auto; cursor:pointer; z-index:1000021; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
+                chip.style.cssText = `position:absolute; left:${Math.max(l, l + w - 22)}px; top:${t + h + 4}px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:${b.getAttribute('data-text-overflow') === 'true' ? '#dc2626' : '#007670'}; color:#fff; font:700 10px/18px 'Segoe UI',sans-serif; text-align:center; pointer-events:auto; cursor:pointer; z-index:1000025; box-shadow:0 1px 4px rgba(0,0,0,0.28); user-select:none;`;
                 chip.textContent = (b.getAttribute('data-text-overflow') === 'true') ? `${idx + 1}+` : `${idx + 1}`;
                 bindPillNavigation(chip, itemRef);
                 layer.appendChild(chip);

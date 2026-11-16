@@ -4735,6 +4735,19 @@ body.linking-mode, body.linking-mode * {
     overflow: hidden !important;
 }
 
+/* Keep empty or unselected linked text boxes visible on canvas */
+.pub-element[data-prev-box],
+.pub-element[data-next-box] {
+    outline: 1px dashed rgba(0, 150, 136, 0.28);
+    outline-offset: -1px;
+}
+
+.op-textflow-pill {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1000025 !important;
+}
+
 /* Overflow indicator when the final box in a linked story still overflows */
 .pub-element[data-text-overflow="true"]::after {
     content: "...";
@@ -4757,6 +4770,10 @@ body.linking-mode, body.linking-mode * {
     .op-textflow-overlay,
     .pub-element[data-text-overflow="true"]::after {
         display: none !important;
+    }
+    .pub-element[data-prev-box],
+    .pub-element[data-next-box] {
+        outline: none !important;
     }
 }
 
