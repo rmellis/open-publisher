@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "files": {
     "wrapper.html": {
       "sha256": "2c6f8868d12e2495b501a5f4d3457fcf6f74df36ac32bd8a45879c37e973ab55",
@@ -46,7 +46,7 @@
       "url": "windows/wa_rules.css"
     },
     "op_tray.exe": {
-      "sha256": "69f2df5401aab8a12027da85a6eb790f29e75df2986856d22044a4c5694f8372",
+      "sha256": "cc219bd13dac8010b357f30d98a6fb1e86e8ebef539077a74e73ca2046b208f7",
       "url": "op_tray.exe"
     }
   }
