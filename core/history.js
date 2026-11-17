@@ -197,6 +197,8 @@ function serializeCurrentPage() {
                 attr.name === 'data-next-box' ||
                 attr.name === 'data-prev-box' ||
                 attr.name === 'data-text-overflow' ||
+                attr.name === 'data-crossword' ||
+                attr.name.startsWith('data-cw-') ||
                 attr.name.startsWith('data-picture-frame') ||
                 attr.name.startsWith('data-frame-')) {
                 filterAttrs[attr.name] = attr.value;
