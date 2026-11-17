@@ -1,8 +1,8 @@
 {
-  "version": 5,
+  "version": 7,
   "files": {
     "wrapper.html": {
-      "sha256": "3db5ff43a8c913e302b79b8aae7e6db852942feb66e46629632d6ba66cdacc74",
+      "sha256": "2c6f8868d12e2495b501a5f4d3457fcf6f74df36ac32bd8a45879c37e973ab55",
       "url": "wrapper.html"
     },
     "gecko_nw_shim.js": {
@@ -10,7 +10,7 @@
       "url": "gecko_nw_shim.js"
     },
     "firefox/core/firefox.cfg": {
-      "sha256": "3dfba8b88c46d0773b451268ebecbed94e975605273940cfff2087d1d9896f51",
+      "sha256": "30bc60aa4e33f436f7a1a93f04a87dc00d2561ca6823c4aaec50508d1416a939",
       "url": "firefox/core/firefox.cfg"
     },
     "windows/backup_mgr.html": {
@@ -44,6 +44,10 @@
     "windows/wa_rules.css": {
       "sha256": "431f712d552b7cc5ce289663c937e62d96d1be563f3bdefc4ec10d18e260b700",
       "url": "windows/wa_rules.css"
+    },
+    "op_tray.exe": {
+      "sha256": "69f2df5401aab8a12027da85a6eb790f29e75df2986856d22044a4c5694f8372",
+      "url": "op_tray.exe"
     }
   }
 }
