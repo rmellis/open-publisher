@@ -395,6 +395,16 @@ const ContextMenuSystem = {
                         html += this.buildItem('Add Hyperlink', 'fa-link', 'ContextMenuActions.addHyperlink()');
                     }
                     html += this.buildDivider();
+                    html += this.buildFlyoutItem('Heading Level', 'fa-heading', `
+                        ${this.buildItem('Heading 1 (H1)', 'fa-heading', 'window.applyHeadingLevel(1)')}
+                        ${this.buildItem('Heading 2 (H2)', 'fa-heading', 'window.applyHeadingLevel(2)')}
+                        ${this.buildItem('Heading 3 (H3)', 'fa-heading', 'window.applyHeadingLevel(3)')}
+                        ${this.buildItem('Normal Body Text', 'fa-paragraph', 'window.applyHeadingLevel(0)')}
+                    `);
+                    html += this.buildItem('Insert Footnote...', 'fa-file-alt', "window.showInsertNoteModal('footnote')");
+                    html += this.buildItem('Insert Endnote...', 'fa-book', "window.showInsertNoteModal('endnote')");
+                    html += this.buildItem('Insert / Update Table of Contents...', 'fa-stream', 'window.showTOCModal()');
+                    html += this.buildDivider();
                     html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
                     html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
                     html += this.buildItem('Border Art...', 'fa-palette', 'if(window.ContextMenuActions && ContextMenuActions.openBorderArt) ContextMenuActions.openBorderArt(); else if(window.BorderArtEngine) BorderArtEngine.openForElement(state.selectedEl);');

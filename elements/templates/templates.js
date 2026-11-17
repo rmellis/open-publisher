@@ -271,7 +271,7 @@
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.22.7`;
+    return `${path}?v=5.22.8`;
 };
 
 function initTemplates() {
@@ -1042,7 +1042,7 @@ function showAdModal() { document.getElementById('ad-modal').style.display = 'fl
 function showTemplateModal() { document.getElementById('template-modal').style.display = 'flex'; }
 
 // ==========================================
-// STATIC TEMPLATE LINKS & DEEP-LINK ROUTER (v5.22.7)
+// STATIC TEMPLATE LINKS & DEEP-LINK ROUTER (v5.22.8)
 // ==========================================
 (function() {
     const RESERVED_QUERY_KEYS = new Set([

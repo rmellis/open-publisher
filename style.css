@@ -120,6 +120,7 @@ body.dark-mode.dark-ui-theme .qr-icon {
 }
 
 body.dark-mode .tool-btn i,
+body.dark-mode .tool-btn svg,
 body.dark-mode .cm-item i,
 body.dark-mode .dropdown-item i,
 body.dark-mode .op-sidebar-btn i,
@@ -705,6 +706,7 @@ body.dark-mode .tab.active {
 .tool-btn:hover:not(.disabled) { background: color-mix(in srgb, var(--ui-theme-color) 10%, transparent); border-color: color-mix(in srgb, var(--ui-theme-color) 50%, transparent); border-radius: 6px; }
 .tool-btn.active-tool { background: color-mix(in srgb, var(--ui-theme-color) 20%, transparent); border-color: var(--ui-theme-color); border-radius: 6px; }
 .tool-btn i { font-size: 22px; color: var(--ui-theme-dark); }
+.tool-btn svg { color: var(--ui-theme-dark); }
 .tool-btn > i.fa-caret-down { font-size: 10px; margin-top: -6px; }
 
 .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
@@ -10187,7 +10189,7 @@ body.dark-mode .op-ai-chip.active-preset {
 }
 
 /* ========================================================
-   SIZE & POSITION (DIMENSIONS) CONTROLS (v5.22.7)
+   SIZE & POSITION (DIMENSIONS) CONTROLS (v5.22.8)
    ======================================================== */
 .ribbon-dim-group {
     user-select: none;
@@ -10264,5 +10266,27 @@ body.dark-mode .sp-help-icon-btn:hover {
     top: 115px;
     bottom: 25px;
     position: fixed;
+}
+
+/* ==========================================================================
+   References Engine (TOC, Footnotes, Endnotes) - v5.22.8
+   ========================================================================== */
+.op-note-ref {
+    user-select: none;
+    border-radius: 3px;
+    padding: 0 2px;
+    transition: background 0.15s;
+}
+.op-note-ref:hover {
+    background: rgba(0, 118, 112, 0.18);
+}
+.op-toc-entry-text:hover {
+    color: var(--ui-theme-color, #007670);
+    text-decoration: underline;
+}
+.pub-element[data-footnote-box="true"],
+.pub-element[data-endnote-box="true"],
+.pub-element[data-toc-box="true"] {
+    border-style: dashed;
 }
 

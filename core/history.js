@@ -206,7 +206,14 @@ function serializeCurrentPage() {
                 attr.name === 'data-cryptogram' ||
                 attr.name.startsWith('data-cg-') ||
                 attr.name.startsWith('data-picture-frame') ||
-                attr.name.startsWith('data-frame-')) {
+                attr.name.startsWith('data-frame-') ||
+                attr.name === 'data-toc-box' ||
+                attr.name === 'data-footnote-box' ||
+                attr.name === 'data-endnote-box' ||
+                attr.name === 'data-heading-level' ||
+                attr.name === 'data-note-type' ||
+                attr.name === 'data-note-id' ||
+                attr.name === 'data-note-text') {
                 filterAttrs[attr.name] = attr.value;
             }
         }
@@ -336,7 +343,7 @@ function serializeCurrentPage() {
             }
         }
 
-        const isLinkedFlow = !!(data.filterAttributes && (data.filterAttributes['data-next-box'] || data.filterAttributes['data-prev-box']));
+        const isLinkedFlow = !!(data.filterAttributes && (data.filterAttributes['data-next-box'] || data.filterAttributes['data-prev-box'] || data.filterAttributes['data-toc-box'] || data.filterAttributes['data-footnote-box'] || data.filterAttributes['data-endnote-box']));
         const isGhost = data.type === 'box' && !isLinkedFlow && (!data.innerHTML || data.innerHTML.trim() === '') && !data.bg && !data.bgImage && !data.imgSrc && !data.clipPath;
         if (!isGhost) {
             p.elements.push(data);

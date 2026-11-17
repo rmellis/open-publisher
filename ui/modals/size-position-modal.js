@@ -1,5 +1,5 @@
 /**
- * OpenPublisher - Size & Position (Object Dimensions) Engine & Dialog (v5.22.7)
+ * OpenPublisher - Size & Position (Object Dimensions) Engine & Dialog (v5.22.8)
  * Implements GitHub Issue #12: Numerical positioning and sizing for canvas objects
  * (Text boxes, pictures, shapes, tables, WordArt, etc.) with physical unit precision
  * (cm, in, mm, pt, px), aspect ratio locking, live canvas synchronization, and
