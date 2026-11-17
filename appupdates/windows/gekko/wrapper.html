@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="6">
-    <meta name="op-wrapper-date" content="2026-11-17T06:06:00Z">
+    <meta name="op-wrapper-version" content="10">
+    <meta name="op-wrapper-date" content="2026-11-17T07:16:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -18013,6 +18013,12 @@ function ensureClippyRibbonButton() {
 
         // Capture Ctrl+P before Firefox prints wrapper.html when focus is in the shell
         window.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' || e.code === 'F5' || e.keyCode === 116) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return;
+            }
             if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'p' || e.key === 'P' || e.code === 'KeyP')) {
                 e.preventDefault();
                 e.stopPropagation();

@@ -1,53 +1,17 @@
 {
-  "version": 9,
-  "files": {
-    "wrapper.html": {
-      "sha256": "2c6f8868d12e2495b501a5f4d3457fcf6f74df36ac32bd8a45879c37e973ab55",
-      "url": "wrapper.html"
-    },
-    "gecko_nw_shim.js": {
-      "sha256": "4bfe4a242194abfa375e509400d8bd6cf3414b4a84015d75a630fda807e9b591",
-      "url": "gecko_nw_shim.js"
-    },
-    "firefox/core/firefox.cfg": {
-      "sha256": "30bc60aa4e33f436f7a1a93f04a87dc00d2561ca6823c4aaec50508d1416a939",
-      "url": "firefox/core/firefox.cfg"
-    },
-    "windows/backup_mgr.html": {
-      "sha256": "11b18686c51bc48f7e58d2c0dc5bc60e435e31ae6ca335620290c697a0931cdf",
-      "url": "windows/backup_mgr.html"
-    },
-    "windows/doc_preview.html": {
-      "sha256": "6153a602823bc608df164bafd461a19cdcbd37c77ba154f440a7245b9c19c148",
-      "url": "windows/doc_preview.html"
-    },
-    "windows/export_queue.html": {
-      "sha256": "9337587ddd0c88ad6c8996828b2b597e6396239d00f384e30bc49287e35f5d3d",
-      "url": "windows/export_queue.html"
-    },
-    "windows/hud.html": {
-      "sha256": "4b618fcacee7de6e9dccab8512ad20adf59f3257572c68f6e85b03aba665ac8b",
-      "url": "windows/hud.html"
-    },
-    "windows/ipc_sniffer.html": {
-      "sha256": "6ddddce6730d745f7faf2a979b276b95fcd820987d16d4a91c5ea0ad3ce61c59",
-      "url": "windows/ipc_sniffer.html"
-    },
-    "windows/prev_versions.html": {
-      "sha256": "019e4bf48758260446e1ebdd6edd570a8e481fa48fba6af04acc284fd1b0612d",
-      "url": "windows/prev_versions.html"
-    },
-    "windows/quick_actions.html": {
-      "sha256": "e9e7b07b15c8e008eaf48d24c5ae9e3193329af2c3eee2076019ac2998d98215",
-      "url": "windows/quick_actions.html"
-    },
-    "windows/wa_rules.css": {
-      "sha256": "431f712d552b7cc5ce289663c937e62d96d1be563f3bdefc4ec10d18e260b700",
-      "url": "windows/wa_rules.css"
-    },
-    "op_tray.exe": {
-      "sha256": "77f5298033b5f111d7d01f10ee3084a4502a1542530de14b9e01b1eddb2da9f5",
-      "url": "op_tray.exe"
+    "version": 10,
+    "files": {
+        "wrapper.html": "28885B1B22B859F56597B5A354CC0419F17BA7E4236BF634E478A7099D3FC2F5",
+        "gecko_nw_shim.js": "4BFE4A242194ABFA375E509400D8BD6CF3414B4A84015D75A630FDA807E9B591",
+        "firefox/core/firefox.cfg": "8CCA0D90BEA0DB794CE29BAE33B8E8374D538398CDC7B0828DB7D38BDF14A771",
+        "windows/backup_mgr.html": "11B18686C51BC48F7E58D2C0DC5BC60E435E31AE6CA335620290C697A0931CDF",
+        "windows/doc_preview.html": "6153A602823BC608DF164BAFD461A19CDCBD37C77BA154F440A7245B9C19C148",
+        "windows/export_queue.html": "9337587DDD0C88AD6C8996828B2B597E6396239D00F384E30BC49287E35F5D3D",
+        "windows/hud.html": "4B618FCACEE7DE6E9DCCAB8512AD20ADF59F3257572C68F6E85B03ABA665AC8B",
+        "windows/ipc_sniffer.html": "6DDDDCE6730D745F7FAF2A979B276B95FCD820987D16D4A91C5EA0AD3CE61C59",
+        "windows/prev_versions.html": "019E4BF48758260446E1EBDD6EDD570A8E481FA48FBA6AF04ACC284FD1B0612D",
+        "windows/quick_actions.html": "E9E7B07B15C8E008EAF48D24C5AE9E3193329AF2C3EEE2076019AC2998D98215",
+        "windows/wa_rules.css": "431F712D552B7CC5CE289663C937E62D96D1BE563F3BDEFC4EC10D18E260B700",
+        "op_tray.exe": "77F5298033B5F111D7D01F10EE3084A4502A1542530DE14B9E01B1EDDB2DA9F5"
     }
-  }
 }
