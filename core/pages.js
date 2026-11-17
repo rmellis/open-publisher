@@ -1377,3 +1377,105 @@ function generateThumbnail(index) {
 function generateAllThumbnails() {
     updateSidebar();
 }
+
+/**
+ * Shared 1-or-2-page insertion allocator for Fun tab puzzle generators.
+ * Reuses the active page only when it is non-master and empty; otherwise creates
+ * dedicated new individual page(s) so existing puzzles and Answer Keys are never
+ * overwritten or lost.
+ */
+window.insertTwoPagePuzzleIntoDocument = function(options) {
+    if (typeof state === 'undefined' || !Array.isArray(state.pages)) return null;
+    const opts = options || {};
+    const needsAnswerKey = !!opts.needsAnswerKey;
+    const renderPuzzleOnCurrentPage = opts.renderPuzzleOnCurrentPage;
+    const renderAnswerKeyOnCurrentPage = opts.renderAnswerKeyOnCurrentPage;
+
+    const makeBlankPage = (basePage) => {
+        const ref = basePage || {};
+        return {
+            id: Date.now() + Math.floor(Math.random() * 100000),
+            orientation: ref.orientation || 'portrait',
+            ignoreMasterPage: false,
+            ignoreBackground: false,
+            width: ref.width || '794px',
+            height: ref.height || '1123px',
+            dpi: ref.dpi || state.dpi || 96,
+            format: ref.format || state.format || 'A4',
+            background: '#ffffff',
+            header: '',
+            footer: '',
+            borderStyle: 'none',
+            elements: []
+        };
+    };
+
+    let currIdx = (typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
+    if (currIdx < 0 || currIdx >= state.pages.length) currIdx = 0;
+
+    if (typeof serializeCurrentPage === 'function') {
+        state.pages[currIdx] = serializeCurrentPage();
+    }
+
+    const currPage = state.pages[currIdx];
+    const isCurrMaster = !!(state.hasMasterPage && currIdx === 0);
+    const isCurrEmpty = !!(currPage && Array.isArray(currPage.elements) && currPage.elements.length === 0);
+
+    let puzzlePageIdx = currIdx;
+    if (isCurrMaster || !isCurrEmpty) {
+        // Current page already contains content (or is Master Page): append a fresh page for this puzzle
+        state.pages.push(makeBlankPage(currPage));
+        puzzlePageIdx = state.pages.length - 1;
+        if (typeof window.switchPage === 'function') {
+            window.switchPage(puzzlePageIdx);
+        } else {
+            state.currentPageIndex = puzzlePageIdx;
+            if (typeof renderPage === 'function') renderPage(state.pages[puzzlePageIdx]);
+        }
+    }
+
+    const primaryEl = (typeof renderPuzzleOnCurrentPage === 'function')
+        ? renderPuzzleOnCurrentPage(puzzlePageIdx)
+        : null;
+
+    if (typeof serializeCurrentPage === 'function') {
+        state.pages[puzzlePageIdx] = serializeCurrentPage();
+    }
+
+    let answerPageIdx = null;
+    if (needsAnswerKey && typeof renderAnswerKeyOnCurrentPage === 'function') {
+        const targetIdx = puzzlePageIdx + 1;
+        const existingNext = state.pages[targetIdx];
+        const isNextEmpty = !!(existingNext && Array.isArray(existingNext.elements) && existingNext.elements.length === 0);
+
+        if (!isNextEmpty) {
+            state.pages.splice(targetIdx, 0, makeBlankPage(state.pages[puzzlePageIdx]));
+        }
+
+        if (typeof window.switchPage === 'function') {
+            window.switchPage(targetIdx);
+        } else {
+            state.currentPageIndex = targetIdx;
+            if (typeof renderPage === 'function') renderPage(state.pages[targetIdx]);
+        }
+
+        renderAnswerKeyOnCurrentPage(targetIdx);
+        if (typeof serializeCurrentPage === 'function') {
+            state.pages[targetIdx] = serializeCurrentPage();
+        }
+
+        if (typeof window.switchPage === 'function') {
+            window.switchPage(puzzlePageIdx);
+        }
+        answerPageIdx = targetIdx;
+    }
+
+    if (typeof updateThumbnails === 'function') updateThumbnails();
+    if (typeof updateSidebar === 'function') updateSidebar();
+
+    return {
+        primaryEl,
+        puzzlePageNumber: puzzlePageIdx + 1,
+        answerPageNumber: answerPageIdx !== null ? answerPageIdx + 1 : null
+    };
+};

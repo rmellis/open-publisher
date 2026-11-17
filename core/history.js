@@ -197,6 +197,8 @@ function serializeCurrentPage() {
                 attr.name === 'data-next-box' ||
                 attr.name === 'data-prev-box' ||
                 attr.name === 'data-text-overflow' ||
+                attr.name === 'data-wordsearch' ||
+                attr.name.startsWith('data-ws-') ||
                 attr.name === 'data-crossword' ||
                 attr.name.startsWith('data-cw-') ||
                 attr.name === 'data-codebreaker' ||

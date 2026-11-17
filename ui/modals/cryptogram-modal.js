@@ -679,58 +679,16 @@
         if (typeof state === 'undefined' || typeof window.createWrapper !== 'function') return;
 
         const cgId = 'cg-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 10000);
-        const startPageIdx = (typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
-        const primaryEl = insertCryptogramPageObjects(cgId, cfg, false);
-
-        let answerPageNumber = null;
-        if (cfg.answerKeyOnPage2 && Array.isArray(state.pages)) {
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[startPageIdx] = serializeCurrentPage();
-            }
-
-            const targetIdx = startPageIdx + 1;
-            const existingNext = state.pages[targetIdx];
-            const isNextBlank = existingNext && Array.isArray(existingNext.elements) && existingNext.elements.length === 0;
-
-            if (!isNextBlank) {
-                const basePage = state.pages[startPageIdx] || {};
-                const blankPage = {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    orientation: basePage.orientation || 'portrait',
-                    ignoreMasterPage: false,
-                    ignoreBackground: false,
-                    width: basePage.width || '794px',
-                    height: basePage.height || '1123px',
-                    dpi: basePage.dpi || state.dpi || 96,
-                    format: basePage.format || state.format || 'A4',
-                    background: '#ffffff',
-                    header: '',
-                    footer: '',
-                    borderStyle: 'none',
-                    elements: []
-                };
-                state.pages.splice(targetIdx, 0, blankPage);
-            }
-
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(targetIdx);
-            } else {
-                state.currentPageIndex = targetIdx;
-                if (typeof renderPage === 'function') renderPage(state.pages[targetIdx]);
-            }
-
-            insertCryptogramPageObjects(cgId, cfg, true);
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[targetIdx] = serializeCurrentPage();
-            }
-
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(startPageIdx);
-            }
-            answerPageNumber = targetIdx + 1;
+        let res = null;
+        if (typeof window.insertTwoPagePuzzleIntoDocument === 'function') {
+            res = window.insertTwoPagePuzzleIntoDocument({
+                needsAnswerKey: !!cfg.answerKeyOnPage2,
+                renderPuzzleOnCurrentPage: () => insertCryptogramPageObjects(cgId, cfg, false),
+                renderAnswerKeyOnCurrentPage: () => insertCryptogramPageObjects(cgId, cfg, true)
+            });
         }
 
-        const primaryInDom = document.querySelector(`.pub-element[data-cg-id="${cgId}"][data-cryptogram="frame"]`) || primaryEl;
+        const primaryInDom = document.querySelector(`.pub-element[data-cg-id="${cgId}"][data-cryptogram="frame"]`) || (res && res.primaryEl);
         if (primaryInDom && document.contains(primaryInDom) && typeof window.selectElement === 'function') {
             window.selectElement(primaryInDom);
         }
@@ -739,6 +697,7 @@
         if (typeof window.pushHistory === 'function') window.pushHistory();
 
         if (typeof showToast === 'function') {
+            const answerPageNumber = res && res.answerPageNumber;
             showToast(answerPageNumber ? `Cryptogram frame + Page ${answerPageNumber} Answer Key inserted!` : 'Cryptogram frame inserted!');
         }
     }

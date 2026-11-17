@@ -771,56 +771,16 @@
         if (typeof state === 'undefined' || typeof window.createWrapper !== 'function') return;
 
         const cwId = 'cw-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000);
-        const startPageIdx = (typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
-        const primaryEl = insertCrosswordPageObjects(cwId, layout, config, false);
-
-        if (config.answerKeyOnPage2 && Array.isArray(state.pages)) {
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[startPageIdx] = serializeCurrentPage();
-            }
-
-            const targetIdx = startPageIdx + 1;
-            const existingNext = state.pages[targetIdx];
-            const isNextBlank = existingNext && Array.isArray(existingNext.elements) && existingNext.elements.length === 0;
-
-            if (!isNextBlank) {
-                const basePage = state.pages[startPageIdx] || {};
-                const blankPage = {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    orientation: basePage.orientation || 'portrait',
-                    ignoreMasterPage: false,
-                    ignoreBackground: false,
-                    width: basePage.width || '794px',
-                    height: basePage.height || '1123px',
-                    dpi: basePage.dpi || state.dpi || 96,
-                    format: basePage.format || state.format || 'A4',
-                    background: '#ffffff',
-                    header: '',
-                    footer: '',
-                    borderStyle: 'none',
-                    elements: []
-                };
-                state.pages.splice(targetIdx, 0, blankPage);
-            }
-
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(targetIdx);
-            } else {
-                state.currentPageIndex = targetIdx;
-                if (typeof renderPage === 'function') renderPage(state.pages[targetIdx]);
-            }
-
-            insertCrosswordPageObjects(cwId, layout, config, true);
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[targetIdx] = serializeCurrentPage();
-            }
-
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(startPageIdx);
-            }
+        let res = null;
+        if (typeof window.insertTwoPagePuzzleIntoDocument === 'function') {
+            res = window.insertTwoPagePuzzleIntoDocument({
+                needsAnswerKey: !!config.answerKeyOnPage2,
+                renderPuzzleOnCurrentPage: () => insertCrosswordPageObjects(cwId, layout, config, false),
+                renderAnswerKeyOnCurrentPage: () => insertCrosswordPageObjects(cwId, layout, config, true)
+            });
         }
 
-        const primaryInDom = document.querySelector(`.pub-element[data-cw-id="${cwId}"][data-cw-role="puzzle"]`) || primaryEl;
+        const primaryInDom = document.querySelector(`.pub-element[data-cw-id="${cwId}"][data-cw-role="puzzle"]`) || (res && res.primaryEl);
         if (primaryInDom && document.contains(primaryInDom) && typeof window.selectElement === 'function') {
             window.selectElement(primaryInDom);
         }
@@ -829,8 +789,9 @@
         if (typeof window.pushHistory === 'function') window.pushHistory();
 
         if (typeof showToast === 'function') {
-            showToast(config.answerKeyOnPage2
-                ? 'Crossword & Across/Down frames created! Answer Key generated on Page 2.'
+            const ansPage = res && res.answerPageNumber;
+            showToast(ansPage
+                ? `Crossword & Across/Down frames created! Answer Key generated on Page ${ansPage}.`
                 : 'Crossword & Across/Down clue frames inserted.');
         }
     }

@@ -558,67 +558,27 @@
     function insertWordSearchIntoDocument(puzzle, config) {
         if (typeof state === 'undefined' || typeof window.createWrapper !== 'function') return;
 
-        const startPageIdx = (typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
-        const primaryEl = insertWordSearchPageObjects(puzzle, config, false);
-
-        if (config.answerKeyOnPage2 && Array.isArray(state.pages)) {
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[startPageIdx] = serializeCurrentPage();
-            }
-
-            // Use Page 2 (index 1) when on Page 1 & Page 2 is currently empty; otherwise insert a clean page right after current page
-            const targetIdx = startPageIdx + 1;
-            const existingNext = state.pages[targetIdx];
-            const isNextBlank = existingNext && Array.isArray(existingNext.elements) && existingNext.elements.length === 0;
-
-            if (!isNextBlank) {
-                const basePage = state.pages[startPageIdx] || {};
-                const blankPage = {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    orientation: basePage.orientation || 'portrait',
-                    ignoreMasterPage: false,
-                    ignoreBackground: false,
-                    width: basePage.width || '794px',
-                    height: basePage.height || '1123px',
-                    dpi: basePage.dpi || state.dpi || 96,
-                    format: basePage.format || state.format || 'A4',
-                    background: '#ffffff',
-                    header: '',
-                    footer: '',
-                    borderStyle: 'none',
-                    elements: []
-                };
-                state.pages.splice(targetIdx, 0, blankPage);
-            }
-
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(targetIdx);
-            } else {
-                state.currentPageIndex = targetIdx;
-                if (typeof renderPage === 'function') renderPage(state.pages[targetIdx]);
-            }
-
-            insertWordSearchPageObjects(puzzle, config, true);
-            if (typeof serializeCurrentPage === 'function') {
-                state.pages[targetIdx] = serializeCurrentPage();
-            }
-
-            // Return smoothly to the puzzle page so user sees their puzzle immediately and Page 2 thumbnail in sidebar
-            if (typeof window.switchPage === 'function') {
-                window.switchPage(startPageIdx);
-            }
+        let res = null;
+        if (typeof window.insertTwoPagePuzzleIntoDocument === 'function') {
+            res = window.insertTwoPagePuzzleIntoDocument({
+                needsAnswerKey: !!config.answerKeyOnPage2,
+                renderPuzzleOnCurrentPage: () => insertWordSearchPageObjects(puzzle, config, false),
+                renderAnswerKeyOnCurrentPage: () => insertWordSearchPageObjects(puzzle, config, true)
+            });
         }
 
-        if (primaryEl && document.contains(primaryEl) && typeof window.selectElement === 'function') {
-            window.selectElement(primaryEl);
+        const puzzleInDom = document.querySelector('.pub-element[data-wordsearch="puzzle"]') || (res && res.primaryEl);
+        if (puzzleInDom && document.contains(puzzleInDom) && typeof window.selectElement === 'function') {
+            window.selectElement(puzzleInDom);
         }
         if (typeof window.updateThumbnails === 'function') window.updateThumbnails();
         if (typeof window.updateSidebar === 'function') window.updateSidebar();
         if (typeof window.pushHistory === 'function') window.pushHistory();
 
         if (typeof showToast === 'function') {
-            showToast(config.answerKeyOnPage2
-                ? 'Word Search created! Answer Key generated on Page 2.'
+            const ansPage = res && res.answerPageNumber;
+            showToast(ansPage
+                ? `Word Search created! Answer Key generated on Page ${ansPage}.`
                 : 'Word Search inserted onto page.');
         }
     }
