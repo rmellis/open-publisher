@@ -2835,8 +2835,8 @@ svg .shape-path, svg .shape-path * {
             flex-direction: column;
             scrollbar-width: none;
         }
-        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar, #op-graphics-sidebar::-webkit-scrollbar, #op-thesaurus-sidebar::-webkit-scrollbar { display: none; }
-        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible, #op-graphics-sidebar.visible, #op-thesaurus-sidebar.visible { transform: translateX(0); }
+        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar, #op-graphics-sidebar::-webkit-scrollbar, #op-thesaurus-sidebar::-webkit-scrollbar, #op-dimensions-sidebar::-webkit-scrollbar { display: none; }
+        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible, #op-graphics-sidebar.visible, #op-thesaurus-sidebar.visible, #op-dimensions-sidebar.visible { transform: translateX(0); }
         
         #op-sidebar-expander {
             position: fixed;
@@ -2979,8 +2979,8 @@ svg .shape-path, svg .shape-path * {
             transform: translateX(calc(100% + 50px)); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: none;
         }
-        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar, #op-graphics-sidebar::-webkit-scrollbar, #op-thesaurus-sidebar::-webkit-scrollbar { display: none; }
-        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible, #op-graphics-sidebar.visible, #op-thesaurus-sidebar.visible { transform: translateX(0); }
+        #op-image-sidebar::-webkit-scrollbar, #op-selection-sidebar::-webkit-scrollbar, #op-shadow-sidebar::-webkit-scrollbar, #op-a11y-sidebar::-webkit-scrollbar, #op-graphics-sidebar::-webkit-scrollbar, #op-thesaurus-sidebar::-webkit-scrollbar, #op-dimensions-sidebar::-webkit-scrollbar { display: none; }
+        #op-image-sidebar.visible, #op-selection-sidebar.visible, #op-shadow-sidebar.visible, #op-a11y-sidebar.visible, #op-graphics-sidebar.visible, #op-thesaurus-sidebar.visible, #op-dimensions-sidebar.visible { transform: translateX(0); }
         
         #op-sidebar-expander {
             position: fixed; right: 0px; top: 50%; width: 30px; height: 50px;
@@ -10185,3 +10185,84 @@ body.dark-mode .op-ai-chip.active-preset {
     color: #0f172a !important;
     border-color: var(--ui-theme-color, #14b8a6) !important;
 }
+
+/* ========================================================
+   SIZE & POSITION (DIMENSIONS) CONTROLS (v5.22.7)
+   ======================================================== */
+.ribbon-dim-group {
+    user-select: none;
+}
+
+.dim-spinner {
+    height: 20px !important;
+    width: 52px !important;
+    border: 1px solid var(--ui-border, #cbd5e1);
+    border-radius: 4px;
+    background: var(--ui-panel-bg, #ffffff);
+    box-sizing: border-box;
+    display: flex;
+    overflow: hidden;
+}
+
+.dim-spinner input.ribbon-dim-input {
+    width: 34px !important;
+    height: 100% !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 2px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+    color: var(--ui-theme-dark, #0f172a) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.dim-spinner .spin-btns {
+    width: 18px !important;
+    background: var(--ui-theme-color, #0d9e8f);
+    color: #ffffff !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.dim-spinner .spin-btns div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 7px;
+    color: #ffffff;
+    transition: background 0.15s;
+}
+
+.dim-spinner .spin-btns div:hover {
+    background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 70%, white);
+}
+
+body.dark-mode .dim-spinner {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .dim-spinner input.ribbon-dim-input {
+    color: #f8fafc !important;
+}
+
+.sp-help-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .sp-help-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+#op-dimensions-sidebar {
+    width: 270px;
+    right: 0;
+    top: 115px;
+    bottom: 25px;
+    position: fixed;
+}
+

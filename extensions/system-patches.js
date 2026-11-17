@@ -319,6 +319,9 @@ if (!window._sliderFillListenerInstalled) {
                     if (typeof window.renderTextFlowOverlays === 'function') {
                         window.renderTextFlowOverlays(container);
                     }
+                    if (typeof window.DimensionControlService === 'object' && typeof window.DimensionControlService.sync === 'function') {
+                        window.DimensionControlService.sync(el);
+                    }
                     return;
                 }
             }
@@ -521,6 +524,9 @@ if (!window._sliderFillListenerInstalled) {
         }
         if (typeof window.renderTextFlowOverlays === 'function') {
             window.renderTextFlowOverlays(container);
+        }
+        if (typeof window.DimensionControlService === 'object' && typeof window.DimensionControlService.sync === 'function') {
+            window.DimensionControlService.sync(els.length === 1 ? els[0] : null);
         }
     };
 

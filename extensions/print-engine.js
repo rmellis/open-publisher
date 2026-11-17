@@ -1,4 +1,4 @@
-﻿// OpenPublisher Print Engine (v5.22.6)
+﻿// OpenPublisher Print Engine (v5.22.7)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -145,7 +145,7 @@
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.6 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.7 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(pageIdx, pagesToPrint.length, page)
@@ -3200,7 +3200,7 @@
                     if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
                 }
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.6 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.7 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(i, totalPages, page)

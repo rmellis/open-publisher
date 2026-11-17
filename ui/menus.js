@@ -355,6 +355,7 @@ const ContextMenuSystem = {
                     html += this.buildItem('Apply to Background (Fill)', 'fa-expand-arrows-alt', 'ContextMenuActions.bgFill()');
                     html += this.buildItem('Apply to Background (Tile)', 'fa-th-large', 'ContextMenuActions.bgTile()');
                     html += this.buildItem('Format Picture...', 'fa-paint-brush', 'ContextMenuActions.formatTextBox()');
+                    html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
                     html += this.buildItem('Picture Frame...', 'fa-border-style', 'if(window.showPictureFrameModal) window.showPictureFrameModal();');
                     html += this.buildItem('Alt Text', 'fa-universal-access', 'ContextMenuActions.setAltText()');
                     html += this.buildItem('Crop Image', 'fa-crop', 'toggleCrop()');
@@ -395,6 +396,7 @@ const ContextMenuSystem = {
                     }
                     html += this.buildDivider();
                     html += this.buildItem('Format Text Box', 'fa-border-style', 'ContextMenuActions.formatTextBox()');
+                    html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
                     html += this.buildItem('Border Art...', 'fa-palette', 'if(window.ContextMenuActions && ContextMenuActions.openBorderArt) ContextMenuActions.openBorderArt(); else if(window.BorderArtEngine) BorderArtEngine.openForElement(state.selectedEl);');
                 }
                 // 3.5. TABLE CONTEXT MENU
@@ -501,6 +503,7 @@ const ContextMenuSystem = {
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
                 html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
                 html += this.buildItem('Duplicate', 'fa-clone', 'if(window.duplicateSelected) window.duplicateSelected(); else if(typeof duplicateSelected === "function") duplicateSelected();');
+                html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
                 const isElLocked = (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true');
                 html += this.buildItem(isElLocked ? 'Unlock Object' : 'Lock in Place', isElLocked ? 'fa-lock-open' : 'fa-lock', 'if(window.toggleElementLock) window.toggleElementLock();');
                 html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
