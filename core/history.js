@@ -201,6 +201,8 @@ function serializeCurrentPage() {
                 attr.name.startsWith('data-cw-') ||
                 attr.name === 'data-codebreaker' ||
                 attr.name.startsWith('data-cb-') ||
+                attr.name === 'data-cryptogram' ||
+                attr.name.startsWith('data-cg-') ||
                 attr.name.startsWith('data-picture-frame') ||
                 attr.name.startsWith('data-frame-')) {
                 filterAttrs[attr.name] = attr.value;

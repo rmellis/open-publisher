@@ -5547,6 +5547,74 @@ body.classic-cursors-enabled.is-dragging-element * {
     inset: -4px; /* Expands invisible hit-zone by 4px on all sides */
 }
 
+/* Cryptogram & Secret Cipher Frames */
+.cg-live-editor-bar {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 5px 8px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background: rgba(0, 118, 112, 0.08);
+    border: 1px solid rgba(0, 118, 112, 0.25);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+.pub-element.selected .cg-live-editor-bar {
+    display: flex;
+}
+.cg-prose-input {
+    flex: 1 1 200px;
+    min-height: 26px;
+    max-height: 68px;
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    line-height: 1.35;
+    outline: none;
+    cursor: text;
+    resize: none;
+    box-sizing: border-box;
+}
+.cg-prose-input:focus {
+    border-color: var(--ui-theme-color, #007670);
+    box-shadow: 0 0 0 2px rgba(0, 118, 112, 0.16);
+}
+.cg-inline-mode-group {
+    display: inline-flex;
+    gap: 3px;
+    flex-shrink: 0;
+}
+.cg-inline-mode-btn {
+    padding: 3px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    cursor: pointer;
+}
+.cg-inline-mode-btn.active {
+    background: var(--ui-theme-color, #007670);
+    border-color: var(--ui-theme-color, #007670);
+    color: #ffffff;
+}
+body.classic-cursors-enabled .pub-element[data-cryptogram="frame"] .cg-tokens-view,
+body.classic-cursors-enabled .pub-element[data-cryptogram="answer-key"],
+body.classic-cursors-enabled .pub-element[data-cryptogram="answer-legend"] {
+    cursor: var(--cursor-move-truck);
+}
+@media print {
+    .cg-live-editor-bar {
+        display: none !important;
+    }
+}
+
 /* ==========================================================================
    ELEMENT QUICK ACTIONS (FLOATING CLONE & DELETE MICRO-TOOLBAR)
    ========================================================================== */

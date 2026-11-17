@@ -1325,7 +1325,14 @@
                     user-select: none; min-height: 46px; box-sizing: border-box;
                 }
                 .cb-header-title { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14.5px; }
-                .cb-header-actions { display: flex; align-items: center; gap: 4px; }
+                .cb-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+                .cb-header-actions .custom-dialog-close {
+                    width: 34px; height: 34px; font-size: 17px; border-radius: 8px;
+                }
+                .cb-help-icon-btn:hover,
+                body.dark-mode .cb-help-icon-btn:hover {
+                    background: rgba(255, 255, 255, 0.25) !important;
+                }
                 .cb-modal-body {
                     display: grid; grid-template-columns: 356px 1fr; flex: 1; min-height: 0; overflow: hidden;
                 }
@@ -1498,7 +1505,7 @@
                         <span>Codebreaker (Cipher Grid) Generator</span>
                     </div>
                     <div class="cb-header-actions">
-                        <button type="button" class="custom-dialog-close" id="cb-help-btn" title="Codebreaker Help" aria-label="Codebreaker Help">
+                        <button type="button" class="custom-dialog-close cb-help-icon-btn" id="cb-help-btn" title="Codebreaker Help" aria-label="Codebreaker Help">
                             <i class="fas fa-question"></i>
                         </button>
                         <button type="button" class="custom-dialog-close" id="cb-close-x" title="Close" aria-label="Close">
