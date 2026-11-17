@@ -922,9 +922,9 @@ window.showOptionsModal = function() {
                 </label>
                 <label style="${labelStyle}">
                     <input type="checkbox" id="opt-classic-cursors" ${useClassicCursors ? 'checked' : ''} style="${checkboxStyle}">
-                    Use classic MS Publisher drag cursors (Move Truck & Crosshair)
+                    Use classic MS Publisher Move Truck drag cursor
                 </label>
-                <p style="${subtextStyle}">When enabled, hovering over object borders shows the Publisher Move Truck, and holding to drag switches to crosshair. When disabled, standard system move cursors are used.</p>
+                <p style="${subtextStyle}">When enabled, hovering over object borders or shapes and dragging objects displays the Publisher Move Truck cursor. When disabled, standard system move cursors are used.</p>
 
                 <hr style="${dividerStyle}">
                 <strong style="${sectionHeadingStyle}">Personalize your copy of Publisher</strong>

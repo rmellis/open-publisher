@@ -5523,14 +5523,18 @@ body.is-dragging-element * {
 
 /* Classic MS Publisher Cursors: ONLY when enabled via Ribbon toggle or Options */
 body.classic-cursors-enabled .selection-edge-drag,
-body.classic-cursors-enabled .openpublisher-movable {
-    cursor: var(--cursor-move-truck) !important;
+body.classic-cursors-enabled .openpublisher-movable,
+body.classic-cursors-enabled .pub-element[data-type="shape"]:not(.cropping):not([data-locked="true"]),
+body.classic-cursors-enabled .pub-element[data-codebreaker]:not(.cropping):not([data-locked="true"]) {
+    cursor: var(--cursor-move-truck);
 }
 
+body.classic-cursors-enabled .selection-edge-drag,
+body.classic-cursors-enabled .openpublisher-movable,
 body.classic-cursors-enabled .openpublisher-movable:active,
 body.classic-cursors-enabled.is-dragging-element,
 body.classic-cursors-enabled.is-dragging-element * {
-    cursor: crosshair !important;
+    cursor: var(--cursor-move-truck) !important;
 }
 
 /* Ensure resize handles take cursor priority when hovering near them */

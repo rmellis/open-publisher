@@ -5910,7 +5910,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
                 const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from(el.querySelectorAll('img')).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
                 const isShape = contentImg || el.querySelector('svg') || el.getAttribute('data-type') === 'shape';
                 const rect = el.getBoundingClientRect();
-                const moveCursor = window.useClassicCursors ? "url('ui/icons/truck.svg') 11 11, move" : 'move';
+                const moveCursor = window.useClassicCursors ? 'var(--cursor-move-truck)' : 'move';
                 if (isShape) { 
                     el.style.cursor = moveCursor; 
                 } else { 
