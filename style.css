@@ -10190,7 +10190,7 @@ body.dark-mode .op-ai-chip.active-preset {
 }
 
 /* ========================================================
-   SIZE & POSITION (DIMENSIONS) CONTROLS (v5.22.11)
+   SIZE & POSITION (DIMENSIONS) CONTROLS (v5.22.12)
    ======================================================== */
 .ribbon-dim-group {
     user-select: none;
@@ -10270,7 +10270,7 @@ body.dark-mode .sp-help-icon-btn:hover {
 }
 
 /* ==========================================================================
-   References Engine (TOC, Footnotes, Endnotes) - v5.22.11
+   References Engine (TOC, Footnotes, Endnotes) - v5.22.12
    ========================================================================== */
 .op-note-ref {
     user-select: none;
