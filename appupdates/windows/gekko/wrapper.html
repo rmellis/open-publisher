@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="11">
-    <meta name="op-wrapper-date" content="2026-11-17T07:45:00Z">
+    <meta name="op-wrapper-version" content="12">
+    <meta name="op-wrapper-date" content="2026-11-18T02:50:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -9095,9 +9095,13 @@ function ensureClippyRibbonButton() {
                         }));
                         sessionStorage.setItem(JUST_UPDATED_KEY, '1');
                     } catch (e) {}
-                    showUpdateBar(100, 'Update complete', 'Reloading latest OpenPublisher...');
+                    showUpdateBar(100, 'Update complete', 'Restarting OpenPublisher...');
                     setTimeout(function() {
-                        window.location.reload();
+                        if (window.GeckoNative && typeof window.GeckoNative.restartApp === 'function') {
+                            window.GeckoNative.restartApp();
+                        } else {
+                            window.location.reload();
+                        }
                     }, 220);
                 } else if (msg.status === 'uptodate') {
                     hideUpdateBar();
