@@ -1278,7 +1278,7 @@
                     display: flex; flex-direction: column; overflow: hidden;
                 }
                 .cb-modal-header {
-                    padding: 8px 10px 8px 18px;
+                    padding: 10px 14px 10px 20px;
                     background: linear-gradient(135deg, var(--ui-theme-color, #007670), var(--ui-theme-dark, #004a46));
                     color: #ffffff; display: flex; align-items: center; justify-content: space-between;
                     user-select: none; min-height: 46px; box-sizing: border-box;
@@ -1458,10 +1458,13 @@
                 }
             </style>
             <div class="cb-modal-box" id="cb-modal-box" role="dialog" aria-modal="true" aria-labelledby="cb-modal-title">
-                <div class="cb-modal-header" id="cb-modal-header">
-                    <div class="cb-header-title" id="cb-modal-title">
-                        <i class="fas fa-key"></i>
-                        <span>Codebreaker (Cipher Grid) Generator</span>
+                <div class="cb-modal-header" id="cb-modal-header" title="Drag to move">
+                    <div id="cb-modal-title" style="display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-key" style="font-size:17px;"></i>
+                        <div>
+                            <div style="font-size:15px; font-weight:700;">Codebreaker (Cipher Grid) Generator</div>
+                            <div style="font-size:11px; opacity:0.88;">Numbered 1-26 cipher grid, starter letter hints, A-Z tracker &amp; Page 2 Answer Key</div>
+                        </div>
                     </div>
                     <div class="cb-header-actions">
                         <button type="button" class="custom-dialog-close cb-help-icon-btn" id="cb-help-btn" title="Codebreaker Help" aria-label="Codebreaker Help">

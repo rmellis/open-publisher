@@ -1487,6 +1487,18 @@
                     display: flex; align-items: center; justify-content: space-between; gap: 10px;
                     background: var(--ui-panel-bg, #ffffff);
                 }
+                body.dark-mode .cw-modal-footer { background: #111827; border-top-color: #334155; }
+                .cw-btn-secondary {
+                    padding: 7px 15px; border-radius: 6px; border: 1px solid var(--ui-border, #cbd5e1);
+                    background: transparent; color: var(--ui-text, #1e293b); font-size: 12.5px; font-weight: 600; cursor: pointer;
+                }
+                body.dark-mode .cw-btn-secondary { color: #e2e8f0; border-color: #475569; }
+                .cw-btn-primary {
+                    padding: 7px 18px; border-radius: 6px; border: none;
+                    background: var(--ui-theme-color, #007670); color: #ffffff;
+                    font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+                }
+                .cw-btn-primary:hover { background: var(--ui-theme-dark, #004a46); }
                 @media (max-width: 860px) {
                     .cw-modal-body { grid-template-columns: 1fr; }
                 }
@@ -1623,9 +1635,9 @@
 
                 <div class="cw-modal-footer">
                     <div style="font-size:11.5px; opacity:0.75;">Drag any word on the grid (preview or canvas) to adjust &amp; dynamically update Across/Down clues.</div>
-                    <div style="display:flex; gap:10px;">
-                        <button type="button" class="btn-secondary" id="cw-cancel-btn">Cancel</button>
-                        <button type="button" class="btn-primary" id="cw-insert-btn"><i class="fas fa-plus" style="margin-right:6px;"></i>Insert Crossword</button>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="cw-btn-secondary" id="cw-cancel-btn">Cancel</button>
+                        <button type="button" class="cw-btn-primary" id="cw-insert-btn"><i class="fas fa-plus"></i> Insert Crossword</button>
                     </div>
                 </div>
             </div>

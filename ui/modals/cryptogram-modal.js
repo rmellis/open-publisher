@@ -1184,7 +1184,7 @@
                     display: flex; flex-direction: column; overflow: hidden;
                 }
                 .cg-modal-header {
-                    padding: 8px 10px 8px 18px;
+                    padding: 10px 14px 10px 20px;
                     background: linear-gradient(135deg, var(--ui-theme-color, #007670), var(--ui-theme-dark, #004a46));
                     color: #ffffff; display: flex; align-items: center; justify-content: space-between;
                     user-select: none; min-height: 46px; box-sizing: border-box;
@@ -1349,10 +1349,13 @@
                 }
             </style>
             <div class="cg-modal-box" id="cg-modal-box" role="dialog" aria-modal="true" aria-labelledby="cg-modal-title">
-                <div class="cg-modal-header" id="cg-modal-header">
-                    <div class="cg-header-title" id="cg-modal-title">
-                        <i class="fas fa-user-secret"></i>
-                        <span>Cryptogram &amp; Secret Cipher Frame</span>
+                <div class="cg-modal-header" id="cg-modal-header" title="Drag to move">
+                    <div id="cg-modal-title" style="display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-user-secret" style="font-size:17px;"></i>
+                        <div>
+                            <div style="font-size:15px; font-weight:700;">Cryptogram &amp; Secret Cipher Frame</div>
+                            <div style="font-size:11px; opacity:0.88;">Substitution, Pigpen, Braille &amp; Morse ciphers with write-in lines &amp; Page 2 Answer Key</div>
+                        </div>
                     </div>
                     <div class="cg-header-actions">
                         <button type="button" class="custom-dialog-close cg-help-icon-btn" id="cg-help-btn" title="Cryptogram Help" aria-label="Cryptogram Help">
