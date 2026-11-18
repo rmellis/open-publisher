@@ -1,5 +1,5 @@
 /**
- * OpenPublisher References Engine (v5.22.12)
+ * OpenPublisher References Engine (v5.22.13)
  * Modular architecture providing Table of Contents (TOC) based on headings,
  * Footnotes anchored to current page, and Endnotes collected at document end.
  *
@@ -720,7 +720,7 @@
                 <div class="op-toc-container" style="font-family: inherit; width: 100%; height: 100%; box-sizing: border-box; outline: none;${containerBgCss}">
                     <div class="op-toc-header" style="display: flex; align-items: center; justify-content: space-between; ${headerDividerCss} padding-bottom: 6px; margin-bottom: 14px;">
                         <span class="op-toc-title" style="font-size: 18pt; font-weight: 700; color: ${prevStyles.titleColor};">${escapeHtml(title)}</span>
-                        <span class="op-toc-update-badge" onclick="window.insertOrUpdateTOC(); event.stopPropagation();" title="Click to refresh Table of Contents" style="font-size: 10px; font-weight: 600; background-color: ${prevStyles.badgeBg}; color: ${prevStyles.badgeColor}; padding: 3px 8px; border-radius: 4px; cursor: pointer; user-select: none;">Update TOC</span>
+                        <span class="op-toc-update-badge no-print" data-html2canvas-ignore="true" onclick="window.insertOrUpdateTOC(); event.stopPropagation();" title="Click to refresh Table of Contents" style="font-size: 10px; font-weight: 600; background-color: ${prevStyles.badgeBg}; color: ${prevStyles.badgeColor}; padding: 3px 8px; border-radius: 4px; cursor: pointer; user-select: none;">Update TOC</span>
                     </div>
                     <div class="op-toc-entries">
                         ${rowsHtml}
@@ -1947,7 +1947,7 @@
                         <span role="button" tabindex="0" class="custom-dialog-close" id="op-ref-notice-close-x" title="Close" aria-label="Close"><i class="fas fa-times"></i></span>
                     </div>
                     <div class="op-ref-modal-body" style="padding:18px 20px;font-size:13.5px;line-height:1.5;display:flex;align-items:center;gap:14px;">
-                        <img src="ui/icons/alert.png?v=5.22.12" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
+                        <img src="ui/icons/alert.png?v=5.22.13" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
                         <div style="flex:1;">${escapeHtml(message)}</div>
                     </div>
                     <div class="op-ref-modal-footer">

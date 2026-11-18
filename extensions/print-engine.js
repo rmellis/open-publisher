@@ -1,4 +1,4 @@
-﻿// OpenPublisher Print Engine (v5.22.12)
+﻿// OpenPublisher Print Engine (v5.22.13)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -145,7 +145,7 @@
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.12 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.13 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(pageIdx, pagesToPrint.length, page)
@@ -480,7 +480,7 @@
                 }
 
                 // Pre-flight: Strip interactive handles and non-printable elements
-                scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print').forEach(el => el.remove());
+                scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .op-toc-update-badge').forEach(el => el.remove());
                 scaler.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());
 
                 // ✨ UNIVERSAL IMAGE ASPECT RATIO & OBJECT-FIT NORMALIZATION FOR PRINT SPOOLER (v5.19.9) ✨
@@ -3200,7 +3200,7 @@
                     if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
                 }
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.12 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.13 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(i, totalPages, page)
@@ -3216,6 +3216,9 @@
                 }
 
                 stagingArea.appendChild(pageWrapper);
+
+                // Pre-flight: Immediately strip interactive UI badges/handles so baking/filters never capture them
+                pageWrapper.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .op-toc-update-badge, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
 
                 // --- TAB PRINT RESCUE MODULE ---
                 // html2canvas fails spectacularly on flex-grow calculations.
@@ -3536,8 +3539,8 @@
                     }));
                 }
 
-                // Pre-flight: Remove interactive elements that should never appear on print (progress bar drag handles, selection handles, floating toolbars, etc.)
-                pageWrapper.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
+                // Pre-flight: Remove interactive elements that should never appear on print (progress bar drag handles, selection handles, floating toolbars, Update TOC badge, etc.)
+                pageWrapper.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .op-toc-update-badge, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
 
                 // Strip any rogue shadow underlays accidentally placed on progress bar or chart elements
                 pageWrapper.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());

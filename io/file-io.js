@@ -242,6 +242,7 @@ window.printFullDocumentDirect = async function(isImposed = false) {
             } else {
                  // Otherwise, it's text. Just dump the exact HTML inside!
                  elDiv.innerHTML = el.innerHTML;
+                 elDiv.querySelectorAll('.no-print, .op-toc-update-badge, .pb-drag-handle, #pb-float-toolbar').forEach(node => node.remove());
             }
             pageWrapper.appendChild(elDiv);
         });

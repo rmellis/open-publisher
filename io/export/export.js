@@ -217,6 +217,9 @@ window.exportAsHTML = async function(opts = {}) {
             }
             
             printSpooler.appendChild(pageWrapper);
+
+            // Strip interactive editor badges/handles that should never appear in HTML or email exports
+            pageWrapper.querySelectorAll('.op-toc-update-badge, .no-print, .pb-drag-handle, #pb-float-toolbar, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
             
             // --- Inline Computed Styles ---
             // For Tables and WordArt, we extract the exact styles calculated by the browser
@@ -354,6 +357,7 @@ window.exportAsHTML = async function(opts = {}) {
             margin-bottom: 0 !important;
         }
         img { border: 0; display: block; }
+        .no-print, .op-toc-update-badge { display: none !important; }
         @media print {
             body { background: white; padding: 0; }
             .op-page { box-shadow: none !important; margin-bottom: 0 !important; }
