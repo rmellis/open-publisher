@@ -210,6 +210,8 @@ function serializeCurrentPage() {
                 attr.name === 'data-toc-box' ||
                 attr.name === 'data-footnote-box' ||
                 attr.name === 'data-endnote-box' ||
+                attr.name === 'data-ref-outline' ||
+                attr.name === 'data-ref-guide-color' ||
                 attr.name === 'data-heading-level' ||
                 attr.name === 'data-note-type' ||
                 attr.name === 'data-note-id' ||

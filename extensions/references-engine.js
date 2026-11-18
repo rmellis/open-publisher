@@ -1,5 +1,5 @@
 /**
- * OpenPublisher References Engine (v5.22.8)
+ * OpenPublisher References Engine (v5.22.9)
  * Modular architecture providing Table of Contents (TOC) based on headings,
  * Footnotes anchored to current page, and Endnotes collected at document end.
  *
@@ -412,17 +412,252 @@
         /* =========================================================================
          * 3. INSERT OR UPDATE TABLE OF CONTENTS (TOC)
          * ========================================================================= */
+        _getThemeHex: function(varName, fallback) {
+            try {
+                const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+                if (raw && /^#[0-9a-f]{3,8}$/i.test(raw)) {
+                    if (raw.length === 4) return '#' + raw[1]+raw[1] + raw[2]+raw[2] + raw[3]+raw[3];
+                    return raw.slice(0, 7).toLowerCase();
+                }
+                const rgb = raw && raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+                if (rgb) {
+                    return '#' + [1,2,3].map(i => Math.min(255, Math.max(0, parseInt(rgb[i],10))).toString(16).padStart(2,'0')).join('');
+                }
+            } catch (e) {}
+            return fallback || '#007670';
+        },
+
+        _toHexColor: function(val, fallback) {
+            if (!val) return fallback;
+            if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.toHex === 'function') {
+                const h = window.TemplateCSSColorEngine.toHex(val);
+                if (h) return h;
+            }
+            const s = String(val).trim();
+            if (/^#[0-9a-f]{6}$/i.test(s)) return s.toLowerCase();
+            if (/^#[0-9a-f]{3}$/i.test(s)) return '#' + s[1]+s[1] + s[2]+s[2] + s[3]+s[3];
+            const m = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+            if (m) return '#' + [1,2,3].map(i => Math.min(255, Math.max(0, parseInt(m[i],10))).toString(16).padStart(2,'0')).join('');
+            return fallback;
+        },
+
+        _findNonOverlappingPosition: function(paper, excludeEl, w, h, prefLeft, prefTop, preferUpward) {
+            if (!paper) return { left: prefLeft, top: prefTop };
+            const paperW = parseFloat(paper.style.width) || paper.clientWidth || 794;
+            const paperH = parseFloat(paper.style.height) || paper.clientHeight || 1123;
+            const boxes = Array.from(paper.querySelectorAll('.pub-element')).filter(el => {
+                if (!el || el === excludeEl) return false;
+                if (el.getAttribute('data-is-theme') === 'true' || el.getAttribute('data-is-border') === 'true') return false;
+                return true;
+            }).map(el => ({
+                left: parseFloat(el.style.left) || 0,
+                top: parseFloat(el.style.top) || 0,
+                width: parseFloat(el.style.width) || el.offsetWidth || 200,
+                height: parseFloat(el.style.height) || el.offsetHeight || 80
+            }));
+
+            const gap = 14;
+            const overlapsAny = (x, y) => boxes.some(b =>
+                x < (b.left + b.width + gap) &&
+                (x + w + gap) > b.left &&
+                y < (b.top + b.height + gap) &&
+                (y + h + gap) > b.top
+            );
+
+            let candX = Math.max(20, Math.min(Math.max(20, paperW - w - 20), prefLeft));
+            let candY = Math.max(20, Math.min(Math.max(20, paperH - h - 20), prefTop));
+            if (!overlapsAny(candX, candY)) {
+                return { left: Math.round(candX), top: Math.round(candY) };
+            }
+
+            if (preferUpward) {
+                for (let y = candY; y >= 40; y -= 24) {
+                    if (!overlapsAny(candX, y)) return { left: Math.round(candX), top: Math.round(y) };
+                }
+            }
+
+            const yCandidates = [candY];
+            boxes.forEach(b => {
+                if (preferUpward) {
+                    const above = b.top - h - gap;
+                    if (above >= 40) yCandidates.push(above);
+                } else {
+                    const below = b.top + b.height + gap;
+                    if (below + h <= paperH - 20) yCandidates.push(below);
+                }
+            });
+            for (let y = 50; y <= Math.max(50, paperH - h - 30); y += 36) {
+                yCandidates.push(y);
+            }
+
+            for (let i = 0; i < yCandidates.length; i++) {
+                const y = yCandidates[i];
+                if (!overlapsAny(candX, y)) return { left: Math.round(candX), top: Math.round(y) };
+                for (let x = 50; x <= Math.max(50, paperW - w - 30); x += 40) {
+                    if (!overlapsAny(x, y)) return { left: Math.round(x), top: Math.round(y) };
+                }
+            }
+
+            const offset = ((boxes.length) % 6) * 28;
+            return {
+                left: Math.round(Math.min(Math.max(20, paperW - w - 20), candX + offset)),
+                top: Math.round(Math.min(Math.max(20, paperH - h - 20), Math.max(40, preferUpward ? candY - offset : candY + offset)))
+            };
+        },
+
+        _readBoxOutlineStyles: function(boxEl, baseDefaults) {
+            const out = Object.assign({
+                outlineStyle: 'guide',
+                outlineColor: '#94a3b8',
+                outlineWidth: 1,
+                guideColor: ''
+            }, baseDefaults || {});
+            if (!boxEl) return out;
+            const editable = boxEl.querySelector('[contenteditable="true"]');
+            const savedGuideCol = boxEl.getAttribute('data-ref-guide-color') || (boxEl.style ? boxEl.style.getPropertyValue('--op-ref-guide-color').trim() : '');
+            if (savedGuideCol) {
+                out.guideColor = this._toHexColor(savedGuideCol, out.outlineColor);
+                out.outlineColor = out.guideColor;
+            }
+            const refAttr = boxEl.getAttribute('data-ref-outline');
+            if (editable && editable.style.borderStyle && editable.style.borderStyle !== 'none') {
+                out.outlineStyle = editable.style.borderStyle;
+                out.outlineWidth = parseInt(editable.style.borderWidth, 10) || 1;
+                out.outlineColor = this._toHexColor(editable.style.borderColor, out.outlineColor);
+            } else if (refAttr === 'none') {
+                out.outlineStyle = 'none';
+            }
+            return out;
+        },
+
+        _applyBoxOutlineStyles: function(boxEl, outlineStyle, outlineColor, outlineWidth, prevGuideColor) {
+            if (!boxEl) return;
+            const editable = boxEl.querySelector('[contenteditable="true"]');
+            if (!editable) return;
+            boxEl.style.borderStyle = '';
+            boxEl.style.borderWidth = '';
+            boxEl.style.borderColor = '';
+            if (outlineStyle === 'guide') {
+                boxEl.removeAttribute('data-ref-outline');
+                editable.style.borderStyle = 'none';
+                editable.style.borderWidth = '0px';
+                const guideColToApply = outlineColor || prevGuideColor;
+                if (guideColToApply) {
+                    boxEl.setAttribute('data-ref-guide-color', guideColToApply);
+                    boxEl.style.setProperty('--op-ref-guide-color', guideColToApply);
+                } else {
+                    boxEl.removeAttribute('data-ref-guide-color');
+                    boxEl.style.removeProperty('--op-ref-guide-color');
+                }
+            } else if (outlineStyle === 'none') {
+                boxEl.setAttribute('data-ref-outline', 'none');
+                editable.style.borderStyle = 'none';
+                editable.style.borderWidth = '0px';
+                boxEl.removeAttribute('data-ref-guide-color');
+                boxEl.style.removeProperty('--op-ref-guide-color');
+            } else {
+                boxEl.setAttribute('data-ref-outline', 'custom');
+                editable.style.borderStyle = outlineStyle;
+                editable.style.borderWidth = Math.max(1, parseInt(outlineWidth, 10) || 1) + 'px';
+                editable.style.borderColor = outlineColor || '#94a3b8';
+                boxEl.removeAttribute('data-ref-guide-color');
+                boxEl.style.removeProperty('--op-ref-guide-color');
+            }
+        },
+
+        _readTOCStylesFromBox: function(tocBox) {
+            const themeAccent = this._getThemeHex('--ui-theme-color', '#007670');
+            const themeDark = this._getThemeHex('--ui-theme-dark', '#007670');
+            const defaults = {
+                title: 'Table of Contents',
+                dividerColor: themeAccent,
+                dividerStyle: 'solid',
+                dividerWidth: 2,
+                titleColor: themeDark,
+                badgeBg: themeAccent,
+                badgeColor: '#ffffff',
+                pageNumColor: themeDark,
+                leaderColor: '#718096',
+                leaderStyle: 'dots',
+                entryL1Color: '#0f172a',
+                entrySubColor: '#334155',
+                emptyMsgColor: '#718096',
+                containerBg: '',
+                outlineStyle: 'guide',
+                outlineColor: '#94a3b8',
+                outlineWidth: 1,
+                guideColor: ''
+            };
+            if (!tocBox) return defaults;
+            const editable = tocBox.querySelector('[contenteditable="true"]');
+            const containerEl = tocBox.querySelector('.op-toc-container');
+            const hdr = tocBox.querySelector('.op-toc-header');
+            const titleEl = tocBox.querySelector('.op-toc-title');
+            const badgeEl = tocBox.querySelector('.op-toc-update-badge');
+            const pageNumEl = tocBox.querySelector('.op-toc-page-num');
+            const leaderEl = tocBox.querySelector('.op-toc-leader');
+            const emptyEl = tocBox.querySelector('.op-toc-empty');
+            const row1 = tocBox.querySelector('.op-toc-row[data-toc-level="1"] .op-toc-entry-text') || tocBox.querySelector('.op-toc-row[data-toc-level="1"]');
+            const rowSub = tocBox.querySelector('.op-toc-row[data-toc-level="2"] .op-toc-entry-text, .op-toc-row[data-toc-level="3"] .op-toc-entry-text') || tocBox.querySelector('.op-toc-row[data-toc-level="2"], .op-toc-row[data-toc-level="3"]');
+
+            if (containerEl) {
+                const bg = containerEl.style.backgroundImage && containerEl.style.backgroundImage.includes('gradient')
+                    ? containerEl.style.backgroundImage
+                    : (containerEl.style.backgroundColor || containerEl.style.background || '');
+                if (bg && bg !== 'none' && bg !== 'transparent') defaults.containerBg = bg;
+            }
+            if (titleEl) {
+                defaults.title = (titleEl.textContent || '').trim() || defaults.title;
+                if (titleEl.style.color) defaults.titleColor = this._toHexColor(titleEl.style.color, defaults.titleColor);
+            }
+            if (hdr) {
+                if (hdr.style.borderBottomStyle) defaults.dividerStyle = hdr.style.borderBottomStyle || 'solid';
+                if (hdr.style.borderBottomWidth) defaults.dividerWidth = parseInt(hdr.style.borderBottomWidth, 10) || (defaults.dividerStyle === 'none' ? 0 : 2);
+                if (hdr.style.borderBottomColor) defaults.dividerColor = this._toHexColor(hdr.style.borderBottomColor, defaults.dividerColor);
+            }
+            if (badgeEl) {
+                if (badgeEl.style.backgroundColor || badgeEl.style.background) {
+                    defaults.badgeBg = this._toHexColor(badgeEl.style.backgroundColor || badgeEl.style.background, defaults.badgeBg);
+                }
+                if (badgeEl.style.color) defaults.badgeColor = this._toHexColor(badgeEl.style.color, defaults.badgeColor);
+            }
+            if (pageNumEl && pageNumEl.style.color) {
+                defaults.pageNumColor = this._toHexColor(pageNumEl.style.color, defaults.pageNumColor);
+            }
+            if (leaderEl) {
+                if (leaderEl.style.borderBottomStyle === 'dashed') defaults.leaderStyle = 'dashes';
+                else if (leaderEl.style.borderBottomStyle === 'none') defaults.leaderStyle = 'none';
+                else if (leaderEl.style.borderBottomStyle === 'dotted') defaults.leaderStyle = 'dots';
+                if (leaderEl.style.borderBottomColor) defaults.leaderColor = this._toHexColor(leaderEl.style.borderBottomColor, defaults.leaderColor);
+            }
+            if (emptyEl && emptyEl.style.color) {
+                defaults.emptyMsgColor = this._toHexColor(emptyEl.style.color, defaults.emptyMsgColor);
+            }
+            if (row1 && row1.style.color) defaults.entryL1Color = this._toHexColor(row1.style.color, defaults.entryL1Color);
+            if (rowSub && rowSub.style.color) defaults.entrySubColor = this._toHexColor(rowSub.style.color, defaults.entrySubColor);
+
+            return this._readBoxOutlineStyles(tocBox, defaults);
+        },
+
         insertOrUpdateTOC: function(options) {
             options = options || {};
-            const title = options.title || 'Table of Contents';
-            const leaderStyle = options.leaderStyle || 'dots'; // 'dots', 'dashes', 'none'
-            const headings = this.scanHeadings(options);
-
             const paper = document.getElementById('paper');
             if (!paper) return;
 
             // Search for existing TOC box on current page
             let tocBox = paper.querySelector('.pub-element[data-toc-box="true"]');
+            const prevStyles = this._readTOCStylesFromBox(tocBox);
+
+            const title = options.title || prevStyles.title || 'Table of Contents';
+            const leaderStyle = options.leaderStyle || prevStyles.leaderStyle || 'dots'; // 'dots', 'dashes', 'none'
+            const dividerColor = options.dividerColor || prevStyles.dividerColor;
+            const dividerStyle = options.dividerStyle || prevStyles.dividerStyle || 'solid';
+            const dividerWidth = (options.dividerWidth !== undefined) ? parseInt(options.dividerWidth, 10) : prevStyles.dividerWidth;
+            const outlineStyle = options.outlineStyle || prevStyles.outlineStyle || 'guide';
+            const outlineColor = options.outlineColor || prevStyles.outlineColor || '#94a3b8';
+            const outlineWidth = (options.outlineWidth !== undefined) ? parseInt(options.outlineWidth, 10) : (prevStyles.outlineWidth || 1);
+
+            const headings = this.scanHeadings(options);
 
             if (!tocBox) {
                 if (typeof window.addTextBox === 'function') {
@@ -431,8 +666,9 @@
                 if (!tocBox) return;
 
                 tocBox.setAttribute('data-toc-box', 'true');
-                tocBox.style.left = '60px';
-                tocBox.style.top = '70px';
+                const tocPos = this._findNonOverlappingPosition(paper, tocBox, 520, 340, 60, 70, false);
+                tocBox.style.left = tocPos.left + 'px';
+                tocBox.style.top = tocPos.top + 'px';
                 tocBox.style.width = '520px';
                 tocBox.style.height = '340px';
             }
@@ -440,17 +676,26 @@
             const editable = tocBox.querySelector('[contenteditable="true"]');
             if (!editable) return;
 
-            let borderStyle = 'border-bottom: 1px dotted #718096;';
+            // Apply box outline preference cleanly
+            this._applyBoxOutlineStyles(tocBox, outlineStyle, options.outlineColor, outlineWidth, prevStyles.guideColor);
+
+            let borderStyle = `border-bottom-width: 1px; border-bottom-style: dotted; border-bottom-color: ${prevStyles.leaderColor};`;
             if (leaderStyle === 'dashes') {
-                borderStyle = 'border-bottom: 1px dashed #718096;';
+                borderStyle = `border-bottom-width: 1px; border-bottom-style: dashed; border-bottom-color: ${prevStyles.leaderColor};`;
             } else if (leaderStyle === 'none') {
                 borderStyle = 'border-bottom: none;';
             }
 
+            const headerDividerCss = dividerStyle === 'none'
+                ? 'border-bottom: none;'
+                : `border-bottom-width: ${Math.max(1, dividerWidth)}px; border-bottom-style: ${dividerStyle}; border-bottom-color: ${dividerColor};`;
+
+            const containerBgCss = prevStyles.containerBg ? ` background: ${prevStyles.containerBg};` : '';
+
             let rowsHtml = '';
             if (headings.length === 0) {
                 rowsHtml = `
-                    <div style="padding: 18px 0; color: #718096; font-style: italic; font-size: 11pt; text-align: center;">
+                    <div class="op-toc-empty" style="padding: 18px 0; color: ${prevStyles.emptyMsgColor}; font-style: italic; font-size: 11pt; text-align: center;">
                         No headings found in publication. Mark headings using H1 / H2 / H3 in the ribbon or context menu, then click Update TOC.
                     </div>
                 `;
@@ -459,23 +704,23 @@
                     const indentPx = (item.level - 1) * 22;
                     const fontSize = item.level === 1 ? '11.5pt' : (item.level === 2 ? '10.5pt' : '10pt');
                     const fontWeight = item.level === 1 ? 'bold' : 'normal';
-                    const color = item.level === 1 ? '#0f172a' : '#334155';
+                    const color = item.level === 1 ? prevStyles.entryL1Color : prevStyles.entrySubColor;
 
                     rowsHtml += `
                         <div class="op-toc-row" data-toc-level="${item.level}" style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; padding-left: ${indentPx}px; font-size: ${fontSize}; font-weight: ${fontWeight}; color: ${color};">
-                            <span class="op-toc-entry-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 78%; cursor: pointer;" title="Go to Page ${item.pageNumber}">${escapeHtml(item.text)}</span>
+                            <span class="op-toc-entry-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 78%; cursor: pointer; color: ${color};" title="Go to Page ${item.pageNumber}">${escapeHtml(item.text)}</span>
                             <span class="op-toc-leader" style="flex: 1; margin: 0 8px; transform: translateY(-4px); ${borderStyle}"></span>
-                            <span class="op-toc-page-num" style="min-width: 22px; text-align: right; font-weight: bold; color: var(--ui-theme-dark, #007670);">${item.pageNumber}</span>
+                            <span class="op-toc-page-num" style="min-width: 22px; text-align: right; font-weight: bold; color: ${prevStyles.pageNumColor};">${item.pageNumber}</span>
                         </div>
                     `;
                 });
             }
 
             editable.innerHTML = `
-                <div class="op-toc-container" style="font-family: inherit; width: 100%; height: 100%; box-sizing: border-box; outline: none;">
-                    <div class="op-toc-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--ui-theme-color, #007670); padding-bottom: 6px; margin-bottom: 14px;">
-                        <span class="op-toc-title" style="font-size: 18pt; font-weight: 700; color: var(--ui-theme-dark, #007670);">${escapeHtml(title)}</span>
-                        <span class="op-toc-update-badge" onclick="window.insertOrUpdateTOC(); event.stopPropagation();" title="Click to refresh Table of Contents" style="font-size: 10px; font-weight: 600; background: var(--ui-theme-color, #007670); color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; user-select: none;">Update TOC</span>
+                <div class="op-toc-container" style="font-family: inherit; width: 100%; height: 100%; box-sizing: border-box; outline: none;${containerBgCss}">
+                    <div class="op-toc-header" style="display: flex; align-items: center; justify-content: space-between; ${headerDividerCss} padding-bottom: 6px; margin-bottom: 14px;">
+                        <span class="op-toc-title" style="font-size: 18pt; font-weight: 700; color: ${prevStyles.titleColor};">${escapeHtml(title)}</span>
+                        <span class="op-toc-update-badge" onclick="window.insertOrUpdateTOC(); event.stopPropagation();" title="Click to refresh Table of Contents" style="font-size: 10px; font-weight: 600; background-color: ${prevStyles.badgeBg}; color: ${prevStyles.badgeColor}; padding: 3px 8px; border-radius: 4px; cursor: pointer; user-select: none;">Update TOC</span>
                     </div>
                     <div class="op-toc-entries">
                         ${rowsHtml}
@@ -483,6 +728,9 @@
                 </div>
             `;
 
+            if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function') {
+                window.TemplateCSSColorEngine.refreshRibbonPanel(tocBox);
+            }
             if (typeof window.selectElement === 'function') {
                 window.selectElement(tocBox);
             }
@@ -496,6 +744,10 @@
          * ========================================================================= */
         showTOCModal: function() {
             this._removeModalOverlay();
+
+            const paper = document.getElementById('paper');
+            const existingTocBox = paper ? paper.querySelector('.pub-element[data-toc-box="true"]') : null;
+            const curStyles = this._readTOCStylesFromBox(existingTocBox);
 
             const headings = this.scanHeadings({ h1: true, h2: true, h3: true, autoDetectLargeText: true });
 
@@ -518,8 +770,8 @@
             }
 
             const modalHtml = `
-                <div class="op-ref-modal-backdrop" id="op-toc-modal-backdrop" onclick="window.ReferencesEngine._removeModalOverlay()"></div>
-                <div class="op-ref-modal-window" id="op-toc-modal-window" role="dialog" aria-modal="true" aria-labelledby="op-toc-modal-title">
+                <div class="op-ref-modal-backdrop" id="op-toc-modal-backdrop"></div>
+                <div class="op-ref-modal-window" id="op-toc-modal-window" style="width: 580px;" role="dialog" aria-modal="true" aria-labelledby="op-toc-modal-title">
                     <div class="op-ref-modal-header">
                         <div style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px;">
                             <i class="fas fa-list-ol"></i>
@@ -533,15 +785,15 @@
                     <div class="op-ref-modal-body">
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;">
                             <div>
-                                <label class="op-ref-label">TOC Title</label>
-                                <input type="text" id="op-toc-input-title" class="op-ref-input" value="Table of Contents">
+                                <label class="op-ref-label" for="op-toc-input-title">TOC Title</label>
+                                <input type="text" id="op-toc-input-title" class="op-ref-input" value="${escapeAttr(curStyles.title)}">
                             </div>
                             <div>
                                 <label class="op-ref-label" for="op-toc-input-leader">Tab Leader Style</label>
                                 <select id="op-toc-input-leader" class="op-ref-select">
-                                    <option value="dots" selected>Dots ( . . . . . . . . . . . )</option>
-                                    <option value="dashes">Dashes ( - - - - - - - - )</option>
-                                    <option value="none">None</option>
+                                    <option value="dots" ${curStyles.leaderStyle === 'dots' ? 'selected' : ''}>Dots ( . . . . . . . . . . . )</option>
+                                    <option value="dashes" ${curStyles.leaderStyle === 'dashes' ? 'selected' : ''}>Dashes ( - - - - - - - - )</option>
+                                    <option value="none" ${curStyles.leaderStyle === 'none' ? 'selected' : ''}>None</option>
                                 </select>
                             </div>
                         </div>
@@ -569,11 +821,56 @@
                         </div>
 
                         <div class="op-ref-section-card" style="margin-top:12px;">
+                            <div class="op-ref-card-title">Divider Line &amp; Box Outline Styling</div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:6px;">
+                                <div>
+                                    <label class="op-ref-label" for="op-toc-divider-style" style="font-size:10px;">Header Divider Line</label>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <input type="hidden" id="op-toc-divider-color" value="${escapeAttr(curStyles.dividerColor)}">
+                                        <button type="button" id="op-toc-divider-color-btn" class="op-ref-color-btn" title="Choose Divider Line Color" style="background:${escapeAttr(curStyles.dividerColor)};" onclick="event.stopPropagation(); window.ReferencesEngine._openCustomColorPicker('op-toc-divider-color', 'op-toc-divider-color-btn', this);"></button>
+                                        <select id="op-toc-divider-style" class="op-ref-select" style="width:140px; flex:1;">
+                                            <option value="solid" ${curStyles.dividerStyle === 'solid' ? 'selected' : ''}>Solid Line</option>
+                                            <option value="dashed" ${curStyles.dividerStyle === 'dashed' ? 'selected' : ''}>Dashed Line</option>
+                                            <option value="dotted" ${curStyles.dividerStyle === 'dotted' ? 'selected' : ''}>Dotted Line</option>
+                                            <option value="none" ${curStyles.dividerStyle === 'none' ? 'selected' : ''}>None</option>
+                                        </select>
+                                        <select id="op-toc-divider-width" class="op-ref-select" style="width:68px;" title="Divider Thickness">
+                                            <option value="1" ${curStyles.dividerWidth === 1 ? 'selected' : ''}>1px</option>
+                                            <option value="2" ${curStyles.dividerWidth === 2 ? 'selected' : ''}>2px</option>
+                                            <option value="3" ${curStyles.dividerWidth === 3 ? 'selected' : ''}>3px</option>
+                                            <option value="4" ${curStyles.dividerWidth === 4 ? 'selected' : ''}>4px</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="op-ref-label" for="op-toc-outline-style" style="font-size:10px;">Box Outline</label>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <input type="hidden" id="op-toc-outline-color" value="${escapeAttr(curStyles.outlineColor)}">
+                                        <button type="button" id="op-toc-outline-color-btn" class="op-ref-color-btn" title="Choose Box Outline Color" style="background:${escapeAttr(curStyles.outlineColor)};" onclick="event.stopPropagation(); window.ReferencesEngine._openCustomColorPicker('op-toc-outline-color', 'op-toc-outline-color-btn', this);"></button>
+                                        <select id="op-toc-outline-style" class="op-ref-select" style="width:140px; flex:1;">
+                                            <option value="guide" ${curStyles.outlineStyle === 'guide' ? 'selected' : ''}>Editor Guide</option>
+                                            <option value="none" ${curStyles.outlineStyle === 'none' ? 'selected' : ''}>None (Borderless)</option>
+                                            <option value="dashed" ${curStyles.outlineStyle === 'dashed' ? 'selected' : ''}>Dashed Border</option>
+                                            <option value="solid" ${curStyles.outlineStyle === 'solid' ? 'selected' : ''}>Solid Border</option>
+                                            <option value="dotted" ${curStyles.outlineStyle === 'dotted' ? 'selected' : ''}>Dotted Border</option>
+                                        </select>
+                                        <select id="op-toc-outline-width" class="op-ref-select" style="width:68px;" title="Outline Thickness">
+                                            <option value="1" ${curStyles.outlineWidth === 1 ? 'selected' : ''}>1px</option>
+                                            <option value="2" ${curStyles.outlineWidth === 2 ? 'selected' : ''}>2px</option>
+                                            <option value="3" ${curStyles.outlineWidth === 3 ? 'selected' : ''}>3px</option>
+                                            <option value="4" ${curStyles.outlineWidth === 4 ? 'selected' : ''}>4px</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="op-ref-section-card" style="margin-top:10px;">
                             <div class="op-ref-card-title" style="display:flex; justify-content:space-between; align-items:center;">
                                 <span>Detected Headings Across All Pages (${headings.length})</span>
                                 <span style="font-size:10px; font-weight:normal; text-transform:none; color:#64748b;">Visual reading order</span>
                             </div>
-                            <div style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; margin-top:6px; background:#fff;">
+                            <div style="max-height:110px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; margin-top:6px; background:#fff;">
                                 ${previewItemsHtml}
                             </div>
                         </div>
@@ -596,16 +893,24 @@
                 DialogSystem.convertNativeSelects(modalWin);
             }
             this._makeDraggable(modalWin, modalHdr);
+            this._wireModalInputGuards(modalWin);
 
             setTimeout(() => {
                 const titleInput = document.getElementById('op-toc-input-title');
-                if (titleInput) titleInput.focus();
+                const root = document.getElementById('op-references-modal-root');
+                if (titleInput && root && !root.contains(document.activeElement)) titleInput.focus();
             }, 50);
         },
 
         _commitTOCFromModal: function() {
             const titleInput = document.getElementById('op-toc-input-title');
             const leaderInput = document.getElementById('op-toc-input-leader');
+            const dividerColorInput = document.getElementById('op-toc-divider-color');
+            const dividerStyleInput = document.getElementById('op-toc-divider-style');
+            const dividerWidthInput = document.getElementById('op-toc-divider-width');
+            const outlineColorInput = document.getElementById('op-toc-outline-color');
+            const outlineStyleInput = document.getElementById('op-toc-outline-style');
+            const outlineWidthInput = document.getElementById('op-toc-outline-width');
             const h1Check = document.getElementById('op-toc-check-h1');
             const h2Check = document.getElementById('op-toc-check-h2');
             const h3Check = document.getElementById('op-toc-check-h3');
@@ -614,6 +919,12 @@
             const options = {
                 title: titleInput ? titleInput.value.trim() : 'Table of Contents',
                 leaderStyle: leaderInput ? leaderInput.value : 'dots',
+                dividerColor: dividerColorInput ? dividerColorInput.value : undefined,
+                dividerStyle: dividerStyleInput ? dividerStyleInput.value : undefined,
+                dividerWidth: dividerWidthInput ? parseInt(dividerWidthInput.value, 10) : undefined,
+                outlineColor: outlineColorInput ? outlineColorInput.value : undefined,
+                outlineStyle: outlineStyleInput ? outlineStyleInput.value : undefined,
+                outlineWidth: outlineWidthInput ? parseInt(outlineWidthInput.value, 10) : undefined,
                 h1: h1Check ? h1Check.checked : true,
                 h2: h2Check ? h2Check.checked : true,
                 h3: h3Check ? h3Check.checked : true,
@@ -627,12 +938,93 @@
         /* =========================================================================
          * 5. FOOTNOTES & ENDNOTES
          * ========================================================================= */
+        _readNoteBoxStyles: function(noteType) {
+            const isEndnote = noteType === 'endnote';
+            const themeAccent = this._getThemeHex('--ui-theme-color', '#007670');
+            const themeDark = this._getThemeHex('--ui-theme-dark', '#007670');
+            const defaults = {
+                dividerColor: isEndnote ? themeAccent : '#94a3b8',
+                dividerStyle: 'solid',
+                dividerWidth: isEndnote ? 2 : 1,
+                headerColor: themeDark,
+                supColor: isEndnote ? themeDark : themeAccent,
+                lineColor: isEndnote ? '#1e293b' : '#334155',
+                containerBg: '',
+                outlineStyle: 'guide',
+                outlineColor: '#94a3b8',
+                outlineWidth: 1,
+                guideColor: ''
+            };
+            const paper = document.getElementById('paper');
+            if (!paper) return defaults;
+            const selector = isEndnote ? '.pub-element[data-endnote-box="true"]' : '.pub-element[data-footnote-box="true"]';
+            const box = paper.querySelector(selector);
+            if (!box) return defaults;
+
+            const container = box.querySelector(isEndnote ? '.op-endnote-container' : '.op-footnote-container');
+            if (container) {
+                const bg = container.style.backgroundImage && container.style.backgroundImage.includes('gradient')
+                    ? container.style.backgroundImage
+                    : (container.style.backgroundColor || container.style.background || '');
+                if (bg && bg !== 'none' && bg !== 'transparent') defaults.containerBg = bg;
+            }
+            if (isEndnote) {
+                const hdr = box.querySelector('.op-endnote-header');
+                if (hdr) {
+                    if (hdr.style.color) defaults.headerColor = this._toHexColor(hdr.style.color, defaults.headerColor);
+                    if (hdr.style.borderBottomStyle) defaults.dividerStyle = hdr.style.borderBottomStyle || 'solid';
+                    if (hdr.style.borderBottomWidth) defaults.dividerWidth = parseInt(hdr.style.borderBottomWidth, 10) || (defaults.dividerStyle === 'none' ? 0 : 2);
+                    if (hdr.style.borderBottomColor) defaults.dividerColor = this._toHexColor(hdr.style.borderBottomColor, defaults.dividerColor);
+                }
+            } else {
+                const div = box.querySelector('.op-footnote-divider');
+                if (div) {
+                    if (div.style.borderTopStyle) defaults.dividerStyle = div.style.borderTopStyle || 'solid';
+                    if (div.style.borderTopWidth) defaults.dividerWidth = parseInt(div.style.borderTopWidth, 10) || (defaults.dividerStyle === 'none' ? 0 : 1);
+                    if (div.style.borderTopColor) defaults.dividerColor = this._toHexColor(div.style.borderTopColor, defaults.dividerColor);
+                }
+            }
+            const sup = box.querySelector((isEndnote ? '.op-endnote-line' : '.op-footnote-line') + ' sup');
+            if (sup && sup.style.color) defaults.supColor = this._toHexColor(sup.style.color, defaults.supColor);
+            const line = box.querySelector(isEndnote ? '.op-endnote-line' : '.op-footnote-line');
+            if (line && line.style.color) defaults.lineColor = this._toHexColor(line.style.color, defaults.lineColor);
+
+            return this._readBoxOutlineStyles(box, defaults);
+        },
+
+        _syncNoteModalStyles: function(noteType) {
+            const st = this._readNoteBoxStyles(noteType);
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            setVal('op-note-divider-color', st.dividerColor);
+            const dBtn = document.getElementById('op-note-divider-color-btn');
+            if (dBtn) dBtn.style.background = st.dividerColor;
+            setVal('op-note-divider-style', st.dividerStyle);
+            setVal('op-note-divider-width', String(st.dividerWidth || 1));
+            setVal('op-note-outline-color', st.outlineColor);
+            const oBtn = document.getElementById('op-note-outline-color-btn');
+            if (oBtn) oBtn.style.background = st.outlineColor;
+            setVal('op-note-outline-style', st.outlineStyle);
+            setVal('op-note-outline-width', String(st.outlineWidth || 1));
+
+            const modalWin = document.getElementById('op-note-modal-window');
+            if (modalWin) {
+                modalWin.querySelectorAll('select').forEach(sel => {
+                    const customWrap = sel.nextElementSibling;
+                    if (customWrap && customWrap.classList.contains('custom-dom-select')) {
+                        const span = customWrap.querySelector('span');
+                        if (span && sel.selectedIndex >= 0) span.innerText = sel.options[sel.selectedIndex].text;
+                    }
+                });
+            }
+        },
+
         showInsertNoteModal: function(defaultType, editNoteId) {
             this.saveCurrentSelection();
             this._removeModalOverlay();
 
             const isEndnote = defaultType === 'endnote';
             const allNotes = this.getAllNotes();
+            const curStyles = this._readNoteBoxStyles(isEndnote ? 'endnote' : 'footnote');
 
             let initialText = '';
             if (editNoteId) {
@@ -668,8 +1060,8 @@
             }
 
             const modalHtml = `
-                <div class="op-ref-modal-backdrop" id="op-note-modal-backdrop" onclick="window.ReferencesEngine._removeModalOverlay()"></div>
-                <div class="op-ref-modal-window" id="op-note-modal-window" style="width: 480px;" role="dialog" aria-modal="true" aria-labelledby="op-note-modal-title">
+                <div class="op-ref-modal-backdrop" id="op-note-modal-backdrop"></div>
+                <div class="op-ref-modal-window" id="op-note-modal-window" style="width: 580px;" role="dialog" aria-modal="true" aria-labelledby="op-note-modal-title">
                     <div class="op-ref-modal-header">
                         <div style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px;">
                             <i class="fas ${isEndnote ? 'fa-book' : 'fa-file-alt'}"></i>
@@ -683,18 +1075,18 @@
                     <div class="op-ref-modal-body">
                         ${editNoteId ? `<input type="hidden" id="op-note-edit-id" value="${escapeAttr(editNoteId)}">` : ''}
                         
-                        <div style="margin-bottom:12px;">
+                        <div style="margin-bottom:10px;">
                             <label class="op-ref-label">Reference Location</label>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                                 <label class="op-ref-radio-card ${!isEndnote ? 'active' : ''}" id="op-note-card-fn">
-                                    <input type="radio" name="op-note-type-radio" value="footnote" ${!isEndnote ? 'checked' : ''} onchange="document.getElementById('op-note-card-fn').classList.add('active'); document.getElementById('op-note-card-en').classList.remove('active');">
+                                    <input type="radio" name="op-note-type-radio" value="footnote" ${!isEndnote ? 'checked' : ''} onchange="document.getElementById('op-note-card-fn').classList.add('active'); document.getElementById('op-note-card-en').classList.remove('active'); window.ReferencesEngine._syncNoteModalStyles('footnote');">
                                     <div>
                                         <div style="font-weight:700; font-size:12px; color:#00796b;">Footnote</div>
                                         <div style="font-size:10.5px; color:#64748b;">Bottom of current page</div>
                                     </div>
                                 </label>
                                 <label class="op-ref-radio-card ${isEndnote ? 'active' : ''}" id="op-note-card-en">
-                                    <input type="radio" name="op-note-type-radio" value="endnote" ${isEndnote ? 'checked' : ''} onchange="document.getElementById('op-note-card-en').classList.add('active'); document.getElementById('op-note-card-fn').classList.remove('active');">
+                                    <input type="radio" name="op-note-type-radio" value="endnote" ${isEndnote ? 'checked' : ''} onchange="document.getElementById('op-note-card-en').classList.add('active'); document.getElementById('op-note-card-fn').classList.remove('active'); window.ReferencesEngine._syncNoteModalStyles('endnote');">
                                     <div>
                                         <div style="font-weight:700; font-size:12px; color:var(--ui-theme-dark,#007670);">Endnote</div>
                                         <div style="font-size:10.5px; color:#64748b;">End of publication</div>
@@ -703,11 +1095,56 @@
                             </div>
                         </div>
 
-                        <div style="margin-bottom:14px;">
+                        <div style="margin-bottom:10px;">
                             <label class="op-ref-label" for="op-note-text-input">Note Text / Citation</label>
-                            <textarea id="op-note-text-input" class="op-ref-textarea" placeholder="Type source citation, explanatory note, or reference...">${escapeHtml(initialText)}</textarea>
-                            <div style="font-size:10.5px; color:#64748b; margin-top:4px;">
+                            <textarea id="op-note-text-input" class="op-ref-textarea" style="min-height:66px;" placeholder="Type source citation, explanatory note, or reference...">${escapeHtml(initialText)}</textarea>
+                            <div style="font-size:10.5px; color:#64748b; margin-top:3px;">
                                 Drops a superscript marker at the cursor and anchors a formatted note box automatically.
+                            </div>
+                        </div>
+
+                        <div class="op-ref-section-card" style="margin-bottom:10px;">
+                            <div class="op-ref-card-title">Divider Line &amp; Box Outline Styling</div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:6px;">
+                                <div>
+                                    <label class="op-ref-label" for="op-note-divider-style" style="font-size:10px;">Separator / Header Line</label>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <input type="hidden" id="op-note-divider-color" value="${escapeAttr(curStyles.dividerColor)}">
+                                        <button type="button" id="op-note-divider-color-btn" class="op-ref-color-btn" title="Choose Divider Line Color" style="background:${escapeAttr(curStyles.dividerColor)};" onclick="event.stopPropagation(); window.ReferencesEngine._openCustomColorPicker('op-note-divider-color', 'op-note-divider-color-btn', this);"></button>
+                                        <select id="op-note-divider-style" class="op-ref-select" style="width:140px; flex:1;">
+                                            <option value="solid" ${curStyles.dividerStyle === 'solid' ? 'selected' : ''}>Solid Line</option>
+                                            <option value="dashed" ${curStyles.dividerStyle === 'dashed' ? 'selected' : ''}>Dashed Line</option>
+                                            <option value="dotted" ${curStyles.dividerStyle === 'dotted' ? 'selected' : ''}>Dotted Line</option>
+                                            <option value="none" ${curStyles.dividerStyle === 'none' ? 'selected' : ''}>None</option>
+                                        </select>
+                                        <select id="op-note-divider-width" class="op-ref-select" style="width:68px;" title="Divider Thickness">
+                                            <option value="1" ${curStyles.dividerWidth === 1 ? 'selected' : ''}>1px</option>
+                                            <option value="2" ${curStyles.dividerWidth === 2 ? 'selected' : ''}>2px</option>
+                                            <option value="3" ${curStyles.dividerWidth === 3 ? 'selected' : ''}>3px</option>
+                                            <option value="4" ${curStyles.dividerWidth === 4 ? 'selected' : ''}>4px</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="op-ref-label" for="op-note-outline-style" style="font-size:10px;">Box Outline</label>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <input type="hidden" id="op-note-outline-color" value="${escapeAttr(curStyles.outlineColor)}">
+                                        <button type="button" id="op-note-outline-color-btn" class="op-ref-color-btn" title="Choose Box Outline Color" style="background:${escapeAttr(curStyles.outlineColor)};" onclick="event.stopPropagation(); window.ReferencesEngine._openCustomColorPicker('op-note-outline-color', 'op-note-outline-color-btn', this);"></button>
+                                        <select id="op-note-outline-style" class="op-ref-select" style="width:140px; flex:1;">
+                                            <option value="guide" ${curStyles.outlineStyle === 'guide' ? 'selected' : ''}>Editor Guide</option>
+                                            <option value="none" ${curStyles.outlineStyle === 'none' ? 'selected' : ''}>None (Borderless)</option>
+                                            <option value="dashed" ${curStyles.outlineStyle === 'dashed' ? 'selected' : ''}>Dashed Border</option>
+                                            <option value="solid" ${curStyles.outlineStyle === 'solid' ? 'selected' : ''}>Solid Border</option>
+                                            <option value="dotted" ${curStyles.outlineStyle === 'dotted' ? 'selected' : ''}>Dotted Border</option>
+                                        </select>
+                                        <select id="op-note-outline-width" class="op-ref-select" style="width:68px;" title="Outline Thickness">
+                                            <option value="1" ${curStyles.outlineWidth === 1 ? 'selected' : ''}>1px</option>
+                                            <option value="2" ${curStyles.outlineWidth === 2 ? 'selected' : ''}>2px</option>
+                                            <option value="3" ${curStyles.outlineWidth === 3 ? 'selected' : ''}>3px</option>
+                                            <option value="4" ${curStyles.outlineWidth === 4 ? 'selected' : ''}>4px</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -716,7 +1153,7 @@
                                 <span>Document Notes (${allNotes.length})</span>
                                 <button type="button" class="op-ref-link-btn" onclick="window.ReferencesEngine.updateAllReferences(); window.ReferencesEngine.showInsertNoteModal('${defaultType}')">Update All</button>
                             </div>
-                            <div style="max-height:110px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:5px; margin-top:6px; background:#fff;">
+                            <div style="max-height:92px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:5px; margin-top:6px; background:#fff;">
                                 ${existingNotesListHtml}
                             </div>
                         </div>
@@ -735,11 +1172,16 @@
 
             const modalWin = document.getElementById('op-note-modal-window');
             const modalHdr = modalWin ? modalWin.querySelector('.op-ref-modal-header') : null;
+            if (typeof DialogSystem !== 'undefined' && typeof DialogSystem.convertNativeSelects === 'function') {
+                DialogSystem.convertNativeSelects(modalWin);
+            }
             this._makeDraggable(modalWin, modalHdr);
+            this._wireModalInputGuards(modalWin);
 
             setTimeout(() => {
                 const ta = document.getElementById('op-note-text-input');
-                if (ta) ta.focus();
+                const root = document.getElementById('op-references-modal-root');
+                if (ta && root && !root.contains(document.activeElement)) ta.focus();
             }, 50);
         },
 
@@ -747,7 +1189,10 @@
             const ta = document.getElementById('op-note-text-input');
             const noteText = ta ? ta.value.trim() : '';
             if (!noteText) {
-                alert('Please enter note text or citation.');
+                this._showNoticeModal('Note Text Required', 'Please enter note text or citation before inserting this reference.', () => {
+                    const inp = document.getElementById('op-note-text-input');
+                    if (inp) inp.focus();
+                });
                 return;
             }
 
@@ -756,40 +1201,54 @@
 
             const typeRadio = document.querySelector('input[name="op-note-type-radio"]:checked');
             const noteType = typeRadio ? typeRadio.value : 'footnote';
+            const styleOptions = {
+                dividerColor: (document.getElementById('op-note-divider-color') || {}).value,
+                dividerStyle: (document.getElementById('op-note-divider-style') || {}).value,
+                dividerWidth: parseInt((document.getElementById('op-note-divider-width') || {}).value, 10) || undefined,
+                outlineColor: (document.getElementById('op-note-outline-color') || {}).value,
+                outlineStyle: (document.getElementById('op-note-outline-style') || {}).value,
+                outlineWidth: parseInt((document.getElementById('op-note-outline-width') || {}).value, 10) || undefined
+            };
 
             this._removeModalOverlay();
 
             if (editId) {
                 this.updateNoteText(editId, noteText);
+                if (noteType === 'endnote') {
+                    this.resyncEndnotes(styleOptions);
+                } else {
+                    this.resyncFootnotes(typeof state !== 'undefined' ? state.currentPageIndex : 0, styleOptions);
+                }
+                if (typeof window.pushHistory === 'function') window.pushHistory();
             } else {
                 if (noteType === 'endnote') {
-                    this.insertEndnote(noteText);
+                    this.insertEndnote(noteText, styleOptions);
                 } else {
-                    this.insertFootnote(noteText);
+                    this.insertFootnote(noteText, styleOptions);
                 }
             }
         },
 
-        insertFootnote: function(text) {
+        insertFootnote: function(text, styleOptions) {
             text = (text || '').trim();
             if (!text) return;
 
             const noteId = 'fn-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
             this._insertNoteMarker('footnote', noteId, text);
-            this.resyncFootnotes(typeof state !== 'undefined' ? state.currentPageIndex : 0);
+            this.resyncFootnotes(typeof state !== 'undefined' ? state.currentPageIndex : 0, styleOptions);
 
             if (typeof window.pushHistory === 'function') {
                 window.pushHistory();
             }
         },
 
-        insertEndnote: function(text) {
+        insertEndnote: function(text, styleOptions) {
             text = (text || '').trim();
             if (!text) return;
 
             const noteId = 'en-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
             this._insertNoteMarker('endnote', noteId, text);
-            this.resyncEndnotes();
+            this.resyncEndnotes(styleOptions);
 
             if (typeof window.pushHistory === 'function') {
                 window.pushHistory();
@@ -798,7 +1257,7 @@
 
         _insertNoteMarker: function(type, noteId, text) {
             const isFootnote = type === 'footnote';
-            const markerColor = isFootnote ? 'var(--ui-theme-color, #007670)' : 'var(--ui-theme-dark, #004d49)';
+            const markerColor = isFootnote ? this._getThemeHex('--ui-theme-color', '#007670') : this._getThemeHex('--ui-theme-dark', '#004d49');
 
             const sup = document.createElement('sup');
             sup.className = `op-note-ref ${isFootnote ? 'op-footnote-ref' : 'op-endnote-ref'}`;
@@ -819,22 +1278,37 @@
                 window.ReferencesEngine.showInsertNoteModal(type, noteId);
             };
 
-            // Attempt caret insertion using saved range or active selection
+            // Attempt caret insertion using saved range or active selection (skip generated TOC/note frames)
+            const isInsideSpecialFrame = (node) => !!(node && node.closest && node.closest('[data-toc-box="true"], [data-footnote-box="true"], [data-endnote-box="true"]'));
             let inserted = false;
-            let targetEditable = this._lastSavedEditable;
+            let targetEditable = (this._lastSavedEditable && !isInsideSpecialFrame(this._lastSavedEditable)) ? this._lastSavedEditable : null;
 
-            if (this._lastSavedRange) {
+            if (this._lastSavedRange && targetEditable && targetEditable.contains(this._lastSavedRange.startContainer)) {
                 try {
-                    this._lastSavedRange.deleteContents();
-                    this._lastSavedRange.insertNode(sup);
-                    // Move caret after sup
-                    const sel = window.getSelection();
-                    if (sel) {
-                        sel.removeAllRanges();
-                        const newR = document.createRange();
-                        newR.setStartAfter(sup);
-                        newR.collapse(true);
-                        sel.addRange(newR);
+                    if ((targetEditable.innerText || '').trim() === 'Click to edit text') {
+                        targetEditable.innerHTML = '';
+                        const lead = document.createTextNode('');
+                        targetEditable.appendChild(lead);
+                        targetEditable.appendChild(sup);
+                        const sel = window.getSelection();
+                        if (sel) {
+                            sel.removeAllRanges();
+                            const newR = document.createRange();
+                            newR.setStart(lead, 0);
+                            newR.collapse(true);
+                            sel.addRange(newR);
+                        }
+                    } else {
+                        this._lastSavedRange.deleteContents();
+                        this._lastSavedRange.insertNode(sup);
+                        const sel = window.getSelection();
+                        if (sel) {
+                            sel.removeAllRanges();
+                            const newR = document.createRange();
+                            newR.setStartAfter(sup);
+                            newR.collapse(true);
+                            sel.addRange(newR);
+                        }
                     }
                     inserted = true;
                 } catch (e) {
@@ -843,21 +1317,49 @@
             }
 
             if (!inserted) {
-                if (!targetEditable && typeof state !== 'undefined' && state.selectedEl) {
+                if (!targetEditable && typeof state !== 'undefined' && state.selectedEl && !isInsideSpecialFrame(state.selectedEl)) {
                     targetEditable = state.selectedEl.querySelector('[contenteditable="true"]');
                 }
+                let createdFallbackBox = false;
                 if (!targetEditable) {
-                    // Create new text box if none active
+                    // Create new text box if none active, placed in an empty area of the page
                     if (typeof window.addTextBox === 'function') {
                         const newBox = window.addTextBox();
                         if (newBox) {
+                            const paper = document.getElementById('paper');
+                            const bw = parseFloat(newBox.style.width) || 240;
+                            const bh = parseFloat(newBox.style.height) || 80;
+                            const pos = this._findNonOverlappingPosition(paper, newBox, bw, bh, 60, 60, false);
+                            newBox.style.left = pos.left + 'px';
+                            newBox.style.top = pos.top + 'px';
+                            if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
                             targetEditable = newBox.querySelector('[contenteditable="true"]');
+                            createdFallbackBox = true;
                         }
                     }
                 }
 
                 if (targetEditable) {
-                    targetEditable.appendChild(sup);
+                    const rawText = (targetEditable.innerText || '').trim();
+                    if (createdFallbackBox || rawText === 'Click to edit text') {
+                        targetEditable.innerHTML = '';
+                        const lead = document.createTextNode('');
+                        targetEditable.appendChild(lead);
+                        targetEditable.appendChild(sup);
+                        try {
+                            targetEditable.focus();
+                            const sel = window.getSelection();
+                            if (sel) {
+                                sel.removeAllRanges();
+                                const r = document.createRange();
+                                r.setStart(lead, 0);
+                                r.collapse(true);
+                                sel.addRange(r);
+                            }
+                        } catch (err) {}
+                    } else {
+                        targetEditable.appendChild(sup);
+                    }
                     inserted = true;
                 }
             }
@@ -869,7 +1371,8 @@
         /* =========================================================================
          * 6. RESYNC FOOTNOTES (Current Page)
          * ========================================================================= */
-        resyncFootnotes: function(pageIndex) {
+        resyncFootnotes: function(pageIndex, styleOptions) {
+            styleOptions = styleOptions || {};
             const paper = document.getElementById('paper');
             if (!paper) return;
 
@@ -904,6 +1407,8 @@
                 return;
             }
 
+            const prevStyles = this._readNoteBoxStyles('footnote');
+
             if (!fnBox) {
                 if (typeof window.addTextBox === 'function') {
                     fnBox = window.addTextBox();
@@ -913,15 +1418,31 @@
                 fnBox.setAttribute('data-footnote-box', 'true');
                 const paperH = parseFloat(paper.style.height) || 1123;
                 const paperW = parseFloat(paper.style.width) || 794;
+                const fnW = Math.max(200, paperW - 120);
+                const fnH = 120;
+                const fnPos = this._findNonOverlappingPosition(paper, fnBox, fnW, fnH, 60, Math.max(80, paperH - 180), true);
 
-                fnBox.style.left = '60px';
-                fnBox.style.top = Math.max(80, paperH - 180) + 'px';
-                fnBox.style.width = Math.max(200, paperW - 120) + 'px';
-                fnBox.style.height = '120px';
+                fnBox.style.left = fnPos.left + 'px';
+                fnBox.style.top = fnPos.top + 'px';
+                fnBox.style.width = fnW + 'px';
+                fnBox.style.height = fnH + 'px';
             }
 
             const editable = fnBox.querySelector('[contenteditable="true"]');
             if (!editable) return;
+
+            const divColor = styleOptions.dividerColor || prevStyles.dividerColor;
+            const divStyle = styleOptions.dividerStyle || prevStyles.dividerStyle;
+            const divWidth = (styleOptions.dividerWidth !== undefined) ? styleOptions.dividerWidth : prevStyles.dividerWidth;
+            const outlineStyle = styleOptions.outlineStyle || prevStyles.outlineStyle;
+            const outlineColor = styleOptions.outlineColor || prevStyles.outlineColor;
+            const outlineWidth = (styleOptions.outlineWidth !== undefined) ? styleOptions.outlineWidth : prevStyles.outlineWidth;
+            this._applyBoxOutlineStyles(fnBox, outlineStyle, styleOptions.outlineColor || (outlineStyle === 'guide' ? prevStyles.guideColor : outlineColor), outlineWidth, prevStyles.guideColor);
+
+            const divCss = divStyle === 'none'
+                ? 'border-top: none;'
+                : `border-top-width: ${Math.max(1, parseInt(divWidth, 10) || 1)}px; border-top-style: ${divStyle}; border-top-color: ${divColor};`;
+            const containerBgCss = prevStyles.containerBg ? ` background: ${prevStyles.containerBg};` : '';
 
             let notesHtml = '';
             markers.forEach((sup, idx) => {
@@ -930,25 +1451,29 @@
                 const noteText = sup.getAttribute('data-note-text') || '';
 
                 notesHtml += `
-                    <div class="op-footnote-line" data-note-id="${escapeAttr(noteId)}" style="margin-bottom: 4px; font-size: 9.5pt; line-height: 1.4; color: #334155; display: flex; align-items: baseline;">
-                        <sup style="font-weight: bold; color: #00796b; margin-right: 5px; font-size: 8.5pt;">[${num}]</sup>
+                    <div class="op-footnote-line" data-note-id="${escapeAttr(noteId)}" style="margin-bottom: 4px; font-size: 9.5pt; line-height: 1.4; color: ${prevStyles.lineColor}; display: flex; align-items: baseline;">
+                        <sup style="font-weight: bold; color: ${prevStyles.supColor}; margin-right: 5px; font-size: 8.5pt;">[${num}]</sup>
                         <span class="op-note-text-span" style="flex: 1;">${escapeHtml(noteText)}</span>
                     </div>
                 `;
             });
 
             editable.innerHTML = `
-                <div class="op-footnote-container" style="font-family: inherit; width: 100%; height: 100%; outline: none;">
-                    <div style="width: 100px; border-top: 1px solid #94a3b8; margin-bottom: 8px;"></div>
+                <div class="op-footnote-container" style="font-family: inherit; width: 100%; height: 100%; outline: none;${containerBgCss}">
+                    <div class="op-footnote-divider" style="width: 100px; ${divCss} margin-bottom: 8px;"></div>
                     ${notesHtml}
                 </div>
             `;
+            if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function' && typeof state !== 'undefined' && state.selectedEl === fnBox) {
+                window.TemplateCSSColorEngine.refreshRibbonPanel(fnBox);
+            }
         },
 
         /* =========================================================================
          * 7. RESYNC ENDNOTES (End of Document)
          * ========================================================================= */
-        resyncEndnotes: function() {
+        resyncEndnotes: function(styleOptions) {
+            styleOptions = styleOptions || {};
             // First flush current page
             if (typeof window.serializeCurrentPage === 'function' && typeof state !== 'undefined' && state.pages) {
                 state.pages[state.currentPageIndex] = window.serializeCurrentPage();
@@ -1015,6 +1540,8 @@
                     return;
                 }
 
+                const prevStyles = this._readNoteBoxStyles('endnote');
+
                 if (!enBox) {
                     if (typeof window.addTextBox === 'function') {
                         enBox = window.addTextBox();
@@ -1024,33 +1551,52 @@
                     enBox.setAttribute('data-endnote-box', 'true');
                     const paperH = parseFloat(paper.style.height) || 1123;
                     const paperW = parseFloat(paper.style.width) || 794;
+                    const enW = Math.max(200, paperW - 120);
+                    const enH = 180;
+                    const enPos = this._findNonOverlappingPosition(paper, enBox, enW, enH, 60, Math.max(100, paperH - 260), true);
 
-                    enBox.style.left = '60px';
-                    enBox.style.top = Math.max(100, paperH - 260) + 'px';
-                    enBox.style.width = Math.max(200, paperW - 120) + 'px';
-                    enBox.style.height = '180px';
+                    enBox.style.left = enPos.left + 'px';
+                    enBox.style.top = enPos.top + 'px';
+                    enBox.style.width = enW + 'px';
+                    enBox.style.height = enH + 'px';
                 }
 
                 const editable = enBox.querySelector('[contenteditable="true"]');
                 if (!editable) return;
 
+                const divColor = styleOptions.dividerColor || prevStyles.dividerColor;
+                const divStyle = styleOptions.dividerStyle || prevStyles.dividerStyle;
+                const divWidth = (styleOptions.dividerWidth !== undefined) ? styleOptions.dividerWidth : prevStyles.dividerWidth;
+                const outlineStyle = styleOptions.outlineStyle || prevStyles.outlineStyle;
+                const outlineColor = styleOptions.outlineColor || prevStyles.outlineColor;
+                const outlineWidth = (styleOptions.outlineWidth !== undefined) ? styleOptions.outlineWidth : prevStyles.outlineWidth;
+                this._applyBoxOutlineStyles(enBox, outlineStyle, styleOptions.outlineColor || (outlineStyle === 'guide' ? prevStyles.guideColor : outlineColor), outlineWidth, prevStyles.guideColor);
+
+                const divCss = divStyle === 'none'
+                    ? 'border-bottom: none;'
+                    : `border-bottom-width: ${Math.max(1, parseInt(divWidth, 10) || 2)}px; border-bottom-style: ${divStyle}; border-bottom-color: ${divColor};`;
+                const containerBgCss = prevStyles.containerBg ? ` background: ${prevStyles.containerBg};` : '';
+
                 let linesHtml = '';
                 endnotes.forEach((n, idx) => {
                     const roman = toRoman(idx + 1);
                     linesHtml += `
-                        <div class="op-endnote-line" data-note-id="${escapeAttr(n.id)}" style="margin-bottom: 5px; font-size: 10pt; line-height: 1.4; color: #1e293b; display: flex; align-items: baseline;">
-                            <sup style="font-weight: bold; color: var(--ui-theme-dark, #004d49); margin-right: 5px; font-size: 9pt;">[${roman}]</sup>
+                        <div class="op-endnote-line" data-note-id="${escapeAttr(n.id)}" style="margin-bottom: 5px; font-size: 10pt; line-height: 1.4; color: ${prevStyles.lineColor}; display: flex; align-items: baseline;">
+                            <sup style="font-weight: bold; color: ${prevStyles.supColor}; margin-right: 5px; font-size: 9pt;">[${roman}]</sup>
                             <span class="op-note-text-span" style="flex: 1;">${escapeHtml(n.text)}</span>
                         </div>
                     `;
                 });
 
                 editable.innerHTML = `
-                    <div class="op-endnote-container" style="font-family: inherit; width: 100%; height: 100%; outline: none;">
-                        <div style="font-size: 14pt; font-weight: bold; color: var(--ui-theme-dark, #007670); margin-bottom: 8px; border-bottom: 1.5px solid var(--ui-theme-color, #007670); padding-bottom: 4px;">Endnotes</div>
+                    <div class="op-endnote-container" style="font-family: inherit; width: 100%; height: 100%; outline: none;${containerBgCss}">
+                        <div class="op-endnote-header" style="font-size: 14pt; font-weight: bold; color: ${prevStyles.headerColor}; margin-bottom: 8px; ${divCss} padding-bottom: 4px;">Endnotes</div>
                         ${linesHtml}
                     </div>
                 `;
+                if (window.TemplateCSSColorEngine && typeof window.TemplateCSSColorEngine.refreshRibbonPanel === 'function' && typeof state !== 'undefined' && state.selectedEl === enBox) {
+                    window.TemplateCSSColorEngine.refreshRibbonPanel(enBox);
+                }
             }
         },
 
@@ -1120,6 +1666,46 @@
             }
         },
 
+        _openCustomColorPicker: function(hiddenInputId, btnId, anchorEl) {
+            const hidden = document.getElementById(hiddenInputId);
+            const btn = document.getElementById(btnId) || anchorEl;
+            const current = (hidden && hidden.value) ? hidden.value : '#007670';
+            if (window.CustomColorPicker && typeof window.CustomColorPicker.open === 'function') {
+                window.CustomColorPicker.open(btn, current, (newColor) => {
+                    if (!newColor || newColor === 'transparent') return;
+                    const hex = this._toHexColor(newColor, current);
+                    if (hidden) hidden.value = hex;
+                    if (btn) btn.style.background = hex;
+                });
+            }
+        },
+
+        _wireModalInputGuards: function(modalWin) {
+            if (!modalWin) return;
+            modalWin.addEventListener('focusout', function(e) {
+                e.stopPropagation();
+            });
+            ['mousedown', 'mouseup'].forEach(evt => {
+                modalWin.addEventListener(evt, function(e) {
+                    if (e.target && e.target.closest && e.target.closest('input, textarea')) {
+                        e.stopPropagation();
+                    }
+                });
+            });
+            ['keydown', 'keyup'].forEach(evt => {
+                modalWin.addEventListener(evt, function(e) {
+                    if (e.target && e.target.closest && e.target.closest('input, textarea')) {
+                        if (e.key === 'Escape') {
+                            e.stopPropagation();
+                            window.ReferencesEngine._removeModalOverlay();
+                            return;
+                        }
+                        e.stopPropagation();
+                    }
+                });
+            });
+        },
+
         _makeDraggable: function(boxEl, handleEl) {
             if (!boxEl || !handleEl) return;
             handleEl.style.cursor = 'grab';
@@ -1165,17 +1751,22 @@
                 {
                     id: 'overview',
                     title: 'Overview & Quick Start',
-                    body: '<p>The <strong>Table of Contents Builder</strong> scans every page in your publication for headings and generates a formatted contents box with automatic page numbers.</p><ul><li><strong>Zero Manual Typing:</strong> Page numbers and tab leaders are calculated automatically across all pages.</li><li><strong>Live Updates:</strong> Click <strong>Update TOC</strong> anytime after adding pages or editing headings.</li></ul>'
+                    body: '<p>The <strong>Table of Contents Builder</strong> scans every page in your publication for headings and generates a formatted contents box with automatic page numbers.</p><ul><li><strong>Custom Title &amp; Preview:</strong> Enter a <strong>TOC Title</strong> and review all detected headings across pages before inserting.</li><li><strong>Zero Manual Typing:</strong> Page numbers and tab leaders are calculated automatically in visual reading order.</li><li><strong>Live Updates:</strong> Click <strong>Update TOC</strong> inside the box anytime after adding pages or editing headings.</li></ul>'
                 },
                 {
                     id: 'headings',
                     title: 'Marking Headings (H1-H3)',
-                    body: '<p>Mark any paragraph or text box as a heading before generating your TOC:</p><ul><li><strong>Format Tab:</strong> Select text or a text box and click <strong>H1</strong>, <strong>H2</strong>, <strong>H3</strong>, or <strong>Body</strong> under <em>Headings &amp; Notes</em>.</li><li><strong>Right-Click Menu:</strong> Right-click a text box and choose <strong>Heading Level</strong>.</li><li><strong>Auto-Detect:</strong> Leave <em>Auto-detect large/bold headings</em> checked to automatically include bold or large titles (18pt+) in existing documents.</li></ul>'
+                    body: '<p>Mark any paragraph or text box as a heading before generating or updating your TOC:</p><ul><li><strong>Text Box Tools Ribbon:</strong> Select text or a text box and click <strong>H1</strong>, <strong>H2</strong>, <strong>H3</strong>, or <strong>Body</strong> under <em>Headings &amp; Notes</em>.</li><li><strong>Right-Click Menu:</strong> Right-click a text box and choose <strong>Heading Level</strong>.</li><li><strong>Auto-Detect:</strong> Leave <em>Auto-detect bold or large title text (&gt;= 18pt)</em> checked to automatically include bold or large titles in existing documents.</li></ul>'
                 },
                 {
-                    id: 'leaders',
-                    title: 'Leaders & Updating',
-                    body: '<p>Customize how entries appear inside the TOC box:</p><ul><li><strong>Tab Leader Style:</strong> Choose <code>Dots (...)</code>, <code>Dashes (---)</code>, or <code>None</code> between heading titles and page numbers.</li><li><strong>Non-Destructive Refresh:</strong> Re-running <strong>Insert / Update TOC</strong> updates your existing TOC box in place.</li></ul>'
+                    id: 'styling',
+                    title: 'Divider Line & Box Outline',
+                    body: '<p>Customize the appearance of your Table of Contents box directly inside <strong>Table of Contents Builder</strong>:</p><ul><li><strong>Tab Leader Style:</strong> Choose <code>Dots (...)</code>, <code>Dashes (---)</code>, or <code>None</code> between heading titles and page numbers.</li><li><strong>Header Divider Line:</strong> Click the color swatch to open our <em>Custom Color Picker</em>, then set the line style (<code>Solid</code>, <code>Dashed</code>, <code>Dotted</code>, or <code>None</code>) and thickness (<code>1px</code>-<code>4px</code>).</li><li><strong>Box Outline:</strong> Choose <strong>Editor Guide</strong> (screen-only dashed guide hidden when printing), <strong>None (Borderless)</strong>, or a printable <code>Dashed</code>, <code>Solid</code>, or <code>Dotted</code> border with your chosen color and thickness.</li></ul>'
+                },
+                {
+                    id: 'recoloring',
+                    title: 'Element Colors & Updating',
+                    body: '<p>Fine-tune individual TOC colors anytime using the ribbon styling tools:</p><ul><li><strong>Element Colors &amp; CSS Studio:</strong> Select the TOC box and use <strong>Element Colors</strong> or <strong>CSS Colors &amp; Style</strong> in <em>Text Box Tools</em> to recolor the <strong>TOC Title</strong>, <strong>TOC Header Divider</strong>, <strong>Update TOC Button</strong>, entry text, page numbers, or adjust <strong>Outline Style</strong> &amp; <strong>Outline Width</strong>.</li><li><strong>Preserved on Update:</strong> Clicking <strong>Update TOC</strong> (or re-running <strong>Insert / Update TOC</strong>) refreshes headings and page numbers while keeping your custom colors and outline styling intact.</li></ul>'
                 }
             ] : [
                 {
@@ -1192,6 +1783,11 @@
                     id: 'endnotes',
                     title: 'Endnotes & Resyncing',
                     body: '<p><strong>Endnotes</strong> use lowercase Roman numerals (<code>i, ii, iii...</code>) collected on the final page under an <em>Endnotes</em> heading.</p><ul><li><strong>Edit or Delete:</strong> Reopen this dialog to edit existing note text or delete notes cleanly.</li><li><strong>Update All:</strong> Click <strong>Update All</strong> to renumber all footnotes and endnotes across every page.</li></ul>'
+                },
+                {
+                    id: 'styling',
+                    title: 'Divider Line & Box Outline',
+                    body: '<p>Customize Footnote and Endnote frame styling directly inside the <strong>Insert Footnote or Endnote</strong> dialog:</p><ul><li><strong>Separator / Header Line:</strong> Click the swatch to pick a color with our <em>Custom Color Picker</em>, then choose line style (<code>Solid</code>, <code>Dashed</code>, <code>Dotted</code>, or <code>None</code>) and thickness (<code>1px</code>-<code>4px</code>).</li><li><strong>Box Outline:</strong> Choose <strong>Editor Guide</strong> (screen-only dashed guide hidden when printing), <strong>None (Borderless)</strong>, or a printable <code>Dashed</code>, <code>Solid</code>, or <code>Dotted</code> border with custom color and width.</li><li><strong>Element Colors:</strong> Further customize markers, headers, and fills in <em>Text Box Tools -&gt; Element Colors</em>; customizations are preserved when notes resync.</li></ul>'
                 }
             ];
 
@@ -1336,6 +1932,43 @@
             wrap.querySelector('#op-ref-help-ok-btn').addEventListener('click', closeHelp);
         },
 
+        _showNoticeModal: function(title, message, onClose) {
+            const existing = document.getElementById('op-ref-notice-overlay');
+            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+            const wrap = document.createElement('div');
+            wrap.id = 'op-ref-notice-overlay';
+            wrap.innerHTML = `
+                <div style="position:fixed;inset:0;background:rgba(0,0,0,0.12);z-index:1000044;" id="op-ref-notice-backdrop"></div>
+                <div class="op-ref-modal-window" id="op-ref-notice-window" style="width:410px;z-index:1000045;" role="alertdialog" aria-modal="true">
+                    <div class="op-ref-modal-header" id="op-ref-notice-header">
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-exclamation-triangle"></i> ${escapeHtml(title || 'Notice')}
+                        </span>
+                        <span role="button" tabindex="0" class="custom-dialog-close" id="op-ref-notice-close-x" title="Close" aria-label="Close"><i class="fas fa-times"></i></span>
+                    </div>
+                    <div class="op-ref-modal-body" style="padding:18px 20px;font-size:13.5px;line-height:1.5;display:flex;align-items:center;gap:14px;">
+                        <img src="ui/icons/alert.png?v=5.22.9" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
+                        <div style="flex:1;">${escapeHtml(message)}</div>
+                    </div>
+                    <div class="op-ref-modal-footer">
+                        <button type="button" class="op-ref-btn-primary" id="op-ref-notice-ok-btn">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(wrap);
+            const win = document.getElementById('op-ref-notice-window');
+            const hdr = document.getElementById('op-ref-notice-header');
+            this._makeDraggable(win, hdr);
+            const dismiss = () => {
+                if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+                if (typeof onClose === 'function') onClose();
+            };
+            document.getElementById('op-ref-notice-close-x').addEventListener('click', dismiss);
+            document.getElementById('op-ref-notice-ok-btn').addEventListener('click', dismiss);
+            const okBtn = document.getElementById('op-ref-notice-ok-btn');
+            if (okBtn) okBtn.focus();
+        },
+
         _removeModalOverlay: function() {
             const existing = document.getElementById('op-references-modal-root');
             if (existing && existing.parentNode) {
@@ -1389,12 +2022,17 @@
                     background: rgba(255, 255, 255, 0.22);
                 }
                 .op-ref-modal-body {
-                    padding: 16px 20px; overflow-y: auto; flex: 1;
+                    padding: 14px 18px; overflow-y: auto; flex: 1;
+                }
+                #op-toc-modal-window.allow-overflow .op-ref-modal-body,
+                #op-note-modal-window.allow-overflow .op-ref-modal-body {
+                    overflow: visible;
                 }
                 .op-ref-modal-footer {
                     padding: 10px 18px; border-top: 1px solid var(--ui-border, #e2e8f0);
                     display: flex; justify-content: flex-end; gap: 8px;
                     background: var(--ui-surface-bg, #f8fafc);
+                    border-bottom-left-radius: 11px; border-bottom-right-radius: 11px;
                 }
                 body.dark-mode .op-ref-modal-footer {
                     background: #0f172a; border-top-color: #334155;
@@ -1410,6 +2048,8 @@
                     border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px;
                     background: #ffffff; color: #0f172a; font-family: inherit; font-size: 12.5px;
                     outline: none; transition: border-color 0.15s;
+                    user-select: text !important; -webkit-user-select: text !important; -moz-user-select: text !important;
+                    pointer-events: auto !important; cursor: text;
                 }
                 body.dark-mode .op-ref-input, body.dark-mode .op-ref-select, body.dark-mode .op-ref-textarea {
                     background: #0f172a; color: #f8fafc; border-color: #475569;
@@ -1446,6 +2086,14 @@
                 }
                 body.dark-mode .op-ref-btn-secondary { color: #cbd5e1; border-color: #475569; }
                 .op-ref-btn-secondary:hover { background: rgba(0,0,0,0.05); }
+                .op-ref-color-btn {
+                    width: 30px; height: 28px; border-radius: 6px; padding: 0;
+                    border: 1.5px solid rgba(0, 0, 0, 0.25);
+                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+                    cursor: pointer; flex-shrink: 0; transition: transform 0.12s, border-color 0.15s;
+                }
+                .op-ref-color-btn:hover { transform: scale(1.06); border-color: var(--ui-theme-color, #007670); }
+                body.dark-mode .op-ref-color-btn { border-color: rgba(255, 255, 255, 0.35); }
                 .op-ref-radio-card {
                     border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px;
                     display: flex; align-items: center; gap: 10px; cursor: pointer;
@@ -1515,8 +2163,8 @@
     window.showTOCModal = function() { ReferencesEngine.showTOCModal(); };
     window.insertOrUpdateTOC = function(options) { ReferencesEngine.insertOrUpdateTOC(options); };
     window.showInsertNoteModal = function(defaultType, editId) { ReferencesEngine.showInsertNoteModal(defaultType, editId); };
-    window.insertFootnote = function(text) { ReferencesEngine.insertFootnote(text); };
-    window.insertEndnote = function(text) { ReferencesEngine.insertEndnote(text); };
+    window.insertFootnote = function(text, styleOptions) { ReferencesEngine.insertFootnote(text, styleOptions); };
+    window.insertEndnote = function(text, styleOptions) { ReferencesEngine.insertEndnote(text, styleOptions); };
     window.applyHeadingLevel = function(level) { ReferencesEngine.applyHeadingLevel(level); };
     window.updateAllReferences = function() { ReferencesEngine.updateAllReferences(); };
 

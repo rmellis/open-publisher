@@ -2,6 +2,10 @@
 // KEYBOARD SHORTCUTS ENGINE
 // ==========================================
 document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+            return;
+        }
         if (typeof state !== 'undefined' && state.viewMode === 'multipage') {
             if (e.key === 'Enter') {
                 e.preventDefault();

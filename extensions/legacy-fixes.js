@@ -1677,6 +1677,7 @@ if (!window._sliderFillListenerInstalled) {
 
     window.addEventListener('keydown', function(e) {
         const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) return;
         const isTextEditing = activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
 
         // --- 1. OVERRIDE CTRL + C ---

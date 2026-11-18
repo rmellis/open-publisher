@@ -1,4 +1,4 @@
-﻿// Open Publisher UI Interactions (v5.22.8)
+﻿// Open Publisher UI Interactions (v5.22.9)
 (function installRulerTrackingEngine() {
     console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.19.1)...");
 
@@ -759,7 +759,10 @@
                                    e.target.closest('.custom-dropdown') ||
                                    e.target.closest('.sidebar-panel') ||
                                    e.target.closest('#float-toolbar') ||
-                                   e.target.closest('.custom-dialog');
+                                   e.target.closest('.custom-dialog') ||
+                                   e.target.closest('.op-ref-modal-window') ||
+                                   e.target.closest('.op-ref-help-box') ||
+                                   e.target.closest('input, textarea, select');
 
             if (!clickedToolbar) {
                 if (window.getSelection) {
@@ -954,7 +957,7 @@
             aboutGroup.id = 'about-btn-group';
             aboutGroup.className = 'group';
             aboutGroup.innerHTML = `
-                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.22.8" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
+                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.22.9" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
                 <div class="tool-btn" onclick="window.showAboutDialog()"><i class="fas fa-info-circle"></i>About</div>
                 <div class="group-label">Help</div>
             `;
@@ -1133,7 +1136,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.22.8</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.22.9</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1143,7 +1146,7 @@
                     <br><br>
                     <div class="about-action-btns" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
                         <a href="#" onclick="window.showKnowledgeBase(); return false;" class="about-action-btn about-kb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--ui-theme-color); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                            <img src="ui/icons/kb.webp?v=5.22.8" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
+                            <img src="ui/icons/kb.webp?v=5.22.9" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
                         </a>
                         <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/" target="_blank" rel="noopener noreferrer" class="about-action-btn about-fb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #1877F2; color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             <i class="fab fa-facebook" style="font-size: 15px;"></i> Facebook Page
@@ -2368,6 +2371,15 @@
         // Friendly label for a DOM node inside a template element
         describeNode: function(node, rootContent) {
             if (!node || node === rootContent) return 'Box';
+            if (node.classList) {
+                if (node.classList.contains('op-toc-header')) return 'TOC Header Divider';
+                if (node.classList.contains('op-endnote-header')) return 'Endnotes Divider';
+                if (node.classList.contains('op-footnote-divider')) return 'Footnote Divider';
+                if (node.classList.contains('op-toc-leader')) return 'TOC Leader Line';
+                if (node.classList.contains('op-toc-update-badge')) return 'Update TOC Button';
+                if (node.classList.contains('op-toc-page-num')) return 'TOC Page Number';
+                if (node.classList.contains('op-toc-title')) return 'TOC Title';
+            }
             const txt = (node.textContent || '').replace(/@import[^;]+;/g, '').trim();
             if (txt.length > 0 && txt.length <= 22) {
                 return `"${txt.substring(0, 18)}${txt.length > 18 ? '...' : ''}"`;
@@ -2496,8 +2508,19 @@
                             }
                         }
                         if (bp.prop === 'border' && !hasFullBorder) return;
-                        const wVal = node.style[bp.widthProp];
-                        const cVal = node.style[bp.colorProp];
+                        let wVal = node.style[bp.widthProp];
+                        let cVal = node.style[bp.colorProp];
+                        if ((!wVal || !cVal) && rawStyle) {
+                            const cssProp = bp.prop.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+                            const mProp = rawStyle.match(new RegExp('(?:^|;)\\s*' + cssProp + '\\s*:\\s*([^;]+)', 'i'));
+                            if (mProp && !/\bnone\b/i.test(mProp[1])) {
+                                const parts = mProp[1].trim();
+                                const wm = parts.match(/(\d+(?:\.\d+)?px)/i);
+                                const cm = parts.match(/(var\([^)]+\)|#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|[a-zA-Z]+)$/);
+                                if (!wVal && wm) wVal = wm[1];
+                                if (!cVal && cm) cVal = cm[1];
+                            }
+                        }
                         if (wVal && parseFloat(wVal) > 0 && cVal) {
                             const hex = this.toHex(cVal);
                             if (hex) {
@@ -3034,6 +3057,12 @@
             const pagePalette = this.scanPagePalette();
             const visualBox = (el && window.TextBoxStylesSystem) ? window.TextBoxStylesSystem.getVisualBoxTarget(el) : (el && el.querySelector('.element-content'));
             const curRadius = visualBox ? (parseInt(visualBox.style.borderRadius) || 0) : 0;
+            const isRefBox = !!(el && (el.getAttribute('data-toc-box') === 'true' || el.getAttribute('data-footnote-box') === 'true' || el.getAttribute('data-endnote-box') === 'true'));
+            const curBorderStyleRaw = (visualBox && visualBox.style.borderStyle && visualBox.style.borderStyle !== 'none')
+                ? visualBox.style.borderStyle
+                : (isRefBox ? (el.getAttribute('data-ref-outline') === 'none' ? 'none' : 'dashed') : 'none');
+            const curOutlineStyle = ['solid', 'dashed', 'dotted'].includes(curBorderStyleRaw) ? curBorderStyleRaw : 'none';
+            const curOutlineWidth = (visualBox && parseFloat(visualBox.style.borderWidth)) ? Math.round(parseFloat(visualBox.style.borderWidth)) : 1;
 
             const uiHtml = `
                 <style>
@@ -3073,6 +3102,17 @@
                                 <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px; cursor:pointer;" onclick="if(window.TextBoxStylesSystem) window.TextBoxStylesSystem.pickCustomBorderColor(this);">
                                     <i class="fas fa-border-style" style="color:var(--ui-theme-color); margin-right:4px;"></i> Set Box Outline Color...
                                 </button>
+                                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;">
+                                    <span>Outline Style:</span>
+                                    <select id="css-studio-outline-style" style="padding:3px 6px; border:1px solid var(--ui-border,#cbd5e1); border-radius:4px; font-size:12px;">
+                                        <option value="none" ${curOutlineStyle === 'none' ? 'selected' : ''}>None</option>
+                                        <option value="solid" ${curOutlineStyle === 'solid' ? 'selected' : ''}>Solid</option>
+                                        <option value="dashed" ${curOutlineStyle === 'dashed' ? 'selected' : ''}>Dashed</option>
+                                        <option value="dotted" ${curOutlineStyle === 'dotted' ? 'selected' : ''}>Dotted</option>
+                                    </select>
+                                    <input type="range" id="css-studio-outline-width" min="1" max="6" value="${Math.min(6, Math.max(1, curOutlineWidth))}" style="width:60px; accent-color:var(--ui-theme-color);" title="Outline Width">
+                                    <span id="css-studio-outline-wval" style="min-width:26px;">${Math.min(6, Math.max(1, curOutlineWidth))}px</span>
+                                </div>
                                 <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600;">
                                     <span>Corner Radius:</span>
                                     <input type="range" id="css-studio-radius-slider" min="0" max="60" value="${Math.min(60, curRadius)}" style="width:90px; accent-color:var(--ui-theme-color);">
@@ -3241,6 +3281,48 @@
                         if (typeof pushHistory === 'function') pushHistory();
                         if (typeof updateThumbnails === 'function') updateThumbnails();
                     };
+                }
+
+                // Outline style & width wiring
+                const oStyleSel = document.getElementById('css-studio-outline-style');
+                const oWidthSlider = document.getElementById('css-studio-outline-width');
+                const oWidthVal = document.getElementById('css-studio-outline-wval');
+                const applyBoxOutline = () => {
+                    if (!visualBox) return;
+                    const st = oStyleSel ? oStyleSel.value : 'none';
+                    const w = oWidthSlider ? (parseInt(oWidthSlider.value, 10) || 1) : 1;
+                    if (oWidthVal) oWidthVal.textContent = w + 'px';
+                    if (st === 'none') {
+                        visualBox.style.borderStyle = 'none';
+                        visualBox.style.borderWidth = '0px';
+                        if (isRefBox && el) {
+                            el.setAttribute('data-ref-outline', 'none');
+                            el.style.borderStyle = '';
+                            el.style.borderWidth = '';
+                            el.style.borderColor = '';
+                        }
+                    } else {
+                        const existingCol = (visualBox.style.borderColor && visualBox.style.borderColor !== 'transparent') ? visualBox.style.borderColor : '#94a3b8';
+                        visualBox.style.borderStyle = st;
+                        visualBox.style.borderWidth = w + 'px';
+                        visualBox.style.borderColor = existingCol;
+                        if (isRefBox && el) {
+                            el.setAttribute('data-ref-outline', 'custom');
+                            el.style.borderStyle = '';
+                            el.style.borderWidth = '';
+                            el.style.borderColor = '';
+                        }
+                    }
+                    if (typeof pushHistory === 'function') pushHistory();
+                    if (typeof updateThumbnails === 'function') updateThumbnails();
+                };
+                if (oStyleSel) oStyleSel.addEventListener('change', applyBoxOutline);
+                if (oWidthSlider) {
+                    oWidthSlider.addEventListener('input', () => {
+                        if (oWidthVal) oWidthVal.textContent = oWidthSlider.value + 'px';
+                        if (oStyleSel && oStyleSel.value === 'none') oStyleSel.value = 'solid';
+                        applyBoxOutline();
+                    });
                 }
             }
 
