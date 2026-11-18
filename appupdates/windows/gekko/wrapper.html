@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="op-wrapper-version" content="12">
-    <meta name="op-wrapper-date" content="2026-11-18T02:50:00Z">
+    <meta name="op-wrapper-version" content="13">
+    <meta name="op-wrapper-date" content="2026-11-18T13:46:00Z">
     <title>OpenPublisher</title>
     <script src="gecko_nw_shim.js"></script>
     <!-- Modern V5 Typeface (Bundled Local Fonts + CDN Fallback) -->
@@ -11958,8 +11958,12 @@ function ensureClippyRibbonButton() {
                 }
                 
                 if (!isOffScreen) {
-                    win.resizeTo(bounds.width, bounds.height);
-                    win.moveTo(bounds.x, bounds.y);
+                    if (Math.abs((win.width || 0) - bounds.width) > 2 || Math.abs((win.height || 0) - bounds.height) > 2) {
+                        win.resizeTo(bounds.width, bounds.height);
+                    }
+                    if (Math.abs((win.x || 0) - bounds.x) > 2 || Math.abs((win.y || 0) - bounds.y) > 2) {
+                        win.moveTo(bounds.x, bounds.y);
+                    }
                 } else {
                     console.warn('Saved window bounds were off-screen, falling back to primary screen.');
                     win.resizeTo(bounds.width, bounds.height);
@@ -11967,8 +11971,12 @@ function ensureClippyRibbonButton() {
                         win.moveTo(screens[0].bounds.x + 50, screens[0].bounds.y + 50);
                     }
                 }
+
+                if (window.GeckoNative && typeof window.GeckoNative.saveWindowBounds === 'function') {
+                    window.GeckoNative.saveWindowBounds(JSON.stringify(bounds));
+                }
                 
-                if (bounds.isMaximized) {
+                if (bounds.isMaximized && !document.body.classList.contains('maximized')) {
                     setTimeout(() => { win.maximize(); }, 50);
                 }
             }
@@ -12061,7 +12069,11 @@ function ensureClippyRibbonButton() {
                     }
                 }
                 
-                localStorage.setItem('op_window_bounds', JSON.stringify(bounds));
+                const boundsJson = JSON.stringify(bounds);
+                localStorage.setItem('op_window_bounds', boundsJson);
+                if (window.GeckoNative && typeof window.GeckoNative.saveWindowBounds === 'function') {
+                    window.GeckoNative.saveWindowBounds(boundsJson);
+                }
             } catch (e) {
                 console.warn('Failed to save window bounds:', e);
             }
