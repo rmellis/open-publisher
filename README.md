@@ -15,12 +15,13 @@
   <img src="https://img.shields.io/badge/Export-PDF%20%7C%20Image%20%7C%20HTML%20%7C%20XPS-teal?style=flat-square"/>
   <a href="https://kb.openpublisher.app"><img src="https://img.shields.io/badge/Documentation-Knowledge Base-teal?style=flat-square&logo=adobeacrobatreader&logoColor=white"/></a>
   <a href="https://openpublisher.app/documentation.pdf"><img src="https://img.shields.io/badge/Documentation (old)-PDF-teal?style=flat-square&logo=adobeacrobatreader&logoColor=white"/></a>
+  <a href="https://stats.openpublisher.app"><img src="https://img.shields.io/badge/System%20Status-Live-teal?style=flat-square&logo=statuspage&logoColor=white"/></a>
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.22.14" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.22.15" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.22.14" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.22.15" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---
@@ -65,7 +66,7 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_windows_installer.png" width="48" height="48" alt="Windows"/><br/>
     <a href="https://openpublisher.app/setup.exe"><strong>Gecko Edition (.exe)</strong></a><br/>
-    <sub>5.22.14 · 77 MB · Portable coming soon</sub><br/>
+    <sub>5.22.15 · 77 MB · Portable coming soon</sub><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows.exe"><strong>NW.js Installer (.exe)</strong></a><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows-portable.exe">NW.js Portable (.zip)</a><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.8.0/OpenPublisher5-i386-windowsXP.exe"><strong>Windows XP</strong> (.exe)</a>
@@ -104,6 +105,8 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 > 🚀 **[Visit the Open Publisher Knowledge Base (kb.openpublisher.app)](https://kb.openpublisher.app)**
 >
 > 🎬 **[Watch Video Tutorial: Creating Layered Templates with AI & Layout Tools](https://youtu.be/V4X0Q-dCXTQ)** · **[Open the Back To School Template](https://openpublisher.app/back-to-school)**
+>
+> 📊 **[Live Service Status & 30-Day Uptime (stats.openpublisher.app)](https://stats.openpublisher.app)** · **[Status Page Repo (OpenPublisher-Stats)](https://github.com/rmellis/OpenPublisher-Stats)** - Real-time telemetry and 30-day incident history across Web App, Knowledge Base, Desktop Downloads, Source Code, Builds, and Bug Reports.
 >
 > <details>
 >   <summary><small>Looking for the legacy documentation? (PDF)</small></summary>
@@ -348,7 +351,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 Open Publisher is available in Gecko and NW.js editions for Windows, alongside a dedicated Windows XP build:
 
-- **Gecko Edition Installer ([`setup.exe`](https://openpublisher.app/setup.exe) - v5.22.14)** - New chromeless Gecko 115.21.0 ESR runtime for Windows 7 through Windows 11. Shrinks the installer from 161 MB to 77 MB, supports clean in-place upgrades over existing NW.js installs, includes a built-in SHA-256 manifest OTA auto-updater, and resolves image-heavy zoom lag, `Ctrl+V` double-pasting, and print reliability issues. *(Gecko Portable `.exe` coming soon.)*
+- **Gecko Edition Installer ([`setup.exe`](https://openpublisher.app/setup.exe) - v5.22.15)** - New chromeless Gecko 115.21.0 ESR runtime for Windows 7 through Windows 11. Shrinks the installer from 161 MB to 77 MB, supports clean in-place upgrades over existing NW.js installs, includes a built-in SHA-256 manifest OTA auto-updater, and resolves image-heavy zoom lag, `Ctrl+V` double-pasting, and print reliability issues. *(Gecko Portable `.exe` coming soon.)*
 - **3-Phase Windows Rollout** - Offered side-by-side with the NW.js build during Phase 1; once validated, Gecko will become the primary Windows download (Phase 2), and the NW.js edition will transition to a legacy archive release while future desktop updates focus exclusively on Gecko (Phase 3).
 - **Standard NW.js Installer (`.exe`)** - Full NW.js installer with Start Menu and Desktop shortcuts, multi-resolution 10-frame high-DPI icon embedding (up to 256x256), and `.opub` registry file association.
 - **NW.js Portable Version (`.exe`)** - Self-contained zero-install executable. Ideal for USB drives, restricted workstations, or running without administrator rights.
