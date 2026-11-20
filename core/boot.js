@@ -26,41 +26,6 @@ function bootOpenPublisher() {
     
     // Set Default Zoom to 60%
     setZoom(0.6);
-    
-    // Check if an associated document was passed via NW.js startup arguments
-    if (typeof window.checkNwStartupArgv === 'function') {
-        window.checkNwStartupArgv();
-    }
-
-    // Process any deferred document loaded before DOM ready
-    if (window._pendingStartupPublication && typeof window.handlePublisherFileLoad === 'function') {
-        const pending = window._pendingStartupPublication;
-        window._pendingStartupPublication = null;
-        window.handlePublisherFileLoad(pending);
-    }
-
-    // Create initial page only if no document is already loaded or loading
-    const hasLoadedDoc = (window._documentLoadingActive || window._hasLoadedInitialDocument) ||
-        (state.pages && state.pages.length > 0 && state.pages.some(p => p.elements && p.elements.length > 0));
-
-    if (!hasLoadedDoc) {
-        addNewPage();
-        
-        // Show Dashboard on startup if enabled
-        if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
-            DashboardSystem.show();
-        }
-    } else {
-        // Document already loaded or loading: ensure dashboard is closed
-        if (window.DashboardSystem && typeof DashboardSystem.close === 'function') {
-            DashboardSystem.close();
-        }
-    }
-
-    // Load template directly if requested via static template URL query/hash
-    if (typeof window.processStartupTemplateRoute === 'function') {
-        window.processStartupTemplateRoute();
-    }
 
     // Classic MS Publisher Cursor Settings
     window.useClassicCursors = (localStorage.getItem('opub_classic_cursors') !== 'false');
@@ -90,44 +55,44 @@ function bootOpenPublisher() {
     });
     
     // Track selection changes to update Float Bar state
-let selectionTimer = null;
-document.addEventListener('selectionchange', () => {
-    if(state.isProgrammaticUpdate) return; 
+    let selectionTimer = null;
+    document.addEventListener('selectionchange', () => {
+        if(state.isProgrammaticUpdate) return; 
 
-    const activePre = document.activeElement;
-    if (activePre && (activePre.tagName === 'INPUT' || activePre.tagName === 'TEXTAREA' || activePre.tagName === 'SELECT')) return;
-    const selNow = window.getSelection();
-    if(selNow && selNow.rangeCount > 0) {
-        const rangeNow = selNow.getRangeAt(0);
-        if(paper.contains(rangeNow.commonAncestorContainer)) {
-            state.lastRange = rangeNow.cloneRange();
-        }
-    }
-
-    if(state.selectedEl && typeof window.syncFormatButtonHighlights === 'function') {
-        window.syncFormatButtonHighlights();
-    }
-
-    // Clear the timer if the user is still actively highlighting
-    if (selectionTimer) clearTimeout(selectionTimer);
-    
-    // Wait 150ms after they stop dragging before updating the UI
-    selectionTimer = setTimeout(() => {
-        const activeDelayed = document.activeElement;
-        if (activeDelayed && (activeDelayed.tagName === 'INPUT' || activeDelayed.tagName === 'TEXTAREA' || activeDelayed.tagName === 'SELECT')) return;
-        const sel = window.getSelection();
-        if(sel.rangeCount > 0) {
-            const range = sel.getRangeAt(0);
-            if(paper.contains(range.commonAncestorContainer)) {
-                state.lastRange = range.cloneRange();
-                if(state.selectedEl) {
-                    updateFloatToolbarValues();
-                    if(window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
-                }
+        const activePre = document.activeElement;
+        if (activePre && (activePre.tagName === 'INPUT' || activePre.tagName === 'TEXTAREA' || activePre.tagName === 'SELECT')) return;
+        const selNow = window.getSelection();
+        if(selNow && selNow.rangeCount > 0) {
+            const rangeNow = selNow.getRangeAt(0);
+            if(paper.contains(rangeNow.commonAncestorContainer)) {
+                state.lastRange = rangeNow.cloneRange();
             }
         }
-    }, 150); 
-});
+
+        if(state.selectedEl && typeof window.syncFormatButtonHighlights === 'function') {
+            window.syncFormatButtonHighlights();
+        }
+
+        // Clear the timer if the user is still actively highlighting
+        if (selectionTimer) clearTimeout(selectionTimer);
+        
+        // Wait 150ms after they stop dragging before updating the UI
+        selectionTimer = setTimeout(() => {
+            const activeDelayed = document.activeElement;
+            if (activeDelayed && (activeDelayed.tagName === 'INPUT' || activeDelayed.tagName === 'TEXTAREA' || activeDelayed.tagName === 'SELECT')) return;
+            const sel = window.getSelection();
+            if(sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                if(paper.contains(range.commonAncestorContainer)) {
+                    state.lastRange = range.cloneRange();
+                    if(state.selectedEl) {
+                        updateFloatToolbarValues();
+                        if(window.updateIndentMarkersPosition) window.updateIndentMarkersPosition();
+                    }
+                }
+            }
+        }, 150); 
+    });
 
     
     window.addEventListener('click', (e) => {
@@ -143,6 +108,52 @@ document.addEventListener('selectionchange', () => {
         }
         if(e.target.id === 'viewport' || e.target.classList.contains('viewport')) deselect();
     });
+
+    window._opBootCompleted = true;
+    console.info('[OP-ColdStart] bootOpenPublisher ready', {
+        hasPendingStartup: Boolean(window._pendingStartupPublication),
+        documentLoadingActive: Boolean(window._documentLoadingActive)
+    });
+
+    // Check if an associated document was passed via NW.js startup arguments
+    if (typeof window.checkNwStartupArgv === 'function') {
+        window.checkNwStartupArgv();
+    }
+
+    // Process any deferred document loaded before boot completed
+    if (window._pendingStartupPublication && typeof window.handlePublisherFileLoad === 'function') {
+        const pending = window._pendingStartupPublication;
+        window._pendingStartupPublication = null;
+        console.info('[OP-ColdStart] Flushing queued startup .opub payload');
+        window.handlePublisherFileLoad(pending);
+    }
+
+    // Create initial page only if no document is already loaded or loading
+    const hasLoadedDoc = (window._documentLoadingActive || window._hasLoadedInitialDocument) ||
+        (state.pages && state.pages.length > 0 && state.pages.some(p => p.elements && p.elements.length > 0));
+
+    if (!hasLoadedDoc) {
+        addNewPage();
+        
+        // Show Dashboard on startup if enabled
+        if (window.DashboardSystem && localStorage.getItem('opub_show_start_screen') !== 'false') {
+            DashboardSystem.show();
+        }
+
+        // Load template directly if requested via static template URL query/hash
+        if (typeof window.processStartupTemplateRoute === 'function') {
+            window.processStartupTemplateRoute();
+        }
+    } else {
+        // Document already loaded or loading: ensure dashboard is dismissed non-destructively
+        if (window.DashboardSystem) {
+            if (typeof DashboardSystem.close === 'function') {
+                DashboardSystem.close({ suppressBlank: true });
+            } else if (typeof DashboardSystem.hide === 'function') {
+                DashboardSystem.hide(true);
+            }
+        }
+    }
 
     // Initialize Extended Modules
     setTimeout(() => {

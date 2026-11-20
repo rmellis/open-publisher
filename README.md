@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.23.0" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.23.1" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.23.0" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.23.1" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---
@@ -65,13 +65,10 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 <tr>
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_windows_installer.png" width="48" height="48" alt="Windows"/><br/>
-    <a href="https://openpublisher.app/setup.exe"><strong>Gecko Edition (.exe)</strong></a><br/>
-    <sub>5.22.15 · 77 MB</sub><br/>
-    <a href="https://github.com/rmellis/open-publisher/releases/download/5.22.15/openpublisher5g_amd64-windows-portable.exe"><strong>Gecko Portable (.exe)</strong></a><br/>
-    <sub>5.22.15 · 138 MB</sub><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows.exe"><strong>NW.js Installer (.exe)</strong></a><br/>
-    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows-portable.exe">NW.js Portable (.zip)</a><br/>
-    <a href="https://github.com/rmellis/open-publisher/releases/download/5.8.0/OpenPublisher5-i386-windowsXP.exe"><strong>Windows XP</strong> (.exe)</a>
+    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-windows-portable.exe"><strong>NW.js Portable (.exe)</strong></a><br/>
+    <a href="https://github.com/rmellis/open-publisher/releases/download/5.8.0/OpenPublisher5-i386-windowsXP.exe"><strong>Windows XP</strong> (.exe)</a><br/>
+    <sub>Gecko build removed - <a href="#what-happened-to-the-gecko-windows-build">read why</a></sub>
   </td>
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_macos_dmg.png" width="48" height="48" alt="macOS"/><br/>
@@ -351,16 +348,34 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 ### Windows
 
-Open Publisher is available in Gecko and NW.js editions for Windows, alongside a dedicated Windows XP build:
+Open Publisher is available in NW.js editions for Windows, alongside a dedicated Windows XP build:
 
-- **Gecko Edition Installer ([`setup.exe`](https://openpublisher.app/setup.exe) - v5.22.15)** - New chromeless Gecko 115.21.0 ESR runtime for Windows 7 through Windows 11. Shrinks the installer from 161 MB to 77 MB, supports clean in-place upgrades over existing NW.js installs, includes a built-in SHA-256 manifest OTA auto-updater, and resolves image-heavy zoom lag, `Ctrl+V` double-pasting, and print reliability issues.
-- **Gecko Edition Portable ([`openpublisher5g_amd64-windows-portable.exe`](https://github.com/rmellis/open-publisher/releases/download/5.22.15/openpublisher5g_amd64-windows-portable.exe) - v5.22.15, 138 MB)** - Self-contained WinRAR SFX portable build (Normal compression) bundling the Gecko 115.21.0 ESR runtime, `op_tray.exe` system tray integration, and OTA auto-updater with zero hardcoded install paths (down from 175 MB on the legacy NW.js portable build).
-- **3-Phase Windows Rollout** - Offered side-by-side with the NW.js build during Phase 1; once validated, Gecko will become the primary Windows download (Phase 2), and the NW.js edition will transition to a legacy archive release while future desktop updates focus exclusively on Gecko (Phase 3).
-- **Standard NW.js Installer (`.exe`)** - Full NW.js installer with Start Menu and Desktop shortcuts, multi-resolution 10-frame high-DPI icon embedding (up to 256x256), and `.opub` registry file association.
+- **NW.js Installer (`.exe`)** - Full NW.js installer with Start Menu and Desktop shortcuts, multi-resolution 10-frame high-DPI icon embedding (up to 256x256), and `.opub` registry file association.
 - **NW.js Portable Version (`.exe`)** - Self-contained zero-install executable. Ideal for USB drives, restricted workstations, or running without administrator rights.
 - **Windows XP Client (`.exe`)** - Dedicated standalone client for Windows XP SP3, featuring a customized chromeless runtime, integrated window controls, and full native branding.
 - **Safe Mode Startup** - Launch with `--safe-mode` or `--reset` from the command line to purge cached data, reset layout bounds, and troubleshoot faulty extensions.
 - MyDockFinder native menu bar integration support.
+
+<a id="what-happened-to-the-gecko-windows-build"></a>
+#### What Happened to the Gecko Windows Build?
+
+Before its removal, the Gecko Windows edition represented a huge step forward for desktop users:
+
+- Pushed 41 updates to Gecko
+- Added a custom update system and a ton of Gecko-specific bug fixes
+- Hit 2x faster loading speeds, half the file size, and 5x better performance on older machines (including Windows 7 support)
+
+The Gecko launcher looked like a great move. It wasn't showing any issues in testing and users seemed to be getting along with it fine, so we started advertising the new version on as many sites as possible. That turned out to be the worst timing we could have possibly picked.
+
+When the Gecko launcher was compiled, we left the code unsigned. Code signing costs money, and for an open-source project that already funds itself, it just isn't worth the expense. Unfortunately, the unsigned code issue blew up much bigger than we anticipated because of an extra C# system tray launcher (`op_tray.exe`). Microsoft flagged the C# tray icon as obfuscated, even though it wasn't.
+
+About a day later, Malwarebytes copied Microsoft's hashes and definitions, mistakenly flagging the Gecko launcher as a virus because of that tray icon. Since Windows Defender never threw an alert on any of our test machines, we had no idea until a user reported it. The problem was that the user tested it by uploading it to VirusTotal, which put the file in front of every antivirus engine in the world. Initially, it came back clean, but after a few days of going unnoticed, the issue cascaded dramatically as other vendors started copying Microsoft's flag.
+
+As soon as the user reported it, we reached out to Microsoft to clear it up, and it would have been just in time to save things. However, the first support representative rejected the dispute without looking into it and marked it as malicious. We immediately disputed it again, and a higher-level security team at Microsoft reviewed, cleared the detection, and apologized, but by then it was too late: more than 35 antivirus engines had already flagged the Gecko launcher.
+
+This triggered security warnings across every site hosting `setup.exe`, and Facebook began systematically removing hundreds of our posts one by one even after we disputed them. We entered emergency mode, messaging antivirus vendors with clean hashes as quickly as possible, yet copycat vendors kept replicating the stale Microsoft hashes up to around 50 false malicious detections. Software directories began delisting Open Publisher, leaving no realistic way to outrun the cascade on that build.
+
+As a result, we rolled the Windows client 41 updates back downstream to the Chromium-based NW.js (Node-WebKit) wrapper. Because it runs the earlier wrapper build (which lacked the Gecko auto-update system and carried wrapper bugs already solved on Firefox/Gecko), and because we cannot modify or recompile the working `.exe` without resetting reputation and triggering new hash checks, we have been backporting as many fixes as possible directly inside the web application itself to protect the trust score of `openpublisher.app` and avoid forcing a full rebrand. All Gecko binaries and components were stripped from every GitHub release, though some third-party platforms and social filters still retain legacy flags from the incident.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/af83b0b5-6d2b-4ddd-ac1c-cb0d2e22976a" alt="Open Publisher on Windows 11" width="700"/>

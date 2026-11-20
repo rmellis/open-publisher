@@ -4,6 +4,138 @@
 // ==========================================
 
 (function() {
+    let _activeLoadSeq = 0;
+
+    window.clearWrapperPourArtifacts = function(paperEl) {
+        if (!paperEl) {
+            return { removedPourClass: false, removedCurtain: false, healedChildren: 0 };
+        }
+        let removedPourClass = false;
+        let removedCurtain = false;
+        let healedChildren = 0;
+
+        if (paperEl.classList && paperEl.classList.contains('paper-pouring')) {
+            paperEl.classList.remove('paper-pouring');
+            removedPourClass = true;
+        }
+
+        const curtain = paperEl.querySelector('#paper-pour-curtain');
+        if (curtain && !window._isPourAnimating) {
+            curtain.remove();
+            removedCurtain = true;
+        }
+
+        Array.from(paperEl.children).forEach((el) => {
+            if (!el.classList || !el.classList.contains('pub-element')) return;
+            const inlineTransform = el.style.transform || '';
+            if (el.style.opacity === '0' && el.style.filter === 'blur(2.5px)' && inlineTransform.includes('translateY(-22px)')) {
+                el.style.opacity = '';
+                el.style.filter = '';
+                el.style.transition = '';
+                el.style.transform = inlineTransform.replace(/translateY\(-22px\)\s*/g, '').trim();
+                healedChildren++;
+            }
+        });
+
+        return { removedPourClass, removedCurtain, healedChildren };
+    };
+
+    function verifyCanvasRenderedAndVisible(loadSeq, reason, rafRetryCount) {
+        if (loadSeq !== _activeLoadSeq) return;
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                if (loadSeq !== _activeLoadSeq) return;
+                const viewport = document.getElementById('viewport');
+                const paperEl = document.getElementById('paper');
+                if (!viewport || !paperEl) return;
+
+                // Deterministic 0x0 viewport guard
+                if (viewport.clientWidth === 0 || viewport.clientHeight === 0) {
+                    console.info('[OP-ColdStart] Viewport has 0x0 dimensions; waiting via ResizeObserver', { loadSeq, reason });
+                    if (window._opColdStartResizeObserver) {
+                        try { window._opColdStartResizeObserver.disconnect(); } catch (e) {}
+                        window._opColdStartResizeObserver = null;
+                    }
+                    if (typeof ResizeObserver === 'function') {
+                        const ro = new ResizeObserver(() => {
+                            if (loadSeq !== _activeLoadSeq) {
+                                ro.disconnect();
+                                if (window._opColdStartResizeObserver === ro) window._opColdStartResizeObserver = null;
+                                return;
+                            }
+                            if (viewport.clientWidth > 0 && viewport.clientHeight > 0) {
+                                ro.disconnect();
+                                if (window._opColdStartResizeObserver === ro) window._opColdStartResizeObserver = null;
+                                verifyCanvasRenderedAndVisible(loadSeq, 'resize-ready');
+                            }
+                        });
+                        window._opColdStartResizeObserver = ro;
+                        ro.observe(viewport);
+                    } else if ((rafRetryCount || 0) < 10) {
+                        verifyCanvasRenderedAndVisible(loadSeq, 'raf-resize-retry', (rafRetryCount || 0) + 1);
+                    }
+                    return;
+                }
+
+                // Orphaned pour-state guard
+                const pourStats = window.clearWrapperPourArtifacts(paperEl);
+                if (pourStats.removedPourClass || pourStats.removedCurtain || pourStats.healedChildren > 0) {
+                    console.info('[OP-ColdStart] Cleared orphaned wrapper pour state', Object.assign({ loadSeq, reason }, pourStats));
+                }
+
+                // Missing DOM self-heal (single-shot per loadSeq)
+                const pageIdx = (typeof state !== 'undefined' && typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
+                const activePage = (typeof state !== 'undefined' && Array.isArray(state.pages)) ? state.pages[pageIdx] : null;
+                const expectedCount = (activePage && Array.isArray(activePage.elements)) ? activePage.elements.length : 0;
+                const mountedCount = paperEl.querySelectorAll('.pub-element').length;
+                if (expectedCount > 0 && mountedCount === 0 && paperEl._opSelfHealSeq !== loadSeq) {
+                    paperEl._opSelfHealSeq = loadSeq;
+                    console.info('[OP-ColdStart] Self-heal triggered: re-rendering missing canvas elements', { loadSeq, reason, pageIdx, expectedCount, mountedCount });
+                    if (typeof renderPage === 'function') {
+                        renderPage(activePage);
+                    }
+                    window.clearWrapperPourArtifacts(paperEl);
+                }
+
+                // Off-screen / uncentered paper guard
+                const vpRect = viewport.getBoundingClientRect();
+                const paperRect = paperEl.getBoundingClientRect();
+                const intersectsX = paperRect.right > vpRect.left + 8 && paperRect.left < vpRect.right - 8;
+                const intersectsY = paperRect.bottom > vpRect.top + 8 && paperRect.top < vpRect.bottom - 8;
+                if (paperRect.width === 0 || paperRect.height === 0 || !intersectsX || !intersectsY) {
+                    console.info('[OP-ColdStart] Re-centering off-screen paper in viewport', {
+                        loadSeq,
+                        reason,
+                        viewportSize: viewport.clientWidth + 'x' + viewport.clientHeight,
+                        scrollLeft: viewport.scrollLeft,
+                        marginLeft: paperEl.style.marginLeft
+                    });
+                    if (typeof window.focusPage === 'function') {
+                        window.focusPage(pageIdx);
+                    }
+                    const postVpRect = viewport.getBoundingClientRect();
+                    const postPaperRect = paperEl.getBoundingClientRect();
+                    const postIntersectsX = postPaperRect.right > postVpRect.left + 8 && postPaperRect.left < postVpRect.right - 8;
+                    if (!postIntersectsX && viewport.scrollWidth > viewport.clientWidth) {
+                        viewport.scrollLeft = Math.max(0, Math.round((viewport.scrollWidth - viewport.clientWidth) / 2));
+                    }
+                    if (typeof window.syncRulers === 'function') window.syncRulers();
+                    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+                }
+
+                console.info('[OP-ColdStart] Canvas verification complete', {
+                    reason,
+                    loadSeq,
+                    pageIdx,
+                    expectedElements: expectedCount,
+                    mountedElements: paperEl.querySelectorAll('.pub-element').length,
+                    viewportSize: `${viewport.clientWidth}x${viewport.clientHeight}`,
+                    hasPaperPouring: paperEl.classList.contains('paper-pouring')
+                });
+            });
+        });
+    }
+
     function ensureLoadingModalStyles() {
         if (document.getElementById('op-pub-loading-styles')) return;
         const style = document.createElement('style');
@@ -134,7 +266,7 @@
         document.head.appendChild(style);
     }
 
-    function applyDocumentToState(data) {
+    function applyDocumentToState(data, loadSeq) {
         if (data.isTemplate) {
             const titleEl = document.getElementById('doc-title');
             if (titleEl) titleEl.innerText = "Untitled Publication";
@@ -263,6 +395,9 @@
             }
         }
         function refreshAfterVariableFontRestore() {
+            if ((typeof loadSeq === 'number' && loadSeq !== _activeLoadSeq) || typeof state === 'undefined' || !state.pages || state.pages.length === 0) {
+                return;
+            }
             const paperEl = document.getElementById('paper');
             if (typeof window.forceRepaint === 'function') {
                 window.forceRepaint();
@@ -284,6 +419,7 @@
             if (window.VariableFontsEngine && typeof window.VariableFontsEngine.syncRibbonUI === 'function') {
                 window.VariableFontsEngine.syncRibbonUI();
             }
+            window.clearWrapperPourArtifacts(paperEl);
         }
 
         if (window.VariableFontsEngine && typeof window.VariableFontsEngine.restoreFromOpub === 'function') {
@@ -302,6 +438,21 @@
         if (typeof renderPage === 'function' && state.pages[0]) {
             renderPage(state.pages[0]);
         }
+        if (window._pourAnimationCleanupTimer) {
+            clearTimeout(window._pourAnimationCleanupTimer);
+            window._pourAnimationCleanupTimer = null;
+        }
+        window._isPourAnimating = false;
+        const activePaperEl = paperEl || document.getElementById('paper');
+        const pourCleanup = window.clearWrapperPourArtifacts(activePaperEl);
+        console.info('[OP-ColdStart] applyDocumentToState rendered page 0', {
+            loadSeq,
+            pages: state.pages.length,
+            expectedElements: state.pages[0] && state.pages[0].elements ? state.pages[0].elements.length : 0,
+            mountedElements: activePaperEl ? activePaperEl.querySelectorAll('.pub-element').length : 0,
+            pourCleanup
+        });
+
         if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
         if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
         if (typeof window.focusPage === 'function') {
@@ -316,6 +467,7 @@
         if (typeof toggleHeaderFooter === 'function') {
             toggleHeaderFooter(state.headersVisible, true);
         }
+        verifyCanvasRenderedAndVisible(loadSeq, 'post-apply');
     }
 
     /**
@@ -325,13 +477,18 @@
      */
     window.loadPublicationWithProgress = function(data, onComplete) {
         if (!data || !data.pages) return;
+        const loadSeq = ++_activeLoadSeq;
         ensureLoadingModalStyles();
         window._documentLoadingActive = true;
         window._hasLoadedInitialDocument = true;
 
-        // Dismiss dashboard and remove splash screen immediately
-        if (typeof DashboardSystem !== 'undefined' && DashboardSystem && typeof DashboardSystem.close === 'function') {
-            try { DashboardSystem.close(); } catch(e) {}
+        // Dismiss dashboard non-destructively and remove splash screen immediately
+        if (typeof DashboardSystem !== 'undefined' && DashboardSystem) {
+            if (typeof DashboardSystem.close === 'function') {
+                try { DashboardSystem.close({ suppressBlank: true }); } catch(e) {}
+            } else if (typeof DashboardSystem.hide === 'function') {
+                try { DashboardSystem.hide(true); } catch(e) {}
+            }
         }
         const splash = document.getElementById('splash-screen');
         if (splash) splash.remove();
@@ -408,41 +565,49 @@
 
         // Stage 2 (180ms): Extracting images..
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             const imgMsg = imgCount > 0 ? `Resolving ${imgCount} image assets` : 'Scanning image buffers';
             updateStage('Extracting images..', imgMsg, 40);
         }, 180);
 
         // Stage 3 (360ms): Decoding wordart..
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             const waMsg = waCount > 0 ? `Decoding ${waCount} WordArt objects` : 'Initializing typography & vector curves';
             updateStage('Decoding wordart..', waMsg, 60);
         }, 360);
 
         // Stage 4 (540ms): Importing assets..
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             const assetMsg = totalElements > 0 ? `Importing ${totalElements} layout elements` : 'Synchronizing layout & margins';
             updateStage('Importing assets..', assetMsg, 80);
         }, 540);
 
         // Stage 5 (720ms): Crafting the page..
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             updateStage('Crafting the page..', 'Constructing canvas elements', 95);
-            applyDocumentToState(data);
+            applyDocumentToState(data, loadSeq);
         }, 720);
 
         // Stage 6 (920ms): Ready!
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             updateStage('Ready!', 'Publication loaded', 100);
             if (typeof generateAllThumbnails === 'function') generateAllThumbnails();
             if (typeof pushHistory === 'function') pushHistory();
             window._documentLoadingActive = false;
+            verifyCanvasRenderedAndVisible(loadSeq, 'stage-6-ready');
             if (typeof onComplete === 'function') onComplete();
         }, 920);
 
         // Stage 7 (1080ms): Smooth fade out and dismissal
         setTimeout(() => {
+            if (loadSeq !== _activeLoadSeq) return;
             overlay.classList.add('fade-out');
             setTimeout(() => {
+                if (loadSeq !== _activeLoadSeq) return;
                 if (overlay && overlay.parentNode) {
                     overlay.remove();
                 }
@@ -477,20 +642,25 @@
                 rawData = window.OpenPubImporter.sanitizeLegacyOpubData(rawData);
             }
 
+            console.info('[OP-ColdStart] Handoff received', {
+                bootCompleted: Boolean(window._opBootCompleted),
+                readyState: document.readyState,
+                pages: rawData && Array.isArray(rawData.pages) ? rawData.pages.length : 0,
+                encrypted: Boolean(rawData && rawData.encrypted)
+            });
+
             const paperEl = document.getElementById('paper');
-            if (!document.body || !paperEl) {
-                // Early startup invocation: defer until DOMContentLoaded
+            const waitingForBoot = !window._opBootCompleted && (document.readyState === 'loading' || typeof window.bootOpenPublisher === 'function');
+            if (!document.body || !paperEl || waitingForBoot) {
+                // Early startup invocation: defer deterministically until bootOpenPublisher finishes
                 window._pendingStartupPublication = rawData;
                 window._hasLoadedInitialDocument = true;
                 window._documentLoadingActive = true;
-                window.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(() => {
-                        if (window._pendingStartupPublication) {
-                            const doc = window._pendingStartupPublication;
-                            window._pendingStartupPublication = null;
-                            window.handlePublisherFileLoad(doc);
-                        }
-                    }, 50);
+                console.info('[OP-ColdStart] Queued early .opub handoff until bootOpenPublisher finishes', {
+                    hasBody: Boolean(document.body),
+                    hasPaper: Boolean(paperEl),
+                    bootCompleted: Boolean(window._opBootCompleted),
+                    readyState: document.readyState
                 });
                 return;
             }

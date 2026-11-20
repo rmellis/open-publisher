@@ -472,6 +472,11 @@ function renderPage(pageData) {
         window.WatermarkEngine.renderWatermarkOnCanvas();
     }
     if (typeof window.SpellCheckEngine !== 'undefined') window.SpellCheckEngine.trigger(100);
+    if (typeof window.clearWrapperPourArtifacts === 'function') {
+        window.clearWrapperPourArtifacts(paper);
+    } else if (paper && paper.classList) {
+        paper.classList.remove('paper-pouring');
+    }
     if (window.VariableFontsEngine && typeof window.VariableFontsEngine.ensureDocumentFontsLoaded === 'function') {
         Promise.resolve(window.VariableFontsEngine.ensureDocumentFontsLoaded([pageData]))
             .then((loadedAny) => {

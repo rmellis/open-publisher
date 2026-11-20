@@ -147,6 +147,18 @@ window.DashboardSystem = {
     },
     
     show: function() {
+        if (window._documentLoadingActive || window._pendingStartupPublication) {
+            return;
+        }
+        if (this._hideTimer) {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        }
+        if (this._showTimer) {
+            clearTimeout(this._showTimer);
+            this._showTimer = null;
+        }
+
         document.body.classList.add('dashboard-open');
         const ft = document.getElementById('float-toolbar');
         if (ft) ft.style.display = 'none';
@@ -162,6 +174,7 @@ window.DashboardSystem = {
         });
 
         const overlay = document.getElementById('dashboard-overlay');
+        if (!overlay) return;
         overlay.style.display = 'flex';
         if (window.innerWidth <= 768) {
             overlay.style.left = '0px';
@@ -169,7 +182,11 @@ window.DashboardSystem = {
             overlay.style.margin = '0px';
         }
         // Small delay to allow display:flex to apply before setting opacity for transition
-        setTimeout(() => {
+        this._showTimer = setTimeout(() => {
+            this._showTimer = null;
+            if (window._documentLoadingActive || window._pendingStartupPublication || !document.body.classList.contains('dashboard-open')) {
+                return;
+            }
             overlay.style.opacity = '1';
             const searchInput = document.getElementById('dashboard-search-input');
             if (searchInput && window.innerWidth > 768) {
@@ -180,17 +197,39 @@ window.DashboardSystem = {
         if (!this.initialized) this.init();
     },
     
-    hide: function() {
+    hide: function(immediate) {
+        if (this._showTimer) {
+            clearTimeout(this._showTimer);
+            this._showTimer = null;
+        }
+        if (this._hideTimer) {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        }
         document.body.classList.remove('dashboard-open');
         const overlay = document.getElementById('dashboard-overlay');
+        if (!overlay) return;
         overlay.style.opacity = '0';
-        setTimeout(() => {
+        if (immediate) {
             overlay.style.display = 'none';
-        }, 300);
+        } else {
+            this._hideTimer = setTimeout(() => {
+                overlay.style.display = 'none';
+                this._hideTimer = null;
+            }, 300);
+        }
     },
     
-    close: function() {
-        this.hide();
+    close: function(options) {
+        const suppressBlank = Boolean(
+            (options && options.suppressBlank) ||
+            window._documentLoadingActive ||
+            window._pendingStartupPublication
+        );
+        this.hide(suppressBlank);
+        if (suppressBlank) {
+            return;
+        }
         if (typeof state === 'undefined' || !state.pages || state.pages.length === 0) {
             this.startBlank('A4');
         } else {
@@ -232,7 +271,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.23.0');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.23.1');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -326,7 +365,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.23.0`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.23.1`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -361,7 +400,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.23.0`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.23.1`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -396,7 +435,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.23.0`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.23.1`);
 
         fetch(fileUrl)
             .then(res => res.json())
