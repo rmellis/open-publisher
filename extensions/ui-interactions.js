@@ -1,4 +1,4 @@
-﻿// Open Publisher UI Interactions (v5.22.16)
+﻿// Open Publisher UI Interactions (v5.23.0)
 (function installRulerTrackingEngine() {
     console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.19.1)...");
 
@@ -399,6 +399,7 @@
                         
                         <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('subscript')" title="Subscript"><i class="fas fa-subscript"></i></div>
                         <div class="modern-format-btn" style="font-size: 12px;" onclick="execCmd('superscript')" title="Superscript"><i class="fas fa-superscript"></i></div>
+                        <div class="modern-format-btn vf-ribbon-btn" id="ctx-vf-btn-${target.suffix}" onmousedown="event.preventDefault()" onclick="if(window.toggleVariableFontsQuickPopover) window.toggleVariableFontsQuickPopover(this, event); else if(window.showVariableFontsModal) window.showVariableFontsModal();" title="Variable Font Axes & Studio (VF)">VF</div>
                         
                         <div style="width:1px; height:20px; background:#ccc; margin:0 2px;"></div>
                         
@@ -523,10 +524,13 @@
                             const rect = btn.getBoundingClientRect();
                             menu.style.left = rect.left + 'px';
                             menu.style.top = (rect.bottom + 2) + 'px';
-                            menu.style.width = '200px';
+                            menu.style.width = '240px';
                             menu.style.zIndex = '9999999';
                         }
                         menu.style.display = 'block';
+                        if (typeof window.loadVisibleDropdownVariableFonts === 'function') {
+                            requestAnimationFrame(() => window.loadVisibleDropdownVariableFonts(menu));
+                        }
                     }
                     return;
                 }
@@ -957,7 +961,7 @@
             aboutGroup.id = 'about-btn-group';
             aboutGroup.className = 'group';
             aboutGroup.innerHTML = `
-                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.22.16" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
+                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.23.0" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
                 <div class="tool-btn" onclick="window.showAboutDialog()"><i class="fas fa-info-circle"></i>About</div>
                 <div class="group-label">Help</div>
             `;
@@ -1136,7 +1140,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.22.16</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.23.0</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1146,7 +1150,7 @@
                     <br><br>
                     <div class="about-action-btns" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
                         <a href="#" onclick="window.showKnowledgeBase(); return false;" class="about-action-btn about-kb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--ui-theme-color); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                            <img src="ui/icons/kb.webp?v=5.22.16" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
+                            <img src="ui/icons/kb.webp?v=5.23.0" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
                         </a>
                         <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/" target="_blank" rel="noopener noreferrer" class="about-action-btn about-fb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #1877F2; color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             <i class="fab fa-facebook" style="font-size: 15px;"></i> Facebook Page

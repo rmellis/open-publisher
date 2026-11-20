@@ -377,7 +377,7 @@
         return units;
     }
 
-    function resolveStoryUnitInRoot(root, targetUnits) {
+    function resolveStoryUnitInRoot(root, targetUnits, preferRight) {
         let units = 0;
         let lastValidPos = null;
 
@@ -388,7 +388,7 @@
         function walk(node, isTopBoxContent) {
             if (node.nodeType === Node.TEXT_NODE) {
                 const len = node.nodeValue.length;
-                if (units + len >= targetUnits) {
+                if (preferRight ? (units + len > targetUnits) : (units + len >= targetUnits)) {
                     return { node: node, offset: Math.max(0, Math.min(len, targetUnits - units)) };
                 }
                 units += len;
@@ -450,6 +450,31 @@
         }
     }
 
+    function canMergeContinuationElement(target, first) {
+        if (!target || !first || target.nodeType !== Node.ELEMENT_NODE || first.nodeType !== Node.ELEMENT_NODE) return false;
+        if (target.tagName !== first.tagName) return false;
+        const vfAttrs = ['data-vf-font', 'data-vf-axes', 'data-vf-opsz-mode'];
+        for (let i = 0; i < vfAttrs.length; i++) {
+            if ((target.getAttribute(vfAttrs[i]) || '') !== (first.getAttribute(vfAttrs[i]) || '')) {
+                return false;
+            }
+        }
+        const hasVfStyle = target.classList.contains('op-vf-span') ||
+            first.classList.contains('op-vf-span') ||
+            Boolean(target.style && target.style.fontVariationSettings) ||
+            Boolean(first.style && first.style.fontVariationSettings);
+        if (hasVfStyle) {
+            if ((target.style.fontFamily || '') !== (first.style.fontFamily || '') ||
+                (target.style.fontVariationSettings || '') !== (first.style.fontVariationSettings || '') ||
+                (target.style.fontWeight || '') !== (first.style.fontWeight || '') ||
+                (target.style.fontStretch || '') !== (first.style.fontStretch || '') ||
+                (target.style.fontStyle || '') !== (first.style.fontStyle || '')) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function mergeContinuationNodes(storyDiv, nextFragment) {
         const nodes = Array.from(nextFragment.childNodes);
         while (nodes.length > 0) {
@@ -463,7 +488,7 @@
                     target = target.previousSibling;
                     toRemove.remove();
                 }
-                if (target && target.nodeType === Node.ELEMENT_NODE && target.tagName === first.tagName) {
+                if (canMergeContinuationElement(target, first)) {
                     first.removeAttribute(FLOW_CONT_ATTR);
                     const innerFrag = document.createDocumentFragment();
                     while (first.firstChild) innerFrag.appendChild(first.firstChild);
@@ -538,6 +563,8 @@
 
     const TYPO_PROPS = [
         'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontVariant',
+        'fontStretch', 'fontVariationSettings', 'fontOpticalSizing',
+        'fontFeatureSettings', 'fontKerning',
         'lineHeight', 'letterSpacing', 'wordSpacing', 'textAlign', 'textTransform',
         'textIndent', 'wordWrap', 'overflowWrap', 'wordBreak', 'whiteSpace',
         'hyphens', 'direction', 'columnCount', 'columnGap', 'columnFill', 'color'
@@ -563,6 +590,11 @@
                 clone.style[prop] = val;
             }
         });
+
+        if (boxObj.content.style && boxObj.content.style.fontVariationSettings &&
+            (!clone.style.fontVariationSettings || clone.style.fontVariationSettings === 'normal')) {
+            clone.style.fontVariationSettings = boxObj.content.style.fontVariationSettings;
+        }
 
         // Support columns placed on .element-content by ContextRibbonActions.setColumns
         if ((!clone.style.columnCount || clone.style.columnCount === 'auto') && dims.ecComp.columnCount && dims.ecComp.columnCount !== 'auto') {
@@ -787,6 +819,109 @@
         };
     }
 
+    const CHAIN_SYNC_STYLE_PROPS = [
+        'fontFamily', 'fontSize', 'fontWeight', 'fontStretch', 'fontStyle',
+        'fontVariationSettings', 'fontOpticalSizing', 'fontFeatureSettings', 'fontKerning',
+        'lineHeight', 'letterSpacing', 'wordSpacing', 'textTransform', 'color'
+    ];
+    const CHAIN_CLEAR_WHEN_EMPTY_PROPS = new Set([
+        'fontSize', 'fontWeight', 'fontStretch', 'fontStyle',
+        'fontVariationSettings', 'fontOpticalSizing', 'fontFeatureSettings', 'fontKerning',
+        'lineHeight', 'letterSpacing', 'wordSpacing', 'textTransform'
+    ]);
+    const CHAIN_SYNC_VF_ATTRS = [
+        'data-vf-font', 'data-vf-axes', 'data-vf-opsz-mode', 'data-vf-opsz-auto-pt'
+    ];
+
+    function syncChainRootTypography(chain) {
+        if (!Array.isArray(chain) || chain.length < 2) return;
+        const headContent = chain[0] && chain[0].content;
+        if (!headContent) return;
+
+        for (let i = 1; i < chain.length; i++) {
+            const targetContent = chain[i] && chain[i].content;
+            if (!targetContent || !targetContent.style) continue;
+
+            for (let p = 0; p < CHAIN_SYNC_STYLE_PROPS.length; p++) {
+                const prop = CHAIN_SYNC_STYLE_PROPS[p];
+                const val = headContent.style ? headContent.style[prop] : '';
+                if (val) {
+                    if (targetContent.style[prop] !== val) {
+                        targetContent.style[prop] = val;
+                    }
+                } else if (CHAIN_CLEAR_WHEN_EMPTY_PROPS.has(prop)) {
+                    if (targetContent.style[prop]) {
+                        targetContent.style[prop] = '';
+                    }
+                }
+            }
+
+            for (let a = 0; a < CHAIN_SYNC_VF_ATTRS.length; a++) {
+                const attr = CHAIN_SYNC_VF_ATTRS[a];
+                if (headContent.hasAttribute(attr)) {
+                    const v = headContent.getAttribute(attr);
+                    if (targetContent.getAttribute(attr) !== v) {
+                        targetContent.setAttribute(attr, v);
+                    }
+                } else if (targetContent.hasAttribute(attr)) {
+                    targetContent.removeAttribute(attr);
+                }
+            }
+        }
+    }
+
+    window.applyToLinkedTextBoxChain = function(boxOrEl, fn) {
+        if (!boxOrEl || typeof fn !== 'function') return false;
+        const box = (boxOrEl.classList && boxOrEl.classList.contains('pub-element'))
+            ? boxOrEl
+            : (boxOrEl.closest ? boxOrEl.closest('.pub-element') : null);
+        if (!box) return false;
+
+        const isLinked = !!(box.getAttribute('data-next-box') || box.getAttribute('data-prev-box'));
+        if (!isLinked) {
+            const content = getEditableTextContent(box);
+            if (content) fn(box, content, false);
+            return false;
+        }
+
+        const headRef = getTextFlowHeadRef(box);
+        const chainRefs = headRef ? getTextFlowChainRefs(headRef) : [];
+        if (chainRefs.length === 0) {
+            const content = getEditableTextContent(box);
+            if (content) fn(box, content, false);
+            return false;
+        }
+
+        let touchedOffPage = false;
+        for (let i = 0; i < chainRefs.length; i++) {
+            const ref = chainRefs[i];
+            if (ref.kind === 'dom' && ref.box) {
+                const content = getEditableTextContent(ref.box);
+                if (content) fn(ref.box, content, false);
+            } else if (ref.kind === 'data' && ref.data) {
+                const hydrated = hydrateSerializedFlowBox(ref.data);
+                if (hydrated) {
+                    const content = getEditableTextContent(hydrated);
+                    if (content) {
+                        fn(hydrated, content, true);
+                        const ec = hydrated.querySelector('.element-content');
+                        ref.data.innerHTML = ec ? ec.innerHTML : content.innerHTML;
+                        if (ec) ref.data.contentCssText = ec.style.cssText;
+                        touchedOffPage = true;
+                    }
+                }
+            }
+        }
+
+        if (touchedOffPage && typeof window.updateSidebar === 'function') {
+            clearTimeout(window._crossPageThumbTimer);
+            window._crossPageThumbTimer = setTimeout(() => {
+                if (typeof window.updateSidebar === 'function') window.updateSidebar();
+            }, 150);
+        }
+        return true;
+    };
+
     function applyLinkedBoxStyles(boxObj) {
         const content = boxObj.content;
         if (content.style.boxSizing !== 'border-box') content.style.boxSizing = 'border-box';
@@ -799,6 +934,14 @@
         if (!headBox || window._isFlowingText) return;
         const resolvedHeadRef = getTextFlowHeadRef(headBox);
         if (!resolvedHeadRef) return;
+
+        const timerKey = resolvedHeadRef.id || (headBox && headBox.id) || 'default';
+        const pendingTimer = window._flowTimers && window._flowTimers.get(timerKey);
+        if (pendingTimer) {
+            if (pendingTimer.type === 'raf') cancelAnimationFrame(pendingTimer.id);
+            else clearTimeout(pendingTimer.id);
+            window._flowTimers.delete(timerKey);
+        }
 
         const chainRefs = getTextFlowChainRefs(resolvedHeadRef);
         if (chainRefs.length < 2) {
@@ -847,6 +990,8 @@
             // 2. Capture global selection offsets if user is currently focused/selecting inside an active on-page box
             let globalStartUnits = -1;
             let globalEndUnits = -1;
+            let savedLastRangeStartUnits = -1;
+            let savedLastRangeEndUnits = -1;
             let hadChainFocus = false;
             const activeEl = document.activeElement;
             for (let i = 0; i < chain.length; i++) {
@@ -855,14 +1000,15 @@
                     break;
                 }
             }
-            const sel = window.getSelection ? window.getSelection() : null;
-            if (sel && sel.rangeCount > 0) {
-                const range = sel.getRangeAt(0);
+            const captureRangeUnits = (range) => {
+                if (!range || !range.startContainer || !range.endContainer) return { start: -1, end: -1 };
+                let sUnits = -1;
+                let eUnits = -1;
                 let accStart = 0;
                 for (let i = 0; i < chain.length; i++) {
                     const contentEl = chain[i].content;
                     if (!chain[i].isHydrated && contentEl.contains(range.startContainer)) {
-                        globalStartUnits = accStart + countStoryUnitsInRoot(contentEl, range.startContainer, range.startOffset);
+                        sUnits = accStart + countStoryUnitsInRoot(contentEl, range.startContainer, range.startOffset);
                         break;
                     }
                     if (i === 0 || !isEditableEmptyOrPlaceholder(contentEl) || getPlainTextNormalized(contentEl) !== PLACEHOLDER_TEXT) {
@@ -870,13 +1016,13 @@
                     }
                 }
                 if (range.collapsed) {
-                    globalEndUnits = globalStartUnits;
-                } else {
+                    eUnits = sUnits;
+                } else if (sUnits !== -1) {
                     let accEnd = 0;
                     for (let i = 0; i < chain.length; i++) {
                         const contentEl = chain[i].content;
                         if (!chain[i].isHydrated && contentEl.contains(range.endContainer)) {
-                            globalEndUnits = accEnd + countStoryUnitsInRoot(contentEl, range.endContainer, range.endOffset);
+                            eUnits = accEnd + countStoryUnitsInRoot(contentEl, range.endContainer, range.endOffset);
                             break;
                         }
                         if (i === 0 || !isEditableEmptyOrPlaceholder(contentEl) || getPlainTextNormalized(contentEl) !== PLACEHOLDER_TEXT) {
@@ -884,12 +1030,30 @@
                         }
                     }
                 }
+                return { start: sUnits, end: eUnits };
+            };
+
+            const sel = window.getSelection ? window.getSelection() : null;
+            if (sel && sel.rangeCount > 0) {
+                const cap = captureRangeUnits(sel.getRangeAt(0));
+                globalStartUnits = cap.start;
+                globalEndUnits = cap.end;
+            }
+            if (!hadChainFocus && typeof state !== 'undefined' && state.lastRange &&
+                state.lastRange.startContainer && state.lastRange.startContainer.isConnected &&
+                state.lastRange.endContainer && state.lastRange.endContainer.isConnected) {
+                const capSaved = captureRangeUnits(state.lastRange);
+                savedLastRangeStartUnits = capSaved.start;
+                savedLastRangeEndUnits = capSaved.end;
             }
 
             // 3. Gather entire chain into one continuous Story DOM
             const storyDiv = gatherStory(chain);
             let remainderFrag = document.createDocumentFragment();
             while (storyDiv.firstChild) remainderFrag.appendChild(storyDiv.firstChild);
+
+            // Sync head box root typography & Variable Font attributes across downstream boxes before measuring/packing
+            syncChainRootTypography(chain);
 
             // 4. Pack story fragments frame-by-frame across all pages in the chain
             for (let i = 0; i < chain.length; i++) {
@@ -948,32 +1112,33 @@
             }
 
             // 6. Restore caret or text selection across on-page boxes if editing/selecting was active
-            if (hadChainFocus && globalStartUnits !== -1 && sel) {
-                const resolveInChain = (targetUnits) => {
-                    let rem = Math.max(0, targetUnits);
-                    let resContent = null;
-                    let resPos = null;
-                    let resIsHydrated = false;
-                    for (let i = 0; i < chain.length; i++) {
-                        const c = chain[i].content;
-                        const resolved = resolveStoryUnitInRoot(c, rem);
-                        resContent = c;
-                        resPos = resolved.pos;
-                        resIsHydrated = !!chain[i].isHydrated;
-                        if (resolved.found) break;
-                        rem -= resolved.consumed;
-                    }
-                    return (!resIsHydrated && resContent && resPos) ? { content: resContent, pos: resPos } : null;
-                };
+            const resolveInChain = (targetUnits, preferRight) => {
+                let rem = Math.max(0, targetUnits);
+                let resContent = null;
+                let resPos = null;
+                let resIsHydrated = false;
+                for (let i = 0; i < chain.length; i++) {
+                    const c = chain[i].content;
+                    const resolved = resolveStoryUnitInRoot(c, rem, preferRight);
+                    resContent = c;
+                    resPos = resolved.pos;
+                    resIsHydrated = !!chain[i].isHydrated;
+                    if (resolved.found) break;
+                    rem -= resolved.consumed;
+                }
+                return (!resIsHydrated && resContent && resPos) ? { content: resContent, pos: resPos } : null;
+            };
 
-                const startLoc = resolveInChain(globalStartUnits);
-                const endLoc = (globalEndUnits > globalStartUnits) ? resolveInChain(globalEndUnits) : startLoc;
+            if (hadChainFocus && globalStartUnits !== -1 && sel) {
+                const isNonCollapsed = globalEndUnits > globalStartUnits;
+                const startLoc = resolveInChain(globalStartUnits, isNonCollapsed);
+                const endLoc = isNonCollapsed ? resolveInChain(globalEndUnits, false) : startLoc;
 
                 if (startLoc && endLoc) {
                     try {
                         const newRange = document.createRange();
                         newRange.setStart(startLoc.pos.node, startLoc.pos.offset);
-                        if (globalEndUnits > globalStartUnits) {
+                        if (isNonCollapsed) {
                             if (endLoc.content === startLoc.content) {
                                 newRange.setEnd(endLoc.pos.node, endLoc.pos.offset);
                             } else {
@@ -990,6 +1155,27 @@
                         if (typeof state !== 'undefined') {
                             state.lastRange = newRange.cloneRange();
                         }
+                    } catch (err) {}
+                }
+            } else if (!hadChainFocus && savedLastRangeStartUnits !== -1 && typeof state !== 'undefined') {
+                const isNonCollapsed = savedLastRangeEndUnits > savedLastRangeStartUnits;
+                const startLoc = resolveInChain(savedLastRangeStartUnits, isNonCollapsed);
+                const endLoc = isNonCollapsed ? resolveInChain(savedLastRangeEndUnits, false) : startLoc;
+
+                if (startLoc && endLoc) {
+                    try {
+                        const newRange = document.createRange();
+                        newRange.setStart(startLoc.pos.node, startLoc.pos.offset);
+                        if (isNonCollapsed) {
+                            if (endLoc.content === startLoc.content) {
+                                newRange.setEnd(endLoc.pos.node, endLoc.pos.offset);
+                            } else {
+                                newRange.setEnd(startLoc.content, startLoc.content.childNodes.length);
+                            }
+                        } else {
+                            newRange.collapse(true);
+                        }
+                        state.lastRange = newRange.cloneRange();
                     } catch (err) {}
                 }
             }

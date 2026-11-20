@@ -58,14 +58,18 @@ window.exportAsHTML = async function(opts = {}) {
         let fontLink = '';
         const googleFontFamilies = [];
         usedFonts.forEach(f => {
-            // Skip system fonts
+            // Skip system fonts and variable fonts handled separately with full axis ranges
             const systemFonts = ['Arial', 'Segoe UI', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Helvetica', 'sans-serif', 'serif'];
+            if (window.VariableFontsEngine && window.VariableFontsEngine.isVariableFont(f)) return;
             if (!systemFonts.includes(f)) {
                 googleFontFamilies.push('family=' + f.replace(/\s+/g, '+') + ':wght@400;700');
             }
         });
         if (opts.fonts !== false && googleFontFamilies.length > 0) {
             fontLink = `<link href="https://fonts.googleapis.com/css2?${googleFontFamilies.join('&')}&display=swap" rel="stylesheet">`;
+        }
+        if (opts.fonts !== false && window.VariableFontsEngine && typeof window.VariableFontsEngine.buildExportFontHeadHTML === 'function') {
+            fontLink += window.VariableFontsEngine.buildExportFontHeadHTML(opts.base64 !== false);
         }
         
         // --- 1.5 Setup Print Spooler for Computed Styles ---
@@ -228,7 +232,7 @@ window.exportAsHTML = async function(opts = {}) {
             targetElements.forEach(el => {
                 const comp = window.getComputedStyle(el);
                 const props = [
-                    'color', 'background', 'font-family', 'font-size', 'font-weight', 'font-style', 'letter-spacing',
+                    'color', 'background', 'font-family', 'font-size', 'font-weight', 'font-stretch', 'font-style', 'font-variation-settings', 'font-optical-sizing', 'letter-spacing',
                     'text-shadow', 'text-transform', 'text-align', 'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
                     'border-collapse', 'padding', 'margin', 'filter', '-webkit-text-stroke', '-webkit-background-clip', 'transform'
                 ];
@@ -280,6 +284,9 @@ window.exportAsHTML = async function(opts = {}) {
                 }
                 if (typeof window.bakeElementShadowUnderlays === 'function') {
                     window.bakeElementShadowUnderlays(pageWrapper, null, 2);
+                }
+                if (window.VariableFontsEngine && typeof window.VariableFontsEngine.bakeVariableFontElementsForCanvas === 'function') {
+                    await window.VariableFontsEngine.bakeVariableFontElementsForCanvas(pageWrapper, 2);
                 }
                 const canvas = await html2canvas(pageWrapper, { scale: 2, useCORS: true, backgroundColor: emailBg });
                 const imgData = canvas.toDataURL('image/jpeg', 0.85);
@@ -498,6 +505,21 @@ window.packAndGo = async function() {
         usedFonts.forEach(f => {
             fontsText += `- ${f}\n`;
         });
+        if (window.VariableFontsEngine && typeof window.VariableFontsEngine.getUsedVariableFontsInDocument === 'function') {
+            const usedVfs = window.VariableFontsEngine.getUsedVariableFontsInDocument();
+            if (usedVfs.length > 0) {
+                fontsText += "\n--- Variable Fonts Used ---\n";
+                const fontsZipFolder = zip.folder("Fonts");
+                usedVfs.forEach(vf => {
+                    const axisTags = (vf.axes || []).filter(a => !a.hidden).map(a => a.tag).join(', ');
+                    fontsText += `- ${vf.family} [${vf.isCustom ? 'Embedded Binary' : 'Google Variable Font'}] (Axes: ${axisTags})\n`;
+                    if (vf.isCustom && vf.dataUri && fontsZipFolder) {
+                        const b64Part = vf.dataUri.split(',')[1];
+                        if (b64Part) fontsZipFolder.file(vf.fileName || (vf.family + '.ttf'), b64Part, { base64: true });
+                    }
+                });
+            }
+        }
         zip.file("Fonts.txt", fontsText);
         
         // 4. Save Native Project File

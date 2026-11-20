@@ -358,8 +358,9 @@ function renderPage(pageData) {
         if (data.rz3d) d3d += ` data-3d-rz="${data.rz3d}"`;
         if (data.p3d) d3d += ` data-3d-p="${data.p3d}"`;
 
+        const safeCss = String(css || '').replace(/"/g, '&quot;');
         el.innerHTML = `
-            <div class="element-content" style="${css}"${d3d}>${inner}</div>
+            <div class="element-content" style="${safeCss}"${d3d}>${inner}</div>
             <div class="resize-handle rh-nw" data-dir="nw"></div>
             <div class="resize-handle rh-n" data-dir="n"></div>
             <div class="resize-handle rh-ne" data-dir="ne"></div>
@@ -471,6 +472,20 @@ function renderPage(pageData) {
         window.WatermarkEngine.renderWatermarkOnCanvas();
     }
     if (typeof window.SpellCheckEngine !== 'undefined') window.SpellCheckEngine.trigger(100);
+    if (window.VariableFontsEngine && typeof window.VariableFontsEngine.ensureDocumentFontsLoaded === 'function') {
+        Promise.resolve(window.VariableFontsEngine.ensureDocumentFontsLoaded([pageData]))
+            .then((loadedAny) => {
+                if (!loadedAny) return;
+                if (typeof window.forceRepaint === 'function') window.forceRepaint();
+                if (typeof window.initTextFlowLinks === 'function') window.initTextFlowLinks(paper);
+                if (typeof window.upgradeAllCanvasWordArt === 'function') window.upgradeAllCanvasWordArt(paper);
+                if (typeof window.updateThumbnails === 'function') window.updateThumbnails();
+                if (window.VariableFontsEngine && typeof window.VariableFontsEngine.syncRibbonUI === 'function') {
+                    window.VariableFontsEngine.syncRibbonUI();
+                }
+            })
+            .catch(() => {});
+    }
 }
 
 // --- HISTORY MANAGEMENT ---

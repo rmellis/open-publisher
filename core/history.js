@@ -189,6 +189,7 @@ function serializeCurrentPage() {
                 attr.name.startsWith('data-current-') ||
                 attr.name.startsWith('data-supports-') ||
                 attr.name.startsWith('data-text-direction') ||
+                attr.name.startsWith('data-vf-') ||
                 attr.name === 'dir' ||
                 attr.name === 'data-is-border' ||
                 attr.name === 'data-aspect-lock' || 

@@ -232,7 +232,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.22.16');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.23.0');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -326,7 +326,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.22.16`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.23.0`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -361,7 +361,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.22.16`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.23.0`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -396,7 +396,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.22.16`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.23.0`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -782,6 +782,9 @@ window.DashboardSystem = {
 
                     state.pages = JSON.parse(JSON.stringify(fileData.pages || []));
                     state.currentPageIndex = 0;
+                    if (window.VariableFontsEngine && typeof window.VariableFontsEngine.restoreFromOpub === 'function') {
+                        Promise.resolve(window.VariableFontsEngine.restoreFromOpub(fileData.variableFonts || null, fileData)).catch(() => false);
+                    }
                     renderPage(state.pages[0]);
                     updateSidebar();
                 }

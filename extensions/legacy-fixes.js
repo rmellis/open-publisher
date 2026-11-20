@@ -1859,6 +1859,7 @@ if (!window._sliderFillListenerInstalled) {
             if (typeof window.updateDocumentFontsSection === 'function') {
                 window.updateDocumentFontsSection();
             }
+            menu.style.width = '240px';
             menu.style.display = 'block';
             menu.style.top = '28px';
             menu.style.bottom = 'auto';
@@ -1866,6 +1867,9 @@ if (!window._sliderFillListenerInstalled) {
             if (rect.bottom > window.innerHeight - 10) {
                 menu.style.top = 'auto';
                 menu.style.bottom = '28px';
+            }
+            if (typeof window.loadVisibleDropdownVariableFonts === 'function') {
+                requestAnimationFrame(() => window.loadVisibleDropdownVariableFonts(menu));
             }
         }
     };
@@ -1977,6 +1981,7 @@ if (!window._sliderFillListenerInstalled) {
                 <div class="float-mini-btn" id="float-italic-btn" onclick="execCmd('italic')" title="Italic"><strong><em>I</em></strong></div>
                 <div class="float-mini-btn" id="float-underline-btn" onclick="execCmd('underline')" title="Underline"><strong style="text-decoration: underline;">U</strong></div>
                 <div class="float-mini-btn" id="float-strikethrough-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><strong style="text-decoration: line-through;">S</strong></div>
+                <div class="float-mini-btn vf-ribbon-btn" id="float-vf-btn" onclick="if(window.toggleVariableFontsQuickPopover) window.toggleVariableFontsQuickPopover(this, event); else if(window.showVariableFontsModal) window.showVariableFontsModal();" title="Variable Font Axes & Studio (VF)">VF</div>
                 
                 <div class="float-divider"></div>
                 

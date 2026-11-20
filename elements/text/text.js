@@ -41,12 +41,18 @@ function handleFontDropdownKeyDown(e) {
     const activeMenu = getActiveFontDropdown();
     if (!activeMenu) return;
 
+    const isSearchInput = !!(e.target && e.target.classList && e.target.classList.contains('vf-dropdown-search'));
+
     // 1. Escape: Close dropdown
     if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         activeMenu.style.display = 'none';
         window.resetFontNavState();
+        return;
+    }
+
+    if (isSearchInput && e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter') {
         return;
     }
 
@@ -63,7 +69,7 @@ function handleFontDropdownKeyDown(e) {
         return;
     }
 
-    const allItems = Array.from(activeMenu.querySelectorAll('.font-item'));
+    const allItems = Array.from(activeMenu.querySelectorAll('.font-item')).filter(el => !el.classList.contains('vf-filter-hidden') && el.style.display !== 'none');
     if (allItems.length === 0) return;
 
     // 3. Arrow Down: Next item
@@ -93,7 +99,7 @@ function handleFontDropdownKeyDown(e) {
         e.preventDefault();
         e.stopPropagation();
         const char = e.key.toUpperCase();
-        const matchingItems = allItems.filter(item => item.innerText.trim().toUpperCase().startsWith(char));
+        const matchingItems = allItems.filter(item => ((item.dataset && item.dataset.fontName) || item.innerText).trim().toUpperCase().startsWith(char));
         if (matchingItems.length === 0) return;
 
         if (char === fontNavState.lastSearchedChar && matchingItems.includes(fontNavState.highlightedItem)) {
@@ -279,7 +285,9 @@ function updateDocumentFontsSection(force = false) {
         if (!docSection) {
             docSection = document.createElement('div');
             docSection.className = 'font-dropdown-doc-section';
-            list.prepend(docSection);
+            const ctrl = list.querySelector('.vf-dropdown-controls');
+            if (ctrl && ctrl.nextSibling) list.insertBefore(docSection, ctrl.nextSibling);
+            else list.appendChild(docSection);
         }
 
         docSection.innerHTML = '';
@@ -293,20 +301,9 @@ function updateDocumentFontsSection(force = false) {
 
         // 2. Document Font Items
         docFonts.forEach(font => {
-            const item = document.createElement('div');
-            item.className = 'font-item font-item-doc';
+            const item = createFontDropdownItem(list, font);
+            item.classList.add('font-item-doc');
             item.setAttribute('data-doc-font', 'true');
-            item.innerText = font;
-            item.style.fontFamily = font;
-            item.onclick = (e) => {
-                e.stopPropagation();
-                selectFont(font);
-            };
-            item.onmouseenter = () => {
-                if (typeof window.highlightFontItem === 'function') {
-                    window.highlightFontItem(list, item, false);
-                }
-            };
             docSection.appendChild(item);
         });
 
@@ -320,49 +317,207 @@ function updateDocumentFontsSection(force = false) {
         allHeader.className = 'font-dropdown-section-header';
         allHeader.innerText = 'All Fonts';
         docSection.appendChild(allHeader);
+
+        const searchInp = list.querySelector('.vf-dropdown-search');
+        applyDropdownFontFilter(list, list.dataset.vfFilterMode || 'all', searchInp ? searchInp.value : '');
     });
 }
 
-function initFontPickers() {
+function createFontDropdownItem(list, font) {
+    const item = document.createElement('div');
+    item.className = 'font-item';
+    item.dataset.fontName = font;
+    const vfEngine = window.VariableFontsEngine;
+    const vfDef = vfEngine ? vfEngine.getFontDef(font) : null;
+    const isVf = !!vfDef;
+    const isCustomVf = !!(vfEngine && vfEngine.isCustomVariableFont(font));
+    const visAxes = vfDef ? (vfEngine.getVisibleAxes ? vfEngine.getVisibleAxes(vfDef) : vfDef.axes.filter(a => !a.hidden)) : [];
+    const hasCustomAxes = !!(vfDef && vfEngine.hasCustomAxes && vfEngine.hasCustomAxes(vfDef));
+    const isRich = !!(isVf && (visAxes.length >= 2 || hasCustomAxes));
+
+    item.dataset.vf = isVf ? '1' : '0';
+    item.dataset.customVf = isCustomVf ? '1' : '0';
+    item.dataset.vfMulti = isRich ? '1' : '0';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'font-item-name';
+    nameSpan.innerText = font;
+    nameSpan.style.fontFamily = `"${font}", sans-serif`;
+    item.appendChild(nameSpan);
+
+    if (isVf) {
+        const badge = document.createElement('span');
+        badge.className = 'vf-badge-pill' + (isRich ? ' vf-badge-rich' : '');
+        if (isCustomVf) {
+            badge.innerText = visAxes.length >= 2 ? `VF ${visAxes.length}` : 'VF+';
+        } else if (visAxes.length >= 2) {
+            badge.innerText = `VF ${visAxes.length}`;
+        } else if (hasCustomAxes) {
+            badge.innerText = 'VF ★';
+        } else {
+            badge.innerText = 'VF';
+        }
+        const tagList = visAxes.map(a => a.tag).join(', ');
+        badge.title = `${isCustomVf ? 'Custom ' : ''}Variable Font (${visAxes.length} ${visAxes.length === 1 ? 'axis' : 'axes'}${tagList ? ': ' + tagList : ''})`;
+        item.appendChild(badge);
+    }
+
+    item.onclick = (e) => {
+        if (e) e.stopPropagation();
+        selectFont(font);
+    };
+    item.onmouseenter = () => {
+        if (typeof window.highlightFontItem === 'function') {
+            window.highlightFontItem(list, item, false);
+        }
+    };
+    return item;
+}
+
+function loadVisibleDropdownVariableFonts(list) {
+    if (!list || !window.VariableFontsEngine || typeof window.VariableFontsEngine.ensureFontLoaded !== 'function') return;
+    const listRect = list.getBoundingClientRect();
+    if (!listRect || listRect.height <= 0) return;
+    const topBound = listRect.top - 120;
+    const bottomBound = listRect.bottom + 160;
+    const items = list.querySelectorAll('.font-item[data-vf="1"]:not(.vf-filter-hidden)');
+    for (const item of items) {
+        if (item.style.display === 'none') continue;
+        const r = item.getBoundingClientRect();
+        if (r.height <= 0) continue;
+        if (r.bottom >= topBound && r.top <= bottomBound) {
+            const fname = item.dataset.fontName;
+            if (fname) window.VariableFontsEngine.ensureFontLoaded(fname);
+        }
+    }
+}
+window.loadVisibleDropdownVariableFonts = loadVisibleDropdownVariableFonts;
+
+function applyDropdownFontFilter(list, mode, query) {
+    if (!list) return;
+    const q = String(query || '').trim().toLowerCase();
+    const m = mode || list.dataset.vfFilterMode || 'all';
+    list.dataset.vfFilterMode = m;
+    list.querySelectorAll('.font-item').forEach(item => {
+        const fname = (item.dataset.fontName || item.innerText || '').toLowerCase();
+        const matchesQ = !q || fname.includes(q);
+        const matchesMode = m === 'all'
+            || (m === 'vf' && item.dataset.vf === '1')
+            || (m === 'multi' && item.dataset.vfMulti === '1')
+            || (m === 'custom' && item.dataset.customVf === '1');
+        const visible = matchesQ && matchesMode;
+        item.classList.toggle('vf-filter-hidden', !visible);
+        item.style.display = visible ? '' : 'none';
+    });
+    const docSection = list.querySelector('.font-dropdown-doc-section');
+    if (docSection) {
+        const hasVisibleDoc = Array.from(docSection.querySelectorAll('.font-item')).some(it => !it.classList.contains('vf-filter-hidden') && it.style.display !== 'none');
+        docSection.style.display = hasVisibleDoc ? 'block' : 'none';
+    }
+    requestAnimationFrame(() => loadVisibleDropdownVariableFonts(list));
+}
+
+function ensureDropdownChrome(list) {
+    if (!list) return;
+    if (!list.dataset.vfScrollWired) {
+        list.dataset.vfScrollWired = '1';
+        let scrollRaf = null;
+        list.addEventListener('scroll', () => {
+            if (scrollRaf) return;
+            scrollRaf = requestAnimationFrame(() => {
+                scrollRaf = null;
+                loadVisibleDropdownVariableFonts(list);
+            });
+        }, { passive: true });
+    }
+    if (!list.querySelector('.vf-dropdown-controls')) {
+        const ctrl = document.createElement('div');
+        ctrl.className = 'vf-dropdown-controls';
+        ctrl.addEventListener('mousedown', (e) => e.stopPropagation());
+        ctrl.addEventListener('click', (e) => e.stopPropagation());
+        ctrl.innerHTML = `
+            <input type="text" class="vf-dropdown-search" placeholder="Search fonts..." />
+            <div class="vf-dropdown-filters">
+                <button type="button" class="vf-dd-filter-btn active" data-vf-dd="all">All</button>
+                <button type="button" class="vf-dd-filter-btn" data-vf-dd="vf" title="All Variable Fonts">VF</button>
+                <button type="button" class="vf-dd-filter-btn" data-vf-dd="multi" title="Multi-Axis & Creative Custom-Axis Variable Fonts">Multi</button>
+                <button type="button" class="vf-dd-filter-btn" data-vf-dd="custom" title="Uploaded Custom Variable Fonts">Custom</button>
+            </div>
+        `;
+        const searchInp = ctrl.querySelector('.vf-dropdown-search');
+        searchInp.addEventListener('input', () => applyDropdownFontFilter(list, list.dataset.vfFilterMode || 'all', searchInp.value));
+        ctrl.querySelectorAll('.vf-dd-filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ctrl.querySelectorAll('.vf-dd-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+                applyDropdownFontFilter(list, btn.getAttribute('data-vf-dd'), searchInp.value);
+            });
+        });
+        list.prepend(ctrl);
+    }
+    if (!list.querySelector('.vf-dropdown-footer')) {
+        const ftr = document.createElement('div');
+        ftr.className = 'vf-dropdown-footer';
+        ftr.innerHTML = `<button type="button" class="vf-dd-studio-btn"><i class="fas fa-sliders-h"></i> Variable Font Studio...</button>`;
+        ftr.querySelector('.vf-dd-studio-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
+            if (typeof window.showVariableFontsModal === 'function') window.showVariableFontsModal('axes');
+        });
+        list.appendChild(ftr);
+    }
+}
+
+function mergeVariableFontsIntoList() {
+    if (window.VariableFontsEngine && Array.isArray(window.VariableFontsEngine.CATALOG)) {
+        window.VariableFontsEngine.getAllVariableFonts().forEach(vf => {
+            if (!fontList.some(f => f.toLowerCase() === vf.family.toLowerCase())) {
+                fontList.push(vf.family);
+            }
+        });
+    }
+}
+
+function populateFontDropdownItems() {
     const ribbonList = document.getElementById('ribbon-font-list');
     const floatList = document.getElementById('float-font-list');
     const preloader = document.getElementById('font-preloader');
-    
-    // Sort Alphabetically
+    mergeVariableFontsIntoList();
     fontList.sort();
 
-    fontList.forEach(font => {
-        // Ribbon Item
-        const item1 = document.createElement('div');
-        item1.className = 'font-item';
-        item1.innerText = font;
-        item1.style.fontFamily = font;
-        item1.onclick = () => { selectFont(font); };
-        item1.onmouseenter = () => { window.highlightFontItem(ribbonList, item1, false); };
-        ribbonList.appendChild(item1);
+    [ribbonList, floatList].forEach(list => {
+        if (!list) return;
+        list.querySelectorAll(':scope > .font-item').forEach(el => el.remove());
+        ensureDropdownChrome(list);
+        const ftr = list.querySelector('.vf-dropdown-footer');
+        fontList.forEach(font => {
+            const item = createFontDropdownItem(list, font);
+            if (ftr) list.insertBefore(item, ftr);
+            else list.appendChild(item);
+        });
+        const searchInp = list.querySelector('.vf-dropdown-search');
+        applyDropdownFontFilter(list, list.dataset.vfFilterMode || 'all', searchInp ? searchInp.value : '');
+    });
 
-        // Float Item
-        const item2 = document.createElement('div');
-        item2.className = 'font-item';
-        item2.innerText = font;
-        item2.style.fontFamily = font;
-        item2.onclick = () => { selectFont(font); };
-        item2.onmouseenter = () => { window.highlightFontItem(floatList, item2, false); };
-        floatList.appendChild(item2);
-
-        // Preload font by creating an element with rich glyph coverage
-        if (preloader) {
+    if (preloader && !preloader.dataset.vfInit) {
+        preloader.dataset.vfInit = '1';
+        fontList.forEach(font => {
             const span = document.createElement('span');
             span.style.fontFamily = font;
             span.innerText = "Quick brown fox jumps over lazy dog 0123456789";
             preloader.appendChild(span);
-        }
-    });
+        });
+    }
+}
 
-    // Proactively load web fonts via FontFaceSet API if available
+function initFontPickers() {
+    populateFontDropdownItems();
+
+    // Proactively load static Google fonts via FontFaceSet API; variable fonts load on demand with full axis CSS2 URLs
     if (document.fonts && typeof document.fonts.load === 'function') {
         const sampleText = 'Quick brown fox 12345 (a, g, t, r)';
         fontList.forEach(font => {
+            if (window.VariableFontsEngine && window.VariableFontsEngine.isVariableFont(font)) return;
             document.fonts.load(`16px "${font}"`, sampleText).catch(() => {});
         });
     }
@@ -370,6 +525,10 @@ function initFontPickers() {
     initFontDropdownKeyNav();
     window.getDocumentFonts = getDocumentFonts;
     window.updateDocumentFontsSection = updateDocumentFontsSection;
+    window.rebuildFontPickers = () => {
+        populateFontDropdownItems();
+        updateDocumentFontsSection(true);
+    };
     updateDocumentFontsSection();
 }
 
@@ -379,25 +538,52 @@ function selectFont(fontName) {
     document.getElementById('ribbon-font-label').innerText = fontName;
     document.getElementById('float-font-label').innerText = fontName;
     
-    // Ensure font face is fully loaded from webfont cache or network, then trigger repaint
-    if (document.fonts && typeof document.fonts.load === 'function') {
-        document.fonts.load(`16px "${fontName}"`).then(() => {
-            if (typeof forceRepaint === 'function') forceRepaint();
-            if (typeof updateThumbnails === 'function') updateThumbnails();
-            if (typeof updateFloatToolbarValues === 'function') updateFloatToolbarValues();
-        }).catch(() => {});
-    }
+    // Load variable Google Fonts stylesheet (with full axis ranges) or static font from cache
+    const loadPromise = (window.VariableFontsEngine && window.VariableFontsEngine.isVariableFont(fontName))
+        ? window.VariableFontsEngine.ensureFontLoaded(fontName)
+        : ((document.fonts && typeof document.fonts.load === 'function') ? document.fonts.load(`16px "${fontName}"`) : Promise.resolve());
+
+    Promise.resolve(loadPromise).then(() => {
+        if (state.selectedEl && (state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box')) && typeof window.flowTextBoxes === 'function') {
+            window.flowTextBoxes(state.selectedEl);
+        }
+        if (typeof forceRepaint === 'function') forceRepaint();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
+        if (typeof updateFloatToolbarValues === 'function') updateFloatToolbarValues();
+        if (window.VariableFontsEngine) window.VariableFontsEngine.syncRibbonUI();
+    }).catch(() => {});
 
     // Execute
     if (state.selectedEl) {
-        // If text selected, specific execute
-        execCmd('fontName', fontName);
+        if (window.VariableFontsEngine) {
+            if (window.VariableFontsEngine.isVariableFont(fontName)) {
+                const def = window.VariableFontsEngine.getFontDef(fontName);
+                const defAxes = {};
+                if (def) def.axes.forEach(a => { defAxes[a.tag] = a.default; });
+                window.VariableFontsEngine.applyVariation({
+                    family: fontName,
+                    axes: defAxes,
+                    opszMode: 'auto',
+                    skipHistory: false,
+                    targetEl: state.selectedEl
+                });
+            } else {
+                window.VariableFontsEngine.clearIncompatVariationsOnStaticFont(state.selectedEl, fontName);
+                execCmd('fontName', fontName);
+            }
+        } else {
+            execCmd('fontName', fontName);
+        }
         
         // FIXED: Force immediate repaint to show font change
         forceRepaint();
     } else {
         // Set float font updates global execution state
         setFloatFont(fontName);
+    }
+
+    if (window.VariableFontsEngine) {
+        window.VariableFontsEngine.syncRibbonUI();
     }
     
     // Refresh document fonts section now that font was chosen
@@ -658,18 +844,26 @@ function setTrueFontSize(val) {
             if (content) {
                 if (typeof pushHistory === 'function') pushHistory(true);
                 const wasCollapsed = !targetRange || targetRange.collapsed;
-                const res = applyPureFontSizeToEditable(content, targetRange, val, wasCollapsed);
-                if (!wasCollapsed && res.firstText && res.lastText) {
-                    const rebuilt = document.createRange();
-                    rebuilt.setStart(res.firstText, 0);
-                    rebuilt.setEnd(res.lastText, res.lastText.length);
-                    state.lastRange = rebuilt.cloneRange();
-                    if (!activeIsControl && sel) {
+                const isLinkedChain = !!(state.selectedEl.getAttribute && (state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box')));
+                if (wasCollapsed && isLinkedChain && typeof window.applyToLinkedTextBoxChain === 'function') {
+                    window.applyToLinkedTextBoxChain(state.selectedEl, (box, boxContent) => {
+                        applyPureFontSizeToEditable(boxContent, null, val, true);
+                    });
+                    if (!activeIsControl && sel) sel.removeAllRanges();
+                } else {
+                    const res = applyPureFontSizeToEditable(content, targetRange, val, wasCollapsed);
+                    if (!wasCollapsed && res.firstText && res.lastText) {
+                        const rebuilt = document.createRange();
+                        rebuilt.setStart(res.firstText, 0);
+                        rebuilt.setEnd(res.lastText, res.lastText.length);
+                        state.lastRange = rebuilt.cloneRange();
+                        if (!activeIsControl && sel) {
+                            sel.removeAllRanges();
+                            sel.addRange(rebuilt);
+                        }
+                    } else if (wasCollapsed && !activeIsControl && sel) {
                         sel.removeAllRanges();
-                        sel.addRange(rebuilt);
                     }
-                } else if (wasCollapsed && !activeIsControl && sel) {
-                    sel.removeAllRanges();
                 }
             }
         }
@@ -690,6 +884,14 @@ function setTrueFontSize(val) {
                 floatSelect.appendChild(newOpt);
             }
             floatSelect.value = numVal;
+        }
+
+        if (window.VariableFontsEngine && state.selectedEl) {
+            window.VariableFontsEngine.syncAutoOpticalSizeForElement(state.selectedEl, parseFloat(val));
+        }
+
+        if (state.selectedEl && (state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box')) && typeof window.flowTextBoxes === 'function') {
+            window.flowTextBoxes(state.selectedEl);
         }
         
         pushHistory(true);
@@ -1194,11 +1396,25 @@ function execCmd(cmd, val) {
                     f.removeAttribute('face');
                 });
             } else if (editableRoot) {
-                editableRoot.style.fontFamily = val;
-                editableRoot.querySelectorAll('[style*="font-family"], font[face]').forEach(child => {
-                    child.style.fontFamily = val;
-                    if (child.hasAttribute('face')) child.removeAttribute('face');
-                });
+                const applyFontFamilyToRoot = (rootEl) => {
+                    if (!rootEl) return;
+                    rootEl.style.fontFamily = val;
+                    rootEl.querySelectorAll('[style*="font-family"], font[face]').forEach(child => {
+                        child.style.fontFamily = val;
+                        if (child.hasAttribute('face')) child.removeAttribute('face');
+                    });
+                };
+                const isLinkedChain = !!(state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box'));
+                if (isLinkedChain && typeof window.applyToLinkedTextBoxChain === 'function') {
+                    window.applyToLinkedTextBoxChain(state.selectedEl, (box, boxContent) => {
+                        applyFontFamilyToRoot(boxContent);
+                    });
+                    if (typeof window.flowTextBoxes === 'function') {
+                        window.flowTextBoxes(state.selectedEl);
+                    }
+                } else {
+                    applyFontFamilyToRoot(editableRoot);
+                }
             } else {
                 document.execCommand('fontName', false, val);
             }
@@ -1483,6 +1699,10 @@ function updateFloatToolbarValues() {
     if (alignL) alignL.classList.toggle('active-tool', align === 'left' || align === 'start');
     if (alignC) alignC.classList.toggle('active-tool', align === 'center');
     if (alignR) alignR.classList.toggle('active-tool', align === 'right' || align === 'end');
+
+    if (window.VariableFontsEngine && typeof window.VariableFontsEngine.syncRibbonUI === 'function') {
+        window.VariableFontsEngine.syncRibbonUI(node);
+    }
 }
 
 window.updateFloatToolbarValues = updateFloatToolbarValues;
@@ -1754,6 +1974,7 @@ const fontList = [
     "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Grotesk", "Space Mono", "Syne", "Teko", "Titillium Web",
     "Ubuntu", "Varela Round", "Vollkorn", "Work Sans", "Yanone Kaffeesatz", "Zilla Slab"
 ];
+window.fontList = fontList;
 
 /* =========================================================================
    STYLED TEXT BOX SYSTEM (v5.11.9)

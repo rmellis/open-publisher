@@ -1,4 +1,4 @@
-﻿// OpenPublisher Print Engine (v5.22.16)
+﻿// OpenPublisher Print Engine (v5.23.0)
 (function installNativePrintHooks() {
 
     function shouldApplyCors(url) {
@@ -145,7 +145,7 @@
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.16 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.23.0 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(pageIdx, pagesToPrint.length, page)
@@ -482,6 +482,10 @@
                 // Pre-flight: Strip interactive handles and non-printable elements
                 scaler.querySelectorAll('.pb-drag-handle, #pb-float-toolbar, .no-print, .op-toc-update-badge').forEach(el => el.remove());
                 scaler.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());
+                if (window.VariableFontsEngine && typeof window.VariableFontsEngine.getUsedVariableFontsInDocument === 'function') {
+                    const usedVfs = window.VariableFontsEngine.getUsedVariableFontsInDocument();
+                    await Promise.all(usedVfs.map(vf => window.VariableFontsEngine.ensureFontLoaded(vf.family)));
+                }
 
                 // ✨ UNIVERSAL IMAGE ASPECT RATIO & OBJECT-FIT NORMALIZATION FOR PRINT SPOOLER (v5.19.9) ✨
                 if (typeof normalizeObjectFitImagesForPrint === 'function') {
@@ -2326,6 +2330,7 @@
             if (img.classList.contains('op-print-shadow-underlay') ||
                 img.classList.contains('op-theme-baked-bg') ||
                 img.classList.contains('wa-baked-img') ||
+                img.classList.contains('op-vf-baked-img') ||
                 img.hasAttribute('data-op-crop-normalized')) {
                 continue;
             }
@@ -3200,7 +3205,7 @@
                     if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
                 }
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.22.16 per-page support) ✨
+                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.23.0 per-page support) ✨
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(i, totalPages, page)
@@ -3544,6 +3549,11 @@
 
                 // Strip any rogue shadow underlays accidentally placed on progress bar or chart elements
                 pageWrapper.querySelectorAll('.pub-element[data-type="progress-bar"] .op-print-shadow-underlay, .progress-bar-widget .op-print-shadow-underlay, .pub-element[data-type="chart"] .op-print-shadow-underlay').forEach(el => el.remove());
+
+                // Pre-flight: High-resolution SVG/Canvas baking for variable font elements (html2canvas ignores font-variation-settings)
+                if (window.VariableFontsEngine && typeof window.VariableFontsEngine.bakeVariableFontElementsForCanvas === 'function') {
+                    await window.VariableFontsEngine.bakeVariableFontElementsForCanvas(pageWrapper, targetScale || 2);
+                }
 
                 // Pre-flight: Normalize progress bar repeating gradients for html2canvas
                 // html2canvas fails to parse CSS repeating-linear-gradient(), causing striped bars to render empty.

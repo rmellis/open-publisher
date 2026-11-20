@@ -262,6 +262,41 @@
                 state.pages[0].themeSettings = Object.assign({}, data.themeSettings);
             }
         }
+        function refreshAfterVariableFontRestore() {
+            const paperEl = document.getElementById('paper');
+            if (typeof window.forceRepaint === 'function') {
+                window.forceRepaint();
+            }
+            if (paperEl && typeof window.initTextFlowLinks === 'function') {
+                window.initTextFlowLinks(paperEl);
+            }
+            if (paperEl && typeof window.upgradeAllCanvasWordArt === 'function') {
+                window.upgradeAllCanvasWordArt(paperEl);
+            }
+            if (typeof window.generateAllThumbnails === 'function') {
+                window.generateAllThumbnails();
+            } else if (typeof window.updateThumbnails === 'function') {
+                window.updateThumbnails();
+            }
+            if (typeof window.updateDocumentFontsSection === 'function') {
+                window.updateDocumentFontsSection(true);
+            }
+            if (window.VariableFontsEngine && typeof window.VariableFontsEngine.syncRibbonUI === 'function') {
+                window.VariableFontsEngine.syncRibbonUI();
+            }
+        }
+
+        if (window.VariableFontsEngine && typeof window.VariableFontsEngine.restoreFromOpub === 'function') {
+            Promise.resolve(window.VariableFontsEngine.restoreFromOpub(data.variableFonts || null, data))
+                .then((loadedAny) => {
+                    if (loadedAny) {
+                        refreshAfterVariableFontRestore();
+                    } else if (typeof window.updateDocumentFontsSection === 'function') {
+                        window.updateDocumentFontsSection(true);
+                    }
+                })
+                .catch(() => {});
+        }
         
         // Render the page onto canvas paper
         if (typeof renderPage === 'function' && state.pages[0]) {
@@ -367,6 +402,9 @@
 
         // Stage 1 (0ms - Immediate): Reading publication..
         updateStage('Reading publication..', 'Analyzing publication structure', 20);
+        if (window.VariableFontsEngine && typeof window.VariableFontsEngine.restoreFromOpub === 'function') {
+            Promise.resolve(window.VariableFontsEngine.restoreFromOpub(data.variableFonts || null, data)).catch(() => false);
+        }
 
         // Stage 2 (180ms): Extracting images..
         setTimeout(() => {

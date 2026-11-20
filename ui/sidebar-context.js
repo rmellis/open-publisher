@@ -391,8 +391,8 @@ function toggleCustomDropdown(type) {
             const rect = btn.getBoundingClientRect();
             menu.style.left = rect.left + 'px';
             menu.style.top = (rect.bottom + 2) + 'px';
-            // We must ensure the width matches or is appropriate
-            menu.style.width = '200px'; 
+            // Widen slightly for VF badges and filter bar
+            menu.style.width = '240px'; 
             menu.style.zIndex = '999999';
         }
         menu.style.display = 'block';
@@ -402,11 +402,14 @@ function toggleCustomDropdown(type) {
         const labelEl = document.getElementById(labelId);
         const currentFont = labelEl ? labelEl.innerText.trim() : '';
         if (currentFont) {
-            const items = Array.from(menu.querySelectorAll('.font-item'));
-            const matched = items.find(it => it.innerText.trim().toLowerCase() === currentFont.toLowerCase());
+            const items = Array.from(menu.querySelectorAll('.font-item')).filter(it => !it.classList.contains('vf-filter-hidden') && it.style.display !== 'none');
+            const matched = items.find(it => ((it.dataset && it.dataset.fontName) || it.innerText).trim().toLowerCase() === currentFont.toLowerCase());
             if (matched && typeof window.highlightFontItem === 'function') {
                 window.highlightFontItem(menu, matched, true);
             }
+        }
+        if (typeof window.loadVisibleDropdownVariableFonts === 'function') {
+            requestAnimationFrame(() => window.loadVisibleDropdownVariableFonts(menu));
         }
     } else {
         menu.style.display = 'none';

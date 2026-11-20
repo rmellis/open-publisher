@@ -389,6 +389,7 @@ const ContextMenuSystem = {
                     }
                     html += this.buildItem('Drop Cap', 'fa-heading', 'ContextMenuActions.dropCap()');
                     html += this.buildItem('Change Case', 'fa-font', 'ContextMenuActions.changeCase()');
+                    html += this.buildItem('Variable Font Axes...', 'fa-sliders-h', 'if(window.showVariableFontsModal) window.showVariableFontsModal();');
                     if (window._contextTargetLink) {
                         html += this.buildItem('Remove Hyperlink', 'fa-unlink', 'ContextMenuActions.removeHyperlink()');
                     } else if (sel && sel.toString().trim().length > 0) {

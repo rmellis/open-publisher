@@ -1995,6 +1995,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             documentProperties: state.documentProperties || { author: '', company: '', subject: '', keywords: '' }
         };
 
+        if (window.VariableFontsEngine && typeof window.VariableFontsEngine.getExportFontDataForOpub === 'function') {
+            const vfExport = window.VariableFontsEngine.getExportFontDataForOpub();
+            if (vfExport) docData.variableFonts = vfExport;
+        }
+
         if (window.DashboardSystem) {
             try {
                 DashboardSystem.addToRecent(currentTitle + '.opub', docData, '', detectedFormat);
@@ -2124,6 +2129,10 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         const titleEl = document.getElementById('doc-title');
         const docTitle = titleEl ? titleEl.innerText.replace(/ \*$/, '') : 'Publication';
         const docData = { title: docTitle, pages: state.pages };
+        if (window.VariableFontsEngine && typeof window.VariableFontsEngine.getExportFontDataForOpub === 'function') {
+            const vfExport = window.VariableFontsEngine.getExportFontDataForOpub();
+            if (vfExport) docData.variableFonts = vfExport;
+        }
         let payload = docData;
         if (state.documentPassword && typeof window.encryptDocumentData === 'function') {
             try {

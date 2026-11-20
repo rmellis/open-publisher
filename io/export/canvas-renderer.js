@@ -258,6 +258,10 @@ window.capturePageAsCanvasWithFilters = async function(paper, scaleMultiplier) {
         window.bakeElementShadowUnderlays(clone, paper, scaleMultiplier || 2);
     }
 
+    if (window.VariableFontsEngine && typeof window.VariableFontsEngine.bakeVariableFontElementsForCanvas === 'function') {
+        await window.VariableFontsEngine.bakeVariableFontElementsForCanvas(clone, scaleMultiplier || 2);
+    }
+
     const canvas = await html2canvas(clone, { 
         scale: scaleMultiplier, 
         useCORS: true, 

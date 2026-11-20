@@ -42,6 +42,11 @@ window.saveDocument = function() {
     if (state.watermark) {
         docData.watermark = JSON.parse(JSON.stringify(state.watermark));
     }
+
+    if (window.VariableFontsEngine && typeof window.VariableFontsEngine.getExportFontDataForOpub === 'function') {
+        const vfExport = window.VariableFontsEngine.getExportFontDataForOpub();
+        if (vfExport) docData.variableFonts = vfExport;
+    }
     
     const paperEl = document.getElementById('paper');
     if (paperEl && paperEl.getAttribute('data-theme-saved') === 'true') {
@@ -2293,6 +2298,10 @@ window.OpenPubImporter = (function() {
 
             const textEls = page.elements.filter((el, idx) => idx !== bgElIdx && el.innerHTML && el.innerHTML.includes('contenteditable'));
             if (textEls.length === 0) return;
+
+            if (textEls.some(el => el.innerHTML && (el.innerHTML.includes('data-vf-font') || el.innerHTML.includes('font-variation-settings')))) {
+                return;
+            }
 
             // Check if there are legacy cloned shadow nodes even without bgElIdx
             let hasClonedShadows = false;
