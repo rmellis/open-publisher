@@ -98,6 +98,24 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 
 ---
 
+<a id="what-happened-to-the-gecko-windows-build"></a>
+## What Happened to the Experimental Gecko Windows Build (and Why v5.23.1 Rolls Back to NW.js)
+
+Over the last 41 updates, I built an experimental Mozilla Gecko-based desktop shell for OpenPublisher on Windows. It delivered roughly half the installer size, faster startup, smoother canvas performance on older hardware (including Windows 7), and a built-in wrapper updater.
+
+However, as a 100% free, self-funded GNU GPL v2 open-source project, OpenPublisher does not pay for commercial EV code-signing certificates. When the new build was promoted across software directories, the unsigned 48 KB C# launcher (`OpenPublisher.exe`) triggered an automated cloud machine-learning false positive in Microsoft Defender. Although Microsoft's security team reviewed the dispute and cleared the binary as clean (followed by Malwarebytes), the brief delay allowed automated threat feeds and dozens of third-party heuristic scanners to mirror the initial flag on VirusTotal.
+
+That automated cascade triggered software directory rejections and automated link filtering on Facebook (including retroactive removals of older release posts), even though the source code is completely public and clean.
+
+Rather than fighting an endless game of whack-a-mole with dozens of automated heuristic feeds, I made the pragmatic call to:
+1. **Retire the experimental Gecko Windows packages** and strip those binaries from all 41 historical GitHub Releases.
+2. **Restore our proven, clean NW.js Windows Installer and Portable builds** as the primary Windows release, keeping the compiled executables completely frozen so their clean binary reputation stays intact.
+3. **Deliver desktop fixes downstream through the web application (`v5.23.1`):** Instead of rebuilding `setup.exe`, `v5.23.1` eliminates the NW.js cold-start `.opub` file-association blank-canvas bug (caused by orphaned `#paper.paper-pouring` transitions and startup timing races) 100% inside the web app while preserving the wrapper's 4-step atomic save system untouched.
+
+The web app at `openpublisher.app` remains completely clean on Google Safe Browsing and VirusTotal URL scanners, and all NW.js desktop users receive `v5.23.0` (Variable Font Studio) and `v5.23.1` (cold-start `.opub` fix) automatically on launch.
+
+---
+
 > ### 📖 Documentation & Knowledge Base
 > This README is a quick-reference overview. For complete, up-to-date guides packed with **step-by-step instructions, screenshots, and tutorials**, visit our interactive knowledge base:
 >
@@ -355,27 +373,6 @@ Open Publisher is available in NW.js editions for Windows, alongside a dedicated
 - **Windows XP Client (`.exe`)** - Dedicated standalone client for Windows XP SP3, featuring a customized chromeless runtime, integrated window controls, and full native branding.
 - **Safe Mode Startup** - Launch with `--safe-mode` or `--reset` from the command line to purge cached data, reset layout bounds, and troubleshoot faulty extensions.
 - MyDockFinder native menu bar integration support.
-
-<a id="what-happened-to-the-gecko-windows-build"></a>
-#### What Happened to the Gecko Windows Build?
-
-Before its removal, the Gecko Windows edition represented a huge step forward for desktop users:
-
-- Pushed 41 updates to Gecko
-- Added a custom update system and a ton of Gecko-specific bug fixes
-- Hit 2x faster loading speeds, half the file size, and 5x better performance on older machines (including Windows 7 support)
-
-The Gecko launcher looked like a great move. It wasn't showing any issues in testing and users seemed to be getting along with it fine, so we started advertising the new version on as many sites as possible. That turned out to be the worst timing we could have possibly picked.
-
-When the Gecko launcher was compiled, we left the code unsigned. Code signing costs money, and for an open-source project that already funds itself, it just isn't worth the expense. Unfortunately, the unsigned code issue blew up much bigger than we anticipated because of an extra C# system tray launcher (`op_tray.exe`). Microsoft flagged the C# tray icon as obfuscated, even though it wasn't.
-
-About a day later, Malwarebytes copied Microsoft's hashes and definitions, mistakenly flagging the Gecko launcher as a virus because of that tray icon. Since Windows Defender never threw an alert on any of our test machines, we had no idea until a user reported it. The problem was that the user tested it by uploading it to VirusTotal, which put the file in front of every antivirus engine in the world. Initially, it came back clean, but after a few days of going unnoticed, the issue cascaded dramatically as other vendors started copying Microsoft's flag.
-
-As soon as the user reported it, we reached out to Microsoft to clear it up, and it would have been just in time to save things. However, the first support representative rejected the dispute without looking into it and marked it as malicious. We immediately disputed it again, and a higher-level security team at Microsoft reviewed, cleared the detection, and apologized, but by then it was too late: more than 35 antivirus engines had already flagged the Gecko launcher.
-
-This triggered security warnings across every site hosting `setup.exe`, and Facebook began systematically removing hundreds of our posts one by one even after we disputed them. We entered emergency mode, messaging antivirus vendors with clean hashes as quickly as possible, yet copycat vendors kept replicating the stale Microsoft hashes up to around 50 false malicious detections. Software directories began delisting Open Publisher, leaving no realistic way to outrun the cascade on that build.
-
-As a result, we rolled the Windows client 41 updates back downstream to the Chromium-based NW.js (Node-WebKit) wrapper. Because it runs the earlier wrapper build (which lacked the Gecko auto-update system and carried wrapper bugs already solved on Firefox/Gecko), and because we cannot modify or recompile the working `.exe` without resetting reputation and triggering new hash checks, we have been backporting as many fixes as possible directly inside the web application itself to protect the trust score of `openpublisher.app` and avoid forcing a full rebrand. All Gecko binaries and components were stripped from every GitHub release, though some third-party platforms and social filters still retain legacy flags from the incident.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/af83b0b5-6d2b-4ddd-ac1c-cb0d2e22976a" alt="Open Publisher on Windows 11" width="700"/>
