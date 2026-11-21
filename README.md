@@ -95,6 +95,8 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 
 </div>
 
+> **Online vs. Offline Note:** The prebuilt Windows/Linux/macOS desktop packages use a **hybrid architecture** that requires an active internet connection on launch to load the latest live workspace automatically (while still processing your PDF and `.opub` files locally on your device with no server uploads). For **100% air-gapped offline use**, clone this GitHub repository and run the project locally.
+
 
 ---
 
