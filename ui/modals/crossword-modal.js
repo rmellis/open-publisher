@@ -1308,7 +1308,9 @@
         helpOverlay.querySelector('#cw-help-close-x').addEventListener('click', closeHelp);
         helpOverlay.querySelector('#cw-help-ok-btn').addEventListener('click', closeHelp);
         helpOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === helpOverlay) closeHelp();
+            if (e.target === helpOverlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(helpBox);
+            }
         });
     }
 
@@ -1918,7 +1920,9 @@
         overlay.querySelector('#cw-cancel-btn').addEventListener('click', closeModal);
         overlay.addEventListener('mousedown', (e) => {
             if (window.CustomColorPicker && window.CustomColorPicker.isOpen) return;
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(overlay.querySelector('#cw-modal-box'));
+            }
         });
         overlay.querySelector('#cw-insert-btn').addEventListener('click', () => {
             const layoutToInsert = modalState.layout;

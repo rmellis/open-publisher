@@ -1194,8 +1194,10 @@
 
         helpOverlay.querySelector('#sp-help-close-x').addEventListener('click', closeHelp);
         helpOverlay.querySelector('#sp-help-ok-btn').addEventListener('click', closeHelp);
-        helpOverlay.addEventListener('click', (ev) => {
-            if (ev.target === helpOverlay) closeHelp();
+        helpOverlay.addEventListener('mousedown', (ev) => {
+            if (ev.target === helpOverlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(helpBox);
+            }
         });
     };
 

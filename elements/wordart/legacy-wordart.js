@@ -1545,7 +1545,10 @@ window.initWordArt = function() {
             </style>
             
             <div class="wa-modal-header" id="legacy-wa-modal-header">
-                <div class="custom-dialog-close" id="legacy-wa-close-x" title="Close" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
+                <div style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
+                    <div class="custom-dialog-close op-modal-help-btn" id="legacy-wa-help-btn" title="WordArt Gallery (Legacy) Help" onclick="event.stopPropagation(); if(window.OpenPublisherHelp) window.OpenPublisherHelp.open('wordart-legacy');"><i class="fas fa-question"></i></div>
+                    <div class="custom-dialog-close" id="legacy-wa-close-x" title="Close"><i class="fas fa-times"></i></div>
+                </div>
                 <div class="wa-modal-title">WordArt Gallery (Legacy)</div>
                 <input type="text" id="legacy-wa-text" class="wa-modal-input" placeholder="Enter Your Text Here..." value="${initialText ? initialText.replace(/"/g, '&quot;') : ''}">
             </div>
@@ -1670,7 +1673,7 @@ window.initWordArt = function() {
                 let offsetY = 0;
 
                 header.addEventListener('mousedown', function(e) {
-                    if (e.target.tagName.toLowerCase() === 'input' || e.target.id === 'legacy-wa-close-x' || e.target.closest('#legacy-wa-close-x')) return;
+                    if (e.target.tagName.toLowerCase() === 'input' || e.target.closest('.custom-dialog-close')) return;
                     isDragging = true;
                     const rect = dialogBox.getBoundingClientRect();
                     offsetX = e.clientX - rect.left;

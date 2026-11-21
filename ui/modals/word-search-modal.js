@@ -1039,7 +1039,9 @@
         helpOverlay.querySelector('#ws-help-close-x').addEventListener('click', closeHelp);
         helpOverlay.querySelector('#ws-help-ok-btn').addEventListener('click', closeHelp);
         helpOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === helpOverlay) closeHelp();
+            if (e.target === helpOverlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(helpBox);
+            }
         });
     }
 
@@ -1774,7 +1776,9 @@
         overlay.querySelector('#ws-cancel-btn').addEventListener('click', closeModal);
         overlay.addEventListener('mousedown', (e) => {
             if (window.CustomColorPicker && window.CustomColorPicker.isOpen) return;
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(overlay.querySelector('#ws-modal-box'));
+            }
         });
         overlay.querySelector('#ws-insert-btn').addEventListener('click', () => {
             const puzzleToInsert = modalState.puzzle;

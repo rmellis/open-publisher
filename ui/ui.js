@@ -6,10 +6,20 @@ const DialogSystem = {
             overlay.className = 'custom-dialog-overlay';
             overlay.id = 'custom-dialog-overlay';
             document.body.appendChild(overlay);
+
+            overlay.addEventListener('mousedown', (e) => {
+                if (e.target === overlay) {
+                    const box = document.getElementById('custom-dialog-box') || overlay.querySelector('.custom-dialog');
+                    if (box && typeof window.triggerModalPulse === 'function') {
+                        window.triggerModalPulse(box);
+                    }
+                }
+            });
             
             // Allow Esc key to close open dialogs
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
+                    if (document.getElementById('op-universal-help-overlay') || document.getElementById('sp-help-overlay')) return;
                     const overlayElem = document.getElementById('custom-dialog-overlay');
                     // Only close if it's currently displayed
                     if (overlayElem && overlayElem.style.display !== 'none') {
@@ -26,13 +36,17 @@ const DialogSystem = {
             overlay = document.getElementById('custom-dialog-overlay');
         }
         if (!overlay) return;
+
+        const headerActionsHtml = (window.OpenPublisherHelp && typeof window.OpenPublisherHelp.getDialogHeaderActionsHtml === 'function')
+            ? window.OpenPublisherHelp.getDialogHeaderActionsHtml(title, contentHtml)
+            : `<span class="custom-dialog-close" onclick="DialogSystem.close()"><i class="fas fa-times"></i></span>`;
         
         // Build the HTML structure
         overlay.innerHTML = `
             <div class="custom-dialog" id="custom-dialog-box" style="transform: translate(0px, 0px);">
                 <div class="custom-dialog-header" id="custom-dialog-header">
                     <span>${title}</span>
-                    <span class="custom-dialog-close" onclick="DialogSystem.close()"><i class="fas fa-times"></i></span>
+                    ${headerActionsHtml}
                 </div>
                 <div class="custom-dialog-body">
                     ${contentHtml}
@@ -191,6 +205,8 @@ const DialogSystem = {
         overlay.style.display = 'flex';
     },
     close: function() {
+        const openHelp = document.getElementById('op-universal-help-overlay');
+        if (openHelp && openHelp.parentNode) openHelp.parentNode.removeChild(openHelp);
         if (window._dialogCancelHook) {
             window._dialogCancelHook();
             window._dialogCancelHook = null;
@@ -205,6 +221,7 @@ const DialogSystem = {
         header.onmousedown = dragStart;
 
         function dragStart(e) {
+            if (e.target && e.target.closest && e.target.closest('.custom-dialog-close, .op-modal-help-btn, button, input, select')) return;
             e.preventDefault();
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;

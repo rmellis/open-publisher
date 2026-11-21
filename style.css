@@ -10505,12 +10505,13 @@ body.dark-mode .vf-dropdown-footer {
     flex-direction: column;
     overflow: hidden;
 }
-.op-vf-modal-window.op-vf-pulse {
-    animation: opVfPulse 0.25s ease;
+.op-vf-modal-window.op-vf-pulse,
+.op-modal-pulse {
+    animation: opVfPulse 0.25s ease !important;
 }
 @keyframes opVfPulse {
     0%, 100% { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34); }
-    50% { box-shadow: 0 0 0 3px var(--ui-theme-color, #007670), 0 24px 60px rgba(0, 0, 0, 0.4); }
+    50% { box-shadow: 0 0 0 3px var(--ui-theme-color, #007670), 0 24px 60px rgba(0, 0, 0, 0.4) !important; }
 }
 body.dark-mode .op-vf-modal-window {
     background: #1e293b;

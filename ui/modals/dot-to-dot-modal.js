@@ -1,4 +1,4 @@
-// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.23.4)
+// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.24.0)
 // Converts any canvas vector path, shape outline, built-in silhouette, custom SVG path,
 // or click-plotted path into a numbered sequence of dot nodes with configurable intervals
 // (1s, 2s, 5s, 10s, A-Z, a-z), curved or straight guide hints, and automatic Page 2 Answer Keys.
@@ -2092,7 +2092,9 @@
         helpOverlay.querySelector('#dtd-help-close-x').addEventListener('click', closeHelp);
         helpOverlay.querySelector('#dtd-help-ok-btn').addEventListener('click', closeHelp);
         helpOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === helpOverlay) closeHelp();
+            if (e.target === helpOverlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(helpBox);
+            }
         });
 
         renderTopic(topics[0].id, false);
@@ -2981,7 +2983,9 @@
         overlay.querySelector('#dtd-cancel-btn').addEventListener('click', closeModal);
         overlay.addEventListener('mousedown', (e) => {
             if (window.CustomColorPicker && window.CustomColorPicker.isOpen) return;
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(overlay.querySelector('#dtd-modal-box'));
+            }
         });
 
         overlay.querySelector('#dtd-insert-btn').addEventListener('click', () => {

@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="https://github.com/user-attachments/assets/bbedf7fb-a92a-4628-b117-25d729f62f66" alt="Open Publisher Logo" width="500"/>
 </p>
 <p align="center">
@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.23.4" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.24.0" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.23.4" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.24.0" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---

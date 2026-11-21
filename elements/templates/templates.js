@@ -1,4 +1,4 @@
-﻿function initAds() {
+function initAds() {
     if (window.AdvertisementEngine && typeof window.AdvertisementEngine.init === "function") {
         window.AdvertisementEngine.init();
     }
@@ -271,7 +271,7 @@
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.23.4`;
+    return `${path}?v=5.24.0`;
 };
 
 function initTemplates() {

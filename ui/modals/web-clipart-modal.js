@@ -89,7 +89,10 @@ window.showWebClipartModal = function() {
                     <input type="text" id="clipart-search-input" placeholder="Search for clipart (e.g., 'tree', 'computer', 'apple')..." style="width: 100%; padding: 10px 15px 10px 40px; border-radius: 20px; border: 1px solid #ddd; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.95); user-select: text; -webkit-user-select: text; font-family: 'Segoe UI', sans-serif;">
                 </div>
             </div>
-            <div class="custom-dialog-close" id="clipart-close-x" style="position: absolute; top: 8px; right: 8px; z-index: 10;"><i class="fas fa-times"></i></div>
+            <div style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
+                <div class="custom-dialog-close op-modal-help-btn" id="clipart-help-btn" title="Clipart Gallery Help" onclick="event.stopPropagation(); if(window.OpenPublisherHelp) window.OpenPublisherHelp.open('clipart-gallery');"><i class="fas fa-question"></i></div>
+                <div class="custom-dialog-close" id="clipart-close-x" title="Close"><i class="fas fa-times"></i></div>
+            </div>
         </div>
         <div class="clipart-grid-container" id="clipart-grid-container" style="height: 50vh;">
             <!-- Grid goes here -->
@@ -116,7 +119,7 @@ window.showWebClipartModal = function() {
             if (header) {
                 let isDragging = false;
                 header.addEventListener('mousedown', function(e) {
-                    if (e.target.closest('#clipart-search-wrapper') || e.target.closest('#clipart-close-x')) return;
+                    if (e.target.closest('#clipart-search-wrapper') || e.target.closest('.custom-dialog-close')) return;
                     isDragging = true;
                     const rect = dialogBox.getBoundingClientRect();
                     const offsetX = e.clientX - rect.left;

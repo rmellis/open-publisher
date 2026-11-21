@@ -1,5 +1,5 @@
-﻿/* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.23.4)
+/* ============================================================================
+   OpenPublisher AI Layout & Command Assistant (v5.24.0)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
@@ -2582,7 +2582,10 @@
             <div class="custom-dialog op-ai-dialog" id="op-ai-dialog" style="transform: translate(0px, 0px);">
                 <div class="custom-dialog-header" id="op-ai-dialog-header">
                     <span><i class="fas fa-wand-magic-sparkles" style="margin-right:8px;"></i>OpenPublisher AI Studio</span>
-                    <span class="custom-dialog-close" id="op-ai-close-btn" title="Close (Esc)"><i class="fas fa-times"></i></span>
+                    <div class="op-dialog-header-actions" style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                        <span role="button" tabindex="0" class="custom-dialog-close op-modal-help-btn" id="op-ai-help-btn" title="OpenPublisher AI Studio Help" aria-label="OpenPublisher AI Studio Help" onclick="event.stopPropagation(); if(window.OpenPublisherHelp) window.OpenPublisherHelp.open('ai-studio');"><i class="fas fa-question"></i></span>
+                        <span class="custom-dialog-close" id="op-ai-close-btn" title="Close (Esc)"><i class="fas fa-times"></i></span>
+                    </div>
                 </div>
                 <div class="custom-dialog-body op-ai-body">
                     <!-- Tab Strip -->
@@ -2828,6 +2831,7 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && overlay.style.display !== 'none') {
+                if (document.getElementById('op-universal-help-overlay')) return;
                 closeModal();
             }
         });
@@ -3165,7 +3169,7 @@
     global.generateAIImage = generateAIImage;
     global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.23.4',
+        VERSION: '5.24.0',
         WORKER_NODES: AI_WORKER_NODES.slice(),
         IMAGE_WORKER_NODES: AI_IMAGE_WORKER_NODES.slice(),
         COOLDOWN_MS,

@@ -1119,7 +1119,9 @@
         helpOverlay.querySelector('#cg-help-close-x').addEventListener('click', closeHelp);
         helpOverlay.querySelector('#cg-help-ok-btn').addEventListener('click', closeHelp);
         helpOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === helpOverlay) closeHelp();
+            if (e.target === helpOverlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(helpBox);
+            }
         });
 
         renderTopic(topics[0].id, false);
@@ -1684,7 +1686,9 @@
         overlay.querySelector('#cg-cancel-btn').addEventListener('click', closeModal);
         overlay.addEventListener('mousedown', (e) => {
             if (window.CustomColorPicker && window.CustomColorPicker.isOpen) return;
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay && typeof window.triggerModalPulse === 'function') {
+                window.triggerModalPulse(overlay.querySelector('#cg-modal-box'));
+            }
         });
         overlay.querySelector('#cg-insert-btn').addEventListener('click', () => {
             syncControlsToState();
