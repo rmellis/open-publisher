@@ -1,4 +1,4 @@
-﻿// Open Publisher UI Interactions (v5.23.2)
+﻿// Open Publisher UI Interactions (v5.23.3)
 (function installRulerTrackingEngine() {
     console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.19.1)...");
 
@@ -961,7 +961,7 @@
             aboutGroup.id = 'about-btn-group';
             aboutGroup.className = 'group';
             aboutGroup.innerHTML = `
-                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.23.2" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
+                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.23.3" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
                 <div class="tool-btn" onclick="window.showAboutDialog()"><i class="fas fa-info-circle"></i>About</div>
                 <div class="group-label">Help</div>
             `;
@@ -1020,26 +1020,42 @@
         const aboutHtml = `
             <style>
                 .about-container { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; color: #334155; text-align: center; padding: 5px; box-sizing: border-box; width: 100%; }
-                .about-header { margin-bottom: 15px; }
+                .about-header { margin-bottom: 16px; }
                 
                 /* Increased Title & Logo Size */
-                .about-title { font-size: 30px; font-weight: 700; color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; gap: 10px; }
-                .about-title i { font-size: 36px; }
+                .about-title { font-size: 38px; font-weight: 700; color: var(--ui-theme-color); display: flex; align-items: center; justify-content: center; gap: 12px; line-height: 1.1; }
+                .about-title i { font-size: 46px; }
                 
-                .about-subtitle { font-size: 13px; color: #64748b; font-weight: 500; margin-top: 4px; }
-                .about-desc { font-size: 13px; line-height: 1.5; margin-bottom: 18px; padding: 0 10px; }
-                
-                /* ywa.app Premium Sponsor Card */
-                .ywa-card {
-                    display: flex; align-items: center; gap: 15px; padding: 15px;
-                    background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px;
-                    text-align: left; transition: all 0.2s ease; margin-bottom: 5px;
+                .about-subtitle { font-size: 15.5px; color: #64748b; font-weight: 500; margin-top: 6px; }
+                .about-desc { font-size: 13px; line-height: 1.6; margin-bottom: 16px; padding: 0 10px; }
+                .about-ext-chip {
+                    display: inline-block;
+                    padding: 0 6px;
+                    border-radius: 5px;
+                    font-weight: 500;
+                    font-size: 12.5px;
+                    line-height: 1.45;
+                    margin: 0 1px;
+                    color: #1e293b;
                 }
-                .ywa-card:hover { border-color: #cbd5e1; background: #f1f5f9; }
-                .ywa-logo { width: 56px; height: 56px; object-fit: contain; flex-shrink: 0; border-radius: 8px; }
-                .ywa-info { flex: 1; }
-                .ywa-title { font-weight: 600; font-size: 14px; color: #0f172a; margin-bottom: 4px; }
-                .ywa-desc { font-size: 12px; color: #475569; line-height: 1.4; }
+                .about-ext-chip.ext-pdf { background: #f2e6ed; color: #1e293b; }
+                .about-ext-chip.ext-pub { background: #f6e7e3; color: #1e293b; }
+                .about-ext-chip.ext-doc { background: #e1efeb; color: #1e293b; }
+                .about-ext-chip.ext-docx { background: #e5e7f7; color: #1e293b; }
+                .about-action-btn { box-shadow: 0 3px 8px rgba(15, 23, 42, 0.16); }
+                
+                /* ywa.app Compact Sponsor Bar */
+                .ywa-card {
+                    display: flex; align-items: center; gap: 8px; padding: 3px 12px 3px 9px;
+                    min-height: 28px; width: 100%; box-sizing: border-box;
+                    background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 999px;
+                    text-align: left; transition: all 0.2s ease; margin-bottom: 4px;
+                }
+                .ywa-card:hover { border-color: #94a3b8; background: #f1f5f9; }
+                .ywa-logo { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; border-radius: 4px; }
+                .ywa-info { flex: 1; display: flex; align-items: baseline; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; }
+                .ywa-title { font-weight: 600; font-size: 12px; color: #0f172a; margin: 0; flex-shrink: 0; }
+                .ywa-desc { font-size: 11px; color: #475569; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .ywa-link { color: #0ea5e9; text-decoration: none; font-weight: 600; transition: color 0.2s; }
                 .ywa-link:hover { text-decoration: underline; color: #0284c7; }
 
@@ -1068,89 +1084,216 @@
                 .about-footer-link:hover { color: #0f172a; text-decoration: none; }
                 .about-footer-link i { font-size: 16px; }
 
-                /* Project Contributors Section (Compact) */
-                .about-contributors-section { text-align: left; margin-top: 6px; margin-bottom: 2px; }
+                /* Active Contributors Section */
+                .about-contributors-section { text-align: left; margin-top: 10px; margin-bottom: 4px; }
                 .about-contrib-label {
-                    font-size: 9px; font-weight: 700; text-transform: uppercase;
-                    letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px; padding-left: 2px;
-                    display: flex; align-items: center;
+                    font-size: 10px; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: 0.05em; color: #1e293b; margin-bottom: 6px; padding-left: 2px;
+                    display: flex; align-items: center; gap: 5px;
                 }
                 .about-contributors-grid {
                     display: grid;
                     grid-template-columns: repeat(2, 1fr);
-                    gap: 3px;
+                    gap: 6px 12px;
                     box-sizing: border-box;
-                    padding: 1px 2px;
+                    padding: 2px;
                 }
                 .about-contributors-grid.scrollable {
-                    max-height: 82px;
+                    max-height: 108px;
                     overflow-y: auto;
                 }
                 .about-contributors-grid::-webkit-scrollbar { width: 4px; }
                 .about-contributors-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
                 .contributor-badge {
-                    display: flex; align-items: center; gap: 5px; padding: 2px 7px; height: 22px; box-sizing: border-box;
-                    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
+                    display: flex; align-items: center; gap: 7px; padding: 2px 6px 2px 2px; min-height: 26px; box-sizing: border-box;
+                    background: transparent; border: 1px solid transparent; border-radius: 999px;
                     text-decoration: none; color: inherit; transition: all 0.15s ease; min-width: 0;
                     position: relative;
                 }
                 .contributor-badge:hover {
-                    background: #f1f5f9; border-color: #94a3b8; text-decoration: none;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.06); z-index: 2;
+                    background: rgba(148, 163, 184, 0.12);
+                    border-color: rgba(148, 163, 184, 0.28);
+                    text-decoration: none;
                 }
                 .contributor-badge.core {
-                    background: color-mix(in srgb, var(--ui-theme-color) 7%, #ffffff);
+                    padding: 2px 9px 2px 2px;
+                    background: color-mix(in srgb, var(--ui-theme-color) 8%, #ffffff);
                     border-color: color-mix(in srgb, var(--ui-theme-color) 35%, #cbd5e1);
                 }
                 .contributor-badge.core:hover {
-                    background: color-mix(in srgb, var(--ui-theme-color) 14%, #ffffff);
+                    background: color-mix(in srgb, var(--ui-theme-color) 15%, #ffffff);
                     border-color: var(--ui-theme-color);
                 }
                 .contributor-badge.core .contributor-name {
                     color: var(--ui-theme-color);
                 }
-                .contributor-badge.core .contributor-avatar {
-                    color: var(--ui-theme-color);
+                .contributor-badge.gray-pill {
+                    padding: 2px 9px 2px 2px;
+                    background: #f1f5f9;
+                    border-color: #cbd5e1;
                 }
-                .contributor-avatar { width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; color: #475569; }
+                .contributor-badge.gray-pill:hover {
+                    background: #e2e8f0;
+                    border-color: #94a3b8;
+                }
+                .contributor-badge.gemini-pill {
+                    background: linear-gradient(90deg, rgba(219, 234, 254, 0.72) 0%, rgba(237, 233, 254, 0.78) 55%, rgba(250, 232, 255, 0.68) 100%);
+                    border: 1px solid rgba(167, 139, 250, 0.45);
+                    border-radius: 999px;
+                    padding: 2px 10px 2px 8px;
+                    min-height: 26px;
+                }
+                .contributor-badge.gemini-pill:hover {
+                    background: linear-gradient(90deg, rgba(219, 234, 254, 0.92) 0%, rgba(237, 233, 254, 0.95) 55%, rgba(250, 232, 255, 0.88) 100%);
+                    border-color: rgba(139, 92, 246, 0.65);
+                }
+                .contributor-avatar {
+                    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+                    flex-shrink: 0; border-radius: 50%; overflow: hidden;
+                }
+                .contributor-avatar-img {
+                    width: 22px; height: 22px; border-radius: 50%; object-fit: cover; display: block;
+                    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+                }
+                .contributor-monogram {
+                    width: 22px; height: 22px; border-radius: 50%;
+                    display: inline-flex; align-items: center; justify-content: center;
+                    color: #ffffff; font-size: 11px; font-weight: 700; line-height: 1;
+                    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+                }
+                .contributor-badge.gemini-pill .contributor-avatar { width: 14px; height: 14px; border-radius: 0; overflow: visible; }
                 .contributor-meta { display: flex; align-items: baseline; gap: 4px; min-width: 0; overflow: hidden; white-space: nowrap; }
-                .contributor-name { font-size: 10.5px; font-weight: 600; color: #0f172a; flex-shrink: 0; }
-                .contributor-sep { font-size: 7px; color: #94a3b8; flex-shrink: 0; }
-                .contributor-role { font-size: 9px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .contributor-name { font-size: 12px; font-weight: 600; color: #0f172a; flex-shrink: 0; }
+                .contributor-sep { font-size: 10px; color: #64748b; flex-shrink: 0; }
+                .contributor-role { font-size: 10.5px; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-                body.dark-mode .contributor-badge { background: var(--ui-bg, #1e293b) !important; border-color: var(--ui-border, #334155) !important; }
-                body.dark-mode .contributor-badge:hover { background: color-mix(in srgb, var(--ui-bg, #1e293b) 80%, white) !important; border-color: color-mix(in srgb, var(--ui-border, #334155) 70%, white) !important; }
+                body.dark-mode .about-ext-chip.ext-pdf { background: rgba(244, 182, 212, 0.16); color: #e2e8f0; }
+                body.dark-mode .about-ext-chip.ext-pub { background: rgba(251, 182, 172, 0.16); color: #e2e8f0; }
+                body.dark-mode .about-ext-chip.ext-doc { background: rgba(153, 246, 228, 0.14); color: #e2e8f0; }
+                body.dark-mode .about-ext-chip.ext-docx { background: rgba(196, 181, 253, 0.16); color: #e2e8f0; }
+                body.dark-mode .contributor-badge:hover { background: rgba(255, 255, 255, 0.08) !important; border-color: rgba(255, 255, 255, 0.18) !important; }
                 body.dark-mode .contributor-badge.core {
-                    background: color-mix(in srgb, var(--ui-theme-color) 15%, var(--ui-bg, #1e293b)) !important;
-                    border-color: color-mix(in srgb, var(--ui-theme-color) 50%, var(--ui-border, #334155)) !important;
+                    background: color-mix(in srgb, var(--ui-theme-color) 16%, var(--ui-bg, #1e293b)) !important;
+                    border-color: color-mix(in srgb, var(--ui-theme-color) 48%, var(--ui-border, #334155)) !important;
                 }
                 body.dark-mode .contributor-badge.core:hover {
                     background: color-mix(in srgb, var(--ui-theme-color) 25%, var(--ui-bg, #1e293b)) !important;
                     border-color: var(--ui-theme-color) !important;
                 }
-                body.dark-mode .contributor-badge.core .contributor-name { color: color-mix(in srgb, var(--ui-theme-color) 80%, white) !important; }
-                body.dark-mode .contributor-badge.core .contributor-avatar { color: color-mix(in srgb, var(--ui-theme-color) 80%, white) !important; }
+                body.dark-mode .contributor-badge.core .contributor-name {
+                    color: color-mix(in srgb, var(--ui-theme-color) 78%, white) !important;
+                }
+                body.dark-mode .contributor-badge.gray-pill {
+                    background: rgba(148, 163, 184, 0.14) !important;
+                    border-color: rgba(148, 163, 184, 0.34) !important;
+                }
+                body.dark-mode .contributor-badge.gray-pill:hover {
+                    background: rgba(148, 163, 184, 0.24) !important;
+                    border-color: rgba(148, 163, 184, 0.52) !important;
+                }
+                body.dark-mode .contributor-badge.gemini-pill {
+                    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.22) 55%, rgba(217, 70, 239, 0.18) 100%) !important;
+                    border-color: rgba(167, 139, 250, 0.45) !important;
+                }
                 body.dark-mode .contributor-name { color: var(--ui-text, #f1f5f9) !important; }
-                body.dark-mode .contributor-role { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 70%, transparent) !important; }
-                body.dark-mode .contributor-avatar { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 80%, transparent) !important; }
-                body.dark-mode .contributor-sep { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 40%, transparent) !important; }
-                body.dark-mode .about-contrib-label { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 70%, transparent) !important; }
+                body.dark-mode .contributor-role { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 72%, transparent) !important; }
+                body.dark-mode .contributor-sep { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 45%, transparent) !important; }
+                body.dark-mode .about-contrib-label { color: color-mix(in srgb, var(--ui-text, #f1f5f9) 85%, transparent) !important; }
+
+                /* Supporters of Open Source Card */
+                .about-supporters-card {
+                    margin-top: 10px;
+                    padding: 10px 12px;
+                    border-radius: 10px;
+                    background: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    text-align: left;
+                }
+                .about-supporters-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                    margin-bottom: 7px;
+                }
+                .about-supporters-title {
+                    font-size: 10px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: #0f172a;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+                .about-supporters-list {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                }
+                .about-supporter-pill {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 7px;
+                    padding: 4px 10px 4px 5px;
+                    border-radius: 999px;
+                    background: #ffffff;
+                    border: 1px solid #cbd5e1;
+                    font-size: 12.5px;
+                    color: #0f172a;
+                    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+                }
+                .about-supporter-avatar {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                    flex-shrink: 0;
+                }
+                .about-supporter-badge {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #115e59;
+                    background: #f0fdfa;
+                    border: 1px solid #99f6e4;
+                    border-radius: 6px;
+                    padding: 1px 7px;
+                    line-height: 1.35;
+                }
+                body.dark-mode .about-supporters-card {
+                    background: color-mix(in srgb, var(--ui-theme-color, #14b8a6) 14%, var(--ui-bg, #1e293b)) !important;
+                    border-color: color-mix(in srgb, var(--ui-theme-color, #14b8a6) 42%, var(--ui-border, #334155)) !important;
+                }
+                body.dark-mode .about-supporters-title {
+                    color: color-mix(in srgb, var(--ui-text, #f1f5f9) 88%, transparent) !important;
+                }
+                body.dark-mode .about-supporter-pill {
+                    background: var(--ui-bg, #0f172a) !important;
+                    border-color: var(--ui-border, #334155) !important;
+                    color: var(--ui-text, #f1f5f9) !important;
+                }
+                body.dark-mode .about-supporter-badge {
+                    background: rgba(20, 184, 166, 0.16) !important;
+                    border-color: rgba(45, 212, 191, 0.4) !important;
+                    color: #99f6e4 !important;
+                }
             </style>
 
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.23.2</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.23.3</div>
                 </div>
                 
                 <div class="about-desc">
                     An open-source, no-signup alternative to traditional desktop publishing software. 
                     It is <strong>100% ad-free</strong> and completely free to use. Design flyers and documents locally in your browser, with support for 
-                    editing <strong>.pdf</strong> files directly, as well as <strong>.pub</strong>, <strong>.doc</strong>, and <strong>.docx</strong> files via cloud conversion.
+                    editing <span class="about-ext-chip ext-pdf">.pdf</span> files directly, as well as <span class="about-ext-chip ext-pub">.pub</span>, <span class="about-ext-chip ext-doc">.doc</span>, and <span class="about-ext-chip ext-docx">.docx</span> files via cloud conversion.
                     <br><br>
                     <div class="about-action-btns" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
                         <a href="#" onclick="window.showKnowledgeBase(); return false;" class="about-action-btn about-kb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--ui-theme-color); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                            <img src="ui/icons/kb.webp?v=5.23.2" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
+                            <img src="ui/icons/kb.webp?v=5.23.3" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
                         </a>
                         <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/" target="_blank" rel="noopener noreferrer" class="about-action-btn about-fb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #1877F2; color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             <i class="fab fa-facebook" style="font-size: 15px;"></i> Facebook Page
@@ -1162,50 +1305,61 @@
                     <img src="https://proxy.duckduckgo.com/iu/?u=https://i.imgur.com/VkbZiaJ.png" alt="ywa.app Logo" class="ywa-logo">
                     <div class="ywa-info">
                         <div class="ywa-title">Featured on ywa.app</div>
+                        <span class="contributor-sep">&middot;</span>
                         <div class="ywa-desc">
-                            Find Open Publisher and explore a network of fast, secure, and zero-install web applications at <a href="https://ywa.app" target="_blank" class="ywa-link">ywa.app</a>.
+                            Zero-install web applications at <a href="https://ywa.app" target="_blank" class="ywa-link">ywa.app</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="about-contributors-section">
-                    <div class="about-contrib-label"><i class="fas fa-users" style="font-size: 8px; margin-right: 3px;"></i> Contributors</div>
+                    <div class="about-contrib-label"><i class="fas fa-users" style="font-size: 10px; color: #475569;"></i> Active Contributors</div>
                     <div class="about-contributors-grid scrollable">
                         <a href="https://github.com/rmellis" target="_blank" rel="noopener noreferrer" class="contributor-badge core" title="@rmellis - Main Developer">
-                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-avatar">
+                                <img src="https://avatars.githubusercontent.com/u/41447552?s=60&v=4" alt="@rmellis" class="contributor-avatar-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                                <span class="contributor-monogram" style="display:none;background:var(--ui-theme-color,#0f766e);">R</span>
+                            </div>
                             <div class="contributor-meta">
                                 <span class="contributor-name">@rmellis</span>
-                                <span class="contributor-sep">•</span>
+                                <span class="contributor-sep">&middot;</span>
                                 <span class="contributor-role">Main Developer</span>
                             </div>
                         </a>
                         <a href="https://github.com/Tallulah95" target="_blank" rel="noopener noreferrer" class="contributor-badge core" title="@tallulah95 - Main Designer & Tester">
-                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                            <div class="contributor-avatar">
+                                <img src="https://avatars.githubusercontent.com/u/78120197?s=64&v=4" alt="@tallulah95" class="contributor-avatar-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                                <span class="contributor-monogram" style="display:none;background:var(--ui-theme-color,#0f766e);">T</span>
+                            </div>
                             <div class="contributor-meta">
                                 <span class="contributor-name">@tallulah95</span>
-                                <span class="contributor-sep">•</span>
+                                <span class="contributor-sep">&middot;</span>
                                 <span class="contributor-role">Main Designer &amp; Tester</span>
                             </div>
                         </a>
-                        <a href="https://github.com/anupamme" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@anupamme - Security Fix">
-                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                        <a href="https://github.com/anupamme" target="_blank" rel="noopener noreferrer" class="contributor-badge gray-pill" title="@anupamme - Security Fix">
+                            <div class="contributor-avatar">
+                                <span class="contributor-monogram" style="background:#b94a58;">A</span>
+                            </div>
                             <div class="contributor-meta">
                                 <span class="contributor-name">@anupamme</span>
-                                <span class="contributor-sep">•</span>
+                                <span class="contributor-sep">&middot;</span>
                                 <span class="contributor-role">Security Fix</span>
                             </div>
                         </a>
-                        <a href="https://github.com/lucastucious" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="@lucastucious - DPI Feature Suggestion">
-                            <div class="contributor-avatar"><i class="fab fa-github"></i></div>
+                        <a href="https://github.com/lucastucious" target="_blank" rel="noopener noreferrer" class="contributor-badge gray-pill" title="@lucastucious - DPI Feature Suggestion">
+                            <div class="contributor-avatar">
+                                <span class="contributor-monogram" style="background:#8e61c6;">L</span>
+                            </div>
                             <div class="contributor-meta">
                                 <span class="contributor-name">@lucastucious</span>
-                                <span class="contributor-sep">•</span>
+                                <span class="contributor-sep">&middot;</span>
                                 <span class="contributor-role">DPI Feature Suggestion</span>
                             </div>
                         </a>
-                        <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" class="contributor-badge" title="Gemini - Complex Problem Solver">
+                        <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" class="contributor-badge gemini-pill" title="Gemini - Complex Problem Solver">
                             <div class="contributor-avatar">
-                                <svg viewBox="0 0 24 24" width="11" height="11" fill="url(#gemini-sparkle-grad)" style="flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="url(#gemini-sparkle-grad)" style="flex-shrink:0;">
                                     <defs>
                                         <linearGradient id="gemini-sparkle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                                             <stop offset="0%" stop-color="#4285F4"/>
@@ -1218,10 +1372,25 @@
                             </div>
                             <div class="contributor-meta">
                                 <span class="contributor-name">Gemini</span>
-                                <span class="contributor-sep">•</span>
+                                <span class="contributor-sep">&middot;</span>
                                 <span class="contributor-role">Complex Problem Solver</span>
                             </div>
                         </a>
+                    </div>
+                </div>
+
+                <div class="about-supporters-card">
+                    <div class="about-supporters-header">
+                        <span class="about-supporters-title"><i class="fas fa-heart" style="color: #e11d48; font-size: 10px;"></i> Supporters of Open Source</span>
+                    </div>
+                    <div class="about-supporters-list">
+                        <div class="about-supporter-pill">
+                            <img src="https://avatars.githubusercontent.com/u/179221565?s=64&v=4" alt="Frank Reibold" class="about-supporter-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                            <span class="contributor-monogram" style="display:none;background:var(--ui-theme-color,#0f766e);">F</span>
+                            <strong>Frank Reibold</strong>
+                            <span class="contributor-sep">&middot;</span>
+                            <span class="about-supporter-badge">Founding Supporter</span>
+                        </div>
                     </div>
                 </div>
 

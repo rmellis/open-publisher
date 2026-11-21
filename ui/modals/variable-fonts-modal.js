@@ -244,13 +244,13 @@
             <div class="op-vf-notice-box" role="alertdialog" aria-modal="true">
                 <div class="op-vf-notice-header">
                     <span style="display:flex;align-items:center;gap:8px;">
-                        <img src="ui/icons/alert.png?v=5.23.2" alt="" style="width:20px;height:20px;object-fit:contain;">
+                        <img src="ui/icons/alert.png?v=5.23.3" alt="" style="width:20px;height:20px;object-fit:contain;">
                         <span>${escapeHtml(title)}</span>
                     </span>
                     <button type="button" class="custom-dialog-close" id="op-vf-notice-x" title="Close" aria-label="Close"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="op-vf-notice-body">
-                    <img src="ui/icons/alert.png?v=5.23.2" alt="Notice" style="width:40px;height:40px;object-fit:contain;flex-shrink:0;">
+                    <img src="ui/icons/alert.png?v=5.23.3" alt="Notice" style="width:40px;height:40px;object-fit:contain;flex-shrink:0;">
                     <div style="flex:1;line-height:1.45;">${escapeHtml(message)}</div>
                 </div>
                 <div class="op-vf-notice-footer">
@@ -765,7 +765,7 @@
                     </label>
                     ${studioState.showHiddenAxes ? `
                     <div class="op-vf-hidden-warning">
-                        <img src="ui/icons/alert.png?v=5.23.2" alt="Warning" style="width:22px;height:22px;object-fit:contain;flex-shrink:0;">
+                        <img src="ui/icons/alert.png?v=5.23.3" alt="Warning" style="width:22px;height:22px;object-fit:contain;flex-shrink:0;">
                         <span><strong>Hidden Axes Notice:</strong> These parametric axes are marked hidden in the OpenType <code>fvar</code> table because the font normally drives them internally. Direct edits may reduce typographic fidelity.</span>
                     </div>
                     <div class="op-vf-axes-list" id="op-vf-hidden-axes-list">

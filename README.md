@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.23.2" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.23.3" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.23.2" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.23.3" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---
@@ -159,6 +159,7 @@ The web app at `openpublisher.app` remains completely clean on Google Safe Brows
 - [Document Security and Privacy](#document-security-and-privacy)
 - [The .opub File Format](#the-opub-file-format)
 - [Keyboard Shortcuts Reference](#keyboard-shortcuts-reference)
+- [Supporters of Open Source](#supporters-of-open-source)
 - [Developers](#developers)
 
 ---
@@ -1040,6 +1041,17 @@ Open Publisher's native format is `.opub`:
 | `Enter` (Multi-Page Overview) | Open selected page for editing |
 | `Ctrl + Enter` (AI Assistant) | Generate AI layout |
 | `Escape` | Exit text editing mode / return to Single-Page from Overview |
+
+---
+
+<a id="supporters-of-open-source"></a>
+## ❤️ Supporters of Open Source
+
+OpenPublisher is 100% free, ad-free, and open source (GNU GPL v2). A huge thank you to the Patreon supporter(s) helping keep the project independent and actively developed:
+
+- **Frank Reibold** *(Founding Supporter)*
+
+Want to support ongoing development? [Support OpenPublisher on Patreon](https://patreon.com/OpenPublisher)
 
 ---
 
