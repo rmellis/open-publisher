@@ -77,7 +77,7 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
   </td>
   <td align="center" valign="top">
     <img src="https://download.openpublisher.app/images/icon_linux_deb.png" width="48" height="48" alt="Linux"/><br/>
-    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.flatpak"><strong>Flatpak</strong></a> · <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.AppImage"><strong>AppImage</strong></a><br/>
+    <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.flatpak"><strong>Flatpak</strong></a> · <a href="https://github.com/rmellis/open-publisher/releases/download/5.23.2/openpublisher5_amd64-linux.AppImage"><strong>AppImage</strong></a><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.deb">.deb</a> · <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.rpm">.rpm</a><br/>
     <a href="https://github.com/rmellis/open-publisher/releases/download/5.1.4/openpublisher5_amd64-linux.run">.run Installer</a>
   </td>
