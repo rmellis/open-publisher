@@ -460,7 +460,14 @@ const ContextMenuSystem = {
                 }
                 // 4. SHAPE CONTEXT MENU
                 else if (isShape) {
+                    if (el.hasAttribute('data-dot-to-dot')) {
+                        html += this.buildItem('Edit Connect-the-Dots...', 'fa-circle-nodes', 'if(window.DotToDotStudio) window.DotToDotStudio.showModal({ editEl: state.selectedEl })');
+                        html += this.buildDivider();
+                    }
                     html += this.buildItem('Edit Points', 'fa-draw-polygon', 'if(window.toggleShapeEditPoints) window.toggleShapeEditPoints()');
+                    if (!el.hasAttribute('data-dot-to-dot')) {
+                        html += this.buildItem('Convert to Connect-the-Dots...', 'fa-circle-nodes', 'if(window.DotToDotStudio) window.DotToDotStudio.showModal({ useSelected: true })');
+                    }
                     html += this.buildItem('Add/Edit Text', 'fa-font', 'ContextMenuActions.addShapeText()');
                     html += this.buildItem('Set as Default Shape', 'fa-check-circle', 'ContextMenuActions.setDefaultShape()');
                     html += this.buildDivider();

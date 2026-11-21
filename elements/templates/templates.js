@@ -271,7 +271,7 @@
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.23.3`;
+    return `${path}?v=5.23.4`;
 };
 
 function initTemplates() {
