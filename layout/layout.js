@@ -326,9 +326,15 @@ window.applySnapping = function(x, y, elW, elH, el, e) {
     sgX.style.opacity = '0';
 
     if (state.snap.grid) {
-        const tol = 15;
-        const gx = Math.round(x / 20) * 20;
-        const gy = Math.round(y / 20) * 20;
+        const paperEl = document.getElementById('paper');
+        const rawGrid = paperEl ? parseFloat(getComputedStyle(paperEl).getPropertyValue('--grid-spacing')) : NaN;
+        const baseGrid = (rawGrid > 0) ? rawGrid : 20;
+        const activeDpi = (typeof state !== 'undefined' && state.dpi) ? state.dpi : 96;
+        const dpiRatio = activeDpi / 96;
+        const step = baseGrid * dpiRatio;
+        const tol = 15 * dpiRatio;
+        const gx = Math.round(x / step) * step;
+        const gy = Math.round(y / step) * step;
         if (Math.abs(x - gx) <= tol) resX = gx;
         if (Math.abs(y - gy) <= tol) resY = gy;
     }

@@ -1122,6 +1122,7 @@ window.initCanvasScrollEnhancements = function() {
             if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
             if (typeof window.syncRulers === 'function') window.syncRulers();
             if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+            if (typeof window.syncGridGuideOverlay === 'function') window.syncGridGuideOverlay();
             if (typeof window.checkPageVisibility === 'function') window.checkPageVisibility();
         }
     }, { passive: false });
@@ -1158,6 +1159,7 @@ window.setZoom = function(z) {
         }
     }, 200);
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.syncGridGuideOverlay === 'function') window.syncGridGuideOverlay();
     if (typeof window.updateCanvasScrollBounds === 'function') window.updateCanvasScrollBounds();
     if (typeof state !== 'undefined' && state.selectedEl && typeof window.updateArrowTipOverlay === 'function') {
         const overlay = document.querySelector('.selected-overlay');
@@ -1200,7 +1202,24 @@ window.zoomStepIn = function() {
     ov.id = 'margin-guide-overlay';
     ov.style.cssText = 'position:fixed; pointer-events:none; z-index:1001; box-sizing:border-box; display:none;';
     document.body.appendChild(ov);
+
+    const gridOv = document.createElement('div');
+    gridOv.id = 'grid-guide-overlay';
+    gridOv.style.cssText = 'position:fixed; pointer-events:none; z-index:999; box-sizing:border-box; display:none;';
+    document.body.appendChild(gridOv);
 })();
+
+window._clipGuideOverlayToViewport = function(ov) {
+    const vp = document.getElementById('viewport');
+    if (!vp || !ov) return;
+    const vr = vp.getBoundingClientRect();
+    const ovR = ov.getBoundingClientRect();
+    const clipTop = Math.max(0, vr.top - ovR.top) + 'px';
+    const clipRight = Math.max(0, ovR.right - vr.right) + 'px';
+    const clipBottom = Math.max(0, ovR.bottom - vr.bottom) + 'px';
+    const clipLeft = Math.max(0, vr.left - ovR.left) + 'px';
+    ov.style.clipPath = `inset(${clipTop} ${clipRight} ${clipBottom} ${clipLeft})`;
+};
 
 window.syncMarginGuideOverlay = function() {
     const paper  = document.getElementById('paper');
@@ -1208,7 +1227,7 @@ window.syncMarginGuideOverlay = function() {
     const ov     = document.getElementById('margin-guide-overlay');
     if (!ov || !paper || !guide) return;
 
-    if (window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage')) {
+    if (window._multiPageActive || (typeof state !== 'undefined' && state.viewMode === 'multipage') || paper.style.display === 'none') {
         ov.style.display = 'none';
         return;
     }
@@ -1239,29 +1258,69 @@ window.syncMarginGuideOverlay = function() {
     const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--ui-theme-color').trim() || '#008080';
     ov.style.border = '1px dotted ' + themeColor;
 
-    // Clip the overlay to the canvas viewport so it never bleeds over the ribbon or other UI chrome.
-    // clip-path:inset() takes distances from each edge of the element inward.
-    // A positive value means that edge is clipped; negative/zero means fully visible.
-    const vp = document.getElementById('viewport');
-    if (vp) {
-        const vr  = vp.getBoundingClientRect();
-        const ovR = ov.getBoundingClientRect();
-        const clipTop    = Math.max(0, vr.top    - ovR.top)    + 'px';
-        const clipRight  = Math.max(0, ovR.right  - vr.right)  + 'px';
-        const clipBottom = Math.max(0, ovR.bottom - vr.bottom) + 'px';
-        const clipLeft   = Math.max(0, vr.left   - ovR.left)   + 'px';
-        ov.style.clipPath = `inset(${clipTop} ${clipRight} ${clipBottom} ${clipLeft})`;
-    }
-
     ov.style.display = 'block';
-
+    window._clipGuideOverlayToViewport(ov);
 };
 
-// Run a rAF loop to keep the overlay locked to the paper on every frame.
-// This handles fast panning, window resize, and any layout shift without
-// needing discrete events - cost is one getBoundingClientRect + 4 style writes per frame.
+window.syncGridGuideOverlay = function() {
+    const paper = document.getElementById('paper');
+    const ov = document.getElementById('grid-guide-overlay');
+    if (!ov || !paper) return;
+
+    if (window._multiPageActive
+        || (typeof state !== 'undefined' && state.viewMode === 'multipage')
+        || paper.style.display === 'none'
+        || !paper.classList.contains('theme-grid')) {
+        ov.style.display = 'none';
+        return;
+    }
+
+    const pr = paper.getBoundingClientRect();
+    if (pr.width <= 0 || pr.height <= 0) {
+        ov.style.display = 'none';
+        return;
+    }
+
+    const z = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
+    const activeDpi = (typeof state !== 'undefined' && state.pages && state.pages[state.currentPageIndex] && parseFloat(state.pages[state.currentPageIndex].dpi))
+        || (typeof state !== 'undefined' && parseFloat(state.dpi))
+        || 96;
+    const dpiRatio = activeDpi / 96;
+
+    const cs = getComputedStyle(paper);
+    const rawSpacing = parseFloat(cs.getPropertyValue('--grid-spacing'));
+    const baseSpacing = (rawSpacing > 0) ? rawSpacing : 20;
+    const gridColor = cs.getPropertyValue('--grid-color').trim() || '#e0e0e0';
+
+    // Scale base spacing with DPI so physical cell size matches the page, then multiply
+    // visually by powers of 2 when zoomed far out so cells remain clearly separated and legible.
+    let screenStep = baseSpacing * dpiRatio * z;
+    let safety = 0;
+    while (screenStep > 0 && screenStep < 10 && screenStep * 2 <= Math.min(pr.width, pr.height) && safety < 8) {
+        screenStep *= 2;
+        safety++;
+    }
+    if (!(screenStep > 0)) {
+        ov.style.display = 'none';
+        return;
+    }
+
+    ov.style.left = pr.left + 'px';
+    ov.style.top = pr.top + 'px';
+    ov.style.width = pr.width + 'px';
+    ov.style.height = pr.height + 'px';
+    ov.style.opacity = '0.8';
+    ov.style.backgroundImage = `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`;
+    ov.style.backgroundSize = `${screenStep}px ${screenStep}px`;
+    ov.style.backgroundPosition = '0 0';
+    ov.style.display = 'block';
+    window._clipGuideOverlayToViewport(ov);
+};
+
+// Run a rAF loop to keep the overlays locked to the paper on every frame.
 (function marginOverlayRAFLoop() {
     window.syncMarginGuideOverlay();
+    window.syncGridGuideOverlay();
     requestAnimationFrame(marginOverlayRAFLoop);
 })();
 
@@ -1456,6 +1515,8 @@ function enterMultiPageView(z) {
     // Hide fixed margin guide overlay while in multi-page mode
     const ov = document.getElementById('margin-guide-overlay');
     if (ov) ov.style.display = 'none';
+    const gridOv = document.getElementById('grid-guide-overlay');
+    if (gridOv) gridOv.style.display = 'none';
 
     // Paper is hidden in multi-page mode; preview containers represent all pages
     paperEl.style.display = 'none';
@@ -1894,6 +1955,7 @@ window.focusPage = function(pageIndex = null) {
     // Synchronize all canvas overlays, rulers, and tools
     if (typeof window.syncRulers === 'function') window.syncRulers();
     if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.syncGridGuideOverlay === 'function') window.syncGridGuideOverlay();
     if (typeof window.syncHandleScaling === 'function') window.syncHandleScaling(state.zoom);
     if (window.minimapSystem && typeof window.minimapSystem.updateMinimap === 'function') {
         window.minimapSystem.updateMinimap();

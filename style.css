@@ -1421,7 +1421,20 @@ body.dark-mode .multipage-dialog-warning {
         linear-gradient(var(--grid-color, #e0e0e0) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-color, #e0e0e0) 1px, transparent 1px);
     background-size: var(--grid-spacing, 20px) var(--grid-spacing, 20px);
-    opacity: 0.8;
+    /* #grid-guide-overlay renders the native device-pixel grid outside the CSS scale transform
+       so lines remain crisp at low zoom and high DPI. Keep this hidden to avoid double/blurry rendering. */
+    opacity: 0;
+}
+
+#grid-guide-overlay {
+    z-index: 999 !important;
+}
+
+@media print {
+    #grid-guide-overlay,
+    #margin-guide-overlay {
+        display: none !important;
+    }
 }
 
 #paper.theme-baselines::before {

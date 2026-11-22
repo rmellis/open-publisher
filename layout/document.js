@@ -1030,6 +1030,7 @@ function applyGuidesSettings() {
     paper.style.setProperty('--baseline-color', baseColor);
     paper.style.setProperty('--grid-spacing', gridSpacing + 'px');
     paper.style.setProperty('--grid-color', gridColor);
+    if (typeof window.syncGridGuideOverlay === 'function') window.syncGridGuideOverlay();
 }
 
 function showCustomMarginsModal() {
@@ -1170,7 +1171,10 @@ function setMarginPresetInches(topIn, rightIn, bottomIn, leftIn) {
     setMarginPreset(top, right, bottom, left);
 }
 
-function toggleGrid() { paper.classList.toggle('theme-grid'); }
+function toggleGrid() {
+    paper.classList.toggle('theme-grid');
+    if (typeof window.syncGridGuideOverlay === 'function') window.syncGridGuideOverlay();
+}
 
 function toggleBaselines() { paper.classList.toggle('theme-baselines'); }
 
