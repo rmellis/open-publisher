@@ -2301,7 +2301,9 @@ window.ContextRibbonSystem = {
         else if (isTable) { 
             document.getElementById('tab-table-design').style.display = 'inline-block'; 
             tabIdToOpen = 'table-design'; 
-            document.getElementById('op-table-sidebar')?.classList.add('visible'); 
+            if (!document.getElementById('op-dimensions-sidebar')?.classList.contains('visible')) {
+                document.getElementById('op-table-sidebar')?.classList.add('visible');
+            }
             const firstCell = el.querySelector('td, th');
             if (firstCell) {
                 const padVal = parseInt(firstCell.style.padding) || 0;

@@ -1,5 +1,5 @@
 /**
- * OpenPublisher - Size & Position (Object Dimensions) Engine & Dialog (v5.23.0)
+ * OpenPublisher - Size & Position (Object Dimensions) Engine & Dialog (v5.24.1)
  * Implements GitHub Issue #12: Numerical positioning and sizing for canvas objects
  * (Text boxes, pictures, shapes, tables, WordArt, etc.) with physical unit precision
  * (cm, in, mm, pt, px), aspect ratio locking, live canvas synchronization, and
@@ -16,6 +16,10 @@
         _isSyncing: false,
         _activeModalEl: null,
         _modalInitialSnapshot: null,
+        _modalLockAspectRatio: null,
+        _lastEditedDialogAxis: null,
+        _lastEditedSidebarAxis: null,
+        _lastSyncedSidebarEl: null,
 
         getActiveUnit: function() {
             if (typeof state !== 'undefined' && state.unit) {
@@ -48,11 +52,10 @@
             let heightPx = parseFloat(el.style.height);
             if (isNaN(heightPx) || heightPx <= 0) heightPx = el.offsetHeight || 40;
 
-            const ucs = window.UnitConversionService;
-            const xVal = ucs ? ucs.fromPixels(leftPx, unit, dpi) : leftPx;
-            const yVal = ucs ? ucs.fromPixels(topPx, unit, dpi) : topPx;
-            const wVal = ucs ? ucs.fromPixels(widthPx, unit, dpi) : widthPx;
-            const hVal = ucs ? ucs.fromPixels(heightPx, unit, dpi) : heightPx;
+            const xVal = this.fromPixelsToUnit(leftPx, unit, dpi);
+            const yVal = this.fromPixelsToUnit(topPx, unit, dpi);
+            const wVal = this.fromPixelsToUnit(widthPx, unit, dpi);
+            const hVal = this.fromPixelsToUnit(heightPx, unit, dpi);
 
             let rotDeg = 0;
             const tr = el.style.transform || '';
@@ -181,14 +184,16 @@
             const current = this.getCurrentValues(el);
             if (!current) return;
 
-            let newLeftPx = current.leftPx;
-            let newTopPx = current.topPx;
-            let newWidthPx = current.widthPx;
-            let newHeightPx = current.heightPx;
+            let newLeftPx = Math.round(current.leftPx);
+            let newTopPx = Math.round(current.topPx);
+            let newWidthPx = Math.round(current.widthPx);
+            let newHeightPx = Math.round(current.heightPx);
 
             const dpi = current.dpi;
             const isLocked = (options.isLocked !== undefined) ? options.isLocked : current.isLocked;
-            const aspectRatio = current.aspectRatio || 1;
+            const aspectRatio = (options.aspectRatio && options.aspectRatio > 0)
+                ? options.aspectRatio
+                : (current.aspectRatio || 1);
 
             if (options.x !== undefined) {
                 const parsedX = typeof options.x === 'object' ? options.x : this.parseInputDimension(options.x, current.unit);
@@ -202,10 +207,13 @@
 
             let widthChanged = false;
             let heightChanged = false;
+            let wProvided = false;
+            let hProvided = false;
 
             if (options.w !== undefined) {
                 const parsedW = typeof options.w === 'object' ? options.w : this.parseInputDimension(options.w, current.unit);
                 if (parsedW !== null) {
+                    wProvided = true;
                     const wPx = Math.max(10, this.toPixels(parsedW, dpi));
                     if (wPx !== newWidthPx) {
                         newWidthPx = wPx;
@@ -217,6 +225,7 @@
             if (options.h !== undefined) {
                 const parsedH = typeof options.h === 'object' ? options.h : this.parseInputDimension(options.h, current.unit);
                 if (parsedH !== null) {
+                    hProvided = true;
                     const hPx = Math.max(10, this.toPixels(parsedH, dpi));
                     if (hPx !== newHeightPx) {
                         newHeightPx = hPx;
@@ -225,9 +234,13 @@
                 }
             }
 
-            // Proportional constraint enforcement
+            // Proportional constraint enforcement (prefer explicit changedAxis when both values are supplied)
             if (isLocked) {
-                if (widthChanged && !heightChanged) {
+                if (options.changedAxis === 'w' && wProvided) {
+                    newHeightPx = Math.max(10, Math.round(newWidthPx / aspectRatio));
+                } else if (options.changedAxis === 'h' && hProvided) {
+                    newWidthPx = Math.max(10, Math.round(newHeightPx * aspectRatio));
+                } else if (widthChanged && !heightChanged) {
                     newHeightPx = Math.max(10, Math.round(newWidthPx / aspectRatio));
                 } else if (heightChanged && !widthChanged) {
                     newWidthPx = Math.max(10, Math.round(newHeightPx * aspectRatio));
@@ -244,12 +257,16 @@
 
             if (options.isLocked !== undefined) {
                 el.setAttribute('data-aspect-lock', options.isLocked ? 'true' : 'false');
+                if (options.isLocked && options.aspectRatio && options.aspectRatio > 0) {
+                    el.setAttribute('data-aspect-ratio', options.aspectRatio);
+                }
             }
 
             if (options.rotation !== undefined) {
-                const rotDeg = parseFloat(options.rotation) || 0;
+                const parsedRot = parseFloat(options.rotation);
+                const rotDeg = isNaN(parsedRot) ? 0 : parsedRot;
                 let trans = el.style.transform || '';
-                if (trans.includes('rotate')) {
+                if (/rotate\([-\d.]+deg\)/.test(trans)) {
                     trans = trans.replace(/rotate\([-\d.]+deg\)/, `rotate(${rotDeg}deg)`);
                 } else {
                     trans = (trans + ` rotate(${rotDeg}deg)`).trim();
@@ -271,7 +288,7 @@
             if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
             if (recordHistory && typeof pushHistory === 'function') pushHistory();
 
-            this.sync(el);
+            this.sync(el, !!options.forceUiSync);
         },
 
         onRibbonInputChange: function(dim, val) {
@@ -311,44 +328,273 @@
             const current = this.getCurrentValues(el);
             if (!current) return;
 
-            const isShift = e && e.shiftKey;
-            const step = this.getStepForUnit(current.unit, isShift);
+            const isShift = !!(e && e.shiftKey);
+            const patch = {};
+            patch[dim] = this._computeSteppedDimension(dim, dir, current, isShift, current[dim + 'Raw']);
+            patch.changedAxis = (dim === 'w' || dim === 'h') ? dim : undefined;
+            patch.forceUiSync = !this._activeModalEl;
+            this.applyDimensions(el, patch, recordHistory);
+        },
 
-            let curVal = 0;
-            if (dim === 'x') curVal = current.xRaw;
-            else if (dim === 'y') curVal = current.yRaw;
-            else if (dim === 'w') curVal = current.wRaw;
-            else if (dim === 'h') curVal = current.hRaw;
-
+        _computeSteppedDimension: function(dim, dir, current, isShift, curNumericVal) {
+            if (dim === 'rot') {
+                const stepRot = isShift ? 15 : 1;
+                const baseRot = isNaN(curNumericVal) ? (current ? current.rotation : 0) : curNumericVal;
+                return Math.round((baseRot + (dir * stepRot)) * 10) / 10;
+            }
+            const unit = current ? current.unit : this.getActiveUnit();
+            const dpi = current ? current.dpi : this.getDpi();
+            const step = this.getStepForUnit(unit, isShift);
+            let curVal = isNaN(curNumericVal) ? (current ? current[dim + 'Raw'] : 0) : curNumericVal;
             let nextVal = curVal + (dir * step);
             if (dim === 'w' || dim === 'h') {
-                const minVal = this.fromPixelsToUnit(10, current.unit, current.dpi);
+                const minVal = this.fromPixelsToUnit(10, unit, dpi);
                 nextVal = Math.max(minVal, nextVal);
             }
+            return { value: nextVal, unit: unit };
+        },
 
-            const patch = {};
-            patch[dim] = { value: nextVal, unit: current.unit };
-            this.applyDimensions(el, patch, recordHistory);
+        _applyLiveSizePair: function(prefix, changedDim, current, aspectRatio) {
+            const wEl = document.getElementById(`${prefix}-w`);
+            const hEl = document.getElementById(`${prefix}-h`);
+            if (!wEl || !hEl || !current) return;
+            const ratio = (aspectRatio && aspectRatio > 0) ? aspectRatio : (current.aspectRatio || 1);
+            const unit = current.unit;
+            const dpi = current.dpi;
+
+            if (changedDim === 'w') {
+                const parsedW = this.parseInputDimension(wEl.value, unit);
+                if (!parsedW) return;
+                const wPx = Math.max(10, this.toPixels(parsedW, dpi));
+                const hPx = Math.max(10, Math.round(wPx / ratio));
+                hEl.value = this.formatValue(this.fromPixelsToUnit(hPx, unit, dpi), unit);
+            } else if (changedDim === 'h') {
+                const parsedH = this.parseInputDimension(hEl.value, unit);
+                if (!parsedH) return;
+                const hPx = Math.max(10, this.toPixels(parsedH, dpi));
+                const wPx = Math.max(10, Math.round(hPx * ratio));
+                wEl.value = this.formatValue(this.fromPixelsToUnit(wPx, unit, dpi), unit);
+            }
+        },
+
+        _readFieldNumericInUnit: function(inputEl, fallbackVal, unit, dpi) {
+            if (!inputEl) return fallbackVal;
+            const parsed = this.parseInputDimension(inputEl.value, unit);
+            if (!parsed) return fallbackVal;
+            if ((parsed.unit || '').toLowerCase() === (unit || '').toLowerCase()) {
+                return parsed.value;
+            }
+            return this.fromPixelsToUnit(this.toPixels(parsed, dpi), unit, dpi);
+        },
+
+        onDialogFieldInput: function(dim) {
+            if (dim === 'w' || dim === 'h') {
+                this._lastEditedDialogAxis = dim;
+                const el = this._activeModalEl;
+                const lockCb = document.getElementById('sp-input-lock');
+                if (el && lockCb && lockCb.checked) {
+                    const current = this.getCurrentValues(el);
+                    const ratio = this._modalLockAspectRatio || (current ? current.aspectRatio : 1);
+                    this._applyLiveSizePair('sp-input', dim, current, ratio);
+                }
+            }
+        },
+
+        onDialogLockToggle: function(checked) {
+            const el = this._activeModalEl;
+            if (!el) return;
+            if (checked) {
+                const current = this.getCurrentValues(el);
+                const wParsed = this.parseInputDimension(document.getElementById('sp-input-w')?.value, current.unit);
+                const hParsed = this.parseInputDimension(document.getElementById('sp-input-h')?.value, current.unit);
+                if (wParsed && hParsed) {
+                    const wPx = Math.max(10, this.toPixels(wParsed, current.dpi));
+                    const hPx = Math.max(10, this.toPixels(hParsed, current.dpi));
+                    this._modalLockAspectRatio = (wPx / hPx) || 1;
+                } else {
+                    this._modalLockAspectRatio = current ? current.aspectRatio : 1;
+                }
+            }
+        },
+
+        onSidebarFieldInput: function(dim) {
+            const inp = document.getElementById(`sidebar-dim-${dim}`);
+            if (inp) inp.setAttribute('data-dirty', 'true');
+            if (dim === 'w' || dim === 'h') {
+                this._lastEditedSidebarAxis = dim;
+                const el = (typeof state !== 'undefined') ? state.selectedEl : null;
+                const lockCb = document.getElementById('sidebar-dim-lock');
+                if (el && lockCb && lockCb.checked) {
+                    const current = this.getCurrentValues(el);
+                    this._applyLiveSizePair('sidebar-dim', dim, current, current ? current.aspectRatio : 1);
+                    const partner = document.getElementById(dim === 'w' ? 'sidebar-dim-h' : 'sidebar-dim-w');
+                    if (partner) partner.setAttribute('data-dirty', 'true');
+                }
+            }
+        },
+
+        stepDialog: function(dim, dir, e) {
+            const el = this._activeModalEl;
+            if (!el) return;
+            const current = this.getCurrentValues(el);
+            if (!current) return;
+
+            const isShift = !!(e && e.shiftKey);
+            const inp = document.getElementById(`sp-input-${dim}`);
+            if (!inp) return;
+
+            if (dim === 'rot') {
+                const curRot = parseFloat(inp.value);
+                const nextRot = this._computeSteppedDimension('rot', dir, current, isShift, isNaN(curRot) ? current.rotation : curRot);
+                inp.value = String(nextRot);
+            } else {
+                const curVal = this._readFieldNumericInUnit(inp, current[dim + 'Raw'], current.unit, current.dpi);
+                const stepped = this._computeSteppedDimension(dim, dir, current, isShift, curVal);
+                inp.value = this.formatValue(stepped.value, current.unit);
+                if (dim === 'w' || dim === 'h') {
+                    this._lastEditedDialogAxis = dim;
+                    if (document.getElementById('sp-input-lock')?.checked) {
+                        const ratio = this._modalLockAspectRatio || current.aspectRatio || 1;
+                        this._applyLiveSizePair('sp-input', dim, current, ratio);
+                    }
+                }
+            }
+
+            // Live preview on canvas while keeping _modalInitialSnapshot reversible via Cancel
+            this.applyDimensions(el, {
+                x: document.getElementById('sp-input-x')?.value,
+                y: document.getElementById('sp-input-y')?.value,
+                w: document.getElementById('sp-input-w')?.value,
+                h: document.getElementById('sp-input-h')?.value,
+                rotation: document.getElementById('sp-input-rot')?.value,
+                isLocked: document.getElementById('sp-input-lock')?.checked,
+                aspectRatio: this._modalLockAspectRatio || current.aspectRatio,
+                changedAxis: (dim === 'w' || dim === 'h') ? dim : this._lastEditedDialogAxis,
+                forceUiSync: true
+            }, false);
+        },
+
+        stepSidebar: function(dim, dir, e, recordHistory = true) {
+            const el = (typeof state !== 'undefined') ? state.selectedEl : null;
+            if (!el) return;
+            const current = this.getCurrentValues(el);
+            if (!current) return;
+
+            const isShift = !!(e && e.shiftKey);
+            const inp = document.getElementById(`sidebar-dim-${dim}`);
+            if (!inp) return;
+
+            if (dim === 'rot') {
+                const curRot = parseFloat(inp.value);
+                const nextRot = this._computeSteppedDimension('rot', dir, current, isShift, isNaN(curRot) ? current.rotation : curRot);
+                inp.value = String(nextRot);
+            } else {
+                const curVal = this._readFieldNumericInUnit(inp, current[dim + 'Raw'], current.unit, current.dpi);
+                const stepped = this._computeSteppedDimension(dim, dir, current, isShift, curVal);
+                inp.value = this.formatValue(stepped.value, current.unit);
+                if (dim === 'w' || dim === 'h') {
+                    this._lastEditedSidebarAxis = dim;
+                    if (document.getElementById('sidebar-dim-lock')?.checked) {
+                        this._applyLiveSizePair('sidebar-dim', dim, current, current.aspectRatio || 1);
+                    }
+                }
+            }
+
+            this.applyDimensions(el, {
+                x: document.getElementById('sidebar-dim-x')?.value,
+                y: document.getElementById('sidebar-dim-y')?.value,
+                w: document.getElementById('sidebar-dim-w')?.value,
+                h: document.getElementById('sidebar-dim-h')?.value,
+                rotation: document.getElementById('sidebar-dim-rot')?.value,
+                isLocked: document.getElementById('sidebar-dim-lock')?.checked,
+                changedAxis: (dim === 'w' || dim === 'h') ? dim : this._lastEditedSidebarAxis,
+                forceUiSync: true
+            }, recordHistory);
+        },
+
+        onFieldKeyDown: function(scope, dim, e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (scope === 'dialog' && typeof window.applySizePositionFromDialog === 'function') {
+                    window.applySizePositionFromDialog(false);
+                } else if (scope === 'sidebar' && typeof window.applySidebarDimensions === 'function') {
+                    window.applySidebarDimensions();
+                }
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const dir = e.key === 'ArrowUp' ? 1 : -1;
+                if (scope === 'dialog') this.stepDialog(dim, dir, e);
+                else if (scope === 'sidebar') this.stepSidebar(dim, dir, e, true);
+            }
+        },
+
+        centerElementOnPage: function(axis, targetEl, fromDialog = false) {
+            const el = targetEl || ((typeof state !== 'undefined') ? state.selectedEl : null);
+            if (!el) return;
+            const paper = document.getElementById('paper');
+            if (!paper) return;
+
+            const pW = paper.clientWidth || 800;
+            const pH = paper.clientHeight || 1100;
+            const eW = el.offsetWidth || 100;
+            const eH = el.offsetHeight || 50;
+            const unit = this.getActiveUnit();
+            const dpi = this.getDpi();
+
+            if (axis === 'h') {
+                const centerLeftPx = Math.max(0, Math.round((pW / 2) - (eW / 2)));
+                el.style.left = centerLeftPx + 'px';
+                if (fromDialog) {
+                    const xVal = this.fromPixelsToUnit(centerLeftPx, unit, dpi);
+                    const xInput = document.getElementById('sp-input-x');
+                    if (xInput) xInput.value = this.formatValue(xVal, unit);
+                }
+            } else if (axis === 'v') {
+                const centerTopPx = Math.max(0, Math.round((pH / 2) - (eH / 2)));
+                el.style.top = centerTopPx + 'px';
+                if (fromDialog) {
+                    const yVal = this.fromPixelsToUnit(centerTopPx, unit, dpi);
+                    const yInput = document.getElementById('sp-input-y');
+                    if (yInput) yInput.value = this.formatValue(yVal, unit);
+                }
+            }
+
+            if (typeof updateThumbnails === 'function') updateThumbnails();
+            if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
+            if (typeof pushHistory === 'function') pushHistory();
+            this.sync(el, !fromDialog);
+        },
+
+        renderLeftSpinnerHtml: function(scope, dim, label) {
+            const safeLabel = label || dim.toUpperCase();
+            return `<div class="sp-spin-btns">
+                <div role="button" tabindex="-1" title="Increase ${safeLabel}" aria-label="Increase ${safeLabel}" onmousedown="event.preventDefault(); DimensionControlService.holdSpin('${scope}', '${dim}', 1, event)"><i class="fas fa-chevron-up"></i></div>
+                <div role="button" tabindex="-1" title="Decrease ${safeLabel}" aria-label="Decrease ${safeLabel}" onmousedown="event.preventDefault(); DimensionControlService.holdSpin('${scope}', '${dim}', -1, event)"><i class="fas fa-chevron-down"></i></div>
+            </div>`;
         },
 
         _spinTimer: null,
         _spinTimeout: null,
         _spinActive: false,
+        _spinScope: null,
         _spinGlobalStopHandler: null,
 
-        holdSpinRibbon: function(dim, dir, e) {
+        holdSpin: function(scope, dim, dir, e) {
             if (e && e.button !== undefined && e.button !== 0) return;
-            this.stopSpinRibbon(false);
+            this.stopSpin(false);
 
-            const el = (typeof state !== 'undefined') ? state.selectedEl : null;
-            if (!el) return;
+            const targetEl = (scope === 'dialog') ? this._activeModalEl : ((typeof state !== 'undefined') ? state.selectedEl : null);
+            if (!targetEl) return;
 
             const isShift = !!(e && e.shiftKey);
             this._spinActive = true;
+            this._spinScope = scope;
 
             const tick = () => {
                 if (!this._spinActive) return;
-                this.stepRibbon(dim, dir, { shiftKey: isShift }, false);
+                if (scope === 'dialog') this.stepDialog(dim, dir, { shiftKey: isShift });
+                else if (scope === 'sidebar') this.stepSidebar(dim, dir, { shiftKey: isShift }, false);
+                else this.stepRibbon(dim, dir, { shiftKey: isShift }, false);
             };
 
             tick();
@@ -359,20 +605,22 @@
             }, 400);
 
             if (!this._spinGlobalStopHandler) {
-                this._spinGlobalStopHandler = () => this.stopSpinRibbon(true);
+                this._spinGlobalStopHandler = () => this.stopSpin(true);
                 window.addEventListener('mouseup', this._spinGlobalStopHandler, true);
                 window.addEventListener('blur', this._spinGlobalStopHandler);
             }
         },
 
-        stopSpinRibbon: function(commit = true) {
+        stopSpin: function(commit = true) {
             clearTimeout(this._spinTimeout);
             clearInterval(this._spinTimer);
             this._spinTimeout = null;
             this._spinTimer = null;
 
             const wasActive = this._spinActive;
+            const prevScope = this._spinScope;
             this._spinActive = false;
+            this._spinScope = null;
 
             if (this._spinGlobalStopHandler) {
                 window.removeEventListener('mouseup', this._spinGlobalStopHandler, true);
@@ -380,10 +628,28 @@
                 this._spinGlobalStopHandler = null;
             }
 
-            if (commit && wasActive) {
+            if (commit && wasActive && prevScope !== 'dialog') {
                 if (typeof updateThumbnails === 'function') updateThumbnails();
                 if (typeof pushHistory === 'function') pushHistory();
             }
+        },
+
+        holdSpinRibbon: function(dim, dir, e) {
+            this.holdSpin('ribbon', dim, dir, e);
+        },
+
+        stopSpinRibbon: function(commit = true) {
+            this.stopSpin(commit);
+        },
+
+        updateModalSidebarToggleBtn: function() {
+            const btn = document.getElementById('sp-toggle-sidebar-btn');
+            const lbl = document.getElementById('sp-toggle-sidebar-label');
+            const ribbonBtn = document.getElementById('ribbon-view-dim-pane');
+            const isOpen = !!document.getElementById('op-dimensions-sidebar')?.classList.contains('visible');
+            if (btn) btn.classList.toggle('active', isOpen);
+            if (lbl) lbl.textContent = isOpen ? 'Hide Sidebar' : 'Dimensions Sidebar';
+            if (ribbonBtn) ribbonBtn.classList.toggle('active-tool', isOpen);
         },
 
         toggleAspectLock: function(locked) {
@@ -396,10 +662,10 @@
                 el.setAttribute('data-aspect-ratio', (w / h) || 1);
             }
             if (typeof pushHistory === 'function') pushHistory();
-            this.sync(el);
+            this.sync(el, true);
         },
 
-        sync: function(el) {
+        sync: function(el, forceUiSync = false) {
             if (this._isSyncing) return;
             this._isSyncing = true;
             try {
@@ -441,35 +707,61 @@
                 });
 
                 // 2. Synchronize Dimensions Sidebar (if open)
-                const sbX = document.getElementById('sidebar-dim-x');
-                const sbY = document.getElementById('sidebar-dim-y');
-                const sbW = document.getElementById('sidebar-dim-w');
-                const sbH = document.getElementById('sidebar-dim-h');
+                const sidebarFields = [
+                    { id: 'sidebar-dim-x', val: values ? values.x : '' },
+                    { id: 'sidebar-dim-y', val: values ? values.y : '' },
+                    { id: 'sidebar-dim-w', val: values ? values.w : '' },
+                    { id: 'sidebar-dim-h', val: values ? values.h : '' },
+                    { id: 'sidebar-dim-rot', val: values ? String(values.rotation) : '' }
+                ];
+                const sidebarElChanged = target !== this._lastSyncedSidebarEl;
+
+                sidebarFields.forEach(item => {
+                    const inp = document.getElementById(item.id);
+                    if (!inp) return;
+                    const isDirty = inp.getAttribute('data-dirty') === 'true';
+                    if (forceUiSync || sidebarElChanged || (document.activeElement !== inp && !isDirty)) {
+                        inp.value = item.val;
+                        inp.removeAttribute('data-dirty');
+                    }
+                    inp.placeholder = values ? '' : '--';
+                    inp.disabled = !values;
+                });
+
+                if (forceUiSync || sidebarElChanged) {
+                    this._lastEditedSidebarAxis = null;
+                }
+                this._lastSyncedSidebarEl = target;
+
+                ['x', 'y', 'w', 'h'].forEach(axis => {
+                    const tag = document.getElementById(`sidebar-unit-${axis}`);
+                    if (tag) tag.innerText = activeUnit;
+                });
+
                 const sbLock = document.getElementById('sidebar-dim-lock');
                 const sbUnit = document.getElementById('sidebar-dim-unit-select');
-
-                if (sbX && document.activeElement !== sbX) sbX.value = values ? `${values.x} ${activeUnit}` : '';
-                if (sbY && document.activeElement !== sbY) sbY.value = values ? `${values.y} ${activeUnit}` : '';
-                if (sbW && document.activeElement !== sbW) sbW.value = values ? `${values.w} ${activeUnit}` : '';
-                if (sbH && document.activeElement !== sbH) sbH.value = values ? `${values.h} ${activeUnit}` : '';
-                if (sbLock) sbLock.checked = values ? values.isLocked : false;
+                if (sbLock && (forceUiSync || sidebarElChanged || document.activeElement !== sbLock)) {
+                    sbLock.checked = values ? values.isLocked : false;
+                    sbLock.disabled = !values;
+                }
                 if (sbUnit && activeUnit) sbUnit.value = activeUnit;
 
-                // 3. Synchronize Size & Position Dialog (if open)
-                const dlgX = document.getElementById('sp-input-x');
-                const dlgY = document.getElementById('sp-input-y');
-                const dlgW = document.getElementById('sp-input-w');
-                const dlgH = document.getElementById('sp-input-h');
-                const dlgRot = document.getElementById('sp-input-rot');
-                const dlgLock = document.getElementById('sp-input-lock');
+                // 3. Synchronize Size & Position Dialog ONLY on explicit forceUiSync (never let background mouseup/observer clobber user edits)
+                if (forceUiSync && this._activeModalEl && (!target || target === this._activeModalEl)) {
+                    const dlgX = document.getElementById('sp-input-x');
+                    const dlgY = document.getElementById('sp-input-y');
+                    const dlgW = document.getElementById('sp-input-w');
+                    const dlgH = document.getElementById('sp-input-h');
+                    const dlgRot = document.getElementById('sp-input-rot');
+                    const dlgLock = document.getElementById('sp-input-lock');
 
-                if (dlgX && document.activeElement !== dlgX) dlgX.value = values ? values.x : '0.00';
-                if (dlgY && document.activeElement !== dlgY) dlgY.value = values ? values.y : '0.00';
-                if (dlgW && document.activeElement !== dlgW) dlgW.value = values ? values.w : '0.00';
-                if (dlgH && document.activeElement !== dlgH) dlgH.value = values ? values.h : '0.00';
-                if (dlgRot && document.activeElement !== dlgRot) dlgRot.value = values ? values.rotation : 0;
-                if (dlgLock) dlgLock.checked = values ? values.isLocked : false;
-
+                    if (dlgX) dlgX.value = values ? values.x : '0.00';
+                    if (dlgY) dlgY.value = values ? values.y : '0.00';
+                    if (dlgW) dlgW.value = values ? values.w : '0.00';
+                    if (dlgH) dlgH.value = values ? values.h : '0.00';
+                    if (dlgRot) dlgRot.value = values ? String(values.rotation) : '0';
+                    if (dlgLock) dlgLock.checked = values ? values.isLocked : false;
+                }
             } finally {
                 this._isSyncing = false;
             }
@@ -516,13 +808,16 @@
 
         DimensionControlService._activeModalEl = el;
         const initialDims = DimensionControlService.getCurrentValues(el);
+        DimensionControlService._modalLockAspectRatio = initialDims.aspectRatio;
+        DimensionControlService._lastEditedDialogAxis = null;
         DimensionControlService._modalInitialSnapshot = {
             left: el.style.left,
             top: el.style.top,
             width: el.style.width,
             height: el.style.height,
             transform: el.style.transform,
-            lock: el.getAttribute('data-aspect-lock')
+            lock: el.getAttribute('data-aspect-lock'),
+            aspectRatio: el.getAttribute('data-aspect-ratio')
         };
 
         const unit = initialDims.unit;
@@ -576,6 +871,7 @@
                     display: flex;
                     flex-direction: column;
                     gap: 4px;
+                    min-width: 0;
                 }
                 .sp-field label {
                     font-size: 11px;
@@ -692,15 +988,16 @@
                 .sp-align-btns {
                     display: flex;
                     gap: 6px;
-                    margin-top: 4px;
+                    min-width: 0;
                 }
-                .sp-align-btn {
+                .custom-dialog button.sp-align-btn {
                     flex: 1;
-                    padding: 5px 8px;
+                    height: 28px;
+                    padding: 0 8px;
                     font-size: 11px;
-                    font-weight: 500;
+                    font-weight: 600;
                     border: 1px solid var(--ui-border, #cbd5e1);
-                    border-radius: 4px;
+                    border-radius: 5px;
                     background: #fff;
                     color: var(--ui-text, #334155);
                     cursor: pointer;
@@ -708,14 +1005,17 @@
                     align-items: center;
                     justify-content: center;
                     gap: 5px;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    white-space: nowrap;
                     transition: all 0.15s;
                 }
-                body.dark-mode .sp-align-btn {
+                body.dark-mode .custom-dialog button.sp-align-btn {
                     background: #1e293b;
                     border-color: #334155;
                     color: #cbd5e1;
                 }
-                .sp-align-btn:hover {
+                .custom-dialog button.sp-align-btn:hover {
                     background: color-mix(in srgb, var(--ui-theme-color, #0d9e8f) 10%, transparent);
                     border-color: var(--ui-theme-color, #0d9e8f);
                     color: var(--ui-theme-color, #0d9e8f);
@@ -740,14 +1040,16 @@
                                 <div class="sp-field">
                                     <label>Horizontal (X Position):</label>
                                     <div class="sp-input-with-unit">
-                                        <input type="text" id="sp-input-x" value="${initialDims.x}" onkeydown="if(event.key==='Enter') window.applySizePositionFromDialog(false);">
+                                        ${DimensionControlService.renderLeftSpinnerHtml('dialog', 'x', 'Horizontal Position')}
+                                        <input type="text" id="sp-input-x" value="${initialDims.x}" oninput="DimensionControlService.onDialogFieldInput('x')" onkeydown="DimensionControlService.onFieldKeyDown('dialog', 'x', event)">
                                         <div class="sp-unit-badge" id="sp-unit-badge-x">${unit}</div>
                                     </div>
                                 </div>
                                 <div class="sp-field">
                                     <label>Vertical (Y Position):</label>
                                     <div class="sp-input-with-unit">
-                                        <input type="text" id="sp-input-y" value="${initialDims.y}" onkeydown="if(event.key==='Enter') window.applySizePositionFromDialog(false);">
+                                        ${DimensionControlService.renderLeftSpinnerHtml('dialog', 'y', 'Vertical Position')}
+                                        <input type="text" id="sp-input-y" value="${initialDims.y}" oninput="DimensionControlService.onDialogFieldInput('y')" onkeydown="DimensionControlService.onFieldKeyDown('dialog', 'y', event)">
                                         <div class="sp-unit-badge" id="sp-unit-badge-y">${unit}</div>
                                     </div>
                                 </div>
@@ -762,20 +1064,22 @@
                                 <div class="sp-field">
                                     <label>Width (W):</label>
                                     <div class="sp-input-with-unit">
-                                        <input type="text" id="sp-input-w" value="${initialDims.w}" onkeydown="if(event.key==='Enter') window.applySizePositionFromDialog(false);">
+                                        ${DimensionControlService.renderLeftSpinnerHtml('dialog', 'w', 'Width')}
+                                        <input type="text" id="sp-input-w" value="${initialDims.w}" oninput="DimensionControlService.onDialogFieldInput('w')" onkeydown="DimensionControlService.onFieldKeyDown('dialog', 'w', event)">
                                         <div class="sp-unit-badge" id="sp-unit-badge-w">${unit}</div>
                                     </div>
                                 </div>
                                 <div class="sp-field">
                                     <label>Height (H):</label>
                                     <div class="sp-input-with-unit">
-                                        <input type="text" id="sp-input-h" value="${initialDims.h}" onkeydown="if(event.key==='Enter') window.applySizePositionFromDialog(false);">
+                                        ${DimensionControlService.renderLeftSpinnerHtml('dialog', 'h', 'Height')}
+                                        <input type="text" id="sp-input-h" value="${initialDims.h}" oninput="DimensionControlService.onDialogFieldInput('h')" onkeydown="DimensionControlService.onFieldKeyDown('dialog', 'h', event)">
                                         <div class="sp-unit-badge" id="sp-unit-badge-h">${unit}</div>
                                     </div>
                                 </div>
                             </div>
                             <label class="sp-checkbox-row">
-                                <input type="checkbox" id="sp-input-lock" ${initialDims.isLocked ? 'checked' : ''} style="cursor:pointer; accent-color:var(--ui-theme-color);">
+                                <input type="checkbox" id="sp-input-lock" ${initialDims.isLocked ? 'checked' : ''} style="cursor:pointer; accent-color:var(--ui-theme-color);" onchange="DimensionControlService.onDialogLockToggle(this.checked)">
                                 <span>Lock aspect ratio (Proportional resize)</span>
                             </label>
                         </div>
@@ -787,29 +1091,31 @@
                                 <div class="sp-field">
                                     <label>Rotation Angle:</label>
                                     <div class="sp-input-with-unit">
-                                        <input type="number" id="sp-input-rot" value="${initialDims.rotation}" step="1" onkeydown="if(event.key==='Enter') window.applySizePositionFromDialog(false);">
+                                        ${DimensionControlService.renderLeftSpinnerHtml('dialog', 'rot', 'Rotation Angle')}
+                                        <input type="text" inputmode="decimal" id="sp-input-rot" value="${initialDims.rotation}" oninput="DimensionControlService.onDialogFieldInput('rot')" onkeydown="DimensionControlService.onFieldKeyDown('dialog', 'rot', event)">
                                         <div class="sp-unit-badge">deg (&deg;)</div>
                                     </div>
                                 </div>
                                 <div class="sp-field">
                                     <label>Quick Page Centering:</label>
                                     <div class="sp-align-btns">
-                                        <button class="sp-align-btn" onclick="window.centerObjectInDialog('h')"><i class="fas fa-arrows-alt-h"></i> Horizontal</button>
-                                        <button class="sp-align-btn" onclick="window.centerObjectInDialog('v')"><i class="fas fa-arrows-alt-v"></i> Vertical</button>
+                                        <button class="sp-align-btn" onmousedown="event.preventDefault()" onclick="window.centerObjectInDialog('h')"><i class="fas fa-arrows-alt-h"></i> Horizontal</button>
+                                        <button class="sp-align-btn" onmousedown="event.preventDefault()" onclick="window.centerObjectInDialog('v')"><i class="fas fa-arrows-alt-v"></i> Vertical</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="custom-dialog-footer" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <button class="btn-secondary" onclick="window.resetObjectNaturalSize()" title="Reset to natural size" style="font-size:11px; padding:5px 10px;">Reset Size</button>
+                <div class="custom-dialog-footer" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button class="btn-secondary" onmousedown="event.preventDefault()" onclick="window.resetObjectNaturalSize()" title="Reset to natural size" style="font-size:11px; padding:5px 10px;">Reset Size</button>
+                        <button class="btn-secondary" id="sp-toggle-sidebar-btn" onmousedown="event.preventDefault()" onclick="window.toggleDimensionsPane()" title="Toggle Dimensions &amp; Position Sidebar" style="font-size:11px; padding:5px 10px; display:inline-flex; align-items:center; gap:5px;"><i class="fas fa-columns"></i> <span id="sp-toggle-sidebar-label">Dimensions Sidebar</span></button>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn-secondary" onclick="window.closeSizePositionModal(true)">Cancel</button>
-                        <button class="btn-secondary" onclick="window.applySizePositionFromDialog(false)" title="Apply changes immediately to canvas">Apply</button>
-                        <button class="btn-primary" onclick="window.applySizePositionFromDialog(true)">OK</button>
+                        <button class="btn-secondary" onmousedown="event.preventDefault()" onclick="window.closeSizePositionModal(true)">Cancel</button>
+                        <button class="btn-secondary" onmousedown="event.preventDefault()" onclick="window.applySizePositionFromDialog(false)" title="Apply changes immediately to canvas">Apply</button>
+                        <button class="btn-primary" onmousedown="event.preventDefault()" onclick="window.applySizePositionFromDialog(true)">OK</button>
                     </div>
                 </div>
             </div>
@@ -817,6 +1123,7 @@
 
         overlay.innerHTML = modalHtml;
         overlay.style.display = 'flex';
+        DimensionControlService.updateModalSidebarToggleBtn();
 
         if (typeof DialogSystem !== 'undefined' && DialogSystem.makeDraggable) {
             DialogSystem.makeDraggable(document.getElementById('custom-dialog-box'), document.getElementById('custom-dialog-header'));
@@ -842,15 +1149,19 @@
             el.style.transform = snap.transform;
             if (snap.lock) el.setAttribute('data-aspect-lock', snap.lock);
             else el.removeAttribute('data-aspect-lock');
+            if (snap.aspectRatio) el.setAttribute('data-aspect-ratio', snap.aspectRatio);
+            else el.removeAttribute('data-aspect-ratio');
 
             if (typeof updateThumbnails === 'function') updateThumbnails();
             if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
-            DimensionControlService.sync(el);
+            DimensionControlService.sync(el, true);
         }
 
         if (overlay) overlay.style.display = 'none';
         DimensionControlService._activeModalEl = null;
         DimensionControlService._modalInitialSnapshot = null;
+        DimensionControlService._modalLockAspectRatio = null;
+        DimensionControlService._lastEditedDialogAxis = null;
     };
 
     window.applySizePositionFromDialog = function(closeAfterApply = false) {
@@ -870,8 +1181,13 @@
             w: valW,
             h: valH,
             rotation: valRot,
-            isLocked: isLocked
+            isLocked: isLocked,
+            aspectRatio: DimensionControlService._modalLockAspectRatio,
+            changedAxis: DimensionControlService._lastEditedDialogAxis,
+            forceUiSync: true
         }, true);
+
+        DimensionControlService._lastEditedDialogAxis = null;
 
         if (closeAfterApply) {
             window.closeSizePositionModal(false);
@@ -879,37 +1195,7 @@
     };
 
     window.centerObjectInDialog = function(axis) {
-        const el = DimensionControlService._activeModalEl;
-        if (!el) return;
-        const paper = document.getElementById('paper');
-        if (!paper) return;
-
-        const pW = paper.clientWidth || 800;
-        const pH = paper.clientHeight || 1100;
-        const eW = el.offsetWidth || 100;
-        const eH = el.offsetHeight || 50;
-
-        const unit = DimensionControlService.getActiveUnit();
-        const dpi = DimensionControlService.getDpi();
-
-        if (axis === 'h') {
-            const centerLeftPx = Math.max(0, Math.round((pW / 2) - (eW / 2)));
-            el.style.left = centerLeftPx + 'px';
-            const xVal = DimensionControlService.fromPixelsToUnit(centerLeftPx, unit, dpi);
-            const xInput = document.getElementById('sp-input-x');
-            if (xInput) xInput.value = DimensionControlService.formatValue(xVal, unit);
-        } else if (axis === 'v') {
-            const centerTopPx = Math.max(0, Math.round((pH / 2) - (eH / 2)));
-            el.style.top = centerTopPx + 'px';
-            const yVal = DimensionControlService.fromPixelsToUnit(centerTopPx, unit, dpi);
-            const yInput = document.getElementById('sp-input-y');
-            if (yInput) yInput.value = DimensionControlService.formatValue(yVal, unit);
-        }
-
-        if (typeof updateThumbnails === 'function') updateThumbnails();
-        if (typeof window.renderSelectionOverlays === 'function') window.renderSelectionOverlays();
-        if (typeof pushHistory === 'function') pushHistory();
-        DimensionControlService.sync(el);
+        DimensionControlService.centerElementOnPage(axis, DimensionControlService._activeModalEl, true);
     };
 
     window.resetObjectNaturalSize = function() {
@@ -922,6 +1208,10 @@
             const dpi = DimensionControlService.getDpi();
             el.style.width = img.naturalWidth + 'px';
             el.style.height = img.naturalHeight + 'px';
+            const natRatio = (img.naturalWidth / img.naturalHeight) || 1;
+            el.setAttribute('data-aspect-ratio', natRatio);
+            DimensionControlService._modalLockAspectRatio = natRatio;
+            DimensionControlService._lastEditedDialogAxis = null;
 
             const wVal = DimensionControlService.fromPixelsToUnit(img.naturalWidth, unit, dpi);
             const hVal = DimensionControlService.fromPixelsToUnit(img.naturalHeight, unit, dpi);
@@ -1204,27 +1494,76 @@
     // ==========================================
     // 3. DIMENSIONS SIDEBAR PANE (GREETING CARD FACTORY PARITY)
     // ==========================================
+    window.retractOtherSidebars = function(exceptId) {
+        const knownIds = [
+            'op-image-sidebar',
+            'op-wordart-sidebar',
+            'op-table-sidebar',
+            'op-selection-sidebar',
+            'op-shadow-sidebar',
+            'op-a11y-sidebar',
+            'op-graphics-sidebar',
+            'op-thesaurus-sidebar',
+            'op-dimensions-sidebar'
+        ];
+        knownIds.forEach(id => {
+            if (id !== exceptId) {
+                document.getElementById(id)?.classList.remove('visible');
+            }
+        });
+        document.querySelectorAll('.sidebar-panel.visible, .op-sidebar.visible').forEach(el => {
+            if (!exceptId || el.id !== exceptId) {
+                el.classList.remove('visible');
+            }
+        });
+        if (exceptId !== 'op-image-sidebar') {
+            document.getElementById('op-sidebar-expander')?.classList.remove('visible');
+        }
+        if (exceptId !== 'op-wordart-sidebar') {
+            document.getElementById('op-wa-sidebar-expander')?.classList.remove('visible');
+        }
+        DimensionControlService.updateModalSidebarToggleBtn();
+        if (typeof window.syncWorkspaceLayout === 'function') window.syncWorkspaceLayout();
+    };
+
+    window.closeDimensionsPane = function() {
+        const panel = document.getElementById('op-dimensions-sidebar');
+        if (panel) panel.classList.remove('visible');
+        DimensionControlService.updateModalSidebarToggleBtn();
+
+        const selectedEl = (typeof state !== 'undefined') ? state.selectedEl : null;
+        if (selectedEl && typeof window._refreshImageSidebarVisibility === 'function') {
+            window._refreshImageSidebarVisibility(selectedEl);
+        }
+        if (selectedEl && typeof window._refreshWordArtSidebarVisibility === 'function') {
+            window._refreshWordArtSidebarVisibility(selectedEl);
+        }
+        if (selectedEl && window.RibbonContextController && typeof window.RibbonContextController.updateTabs === 'function') {
+            window.RibbonContextController.updateTabs(selectedEl, true);
+        }
+        if (typeof window.syncWorkspaceLayout === 'function') window.syncWorkspaceLayout();
+    };
+
     window.toggleDimensionsPane = function() {
         let panel = document.getElementById('op-dimensions-sidebar');
+        const activeUnit = DimensionControlService.getActiveUnit();
         if (!panel) {
             panel = document.createElement('div');
             panel.id = 'op-dimensions-sidebar';
-            panel.className = 'sidebar-panel op-sidebar visible';
+            panel.className = 'sidebar-panel op-sidebar';
             panel.innerHTML = `
                 <div class="op-sidebar-header">
-                    <span class="op-sidebar-title" style="display:flex; align-items:center; gap:8px;">
-                        <i class="fas fa-ruler-combined" style="color:var(--ui-theme-color);"></i> Dimensions & Position
-                    </span>
-                    <div class="op-sidebar-top-btns">
-                        <button class="sp-help-icon-btn" onclick="window.showSizePositionHelp(event)" title="Dimensions Help" style="color:#64748b; font-size:12px; margin-right:6px;"><i class="fas fa-question"></i></button>
-                        <button class="custom-dialog-close" onclick="document.getElementById('op-dimensions-sidebar').classList.remove('visible')"><i class="fas fa-times"></i></button>
+                    <span class="op-sidebar-title">Dimensions &amp; Position</span>
+                    <div class="op-sidebar-top-btns" style="display:flex; align-items:center; gap:6px;">
+                        <button type="button" class="op-header-btn" onclick="window.showSizePositionHelp(event)" title="Dimensions &amp; Position Help" style="margin-right:2px;"><i class="fas fa-question-circle"></i></button>
+                        <button type="button" class="custom-dialog-close" onclick="window.closeDimensionsPane()" title="Close"><i class="fas fa-times"></i></button>
                     </div>
                 </div>
-                <!-- SECTION: DIMENSIONS (MATCHING SCREENSHOT) -->
+
                 <div class="op-sidebar-section">
-                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ui-theme-color); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>Dimensions</span>
-                        <select id="sidebar-dim-unit-select" style="font-size:10px; padding:2px 4px; border-radius:4px; border:1px solid #cbd5e1; background:#fff;" onchange="state.unit=this.value; DimensionControlService.sync();">
+                    <div class="op-dim-header-row">
+                        <span class="op-section-label">Size &amp; Coordinates</span>
+                        <select id="sidebar-dim-unit-select" class="op-dim-unit-select" onchange="if(typeof state!=='undefined'){state.unit=this.value;} DimensionControlService.sync(null, true);">
                             <option value="cm">cm</option>
                             <option value="in">in</option>
                             <option value="mm">mm</option>
@@ -1232,57 +1571,87 @@
                             <option value="px">px</option>
                         </select>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:#475569; display:block; margin-bottom:2px;">X:</label>
-                            <input type="text" id="sidebar-dim-x" placeholder="0,00 cm" style="width:100%; box-sizing:border-box; padding:5px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" onkeydown="if(event.key==='Enter') window.applySidebarDimensions();">
+                    <div class="op-dim-grid">
+                        <div class="op-dim-field">
+                            <label for="sidebar-dim-x">X</label>
+                            <div class="op-dim-spinner">
+                                ${DimensionControlService.renderLeftSpinnerHtml('sidebar', 'x', 'X Position')}
+                                <input type="text" id="sidebar-dim-x" placeholder="--" oninput="DimensionControlService.onSidebarFieldInput('x')" onkeydown="DimensionControlService.onFieldKeyDown('sidebar', 'x', event)">
+                                <span class="op-dim-unit-tag" id="sidebar-unit-x">${activeUnit}</span>
+                            </div>
                         </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:#475569; display:block; margin-bottom:2px;">Y:</label>
-                            <input type="text" id="sidebar-dim-y" placeholder="0,00 cm" style="width:100%; box-sizing:border-box; padding:5px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" onkeydown="if(event.key==='Enter') window.applySidebarDimensions();">
+                        <div class="op-dim-field">
+                            <label for="sidebar-dim-y">Y</label>
+                            <div class="op-dim-spinner">
+                                ${DimensionControlService.renderLeftSpinnerHtml('sidebar', 'y', 'Y Position')}
+                                <input type="text" id="sidebar-dim-y" placeholder="--" oninput="DimensionControlService.onSidebarFieldInput('y')" onkeydown="DimensionControlService.onFieldKeyDown('sidebar', 'y', event)">
+                                <span class="op-dim-unit-tag" id="sidebar-unit-y">${activeUnit}</span>
+                            </div>
                         </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:#475569; display:block; margin-bottom:2px;">W:</label>
-                            <input type="text" id="sidebar-dim-w" placeholder="8,40 cm" style="width:100%; box-sizing:border-box; padding:5px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" onkeydown="if(event.key==='Enter') window.applySidebarDimensions();">
+                        <div class="op-dim-field">
+                            <label for="sidebar-dim-w">W</label>
+                            <div class="op-dim-spinner">
+                                ${DimensionControlService.renderLeftSpinnerHtml('sidebar', 'w', 'Width')}
+                                <input type="text" id="sidebar-dim-w" placeholder="--" oninput="DimensionControlService.onSidebarFieldInput('w')" onkeydown="DimensionControlService.onFieldKeyDown('sidebar', 'w', event)">
+                                <span class="op-dim-unit-tag" id="sidebar-unit-w">${activeUnit}</span>
+                            </div>
                         </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:#475569; display:block; margin-bottom:2px;">H:</label>
-                            <input type="text" id="sidebar-dim-h" placeholder="2,97 cm" style="width:100%; box-sizing:border-box; padding:5px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" onkeydown="if(event.key==='Enter') window.applySidebarDimensions();">
+                        <div class="op-dim-field">
+                            <label for="sidebar-dim-h">H</label>
+                            <div class="op-dim-spinner">
+                                ${DimensionControlService.renderLeftSpinnerHtml('sidebar', 'h', 'Height')}
+                                <input type="text" id="sidebar-dim-h" placeholder="--" oninput="DimensionControlService.onSidebarFieldInput('h')" onkeydown="DimensionControlService.onFieldKeyDown('sidebar', 'h', event)">
+                                <span class="op-dim-unit-tag" id="sidebar-unit-h">${activeUnit}</span>
+                            </div>
                         </div>
                     </div>
-                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; margin-bottom:10px; user-select:none;">
+                    <div class="op-dim-field">
+                        <label for="sidebar-dim-rot">Rotation</label>
+                        <div class="op-dim-spinner">
+                            ${DimensionControlService.renderLeftSpinnerHtml('sidebar', 'rot', 'Rotation Angle')}
+                            <input type="text" inputmode="decimal" id="sidebar-dim-rot" placeholder="--" oninput="DimensionControlService.onSidebarFieldInput('rot')" onkeydown="DimensionControlService.onFieldKeyDown('sidebar', 'rot', event)">
+                            <span class="op-dim-unit-tag">&deg;</span>
+                        </div>
+                    </div>
+                    <label class="op-dim-checkbox-row">
                         <input type="checkbox" id="sidebar-dim-lock" style="cursor:pointer; accent-color:var(--ui-theme-color);" onchange="DimensionControlService.toggleAspectLock(this.checked);">
                         <span>Lock aspect ratio</span>
                     </label>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-primary" style="flex:1; padding:6px; font-size:12px; justify-content:center;" onclick="window.applySidebarDimensions()">Apply</button>
-                        <button class="btn-secondary" style="flex:1; padding:6px; font-size:12px; justify-content:center;" onclick="window.showSizePositionModal()">Edit...</button>
+                    <div class="op-dim-actions">
+                        <button type="button" class="btn-primary" onmousedown="event.preventDefault()" onclick="window.applySidebarDimensions()">Apply</button>
+                        <button type="button" class="btn-secondary" onmousedown="event.preventDefault()" onclick="window.showSizePositionModal()">Edit...</button>
                     </div>
                 </div>
 
-                <!-- SECTION: NUDGE CONTROLS -->
                 <div class="op-sidebar-section">
-                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ui-theme-color); margin-bottom:10px;">Move & Resize Nudge</div>
-                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                        <button class="op-sidebar-btn" style="justify-content:center; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('y', -1)" title="Move Up"><i class="fas fa-arrow-up"></i></button>
-                        <button class="op-sidebar-btn" style="justify-content:center; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('y', 1)" title="Move Down"><i class="fas fa-arrow-down"></i></button>
-                        <button class="op-sidebar-btn" style="justify-content:center; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('x', -1)" title="Move Left"><i class="fas fa-arrow-left"></i></button>
-                        <button class="op-sidebar-btn" style="justify-content:center; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('x', 1)" title="Move Right"><i class="fas fa-arrow-right"></i></button>
+                    <span class="op-section-label">Move &amp; Resize Nudge</span>
+                    <div class="op-dim-nudge-grid">
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('y', -1)" title="Move Up"><i class="fas fa-arrow-up"></i></button>
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('y', 1)" title="Move Down"><i class="fas fa-arrow-down"></i></button>
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('x', -1)" title="Move Left"><i class="fas fa-arrow-left"></i></button>
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('x', 1)" title="Move Right"><i class="fas fa-arrow-right"></i></button>
                     </div>
-                    <div style="display:flex; gap:6px; margin-top:8px;">
-                        <button class="op-sidebar-btn" style="flex:1; justify-content:center; font-size:11px; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('w', 1)" title="Wider"><i class="fas fa-expand-arrows-alt"></i> Width +</button>
-                        <button class="op-sidebar-btn" style="flex:1; justify-content:center; font-size:11px; padding:6px 0; margin-bottom:0;" onclick="DimensionControlService.stepRibbon('h', 1)" title="Taller"><i class="fas fa-arrows-alt-v"></i> Height +</button>
+                    <div class="op-dim-nudge-row">
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('w', 1)" title="Wider"><i class="fas fa-arrows-alt-h"></i> Width +</button>
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.stepRibbon('h', 1)" title="Taller"><i class="fas fa-arrows-alt-v"></i> Height +</button>
+                    </div>
+                    <div class="op-dim-nudge-row">
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.centerElementOnPage('h')" title="Center Horizontally"><i class="fas fa-align-center"></i> Center H</button>
+                        <button type="button" class="op-sidebar-btn" onmousedown="event.preventDefault()" onclick="DimensionControlService.centerElementOnPage('v')" title="Center Vertically"><i class="fas fa-align-justify"></i> Center V</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(panel);
+            panel.classList.add('visible');
+        } else if (panel.classList.contains('visible')) {
+            window.closeDimensionsPane();
+            return;
         } else {
-            panel.classList.toggle('visible');
+            panel.classList.add('visible');
         }
 
-        if (panel.classList.contains('visible')) {
-            DimensionControlService.sync();
-        }
+        window.retractOtherSidebars('op-dimensions-sidebar');
+        DimensionControlService.sync(null, true);
     };
 
     window.applySidebarDimensions = function() {
@@ -1293,6 +1662,7 @@
         const valY = document.getElementById('sidebar-dim-y')?.value;
         const valW = document.getElementById('sidebar-dim-w')?.value;
         const valH = document.getElementById('sidebar-dim-h')?.value;
+        const valRot = document.getElementById('sidebar-dim-rot')?.value;
         const isLocked = document.getElementById('sidebar-dim-lock')?.checked;
 
         DimensionControlService.applyDimensions(el, {
@@ -1300,8 +1670,13 @@
             y: valY,
             w: valW,
             h: valH,
-            isLocked: isLocked
+            rotation: valRot,
+            isLocked: isLocked,
+            changedAxis: DimensionControlService._lastEditedSidebarAxis,
+            forceUiSync: true
         }, true);
+
+        DimensionControlService._lastEditedSidebarAxis = null;
     };
 
 })(window);

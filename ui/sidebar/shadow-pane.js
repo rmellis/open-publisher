@@ -230,9 +230,13 @@ window.setShadowPaneVisibility = function(visible, targetEl) {
     }
     
     window._shadowSidebarOwnerEl = ownerEl;
-    document.querySelectorAll('.sidebar-panel.visible, .op-sidebar.visible').forEach(el => {
-        if (el !== panel) el.classList.remove('visible');
-    });
+    if (typeof window.retractOtherSidebars === 'function') {
+        window.retractOtherSidebars('op-shadow-sidebar');
+    } else {
+        document.querySelectorAll('.sidebar-panel.visible, .op-sidebar.visible').forEach(el => {
+            if (el !== panel) el.classList.remove('visible');
+        });
+    }
     panel.classList.add('visible');
     window.parseShadowToSliders();
     if (typeof window.syncWorkspaceLayout === 'function') window.syncWorkspaceLayout();

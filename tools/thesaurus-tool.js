@@ -5,11 +5,16 @@ window.ThesaurusTool = {
             if (sidebar.classList.contains('visible')) {
                 sidebar.classList.remove('visible');
             } else {
-                document.getElementById('op-table-sidebar')?.classList.remove('visible');
-                document.getElementById('op-image-sidebar')?.classList.remove('visible');
-                document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
-                document.getElementById('op-a11y-sidebar')?.classList.remove('visible');
-                document.getElementById('op-graphics-sidebar')?.classList.remove('visible');
+                if (typeof window.retractOtherSidebars === 'function') {
+                    window.retractOtherSidebars('op-thesaurus-sidebar');
+                } else {
+                    document.getElementById('op-table-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-image-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-a11y-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-graphics-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-dimensions-sidebar')?.classList.remove('visible');
+                }
                 sidebar.classList.add('visible');
                 
                 // Pre-fill with selected text if it's a single word

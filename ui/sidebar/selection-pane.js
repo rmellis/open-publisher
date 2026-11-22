@@ -36,9 +36,14 @@ window.toggleSelectionPane = function() {
     }
 
     if (panel.classList.contains('visible')) {
-        document.getElementById('op-image-sidebar')?.classList.remove('visible');
-        document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
-        document.getElementById('op-table-sidebar')?.classList.remove('visible');
+        if (typeof window.retractOtherSidebars === 'function') {
+            window.retractOtherSidebars('op-selection-sidebar');
+        } else {
+            document.getElementById('op-image-sidebar')?.classList.remove('visible');
+            document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
+            document.getElementById('op-table-sidebar')?.classList.remove('visible');
+            document.getElementById('op-dimensions-sidebar')?.classList.remove('visible');
+        }
         window.refreshSelectionPane();
     }
 };

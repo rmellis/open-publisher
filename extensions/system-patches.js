@@ -2528,6 +2528,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     const refreshVisibility = (el) => {
         const contentImg = window.getElementContentImage ? window.getElementContentImage(el) : Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []).find(img => !img.closest('.element-border-art, .border-art-wrapper, #native-border-art-border'));
         if (el && (contentImg || el.getAttribute('data-type') === 'emoji')) {
+            if (document.getElementById('op-dimensions-sidebar')?.classList.contains('visible')) {
+                if (panel.classList.contains('visible')) panel.classList.remove('visible');
+                if (expander.classList.contains('visible')) expander.classList.remove('visible');
+                if (typeof window.syncWorkspaceLayout === 'function') window.syncWorkspaceLayout();
+                return;
+            }
             const isBetaWordArt = el.querySelector('.beta-wa-img') !== null;
             const titleEl = panel.querySelector('.op-sidebar-title');
             if (titleEl) titleEl.innerText = isBetaWordArt ? 'Format WordArt' : 'Format Picture';
@@ -2698,6 +2704,7 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     document.getElementById('op-sidebar-expander').addEventListener('click', () => { 
         userCollapsed = false; 
+        if (typeof window.retractOtherSidebars === 'function') window.retractOtherSidebars('op-image-sidebar');
         refreshVisibility(state.selectedEl);
     });
 
@@ -3287,6 +3294,12 @@ window.decryptDocumentData = async function(encryptedObj, password) {
     const refreshUI = (el) => {
         const isWA = el && (el.classList.contains('wa-text') || el.querySelector('.wa-text') || el.closest('.wa-wrapper'));
         if (isWA) {
+            if (document.getElementById('op-dimensions-sidebar')?.classList.contains('visible')) {
+                panel.classList.remove('visible');
+                expander.classList.remove('visible');
+                if (typeof window.syncWorkspaceLayout === 'function') window.syncWorkspaceLayout();
+                return;
+            }
             if (waUserCollapsed) {
                 panel.classList.remove('visible');
                 expander.classList.add('visible');
@@ -3343,7 +3356,11 @@ window.decryptDocumentData = async function(encryptedObj, password) {
 
     // Sidebar Close / Expander
     document.getElementById('wa-close-btn').onclick = () => { waUserCollapsed = true; refreshUI(state.selectedEl); };
-    expander.onclick = () => { waUserCollapsed = false; refreshUI(state.selectedEl); };
+    expander.onclick = () => {
+        waUserCollapsed = false;
+        if (typeof window.retractOtherSidebars === 'function') window.retractOtherSidebars('op-wordart-sidebar');
+        refreshUI(state.selectedEl);
+    };
 
     // --- Shape Button Click Logic ---
     panel.querySelectorAll('.wa-shape-btn').forEach(btn => {

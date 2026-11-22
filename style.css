@@ -2327,7 +2327,7 @@ body.classic-cursors-enabled .force-move-cursor * {
 }
 
 /* Modal Buttons */
-.custom-dialog button:not(.op-tmpl-browse-btn):not(.op-tmpl-btn-cancel):not(.op-tmpl-btn-export) {
+.custom-dialog button:not(.op-tmpl-browse-btn):not(.op-tmpl-btn-cancel):not(.op-tmpl-btn-export):not(.sp-align-btn) {
     padding: 8px 24px; 
     border: none; 
     border-radius: 20px; 
@@ -2814,7 +2814,7 @@ svg .shape-path, svg .shape-path * {
             transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         }
 
-        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar, #op-graphics-sidebar, #op-thesaurus-sidebar {
+        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar, #op-graphics-sidebar, #op-thesaurus-sidebar, #op-dimensions-sidebar {
             position: fixed;
             right: 0px; 
             top: 205px; 
@@ -2972,7 +2972,7 @@ svg .shape-path, svg .shape-path * {
             transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         }
 
-        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar, #op-graphics-sidebar, #op-thesaurus-sidebar {
+        #op-image-sidebar, #op-selection-sidebar, #op-shadow-sidebar, #op-a11y-sidebar, #op-graphics-sidebar, #op-thesaurus-sidebar, #op-dimensions-sidebar {
             position: fixed; right: 0px; top: 205px; bottom: 22px; width: 290px;
             background: rgba(245, 245, 245, 0.7); backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -5397,7 +5397,8 @@ body.dark-mode #op-shadow-sidebar,
 body.dark-mode #op-a11y-sidebar, 
 body.dark-mode #op-graphics-sidebar, 
 body.dark-mode #op-wordart-sidebar,
-body.dark-mode #op-thesaurus-sidebar {
+body.dark-mode #op-thesaurus-sidebar,
+body.dark-mode #op-dimensions-sidebar {
     background: rgba(30, 30, 30, 0.8);
     border-left-color: rgba(255, 255, 255, 0.1);
 }
@@ -10261,12 +10262,264 @@ body.dark-mode .sp-help-icon-btn:hover {
     background: rgba(255, 255, 255, 0.2) !important;
 }
 
-#op-dimensions-sidebar {
-    width: 270px;
-    right: 0;
-    top: 115px;
-    bottom: 25px;
-    position: fixed;
+/* Left-side teal-green number selector matching .modern-spinner */
+.sp-spin-btns {
+    display: flex;
+    flex-direction: column;
+    width: 20px;
+    height: 100%;
+    background: var(--ui-theme-dark, #004d48);
+    color: #ffffff;
+    border-right: 1px solid var(--ui-theme-dark, #004d48);
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.sp-spin-btns div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 7px;
+    line-height: 1;
+    color: #ffffff;
+    transition: background 0.15s ease;
+}
+
+.sp-spin-btns div:first-child i {
+    transform: translateY(1px);
+}
+
+.sp-spin-btns div:last-child i {
+    transform: translateY(-1px);
+}
+
+.sp-spin-btns div:hover {
+    background: var(--ui-theme-color, #007670);
+}
+
+.sp-spin-btns div:active {
+    background: color-mix(in srgb, var(--ui-theme-color, #007670) 80%, black);
+}
+
+body.dark-mode .sp-spin-btns {
+    background: var(--ui-theme-dark, #005a54);
+    border-right-color: var(--ui-theme-dark, #005a54);
+}
+
+/* Dimensions & Position Sidebar Internal Styling (outer geometry inherited from shared sidebar rules) */
+.op-dim-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.op-dim-header-row .op-section-label {
+    margin-bottom: 0;
+}
+
+.op-dim-unit-select {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--ui-theme-dark, #004d48);
+    cursor: pointer;
+    outline: none;
+}
+
+.op-dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.op-dim-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.op-dim-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.op-dim-spinner {
+    display: flex;
+    align-items: center;
+    height: 26px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+}
+
+.op-dim-spinner:hover,
+.op-dim-spinner:focus-within {
+    border-color: var(--ui-theme-dark, #004d48);
+}
+
+.op-dim-spinner .sp-spin-btns {
+    width: 18px;
+}
+
+.op-dim-spinner input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--ui-theme-dark, #004d48);
+}
+
+.op-dim-unit-tag {
+    padding: 0 7px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--ui-theme-dark, #004d48);
+    border-left: 1px solid var(--ui-theme-dark, #004d48);
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.op-dim-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    margin: 10px 0 12px;
+    user-select: none;
+}
+
+.op-dim-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.op-dim-actions button {
+    flex: 1;
+    height: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.op-dim-nudge-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.op-dim-nudge-grid .op-sidebar-btn,
+.op-dim-nudge-row .op-sidebar-btn {
+    justify-content: center;
+    padding: 6px 4px;
+    margin-bottom: 0;
+    font-size: 11px;
+}
+
+.op-dim-nudge-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.op-dim-nudge-row .op-sidebar-btn {
+    flex: 1;
+}
+
+#sp-toggle-sidebar-btn.active {
+    border-color: var(--ui-theme-color, #007670);
+    color: var(--ui-theme-color, #007670);
+    background: color-mix(in srgb, var(--ui-theme-color, #007670) 12%, transparent);
+}
+
+body.dark-mode .op-dim-unit-select {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+body.dark-mode .op-dim-field label,
+body.dark-mode .op-dim-checkbox-row {
+    color: #cbd5e1;
+}
+
+body.dark-mode .op-dim-spinner {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+body.dark-mode .op-dim-spinner:hover,
+body.dark-mode .op-dim-spinner:focus-within {
+    border-color: var(--ui-theme-color, #14b8a6);
+}
+
+body.dark-mode .op-dim-spinner input {
+    color: #f8fafc;
+}
+
+body.dark-mode .op-dim-unit-tag {
+    color: #ffffff;
+    background: var(--ui-theme-dark, #005a54);
+    border-left-color: var(--ui-theme-dark, #005a54);
+}
+
+body.dark-mode #op-dimensions-sidebar .op-sidebar-btn {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+}
+
+body.dark-mode #op-dimensions-sidebar .op-sidebar-btn:hover {
+    background: rgba(51, 65, 85, 0.9);
+    border-color: var(--ui-theme-color, #14b8a6);
+    color: #ffffff;
+}
+
+body.dark-mode #op-dimensions-sidebar .op-dim-actions .btn-secondary {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+}
+
+body.dark-mode #op-dimensions-sidebar .op-dim-actions .btn-secondary:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: var(--ui-theme-color, #14b8a6);
+    color: #ffffff;
+}
+
+body.dark-mode #sp-toggle-sidebar-btn.active {
+    color: #2dd4bf !important;
+    border-color: #14b8a6 !important;
+    background: rgba(20, 184, 166, 0.18) !important;
 }
 
 /* ==========================================================================

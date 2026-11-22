@@ -6,10 +6,15 @@ window.GraphicsManager = {
                 sidebar.classList.remove('visible');
             } else {
                 // hide others
-                document.getElementById('op-table-sidebar')?.classList.remove('visible');
-                document.getElementById('op-image-sidebar')?.classList.remove('visible');
-                document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
-                document.getElementById('op-a11y-sidebar')?.classList.remove('visible');
+                if (typeof window.retractOtherSidebars === 'function') {
+                    window.retractOtherSidebars('op-graphics-sidebar');
+                } else {
+                    document.getElementById('op-table-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-image-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-wordart-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-a11y-sidebar')?.classList.remove('visible');
+                    document.getElementById('op-dimensions-sidebar')?.classList.remove('visible');
+                }
                 sidebar.classList.add('visible');
                 this.scanImages();
             }
