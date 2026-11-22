@@ -1,4 +1,4 @@
-// Open Publisher Text Engine (v5.17.10)
+// Open Publisher Text Engine (v5.24.2)
 // --- FONT DROPDOWN KEYBOARD NAVIGATION ---
 let fontNavState = {
     lastSearchedChar: null,
@@ -17,9 +17,9 @@ window.resetFontNavState = function() {
 };
 
 function getActiveFontDropdown() {
-    const ribbonMenu = document.getElementById('ribbon-font-list');
+    const ribbonMenu = document.getElementById('op-ribbon-font-list');
     if (ribbonMenu && ribbonMenu.style.display === 'block') return ribbonMenu;
-    const floatMenu = document.getElementById('float-font-list');
+    const floatMenu = document.getElementById('op-float-font-list');
     if (floatMenu && floatMenu.style.display === 'block') return floatMenu;
     return null;
 }
@@ -261,8 +261,8 @@ function getDocumentFonts() {
 }
 
 function updateDocumentFontsSection(force = false) {
-    const ribbonList = document.getElementById('ribbon-font-list');
-    const floatList = document.getElementById('float-font-list');
+    const ribbonList = document.getElementById('op-ribbon-font-list');
+    const floatList = document.getElementById('op-float-font-list');
     if (!ribbonList && !floatList) return;
 
     const docFonts = getDocumentFonts();
@@ -334,10 +334,12 @@ function createFontDropdownItem(list, font) {
     const visAxes = vfDef ? (vfEngine.getVisibleAxes ? vfEngine.getVisibleAxes(vfDef) : vfDef.axes.filter(a => !a.hidden)) : [];
     const hasCustomAxes = !!(vfDef && vfEngine.hasCustomAxes && vfEngine.hasCustomAxes(vfDef));
     const isRich = !!(isVf && (visAxes.length >= 2 || hasCustomAxes));
+    const isSystemFont = !isVf && !isCustomVf && !!(window._opDesktopSystemFontSet && window._opDesktopSystemFontSet.has(font.toLowerCase()));
 
     item.dataset.vf = isVf ? '1' : '0';
     item.dataset.customVf = isCustomVf ? '1' : '0';
     item.dataset.vfMulti = isRich ? '1' : '0';
+    item.dataset.systemFont = isSystemFont ? '1' : '0';
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'font-item-name';
@@ -360,6 +362,12 @@ function createFontDropdownItem(list, font) {
         const tagList = visAxes.map(a => a.tag).join(', ');
         badge.title = `${isCustomVf ? 'Custom ' : ''}Variable Font (${visAxes.length} ${visAxes.length === 1 ? 'axis' : 'axes'}${tagList ? ': ' + tagList : ''})`;
         item.appendChild(badge);
+    } else if (isSystemFont) {
+        const sysBadge = document.createElement('span');
+        sysBadge.className = 'vf-badge-pill vf-badge-system';
+        sysBadge.title = 'Local System Font installed on this computer';
+        sysBadge.innerHTML = '<i class="fas fa-desktop" style="font-size:8px; margin-right:3px;"></i>SYS';
+        item.appendChild(sysBadge);
     }
 
     item.onclick = (e) => {
@@ -404,7 +412,8 @@ function applyDropdownFontFilter(list, mode, query) {
         const matchesMode = m === 'all'
             || (m === 'vf' && item.dataset.vf === '1')
             || (m === 'multi' && item.dataset.vfMulti === '1')
-            || (m === 'custom' && item.dataset.customVf === '1');
+            || (m === 'custom' && item.dataset.customVf === '1')
+            || (m === 'system' && item.dataset.systemFont === '1');
         const visible = matchesQ && matchesMode;
         item.classList.toggle('vf-filter-hidden', !visible);
         item.style.display = visible ? '' : 'none';
@@ -442,6 +451,7 @@ function ensureDropdownChrome(list) {
                 <button type="button" class="vf-dd-filter-btn" data-vf-dd="vf" title="All Variable Fonts">VF</button>
                 <button type="button" class="vf-dd-filter-btn" data-vf-dd="multi" title="Multi-Axis & Creative Custom-Axis Variable Fonts">Multi</button>
                 <button type="button" class="vf-dd-filter-btn" data-vf-dd="custom" title="Uploaded Custom Variable Fonts">Custom</button>
+                <button type="button" class="vf-dd-filter-btn vf-dd-filter-system" data-vf-dd="system" title="Local System Fonts installed on this computer" style="display:none;">System</button>
             </div>
         `;
         const searchInp = ctrl.querySelector('.vf-dropdown-search');
@@ -454,6 +464,16 @@ function ensureDropdownChrome(list) {
             });
         });
         list.prepend(ctrl);
+    }
+    const sysFilterBtn = list.querySelector('.vf-dd-filter-system');
+    if (sysFilterBtn) {
+        const hasSysFonts = !!(window._opDesktopSystemFontSet && window._opDesktopSystemFontSet.size > 0);
+        sysFilterBtn.style.display = hasSysFonts ? '' : 'none';
+        if (!hasSysFonts && list.dataset.vfFilterMode === 'system') {
+            list.dataset.vfFilterMode = 'all';
+            const allBtn = list.querySelector('.vf-dd-filter-btn[data-vf-dd="all"]');
+            list.querySelectorAll('.vf-dd-filter-btn').forEach(b => b.classList.toggle('active', b === allBtn));
+        }
     }
     if (!list.querySelector('.vf-dropdown-footer')) {
         const ftr = document.createElement('div');
@@ -468,6 +488,95 @@ function ensureDropdownChrome(list) {
     }
 }
 
+let _opFontPickersInitialized = false;
+let _opSyncingSystemFonts = false;
+
+function _CollectDesktopSystemFontNames() {
+    const raw = [];
+    if (Array.isArray(window._opRawDesktopSystemFonts)) {
+        raw.push(...window._opRawDesktopSystemFonts);
+    }
+    if (Array.isArray(window._unifiedFontObjects)) {
+        window._unifiedFontObjects.forEach(entry => {
+            if (entry && typeof entry.name === 'string' && entry.isGoogle === false) {
+                raw.push(entry.name);
+            }
+        });
+    }
+    return raw;
+}
+
+function mergeDesktopSystemFontsIntoList() {
+    const raw = _CollectDesktopSystemFontNames();
+    const vfEngine = window.VariableFontsEngine;
+    const sysSet = window._opDesktopSystemFontSet instanceof Set
+        ? window._opDesktopSystemFontSet
+        : (window._opDesktopSystemFontSet = new Set());
+    const sysList = [];
+    const seenListKeys = new Set(fontList.map(f => f.toLowerCase()));
+    let changed = false;
+
+    for (let i = 0; i < raw.length; i++) {
+        const clean = typeof raw[i] === 'string' ? raw[i].trim() : '';
+        if (!clean || /VF(?:\s*\d+|[★+])$/i.test(clean)) continue;
+        if (vfEngine && typeof vfEngine.isVariableFont === 'function' && vfEngine.isVariableFont(clean)) continue;
+
+        const key = clean.toLowerCase();
+        if (!sysSet.has(key)) {
+            sysSet.add(key);
+            changed = true;
+        }
+        if (!seenListKeys.has(key)) {
+            seenListKeys.add(key);
+            fontList.push(clean);
+            changed = true;
+        }
+    }
+
+    sysSet.forEach(k => {
+        const canonical = fontList.find(f => f.toLowerCase() === k);
+        if (canonical) sysList.push(canonical);
+    });
+    window._opDesktopSystemFonts = sysList.sort((a, b) => a.localeCompare(b));
+    return changed;
+}
+
+window._opHarvestFontListFallback = function(incomingList) {
+    if (!Array.isArray(incomingList)) return;
+    const knownKeys = new Set(fontList.map(f => f.toLowerCase()));
+    const vfEngine = window.VariableFontsEngine;
+    const extras = [];
+    incomingList.forEach(raw => {
+        const clean = typeof raw === 'string' ? raw.trim() : '';
+        if (!clean || /VF(?:\s*\d+|[★+])$/i.test(clean)) return;
+        if (vfEngine && typeof vfEngine.isVariableFont === 'function' && vfEngine.isVariableFont(clean)) return;
+        if (!knownKeys.has(clean.toLowerCase())) {
+            extras.push(clean);
+        }
+    });
+    if (extras.length > 0) {
+        if (!Array.isArray(window._opRawDesktopSystemFonts)) window._opRawDesktopSystemFonts = [];
+        extras.forEach(n => {
+            if (!window._opRawDesktopSystemFonts.some(x => x.toLowerCase() === n.toLowerCase())) {
+                window._opRawDesktopSystemFonts.push(n);
+            }
+        });
+    }
+};
+
+window._opSyncDesktopSystemFonts = function() {
+    if (_opSyncingSystemFonts) return;
+    _opSyncingSystemFonts = true;
+    try {
+        const changed = mergeDesktopSystemFontsIntoList();
+        if (changed && _opFontPickersInitialized && typeof window.rebuildFontPickers === 'function') {
+            window.rebuildFontPickers();
+        }
+    } finally {
+        _opSyncingSystemFonts = false;
+    }
+};
+
 function mergeVariableFontsIntoList() {
     if (window.VariableFontsEngine && Array.isArray(window.VariableFontsEngine.CATALOG)) {
         window.VariableFontsEngine.getAllVariableFonts().forEach(vf => {
@@ -476,11 +585,12 @@ function mergeVariableFontsIntoList() {
             }
         });
     }
+    mergeDesktopSystemFontsIntoList();
 }
 
 function populateFontDropdownItems() {
-    const ribbonList = document.getElementById('ribbon-font-list');
-    const floatList = document.getElementById('float-font-list');
+    const ribbonList = document.getElementById('op-ribbon-font-list');
+    const floatList = document.getElementById('op-float-font-list');
     const preloader = document.getElementById('font-preloader');
     mergeVariableFontsIntoList();
     fontList.sort();
@@ -513,10 +623,12 @@ function populateFontDropdownItems() {
 function initFontPickers() {
     populateFontDropdownItems();
 
-    // Proactively load static Google fonts via FontFaceSet API; variable fonts load on demand with full axis CSS2 URLs
+    // Proactively load static Google fonts via FontFaceSet API; variable fonts and local OS system fonts skip network preload
     if (document.fonts && typeof document.fonts.load === 'function') {
         const sampleText = 'Quick brown fox 12345 (a, g, t, r)';
+        const sysSet = window._opDesktopSystemFontSet;
         fontList.forEach(font => {
+            if (sysSet && sysSet.has(font.toLowerCase())) return;
             if (window.VariableFontsEngine && window.VariableFontsEngine.isVariableFont(font)) return;
             document.fonts.load(`16px "${font}"`, sampleText).catch(() => {});
         });
@@ -529,6 +641,7 @@ function initFontPickers() {
         populateFontDropdownItems();
         updateDocumentFontsSection(true);
     };
+    _opFontPickersInitialized = true;
     updateDocumentFontsSection();
 }
 
@@ -1974,7 +2087,31 @@ const fontList = [
     "Shadows Into Light", "Signika", "Slabo 27px", "Source Code Pro", "Source Sans Pro", "Space Grotesk", "Space Mono", "Syne", "Teko", "Titillium Web",
     "Ubuntu", "Varela Round", "Vollkorn", "Work Sans", "Yanone Kaffeesatz", "Zilla Slab"
 ];
-window.fontList = fontList;
+(function protectWindowFontListReference() {
+    const existingPreload = Array.isArray(window.fontList) ? window.fontList.slice() : null;
+    if (existingPreload && typeof window._opHarvestFontListFallback === 'function') {
+        window._opHarvestFontListFallback(existingPreload);
+    }
+    try {
+        Object.defineProperty(window, 'fontList', {
+            configurable: true,
+            enumerable: true,
+            get() { return fontList; },
+            set(nextVal) {
+                if (Array.isArray(nextVal) && nextVal !== fontList) {
+                    if (typeof window._opHarvestFontListFallback === 'function') {
+                        window._opHarvestFontListFallback(nextVal);
+                    }
+                    if (typeof window._opSyncDesktopSystemFonts === 'function') {
+                        window._opSyncDesktopSystemFonts();
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        window.fontList = fontList;
+    }
+})();
 
 /* =========================================================================
    STYLED TEXT BOX SYSTEM (v5.11.9)

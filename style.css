@@ -10637,6 +10637,20 @@ body.dark-mode .vf-badge-pill.vf-badge-rich {
     background: rgba(45, 212, 191, 0.28);
     border-color: rgba(94, 234, 212, 0.45);
 }
+.vf-badge-pill.vf-badge-system {
+    background: rgba(100, 116, 139, 0.14);
+    color: #475569;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+}
+body.dark-mode .vf-badge-pill.vf-badge-system {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+}
+.font-item.highlighted .vf-badge-pill.vf-badge-system {
+    background: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+}
 
 .vf-dropdown-controls {
     position: sticky;

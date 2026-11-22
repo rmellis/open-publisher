@@ -369,7 +369,7 @@ function toggleHeaderFooter(forceState, skipHistory = false) {
 window.toggleHeaderFooter = toggleHeaderFooter;
 
 function toggleCustomDropdown(type) {
-    const id = type === 'ribbon' ? 'ribbon-font-list' : 'float-font-list';
+    const id = type === 'ribbon' ? 'op-ribbon-font-list' : 'op-float-font-list';
     const menu = document.getElementById(id);
     const isVisible = menu.style.display === 'block';
     

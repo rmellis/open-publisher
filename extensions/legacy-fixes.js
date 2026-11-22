@@ -1847,7 +1847,7 @@ if (!window._sliderFillListenerInstalled) {
 
     // --- 1. DOM PREPARATION ---
     // Detach critical dropdown elements to prevent reference errors before HTML replacement
-    const fontDropdownList = document.getElementById('float-font-list');
+    const fontDropdownList = document.getElementById('op-float-font-list');
     if (fontDropdownList) fontDropdownList.remove(); 
 
     // --- 2. CSS STYLESHEET INJECTION ---
@@ -1874,7 +1874,7 @@ if (!window._sliderFillListenerInstalled) {
 
     // Custom Font Dropdown Logic
     window.toggleFloatFontDropdown = function() {
-        const menu = document.getElementById('float-font-list');
+        const menu = document.getElementById('op-float-font-list');
         const isVisible = menu && menu.style.display === 'block';
         document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
         if (!isVisible && menu) {
