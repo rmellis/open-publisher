@@ -557,16 +557,51 @@ window.packAndGo = async function() {
         }
     }
 }
+function isNwjsDesktopClient() {
+    return typeof nw !== 'undefined' || Boolean(window.process && window.process.versions && window.process.versions.nw);
+}
+
+function isAppleTouchDevice() {
+    if (isNwjsDesktopClient()) return false;
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+    const platform = (typeof navigator !== 'undefined' && navigator.platform) ? navigator.platform : '';
+    const touchPoints = (typeof navigator !== 'undefined' && typeof navigator.maxTouchPoints === 'number') ? navigator.maxTouchPoints : 0;
+    return /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && touchPoints > 1);
+}
+
+function isStandalonePWA() {
+    if (isNwjsDesktopClient()) return false;
+    const navStandalone = typeof window !== 'undefined' && window.navigator && window.navigator.standalone === true;
+    const mediaStandalone = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
+    return navStandalone || mediaStandalone;
+}
+
 window.exportNativePDF = function() {
     if(typeof DialogSystem !== 'undefined') {
+        const appleTouch = isAppleTouchDevice();
+        const standalonePwa = appleTouch && isStandalonePWA();
+
+        let detailsHtml = `<br><p>In the print dialog that opens, simply change your <b>Destination</b> or <b>Printer</b> to <b>"Save as PDF"</b>.</p>`;
+        let actionLabel = 'Open Print Dialog';
+
+        if (standalonePwa) {
+            detailsHtml = `
+                <div style="margin-top:12px; padding:10px 12px; background:#fffbeb; border:1px solid #f59e0b; color:#78350f; border-radius:6px; font-size:13px; text-align:left; line-height:1.45;">
+                    <b>iPadOS / iOS Web App Notice:</b> iPadOS disables printing and PDF export when launched with <b>"Open as Web App"</b> enabled. To save a PDF, open <b>openpublisher.app</b> directly in standard Safari (or re-add the Home Screen shortcut with <b>"Open as Web App"</b> switched <b>OFF</b>).
+                </div>
+            `;
+            actionLabel = 'Try Print Dialog Anyway';
+        } else if (appleTouch) {
+            detailsHtml = `<br><p>When the Print Preview opens, tap the <b>Share</b> icon at the top (or pinch outward with two fingers on the preview page) and choose <b>"Save to Files"</b> to save the PDF to any folder.</p>`;
+        }
+
         const msg = `
-            <div style="text-align: center; font-size: 14px; margin-bottom: 10px;">
+            <div style="text-align: center; font-size: 14px; margin: 0 auto 10px; max-width: 500px;">
                 <p>Open Publisher uses your browser's native print engine to generate perfect, high-resolution vector PDFs.</p>
-                <br>
-                <p>In the print dialog that opens, simply change your <b>Destination</b> or <b>Printer</b> to <b>"Save as PDF"</b>.</p>
+                ${detailsHtml}
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <button id="btn-proceed-pdf" style="background:#0ea5e9; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Open Print Dialog</button>
+                <button id="btn-proceed-pdf" class="btn-primary" style="border:none; padding:8px 18px; border-radius:6px; font-weight:600; cursor:pointer;">${actionLabel}</button>
             </div>
         `;
         DialogSystem.show('Export High-Res PDF', msg, null, true);
@@ -575,12 +610,15 @@ window.exportNativePDF = function() {
             if(document.getElementById('custom-dialog-confirm')) document.getElementById('custom-dialog-confirm').style.display = 'none';
             if(document.getElementById('custom-dialog-cancel')) document.getElementById('custom-dialog-cancel').style.display = 'none';
             
-            document.getElementById('btn-proceed-pdf').onclick = () => {
-                DialogSystem.close();
-                setTimeout(() => {
-                    if (typeof printFullDocument === 'function') printFullDocument();
-                }, 300);
-            };
+            const proceedBtn = document.getElementById('btn-proceed-pdf');
+            if (proceedBtn) {
+                proceedBtn.onclick = () => {
+                    DialogSystem.close();
+                    setTimeout(() => {
+                        if (typeof printFullDocument === 'function') printFullDocument();
+                    }, 300);
+                };
+            }
         }, 10);
     } else {
         if (typeof printFullDocument === 'function') printFullDocument();
@@ -596,7 +634,7 @@ window.exportXPS = function() {
                 <p>In the print dialog that opens, simply change your <b>Destination</b> or <b>Printer</b> to <b>"Microsoft XPS Document Writer"</b>.</p>
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <button id="btn-proceed-xps" style="background:#0ea5e9; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Open Print Dialog</button>
+                <button id="btn-proceed-xps" class="btn-primary" style="border:none; padding:8px 18px; border-radius:6px; font-weight:600; cursor:pointer;">Open Print Dialog</button>
             </div>
         `;
         DialogSystem.show('Export as XPS', msg, null, true);

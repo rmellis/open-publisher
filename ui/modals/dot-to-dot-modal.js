@@ -1,4 +1,4 @@
-// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.24.3)
+// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.24.4)
 // Converts any canvas vector path, shape outline, built-in silhouette, custom SVG path,
 // or click-plotted path into a numbered sequence of dot nodes with configurable intervals
 // (1s, 2s, 5s, 10s, A-Z, a-z), curved or straight guide hints, and automatic Page 2 Answer Keys.
