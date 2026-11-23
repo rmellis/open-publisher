@@ -101,7 +101,9 @@ Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing ap
 ---
 
 <a id="what-happened-to-the-gecko-windows-build"></a>
-## What Happened to the Experimental Gecko Windows Build (and Why v5.23.1 Rolls Back to NW.js)
+<details>
+<summary><strong>ℹ️ What Happened to the Experimental Gecko Windows Build (and Why v5.23.1 Rolls Back to NW.js) - Click to expand</strong></summary>
+<br/>
 
 Over the last 41 updates, I built an experimental Mozilla Gecko-based desktop shell for OpenPublisher on Windows. It delivered roughly half the installer size, faster startup, smoother canvas performance on older hardware (including Windows 7), and a built-in wrapper updater.
 
@@ -115,6 +117,8 @@ Rather than fighting an endless game of whack-a-mole with dozens of automated he
 3. **Deliver desktop fixes downstream through the web application (`v5.23.1`):** Instead of rebuilding `setup.exe`, `v5.23.1` eliminates the NW.js cold-start `.opub` file-association blank-canvas bug (caused by orphaned `#paper.paper-pouring` transitions and startup timing races) 100% inside the web app while preserving the wrapper's 4-step atomic save system untouched.
 
 The web app at `openpublisher.app` remains completely clean on Google Safe Browsing and VirusTotal URL scanners, and all NW.js desktop users receive `v5.23.0` (Variable Font Studio) and `v5.23.1` (cold-start `.opub` fix) automatically on launch.
+
+</details>
 
 ---
 
@@ -137,6 +141,10 @@ The web app at `openpublisher.app` remains completely clean on Google Safe Brows
 
 ## Table of Contents
 
+<details>
+<summary><strong>📑 Click to expand full Table of Contents</strong></summary>
+<br/>
+
 - [What's New in Version 5](#whats-new-in-version-5)
 - [Features at a Glance](#features-at-a-glance)
 - [Installation and Platform Support](#installation-and-platform-support)
@@ -146,14 +154,15 @@ The web app at `openpublisher.app` remains completely clean on Google Safe Brows
 - [Page and Document Management](#page-and-document-management)
 - [Physical Measurement Units and DPI](#physical-measurement-units-and-dpi)
 - [Master Pages and Themes](#master-pages-and-themes)
-- [Text Boxes, Typography and Spellcheck](#text-boxes-typography-and-spellcheck)
+- [Text Boxes, Typography and Variable Font Studio](#text-boxes-typography-and-spellcheck)
 - [Tables](#tables)
 - [Images, Graphics and Clipboard Scrapbook](#images-graphics-and-clipboard-scrapbook)
 - [Picture Tools Ribbon](#picture-tools-ribbon)
 - [Shapes and Drawing](#shapes-and-drawing)
 - [WordArt](#wordart)
 - [Clipart, Emojis, and Symbols](#clipart-emojis-and-symbols)
-- [Marketing and Promotional Tools](#marketing-and-promotional-tools)
+- [Editable Templates, Marketing and Promotional Tools](#marketing-and-promotional-tools)
+- [Fun and Puzzle Generators (The Fun Ribbon Tab)](#fun-and-puzzle-generators)
 - [AI Studio (Layout, Image and Vector)](#ai-layout-and-command-assistant)
 - [Layout and Workspace Tools](#layout-and-workspace-tools)
 - [Export, Presentation and Multi-Page Output](#export-presentation-and-multi-page-output)
@@ -163,6 +172,8 @@ The web app at `openpublisher.app` remains completely clean on Google Safe Brows
 - [Keyboard Shortcuts Reference](#keyboard-shortcuts-reference)
 - [Supporters of Open Source](#supporters-of-open-source)
 - [Developers](#developers)
+
+</details>
 
 ---
 
@@ -345,9 +356,11 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 | **Physical Units and DPI** | CM, MM, Inches, Pixels; 72/96/140/150/300 DPI or custom; DPI-aware margins, rulers, and print engine |
 | **300 DPI & Multi-Up Print** | Zero-spillage single-page printing, Booklet imposition, and Business Card / Label multi-up sheet printing with crop marks |
 | **Data Protection** | 4-step atomic save, 15-minute shadow snapshots (50 per document), external file watcher, Backup Manager, Previous Versions |
-| **Page Formats & Templates** | A3, A4, A5, Letter, Legal, Tabloid, Business Card, Square - plus 280+ ready-made templates across 15 categories |
-| **Typography and Proofing** | 100 Styled Text Boxes, 40 Clipart Border Art frames, RTL language support, Windows font discovery, offline spellcheck & grammar |
+| **Page Formats & Templates** | A3, A4, A5, Letter, Legal, Tabloid, Business Card, Square - plus 280+ editable multi-layer templates across 15 categories |
+| **Typography & Variable Fonts** | 129 bundled Variable Fonts with continuous OpenType axis sliders, 2D Matrix Explorer, and custom `.ttf`/`.otf`/`.woff2` upload; 100 Styled Text Boxes, 40 Clipart Border Art frames, RTL support, Windows font discovery, offline spellcheck & grammar |
+| **Dark Mode & 50+ UI Themes** | High-contrast Dark Mode studio appearance paired with 50+ UI accent color themes and automatic bright-theme contrast adaptation |
 | **Theme Studio** | 700+ curated page themes & fine textures, 6 live background adjustment sliders, per-page independent themes |
+| **Fun & Puzzle Generators** | Dedicated **Fun** ribbon tab featuring Word Search Studio, Crossword Builder, Connect-the-Dots Path Tool, Codebreaker Grid, and Cryptogram Frames with automatic Page 2 Answer Keys |
 | **Clipboard and Assets** | Unified clipboard engine, 25-item Clipboard Scrapbook drawer, intelligent paste separation, drag-and-drop shockwave feedback |
 | **Bulk Image Import** | Select or drop multiple images; choose single-page collage or one page per image automatically |
 | **Shapes and Smart Arrows** | 200+ SVG vector shapes, 98 parametric Smart Arrows with stem-only scaling, 3D rotation engine, custom point editing |
@@ -366,6 +379,12 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 <a id="installation-and-platform-support"></a>
 ## Installation and Platform Support
+
+Open Publisher runs natively across **Windows** (NW.js Installer, Portable `.exe`, and Windows XP SP3 build), **macOS** (`.dmg`), **Linux** (`.flatpak`, `.AppImage`, `.run`, `.deb`, `.rpm` with bundled Noto Color Emoji COLRv1 support), **FreeBSD** (`.pkg`), and the **Web / Installable PWA**.
+
+<details>
+<summary><strong>🖥️ Click to expand platform-specific installation details & screenshots (Windows, macOS, Linux, FreeBSD)</strong></summary>
+<br/>
 
 ### Windows
 
@@ -414,7 +433,7 @@ chmod +x openpublisher-5.2.x-linux.run
 
 All package formats install cleanly, register `application/x-openpublisher` MIME types, and automatically refresh icon and desktop application caches.
 
-** Linux Emoji Support:** A bundled Noto Color Emoji font (COLRv1) ensures emoji characters render correctly even on Linux systems without a system emoji font installed. The font activates only for emoji codepoints, leaving all text rendering to system fonts.
+**Linux Emoji Support:** A bundled Noto Color Emoji font (COLRv1) ensures emoji characters render correctly even on Linux systems without a system emoji font installed. The font activates only for emoji codepoints, leaving all text rendering to system fonts.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8145450f-8524-4f57-a656-e6654e792b4e" alt="Open Publisher on linux" width="720"/>
 </p>
@@ -430,10 +449,28 @@ Open Publisher V5 introduces an official native FreeBSD distribution:
   <img src="https://github.com/user-attachments/assets/84bfcae0-50ad-4d19-8437-218ecdf29487" alt="Open Publisher on FreeBSD" width="720"/>
 </p>
 
+</details>
+
 ---
 
 <a id="the-dashboard-and-startup-experience"></a>
 ## The Dashboard and Startup Experience
+
+### Dashboard (Start Screen)
+
+The Dashboard greets you on launch (or whenever no document is open), giving you one-click access to blank paper sizes, featured multi-layer templates, category browsing, and recent publications:
+
+<p align="center">
+  <img src="docs/screenshots/op-Dashboard.png" alt="Open Publisher Dashboard with Blank Documents and Featured Templates" width="800"/>
+</p>
+
+- **Blank Documents Strip**: Start immediately with pre-configured **A4**, **Letter**, **A5**, **A3**, **Legal**, **Tabloid**, **Business Card**, **Square**, or **Custom Size...** presets (with unit, orientation, and DPI controls).
+- **Featured & Categorized Templates Gallery**: Browse **280+ professionally designed templates** organized across 15+ sidebar categories (Resumes, Invitations, Flyers, Magazines, Brochures, Certificates, Menus, Calendars, Letterheads, Newsletters, Business Cards, Posters, and Social Media) with instant keyword search (`Search templates...`).
+- **Recent Documents**: Open your recent `.opub` publications with full state restoration (page size, DPI, physical unit, margins, ruler origin, and spread mode) and live status-bar loading feedback.
+
+<details>
+<summary><strong>🚀 Click to expand Splash Screen & First-Run Onboarding Wizard Preview</strong></summary>
+<br/>
 
 ### Splash Screen
 
@@ -451,18 +488,7 @@ On first launch, Open Publisher presents a glassmorphic 8-step interactive onboa
   <img src="https://github.com/user-attachments/assets/6f41fabb-84e5-4e6c-b9a5-3d8ccfd55e47" alt="Open Publisher FirstRun Screen" width="750"/>
 </p>
 
-### Dashboard (Start Screen)
-
-The Dashboard greets you when no document is open, providing:
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/9aac5200-b49f-45ba-966a-7d3577991e67" alt="Open Publisher Dashboard" width="750"/>
-</p>
-
-- **Recent Documents**: A visual grid of your last opened publications. Clicking any card restores the full document state including page size, DPI, unit, margins, ruler origin, and spread mode.
-- **New Document**: Opens the New Document dialog with format preset buttons, orientation toggle, unit selector, DPI picker, and a live canvas pixel preview.
-- **Templates Gallery**: Browse and apply professionally designed templates for newsletters, flyers, menus, certificates, resumes, and more.
-- **Status bar loading progress**: Clicking a recent file immediately activates a green glow progress bar with live status text ("Loading Document... Document Loaded!").
+</details>
 
 ---
 
@@ -477,12 +503,28 @@ The workspace is designed for uncluttered creative productivity:
 
 | Area | Description |
 |---|---|
-| **Ribbon Toolbar** | Tabbed command interface: File, Home, Insert, Page Design, Review, View, and contextual tabs |
+| **Ribbon Toolbar** | Tabbed command interface: File, Home, Insert, Page Design, Review, View, Picture, Fun, and contextual tabs |
 | **Infinite Pasteboard and Canvas** | The central high-precision design canvas surrounded by a full horizontal/vertical pasteboard |
 | **Navigation Pane** | Left-hand sidebar providing live page thumbnails, page notes, and drag-and-drop page reordering |
 | **Status Bar** | Bottom bar with zoom sliders, view mode toggles, DPI badge, cursor coordinates, and notification toasts |
-| **Floating Contextual Toolbar** | Appears instantly above selected text or WordArt for rapid font, style, and alignment adjustments |
-| **Auxiliary Drawer Panels** | Non-modal sliding sidebars for the Clipboard Scrapbook, Format Picture, WordArt, and Table Layout |
+| **Floating Contextual Toolbar** | Appears instantly above selected text or WordArt for rapid font, style, Variable Font (`VF`), and alignment adjustments |
+| **Auxiliary Drawer Panels** | Non-modal sliding sidebars for the Clipboard Scrapbook, Format Picture, Dimensions & Position, WordArt, and Table Layout |
+
+### Dark Mode and 50+ UI Color Themes
+
+Open Publisher includes first-class **Dark Mode** support alongside **more than 50 customizable UI accent color themes** accessible from the titlebar or **File > Options > General**:
+
+<p align="center">
+  <img src="docs/screenshots/op-DarkModeSupport.png" alt="Open Publisher Dark Mode with Snapchat Gold UI Theme and 50+ color palettes" width="800"/>
+</p>
+
+- **Studio Dark Mode Appearance**: Switch between the classic light office aesthetic and a sleek, low-glare dark workspace that adapts ribbons, sidebars, rulers, dialogs, and pasteboard surfaces while keeping your publication page accurate to print.
+- **50+ Built-In Accent Color Palettes**: Personalize the interface with over 50 curated brand and studio color themes (including Publisher Classic Teal, Ocean Blue, Sunset Orange, Snapchat Gold, Spotify Green, Cyberpunk Pink, Forest Green, and Midnight Dark).
+- **Adaptive Bright-Theme Contrast**: When using high-luminance accent themes (such as Gold, Yellow, or Lime) in either Light Mode or Dark Mode, Open Publisher automatically switches titlebars, status bars, dialog headers, gallery scroll buttons, and primary action buttons to crisp dark text and icons for effortless readability.
+
+<details>
+<summary><strong>🪟 Click to expand Desktop Window, Titlebar & System Tray Integration Details</strong></summary>
+<br/>
 
 - **Contextual Tabs** - Selecting any element automatically activates its specialized ribbon tab (Text Box Tools, Picture Tools, Drawing Tools, Table Design) with relevant editing controls.
 - **Dynamic Dirty State Asterisk (*)** - The window titlebar automatically reflects document status, appending an asterisk (`*`) when changes are pending and clearing it upon saving.
@@ -496,12 +538,18 @@ The workspace is designed for uncluttered creative productivity:
 - **Multi-Monitor Support** - Tearaway auxiliary windows (Export Queue, Presentation Preview, Developer HUD) can be moved independently across monitors.
 - **Single Instance Enforcement** - Opening a second `.opub` file from Windows Explorer while the app is already running loads the file in the existing instance rather than opening a duplicate window.
 
+</details>
+
 ---
 
 <a id="data-integrity-saving-and-recovery-systems"></a>
 ## Data Integrity, Saving and Recovery Systems
 
-Open Publisher V5 incorporates enterprise-grade protections to ensure your creative work is never lost:
+Open Publisher V5 incorporates enterprise-grade protections - including a 4-step crash-safe atomic save pipeline, 15-minute rolling background snapshots (up to 50 per document), a dedicated Backup Manager, external file modification watching, and Chromium idle auto-save - to ensure your creative work is never lost.
+
+<details>
+<summary><strong>🛡️ Click to expand Atomic Save Pipeline, Snapshots & Backup Manager Architecture</strong></summary>
+<br/>
 
 - **4-Step Atomic Save Pipeline**:
   1. Writes serialized document data to an isolated temporary file (`[filename].opub.tmp`).
@@ -542,19 +590,25 @@ Open Publisher V5 incorporates enterprise-grade protections to ensure your creat
   <img src="https://github.com/user-attachments/assets/45faebcd-49d1-4dbd-9f39-de52ea45978d" alt="Atomic Save - Backup Manager" width="500"/>
 </p>
 
+</details>
+
 ---
 
 <a id="page-and-document-management"></a>
 ## Page and Document Management
 
-- **Multiple ways to add pages** - Navigation Pane button, right-click context menu, or workspace background right-click.
-- **Page operations** - Duplicate, Move Up/Down, Delete, all from the thumbnail right-click menu.
-- **Two-Page Spread Mode** - Display facing pages side-by-side for booklet and magazine design. Spread mode is stored as document metadata; documents remember whether spreads were on when they were saved.
-- **Page Notes** - Attach custom labels to page thumbnails (e.g., "Front Cover", "Chapter 3") displayed in bold teal beneath thumbnails.
-- **Multi-Page Overview Mode** - Explicit toggle via the status bar or View ribbon. Zoom freely without triggering the mode automatically. Keyboard navigation (Arrow keys, Enter, Escape) works within the overview grid.
-- **Scratch Area** - Off-canvas staging zone for elements not yet placed. Toggle visibility from View > Show.
-- **Auto Page Numbering** - Dynamic, self-updating page number elements via Insert > Page Number.
-- **Template Saving** - Save any document as a reusable template.
+Design multi-page newsletters, magazines, booklets, and reports with instant side-by-side layout overview, facing-page spreads, and drag-and-drop page organization:
+
+<p align="center">
+  <img src="docs/screenshots/op-MultiPageLayouts.png" alt="Open Publisher Multi-Page Layout Overview showing side-by-side newsletter and magazine pages" width="800"/>
+</p>
+
+- **Multi-Page Overview Mode** - Toggle between Single-Page editing and a responsive Multi-Page Overview grid from the **View** ribbon (`Single` / `Multi-Page`) or the bottom status bar. Inspect entire publications side-by-side, navigate pages with the Arrow keys, and double-click (or press `Enter`) on any page card to jump straight into focused editing.
+- **Two-Page Spread Mode** - Display facing pages side-by-side (`View > Spreads`) for booklet, catalog, and magazine layouts. Spread state is saved directly inside `.opub` metadata.
+- **Multiple Ways to Add & Organize Pages** - Add, duplicate, reorder, or delete pages from the left-hand Navigation Pane (`+ Add Page`), thumbnail right-click menu, or workspace context menu.
+- **Page Notes** - Attach custom section labels to page thumbnails (e.g., "Front Cover", "Issue 10 Dispatch") displayed beneath each thumbnail.
+- **Scratch Area & Classic Drag** - Stage off-canvas assets in the surrounding 360-degree pasteboard, and toggle classic desktop-publishing Move Truck cursors from the **View > Show** group.
+- **Auto Page Numbering & Template Saving** - Insert dynamic, self-updating page numbers via `Insert > Page Number`, and save any multi-page layout as a reusable template.
 
 ### Page Setup
 
@@ -573,7 +627,11 @@ Open Publisher V5 incorporates enterprise-grade protections to ensure your creat
 <a id="physical-measurement-units-and-dpi"></a>
 ## Physical Measurement Units and DPI
 
-Open Publisher V5 introduces a mathematically authoritative physical unit and DPI engine designed for real-world print production.
+Open Publisher V5 includes a mathematically authoritative physical unit (`cm`, `mm`, `in`, `px`) and resolution (`72`, `96`, `140`, `150`, `300 DPI`, or custom) engine built for real-world print production, high-DPI grid visibility, and zero-spillage single-sheet output.
+
+<details>
+<summary><strong>📐 Click to expand Unit Conversion Tables, DPI Presets & 300 DPI Print Precision Details</strong></summary>
+<br/>
 
 ### Unit Conversion System
 
@@ -615,6 +673,8 @@ Page format and DPI are stored in `.opub` files as explicit metadata. When you r
   <img src="https://github.com/user-attachments/assets/f452cc56-7774-4493-80cb-8eace349f982" alt="dpi" width="439"/>
 </p>
 
+</details>
+
 ---
 
 <a id="master-pages-and-themes"></a>
@@ -640,12 +700,25 @@ Page format and DPI are stored in `.opub` files as explicit metadata. When you r
 ---
 
 <a id="text-boxes-typography-and-spellcheck"></a>
-## Text Boxes, Typography and Spellcheck
+## Text Boxes, Typography and Variable Font Studio
 
 Text boxes are the primary container for all written content in Open Publisher.
 
 - Insert a standard box via **Insert > Text Box** (or press **T** while the canvas is focused), or pick from **100 Styled Text Box Presets** in the dropdown gallery.
-- Contextual **Text Box Tools** ribbon, **Format Properties Studio**, and **Floating Toolbar** provide complete typography and frame control.
+- Contextual **Text Box Tools** ribbon, **Variable Font Studio (`VF`)**, **Format Properties Studio**, and **Floating Toolbar** provide complete typography and frame control.
+
+### Variable Font Studio (129 Bundled Variable Fonts & Custom Font Upload)
+
+Open Publisher features a dedicated **Variable Font Studio** accessible from the **`VF`** button on the Home ribbon, Text Box Tools ribbon, floating text toolbar, or font dropdown menu:
+
+<p align="center">
+  <img src="docs/screenshots/op-VfSuudio.png" alt="Open Publisher Variable Font Studio adjusting continuous OpenType axes live on the canvas" width="800"/>
+</p>
+
+- **129 Bundled Variable Font Families**: Browse and filter 129 expressive multi-axis variable fonts directly inside the font picker (`All` / `Variable (VF)` tabs with axis-count badges) or inside the Studio catalog.
+- **Continuous OpenType Axis Sliders**: Fine-tune standard and custom axes in real time - including **Weight (`wght`)**, **Width (`wdth`)**, **Optical Size (`opsz`)**, **Slant (`slnt`)**, **Grade (`GRAD`)**, **Bounce (`BNCE`)**, **Informality (`INFM`)**, **Spacing (`SPAC`)**, **Extrusion Depth (`EDPT`)**, and **Highlight (`EHLT`)** - with visual instance notches, `Alt` fine decimal adjustment, and live canvas preview.
+- **Named Instances & Auto Optical Sizing**: Jump between designer-crafted Named Instances (`Neat Marker`, `Playful Bounce`, `Condensed Bold`, `Display Black`, etc.) with one click, and let **Optical Size (`opsz`)** automatically track your text box point size or switch to manual control.
+- **2D Matrix Explorer & Custom Font Upload**: Audition two variable axes simultaneously on an interactive 2D grid and XY coordinate pad, or upload your own `.ttf`, `.otf`, and `.woff2` variable font files with full `.opub` persistence and high-resolution print/PDF output.
 
 ### Styled Text Boxes and Clipart Border Art
 
@@ -658,8 +731,12 @@ Text boxes are the primary container for all written content in Open Publisher.
 - **Native Offline Spellcheck and Grammar Engine**: Integrated offline Hunspell dictionaries (English US and GB) expanded with thousands of UK/US towns, cities, retail brands, and honorifics. Red squiggly underlines flag spelling mistakes with phonetic suggestions, while green underlines catch grammar, punctuation, and name/title capitalization issues.
 - **Native Right-to-Left (RTL) and Bidirectional Support**: Full support for Arabic, Hebrew, Persian, and Urdu with automatic script direction detection, dedicated LTR/RTL paragraph buttons on the Home ribbon and floating toolbar, and standard `Ctrl+Shift` directional shortcuts.
 - **Highlighted Text Drag-and-Drop**: Select any word or phrase inside a text box and drag it directly to a new position within the text flow.
-- **Windows System Fonts Discovery**: Merges all installed TrueType and OpenType fonts from the Windows registry with Google Fonts into a single alphabetically sorted list. System fonts display a desktop monitor icon; Google Fonts display the Google "G" icon. Both render in their actual typeface in the dropdown.
+- **Windows System Fonts Discovery**: Merges all installed TrueType and OpenType fonts from the Windows registry with Google Fonts and Variable Fonts into a single searchable dropdown.
 - **Subpixel Font Smoothing**: Safari-style text anti-aliasing and geometric vector precision across all zoom levels.
+
+<details>
+<summary><strong>📏 Click to expand Text Flow, Linked Text Boxes, Indents & Tab Stop Controls</strong></summary>
+<br/>
 
 ### Text Flow Options
 
@@ -676,6 +753,8 @@ Text boxes are the primary container for all written content in Open Publisher.
 - **Line Spacing** - Set exact point values via the Line Spacing button.
 - **Vertical Alignment** - Top, Middle, or Bottom alignment within the text box container.
 - **Drop Cap and Best Fit** - Stylize opening letters or auto-scale typography to fill text boxes precisely.
+
+</details>
 
 ---
 
@@ -818,14 +897,36 @@ The **WordArt Studio** generates styled typographic art across **214 creative st
 ---
 
 <a id="marketing-and-promotional-tools"></a>
-## Marketing and Promotional Tools
+## Editable Templates, Marketing and Promotional Tools
 
-- **280+ Ready-Made Templates Gallery** - Browse **File > New > Templates** (or open from the startup Dashboard) to launch nearly 290 professionally designed templates across 15 categories: **Flyers, Posters, Menus, Business Cards, Brochures, Newsletters, Resumes, Certificates, Invitations, Magazines, Reports, Labels, Letterheads, Calendars, and Social Media**.
-- **Ad Templates and Stickers** - Pre-built marketing badges, retail sale bursts, and promotional banners.
-- **Coupons** - Ready-to-print promotional coupon layouts with dashed cut lines.
-- **QR Codes** - Insert from the ribbon or canvas right-click menu.
+Open Publisher includes **280+ ready-made publication templates** constructed from independent, fully editable canvas layers rather than flat background images:
 
-> **Note:** Loading a template replaces only the currently selected page, making it easy to combine different template layouts inside a multi-page publication.
+<p align="center">
+  <img src="docs/screenshots/op-editableTemplate.png" alt="Open Publisher editing a multi-layered Back To School template with the Format Picture Studio" width="800"/>
+</p>
+
+- **280+ Multi-Layer Editable Templates** - Launch from the startup **Dashboard**, **Home > Templates**, or **Insert > Template** across 15 categories: **Flyers, Posters, Menus, Business Cards, Brochures, Newsletters, Resumes, Certificates, Invitations, Magazines, Reports, Labels, Letterheads, Calendars, and Social Media**.
+- **Independent Layer Control & Format Picture Studio** - Click any headline graphic, illustration badge, frame, or text block inside a template to reposition, resize, rotate, duplicate, or restyle it live using the **Format Picture** sidebar (Transparency, Brightness, Contrast, Saturation, Hue, Grayscale, Blur, and Frame borders) or the **Selection Pane**.
+- **Page-by-Page Mixing** - Loading a template applies it to the currently selected page only, making it easy to combine different template designs inside a multi-page publication.
+- **Ad Badges, Coupons & QR Codes** - Insert pre-built retail sale bursts, promotional banners, dashed-border cut-out coupons, and custom vector QR codes directly from the **Insert > Marketing** group.
+
+---
+
+<a id="fun-and-puzzle-generators"></a>
+## Fun and Puzzle Generators (The Fun Ribbon Tab)
+
+The dedicated **Fun** ribbon tab transforms Open Publisher into a full puzzle, worksheet, and activity-page studio for teachers, parents, newsletter editors, and activity-book creators:
+
+<p align="center">
+  <img src="docs/screenshots/op-FunStuff.png" alt="Open Publisher Fun tools showing a Word Search Answer Key on the canvas and the Connect-the-Dots Path Tool modal" width="800"/>
+</p>
+
+- **Word Search Studio** - Generate custom word search grids from your own word lists or themed presets with directional controls (horizontal, vertical, diagonal, backwards), grid dimensions, color palettes, and an automatic **Page 2 Answer Key** featuring color-coded capsule highlights around every hidden word.
+- **Crossword Builder** - Build intersecting crossword and criss-cross puzzles with automatic layout fitting, numbered grid cells, formatted **Across** and **Down** clue blocks, and one-click solved answer key generation.
+- **Connect-the-Dots Path Tool** - Convert built-in vector silhouettes (Rocket Ship, animals, vehicles, seasonal icons) or any custom shape on your canvas into a numbered connect-the-dots puzzle. Configure dot count, smart corner sampling, counting intervals (count by 1s, 2s, 5s, 10s, or A-Z), straight or curved guide hints, start-dot highlight, and automatic Page 2 solved answer keys.
+- **Codebreaker Grid** - Create cipher codebreaker puzzles with randomized 1-to-26 number-to-letter keys, starter letter reveals, and A-Z letter-tracking reference tables.
+- **Cryptogram Frames** - Build secret message and quote frames using Letter Substitution, Pigpen / Masonic geometric ciphers, Braille dots, or Morse code with customizable hint levels.
+- **Non-Destructive Double-Click Re-Editing** - Double-click any puzzle placed on the canvas at any time to reopen its studio dialog with all original words, clues, or path nodes restored.
 
 ---
 
@@ -921,7 +1022,9 @@ Access Multi-Page Overview from the status bar view toggle buttons or the View r
 | **Export as XPS** | Windows XML Paper Specification via the browser's native print engine |
 | **Pack and Go** | Commercial print package: extracts all images, lists all fonts used, zips everything for print shop handoff |
 
-### HTML Export Options (Advanced)
+<details>
+<summary><strong>🌐 Click to expand Advanced HTML & Email Newsletter Export Options</strong></summary>
+<br/>
 
 - Seamless Newsletter Layout
 - Optimize for Email Clients (html2canvas + legacy `<table>` structure for Gmail, Outlook, Mailchimp)
@@ -934,12 +1037,18 @@ Access Multi-Page Overview from the status bar view toggle buttons or the View r
 
 > **Privacy - Pack and Go:** The entire packaging process happens natively in your browser using the open-source JSZip library. Your documents and images are never uploaded to any external server.
 
+</details>
+
 ---
 
 <a id="developer-tools-and-diagnostics"></a>
 ## Developer Tools and Diagnostics
 
-Open Publisher V5 includes built-in diagnostic and developer tooling:
+Open Publisher V5 includes built-in diagnostic and developer tooling (`Ctrl+Shift+D`), including a real-time memory/FPS HUD, standalone tearaway monitor window, IPC traffic sniffer, crash recovery logs, and the interactive Clippy assistant.
+
+<details>
+<summary><strong>🔧 Click to expand Developer HUD, IPC Sniffer & Crash Diagnostic Details</strong></summary>
+<br/>
 
 - **Developer HUD (`Ctrl+Shift+D`)**: Floating heads-up display showing live memory allocation graphs, RSS change rates, active DOM node counts, and frame rates.
 - **Standalone Tearaway HUD**: Pop out the Developer HUD into an independent floating window (`hud.html`) across multi-monitor setups.
@@ -949,10 +1058,18 @@ Open Publisher V5 includes built-in diagnostic and developer tooling:
 - **Open AppData Folder**: Quick access button to the application data directory for manual backup and log inspection.
 - **Microsoft Agent (Clippy)**: Nostalgic interactive assistant featuring 41 authentic animations and 101 productivity tips.
 
+</details>
+
 ---
 
 <a id="document-security-and-privacy"></a>
 ## Document Security and Privacy
+
+Protect sensitive publications with native **Web Crypto API (AES-GCM)** password encryption and scan documents for hidden metadata or off-canvas objects with the built-in **Document Inspector** (`File > Info > Inspect Document`).
+
+<details>
+<summary><strong>🔒 Click to expand AES-GCM Password Encryption & Document Inspector Details</strong></summary>
+<br/>
 
 ### Password Protection
 
@@ -976,6 +1093,8 @@ Open Publisher encrypts documents using the **Web Crypto API (AES-GCM)**, an ind
 
 Each category shows a colour-coded Found/Clean status with a one-click **Remove All** action to purge detected data.
 
+</details>
+
 ---
 
 <a id="the-opub-file-format"></a>
@@ -985,7 +1104,7 @@ Open Publisher's native format is `.opub`:
 
 - **Double-click to open** on all supported platforms after installation.
 - **Backwards compatible** with older versions of the application.
-- Stores custom ruler origins, page notes, margin settings, master page overrides, per-page theme preferences, DPI, physical unit, page format, and spread mode.
+- Stores custom ruler origins, page notes, margin settings, master page overrides, per-page theme preferences, Variable Font axes and embedded fonts, DPI, physical unit, page format, and spread mode.
 - Supports **AES-GCM encryption** for protected documents.
 
 ### Supported Import Formats
@@ -999,6 +1118,10 @@ Open Publisher's native format is `.opub`:
 | `.doc`, `.docx` | Dual-canvas Microsoft Word import: Editable Text & Graphics Mode or Flattened Image Mode |
 | `.pdf` | Opened and edited directly in the browser (no server needed): Editable Text & Graphics Mode or Flattened Image Mode. Also works via drag and drop |
 
+<details>
+<summary><strong>📄 Click to expand Dual-Canvas PDF, Microsoft Publisher (.pub) & Word (.doc / .docx) Import Modes</strong></summary>
+<br/>
+
 **Microsoft Publisher (`.pub`) and Word (`.doc` / `.docx`) Import Modes:**
 1. **Editable Text & Graphics Mode** - Uses a dual-canvas reconstruction pipeline that strips foreground text from the background artwork layer while preserving all original vector shapes, borders, table grids, and embedded photographs. Foreground text is reconstructed as editable Open Publisher text boxes with sampled ink colours (including light text over dark backgrounds), inline icons, multi-column table separation, and native CSS drop shadows.
 2. **Flattened Image Mode (Safe Mode)** - Renders each page as a high-resolution background image, guaranteeing 100% pixel-identical layout accuracy. Ideal for archival documents, complex forms, or layouts where exact visual preservation matters more than text editing.
@@ -1009,10 +1132,16 @@ Open Publisher's native format is `.opub`:
 - **Layout-aware text** - Text is grouped by its real baseline and table columns stay separate. Spacing, vertical alignment and text widths follow the original, and text that would blend into its background (such as white text on a coloured button) is kept visible.
 - **Multi-page support** - Every page is imported with its original dimensions and the document is named after the file.
 
+</details>
+
 ---
 
 <a id="keyboard-shortcuts-reference"></a>
 ## Keyboard Shortcuts Reference
+
+<details>
+<summary><strong>⌨️ Click to expand Complete Keyboard Shortcuts Reference</strong></summary>
+<br/>
 
 | Shortcut | Action |
 |---|---|
@@ -1043,6 +1172,8 @@ Open Publisher's native format is `.opub`:
 | `Enter` (Multi-Page Overview) | Open selected page for editing |
 | `Ctrl + Enter` (AI Assistant) | Generate AI layout |
 | `Escape` | Exit text editing mode / return to Single-Page from Overview |
+
+</details>
 
 ---
 
