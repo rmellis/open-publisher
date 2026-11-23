@@ -30,7 +30,7 @@
 
 Open Publisher is a WYSIWYG (What You See Is What You Get) desktop publishing application built as a free alternative to tools like Microsoft Publisher. Whether you are creating newsletters, flyers, business cards, posters, booklets, or marketing materials - Open Publisher gives you precision layout tools, rich typography, image manipulation, and comprehensive export capabilities, entirely free.
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f0b61b5b-26d5-40d6-8cd9-c17092d52471" alt="Open Publisher running on Windows, macOS, Linux and FreeBSD" width="700"/>
+  <img src="https://github.com/user-attachments/assets/f0b61b5b-26d5-40d6-8cd9-c17092d52471" alt="Open Publisher running on Windows, , Linux and FreeBSD" width="700"/>
 </p>
 
 ---
@@ -394,7 +394,7 @@ Open Publisher is available in NW.js editions for Windows, alongside a dedicated
 - **NW.js Portable Version (`.exe`)** - Self-contained zero-install executable. Ideal for USB drives, restricted workstations, or running without administrator rights.
 - **Windows XP Client (`.exe`)** - Dedicated standalone client for Windows XP SP3, featuring a customized chromeless runtime, integrated window controls, and full native branding.
 - **Safe Mode Startup** - Launch with `--safe-mode` or `--reset` from the command line to purge cached data, reset layout bounds, and troubleshoot faulty extensions.
-- MyDockFinder native menu bar integration support.
+-
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/af83b0b5-6d2b-4ddd-ac1c-cb0d2e22976a" alt="Open Publisher on Windows 11" width="700"/>
@@ -410,7 +410,7 @@ Open Publisher provides first-class native integration on macOS (Intel):
 - Native unsaved-changes confirmation dialogs, high-DPI Retina canvas scaling, and zero-flicker boot sequencing.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/e58587b8-edff-4182-b40b-2fac3ab8b673" alt="Open Publisher on macOS" width="700"/>
+  <img src="https://openpublisher.app/docs/screenshots/macos_app.png" alt="Open Publisher on macOS" width="700"/>
 </p>
 
 ### Linux
