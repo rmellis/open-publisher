@@ -537,13 +537,13 @@ window.renderThemeDropdown = function(activeTheme) {
             ? `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; box-shadow: 0 0 0 1px white, 0 0 0 2px ${UI_THEMES[t].dark}; margin-right: 10px; flex-shrink: 0;`
             : `width: 14px; height: 14px; border-radius: 50%; background: ${UI_THEMES[t].primary}; margin-right: 10px; flex-shrink: 0;`;
         
-        const bgStyle = isSelected ? 'background: #e6f0fa;' : '';
-        const checkIcon = isSelected ? '<span style="color: #0078d4; font-size: 14px; margin-left: 10px; font-weight: bold;">&#10003;</span>' : '';
+        const selectedClass = isSelected ? ' theme-item-selected' : '';
+        const checkIcon = isSelected ? '<span class="theme-item-check">&#10003;</span>' : '';
 
         return `
-            <div class="dropdown-item" onclick="window.selectTheme('${t}')" style="${bgStyle}">
+            <div class="dropdown-item${selectedClass}" onclick="window.selectTheme('${t}')">
                 <div style="${circleStyle}"></div>
-                <span style="flex-grow: 1; color: var(--ui-text);">${t}</span>
+                <span class="theme-item-label" style="flex-grow: 1;">${t}</span>
                 ${checkIcon}
             </div>
         `;
@@ -575,8 +575,28 @@ window.toggleThemeDropdown = function(btn) {
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     if (!isBlock) {
         const r = btn.getBoundingClientRect();
-        m.style.left = r.left + 'px'; m.style.top = (r.bottom+5) + 'px';
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        m.style.position = 'fixed';
+        m.style.zIndex = '1000050';
         m.style.display = 'block';
+        const dropW = m.offsetWidth || 220;
+        const spaceBelow = vh - r.bottom - 12;
+        const spaceAbove = r.top - 12;
+        let maxH = 400;
+        let topPos = r.bottom + 5;
+        if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+            maxH = Math.min(400, Math.max(160, spaceAbove));
+            m.style.maxHeight = maxH + 'px';
+            const actualH = Math.min(m.scrollHeight || maxH, maxH);
+            topPos = Math.max(8, r.top - actualH - 5);
+        } else {
+            maxH = Math.min(400, Math.max(160, spaceBelow));
+            m.style.maxHeight = maxH + 'px';
+        }
+        const leftPos = Math.max(8, Math.min(r.left, vw - dropW - 8));
+        m.style.left = leftPos + 'px';
+        m.style.top = topPos + 'px';
     }
 };
 

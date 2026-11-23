@@ -236,6 +236,16 @@
             .op-uh-topic-btn.active i {
                 color: #ffffff;
             }
+            body.bright-theme .op-uh-header,
+            body.bright-theme .op-uh-header .custom-dialog-close,
+            body.bright-theme .op-uh-topic-btn.active,
+            body.bright-theme .op-uh-topic-btn.active i {
+                color: #111111;
+            }
+            body.bright-theme .op-uh-header .custom-dialog-close:hover {
+                background: rgba(0, 0, 0, 0.12);
+                color: #000000;
+            }
             .op-uh-pane {
                 padding: 16px 20px;
                 overflow-y: auto;
@@ -297,6 +307,9 @@
             }
             .op-uh-ok-btn:hover {
                 background: var(--ui-theme-dark, #004a46);
+            }
+            body.bright-theme .op-uh-ok-btn {
+                color: #111111;
             }
         `;
         document.head.appendChild(style);

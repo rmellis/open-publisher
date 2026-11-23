@@ -536,6 +536,100 @@ body.bright-theme #pan-mode-toggle:hover { color: #000; background: rgba(0, 0, 0
 body.bright-theme #pan-mode-toggle.active { color: #000; background: rgba(0, 0, 0, 0.2); }
 body.bright-theme #dpi-status-display { color: rgba(0, 0, 0, 0.75); background: transparent; border-color: transparent; }
 body.bright-theme #dpi-status-display:hover { color: #000; background: rgba(0, 0, 0, 0.08); border-color: rgba(0, 0, 0, 0.16); }
+body.bright-theme .status-view-btn { color: rgba(0, 0, 0, 0.72); border-color: rgba(0, 0, 0, 0.16); }
+body.bright-theme .status-view-btn:hover { background: rgba(0, 0, 0, 0.1); color: #000; border-color: rgba(0, 0, 0, 0.25); }
+body.bright-theme .status-view-btn.active { background: rgba(0, 0, 0, 0.16); color: #000; border-color: rgba(0, 0, 0, 0.32); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); }
+body.bright-theme #protected-indicator { color: #111111; }
+
+/* Galleries, Floating Toolbars, Dropdowns, Spinners & Modals Bright Theme Overrides */
+body.bright-theme .ts-gallery-btn,
+body.dark-mode.bright-theme .ts-gallery-btn,
+body.bright-theme .scheme-scroll-btn,
+body.bright-theme .scheme-scroll-btn i,
+body.bright-theme #ts-gallery-more:hover,
+body.bright-theme .about-kb-btn {
+    color: #111111 !important;
+}
+body.bright-theme .ts-gallery-btn svg,
+body.bright-theme .ts-gallery-btn i,
+body.dark-mode.bright-theme .ts-gallery-btn svg,
+body.dark-mode.bright-theme .ts-gallery-btn i {
+    color: #111111 !important;
+    fill: #111111 !important;
+}
+body.bright-theme .about-kb-btn img {
+    filter: brightness(0) !important;
+}
+body.bright-theme .modern-select .arrow-box,
+body.bright-theme .modern-spinner .spin-btns,
+body.bright-theme .dim-spinner .spin-btns,
+body.bright-theme .sp-spin-btns,
+body.bright-theme .chart-modern-spinner .spin-btns,
+body.bright-theme .op-vf-modern-select .arrow-box,
+body.bright-theme .op-vf-spinner .spin-btns,
+body.bright-theme .op-vf-spinner .spin-btns div,
+body.bright-theme .op-dim-unit-tag,
+body.dark-mode.bright-theme .op-dim-unit-tag,
+body.bright-theme:not(.dark-mode) .drop-arrow,
+body.bright-theme:not(.dark-mode) .op-custom-select-trigger .drop-arrow {
+    color: #111111 !important;
+}
+body.bright-theme #wa-float-toolbar,
+body.bright-theme #wa-float-toolbar .mini-btn,
+body.bright-theme #wa-float-toolbar .wa-drag-handle {
+    color: #111111 !important;
+}
+body.bright-theme #wa-float-toolbar .mini-btn:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+body.bright-theme .font-item.highlighted,
+body.dark-mode.bright-theme .font-item.highlighted,
+body.bright-theme .font-item.highlighted .vf-badge-pill,
+body.dark-mode.bright-theme .font-item.highlighted .vf-badge-pill,
+body.bright-theme .vf-dd-filter-btn.active,
+body.bright-theme .vf-dd-studio-btn,
+body.bright-theme #master-page-btn:hover,
+body.bright-theme .cat-btn.active,
+body.bright-theme .symbol-cat-tab.active,
+body.dark-mode.bright-theme .symbol-cat-tab.active,
+body.bright-theme .wa-shape-btn.active {
+    color: #111111 !important;
+}
+body.bright-theme .op-vf-modal-header,
+body.bright-theme .op-vf-header-badge,
+body.bright-theme .op-vf-header-actions .custom-dialog-close,
+body.bright-theme .op-vf-pop-hdr,
+body.bright-theme .op-vf-pop-hdr .vf-badge-pill,
+body.bright-theme .op-vf-pop-actions .custom-dialog-close,
+body.bright-theme .op-vf-help-header,
+body.bright-theme .op-vf-help-header .custom-dialog-close,
+body.bright-theme .op-vf-notice-header,
+body.bright-theme .op-vf-notice-header .custom-dialog-close,
+body.bright-theme .op-vf-btn-primary,
+body.bright-theme .op-vf-chip.active,
+body.dark-mode.bright-theme .op-vf-chip.active,
+body.bright-theme .op-vf-segmented input:checked + span,
+body.bright-theme .op-vf-fine-pill.active,
+body.bright-theme .op-vf-help-topic-btn.active {
+    color: #111111 !important;
+}
+body.bright-theme .op-vf-header-badge,
+body.bright-theme .op-vf-pop-hdr .vf-badge-pill {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+body.bright-theme .op-vf-header-actions .custom-dialog-close,
+body.bright-theme .op-vf-pop-actions .custom-dialog-close,
+body.bright-theme .op-vf-help-header .custom-dialog-close,
+body.bright-theme .op-vf-notice-header .custom-dialog-close {
+    background: rgba(0, 0, 0, 0.08);
+}
+body.bright-theme .op-vf-header-actions .custom-dialog-close:hover,
+body.bright-theme .op-vf-pop-actions .custom-dialog-close:hover,
+body.bright-theme .op-vf-help-header .custom-dialog-close:hover,
+body.bright-theme .op-vf-notice-header .custom-dialog-close:hover {
+    background: rgba(0, 0, 0, 0.18);
+    color: #000000 !important;
+}
 
 /* Force scrollbar thumb to be dark on bright themes ONLY in Light Mode */
 html.bright-theme:not(.dark-mode),
@@ -5063,10 +5157,40 @@ body.linking-mode, body.linking-mode * {
 
 
 #ribbon-theme-dropdown {
+    position: fixed !important;
+    z-index: 1000050 !important;
     width: 220px !important;
 }
 #ribbon-theme-dropdown .dropdown-item {
     white-space: nowrap;
+}
+#ribbon-theme-dropdown .dropdown-item .theme-item-label {
+    color: var(--ui-text);
+}
+#ribbon-theme-dropdown .dropdown-item.theme-item-selected {
+    background: #e6f0fa;
+}
+#ribbon-theme-dropdown .dropdown-item.theme-item-selected .theme-item-label {
+    color: #0f172a;
+    font-weight: 600;
+}
+#ribbon-theme-dropdown .dropdown-item.theme-item-selected .theme-item-check {
+    color: #0078d4;
+    font-size: 14px;
+    margin-left: 10px;
+    font-weight: bold;
+}
+body.dark-mode #ribbon-theme-dropdown .dropdown-item.theme-item-selected {
+    background: rgba(255, 255, 255, 0.14);
+}
+body.dark-mode #ribbon-theme-dropdown .dropdown-item.theme-item-selected .theme-item-label {
+    color: #f8fafc;
+}
+body.dark-mode #ribbon-theme-dropdown .dropdown-item.theme-item-selected .theme-item-check {
+    color: var(--ui-theme-color, #60a5fa);
+}
+body.bright-theme:not(.dark-mode) #ribbon-theme-dropdown .dropdown-item:hover {
+    color: #111111 !important;
 }
 #ribbon-theme-dropdown::-webkit-scrollbar { width: 6px; }
 #ribbon-theme-dropdown::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ui-theme-dark) 30%, transparent); border-radius: 3px; }
@@ -11142,6 +11266,11 @@ body.dark-mode .op-vf-chip {
     background: #0f172a;
     color: #cbd5e1;
     border-color: #475569;
+}
+body.dark-mode .op-vf-chip.active {
+    background: var(--ui-theme-color, #007670);
+    border-color: var(--ui-theme-color, #007670);
+    color: #ffffff;
 }
 
 .op-vf-opsz-bar {

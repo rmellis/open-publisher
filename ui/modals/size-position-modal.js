@@ -937,6 +937,10 @@
                     border-left-color: var(--ui-theme-dark, #005a54);
                     color: #ffffff;
                 }
+                body.bright-theme .sp-unit-badge,
+                body.dark-mode.bright-theme .sp-unit-badge {
+                    color: #111111;
+                }
                 .sp-stepper-btn {
                     width: 20px;
                     height: 100%;
