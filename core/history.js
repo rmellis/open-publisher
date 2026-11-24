@@ -208,6 +208,8 @@ function serializeCurrentPage() {
                 attr.name.startsWith('data-cg-') ||
                 attr.name === 'data-dot-to-dot' ||
                 attr.name.startsWith('data-dtd-') ||
+                attr.name === 'data-bingo-raffle' ||
+                attr.name.startsWith('data-br-') ||
                 attr.name.startsWith('data-picture-frame') ||
                 attr.name.startsWith('data-frame-') ||
                 attr.name === 'data-toc-box' ||

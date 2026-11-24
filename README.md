@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.24.5" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.24.6" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.24.5" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.24.6" alt="Facebook Page" height="28"/></a>
 </p>
 
 ---
@@ -360,7 +360,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 | **Typography & Variable Fonts** | 129 bundled Variable Fonts with continuous OpenType axis sliders, 2D Matrix Explorer, and custom `.ttf`/`.otf`/`.woff2` upload; 100 Styled Text Boxes, 40 Clipart Border Art frames, RTL support, Windows font discovery, offline spellcheck & grammar |
 | **Dark Mode & 50+ UI Themes** | High-contrast Dark Mode studio appearance paired with 50+ UI accent color themes and automatic bright-theme contrast adaptation |
 | **Theme Studio** | 700+ curated page themes & fine textures, 6 live background adjustment sliders, per-page independent themes |
-| **Fun & Puzzle Generators** | Dedicated **Fun** ribbon tab featuring Word Search Studio, Crossword Builder, Connect-the-Dots Path Tool, Codebreaker Grid, and Cryptogram Frames with automatic Page 2 Answer Keys |
+| **Fun & Puzzle Generators** | Dedicated **Fun** ribbon tab featuring Word Search Studio, Crossword Builder, Connect-the-Dots Path Tool, Codebreaker Grid, Cryptogram Frames, and Bingo & Raffle Ticket Generator with multi-page output & Answer Keys |
 | **Clipboard and Assets** | Unified clipboard engine, 25-item Clipboard Scrapbook drawer, intelligent paste separation, drag-and-drop shockwave feedback |
 | **Bulk Image Import** | Select or drop multiple images; choose single-page collage or one page per image automatically |
 | **Shapes and Smart Arrows** | 200+ SVG vector shapes, 98 parametric Smart Arrows with stem-only scaling, 3D rotation engine, custom point editing |
@@ -926,6 +926,7 @@ The dedicated **Fun** ribbon tab transforms Open Publisher into a full puzzle, w
 - **Connect-the-Dots Path Tool** - Convert built-in vector silhouettes (Rocket Ship, animals, vehicles, seasonal icons) or any custom shape on your canvas into a numbered connect-the-dots puzzle. Configure dot count, smart corner sampling, counting intervals (count by 1s, 2s, 5s, 10s, or A-Z), straight or curved guide hints, start-dot highlight, and automatic Page 2 solved answer keys.
 - **Codebreaker Grid** - Create cipher codebreaker puzzles with randomized 1-to-26 number-to-letter keys, starter letter reveals, and A-Z letter-tracking reference tables.
 - **Cryptogram Frames** - Build secret message and quote frames using Letter Substitution, Pigpen / Masonic geometric ciphers, Braille dots, or Morse code with customizable hint levels.
+- **Bingo & Raffle Ticket Generator** - Input a pool of words or numbers to generate randomized, non-identical Bingo cards (with optional Caller's Master Sheet) or sequentially numbered Raffle tickets with matching tear-off stubs across multiple pages, complete with cut guides, barcodes, and custom styles.
 - **Non-Destructive Double-Click Re-Editing** - Double-click any puzzle placed on the canvas at any time to reopen its studio dialog with all original words, clues, or path nodes restored.
 
 ---

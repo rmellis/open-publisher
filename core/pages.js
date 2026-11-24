@@ -1499,3 +1499,79 @@ window.insertTwoPagePuzzleIntoDocument = function(options) {
         answerPageNumber: answerPageIdx !== null ? answerPageIdx + 1 : null
     };
 };
+
+/**
+ * Multi-page batch allocator for multi-card / multi-ticket generators (Bingo & Raffle).
+ * Reuses the active page only when reuseEmptyCurrentPage is true and it is a non-master empty page;
+ * builds serialized elements for all sheets without switching pages on every iteration, then renders
+ * the first page of the new batch once and refreshes thumbnails/sidebar cleanly.
+ */
+window.insertMultiPageBatchIntoDocument = function(options) {
+    if (typeof state === 'undefined' || !Array.isArray(state.pages)) return null;
+    const opts = options || {};
+    const pageBuilders = Array.isArray(opts.pageBuilders) ? opts.pageBuilders : [];
+    if (pageBuilders.length === 0) return null;
+    const reuseEmpty = opts.reuseEmptyCurrentPage !== false;
+
+    const makeBlankPage = (basePage) => {
+        const ref = basePage || {};
+        return {
+            id: Date.now() + Math.floor(Math.random() * 1000000),
+            orientation: ref.orientation || 'portrait',
+            ignoreMasterPage: false,
+            ignoreBackground: false,
+            width: ref.width || '794px',
+            height: ref.height || '1123px',
+            dpi: ref.dpi || state.dpi || 96,
+            format: ref.format || state.format || 'A4',
+            background: '#ffffff',
+            header: '',
+            footer: '',
+            borderStyle: 'none',
+            elements: []
+        };
+    };
+
+    let currIdx = (typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0;
+    if (currIdx < 0 || currIdx >= state.pages.length) currIdx = 0;
+
+    if (typeof serializeCurrentPage === 'function') {
+        state.pages[currIdx] = serializeCurrentPage();
+    }
+
+    const currPage = state.pages[currIdx];
+    const isCurrMaster = !!(state.hasMasterPage && currIdx === 0);
+    const isCurrEmpty = !!(currPage && Array.isArray(currPage.elements) && currPage.elements.length === 0);
+
+    let startPageIdx = currIdx;
+    let endPageIdx = currIdx;
+
+    for (let i = 0; i < pageBuilders.length; i++) {
+        let targetIdx;
+        if (i === 0 && reuseEmpty && !isCurrMaster && isCurrEmpty) {
+            targetIdx = currIdx;
+        } else {
+            state.pages.push(makeBlankPage(currPage));
+            targetIdx = state.pages.length - 1;
+        }
+        if (i === 0) startPageIdx = targetIdx;
+        endPageIdx = targetIdx;
+
+        const builder = pageBuilders[i];
+        const built = (typeof builder === 'function') ? (builder(targetIdx, state.pages[targetIdx]) || []) : [];
+        state.pages[targetIdx].elements = Array.isArray(built) ? built : [];
+    }
+
+    state.currentPageIndex = startPageIdx;
+    if (typeof renderPage === 'function') renderPage(state.pages[startPageIdx]);
+    if (typeof updateThumbnails === 'function') updateThumbnails();
+    if (typeof updateSidebar === 'function') updateSidebar();
+
+    return {
+        startPageIdx,
+        endPageIdx,
+        startPageNumber: startPageIdx + 1,
+        endPageNumber: endPageIdx + 1,
+        pagesCount: pageBuilders.length
+    };
+};
