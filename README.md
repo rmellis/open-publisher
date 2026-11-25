@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.24.6" alt="Support on Patreon" height="28"/></a>
+  <a href="https://patreon.com/OpenPublisher"><img src="https://openpublisher.app/ui/icons/patreon.png?v=5.24.7" alt="Support on Patreon" height="28"/></a>
   &nbsp;
-  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.24.6" alt="Facebook Page" height="28"/></a>
+  <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/"><img src="https://openpublisher.app/ui/icons/facebook.png?v=5.24.7" alt="Facebook Page" height="28"/></a>
 </p>
 
 <p align="center">
@@ -228,6 +228,7 @@ Version 5 is the most significant release in Open Publisher's history - a comple
 
 ### 🆕 Latest Additions (v5.23 - v5.24)
 
+- **Document Conversion Server Endpoint & Backend Upgrade (v5.24.7)** - Updated the Cloudflare Quick Tunnel endpoint for `.pub`, `.pubx`, `.doc`, and `.docx` imports to match the upgraded conversion backend, featuring asynchronous queued LibreOffice processing, automated pre-conversion content-safety screening with dispute notices, and real-time uptime/engine health monitoring.
 - **Bingo & Raffle Ticket Generator Studio (v5.24.6)** - New **Fun** tab studio that turns a pool of 50+ words or numbers into up to 100 randomized, strictly non-identical Bingo cards (with a printable Caller's Master Sheet) or up to 200 sequentially numbered Raffle tickets with matching tear-off stubs, laid out across multiple pages with 6 design styles, custom colors, fonts, barcodes, cut guides, and a built-in `[?]` help window.
 - **Dark Mode and Bright-Theme Contrast Polish (v5.24.5)** - Bright accent themes (such as Snapchat Gold) now use crisp dark text and icons across ribbons, galleries, floating toolbars, the Status Bar, Variable Font Studio, and help dialogs in both Light and Dark Mode, and the **Options** theme dropdown now opens above the dialog instead of behind it.
 - **iPadOS / iOS PDF Export Guidance and Theme-Aware Export Buttons (v5.24.4)** - The Export High-Res PDF dialog explains how to **Save to Files** from Safari and warns when printing and PDF export are disabled by Home Screen "Open as Web App" mode (strictly gated off on desktop builds). Export PDF and Export XPS action buttons now follow the active UI theme.

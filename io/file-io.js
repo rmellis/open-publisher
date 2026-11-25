@@ -599,7 +599,7 @@ function uploadAndConvertDoc(file) {
         const xhr = new XMLHttpRequest();
         const docEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-doc`
-            : 'https://mate-nova-soundtrack-midnight.trycloudflare.com/api/convert-doc';
+            : 'https://lucia-price-doll-hawaii.trycloudflare.com/api/convert-doc';
         xhr.open('POST', docEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
@@ -2523,7 +2523,7 @@ function uploadAndConvertPub(file) {
         const xhr = new XMLHttpRequest();
         const pubEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-pub`
-            : 'https://mate-nova-soundtrack-midnight.trycloudflare.com/api/convert-pub';
+            : 'https://lucia-price-doll-hawaii.trycloudflare.com/api/convert-pub';
         xhr.open('POST', pubEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
