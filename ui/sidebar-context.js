@@ -346,6 +346,19 @@ function createWrapper(htmlContent) {
 window.createWrapper = createWrapper;
 
 function toggleHeaderFooter(forceState, skipHistory = false) {
+    if (typeof forceState !== 'boolean' && window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.isEditingMasterPage === 'function') {
+        if (window.MasterHeaderFooterEngine.isEditingMasterPage()) {
+            window.MasterHeaderFooterEngine.exitMasterPageMode();
+        } else {
+            window.MasterHeaderFooterEngine.enterMasterPageMode('header');
+        }
+        const editingNow = window.MasterHeaderFooterEngine.isEditingMasterPage();
+        document.querySelectorAll('.hf-toggle-btn, #ribbon-design-hf-btn, #ribbon-insert-hf-btn').forEach(btn => {
+            btn.classList.toggle('active', editingNow);
+        });
+        return;
+    }
+
     if (typeof forceState === 'boolean') {
         state.headersVisible = forceState;
     } else {
@@ -366,8 +379,9 @@ function toggleHeaderFooter(forceState, skipHistory = false) {
             if (ftr) ftr.classList.toggle('visible', !!state.headersVisible);
         }
     }
+    const isEditingMaster = !!(window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.isEditingMasterPage === 'function' && window.MasterHeaderFooterEngine.isEditingMasterPage());
     document.querySelectorAll('.hf-toggle-btn, #ribbon-design-hf-btn, #ribbon-insert-hf-btn').forEach(btn => {
-        btn.classList.toggle('active', !!state.headersVisible);
+        btn.classList.toggle('active', isEditingMaster);
     });
     if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState === 'function') {
         window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState();

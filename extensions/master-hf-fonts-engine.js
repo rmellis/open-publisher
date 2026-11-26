@@ -1541,8 +1541,12 @@
             hfTab.style.display = onMaster ? 'inline-block' : 'none';
         }
 
+        document.querySelectorAll('.hf-toggle-btn, #ribbon-design-hf-btn, #ribbon-insert-hf-btn').forEach(btn => {
+            btn.classList.toggle('active', onMaster);
+        });
+
         const hoverPill = document.getElementById('op-hf-hover-pill');
-        if (hoverPill && onMaster) hoverPill.style.display = 'none';
+        if (hoverPill) hoverPill.remove();
 
         if (onMaster) {
             syncHeaderFooterRibbonState();
@@ -1653,107 +1657,8 @@
     // -------------------------------------------------------------------------
 
     function initHeaderFooterHoverPill() {
-        if (window._opHfHoverPillInitialized) return;
-        window._opHfHoverPillInitialized = true;
-
-        let pill = document.getElementById('op-hf-hover-pill');
-        if (!pill) {
-            pill = document.createElement('button');
-            pill.id = 'op-hf-hover-pill';
-            pill.type = 'button';
-            pill.className = 'op-hf-hover-pill no-print';
-            pill.style.display = 'none';
-            pill.innerHTML = '<i class="fas fa-edit"></i> <span id="op-hf-hover-pill-text">Edit Header / Footer</span>';
-            document.body.appendChild(pill);
-        }
-
-        let hoveredRole = null;
-        let hideTimer = null;
-
-        const hidePill = () => {
-            pill.style.display = 'none';
-            hoveredRole = null;
-        };
-
-        pill.addEventListener('mouseenter', () => {
-            clearTimeout(hideTimer);
-        });
-        pill.addEventListener('mouseleave', () => {
-            hideTimer = setTimeout(hidePill, 150);
-        });
-        pill.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const role = hoveredRole || 'header';
-            hidePill();
-            enterMasterPageMode(role);
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isEditingMasterPage()) {
-                if (pill.style.display !== 'none') hidePill();
-                return;
-            }
-            if (typeof state !== 'undefined' && (state.dragMode || state.viewMode === 'multipage')) {
-                if (pill.style.display !== 'none') hidePill();
-                return;
-            }
-            if (e.target && e.target.closest && e.target.closest('#op-hf-hover-pill')) return;
-            if (e.target && e.target.closest && e.target.closest('.custom-dialog-overlay, .modal-overlay, .dropdown-menu, .ribbon-container')) {
-                if (pill.style.display !== 'none') hidePill();
-                return;
-            }
-
-            const paperEl = document.getElementById('paper');
-            if (!paperEl) return;
-            const rect = paperEl.getBoundingClientRect();
-            if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-                if (pill.style.display !== 'none') {
-                    clearTimeout(hideTimer);
-                    hideTimer = setTimeout(hidePill, 160);
-                }
-                return;
-            }
-
-            const hoveredEl = e.target && e.target.closest ? e.target.closest('.pub-element') : null;
-            if (hoveredEl && !hoveredEl.classList.contains('master-page-element') && !hoveredEl.classList.contains('op-hf-box')) {
-                if (pill.style.display !== 'none') hidePill();
-                return;
-            }
-
-            const zoom = (typeof state !== 'undefined' && state.zoom) ? state.zoom : 1;
-            const unscaledY = (e.clientY - rect.top) / zoom;
-            const paperH = parseFloat(paperEl.style.height) || 1123;
-            const m = (typeof state !== 'undefined' && state.margins) || { top: 48, bottom: 48 };
-            const topZoneH = Math.max(54, (parseFloat(m.top) || 48) + 12);
-            const botZoneH = Math.max(54, (parseFloat(m.bottom) || 48) + 12);
-
-            let role = null;
-            if (unscaledY <= topZoneH) role = 'header';
-            else if (unscaledY >= paperH - botZoneH) role = 'footer';
-
-            if (!role) {
-                if (pill.style.display !== 'none') {
-                    clearTimeout(hideTimer);
-                    hideTimer = setTimeout(hidePill, 140);
-                }
-                return;
-            }
-
-            clearTimeout(hideTimer);
-            hoveredRole = role;
-            const txt = document.getElementById('op-hf-hover-pill-text');
-            if (txt) txt.textContent = role === 'header' ? 'Edit Header' : 'Edit Footer';
-            pill.title = 'Click or double-click margin zone to edit on Master Page';
-            pill.style.display = 'inline-flex';
-            const pillW = pill.offsetWidth || 110;
-            const targetLeft = Math.max(8, Math.min(rect.right - pillW - 10, window.innerWidth - pillW - 12));
-            const targetTop = role === 'header'
-                ? Math.max(60, rect.top + 6)
-                : Math.min(window.innerHeight - 52, rect.bottom - 30);
-            pill.style.left = targetLeft + 'px';
-            pill.style.top = targetTop + 'px';
-        }, { passive: true });
+        const stale = document.getElementById('op-hf-hover-pill');
+        if (stale) stale.remove();
     }
 
     // -------------------------------------------------------------------------
@@ -1862,7 +1767,8 @@
         ensureMasterPageEditBar();
         ensureHeaderFooterContextualTab();
         ensureHeaderFooterStructure(document.getElementById('paper'));
-        initHeaderFooterHoverPill();
+        const staleHoverPill = document.getElementById('op-hf-hover-pill');
+        if (staleHoverPill) staleHoverPill.remove();
         syncFontSchemeRibbonUI();
         syncDefaultToolbarLabels();
         syncMasterPageVisualMode(false);
