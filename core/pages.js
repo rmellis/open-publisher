@@ -951,8 +951,19 @@ function handleNewDocument() {
             state.historyIndex = -1;
             state.dpi = d;
             state.unit = u;
-            window._wrapperBoundTitle = null;
-            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
+            const titleEl = document.getElementById('doc-title');
+            if (titleEl) titleEl.innerText = 'Publication1';
+            if (typeof window.notifyDesktopNewDocument === 'function') {
+                window.notifyDesktopNewDocument(true);
+            } else {
+                window._wrapperBoundTitle = null;
+                window._wrapperHasSavedOnDisk = false;
+                window._userManuallyRenamedTitle = false;
+                if (typeof state !== 'undefined' && state) {
+                    state._wrapperBoundTitle = null;
+                    state._wrapperHasSavedOnDisk = false;
+                }
+            }
 
             let pageW = finalW + 'px';
             let pageH = finalH + 'px';

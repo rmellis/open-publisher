@@ -263,8 +263,19 @@ window.DashboardSystem = {
             if (typeof window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI === 'function') window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI();
             if (typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') window.MasterHeaderFooterEngine.syncMasterPageVisualMode(false);
         }
-        window._wrapperBoundTitle = null;
-        if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
+        const titleEl = document.getElementById('doc-title');
+        if (titleEl) titleEl.innerText = 'Publication1';
+        if (typeof window.notifyDesktopNewDocument === 'function') {
+            window.notifyDesktopNewDocument(true);
+        } else {
+            window._wrapperBoundTitle = null;
+            window._wrapperHasSavedOnDisk = false;
+            window._userManuallyRenamedTitle = false;
+            if (typeof state !== 'undefined' && state) {
+                state._wrapperBoundTitle = null;
+                state._wrapperHasSavedOnDisk = false;
+            }
+        }
         
         if (size === 'Custom') {
             changeSize(); // Native function
@@ -280,7 +291,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.10');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.11');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -374,7 +385,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.24.10`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.24.11`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -409,7 +420,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.10`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.11`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -444,7 +455,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.10`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.11`);
 
         fetch(fileUrl)
             .then(res => res.json())

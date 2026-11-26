@@ -270,14 +270,28 @@
         if (data.isTemplate) {
             const titleEl = document.getElementById('doc-title');
             if (titleEl) titleEl.innerText = "Untitled Publication";
-            window._wrapperBoundTitle = null;
-            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
+            if (typeof window.notifyDesktopNewDocument === 'function') {
+                window.notifyDesktopNewDocument(true);
+            } else {
+                window._wrapperBoundTitle = null;
+                window._wrapperHasSavedOnDisk = false;
+                if (typeof state !== 'undefined' && state) {
+                    state._wrapperBoundTitle = null;
+                    state._wrapperHasSavedOnDisk = false;
+                }
+            }
         } else {
             const titleEl = document.getElementById('doc-title');
             const docTitle = (data.title || "Untitled Publication").replace(/ \*$/, '').trim();
             if (titleEl) titleEl.innerText = docTitle;
             window._wrapperBoundTitle = docTitle;
-            if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = docTitle;
+            window._wrapperHasSavedOnDisk = true;
+            window._userManuallyRenamedTitle = false;
+            window._desktopActivePathCleared = false;
+            if (typeof state !== 'undefined' && state) {
+                state._wrapperBoundTitle = docTitle;
+                state._wrapperHasSavedOnDisk = true;
+            }
         }
         
         state.pages = data.pages;

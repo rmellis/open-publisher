@@ -2034,30 +2034,51 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             }
         }
 
-        // Determine if this save should trigger Save As
+        // Track desktop wrapper binding strictly from confirmed disk saves, trusted user renames, or file loads.
         const boundTitle = window._wrapperBoundTitle || (typeof state !== 'undefined' && state ? state._wrapperBoundTitle : null);
-        const isRenamed = !!(boundTitle && currentTitle !== boundTitle);
-        const shouldSaveAs = !!(forceSaveAs || isRenamed || isTemplate || !boundTitle);
+        const hasDiskBinding = !!(window._wrapperHasSavedOnDisk || (typeof state !== 'undefined' && state && state._wrapperHasSavedOnDisk));
+        const isTrustedRename = !!(window._userManuallyRenamedTitle && boundTitle && currentTitle !== boundTitle);
+        const needsDetach = !!(forceSaveAs || isTemplate || isTrustedRename || (!hasDiskBinding && !boundTitle && !window._desktopActivePathCleared));
 
         // DESKTOP WRAPPER PATH:
         // Safely bridges directly to wrapper.html atomicSave with full AES-GCM encryption & rich metadata
         if (isDesktopEnvironment()) {
-            if (shouldSaveAs) {
+            if (needsDetach) {
                 // Detach wrapper's activeFilePath so OP_SAVE_DATA triggers native Save As dialog
                 // and prevents overwriting the original document or template on disk
-                console.log('OP_IPC:' + JSON.stringify({ type: 'OP_NEW_DOC' }));
+                if (typeof window.notifyDesktopNewDocument === 'function') {
+                    window.notifyDesktopNewDocument(true);
+                } else {
+                    window._wrapperBoundTitle = null;
+                    window._wrapperHasSavedOnDisk = false;
+                    window._userManuallyRenamedTitle = false;
+                    window._desktopActivePathCleared = true;
+                    if (typeof state !== 'undefined' && state) {
+                        state._wrapperBoundTitle = null;
+                        state._wrapperHasSavedOnDisk = false;
+                    }
+                    console.log('OP_IPC:' + JSON.stringify({ type: 'OP_NEW_DOC' }));
+                }
+            } else if (hasDiskBinding) {
+                window._userManuallyRenamedTitle = false;
+                window._desktopActivePathCleared = false;
             }
+
+            if (window._desktopSaveInFlightTimer) {
+                clearTimeout(window._desktopSaveInFlightTimer);
+            }
+            window._desktopSaveInFlight = true;
+            window._desktopSaveInFlightTimer = setTimeout(() => {
+                // Clear in-flight flag if user cancels the native nwsaveas dialog without falsely marking as saved.
+                window._desktopSaveInFlight = false;
+                window._desktopSaveInFlightTimer = null;
+            }, 30000);
+
             if (typeof window._updateDirtyBaseline === 'function') {
                 try { window._updateDirtyBaseline(); } catch(e) {}
             }
             const payloadStr = JSON.stringify(savePayload);
             console.log('OP_IPC:' + JSON.stringify({ type: 'OP_SAVE_DATA', payload: payloadStr }));
-
-            // Update bound title to current title
-            window._wrapperBoundTitle = currentTitle;
-            if (typeof state !== 'undefined' && state) {
-                state._wrapperBoundTitle = currentTitle;
-            }
             return;
         }
         
@@ -2239,21 +2260,142 @@ window.decryptDocumentData = async function(encryptedObj, password) {
         window.saveDocumentAs = masterSaveDocumentAs;
     }
 
-    // Desktop save animation callbacks to ensure title alignment
-    window.finishDesktopSaveAnimation = function() {
-        setTimeout(() => {
-            const dt = document.getElementById('doc-title');
-            const finalTitle = dt ? dt.innerText.replace(/ \*$/, '').trim() : (state && state.title ? state.title : '');
-            if (finalTitle) {
-                window._wrapperBoundTitle = finalTitle;
-                if (typeof state !== 'undefined' && state) {
-                    state._wrapperBoundTitle = finalTitle;
-                }
+    // Desktop save binding helpers, animation traps, and trusted title rename tracking
+    if (typeof window._desktopActivePathCleared !== 'boolean') {
+        window._desktopActivePathCleared = true;
+    }
+    if (typeof window._wrapperHasSavedOnDisk !== 'boolean') {
+        window._wrapperHasSavedOnDisk = false;
+    }
+    if (typeof window._userManuallyRenamedTitle !== 'boolean') {
+        window._userManuallyRenamedTitle = false;
+    }
+    if (typeof window._desktopSaveInFlight !== 'boolean') {
+        window._desktopSaveInFlight = false;
+    }
+
+    function syncDesktopSavedStateFromDom() {
+        const dt = document.getElementById('doc-title');
+        const domTitle = dt ? dt.innerText.replace(/ \*$/, '').trim() : '';
+        const stateTitle = (typeof state !== 'undefined' && state && state.title) ? String(state.title).replace(/ \*$/, '').trim() : '';
+        const finalTitle = domTitle || stateTitle;
+        if (finalTitle) {
+            window._wrapperBoundTitle = finalTitle;
+            if (typeof state !== 'undefined' && state) {
+                state._wrapperBoundTitle = finalTitle;
             }
-        }, 50);
+        }
+        window._wrapperHasSavedOnDisk = true;
+        window._userManuallyRenamedTitle = false;
+        window._desktopActivePathCleared = false;
+        if (typeof state !== 'undefined' && state) {
+            state._wrapperHasSavedOnDisk = true;
+        }
+    }
+
+    window.syncDesktopSavedStateFromDom = syncDesktopSavedStateFromDom;
+
+    window.notifyDesktopNewDocument = function(emitIpc = true) {
+        if (window._desktopSaveInFlightTimer) {
+            clearTimeout(window._desktopSaveInFlightTimer);
+            window._desktopSaveInFlightTimer = null;
+        }
+        window._wrapperBoundTitle = null;
+        window._wrapperHasSavedOnDisk = false;
+        window._userManuallyRenamedTitle = false;
+        window._desktopSaveInFlight = false;
+        window._desktopActivePathCleared = true;
+        if (typeof state !== 'undefined' && state) {
+            state._wrapperBoundTitle = null;
+            state._wrapperHasSavedOnDisk = false;
+        }
+        if (emitIpc && isDesktopEnvironment()) {
+            console.log('OP_IPC:' + JSON.stringify({ type: 'OP_NEW_DOC' }));
+        }
     };
-    if (typeof window.startDesktopSaveAnimation !== 'function') {
-        window.startDesktopSaveAnimation = function() {};
+
+    function onDocTitleMutationEvent(e) {
+        if (!e || !e.target || e.target.id !== 'doc-title') return;
+        const cleanTitle = (e.target.innerText || '').replace(/ \*$/, '').trim();
+        if (!e.isTrusted) {
+            // Wrapper updateTitleScript dispatches synthetic input/change events after nwsaveas:
+            // never treat them as manual user renames.
+            if (window._desktopSaveInFlight && cleanTitle) {
+                syncDesktopSavedStateFromDom();
+            }
+            return;
+        }
+        const bound = window._wrapperBoundTitle || (typeof state !== 'undefined' && state ? state._wrapperBoundTitle : null);
+        const hasDisk = !!(window._wrapperHasSavedOnDisk || (typeof state !== 'undefined' && state && state._wrapperHasSavedOnDisk));
+        window._userManuallyRenamedTitle = !!(hasDisk && bound && cleanTitle && cleanTitle !== bound);
+    }
+
+    if (!window._opDocTitleRenameListenerAttached) {
+        window._opDocTitleRenameListenerAttached = true;
+        document.addEventListener('input', onDocTitleMutationEvent, true);
+        document.addEventListener('change', onDocTitleMutationEvent, true);
+    }
+
+    let _origStartDesktopSaveAnim = (typeof window.startDesktopSaveAnimation === 'function') ? window.startDesktopSaveAnimation : function() {};
+    let _origFinishDesktopSaveAnim = (typeof window.finishDesktopSaveAnimation === 'function') ? window.finishDesktopSaveAnimation : function() {};
+
+    function wrappedStartDesktopSaveAnimation() {
+        try {
+            if (typeof _origStartDesktopSaveAnim === 'function' && _origStartDesktopSaveAnim !== wrappedStartDesktopSaveAnimation) {
+                _origStartDesktopSaveAnim.apply(this, arguments);
+            }
+        } catch(e) {}
+        Promise.resolve().then(() => { syncDesktopSavedStateFromDom(); });
+        setTimeout(syncDesktopSavedStateFromDom, 0);
+        setTimeout(syncDesktopSavedStateFromDom, 60);
+    }
+
+    function wrappedFinishDesktopSaveAnimation() {
+        try {
+            if (typeof _origFinishDesktopSaveAnim === 'function' && _origFinishDesktopSaveAnim !== wrappedFinishDesktopSaveAnimation) {
+                _origFinishDesktopSaveAnim.apply(this, arguments);
+            }
+        } catch(e) {}
+        syncDesktopSavedStateFromDom();
+        setTimeout(syncDesktopSavedStateFromDom, 0);
+        setTimeout(() => {
+            syncDesktopSavedStateFromDom();
+            window._desktopSaveInFlight = false;
+            if (window._desktopSaveInFlightTimer) {
+                clearTimeout(window._desktopSaveInFlightTimer);
+                window._desktopSaveInFlightTimer = null;
+            }
+        }, 60);
+    }
+
+    try {
+        Object.defineProperty(window, 'startDesktopSaveAnimation', {
+            get: function() { return wrappedStartDesktopSaveAnimation; },
+            set: function(fn) {
+                if (typeof fn === 'function' && fn !== wrappedStartDesktopSaveAnimation) {
+                    _origStartDesktopSaveAnim = fn;
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } catch(e) {
+        window.startDesktopSaveAnimation = wrappedStartDesktopSaveAnimation;
+    }
+
+    try {
+        Object.defineProperty(window, 'finishDesktopSaveAnimation', {
+            get: function() { return wrappedFinishDesktopSaveAnimation; },
+            set: function(fn) {
+                if (typeof fn === 'function' && fn !== wrappedFinishDesktopSaveAnimation) {
+                    _origFinishDesktopSaveAnim = fn;
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } catch(e) {
+        window.finishDesktopSaveAnimation = wrappedFinishDesktopSaveAnimation;
     }
 
     try {

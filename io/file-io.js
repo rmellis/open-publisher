@@ -733,6 +733,9 @@ function uploadAndConvertDoc(file) {
                     const pb = document.getElementById('convert-progress');
                     if (pb) pb.style.width = '100%';
                     setTimeout(() => {
+                        if (typeof window.notifyDesktopNewDocument === 'function') {
+                            window.notifyDesktopNewDocument(true);
+                        }
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
                         state.hasMasterPage = false;
@@ -2653,6 +2656,9 @@ function uploadAndConvertPub(file) {
                     const pb = document.getElementById('convert-progress-pub');
                     if (pb) pb.style.width = '100%';
                     setTimeout(() => {
+                        if (typeof window.notifyDesktopNewDocument === 'function') {
+                            window.notifyDesktopNewDocument(true);
+                        }
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
                         state.hasMasterPage = false;
@@ -2881,6 +2887,9 @@ function openPdfDocument(file) {
 
                 if (pb) pb.style.width = '100%';
                 setTimeout(() => {
+                    if (typeof window.notifyDesktopNewDocument === 'function') {
+                        window.notifyDesktopNewDocument(true);
+                    }
                     const docTitle = file.name ? file.name.replace(/\.[^/.]+$/, "") : "Imported_PDF";
                     const titleEl = document.getElementById('doc-title');
                     if (titleEl) titleEl.innerText = docTitle;
