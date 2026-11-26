@@ -614,7 +614,7 @@ function uploadAndConvertDoc(file) {
         const xhr = new XMLHttpRequest();
         const docEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-doc`
-            : 'https://refuse-simpsons-wanting-cosmetic.trycloudflare.com/api/convert-doc';
+            : 'https://preventing-afternoon-encouraged-pair.trycloudflare.com/api/convert-doc';
         xhr.open('POST', docEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
@@ -2543,7 +2543,7 @@ function uploadAndConvertPub(file) {
         const xhr = new XMLHttpRequest();
         const pubEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-pub`
-            : 'https://refuse-simpsons-wanting-cosmetic.trycloudflare.com/api/convert-pub';
+            : 'https://preventing-afternoon-encouraged-pair.trycloudflare.com/api/convert-pub';
         xhr.open('POST', pubEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
