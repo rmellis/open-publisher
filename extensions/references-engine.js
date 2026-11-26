@@ -137,6 +137,8 @@
 
                 const block = this._getActiveBlock(targetEditable);
                 if (block && block !== targetEditable) {
+                    const typo = window.MasterHeaderFooterEngine ? window.MasterHeaderFooterEngine.getEffectiveDocumentTypography() : null;
+                    const hFontStack = typo && window.MasterHeaderFooterEngine ? window.MasterHeaderFooterEngine.buildFontStack(typo.headingFont) : '';
                     const heading = document.createElement(tag);
                     heading.setAttribute('data-heading-level', String(numLevel));
                     heading.innerHTML = block.innerHTML;
@@ -144,8 +146,11 @@
                     heading.style.fontWeight = 'bold';
                     heading.style.margin = margin;
                     heading.style.lineHeight = '1.25';
+                    if (hFontStack) heading.style.fontFamily = hFontStack;
                     block.parentNode.replaceChild(heading, block);
                 } else {
+                    const typo = window.MasterHeaderFooterEngine ? window.MasterHeaderFooterEngine.getEffectiveDocumentTypography() : null;
+                    const hFontStack = typo && window.MasterHeaderFooterEngine ? window.MasterHeaderFooterEngine.buildFontStack(typo.headingFont) : '';
                     const rawHtml = targetEditable.innerHTML.trim();
                     const heading = document.createElement(tag);
                     heading.setAttribute('data-heading-level', String(numLevel));
@@ -154,6 +159,7 @@
                     heading.style.fontWeight = 'bold';
                     heading.style.margin = margin;
                     heading.style.lineHeight = '1.25';
+                    if (hFontStack) heading.style.fontFamily = hFontStack;
                     targetEditable.innerHTML = '';
                     targetEditable.appendChild(heading);
                 }
@@ -1947,7 +1953,7 @@
                         <span role="button" tabindex="0" class="custom-dialog-close" id="op-ref-notice-close-x" title="Close" aria-label="Close"><i class="fas fa-times"></i></span>
                     </div>
                     <div class="op-ref-modal-body" style="padding:18px 20px;font-size:13.5px;line-height:1.5;display:flex;align-items:center;gap:14px;">
-                        <img src="ui/icons/alert.png?v=5.24.8" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
+                        <img src="ui/icons/alert.png?v=5.24.9" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
                         <div style="flex:1;">${escapeHtml(message)}</div>
                     </div>
                     <div class="op-ref-modal-footer">

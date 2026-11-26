@@ -1056,12 +1056,66 @@
                 {
                     id: 'general-display',
                     title: 'General, Display & Classic Publisher Cursors',
-                    body: '<p>The <strong>Options</strong> dialog configures global workspace preferences across Open Publisher:</p><ul><li><strong>Units &amp; Rulers:</strong> Choose default measurement units (Millimeters, Centimeters, Inches, or Pixels) and ruler subdivisions.</li><li><strong>Classic Drag Cursors:</strong> Toggle classic desktop-publishing move-truck and crosshair cursors, scratch area visibility, and UI theme accents.</li></ul>'
+                    body: '<p>The <strong>Options</strong> dialog configures global workspace preferences across Open Publisher:</p><ul><li><strong>Units &amp; Rulers:</strong> Choose default measurement units (Millimeters, Centimeters, Inches, or Pixels) and ruler subdivisions.</li><li><strong>Classic Drag Cursors:</strong> Toggle classic desktop-publishing move-truck and crosshair cursors, scratch area visibility, and UI theme accents.</li><li><strong>Default Font:</strong> Choose a global default Font Family and Font Size in General Options. It is saved in local storage and applied automatically to newly created documents and new text boxes unless overridden by a Page Design Font Scheme.</li></ul>'
                 },
                 {
                     id: 'save-proofing-ribbon',
                     title: 'Save/Recovery, Proofing & Customize Ribbon',
                     body: '<p>Tailor auto-save behavior, spellcheck, and ribbon layout:</p><ul><li><strong>Auto-Save &amp; Local Recovery:</strong> Configure automatic browser local-storage snapshots so work is recoverable after an accidental tab close or power cut.</li><li><strong>Proofing &amp; Customize Ribbon:</strong> Toggle live spellcheck underlines and show or hide individual ribbon tabs and command groups.</li></ul>'
+                }
+            ]
+        },
+
+        'font-schemes': {
+            title: 'Document Font Schemes Help',
+            buttonTitle: 'Font Schemes Help',
+            topics: [
+                {
+                    id: 'paired-typography',
+                    title: 'Choosing & Applying Font Schemes',
+                    body: '<p><strong>Font Schemes</strong> give your whole publication consistent Heading and Body typography with one click:</p><ol><li>Open the <strong>Page Design</strong> tab on the ribbon and click <strong>Font Schemes</strong>.</li><li>Browse the paired font previews (each pair shows a <em>Heading Font / Body Font</em> sample).</li><li>Click any scheme to set it as the active document font pair for new text boxes and headings.</li></ol><p><strong>Updating existing text:</strong> Tick <strong>Apply to existing text</strong> at the top of the menu before choosing a scheme (or click <em>Apply Active Scheme to All Text Boxes</em> at the bottom) to restyle text boxes already on your pages.</p>'
+                },
+                {
+                    id: 'custom-and-default-font',
+                    title: 'Custom Font Schemes & Default Font',
+                    body: '<p><strong>Custom Font Scheme:</strong> Choose <strong>Custom Font Scheme...</strong> at the bottom of the Font Schemes menu to name your own pair and pick any installed or web font for Headings and Body text.</p><ul><li><strong>Saving with your file:</strong> Active Font Schemes save inside <code>.opub</code> project files and restore automatically when reopened.</li><li><strong>Resetting to your Default Font:</strong> Click <em>Use Global Default</em> in the Font Schemes menu, or set your preferred global Family and Size under <em>File -&gt; Options -&gt; General -&gt; Default Font</em>.</li></ul>'
+                }
+            ]
+        },
+
+        'master-header-footer': {
+            title: 'Master Page, Headers & Footers Help',
+            buttonTitle: 'Master Page Help',
+            topics: [
+                {
+                    id: 'master-yellow-tint',
+                    title: 'Master Page & Yellow Page Tint',
+                    body: '<p>The <strong>Master Page</strong> is a shared background template layer. Anything placed on the Master Page (headers, footers, page numbers, borders, or logos) repeats automatically on document pages.</p><ul><li><strong>Why does the page turn light yellow?</strong> While editing the Master Page, Open Publisher adds a soft cream-yellow tint to the canvas, dashed margin outlines, and a top <strong>Editing Master Page</strong> bar so you always know you are editing the shared template instead of normal page content.</li><li><strong>Strictly editor-only:</strong> The yellow tint, dashed boxes, labels, and top bar are editing guides only. Normal pages stay crisp white, and your yellow guides never appear in Print Preview, Desktop Print, or exported PDF/HTML files.</li></ul>'
+                },
+                {
+                    id: 'editing-headers',
+                    title: 'Headers (Top Margin)',
+                    body: '<p>Follow these steps to add or edit a repeating <strong>Header</strong> at the top of your pages:</p><ol><li><strong>Enter Master Page:</strong> Double-click near the top margin of any page, or hover over the top margin and click the <strong>Edit Header</strong> button.</li><li><strong>Type directly inside the Header box:</strong> The top header box is anchored inside the printable top margin and spans between your left and right margins so it stays aligned cleanly across every page and cannot be accidentally dragged into the body.</li><li><strong>Select &amp; style text:</strong> Click and drag, double-click a word, or triple-click a line to select text without popups. Use the <strong>Home</strong> tab for Left, Center, or Right alignment, Font Family, Font Size, Color, Bold, Italic, Underline, and Line Spacing.</li></ol>'
+                },
+                {
+                    id: 'editing-footers',
+                    title: 'Footers (Bottom Margin)',
+                    body: '<p>Follow these steps to add or edit a repeating <strong>Footer</strong> at the bottom of your pages:</p><ol><li><strong>Jump to Footer:</strong> Double-click near the bottom edge of a page, click the <strong>Edit Footer</strong> hover pill, or click <strong>Go to Footer</strong> on the contextual <em>Header &amp; Footer Tools</em> tab.</li><li><strong>Edit inside the locked Footer margin zone:</strong> Like the Header, the Footer stays neatly anchored along the bottom margin and automatically widens or narrows whenever you change paper size or margins in <em>Page Design</em>.</li><li><strong>Format freely:</strong> Switch between Left, Center, Right, or 3-Zone alignment and style fonts or sizes using either the contextual tab or the <strong>Home</strong> tab.</li></ol>'
+                },
+                {
+                    id: 'three-zone-bar',
+                    title: '3-Zone Layout (Left, Center, Right)',
+                    body: '<p>For newsletters, reports, and booklets where you want text on the left, middle, and right on the exact same line (for example: Title on the left, Date in the center, Page Number on the right):</p><ol><li>Click inside a Header or Footer box on the Master Page.</li><li>Press the <strong>Tab</strong> key on your keyboard, or click <strong>3-Zone</strong> in the <em>Header &amp; Footer Tools</em> tab.</li><li>The box splits into three independent zones: <strong>Left</strong> (left-aligned), <strong>Center</strong> (centered), and <strong>Right</strong> (right-aligned).</li><li>Press <strong>Tab</strong> or <strong>Shift+Tab</strong> (or click each zone directly) to move between zones without overwriting text in neighboring cells.</li></ol>'
+                },
+                {
+                    id: 'dynamic-page-numbers',
+                    title: 'Dynamic Page Numbers & Dates',
+                    body: '<p>Live tokens automatically calculate the right page number on every page, print sheet, and exported PDF:</p><ol><li>Click inside a Header, Footer, or 3-Zone cell where you want the page number to appear (any text you already typed stays intact).</li><li>Choose a style from the <strong>Format</strong> dropdown on the <em>Header &amp; Footer Tools</em> tab: <code>1</code>, <code>Page 1</code>, <code>Page 1 of N</code>, or <code>1 / N</code>.</li><li>Click <strong>Insert Page Number</strong> to insert the token at your cursor, or click <strong>Date / Time</strong> to insert today\'s date.</li></ol><p><strong>Standalone Page Number Boxes:</strong> You can still insert free-floating draggable page number boxes from the <em>Insert</em> tab at any time.</p>'
+                },
+                {
+                    id: 'first-page-closing',
+                    title: 'First Page Option & Closing Master Page',
+                    body: '<p>Control cover pages and return to writing your document:</p><ul><li><strong>Hide on Page 1 Covers:</strong> In the <em>Header &amp; Footer Tools</em> tab, uncheck <strong>Show Header &amp; Footer on First Page</strong> if you want a clean cover on Page 1 while keeping headers, footers, and page numbers active starting on Page 2.</li><li><strong>Close Master Page:</strong> Click the blue <strong>Close Master Page</strong> button in the top editing bar (or the <strong>Close Master Page</strong> button on the ribbon) to leave the yellow Master Page view and return to your document pages.</li></ul>'
                 }
             ]
         },
@@ -1197,7 +1251,11 @@
         'add hyperlink': 'hyperlink-alt-notes',
         'alt text': 'hyperlink-alt-notes',
         'add page note': 'hyperlink-alt-notes',
-        'edit header/footer': 'hyperlink-alt-notes',
+        'edit header/footer': 'master-header-footer',
+        'custom font scheme': 'font-schemes',
+        'font schemes': 'font-schemes',
+        'master page': 'master-header-footer',
+        'header & footer tools': 'master-header-footer',
         'download open publisher desktop app': 'desktop-app',
         'download & install': 'desktop-app',
         'install on ios': 'desktop-app'

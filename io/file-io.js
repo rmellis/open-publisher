@@ -32,6 +32,9 @@ window.saveDocument = function() {
         pages: state.pages,
         hasMasterPage: state.hasMasterPage || false,
         headersVisible: state.headersVisible || false,
+        showHeaderFooterOnFirstPage: state.showHeaderFooterOnFirstPage !== false,
+        pageNumberFormat: state.pageNumberFormat || 'page-n-of-total',
+        fontScheme: state.fontScheme ? JSON.parse(JSON.stringify(state.fontScheme)) : null,
         isSpreadMode: state.isSpreadMode || false,
         rulerOriginX: state.rulerOriginX || 0,
         rulerOriginY: state.rulerOriginY || 0,
@@ -147,6 +150,9 @@ window.printFullDocumentDirect = async function(isImposed = false) {
         : state.pages;
 
     pagesToRender.forEach((page, pageIndex) => {
+        if (!isImposed && !window._isBookletPrinting && !window._isMultiUpPrinting && state.hasMasterPage && pagesToRender === state.pages && pagesToRender.length > 1 && pageIndex === 0) {
+            return;
+        }
         // Create a blank piece of paper for this page
         let pageWrapper = document.createElement('div');
         pageWrapper.className = 'op-print-page';
@@ -251,7 +257,16 @@ window.printFullDocumentDirect = async function(isImposed = false) {
             }
             pageWrapper.appendChild(elDiv);
         });
-        
+
+        if (window.MasterHeaderFooterEngine) {
+            const metrics = window.MasterHeaderFooterEngine.getDocumentPageMetrics(pageIndex);
+            const hfHtml = window.MasterHeaderFooterEngine.buildExportHeaderFooterHtml(page, pageIndex, metrics.docPageNum, metrics.totalDocPages);
+            if (hfHtml) {
+                pageWrapper.insertAdjacentHTML('beforeend', hfHtml);
+            }
+            window.MasterHeaderFooterEngine.resolvePageNumberTokensInContainer(pageWrapper, metrics.docPageNum, metrics.totalDocPages);
+        }
+
         // Add the finished page to our hidden stack
         printSpooler.appendChild(pageWrapper);
     });
@@ -599,7 +614,7 @@ function uploadAndConvertDoc(file) {
         const xhr = new XMLHttpRequest();
         const docEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-doc`
-            : 'https://contest-posing-sublime-expansion.trycloudflare.com/api/convert-doc';
+            : 'https://refuse-simpsons-wanting-cosmetic.trycloudflare.com/api/convert-doc';
         xhr.open('POST', docEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
@@ -720,6 +735,11 @@ function uploadAndConvertDoc(file) {
                     setTimeout(() => {
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
+                        state.hasMasterPage = false;
+                        state.headersVisible = false;
+                        state.showHeaderFooterOnFirstPage = true;
+                        state.pageNumberFormat = 'page-n-of-total';
+                        state.fontScheme = null;
                         state.history = [];
                         state.historyIndex = -1;
                         state.currentPageIndex = 0;
@@ -2523,7 +2543,7 @@ function uploadAndConvertPub(file) {
         const xhr = new XMLHttpRequest();
         const pubEndpoint = window.OPENPUB_SERVER_URL
             ? `${window.OPENPUB_SERVER_URL.replace(/\/$/, '')}/api/convert-pub`
-            : 'https://contest-posing-sublime-expansion.trycloudflare.com/api/convert-pub';
+            : 'https://refuse-simpsons-wanting-cosmetic.trycloudflare.com/api/convert-pub';
         xhr.open('POST', pubEndpoint, true); 
 
         xhr.upload.onprogress = function(e) {
@@ -2635,6 +2655,11 @@ function uploadAndConvertPub(file) {
                     setTimeout(() => {
                         document.getElementById('doc-title').innerText = data.title;
                         state.pages = opPages;
+                        state.hasMasterPage = false;
+                        state.headersVisible = false;
+                        state.showHeaderFooterOnFirstPage = true;
+                        state.pageNumberFormat = 'page-n-of-total';
+                        state.fontScheme = null;
                         state.history = [];
                         state.historyIndex = -1;
                         state.currentPageIndex = 0;
@@ -2860,6 +2885,11 @@ function openPdfDocument(file) {
                     const titleEl = document.getElementById('doc-title');
                     if (titleEl) titleEl.innerText = docTitle;
                     state.pages = opPages;
+                    state.hasMasterPage = false;
+                    state.headersVisible = false;
+                    state.showHeaderFooterOnFirstPage = true;
+                    state.pageNumberFormat = 'page-n-of-total';
+                    state.fontScheme = null;
                     state.history = [];
                     state.historyIndex = -1;
                     state.currentPageIndex = 0;

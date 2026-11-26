@@ -250,10 +250,19 @@ window.DashboardSystem = {
         
         // Clear state
         state.pages = [];
+        state.hasMasterPage = false;
+        state.headersVisible = false;
+        state.showHeaderFooterOnFirstPage = true;
+        state.pageNumberFormat = 'page-n-of-total';
+        state.fontScheme = null;
         if (typeof window.resetDocumentWatermark === 'function') window.resetDocumentWatermark(); else delete state.watermark;
         state.history = [];
         state.historyIndex = -1;
         state.currentPageIndex = 0;
+        if (window.MasterHeaderFooterEngine) {
+            if (typeof window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI === 'function') window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI();
+            if (typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') window.MasterHeaderFooterEngine.syncMasterPageVisualMode(false);
+        }
         window._wrapperBoundTitle = null;
         if (typeof state !== 'undefined' && state) state._wrapperBoundTitle = null;
         
@@ -271,7 +280,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.8');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.9');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -365,7 +374,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.24.8`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.24.9`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -400,7 +409,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.8`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.9`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -435,7 +444,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.8`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.9`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -812,6 +821,7 @@ window.DashboardSystem = {
                     state.margins = fileData.margins;
                     state.marginsDpi = fileData.marginsDpi || state.dpi;
                     state.hasMasterPage = fileData.hasMasterPage || false;
+                    state.headersVisible = typeof fileData.headersVisible === 'boolean' ? fileData.headersVisible : (state.hasMasterPage || false);
                     state.isSpreadMode = !!fileData.isSpreadMode;
                     state.rulerOriginX = fileData.rulerOriginX || 0;
                     state.rulerOriginY = fileData.rulerOriginY || 0;
@@ -820,11 +830,15 @@ window.DashboardSystem = {
                     state.documentProperties = fileData.documentProperties || { author: '', company: '', subject: '', keywords: '' };
 
                     state.pages = JSON.parse(JSON.stringify(fileData.pages || []));
-                    state.currentPageIndex = 0;
+                    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.migrateLoadedDocument === 'function') {
+                        window.MasterHeaderFooterEngine.migrateLoadedDocument(fileData);
+                    }
+                    const initialIdx = (state.hasMasterPage && state.pages.length > 1) ? 1 : 0;
+                    state.currentPageIndex = initialIdx;
                     if (window.VariableFontsEngine && typeof window.VariableFontsEngine.restoreFromOpub === 'function') {
                         Promise.resolve(window.VariableFontsEngine.restoreFromOpub(fileData.variableFonts || null, fileData)).catch(() => false);
                     }
-                    renderPage(state.pages[0]);
+                    renderPage(state.pages[initialIdx]);
                     updateSidebar();
                 }
             };

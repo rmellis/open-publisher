@@ -540,8 +540,11 @@ function showQRCodeModal() {
 
 
 function insertPageNumber() {
-    const pageNum = state.currentPageIndex + 1;
-    const totalPages = state.pages.length;
+    const metrics = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.getDocumentPageMetrics === 'function')
+        ? window.MasterHeaderFooterEngine.getDocumentPageMetrics(state.currentPageIndex)
+        : { isMaster: false, docPageNum: state.currentPageIndex + 1, totalDocPages: state.pages.length };
+    const pageNum = metrics.isMaster ? 1 : metrics.docPageNum;
+    const totalPages = metrics.totalDocPages;
     const el = createWrapper(`<div style="padding:5px 15px; height:100%; display:flex; align-items:center; justify-content:center; font-family:inherit; font-size:14px; color:#333; white-space:nowrap; user-select:none; pointer-events:none;" contenteditable="false"><span class="pn-current">${pageNum}</span>&nbsp;/&nbsp;<span class="pn-total">${totalPages}</span></div>`);
     el.setAttribute('data-type', 'page-number');
     el.style.width = '80px';
@@ -554,6 +557,10 @@ function insertPageNumber() {
 }
 
 function updatePageNumbers() {
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.updateAllPageNumbers === 'function') {
+        window.MasterHeaderFooterEngine.updateAllPageNumbers();
+        return;
+    }
     // Update all page number elements on the current page
     const totalPages = state.pages.length;
     const currentPageNum = state.currentPageIndex + 1;

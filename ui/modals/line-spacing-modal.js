@@ -12,7 +12,9 @@ window.showLineSpacingModal = function() {
     }
 
     const targetEl = state.selectedEl;
-    let content = targetEl.querySelector('.element-content');
+    let content = (targetEl.classList.contains('op-hf-box') && window.MasterHeaderFooterEngine)
+        ? window.MasterHeaderFooterEngine.getActiveHfEditable(targetEl)
+        : targetEl.querySelector('.element-content');
     if (!content && targetEl.classList.contains('element-content')) {
         content = targetEl;
     }
@@ -360,7 +362,9 @@ window.showLineSpacingModal = function() {
 window.applyExactLineSpacing = function(val) {
     if (state.selectedEl) {
         const targetEl = state.selectedEl;
-        let content = targetEl.querySelector('.element-content') || targetEl;
+        let content = (targetEl.classList.contains('op-hf-box') && window.MasterHeaderFooterEngine)
+            ? window.MasterHeaderFooterEngine.getActiveHfEditable(targetEl)
+            : (targetEl.querySelector('.element-content') || targetEl);
         if (content) {
             content.style.lineHeight = val;
             const styledChildren = content.querySelectorAll('[style*="line-height"]');
@@ -372,6 +376,9 @@ window.applyExactLineSpacing = function(val) {
                 child.style.lineHeight = val;
             });
 
+            if (targetEl.classList.contains('op-hf-box') && window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncMasterHeaderFooterToState === 'function') {
+                window.MasterHeaderFooterEngine.syncMasterHeaderFooterToState();
+            }
             if (typeof pushHistory === 'function') pushHistory();
             if (typeof window.updateSelectionObserver === 'function') {
                 window.updateSelectionObserver();

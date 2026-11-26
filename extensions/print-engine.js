@@ -2591,8 +2591,9 @@
                 if (liveBorder) borderHtml = liveBorder.outerHTML;
             }
 
-            // Determine the Master Layout based ENTIRELY on Page 1
-            const masterPage = pagesToPrint[0] || {};
+            // Determine the Master Layout based on first printable page
+            const skipMasterTemplate = !!(state.hasMasterPage && pagesToPrint === state.pages && pagesToPrint.length > 1);
+            const masterPage = skipMasterTemplate ? (pagesToPrint[1] || {}) : (pagesToPrint[0] || {});
             const masterPW = parseFloat(masterPage.width) || 794;
             const masterPH = parseFloat(masterPage.height) || 1123;
             const masterIsPortrait = masterPW <= masterPH;
@@ -2624,6 +2625,9 @@
             let iframeHTMLString = '';
 
             for (let i = 0; i < totalPages; i++) {
+                if (state.hasMasterPage && pagesToPrint === state.pages && totalPages > 1 && i === 0) {
+                    continue;
+                }
                 const page = pagesToPrint[i];
                 if (statusEl) {
                     statusEl.innerText = isMultiUp 
@@ -3200,7 +3204,22 @@
                     }
                 }
                 
-                if (state.headersVisible) {
+                if (window.MasterHeaderFooterEngine) {
+                    const isDocPagesList = (pagesToPrint === state.pages);
+                    const metrics = isDocPagesList
+                        ? window.MasterHeaderFooterEngine.getDocumentPageMetrics(i)
+                        : { isMaster: false, docPageNum: i + 1, totalDocPages: totalPages };
+                    const hfHtml = window.MasterHeaderFooterEngine.buildExportHeaderFooterHtml(
+                        page,
+                        isDocPagesList ? i : -1,
+                        metrics.docPageNum,
+                        metrics.totalDocPages
+                    );
+                    if (hfHtml) {
+                        pageWrapper.insertAdjacentHTML('beforeend', hfHtml);
+                    }
+                    window.MasterHeaderFooterEngine.resolvePageNumberTokensInContainer(pageWrapper, metrics.docPageNum, metrics.totalDocPages);
+                } else if (state.headersVisible) {
                     if (renderHeader) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-header visible" style="pointer-events:none; z-index:0;">${renderHeader}</div>`);
                     if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0;">${renderFooter}</div>`);
                 }

@@ -113,33 +113,6 @@ function renderPage(pageData) {
     } else {
         paper.classList.remove('is-spread');
     }
-    let renderHeader = pageData.header;
-    let renderFooter = pageData.footer;
-    let isHeaderEditable = true;
-
-    if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
-        renderHeader = state.pages[0].header;
-        renderFooter = state.pages[0].footer;
-        isHeaderEditable = false;
-    }
-    
-    const headerEl = paper.querySelector('.page-header');
-    const footerEl = paper.querySelector('.page-footer');
-    
-    headerEl.innerHTML = renderHeader;
-    footerEl.innerHTML = renderFooter;
-    headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
-    footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
-    if (isHeaderEditable) {
-        headerEl.setAttribute('spellcheck', 'false');
-        footerEl.setAttribute('spellcheck', 'false');
-        if (state.spellCheck) {
-            const userLang = navigator.language || 'en';
-            headerEl.setAttribute('lang', userLang);
-            footerEl.setAttribute('lang', userLang);
-        }
-    }
-    
     const borderEl = paper.querySelector('.page-border-container');
     borderEl.setAttribute('data-style', pageData.borderStyle);
     setPageBorder(pageData.borderStyle, false); 
@@ -147,6 +120,29 @@ function renderPage(pageData) {
     const structural = paper.querySelectorAll('.margin-guides, .page-border-container, .page-header, .page-footer');
     paper.innerHTML = '';
     structural.forEach(el => paper.appendChild(el));
+
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper === 'function') {
+        window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper(paper, pageData, state.currentPageIndex);
+    } else {
+        let renderHeader = pageData.header;
+        let renderFooter = pageData.footer;
+        let isHeaderEditable = true;
+        if (state.hasMasterPage && state.currentPageIndex !== 0 && state.pages[0] && !pageData.ignoreMasterPage) {
+            renderHeader = state.pages[0].header;
+            renderFooter = state.pages[0].footer;
+            isHeaderEditable = false;
+        }
+        const headerEl = paper.querySelector('.page-header');
+        const footerEl = paper.querySelector('.page-footer');
+        if (headerEl) {
+            headerEl.innerHTML = renderHeader || '';
+            headerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
+        }
+        if (footerEl) {
+            footerEl.innerHTML = renderFooter || '';
+            footerEl.setAttribute('contenteditable', isHeaderEditable ? 'true' : 'false');
+        }
+    }
 
     const marginGuides = paper.querySelector('.margin-guides');
     if (marginGuides) {
@@ -179,6 +175,9 @@ function renderPage(pageData) {
         marginGuides.style.right = m.right + 'px';
         marginGuides.style.bottom = m.bottom + 'px';
         marginGuides.style.left = m.left + 'px';
+    }
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncHeaderFooterGeometry === 'function') {
+        window.MasterHeaderFooterEngine.syncHeaderFooterGeometry(paper);
     }
 
     let elementsToRender = [];
@@ -450,9 +449,13 @@ function renderPage(pageData) {
     if (typeof window.initTextFlowLinks === 'function') window.initTextFlowLinks(paper);
     
     toggleHeaderFooter(state.headersVisible, true);
-    document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.updateAllPageNumbers === 'function') {
+        window.MasterHeaderFooterEngine.updateAllPageNumbers();
+    } else {
+        document.getElementById('page-count-status').innerText = `Page ${state.currentPageIndex + 1} of ${state.pages.length}`;
+        updatePageNumbers();
+    }
     if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(pageDpi);
-    updatePageNumbers();
     updateSidebar();
     scheduleEmojiMigrate();
     if (typeof state !== 'undefined' && state.viewMode === 'multipage' && typeof updateMultiPageView === 'function') {
@@ -560,8 +563,8 @@ function addNewPage() {
         dpi: (state.pages.length > 0 && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].dpi) ? state.pages[state.currentPageIndex].dpi : (state.dpi || 96),
         format: (state.pages.length > 0 && state.pages[state.currentPageIndex] && state.pages[state.currentPageIndex].format) ? state.pages[state.currentPageIndex].format : (state.format || 'A4'),
         background: '#ffffff',
-        header: 'Header (Type here)', 
-        footer: 'Footer (Type here)',
+        header: '', 
+        footer: '',
         borderStyle: 'none',
         elements: initialElements
     };
@@ -705,19 +708,23 @@ function addMasterPage() {
         dpi: targetDpi,
         format: targetFormat,
         background: '#ffffff',
-        header: 'Header (Type here)', 
-        footer: 'Footer (Type here)',
+        header: '', 
+        footer: '',
         borderStyle: 'none',
         elements: []
     };
     
     state.hasMasterPage = true;
+    state.headersVisible = true;
     state.pages.unshift(newPage);
     state.currentPageIndex = 0;
     if (typeof state !== 'undefined') state.format = targetFormat;
     
     renderPage(newPage);
     updateSidebar();
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') {
+        window.MasterHeaderFooterEngine.syncMasterPageVisualMode(true);
+    }
     
     // Immediately record Master Page state in history
     if (typeof window.originalPushHistory === 'function') {
@@ -753,6 +760,9 @@ function removeMasterPage(skipConfirm = false) {
         }
         renderPage(state.pages[state.currentPageIndex]);
         updateSidebar();
+        if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') {
+            window.MasterHeaderFooterEngine.syncMasterPageVisualMode(false);
+        }
         if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
         else if (typeof pushHistory === 'function') pushHistory();
         if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
@@ -931,6 +941,11 @@ function handleNewDocument() {
             const isLand = finalW >= finalH;
 
             state.pages = [];
+            state.hasMasterPage = false;
+            state.headersVisible = false;
+            state.showHeaderFooterOnFirstPage = true;
+            state.pageNumberFormat = 'page-n-of-total';
+            state.fontScheme = null;
             if (typeof window.resetDocumentWatermark === 'function') window.resetDocumentWatermark(); else delete state.watermark;
             state.history = [];
             state.historyIndex = -1;
@@ -969,14 +984,22 @@ function handleNewDocument() {
                 dpi: d,
                 format: chosenFmt,
                 background: '#ffffff',
-                header: 'Header (Type here)',
-                footer: 'Footer (Type here)',
+                header: '',
+                footer: '',
                 borderStyle: 'none',
                 elements: []
             };
 
             state.pages.push(newPage);
             state.currentPageIndex = 0;
+            if (window.MasterHeaderFooterEngine) {
+                if (typeof window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI === 'function') {
+                    window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI();
+                }
+                if (typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') {
+                    window.MasterHeaderFooterEngine.syncMasterPageVisualMode(false);
+                }
+            }
             state.documentPassword = null;
             if (typeof window.updateProtectionIndicator === 'function') window.updateProtectionIndicator();
             renderPage(newPage);
@@ -1265,16 +1288,35 @@ function renderThumbnailHTML(pageData, pageIndex) {
                 }
                 // Update page number spans in thumbnails
                 if (data.type === 'page-number' && typeof pageIndex === 'number') {
+                    const metrics = window.MasterHeaderFooterEngine
+                        ? window.MasterHeaderFooterEngine.getDocumentPageMetrics(pageIndex)
+                        : { isMaster: false, docPageNum: pageIndex + 1, totalDocPages: state.pages.length };
                     const curSpan = scaleBox.querySelector('.pn-current');
                     const totSpan = scaleBox.querySelector('.pn-total');
-                    if (curSpan) curSpan.textContent = pageIndex + 1;
-                    if (totSpan) totSpan.textContent = state.pages.length;
+                    if (curSpan) curSpan.textContent = metrics.isMaster ? '#' : metrics.docPageNum;
+                    if (totSpan) totSpan.textContent = metrics.totalDocPages;
+                    const fmt = data.pnFormat || (data.attrs && data.attrs['data-pn-format']);
+                    if (fmt && window.MasterHeaderFooterEngine && scaleBox.firstElementChild) {
+                        scaleBox.firstElementChild.textContent = window.MasterHeaderFooterEngine.formatPageNumberText(metrics.docPageNum, metrics.totalDocPages, fmt);
+                    }
                 }
             }
             
             elBox.appendChild(scaleBox);
             innerWrapper.appendChild(elBox);
         });
+    }
+
+    if (window.MasterHeaderFooterEngine && typeof pageIndex === 'number' && state.pages && state.pages[pageIndex]) {
+        const thumbPage = state.pages[pageIndex];
+        const metrics = window.MasterHeaderFooterEngine.getDocumentPageMetrics(pageIndex);
+        const hfHtml = window.MasterHeaderFooterEngine.buildExportHeaderFooterHtml(thumbPage, pageIndex, metrics.docPageNum, metrics.totalDocPages);
+        if (hfHtml) {
+            const hfLayer = document.createElement('div');
+            hfLayer.style.cssText = 'position:absolute; inset:0; pointer-events:none; overflow:hidden;';
+            hfLayer.innerHTML = hfHtml;
+            innerWrapper.appendChild(hfLayer);
+        }
     }
 
     outerWrapper.appendChild(innerWrapper);
@@ -1332,9 +1374,13 @@ function updateSidebar() {
         
         let labelText = state.isSpreadMode ? `Page ${(i*2)+1} - ${(i*2)+2}` : `Page ${i+1}`;
         let delTitle = 'Delete Page';
-        if (state.hasMasterPage && i === 0) {
-            labelText = 'Master Page';
-            delTitle = 'Remove Master Page';
+        if (state.hasMasterPage) {
+            if (i === 0) {
+                labelText = 'Master Page';
+                delTitle = 'Remove Master Page';
+            } else {
+                labelText = state.isSpreadMode ? `Page ${((i-1)*2)+1} - ${((i-1)*2)+2}` : `Page ${i}`;
+            }
         }
         const pDpi = parseFloat(p.dpi) || (typeof state !== 'undefined' && parseFloat(state.dpi)) || 96;
         const pW_Inches = (pW / pDpi).toFixed(1);

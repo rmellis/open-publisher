@@ -353,17 +353,29 @@ function toggleHeaderFooter(forceState, skipHistory = false) {
     }
     const currentPaper = document.getElementById('paper');
     if (currentPaper) {
-        const hdr = currentPaper.querySelector('.page-header');
-        const ftr = currentPaper.querySelector('.page-footer');
-        if (hdr) hdr.classList.toggle('visible', !!state.headersVisible);
-        if (ftr) ftr.classList.toggle('visible', !!state.headersVisible);
+        if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper === 'function') {
+            window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper(
+                currentPaper,
+                state.pages && state.pages[state.currentPageIndex],
+                state.currentPageIndex
+            );
+        } else {
+            const hdr = currentPaper.querySelector('.page-header');
+            const ftr = currentPaper.querySelector('.page-footer');
+            if (hdr) hdr.classList.toggle('visible', !!state.headersVisible);
+            if (ftr) ftr.classList.toggle('visible', !!state.headersVisible);
+        }
     }
     document.querySelectorAll('.hf-toggle-btn, #ribbon-design-hf-btn, #ribbon-insert-hf-btn').forEach(btn => {
         btn.classList.toggle('active', !!state.headersVisible);
     });
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState === 'function') {
+        window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState();
+    }
     if (!skipHistory) {
         if (typeof window.originalPushHistory === 'function') window.originalPushHistory();
         else if (typeof pushHistory === 'function') pushHistory();
+        if (typeof updateThumbnails === 'function') updateThumbnails();
     }
 }
 window.toggleHeaderFooter = toggleHeaderFooter;

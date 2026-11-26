@@ -647,6 +647,19 @@ window.saveGlobalOptions = function(closeDialog = true) {
         localStorage.setItem('opub_username', txtUser.value.trim());
     }
 
+    const selDefFont = document.getElementById('opt-default-font');
+    const inpDefSize = document.getElementById('opt-default-font-size');
+    if (selDefFont || inpDefSize) {
+        const chosenFam = selDefFont ? selDefFont.value : 'Segoe UI';
+        const chosenSize = inpDefSize ? parseInt(inpDefSize.value, 10) : 16;
+        if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.setGlobalDefaultFont === 'function') {
+            window.MasterHeaderFooterEngine.setGlobalDefaultFont(chosenFam, chosenSize);
+        } else {
+            if (chosenFam) localStorage.setItem('opub_default_font_family', chosenFam);
+            if (!isNaN(chosenSize)) localStorage.setItem('opub_default_font_size', String(Math.max(6, Math.min(144, chosenSize))));
+        }
+    }
+
     // 2. Proofing Tab Settings
     const cbSpell = document.getElementById('opt-spellcheck');
     if (cbSpell) {
@@ -939,6 +952,31 @@ window.showOptionsModal = function() {
                         <div class="arrow-box"><i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
                     </div>
                 </div>
+
+                <hr style="${dividerStyle}">
+                <strong style="${sectionHeadingStyle}">Default Font (New Documents &amp; Text Boxes)</strong>
+                ${(() => {
+                    const defFontObj = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.getGlobalDefaultFont === 'function')
+                        ? window.MasterHeaderFooterEngine.getGlobalDefaultFont()
+                        : { family: localStorage.getItem('opub_default_font_family') || 'Segoe UI', size: parseInt(localStorage.getItem('opub_default_font_size'), 10) || 16 };
+                    const fonts = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.getAvailableFontsList === 'function')
+                        ? window.MasterHeaderFooterEngine.getAvailableFontsList()
+                        : (typeof fontList !== 'undefined' && Array.isArray(fontList) && fontList.length ? fontList : ['Segoe UI', 'Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Tahoma', 'Courier New', 'Trebuchet MS', 'Montserrat', 'Open Sans', 'Roboto', 'Playfair Display', 'Merriweather']);
+                    const allFonts = Array.from(new Set([defFontObj.family, ...fonts].filter(Boolean)));
+                    const optsHtml = allFonts.map(f => `<option value="${_optEscapeHtml(f)}" ${f === defFontObj.family ? 'selected' : ''}>${_optEscapeHtml(f)}</option>`).join('');
+                    return `
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="width: 100px; flex-shrink: 0;">Font Family:</span>
+                            <select id="opt-default-font" class="no-custom-select" style="padding: 5px 8px; border: 1px solid var(--ui-border, #ccc); border-radius: 4px; width: 220px; background: var(--ui-panel-bg, #fff); color: var(--ui-text, #222); font-size: 13px;">${optsHtml}</select>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 100px; flex-shrink: 0;">Font Size:</span>
+                            <input type="number" id="opt-default-font-size" min="6" max="144" value="${defFontObj.size}" style="padding: 5px 8px; border: 1px solid var(--ui-border, #ccc); border-radius: 4px; width: 84px; background: var(--ui-panel-bg, #fff); color: var(--ui-text, #222); font-size: 13px;">
+                            <span style="font-size: 12px; opacity: 0.75;">px</span>
+                        </div>
+                        <p style="${subtextStyle}">Saved locally and applied automatically to newly created documents and new text boxes unless overridden by a Page Design Font Scheme.</p>
+                    `;
+                })()}
             `;
         } else if (tab === 'Proofing') {
             tabContent = `

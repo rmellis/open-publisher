@@ -605,6 +605,9 @@ function pasteEl() {
 
 function deleteSelected() { 
     if(state.selectedEl) { 
+        if (state.selectedEl.getAttribute('data-hf-locked') === 'true' || state.selectedEl.classList.contains('op-hf-box')) {
+            return;
+        }
         state.selectedEl.remove(); 
         state.selectedEl=null; 
         updateThumbnails();
@@ -665,61 +668,34 @@ function forceRepaint() {
 // Double Click Edit
 document.addEventListener('dblclick', (e) => {
     const el = e.target.closest('.pub-element');
+    const hfBoxTarget = e.target.closest('.op-hf-box, .page-header, .page-footer');
 
-    // --- Master Page Quick Toggle (Headers/Footers) ---
-    if (!el && e.target.closest('#paper')) {
+    // --- Direct Master Page Entry (Headers/Footers, zero confirmation dialog) ---
+    if (!el && (hfBoxTarget || e.target.closest('#paper'))) {
         const paper = document.getElementById('paper');
         if (paper) {
             const rect = paper.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+            const inPaper = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+            if (hfBoxTarget || inPaper) {
                 const relativeY = e.clientY - rect.top;
                 const unscaledY = relativeY / (state.zoom || 1);
                 const paperHeight = parseFloat(paper.style.height) || 1123;
-                
-                // If clicked within top 100px or bottom 100px
-                if (unscaledY <= 100 || unscaledY >= paperHeight - 100) {
-                    // Check if an action is required to edit headers
-                    if (!state.hasMasterPage || state.currentPageIndex !== 0 || !state.headersVisible) {
-                        if (typeof DialogSystem !== 'undefined') {
-                            DialogSystem.show(
-                                'Edit Header/Footer', 
-                                '<p>You double-clicked the header/footer area. Would you like to jump to the Master Page to edit the template for all pages?</p>', 
-                                () => {
-                                    if (!state.hasMasterPage) {
-                                        if (typeof addMasterPage === 'function') addMasterPage();
-                                    } else if (state.currentPageIndex !== 0) {
-                                        if (typeof switchPage === 'function') switchPage(0);
-                                    }
-                                    
-                                    if (!state.headersVisible && typeof toggleHeaderFooter === 'function') {
-                                        toggleHeaderFooter(true);
-                                    }
-                                    
-                                    setTimeout(() => {
-                                        const currentPaper = document.getElementById('paper');
-                                        if (!currentPaper) return;
-                                        const targetClass = unscaledY <= 100 ? '.page-header' : '.page-footer';
-                                        const elToFocus = currentPaper.querySelector(targetClass);
-                                        if (elToFocus) {
-                                            elToFocus.focus();
-                                            // Place cursor at end
-                                            if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
-                                                const range = document.createRange();
-                                                range.selectNodeContents(elToFocus);
-                                                range.collapse(false);
-                                                const sel = window.getSelection();
-                                                sel.removeAllRanges();
-                                                sel.addRange(range);
-                                            }
-                                        }
-                                    }, 50);
-                                }
-                            );
+
+                // If clicked within visible header/footer box or top/bottom 100px margin zone
+                if (hfBoxTarget || unscaledY <= 100 || unscaledY >= paperHeight - 100) {
+                    const editingMaster = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.isEditingMasterPage === 'function')
+                        ? window.MasterHeaderFooterEngine.isEditingMasterPage()
+                        : !!(state.hasMasterPage && state.currentPageIndex === 0);
+                    if (!editingMaster) {
+                        const targetRole = ((hfBoxTarget && hfBoxTarget.classList.contains('page-footer')) || unscaledY >= paperHeight - 100)
+                            ? 'footer'
+                            : 'header';
+                        if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.enterMasterPageMode === 'function') {
+                            window.MasterHeaderFooterEngine.enterMasterPageMode(targetRole);
                         }
                     }
-                    // If we were already on the master page and headers were visible,
-                    // do not interfere so native double-click text selection works natively.
-                    return; // Prevent other double click handlers
+                    // If already editing the Master Page, leave native double/triple-click selection untouched
+                    return;
                 }
             }
         }

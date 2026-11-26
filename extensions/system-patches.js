@@ -243,14 +243,21 @@ if (!window._sliderFillListenerInstalled) {
             const el = els[0];
             const selectedOverlays = container.querySelectorAll(':scope > .selected-overlay');
             const existing = selectedOverlays.length === 1 ? selectedOverlays[0] : null;
+            const isHfLocked = el.getAttribute('data-hf-locked') === 'true' || el.classList.contains('op-hf-box');
             if (existing && existing._boundEl === el && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 existing.classList.toggle('is-transforming', isTransforming);
-                existing.classList.toggle('is-locked', el.getAttribute('data-locked') === 'true');
+                existing.classList.toggle('is-locked', el.getAttribute('data-locked') === 'true' || isHfLocked);
+                existing.classList.toggle('is-hf-locked', isHfLocked);
                 existing.style.left = el.style.left;
                 existing.style.top = el.style.top;
                 existing.style.width = el.style.width;
                 existing.style.height = el.style.height;
                 existing.style.transform = el.style.transform;
+                if (isHfLocked) {
+                    existing.querySelectorAll('.selection-edge-drag, .resize-handle, .rotate-stick, .rotate-handle, .element-quick-actions, .op-floating-css-color-pill').forEach(n => n.remove());
+                    container.style.display = 'block';
+                    return;
+                }
                 if (!existing.querySelector('.selection-edge-drag')) {
                     ['n', 's', 'w', 'e'].forEach(side => {
                         const edge = document.createElement('div');
@@ -348,14 +355,20 @@ if (!window._sliderFillListenerInstalled) {
             box.className = 'selection-border-box';
             overlay.appendChild(box);
 
-            ['n', 's', 'w', 'e'].forEach(side => {
-                const edge = document.createElement('div');
-                edge.className = `selection-edge-drag openpublisher-movable sed-${side}`;
-                edge.dataset.edge = side;
-                overlay.appendChild(edge);
-            });
+            const isHfLocked = el.getAttribute('data-hf-locked') === 'true' || el.classList.contains('op-hf-box');
+            overlay.classList.toggle('is-locked', el.getAttribute('data-locked') === 'true' || isHfLocked);
+            overlay.classList.toggle('is-hf-locked', isHfLocked);
 
-            if (!el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
+            if (!isHfLocked) {
+                ['n', 's', 'w', 'e'].forEach(side => {
+                    const edge = document.createElement('div');
+                    edge.className = `selection-edge-drag openpublisher-movable sed-${side}`;
+                    edge.dataset.edge = side;
+                    overlay.appendChild(edge);
+                });
+            }
+
+            if (!isHfLocked && !el.classList.contains('editing-shape') && !el.classList.contains('cropping')) {
                 const basis = window.getElementTransformBasis(el);
                 const rotDeg = Math.round(basis.rotRad * (180 / Math.PI));
                 const dirs = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -1987,6 +2000,9 @@ window.decryptDocumentData = async function(encryptedObj, password) {
             isTemplate: isTemplate,
             hasMasterPage: state.hasMasterPage || false,
             headersVisible: state.headersVisible || false,
+            showHeaderFooterOnFirstPage: state.showHeaderFooterOnFirstPage !== false,
+            pageNumberFormat: state.pageNumberFormat || 'page-n-of-total',
+            fontScheme: state.fontScheme ? JSON.parse(JSON.stringify(state.fontScheme)) : null,
             isSpreadMode: state.isSpreadMode || false,
             rulerOriginX: state.rulerOriginX || 0,
             rulerOriginY: state.rulerOriginY || 0,

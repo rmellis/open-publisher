@@ -11,6 +11,9 @@ function pushHistory() {
         isSpreadMode: state.isSpreadMode,
         hasMasterPage: !!state.hasMasterPage,
         headersVisible: !!state.headersVisible,
+        showHeaderFooterOnFirstPage: state.showHeaderFooterOnFirstPage !== false,
+        pageNumberFormat: state.pageNumberFormat || 'page-n-of-total',
+        fontScheme: state.fontScheme ? state.fontScheme : null,
         watermark: state.watermark ? state.watermark : null
     }));
 
@@ -66,6 +69,10 @@ function restoreSnapshot(snap) {
         state.headersVisible = false;
     }
 
+    state.showHeaderFooterOnFirstPage = (typeof snap.showHeaderFooterOnFirstPage === 'boolean') ? snap.showHeaderFooterOnFirstPage : true;
+    state.pageNumberFormat = snap.pageNumberFormat || 'page-n-of-total';
+    state.fontScheme = (snap.fontScheme && snap.fontScheme.bodyFont) ? JSON.parse(JSON.stringify(snap.fontScheme)) : null;
+
     if (typeof toggleHeaderFooter === 'function') {
         toggleHeaderFooter(state.headersVisible, true);
     }
@@ -77,6 +84,11 @@ function restoreSnapshot(snap) {
     }
     
     renderPage(state.pages[state.currentPageIndex]);
+    if (window.MasterHeaderFooterEngine) {
+        if (typeof window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI === 'function') window.MasterHeaderFooterEngine.syncFontSchemeRibbonUI();
+        if (typeof window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState === 'function') window.MasterHeaderFooterEngine.syncHeaderFooterRibbonState();
+        if (typeof window.MasterHeaderFooterEngine.syncDefaultToolbarLabels === 'function') window.MasterHeaderFooterEngine.syncDefaultToolbarLabels();
+    }
     if (typeof updateSidebar === 'function') updateSidebar();
     if (typeof window.syncLastSavedHistory === 'function') window.syncLastSavedHistory();
     setTimeout(() => { if (typeof generateAllThumbnails === 'function') generateAllThumbnails(); }, 300);
@@ -92,6 +104,13 @@ function serializeCurrentPage() {
     const curH = paper.style.height || '1123px';
     const isLand = parseFloat(curW) >= parseFloat(curH);
     
+    const serializedHf = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.serializeHeaderFooterFromPaper === 'function')
+        ? window.MasterHeaderFooterEngine.serializeHeaderFooterFromPaper(paper, existingPage)
+        : {
+            header: paper.querySelector('.page-header') ? paper.querySelector('.page-header').innerHTML : (existingPage.header || ''),
+            footer: paper.querySelector('.page-footer') ? paper.querySelector('.page-footer').innerHTML : (existingPage.footer || '')
+        };
+
     const p = {
         id: existingPage.id || Date.now(),
         orientation: isLand ? 'landscape' : 'portrait',
@@ -104,8 +123,8 @@ function serializeCurrentPage() {
         dpi: existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
         format: existingPage.format || (typeof state !== 'undefined' && state.format) || (window.UnitConversionService ? window.UnitConversionService.detectFormat(parseFloat(curW), parseFloat(curH), existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96)) : 'A4'),
         background: paper.style.background || 'white',
-        header: paper.querySelector('.page-header').innerHTML,
-        footer: paper.querySelector('.page-footer').innerHTML,
+        header: serializedHf.header,
+        footer: serializedHf.footer,
         borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',
         themeSettings: (paper.getAttribute('data-theme-saved') === 'true') ? {
             saved: true,
@@ -194,6 +213,7 @@ function serializeCurrentPage() {
                 attr.name === 'data-is-border' ||
                 attr.name === 'data-aspect-lock' || 
                 attr.name === 'data-aspect-ratio' ||
+                attr.name === 'data-pn-format' ||
                 attr.name === 'data-rounded-corners' ||
                 attr.name === 'data-next-box' ||
                 attr.name === 'data-prev-box' ||

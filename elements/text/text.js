@@ -668,7 +668,9 @@ function selectFont(fontName) {
 
     // Execute
     if (state.selectedEl) {
-        if (window.VariableFontsEngine) {
+        if (state.selectedEl.classList && state.selectedEl.classList.contains('op-hf-box')) {
+            execCmd('fontName', fontName);
+        } else if (window.VariableFontsEngine) {
             if (window.VariableFontsEngine.isVariableFont(fontName)) {
                 const def = window.VariableFontsEngine.getFontDef(fontName);
                 const defAxes = {};
@@ -953,11 +955,14 @@ function setTrueFontSize(val) {
 
             const activeEl = document.activeElement;
             const activeIsControl = !!(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT'));
-            const content = state.selectedEl.querySelector('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]') || state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content');
+            const isHfBox = !!(state.selectedEl.classList && state.selectedEl.classList.contains('op-hf-box'));
+            const content = (isHfBox && window.MasterHeaderFooterEngine)
+                ? window.MasterHeaderFooterEngine.getActiveHfEditable(state.selectedEl)
+                : (state.selectedEl.querySelector('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]') || state.selectedEl.querySelector('.element-content > div') || state.selectedEl.querySelector('.element-content'));
             if (content) {
                 if (typeof pushHistory === 'function') pushHistory(true);
                 const wasCollapsed = !targetRange || targetRange.collapsed;
-                const isLinkedChain = !!(state.selectedEl.getAttribute && (state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box')));
+                const isLinkedChain = !isHfBox && !!(state.selectedEl.getAttribute && (state.selectedEl.getAttribute('data-next-box') || state.selectedEl.getAttribute('data-prev-box')));
                 if (wasCollapsed && isLinkedChain && typeof window.applyToLinkedTextBoxChain === 'function') {
                     window.applyToLinkedTextBoxChain(state.selectedEl, (box, boxContent) => {
                         applyPureFontSizeToEditable(boxContent, null, val, true);
@@ -977,6 +982,9 @@ function setTrueFontSize(val) {
                     } else if (wasCollapsed && !activeIsControl && sel) {
                         sel.removeAllRanges();
                     }
+                }
+                if (isHfBox && window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncMasterHeaderFooterToState === 'function') {
+                    window.MasterHeaderFooterEngine.syncMasterHeaderFooterToState();
                 }
             }
         }
@@ -1033,7 +1041,16 @@ function addTextBox() {
     
     const schemes = (typeof colorSchemes !== 'undefined') ? colorSchemes : (window.colorSchemes || {});
     const initialColor = (state.currentScheme && schemes[state.currentScheme] && schemes[state.currentScheme][0]) || '#000000';
-    const el = createWrapper(`<div style="color:${initialColor}; padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif;${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
+    const typo = (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.getEffectiveDocumentTypography === 'function')
+        ? window.MasterHeaderFooterEngine.getEffectiveDocumentTypography()
+        : null;
+    const initialFont = (typo && window.MasterHeaderFooterEngine)
+        ? window.MasterHeaderFooterEngine.buildFontStack(typo.bodyFont)
+        : "'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Amiri', sans-serif";
+    const initialSizeStyle = (typo && typo.fontSize && typo.source === 'global')
+        ? ` font-size:${typo.fontSize}px;`
+        : '';
+    const el = createWrapper(`<div style="color:${initialColor}; padding:10px; height:100%; word-wrap:break-word; outline:none; font-family: ${initialFont};${initialSizeStyle}${hyphenStyle}${dirStyle}" contenteditable="true"${spellAttrs}${dirAttr}>Click to edit text</div>`); 
     el.setAttribute('data-type', 'text');
     el.setAttribute('data-scheme-text', '0');
     el.setAttribute('data-text-direction', defaultDir);
@@ -1374,6 +1391,18 @@ window.syncTextColorIndicatorsFromElement = function(el) {
 };
 
 function execCmd(cmd, val) { 
+    const isHfTarget = !!(
+        (state.selectedEl && state.selectedEl.classList && (state.selectedEl.classList.contains('op-hf-box') || state.selectedEl.getAttribute('data-hf-locked') === 'true')) ||
+        (document.activeElement && document.activeElement.closest && document.activeElement.closest('.op-hf-box'))
+    );
+    if (isHfTarget && window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.applyExecCommandToHeaderFooter === 'function') {
+        const hfCmds = ['justifyLeft', 'justifyCenter', 'justifyRight', 'foreColor', 'fontName', 'bold', 'italic', 'underline', 'strikeThrough'];
+        if (hfCmds.includes(cmd)) {
+            if (window.MasterHeaderFooterEngine.applyExecCommandToHeaderFooter(cmd, val)) {
+                return;
+            }
+        }
+    }
     if (cmd === 'foreColor' && val) {
         if (typeof window.syncTextColorIndicators === 'function') {
             window.syncTextColorIndicators(val);
@@ -1630,9 +1659,11 @@ window.syncFormatButtonHighlights = function(customNode) {
                 }
             }
         } else if (state.selectedEl && state.selectedEl.nodeType === 1) {
-            const editable = state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
-                             state.selectedEl.querySelector('.element-content > div') ||
-                             state.selectedEl;
+            const editable = (state.selectedEl.classList.contains('op-hf-box') && window.MasterHeaderFooterEngine)
+                ? window.MasterHeaderFooterEngine.getActiveHfEditable(state.selectedEl)
+                : (state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
+                   state.selectedEl.querySelector('.element-content > div') ||
+                   state.selectedEl);
             const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face], b, strong, i, em, u, s, strike, del, [style*="line-through"]') : null;
             node = styledChild || editable;
         }
@@ -1644,6 +1675,7 @@ window.syncFormatButtonHighlights = function(customNode) {
     let isStrike = false;
 
     const hasTextContext = !!(state.selectedEl && (
+        state.selectedEl.classList.contains('op-hf-box') ||
         state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
         state.selectedEl.getAttribute('contenteditable') === 'true'
     ));
@@ -1733,9 +1765,11 @@ function updateFloatToolbarValues() {
             }
         }
     } else if (state.selectedEl && state.selectedEl.nodeType === 1) {
-        const editable = state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
-                         state.selectedEl.querySelector('.element-content > div') ||
-                         state.selectedEl;
+        const editable = (state.selectedEl.classList.contains('op-hf-box') && window.MasterHeaderFooterEngine)
+            ? window.MasterHeaderFooterEngine.getActiveHfEditable(state.selectedEl)
+            : (state.selectedEl.querySelector('[contenteditable="true"], .wa-text') ||
+               state.selectedEl.querySelector('.element-content > div') ||
+               state.selectedEl);
         const styledChild = editable ? editable.querySelector('[style*="font-family"], font[face], b, strong, i, em, u, s, strike, del, [style*="line-through"]') : null;
         node = styledChild || editable;
     }

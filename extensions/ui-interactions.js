@@ -1,4 +1,4 @@
-// Open Publisher UI Interactions (v5.24.8)
+// Open Publisher UI Interactions (v5.24.9)
 (function installRulerTrackingEngine() {
     console.log("🛠️ Ruler Tracking Engine initializing (Selection & Cursor Indicators v5.19.1)...");
 
@@ -766,6 +766,9 @@
                                    e.target.closest('.custom-dialog') ||
                                    e.target.closest('.op-ref-modal-window') ||
                                    e.target.closest('.op-ref-help-box') ||
+                                   e.target.closest('#master-page-edit-bar') ||
+                                   e.target.closest('#font-scheme-dropdown') ||
+                                   e.target.closest('#op-hf-hover-pill') ||
                                    e.target.closest('input, textarea, select');
 
             if (!clickedToolbar) {
@@ -961,7 +964,7 @@
             aboutGroup.id = 'about-btn-group';
             aboutGroup.className = 'group';
             aboutGroup.innerHTML = `
-                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.24.8" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
+                <div class="tool-btn" onclick="window.showKnowledgeBase()"><img src="ui/icons/kb.webp?v=5.24.9" style="width:22px; height:22px; object-fit:contain; pointer-events:none; margin-bottom: 0px; filter: hue-rotate(var(--ui-theme-hue-shift, 0deg)) grayscale(var(--ui-theme-grayscale, 0%));">Knowledge<br>Base</div>
                 <div class="tool-btn" onclick="window.showAboutDialog()"><i class="fas fa-info-circle"></i>About</div>
                 <div class="group-label">Help</div>
             `;
@@ -1283,7 +1286,7 @@
             <div class="about-container">
                 <div class="about-header">
                     <div class="about-title"><i class="v5-logo-icon"></i> Open Publisher</div>
-                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.24.8</div>
+                    <div class="about-subtitle">Free Online Desktop Publishing Tool • v5.24.9</div>
                 </div>
                 
                 <div class="about-desc">
@@ -1293,7 +1296,7 @@
                     <br><br>
                     <div class="about-action-btns" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
                         <a href="#" onclick="window.showKnowledgeBase(); return false;" class="about-action-btn about-kb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--ui-theme-color); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                            <img src="ui/icons/kb.webp?v=5.24.8" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
+                            <img src="ui/icons/kb.webp?v=5.24.9" style="width:16px; height:16px; object-fit:contain; filter: brightness(0) invert(1);"> Open Knowledge Base
                         </a>
                         <a href="https://www.facebook.com/people/OpenPublisher-Free-Desktop-Publishing/61595980781121/" target="_blank" rel="noopener noreferrer" class="about-action-btn about-fb-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #1877F2; color: #fff; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 13px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             <i class="fab fa-facebook" style="font-size: 15px;"></i> Facebook Page
@@ -2991,6 +2994,11 @@
             if (!overlay || !el || !el.isConnected || (typeof state !== 'undefined' && state.cropMode)) {
                 return;
             }
+            if (el.getAttribute('data-hf-locked') === 'true' || (el.classList && (el.classList.contains('op-hf-box') || el.classList.contains('page-header') || el.classList.contains('page-footer')))) {
+                overlay.querySelectorAll('.op-floating-css-color-pill').forEach(p => p.remove());
+                this.hideFloatingPill();
+                return;
+            }
             const dtype = el.getAttribute('data-type') || '';
             if (['smart-arrow', 'wordart', 'beta-wordart', 'emoji'].includes(dtype) || el.querySelector('svg.smart-arrow-svg, .wa-wrapper, .wa-text')) {
                 return;
@@ -3126,6 +3134,10 @@
         // Trigger floating pill update or delegate to active selection overlay
         refreshFloatingPill: function(el, preScanned) {
             if (!el || !el.isConnected) return;
+            if (el.getAttribute('data-hf-locked') === 'true' || (el.classList && (el.classList.contains('op-hf-box') || el.classList.contains('page-header') || el.classList.contains('page-footer')))) {
+                this.hideFloatingPill();
+                return;
+            }
             const overlay = document.querySelector('.selected-overlay');
             if (overlay && overlay._boundEl === el) {
                 this.renderFloatingPill(overlay, el, preScanned);

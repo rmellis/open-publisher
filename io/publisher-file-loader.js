@@ -281,9 +281,13 @@
         }
         
         state.pages = data.pages;
-        state.currentPageIndex = 0;
         state.hasMasterPage = data.hasMasterPage || false;
         state.headersVisible = typeof data.headersVisible === 'boolean' ? data.headersVisible : (state.hasMasterPage || false);
+        const initialPageIdx = (state.hasMasterPage && Array.isArray(state.pages) && state.pages.length > 1) ? 1 : 0;
+        state.currentPageIndex = initialPageIdx;
+        if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.migrateLoadedDocument === 'function') {
+            window.MasterHeaderFooterEngine.migrateLoadedDocument(data);
+        }
         state.rulerOriginX = data.rulerOriginX || 0;
         state.rulerOriginY = data.rulerOriginY || 0;
         state.dpi = data.dpi || (data.pages && data.pages[0] && data.pages[0].dpi) || 96;
@@ -434,9 +438,10 @@
                 .catch(() => {});
         }
         
-        // Render the page onto canvas paper
-        if (typeof renderPage === 'function' && state.pages[0]) {
-            renderPage(state.pages[0]);
+        // Render the initial page onto canvas paper (Page 1 when Master Page exists)
+        const activeStartIdx = (typeof state.currentPageIndex === 'number' && state.pages[state.currentPageIndex]) ? state.currentPageIndex : 0;
+        if (typeof renderPage === 'function' && state.pages[activeStartIdx]) {
+            renderPage(state.pages[activeStartIdx]);
         }
         if (window._pourAnimationCleanupTimer) {
             clearTimeout(window._pourAnimationCleanupTimer);
@@ -445,10 +450,10 @@
         window._isPourAnimating = false;
         const activePaperEl = paperEl || document.getElementById('paper');
         const pourCleanup = window.clearWrapperPourArtifacts(activePaperEl);
-        console.info('[OP-ColdStart] applyDocumentToState rendered page 0', {
+        console.info('[OP-ColdStart] applyDocumentToState rendered page ' + activeStartIdx, {
             loadSeq,
             pages: state.pages.length,
-            expectedElements: state.pages[0] && state.pages[0].elements ? state.pages[0].elements.length : 0,
+            expectedElements: state.pages[activeStartIdx] && state.pages[activeStartIdx].elements ? state.pages[activeStartIdx].elements.length : 0,
             mountedElements: activePaperEl ? activePaperEl.querySelectorAll('.pub-element').length : 0,
             pourCleanup
         });
@@ -456,7 +461,7 @@
         if (typeof window.updateDpiDisplay === 'function') window.updateDpiDisplay(state.dpi);
         if (state.format && typeof window.setPageFormatIcon === 'function') window.setPageFormatIcon(state.format);
         if (typeof window.focusPage === 'function') {
-            window.focusPage(0);
+            window.focusPage(activeStartIdx);
         }
         if (typeof window.syncMarginGuideOverlay === 'function') {
             window.syncMarginGuideOverlay();

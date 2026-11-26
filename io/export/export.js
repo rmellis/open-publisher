@@ -91,6 +91,7 @@ window.exportAsHTML = async function(opts = {}) {
         let pagesHTML = '';
         
         for (let i = 0; i < state.pages.length; i++) {
+            if (state.hasMasterPage && state.pages.length > 1 && i === 0) continue;
             setStatus(`Rendering page ${i + 1} of ${state.pages.length}...`, 30 + Math.round((i / state.pages.length) * 50));
             await new Promise(r => setTimeout(r, 20));
             
@@ -215,7 +216,14 @@ window.exportAsHTML = async function(opts = {}) {
                     pageWrapper.appendChild(elDiv);
                 }
             }
-            if (state.headersVisible) {
+            if (window.MasterHeaderFooterEngine) {
+                const metrics = window.MasterHeaderFooterEngine.getDocumentPageMetrics(i);
+                const hfHtml = window.MasterHeaderFooterEngine.buildExportHeaderFooterHtml(page, i, metrics.docPageNum, metrics.totalDocPages);
+                if (hfHtml) {
+                    pageWrapper.insertAdjacentHTML('beforeend', hfHtml);
+                }
+                window.MasterHeaderFooterEngine.resolvePageNumberTokensInContainer(pageWrapper, metrics.docPageNum, metrics.totalDocPages);
+            } else if (state.headersVisible) {
                 if (renderHeader) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-header visible" style="pointer-events:none; z-index:0; position:absolute; top:0; left:0; width:100%; font-family:inherit;">${renderHeader}</div>`);
                 if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0; position:absolute; bottom:0; left:0; width:100%; font-family:inherit;">${renderFooter}</div>`);
             }
@@ -223,7 +231,7 @@ window.exportAsHTML = async function(opts = {}) {
             printSpooler.appendChild(pageWrapper);
 
             // Strip interactive editor badges/handles that should never appear in HTML or email exports
-            pageWrapper.querySelectorAll('.op-toc-update-badge, .no-print, .pb-drag-handle, #pb-float-toolbar, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay').forEach(el => el.remove());
+            pageWrapper.querySelectorAll('.op-toc-update-badge, .no-print, .pb-drag-handle, #pb-float-toolbar, .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .selection-box, .element-quick-actions, .emoji-skin-tone-actions, #selection-overlay-container, .selected-overlay, .op-hf-hover-pill, .op-master-edit-bar').forEach(el => el.remove());
             
             // --- Inline Computed Styles ---
             // For Tables and WordArt, we extract the exact styles calculated by the browser

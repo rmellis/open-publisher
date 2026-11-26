@@ -307,6 +307,9 @@ document.addEventListener('keydown', (e) => {
 
         // Only delete if not editing text (supports Delete and Mac Backspace)
         if ((e.key === 'Delete' || e.key === 'Backspace') && !isTextEditing()) {
+            if (typeof state !== 'undefined' && state.selectedEl && (state.selectedEl.getAttribute('data-hf-locked') === 'true' || state.selectedEl.classList.contains('op-hf-box'))) {
+                return;
+            }
             e.preventDefault();
             deleteSelected();
         }

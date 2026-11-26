@@ -476,7 +476,7 @@ window.handleMouseDown = function(e) {
         const activeEl = document.activeElement, isEditingText = (activeEl && el.contains(activeEl) && activeEl.isContentEditable) || hasEditableText;
 
         if (e.detail <= 1 && (nearEdge || !isEditingText)) {
-            if (el.getAttribute('data-locked') === 'true') {
+            if (el.getAttribute('data-locked') === 'true' || el.getAttribute('data-hf-locked') === 'true' || el.classList.contains('op-hf-box')) {
                 if(!isEditingText) e.preventDefault();
                 return;
             }
