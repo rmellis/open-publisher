@@ -519,16 +519,16 @@ body.dark-mode .dashboard-template-preview {
     position: absolute;
     bottom: 5px;
     left: 5px;
-    background: rgba(15, 23, 42, 0.82);
+    background: rgba(13, 158, 143, 0.72);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    color: #ffffff;
+    color: white;
     font-size: 10px;
-    padding: 2px 7px;
+    padding: 2px 6px;
     border-radius: 12px;
-    font-weight: 700;
+    font-weight: bold;
     pointer-events: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.22);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .dashboard-template-link-btn {

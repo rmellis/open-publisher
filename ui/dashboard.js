@@ -291,12 +291,13 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.12');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.13');
         fetch(url)
             .then(res => res.json())
             .then(data => {
                 this.templateData = data;
                 this.renderFeatured();
+                this.renderMultiPageTemplates();
                 this.renderCategoriesRows();
                 this.populateCategoriesNav();
             })
@@ -387,7 +388,7 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.24.12`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.24.13`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -423,7 +424,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.12`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.13`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -458,7 +459,7 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.12`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.13`);
 
         fetch(fileUrl)
             .then(res => res.json())
@@ -590,6 +591,23 @@ window.DashboardSystem = {
         });
     },
     
+    sortPortraitBeforeLandscape: function(templates) {
+        if (!Array.isArray(templates)) return [];
+        const portraitOrSquare = [];
+        const landscape = [];
+        templates.forEach(t => {
+            if (!t) return;
+            const w = Number(t.width) || 794;
+            const h = Number(t.height) || 1123;
+            if (w > h) {
+                landscape.push(t);
+            } else {
+                portraitOrSquare.push(t);
+            }
+        });
+        return portraitOrSquare.concat(landscape);
+    },
+
     renderFeatured: function() {
         const featuredContainer = document.getElementById('dashboard-featured-grid');
         if (!featuredContainer || !this.templateData) return;
@@ -597,16 +615,6 @@ window.DashboardSystem = {
 
         // Curated hand-picked featured templates: the best of the premium collection
         const featured = [
-            { name: 'Community & Club Newsletter',            file: 'newsletters_community_club_multipage.opub',    category: 'Newsletters' },
-            { name: 'Annual Business & Impact Report',        file: 'reports_annual_business_impact_multipage.opub',category: 'Reports' },
-            { name: 'School Magazine & Yearbook Digest',      file: 'magazines_school_yearbook_digest_multipage.opub', category: 'Magazines' },
-            { name: 'Product Catalog & Price Guide',          file: 'brochures_product_catalog_price_guide_multipage.opub', category: 'Brochures' },
-            { name: 'Conference & Event Program Booklet',     file: 'brochures_conference_event_program_multipage.opub', category: 'Brochures' },
-            { name: 'Client Project Proposal & Pitch Deck',   file: 'reports_client_project_proposal_deck_multipage.opub', category: 'Reports' },
-            { name: 'Charity Fundraising & Impact Packet',    file: 'flyers_charity_fundraising_impact_multipage.opub', category: 'Flyers' },
-            { name: 'Seasonal Restaurant Menu & Wine List',   file: 'menus_seasonal_restaurant_wine_multipage.opub', category: 'Menus' },
-            { name: 'Employee Onboarding Handbook',           file: 'reports_employee_onboarding_handbook_multipage.opub', category: 'Reports' },
-            { name: 'Property Portfolio & Open House Lookbook', file: 'brochures_property_portfolio_lookbook_multipage.opub', category: 'Brochures' },
             { name: 'Winter Wonderland Workshop',             file: 'flyers_winter_wonderland_workshop.opub', category: 'Flyers' },
             { name: 'Back To School',                         file: 'posters_back_to_school.opub',            category: 'Posters' },
             { name: 'Dear Santa Letter',                      file: 'letterheads_dear_santa.opub',             category: 'Letterheads' },
@@ -629,15 +637,54 @@ window.DashboardSystem = {
             { name: 'Gold Excellence Award',                  file: 'certificates_excellence_gold.opub',       category: 'Certificates' },
         ];
 
-        featured.forEach(item => {
-            // Find full template object from loaded data so card renders correctly
+        const resolved = featured.map(item => {
             const catTemplates = this.templateData[item.category];
             const template = catTemplates
                 ? catTemplates.find(t => t.file === item.file)
                 : null;
-            const t = template || { name: item.name, file: item.file };
+            return template || { name: item.name, file: item.file };
+        });
+
+        this.sortPortraitBeforeLandscape(resolved).forEach(t => {
             featuredContainer.appendChild(this.createTemplateCard(t));
         });
+    },
+
+    renderMultiPageTemplates: function() {
+        const section = document.getElementById('dashboard-multipage-section');
+        const grid = document.getElementById('dashboard-multipage-grid');
+        if (!section || !grid || !this.templateData) return;
+
+        grid.innerHTML = '';
+        const seenFiles = new Set();
+        const multiPageTemplates = [];
+
+        Object.keys(this.templateData).forEach(cat => {
+            const list = this.templateData[cat];
+            if (!Array.isArray(list)) return;
+            list.forEach(t => {
+                if (t && typeof t.pages === 'number' && t.pages > 1 && t.file && !seenFiles.has(t.file)) {
+                    seenFiles.add(t.file);
+                    multiPageTemplates.push(t);
+                }
+            });
+        });
+
+        if (multiPageTemplates.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = '';
+        this.sortPortraitBeforeLandscape(multiPageTemplates).forEach(t => {
+            grid.appendChild(this.createTemplateCard(t));
+        });
+
+        const gridContainer = grid.closest('.dashboard-grid-container');
+        if (gridContainer) {
+            this.setupGridScroll(gridContainer);
+        }
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
     },
 
     
@@ -672,11 +719,12 @@ window.DashboardSystem = {
             const grid = document.createElement('div');
             grid.className = 'dashboard-template-grid';
             
-            // Show up to 10 in the row for better scrolling demo
+            // Show up to 10 in the row for better scrolling demo, with landscape cards grouped at far right
             const max = Math.min(templates.length, 10);
-            for(let i=0; i<max; i++) {
-                grid.appendChild(this.createTemplateCard(templates[i]));
-            }
+            const orderedTemplates = this.sortPortraitBeforeLandscape(templates.slice(0, max));
+            orderedTemplates.forEach(t => {
+                grid.appendChild(this.createTemplateCard(t));
+            });
             
             gridContainer.appendChild(leftBtn);
             gridContainer.appendChild(grid);

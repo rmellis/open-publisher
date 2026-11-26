@@ -1953,7 +1953,7 @@
                         <span role="button" tabindex="0" class="custom-dialog-close" id="op-ref-notice-close-x" title="Close" aria-label="Close"><i class="fas fa-times"></i></span>
                     </div>
                     <div class="op-ref-modal-body" style="padding:18px 20px;font-size:13.5px;line-height:1.5;display:flex;align-items:center;gap:14px;">
-                        <img src="ui/icons/alert.png?v=5.24.12" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
+                        <img src="ui/icons/alert.png?v=5.24.13" alt="Warning" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
                         <div style="flex:1;">${escapeHtml(message)}</div>
                     </div>
                     <div class="op-ref-modal-footer">
