@@ -306,6 +306,15 @@
     ],
     "Flyers": [
         {
+            "name": "Charity Fundraising & Impact Packet",
+            "file": "flyers_charity_fundraising_impact_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 3,
+            "hasMasterPage": true
+        },
+        {
             "name": "Winter Wonderland Workshop",
             "file": "flyers_winter_wonderland_workshop.opub",
             "width": 794,
@@ -574,6 +583,14 @@
     ],
     "Magazines": [
         {
+            "name": "School Magazine & Yearbook Digest",
+            "file": "magazines_school_yearbook_digest_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 4
+        },
+        {
             "name": "Car Wash",
             "file": "magazines_car_wash.opub",
             "width": 794,
@@ -701,6 +718,31 @@
         }
     ],
     "Brochures": [
+        {
+            "name": "Property Portfolio & Open House Lookbook",
+            "file": "brochures_property_portfolio_lookbook_multipage.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4",
+            "pages": 3,
+            "hasMasterPage": true
+        },
+        {
+            "name": "Product Catalog & Price Guide",
+            "file": "brochures_product_catalog_price_guide_multipage.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4",
+            "pages": 4
+        },
+        {
+            "name": "Conference & Event Program Booklet",
+            "file": "brochures_conference_event_program_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 4
+        },
         {
             "name": "Nature",
             "file": "brochures_nature.opub",
@@ -1020,6 +1062,15 @@
         }
     ],
     "Menus": [
+        {
+            "name": "Seasonal Restaurant Menu & Wine List",
+            "file": "menus_seasonal_restaurant_wine_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 3,
+            "hasMasterPage": true
+        },
         {
             "name": "Chalkboard Menu",
             "file": "menus_chalkboard_menu.opub",
@@ -1411,6 +1462,14 @@
         }
     ],
     "Newsletters": [
+        {
+            "name": "Community & Club Newsletter",
+            "file": "newsletters_community_club_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 4
+        },
         {
             "name": "Corporate Legal Briefing",
             "file": "newsletters_legal.opub",
@@ -2049,6 +2108,31 @@
         }
     ],
     "Reports": [
+        {
+            "name": "Annual Business & Impact Report",
+            "file": "reports_annual_business_impact_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 4
+        },
+        {
+            "name": "Client Project Proposal & Pitch Deck",
+            "file": "reports_client_project_proposal_deck_multipage.opub",
+            "width": 1123,
+            "height": 794,
+            "format": "A4",
+            "pages": 4
+        },
+        {
+            "name": "Employee Onboarding Handbook",
+            "file": "reports_employee_onboarding_handbook_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 4,
+            "hasMasterPage": true
+        },
         {
             "name": "Annual Report Cover",
             "file": "reports_annual_report_cover.opub",

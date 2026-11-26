@@ -271,7 +271,7 @@ function initAds() {
 
 window.getTemplateAssetUrl = function(path) {
     if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return path;
-    return `${path}?v=5.24.11`;
+    return `${path}?v=5.24.12`;
 };
 
 function initTemplates() {
@@ -397,11 +397,19 @@ function initTemplates() {
             fetch(window.getTemplateAssetUrl(`elements/templates/files/${t.file}`))
                 .then(res => res.json())
                 .then(opubData => {
-                    const page = opubData.pages[0];
+                    const page = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getPreviewPage === 'function')
+                        ? window.OpenPublisherMultiPageTemplates.getPreviewPage(opubData)
+                        : ((opubData.hasMasterPage && Array.isArray(opubData.pages) && opubData.pages.length > 1) ? opubData.pages[1] : opubData.pages[0]);
+                    const docPageCount = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getDocumentPageCount === 'function')
+                        ? window.OpenPublisherMultiPageTemplates.getDocumentPageCount(opubData, t)
+                        : (Array.isArray(opubData.pages) ? Math.max(1, opubData.pages.length - (opubData.hasMasterPage ? 1 : 0)) : 1);
                     let previewHTML = '';
-                    page.elements.forEach(el => {
-                        previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
-                    });
+                    if (page && Array.isArray(page.elements)) {
+                        page.elements.forEach(el => {
+                            const inner = el.innerHTML || (el.imgSrc ? `<img src="${el.imgSrc}" style="width:100%;height:100%;object-fit:${(el.imgStyle && el.imgStyle.objectFit) || el.objectFit || 'contain'};display:block;">` : '');
+                            previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${inner}</div>`;
+                        });
+                    }
                     
                     // Parse width/height if available to scale correctly
                     const w = parseInt(page.width) || 794;
@@ -424,8 +432,9 @@ function initTemplates() {
                             ${previewHTML}
                         </div>
                     `;
+                    const pagesBadge = docPageCount > 1 ? `<div style="position:absolute; bottom:5px; left:5px; z-index:999; background:rgba(15,23,42,0.82); color:#fff; font-size:9px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:2px 6px; border-radius:20px; pointer-events:none; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.22); backdrop-filter:blur(3px);">${docPageCount}P</div>` : '';
                     const sizeBadge = `<div style="position:absolute; bottom:5px; right:5px; z-index:999; background:rgba(13,158,143,0.72); color:#fff; font-size:10px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:3px 8px; border-radius:20px; pointer-events:none; letter-spacing:0.5px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.2); backdrop-filter:blur(3px);">${sizeLabel}</div>`;
-                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}${sizeBadge}<button type="button" class="tp-link-btn" title="Copy static link" aria-label="Copy static link to ${t.name}"><i class="fas fa-link"></i></button></div><div style="margin-top:10px;">${t.name}</div>`;
+                    div.innerHTML = `<div class="template-preview" style="position:relative; width:100px; height:${h*scale}px; overflow:hidden; background:#eee;">${content}${pagesBadge}${sizeBadge}<button type="button" class="tp-link-btn" title="Copy static link" aria-label="Copy static link to ${t.name}"><i class="fas fa-link"></i></button></div><div style="margin-top:10px;">${t.name}</div>`;
                     const linkBtn = div.querySelector('.tp-link-btn');
                     if (linkBtn) {
                         linkBtn.onclick = (ev) => {
@@ -449,6 +458,10 @@ function initTemplates() {
 // --- MULTI-PAGE TEMPLATE INSERTION & LOAD ENGINE (v5.17.1) ---
 function loadTemplate(opubData) {
     const doWipeAndLoad = () => {
+        if (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.applyMultiPageTemplateToState === 'function') {
+            window.OpenPublisherMultiPageTemplates.applyMultiPageTemplateToState(opubData);
+            return;
+        }
         state.pages = []; // Wipe document
         if (typeof window.resetDocumentWatermark === 'function') window.resetDocumentWatermark(); else delete state.watermark;
         state.history = [];
@@ -609,8 +622,11 @@ window.insertTemplateToPage = function(opubData, options = {}) {
     const action = options.action || 'after'; // 'after', 'before', 'end', 'replace', 'append'
     const sizeMode = options.sizeMode || 'template'; // 'template' or 'document'
 
-    // Deep clone the template page
-    const templatePage = JSON.parse(JSON.stringify(opubData.pages[0]));
+    // Deep clone the cover/preview template page (skipping empty Master Page when present)
+    const previewSource = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getPreviewPage === 'function')
+        ? window.OpenPublisherMultiPageTemplates.getPreviewPage(opubData)
+        : ((opubData.hasMasterPage && opubData.pages.length > 1) ? opubData.pages[1] : opubData.pages[0]);
+    const templatePage = JSON.parse(JSON.stringify(previewSource));
 
     // Generate new unique ID for page
     const newPageId = Date.now() + Math.floor(Math.random() * 1000);
@@ -954,13 +970,19 @@ window.showInsertTemplateModal = function(options = {}) {
 
                 fetchPromise.then(opubData => {
                     resolvedData = opubData;
-                    const page = opubData.pages && opubData.pages[0];
+                    const page = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getPreviewPage === 'function')
+                        ? window.OpenPublisherMultiPageTemplates.getPreviewPage(opubData)
+                        : ((opubData.hasMasterPage && Array.isArray(opubData.pages) && opubData.pages.length > 1) ? opubData.pages[1] : (opubData.pages && opubData.pages[0]));
                     if (!page) return;
+                    const docPageCount = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getDocumentPageCount === 'function')
+                        ? window.OpenPublisherMultiPageTemplates.getDocumentPageCount(opubData, t)
+                        : (Array.isArray(opubData.pages) ? Math.max(1, opubData.pages.length - (opubData.hasMasterPage ? 1 : 0)) : 1);
 
                     let previewHTML = '';
                     if (page.elements) {
                         page.elements.forEach(el => {
-                            previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
+                            const inner = el.innerHTML || (el.imgSrc ? `<img src="${el.imgSrc}" style="width:100%;height:100%;object-fit:${(el.imgStyle && el.imgStyle.objectFit) || el.objectFit || 'contain'};display:block;">` : '');
+                            previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${inner}</div>`;
                         });
                     }
 
@@ -975,6 +997,7 @@ window.showInsertTemplateModal = function(options = {}) {
                         </div>
                     `;
 
+                    const pagesBadge = docPageCount > 1 ? `<div style="position:absolute; bottom:4px; left:4px; z-index:99; background:rgba(15,23,42,0.85); color:#fff; font-size:9px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:2px 6px; border-radius:12px; pointer-events:none; box-shadow:0 1px 3px rgba(0,0,0,0.22);">${docPageCount}P</div>` : '';
                     const sizeBadge = `<div style="position:absolute; bottom:4px; right:4px; z-index:99; background:rgba(13,158,143,0.85); color:#fff; font-size:9px; font-family:'Segoe UI',sans-serif; font-weight:700; padding:2px 6px; border-radius:12px; pointer-events:none; box-shadow:0 1px 3px rgba(0,0,0,0.2);">${sizeLabel}</div>`;
                     const hoverOverlay = `
                         <div class="itp-hover-overlay" style="position:absolute; inset:0; background:rgba(15,23,42,0.68); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; opacity:0; transition:opacity 0.2s ease; border-radius:4px; z-index:100; backdrop-filter:blur(1px);">
@@ -986,7 +1009,7 @@ window.showInsertTemplateModal = function(options = {}) {
 
                     card.innerHTML = `
                         <div class="template-preview" style="position:relative; width:100px; height:${Math.round(h * scale)}px; overflow:hidden; background:#eee; margin:0 auto; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                            ${content}${sizeBadge}${hoverOverlay}
+                            ${content}${pagesBadge}${sizeBadge}${hoverOverlay}
                         </div>
                         <div style="margin-top:6px; font-size:12px; font-weight:600; line-height:1.2; color:#1e293b;">${t.name}</div>
                         <div style="font-size:10px; color:#64748b; margin-top:2px;">${t.category}</div>

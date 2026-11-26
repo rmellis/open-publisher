@@ -515,6 +515,22 @@ body.dark-mode .dashboard-template-preview {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
+.dashboard-template-pages-badge {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    color: #ffffff;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-weight: 700;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.22);
+}
+
 .dashboard-template-link-btn {
     position: absolute;
     top: 6px;

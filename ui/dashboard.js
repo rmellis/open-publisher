@@ -291,7 +291,7 @@ window.DashboardSystem = {
     loadTemplates: function() {
         const url = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl('elements/templates/template-index.json')
-            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.11');
+            : (window.location && window.location.protocol === 'file:' ? 'elements/templates/template-index.json' : 'elements/templates/template-index.json?v=5.24.12');
         fetch(url)
             .then(res => res.json())
             .then(data => {
@@ -378,6 +378,8 @@ window.DashboardSystem = {
             sizeLabel = sizeLabel.toUpperCase();
         }
         const sizeBadge = `<div class="dashboard-template-badge">${sizeLabel}</div>`;
+        const pagesCount = (typeof t.pages === 'number' && t.pages > 1) ? t.pages : 1;
+        const pagesBadge = pagesCount > 1 ? `<div class="dashboard-template-pages-badge">${pagesCount} Pages</div>` : '';
 
         // Check if pre-rendered WebP thumbnail is available
         const thumbFile = t.thumbnail || t.file.replace(/\.opub$/, '.webp');
@@ -385,13 +387,14 @@ window.DashboardSystem = {
             ? window.getTemplateAssetUrl(`elements/templates/thumbnails/${thumbFile}`)
             : (window.location && window.location.protocol === 'file:' 
                 ? `elements/templates/thumbnails/${thumbFile}` 
-                : `elements/templates/thumbnails/${thumbFile}?v=5.24.11`);
+                : `elements/templates/thumbnails/${thumbFile}?v=5.24.12`);
 
         div.innerHTML = `
             <div class="dashboard-template-preview" style="height:${cardHeight}px; background:var(--ruler-bg, #f4f4f4); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                 <div class="dashboard-preview-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
-                <img data-src="${thumbUrl}" data-file="${t.file}" data-w="${w}" data-h="${h}" data-size-label="${sizeLabel}" data-is-expanded="${isExpanded}" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity 0.25s ease;">
+                <img data-src="${thumbUrl}" data-file="${t.file}" data-w="${w}" data-h="${h}" data-size-label="${sizeLabel}" data-pages="${pagesCount}" data-is-expanded="${isExpanded}" alt="${t.name}" style="width:100%; height:100%; object-fit:contain; display:block; opacity:0; transition:opacity 0.25s ease;">
                 <button type="button" class="dashboard-template-link-btn" title="Copy static link" aria-label="Copy static link to ${t.name}"><i class="fas fa-link"></i></button>
+                ${pagesBadge}
                 ${sizeBadge}
             </div>
             <div class="dashboard-template-title">${t.name}</div>
@@ -420,7 +423,7 @@ window.DashboardSystem = {
         div.onclick = () => {
             const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
                 ? window.getTemplateAssetUrl(`elements/templates/files/${t.file}`)
-                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.11`);
+                : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${t.file}` : `elements/templates/files/${t.file}?v=5.24.12`);
             
             const titleEl = div.querySelector('.dashboard-template-title');
             const origTitle = t.name;
@@ -455,16 +458,24 @@ window.DashboardSystem = {
         if (!previewContainer) return;
         const fileUrl = (typeof window.getTemplateAssetUrl === 'function')
             ? window.getTemplateAssetUrl(`elements/templates/files/${fileName}`)
-            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.11`);
+            : (window.location && window.location.protocol === 'file:' ? `elements/templates/files/${fileName}` : `elements/templates/files/${fileName}?v=5.24.12`);
 
         fetch(fileUrl)
             .then(res => res.json())
             .then(opubData => {
-                const page = opubData.pages[0];
+                const page = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getPreviewPage === 'function')
+                    ? window.OpenPublisherMultiPageTemplates.getPreviewPage(opubData)
+                    : ((opubData.hasMasterPage && Array.isArray(opubData.pages) && opubData.pages.length > 1) ? opubData.pages[1] : opubData.pages[0]);
+                const docPageCount = (window.OpenPublisherMultiPageTemplates && typeof window.OpenPublisherMultiPageTemplates.getDocumentPageCount === 'function')
+                    ? window.OpenPublisherMultiPageTemplates.getDocumentPageCount(opubData)
+                    : (Array.isArray(opubData.pages) ? Math.max(1, opubData.pages.length - (opubData.hasMasterPage ? 1 : 0)) : 1);
                 let previewHTML = '';
-                page.elements.forEach(el => {
-                    previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${el.innerHTML}</div>`;
-                });
+                if (page && Array.isArray(page.elements)) {
+                    page.elements.forEach(el => {
+                        const inner = el.innerHTML || (el.imgSrc ? `<img src="${el.imgSrc}" style="width:100%;height:100%;object-fit:${(el.imgStyle && el.imgStyle.objectFit) || el.objectFit || 'contain'};display:block;">` : '');
+                        previewHTML += `<div style="position:absolute; top:${el.top}; left:${el.left}; width:${el.width}; height:${el.height}; z-index:${el.zIndex}; transform:${el.transform || 'none'};">${inner}</div>`;
+                    });
+                }
 
                 const w = parseInt(page.width) || defaultW || 794;
                 const h = parseInt(page.height) || defaultH || 1123;
@@ -487,6 +498,7 @@ window.DashboardSystem = {
                     badge = badge.toUpperCase();
                 }
 
+                const pagesBadge = docPageCount > 1 ? `<div class="dashboard-template-pages-badge">${docPageCount} Pages</div>` : '';
                 const existingLinkBtn = previewContainer.querySelector('.dashboard-template-link-btn');
                 previewContainer.style.height = `${cardHeight}px`;
                 previewContainer.innerHTML = `
@@ -503,6 +515,7 @@ window.DashboardSystem = {
                     ">
                         ${previewHTML}
                     </div>
+                    ${pagesBadge}
                     <div class="dashboard-template-badge">${badge}</div>
                 `;
                 if (existingLinkBtn) {
@@ -584,6 +597,16 @@ window.DashboardSystem = {
 
         // Curated hand-picked featured templates: the best of the premium collection
         const featured = [
+            { name: 'Community & Club Newsletter',            file: 'newsletters_community_club_multipage.opub',    category: 'Newsletters' },
+            { name: 'Annual Business & Impact Report',        file: 'reports_annual_business_impact_multipage.opub',category: 'Reports' },
+            { name: 'School Magazine & Yearbook Digest',      file: 'magazines_school_yearbook_digest_multipage.opub', category: 'Magazines' },
+            { name: 'Product Catalog & Price Guide',          file: 'brochures_product_catalog_price_guide_multipage.opub', category: 'Brochures' },
+            { name: 'Conference & Event Program Booklet',     file: 'brochures_conference_event_program_multipage.opub', category: 'Brochures' },
+            { name: 'Client Project Proposal & Pitch Deck',   file: 'reports_client_project_proposal_deck_multipage.opub', category: 'Reports' },
+            { name: 'Charity Fundraising & Impact Packet',    file: 'flyers_charity_fundraising_impact_multipage.opub', category: 'Flyers' },
+            { name: 'Seasonal Restaurant Menu & Wine List',   file: 'menus_seasonal_restaurant_wine_multipage.opub', category: 'Menus' },
+            { name: 'Employee Onboarding Handbook',           file: 'reports_employee_onboarding_handbook_multipage.opub', category: 'Reports' },
+            { name: 'Property Portfolio & Open House Lookbook', file: 'brochures_property_portfolio_lookbook_multipage.opub', category: 'Brochures' },
             { name: 'Winter Wonderland Workshop',             file: 'flyers_winter_wonderland_workshop.opub', category: 'Flyers' },
             { name: 'Back To School',                         file: 'posters_back_to_school.opub',            category: 'Posters' },
             { name: 'Dear Santa Letter',                      file: 'letterheads_dear_santa.opub',             category: 'Letterheads' },
