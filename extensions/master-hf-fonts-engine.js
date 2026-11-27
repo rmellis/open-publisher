@@ -150,18 +150,25 @@
         const sub = document.getElementById('ribbon-font-scheme-sub');
         const btn = document.getElementById('ribbon-font-scheme-btn');
         const scheme = (typeof state !== 'undefined' && state && state.fontScheme) ? state.fontScheme : null;
-        if (lbl) lbl.textContent = scheme ? scheme.name : 'Font Schemes';
-        if (sub) {
-            if (scheme) {
-                sub.textContent = scheme.headingFont === scheme.bodyFont
-                    ? scheme.headingFont
-                    : `${scheme.headingFont} / ${scheme.bodyFont}`;
+        if (lbl) {
+            if (scheme && scheme.name) {
+                lbl.textContent = scheme.name;
             } else {
-                const g = getGlobalDefaultFont();
-                sub.textContent = `Default: ${g.family}`;
+                lbl.innerHTML = 'Font<br>Schemes';
             }
         }
-        if (btn) btn.classList.toggle('active-tool', !!scheme);
+        const pairSummary = scheme
+            ? (scheme.headingFont === scheme.bodyFont ? scheme.headingFont : `${scheme.headingFont} / ${scheme.bodyFont}`)
+            : `Default: ${getGlobalDefaultFont().family}`;
+        if (sub) {
+            sub.textContent = pairSummary;
+        }
+        if (btn) {
+            btn.classList.toggle('active-tool', !!scheme);
+            btn.title = scheme
+                ? `Font Schemes: ${scheme.name} (${pairSummary})`
+                : `Choose a Document Heading & Body Font Scheme (${pairSummary})`;
+        }
     }
 
     function applyFontToElementDom(el, headingFont, bodyFont) {
@@ -425,10 +432,20 @@
         if (triggerEl && typeof triggerEl.getBoundingClientRect === 'function') {
             const rect = triggerEl.getBoundingClientRect();
             const vw = window.innerWidth || 1280;
+            const vh = window.innerHeight || 800;
             const mw = 320;
+            const topPos = rect.bottom + 2;
             menu.style.width = mw + 'px';
             menu.style.left = Math.max(8, Math.min(rect.left, vw - mw - 8)) + 'px';
-            menu.style.top = (rect.bottom + 2) + 'px';
+            menu.style.top = topPos + 'px';
+
+            const listEl = menu.querySelector('.op-fs-list');
+            if (listEl) {
+                const headerEl = menu.querySelector('.op-fs-header');
+                const footerEl = menu.querySelector('.op-fs-footer');
+                const availForList = vh - topPos - 12 - (headerEl ? headerEl.offsetHeight : 38) - (footerEl ? footerEl.offsetHeight : 104) - 6;
+                listEl.style.maxHeight = Math.max(120, Math.min(290, availForList)) + 'px';
+            }
         }
     }
 
@@ -445,30 +462,30 @@
         ).join('');
 
         const html = `
-            <div class="op-custom-fs-modal" style="width: 440px; max-width: 90vw; font-family: inherit;">
-                <p style="margin:0 0 12px 0; font-size:12.5px; opacity:0.82; line-height:1.45;">
+            <div class="op-custom-fs-modal">
+                <p class="op-cfs-desc">
                     Pick a custom Heading and Body font pair for this publication. New text boxes inherit the Body font, and Heading levels (H1, H2, H3) inherit the Heading font.
                 </p>
                 <div style="margin-bottom:10px;">
-                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Scheme Name:</label>
-                    <input type="text" id="cfs-name-input" value="${escapeHtml(curName)}" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid var(--ui-border, #cbd5e1); border-radius:4px; background:var(--ui-panel-bg, #fff); color:var(--ui-text, #1e293b);">
+                    <label class="op-cfs-label" for="cfs-name-input">Scheme Name:</label>
+                    <input type="text" id="cfs-name-input" class="op-cfs-input" value="${escapeHtml(curName)}">
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                     <div>
-                        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Heading Font:</label>
-                        <select id="cfs-heading-font" class="no-custom-select" style="width:100%; padding:6px 8px; border:1px solid var(--ui-border, #cbd5e1); border-radius:4px; background:var(--ui-panel-bg, #fff); color:var(--ui-text, #1e293b);">${buildOpts(cur.headingFont)}</select>
+                        <label class="op-cfs-label" for="cfs-heading-font">Heading Font:</label>
+                        <select id="cfs-heading-font" class="no-custom-select op-cfs-select">${buildOpts(cur.headingFont)}</select>
                     </div>
                     <div>
-                        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Body Font:</label>
-                        <select id="cfs-body-font" class="no-custom-select" style="width:100%; padding:6px 8px; border:1px solid var(--ui-border, #cbd5e1); border-radius:4px; background:var(--ui-panel-bg, #fff); color:var(--ui-text, #1e293b);">${buildOpts(cur.bodyFont)}</select>
+                        <label class="op-cfs-label" for="cfs-body-font">Body Font:</label>
+                        <select id="cfs-body-font" class="no-custom-select op-cfs-select">${buildOpts(cur.bodyFont)}</select>
                     </div>
                 </div>
-                <div id="cfs-preview-card" style="padding:12px 14px; border:1px dashed var(--ui-border, #cbd5e1); border-radius:6px; background:var(--ui-surface-bg, #f8fafc); margin-bottom:12px;">
-                    <div id="cfs-preview-heading" style="font-size:18px; font-weight:700; margin-bottom:4px; font-family:${buildFontStack(cur.headingFont)};">Community Newsletter Headline</div>
-                    <div id="cfs-preview-body" style="font-size:12.5px; line-height:1.45; opacity:0.88; font-family:${buildFontStack(cur.bodyFont)};">Body text uses your selected reading font for crisp paragraphs, captions, and article columns.</div>
+                <div id="cfs-preview-card" class="op-cfs-preview">
+                    <div id="cfs-preview-heading" class="op-cfs-preview-heading" style="font-family:${buildFontStack(cur.headingFont)};">Community Newsletter Headline</div>
+                    <div id="cfs-preview-body" class="op-cfs-preview-body" style="font-family:${buildFontStack(cur.bodyFont)};">Body text uses your selected reading font for crisp paragraphs, captions, and article columns.</div>
                 </div>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; user-select:none;">
-                    <input type="checkbox" id="cfs-apply-existing" style="accent-color:var(--ui-theme-color, #007670);">
+                <label class="op-cfs-checkbox-row" for="cfs-apply-existing">
+                    <input type="checkbox" id="cfs-apply-existing">
                     <span>Also apply this font scheme to existing text boxes in this document</span>
                 </label>
             </div>
