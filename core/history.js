@@ -144,6 +144,13 @@ function serializeCurrentPage() {
         elements: []
     };
 
+    if (existingPage.note) p.note = existingPage.note;
+    if (existingPage._singleOrientation) p._singleOrientation = existingPage._singleOrientation;
+    if (existingPage._spreadLeftPageMeta) p._spreadLeftPageMeta = JSON.parse(JSON.stringify(existingPage._spreadLeftPageMeta));
+    if (existingPage._spreadRightPageMeta !== undefined) {
+        p._spreadRightPageMeta = existingPage._spreadRightPageMeta ? JSON.parse(JSON.stringify(existingPage._spreadRightPageMeta)) : null;
+    }
+
     const els = paper.querySelectorAll('.pub-element:not(.master-page-element)');
     els.forEach(el => {
         // Theme elements are managed strictly via pageData.themeSettings - do not serialize them into elements

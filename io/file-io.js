@@ -297,9 +297,30 @@ function printBooklet() {
         let singlePages = [];
         if (state.isSpreadMode) {
             state.pages.forEach((spread, spreadIndex) => {
+                if (state.hasMasterPage && spreadIndex === 0) return;
                 const singleW = parseInt(spread.width) / 2;
-                let leftPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
-                let rightPage = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
+                const leftMeta = spread._spreadLeftPageMeta || {};
+                const rightMeta = spread._spreadRightPageMeta;
+                let leftPage = {
+                    width: singleW + 'px',
+                    height: spread.height,
+                    background: leftMeta.background || spread.background,
+                    header: leftMeta.header || spread.header || '',
+                    footer: leftMeta.footer || spread.footer || '',
+                    ignoreMasterPage: !!(leftMeta.ignoreMasterPage !== undefined ? leftMeta.ignoreMasterPage : spread.ignoreMasterPage),
+                    borderStyle: leftMeta.borderStyle || spread.borderStyle || 'none',
+                    elements: []
+                };
+                let rightPage = {
+                    width: singleW + 'px',
+                    height: spread.height,
+                    background: (rightMeta && rightMeta.background) || spread.background,
+                    header: (rightMeta && rightMeta.header) || spread.header || '',
+                    footer: (rightMeta && rightMeta.footer) || spread.footer || '',
+                    ignoreMasterPage: !!(rightMeta && rightMeta.ignoreMasterPage !== undefined ? rightMeta.ignoreMasterPage : spread.ignoreMasterPage),
+                    borderStyle: (rightMeta && rightMeta.borderStyle) || spread.borderStyle || 'none',
+                    elements: []
+                };
                 
                 let spreadElements = spread.elements || [];
                 if (state.hasMasterPage && spreadIndex > 0 && state.pages[0] && state.pages[0].elements && !spread.ignoreMasterPage) {
@@ -312,6 +333,7 @@ function printBooklet() {
                 }
                 
                 spreadElements.forEach(el => {
+                    if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
                     let elLeft = parseFloat(el.left);
                     if (elLeft < singleW) {
                         leftPage.elements.push(JSON.parse(JSON.stringify(el)));
@@ -321,7 +343,10 @@ function printBooklet() {
                         rightPage.elements.push(newEl);
                     }
                 });
-                singlePages.push(leftPage, rightPage);
+                singlePages.push(leftPage);
+                if (spread._spreadRightPageMeta !== null || rightPage.elements.length > 0) {
+                    singlePages.push(rightPage);
+                }
             });
         } else {
             singlePages = JSON.parse(JSON.stringify(state.pages));
@@ -335,15 +360,27 @@ function printBooklet() {
                     }
                 }
             }
+            if (state.hasMasterPage && singlePages.length > 1) {
+                singlePages.shift();
+            }
         }
         
+        const totalDocPages = Math.max(1, singlePages.length);
+        singlePages.forEach((p, idx) => {
+            p.docPageNum = idx + 1;
+            p.isBlankPad = false;
+        });
+
         // 2. Pad to multiple of 4
         while (singlePages.length % 4 !== 0) {
             singlePages.push({
                 width: singlePages[0].width,
                 height: singlePages[0].height,
                 background: '#ffffff',
-                elements: []
+                elements: [],
+                isBlankPad: true,
+                ignoreMasterPage: true,
+                docPageNum: null
             });
         }
         
@@ -369,7 +406,23 @@ function printBooklet() {
                 width: (singleW * 2) + 'px',
                 height: leftPage.height,
                 background: '#ffffff',
-                elements: []
+                elements: [],
+                _bookletHalves: {
+                    singleW,
+                    totalDocPages,
+                    left: {
+                        docPageNum: leftPage.docPageNum,
+                        ignoreMasterPage: !!(leftPage.ignoreMasterPage || leftPage.isBlankPad),
+                        header: leftPage.header || '',
+                        footer: leftPage.footer || ''
+                    },
+                    right: {
+                        docPageNum: rightPage.docPageNum,
+                        ignoreMasterPage: !!(rightPage.ignoreMasterPage || rightPage.isBlankPad),
+                        header: rightPage.header || '',
+                        footer: rightPage.footer || ''
+                    }
+                }
             };
 
             if (leftPage.background && leftPage.background !== 'transparent') {

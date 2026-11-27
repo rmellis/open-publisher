@@ -886,68 +886,193 @@ function toggleOrientation() {
     pushHistory();
 }
 
+function extractSpreadPageMeta(pageObj, singleW) {
+    if (!pageObj) return null;
+    const h = pageObj.height || '1123px';
+    return {
+        id: pageObj.id,
+        orientation: pageObj.orientation || (singleW >= parseFloat(h) ? 'landscape' : 'portrait'),
+        dpi: pageObj.dpi,
+        format: pageObj.format,
+        background: pageObj.background,
+        header: pageObj.header || '',
+        footer: pageObj.footer || '',
+        borderStyle: pageObj.borderStyle || 'none',
+        themeSettings: pageObj.themeSettings ? JSON.parse(JSON.stringify(pageObj.themeSettings)) : null,
+        ignoreMasterPage: !!pageObj.ignoreMasterPage,
+        ignoreBackground: !!pageObj.ignoreBackground,
+        watermark: pageObj.watermark ? JSON.parse(JSON.stringify(pageObj.watermark)) : null,
+        note: pageObj.note || '',
+        width: singleW + 'px',
+        height: h
+    };
+}
+
+function buildSinglePageFromSpreadMeta(meta, fallbackSpread, singleW, isRightSide) {
+    const src = meta || fallbackSpread || {};
+    const h = src.height || (fallbackSpread && fallbackSpread.height) || '1123px';
+    const baseOrientation = src.orientation || (singleW >= parseFloat(h) ? 'landscape' : 'portrait');
+    const out = {
+        id: (meta && meta.id) ? meta.id : ((isRightSide || !fallbackSpread || !fallbackSpread.id) ? (Date.now() + Math.random()) : fallbackSpread.id),
+        orientation: baseOrientation,
+        ignoreMasterPage: !!src.ignoreMasterPage,
+        ignoreBackground: !!src.ignoreBackground,
+        watermark: src.watermark ? JSON.parse(JSON.stringify(src.watermark)) : null,
+        width: singleW + 'px',
+        height: h,
+        dpi: src.dpi || (fallbackSpread && fallbackSpread.dpi) || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
+        format: src.format || (fallbackSpread && fallbackSpread.format) || (typeof state !== 'undefined' && state.format ? state.format : 'A4'),
+        background: src.background || (fallbackSpread && fallbackSpread.background) || '#ffffff',
+        header: src.header || '',
+        footer: src.footer || '',
+        borderStyle: src.borderStyle || 'none',
+        elements: []
+    };
+    if (src.note) out.note = src.note;
+    if (src.themeSettings) out.themeSettings = JSON.parse(JSON.stringify(src.themeSettings));
+    return out;
+}
+
 function toggleSpreadMode() {
-    if (typeof serializeCurrentPage === 'function') {
+    if (typeof serializeCurrentPage === 'function' && state.pages[state.currentPageIndex]) {
         state.pages[state.currentPageIndex] = serializeCurrentPage();
     }
-    
+
+    const hasMaster = !!(typeof state !== 'undefined' && state.hasMasterPage && state.pages.length > 0);
     state.isSpreadMode = !state.isSpreadMode;
     const btn = document.getElementById('spread-mode-btn');
     if (btn) btn.classList.toggle('active', state.isSpreadMode);
 
     if (state.isSpreadMode) {
-        let newPages = [];
-        for (let i = 0; i < state.pages.length; i += 2) {
-            let p1 = state.pages[i];
-            let p2 = state.pages[i+1];
-            let singleW = parseInt(p1.width) || 794;
-            let spread = {
+        const newPages = [];
+        let startIndex = 0;
+
+        if (hasMaster) {
+            const masterOrig = state.pages[0];
+            const masterSingleW = parseFloat(masterOrig.width) || 794;
+            const masterSpread = JSON.parse(JSON.stringify(masterOrig));
+            masterSpread._singleOrientation = masterOrig.orientation || (masterSingleW >= parseFloat(masterOrig.height || '1123') ? 'landscape' : 'portrait');
+            masterSpread.width = (masterSingleW * 2) + 'px';
+            masterSpread.orientation = 'landscape';
+            masterSpread.elements = Array.isArray(masterOrig.elements) ? JSON.parse(JSON.stringify(masterOrig.elements)) : [];
+            newPages.push(masterSpread);
+            startIndex = 1;
+        }
+
+        for (let i = startIndex; i < state.pages.length; i += 2) {
+            const p1 = state.pages[i];
+            const p2 = state.pages[i + 1];
+            const singleW = parseFloat(p1.width) || 794;
+            const spread = {
+                id: p1.id || (Date.now() + Math.random()),
+                orientation: 'landscape',
+                ignoreMasterPage: !!p1.ignoreMasterPage,
+                ignoreBackground: !!p1.ignoreBackground,
+                watermark: p1.watermark ? JSON.parse(JSON.stringify(p1.watermark)) : null,
                 width: (singleW * 2) + 'px',
                 height: p1.height || '1123px',
-                background: p1.background,
-                elements: JSON.parse(JSON.stringify(p1.elements))
+                dpi: p1.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
+                format: p1.format || (typeof state !== 'undefined' && state.format ? state.format : 'A4'),
+                background: p1.background || '#ffffff',
+                header: p1.header || '',
+                footer: p1.footer || '',
+                borderStyle: p1.borderStyle || 'none',
+                elements: Array.isArray(p1.elements) ? JSON.parse(JSON.stringify(p1.elements)) : [],
+                _spreadLeftPageMeta: extractSpreadPageMeta(p1, singleW),
+                _spreadRightPageMeta: p2 ? extractSpreadPageMeta(p2, parseFloat(p2.width) || singleW) : null
             };
-            if (p2) {
+            if (p1.note) spread.note = p1.note;
+            if (p1.themeSettings) spread.themeSettings = JSON.parse(JSON.stringify(p1.themeSettings));
+
+            if (p2 && Array.isArray(p2.elements)) {
                 p2.elements.forEach(el => {
-                    let newEl = JSON.parse(JSON.stringify(el));
-                    newEl.left = (parseFloat(newEl.left) + singleW) + 'px';
+                    const newEl = JSON.parse(JSON.stringify(el));
+                    newEl.left = ((parseFloat(newEl.left) || 0) + singleW) + 'px';
                     spread.elements.push(newEl);
                 });
             }
-            
             newPages.push(spread);
         }
+
         state.pages = newPages;
-        state.currentPageIndex = Math.floor(state.currentPageIndex / 2);
+        if (hasMaster) {
+            state.currentPageIndex = (state.currentPageIndex === 0)
+                ? 0
+                : (1 + Math.floor(Math.max(0, state.currentPageIndex - 1) / 2));
+        } else {
+            state.currentPageIndex = Math.floor(state.currentPageIndex / 2);
+        }
     } else {
-        let newPages = [];
-        state.pages.forEach(spread => {
-            const singleW = parseInt(spread.width) / 2;
-            let p1 = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
-            let p2 = { width: singleW + 'px', height: spread.height, background: spread.background, elements: [] };
-            
-            spread.elements.forEach(el => {
+        const newPages = [];
+        let startIndex = 0;
+
+        if (hasMaster) {
+            const masterSpread = state.pages[0];
+            const singleW = (parseFloat(masterSpread.width) || 1588) / 2;
+            const singleH = masterSpread.height || '1123px';
+            const restoredOrient = masterSpread._singleOrientation || (singleW >= parseFloat(singleH) ? 'landscape' : 'portrait');
+            const masterSingle = JSON.parse(JSON.stringify(masterSpread));
+            delete masterSingle._singleOrientation;
+            delete masterSingle._spreadLeftPageMeta;
+            delete masterSingle._spreadRightPageMeta;
+            masterSingle.width = singleW + 'px';
+            masterSingle.orientation = restoredOrient;
+            masterSingle.elements = (masterSpread.elements || [])
+                .filter(el => !(el.innerHTML && el.innerHTML.includes('spread-fold-line')))
+                .map(el => JSON.parse(JSON.stringify(el)));
+            newPages.push(masterSingle);
+            startIndex = 1;
+        }
+
+        for (let i = startIndex; i < state.pages.length; i++) {
+            const spread = state.pages[i];
+            const singleW = (parseFloat(spread.width) || 1588) / 2;
+            const p1 = buildSinglePageFromSpreadMeta(spread._spreadLeftPageMeta, spread, singleW, false);
+            const p2 = buildSinglePageFromSpreadMeta(spread._spreadRightPageMeta, spread, singleW, true);
+
+            (spread.elements || []).forEach(el => {
                 if (el.innerHTML && el.innerHTML.includes('spread-fold-line')) return;
-                
-                if (parseFloat(el.left) < singleW) {
+                const leftVal = parseFloat(el.left) || 0;
+                if (leftVal < singleW) {
                     p1.elements.push(JSON.parse(JSON.stringify(el)));
                 } else {
-                    let newEl = JSON.parse(JSON.stringify(el));
-                    newEl.left = (parseFloat(newEl.left) - singleW) + 'px';
+                    const newEl = JSON.parse(JSON.stringify(el));
+                    newEl.left = (leftVal - singleW) + 'px';
                     p2.elements.push(newEl);
                 }
             });
             newPages.push(p1);
-            if (p2.elements.length > 0) {
+            if (p2.elements.length > 0 || spread._spreadRightPageMeta) {
                 newPages.push(p2);
             }
-        });
+        }
+
         state.pages = newPages;
-        state.currentPageIndex = state.currentPageIndex * 2;
+        if (hasMaster) {
+            state.currentPageIndex = (state.currentPageIndex === 0)
+                ? 0
+                : (1 + (state.currentPageIndex - 1) * 2);
+        } else {
+            state.currentPageIndex = state.currentPageIndex * 2;
+        }
     }
-    
-    renderPage(state.pages[state.currentPageIndex]);
+
+    if (state.pages.length === 0) {
+        state.currentPageIndex = 0;
+    } else {
+        state.currentPageIndex = Math.max(0, Math.min(state.pages.length - 1, state.currentPageIndex));
+    }
+
+    if (state.pages[state.currentPageIndex]) {
+        renderPage(state.pages[state.currentPageIndex]);
+    }
     updateSidebar();
+    if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.syncMasterPageVisualMode === 'function') {
+        window.MasterHeaderFooterEngine.syncMasterPageVisualMode(!!(state.hasMasterPage && state.currentPageIndex === 0));
+    }
+    if (typeof window.syncMarginGuideOverlay === 'function') window.syncMarginGuideOverlay();
+    if (typeof window.syncRulers === 'function') window.syncRulers();
+    if (typeof updateThumbnails === 'function') updateThumbnails();
     if (typeof pushHistory === 'function') pushHistory();
 }
 

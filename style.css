@@ -1655,6 +1655,39 @@ body.dark-mode .multipage-dialog-warning {
 .page-header { top: 10px; }
 .page-footer { bottom: 10px; }
 
+.op-hf-spread-mirror {
+    position: absolute;
+    left: 48px;
+    right: auto;
+    min-height: 28px;
+    border: 1.5px dashed transparent;
+    z-index: 2000;
+    display: none;
+    box-sizing: border-box;
+    font-size: 12px;
+    color: #333333;
+    background: transparent;
+    pointer-events: none !important;
+    cursor: default !important;
+}
+.op-hf-spread-mirror.visible { display: block; }
+.op-hf-spread-mirror * { cursor: default !important; pointer-events: none !important; }
+#paper:not(.master-page-editing) .op-hf-spread-mirror,
+#paper:not(.master-page-editing) .op-hf-spread-mirror:hover {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+#paper.master-page-editing .op-hf-spread-mirror {
+    border: 1.5px dashed rgba(194, 138, 30, 0.55) !important;
+    background: rgba(254, 243, 199, 0.22);
+    border-radius: 3px;
+    opacity: 0.78;
+}
+#paper.master-page-editing .op-hf-spread-mirror .op-hf-zone + .op-hf-zone {
+    border-left: 1px dashed rgba(180, 83, 9, 0.28);
+}
+
 .page-border-container {
     position: absolute; inset: 0; pointer-events: none; z-index: 2500;
     border: 0px solid black;
@@ -2376,8 +2409,8 @@ body.classic-cursors-enabled .force-move-cursor * {
     }
     #paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     .margin-guides, .resize-handle, .rotate-handle, .rotate-stick, .element-quick-actions, .op-floating-css-color-pill, #op-floating-css-color-pill, #selection-overlay-container, .selected-overlay { display: none !important; }
-    .page-header.visible, .page-footer.visible { display: flex !important; }
-    .page-header:not(.visible), .page-footer:not(.visible) { display: none !important; }
+    .page-header.visible, .page-footer.visible, .op-hf-spread-mirror.visible { display: flex !important; }
+    .page-header:not(.visible), .page-footer:not(.visible), .op-hf-spread-mirror:not(.visible) { display: none !important; }
 }
 /* --- CUSTOM DRAGGABLE MODAL SYSTEM --- */
 .custom-dialog-overlay {

@@ -515,12 +515,53 @@
         return !!(typeof state !== 'undefined' && state && state.hasMasterPage && state.currentPageIndex === 0);
     }
 
+    function spreadHasRightHalf(spreadPage, spreadIndex, totalSpreads) {
+        if (!spreadPage) return false;
+        const singleW = (parseFloat(spreadPage.width) || 1588) / 2;
+        const hasRightEls = Array.isArray(spreadPage.elements) && spreadPage.elements.some(el => {
+            if (el && el.innerHTML && el.innerHTML.includes('spread-fold-line')) return false;
+            return (parseFloat(el && el.left) || 0) >= singleW;
+        });
+        if (hasRightEls) return true;
+        if (spreadPage._spreadRightPageMeta !== undefined) {
+            return spreadPage._spreadRightPageMeta !== null;
+        }
+        return true;
+    }
+
+    function getSpreadHalfMetrics(pageIndex, pagesArr, hasMasterOverride) {
+        const pages = Array.isArray(pagesArr) ? pagesArr : ((typeof state !== 'undefined' && Array.isArray(state.pages)) ? state.pages : []);
+        const hasMaster = (typeof hasMasterOverride === 'boolean')
+            ? hasMasterOverride
+            : !!(typeof state !== 'undefined' && state && state.hasMasterPage);
+        const startIdx = hasMaster ? 1 : 0;
+        let totalSinglePages = 0;
+        for (let i = startIdx; i < pages.length; i++) {
+            totalSinglePages += spreadHasRightHalf(pages[i], i, pages.length) ? 2 : 1;
+        }
+        totalSinglePages = Math.max(1, totalSinglePages);
+        const idx = (typeof pageIndex === 'number') ? pageIndex : ((typeof state !== 'undefined' && typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0);
+        if (hasMaster && idx === 0) {
+            return { isMaster: true, leftDocPageNum: 1, rightDocPageNum: Math.min(2, totalSinglePages), totalSinglePages, hasRightPage: true };
+        }
+        const cIdx = Math.max(0, hasMaster ? (idx - 1) : idx);
+        const leftDocPageNum = cIdx * 2 + 1;
+        const hasRightPage = spreadHasRightHalf(pages[idx], idx, pages.length);
+        const rightDocPageNum = leftDocPageNum + 1;
+        return { isMaster: false, leftDocPageNum, rightDocPageNum, totalSinglePages, hasRightPage };
+    }
+
     function getDocumentPageMetrics(pageIndex, pagesArr, hasMasterOverride) {
         const pages = Array.isArray(pagesArr) ? pagesArr : ((typeof state !== 'undefined' && Array.isArray(state.pages)) ? state.pages : []);
         const hasMaster = (typeof hasMasterOverride === 'boolean')
             ? hasMasterOverride
             : !!(typeof state !== 'undefined' && state && state.hasMasterPage);
         const idx = (typeof pageIndex === 'number') ? pageIndex : ((typeof state !== 'undefined' && typeof state.currentPageIndex === 'number') ? state.currentPageIndex : 0);
+
+        if (typeof state !== 'undefined' && state && state.isSpreadMode) {
+            const sm = getSpreadHalfMetrics(idx, pages, hasMaster);
+            return { isMaster: sm.isMaster, docPageNum: sm.leftDocPageNum, totalDocPages: sm.totalSinglePages, pageIndex: idx };
+        }
 
         if (hasMaster) {
             const totalDocPages = Math.max(1, pages.length - 1);
@@ -560,6 +601,7 @@
 
         // 1. Inline dynamic page number tokens (inside headers, footers, or any text box)
         rootEl.querySelectorAll('.op-page-num-token').forEach(tok => {
+            if (tok.getAttribute('data-op-pn-locked') === 'true') return;
             const fmt = tok.getAttribute('data-pn-format') || defaultFmt;
             tok.textContent = formatPageNumberText(docPageNum, totalDocPages, fmt);
         });
@@ -574,6 +616,7 @@
             if (fmt && innerDiv) {
                 const tok = innerDiv.querySelector('.op-page-num-token');
                 if (tok) {
+                    if (tok.getAttribute('data-op-pn-locked') === 'true') return;
                     tok.setAttribute('data-pn-format', fmt);
                     tok.textContent = formatPageNumberText(docPageNum, totalDocPages, fmt);
                 } else {
@@ -589,13 +632,29 @@
     function updateAllPageNumbers() {
         const paperEl = document.getElementById('paper');
         if (!paperEl || typeof state === 'undefined') return;
-        const metrics = getDocumentPageMetrics(state.currentPageIndex);
-        resolvePageNumberTokensInContainer(paperEl, metrics.docPageNum, metrics.totalDocPages);
+        if (state.isSpreadMode) {
+            const sm = getSpreadHalfMetrics(state.currentPageIndex);
+            paperEl.querySelectorAll('.op-hf-box, .pub-element[data-type="page-number"]').forEach(node => {
+                resolvePageNumberTokensInContainer(node, sm.leftDocPageNum, sm.totalSinglePages);
+            });
+            paperEl.querySelectorAll('.op-hf-spread-mirror').forEach(node => {
+                resolvePageNumberTokensInContainer(node, sm.rightDocPageNum, sm.totalSinglePages);
+            });
+        } else {
+            const metrics = getDocumentPageMetrics(state.currentPageIndex);
+            resolvePageNumberTokensInContainer(paperEl, metrics.docPageNum, metrics.totalDocPages);
+        }
 
+        const metrics = getDocumentPageMetrics(state.currentPageIndex);
         const statusEl = document.getElementById('page-count-status');
         if (statusEl) {
             if (metrics.isMaster) {
                 statusEl.innerText = `Master Page (${metrics.totalDocPages} ${metrics.totalDocPages === 1 ? 'page' : 'pages'})`;
+            } else if (state.isSpreadMode) {
+                const sm = getSpreadHalfMetrics(state.currentPageIndex);
+                statusEl.innerText = sm.hasRightPage
+                    ? `Pages ${sm.leftDocPageNum}-${sm.rightDocPageNum} of ${sm.totalSinglePages}`
+                    : `Page ${sm.leftDocPageNum} of ${sm.totalSinglePages}`;
             } else {
                 statusEl.innerText = `Page ${metrics.docPageNum} of ${metrics.totalDocPages}`;
             }
@@ -679,7 +738,9 @@
         if (!targetPaper) return;
         const pageW = parseFloat(targetPaper.style.width) || targetPaper.offsetWidth || 794;
         const pageH = parseFloat(targetPaper.style.height) || targetPaper.offsetHeight || 1123;
-        const geom = computeHeaderFooterGeometry(pageW, pageH, typeof state !== 'undefined' ? state.margins : null);
+        const isSpread = !!(typeof state !== 'undefined' && state && state.isSpreadMode);
+        const slotW = isSpread ? (pageW / 2) : pageW;
+        const geom = computeHeaderFooterGeometry(slotW, pageH, typeof state !== 'undefined' ? state.margins : null);
 
         const hdr = targetPaper.querySelector('.page-header');
         const ftr = targetPaper.querySelector('.page-footer');
@@ -700,6 +761,26 @@
             ftr.style.bottom = geom.footerBottom + 'px';
             ftr.style.minHeight = geom.footerH + 'px';
             ftr.style.height = 'auto';
+        }
+        const mirrorHdr = targetPaper.querySelector('.op-hf-spread-header-mirror');
+        const mirrorFtr = targetPaper.querySelector('.op-hf-spread-footer-mirror');
+        if (mirrorHdr) {
+            mirrorHdr.style.left = (slotW + geom.left) + 'px';
+            mirrorHdr.style.right = 'auto';
+            mirrorHdr.style.width = geom.width + 'px';
+            mirrorHdr.style.top = geom.headerTop + 'px';
+            mirrorHdr.style.bottom = 'auto';
+            mirrorHdr.style.minHeight = geom.headerH + 'px';
+            mirrorHdr.style.height = 'auto';
+        }
+        if (mirrorFtr) {
+            mirrorFtr.style.left = (slotW + geom.left) + 'px';
+            mirrorFtr.style.right = 'auto';
+            mirrorFtr.style.width = geom.width + 'px';
+            mirrorFtr.style.top = 'auto';
+            mirrorFtr.style.bottom = geom.footerBottom + 'px';
+            mirrorFtr.style.minHeight = geom.footerH + 'px';
+            mirrorFtr.style.height = 'auto';
         }
     }
 
@@ -875,6 +956,21 @@
         } catch (e) {}
     }
 
+    function buildSpreadMirrorElement(role, innerMarkup, docPageNum, totalDocPages) {
+        const cls = role === 'header' ? 'op-hf-spread-header-mirror' : 'op-hf-spread-footer-mirror';
+        const el = document.createElement('div');
+        el.className = `op-hf-spread-mirror ${cls}`;
+        el.setAttribute('data-hf-mirror', role);
+        const content = document.createElement('div');
+        content.className = 'element-content op-hf-content';
+        content.innerHTML = innerMarkup || '';
+        content.querySelectorAll('[contenteditable="true"]').forEach(n => n.setAttribute('contenteditable', 'false'));
+        content.querySelectorAll('[data-placeholder]').forEach(n => n.removeAttribute('data-placeholder'));
+        el.appendChild(content);
+        resolvePageNumberTokensInContainer(content, docPageNum, totalDocPages);
+        return el;
+    }
+
     function syncMasterHeaderFooterToState() {
         if (typeof state === 'undefined' || !state.pages || !state.pages[state.currentPageIndex]) return;
         const paperEl = document.getElementById('paper');
@@ -884,15 +980,33 @@
         if (isEditingMasterPage() && state.pages[0]) {
             if (hdrContent) state.pages[0].header = hdrContent.innerHTML;
             if (ftrContent) state.pages[0].footer = ftrContent.innerHTML;
+            if (state.isSpreadMode) {
+                const sm = getSpreadHalfMetrics(0);
+                const mHdrContent = paperEl.querySelector('.op-hf-spread-header-mirror > .op-hf-content');
+                const mFtrContent = paperEl.querySelector('.op-hf-spread-footer-mirror > .op-hf-content');
+                if (mHdrContent && hdrContent) {
+                    mHdrContent.innerHTML = hdrContent.innerHTML;
+                    mHdrContent.querySelectorAll('[contenteditable="true"]').forEach(n => n.setAttribute('contenteditable', 'false'));
+                    mHdrContent.querySelectorAll('[data-placeholder]').forEach(n => n.removeAttribute('data-placeholder'));
+                    resolvePageNumberTokensInContainer(mHdrContent, sm.rightDocPageNum, sm.totalSinglePages);
+                }
+                if (mFtrContent && ftrContent) {
+                    mFtrContent.innerHTML = ftrContent.innerHTML;
+                    mFtrContent.querySelectorAll('[contenteditable="true"]').forEach(n => n.setAttribute('contenteditable', 'false'));
+                    mFtrContent.querySelectorAll('[data-placeholder]').forEach(n => n.removeAttribute('data-placeholder'));
+                    resolvePageNumberTokensInContainer(mFtrContent, sm.rightDocPageNum, sm.totalSinglePages);
+                }
+            }
         }
     }
 
-    function shouldSuppressHeaderFooterOnPage(pageData, pageIndex) {
+    function shouldSuppressHeaderFooterOnPage(pageData, pageIndex, overrideDocPageNum) {
         if (typeof state === 'undefined' || !state.headersVisible) return true;
         const metrics = getDocumentPageMetrics(pageIndex);
         if (metrics.isMaster) return false;
         if (pageData && pageData.ignoreMasterPage) return true;
-        if (state.showHeaderFooterOnFirstPage === false && metrics.docPageNum === 1) {
+        const docPageNum = (typeof overrideDocPageNum === 'number') ? overrideDocPageNum : metrics.docPageNum;
+        if (state.showHeaderFooterOnFirstPage === false && docPageNum === 1) {
             return true;
         }
         return false;
@@ -901,9 +1015,12 @@
     function renderHeaderFooterOnPaper(paperEl, pageData, pageIndex) {
         const targetPaper = paperEl || document.getElementById('paper');
         if (!targetPaper) return;
+        targetPaper.querySelectorAll('.op-hf-spread-mirror').forEach(n => n.remove());
         const { header, footer } = ensureHeaderFooterStructure(targetPaper);
         if (!header || !footer) return;
 
+        const isSpread = !!(typeof state !== 'undefined' && state && state.isSpreadMode);
+        const spreadMetrics = isSpread ? getSpreadHalfMetrics(pageIndex) : null;
         const metrics = getDocumentPageMetrics(pageIndex);
         const onMaster = metrics.isMaster;
         const useMasterSource = !!(typeof state !== 'undefined' && state.hasMasterPage && !onMaster && state.pages[0] && !(pageData && pageData.ignoreMasterPage));
@@ -934,19 +1051,37 @@
             });
         });
 
-        resolvePageNumberTokensInContainer(headerContent, metrics.docPageNum, metrics.totalDocPages);
-        resolvePageNumberTokensInContainer(footerContent, metrics.docPageNum, metrics.totalDocPages);
+        const leftDocNum = isSpread ? spreadMetrics.leftDocPageNum : metrics.docPageNum;
+        const leftTotal = isSpread ? spreadMetrics.totalSinglePages : metrics.totalDocPages;
+        resolvePageNumberTokensInContainer(headerContent, leftDocNum, leftTotal);
+        resolvePageNumberTokensInContainer(footerContent, leftDocNum, leftTotal);
 
-        const suppressed = shouldSuppressHeaderFooterOnPage(pageData, pageIndex);
-        const showBoxes = onMaster || (!suppressed && !!(typeof state !== 'undefined' && state.headersVisible));
+        const leftSuppress = isSpread
+            ? (onMaster ? !state.headersVisible : (!!(pageData && pageData.ignoreMasterPage) || !state.headersVisible || (state.showHeaderFooterOnFirstPage === false && leftDocNum === 1)))
+            : shouldSuppressHeaderFooterOnPage(pageData, pageIndex);
+        const showLeftBoxes = onMaster || (!leftSuppress && !!(typeof state !== 'undefined' && state.headersVisible));
 
         const headerHasContent = onMaster || hasMeaningfulHfContent(headerContent);
         const footerHasContent = onMaster || hasMeaningfulHfContent(footerContent);
 
-        header.classList.toggle('visible', showBoxes && headerHasContent);
-        footer.classList.toggle('visible', showBoxes && footerHasContent);
+        header.classList.toggle('visible', showLeftBoxes && headerHasContent);
+        footer.classList.toggle('visible', showLeftBoxes && footerHasContent);
         header.classList.toggle('hf-readonly', !onMaster);
         footer.classList.toggle('hf-readonly', !onMaster);
+
+        if (isSpread && spreadMetrics && spreadMetrics.hasRightPage) {
+            const rightSuppress = !onMaster && (!!(pageData && pageData.ignoreMasterPage) || !state.headersVisible || (state.showHeaderFooterOnFirstPage === false && spreadMetrics.rightDocPageNum === 1));
+            const showRightBoxes = onMaster ? !!(typeof state !== 'undefined' && state.headersVisible) : (!rightSuppress && !!(typeof state !== 'undefined' && state.headersVisible));
+            const rightDocNum = spreadMetrics.rightDocPageNum;
+            const rightTotal = spreadMetrics.totalSinglePages;
+
+            const mHdr = buildSpreadMirrorElement('header', headerContent.innerHTML, rightDocNum, rightTotal);
+            const mFtr = buildSpreadMirrorElement('footer', footerContent.innerHTML, rightDocNum, rightTotal);
+            mHdr.classList.toggle('visible', showRightBoxes && headerHasContent);
+            mFtr.classList.toggle('visible', showRightBoxes && footerHasContent);
+            targetPaper.appendChild(mHdr);
+            targetPaper.appendChild(mFtr);
+        }
 
         syncHeaderFooterGeometry(targetPaper);
         syncMasterPageVisualMode();
@@ -1667,66 +1802,119 @@
 
     function buildExportHeaderFooterHtml(page, pageIndex, docPageNum, totalDocPages) {
         if (typeof state === 'undefined' || !state.headersVisible) return '';
-        if (page && page.ignoreMasterPage) return '';
-        if (state.showHeaderFooterOnFirstPage === false && docPageNum === 1) return '';
 
-        const useMaster = !!(state.hasMasterPage && state.pages[0] && pageIndex !== 0);
-        const srcPage = useMaster ? state.pages[0] : (page || {});
         const pW = parseFloat(page && page.width) || 794;
         const pH = parseFloat(page && page.height) || 1123;
-        const geom = computeHeaderFooterGeometry(pW, pH, state.margins);
         const typo = getEffectiveDocumentTypography();
         const fontStack = buildFontStack(typo.bodyFont);
+        const masterPage = (state.hasMasterPage && state.pages && state.pages[0]) ? state.pages[0] : null;
 
-        const buildOne = (role, rawHtml) => {
-            if (!rawHtml || isLegacyPlaceholderText(rawHtml)) return '';
-            const temp = document.createElement('div');
-            temp.innerHTML = migrateLegacyHeaderFooterHtml(rawHtml, role);
-            if (!hasMeaningfulHfContent(temp)) return '';
+        const renderSingleSlotHtml = (srcPage, slotW, offsetX, slotDocPageNum, slotTotalPages, suppressThisSlot) => {
+            if (suppressThisSlot || !srcPage) return '';
+            const geom = computeHeaderFooterGeometry(slotW, pH, state.margins);
 
-            resolvePageNumberTokensInContainer(temp, docPageNum, totalDocPages);
+            const buildOne = (role, rawHtml) => {
+                if (!rawHtml || isLegacyPlaceholderText(rawHtml)) return '';
+                const temp = document.createElement('div');
+                temp.innerHTML = migrateLegacyHeaderFooterHtml(rawHtml, role);
+                if (!hasMeaningfulHfContent(temp)) return '';
 
-            temp.querySelectorAll('[contenteditable]').forEach(n => n.removeAttribute('contenteditable'));
-            temp.querySelectorAll('[data-placeholder]').forEach(n => n.removeAttribute('data-placeholder'));
-            temp.querySelectorAll('.op-hf-zones').forEach(z => {
-                z.style.display = 'flex';
-                z.style.alignItems = 'center';
-                z.style.justifyContent = 'space-between';
-                z.style.gap = '8px';
-                z.style.width = '100%';
-            });
-            temp.querySelectorAll('.op-hf-zone').forEach(z => {
-                z.style.flex = '1 1 0';
-                z.style.minWidth = '0';
-                z.style.border = 'none';
-                z.style.outline = 'none';
-                z.style.background = 'transparent';
-                z.style.padding = '4px 6px';
-                z.style.boxSizing = 'border-box';
-                if (!z.style.fontFamily) z.style.fontFamily = fontStack;
-                if (!z.style.fontSize) z.style.fontSize = '12px';
-                if (!z.style.color) z.style.color = '#333333';
-            });
-            temp.querySelectorAll('.op-hf-editable').forEach(ed => {
-                ed.style.width = '100%';
-                ed.style.border = 'none';
-                ed.style.outline = 'none';
-                ed.style.background = 'transparent';
-                ed.style.padding = '4px 6px';
-                ed.style.boxSizing = 'border-box';
-                if (!ed.style.fontFamily) ed.style.fontFamily = fontStack;
-                if (!ed.style.fontSize) ed.style.fontSize = '12px';
-                if (!ed.style.color) ed.style.color = '#333333';
-            });
+                resolvePageNumberTokensInContainer(temp, slotDocPageNum, slotTotalPages);
+                temp.querySelectorAll('.op-page-num-token').forEach(tok => {
+                    tok.setAttribute('data-op-pn-locked', 'true');
+                });
 
-            const posCss = role === 'header'
-                ? `top:${geom.headerTop}px; min-height:${geom.headerH}px;`
-                : `bottom:${geom.footerBottom}px; min-height:${geom.footerH}px;`;
+                temp.querySelectorAll('[contenteditable]').forEach(n => n.removeAttribute('contenteditable'));
+                temp.querySelectorAll('[data-placeholder]').forEach(n => n.removeAttribute('data-placeholder'));
+                temp.querySelectorAll('.op-hf-zones').forEach(z => {
+                    z.style.display = 'flex';
+                    z.style.alignItems = 'center';
+                    z.style.justifyContent = 'space-between';
+                    z.style.gap = '8px';
+                    z.style.width = '100%';
+                });
+                temp.querySelectorAll('.op-hf-zone').forEach(z => {
+                    z.style.flex = '1 1 0';
+                    z.style.minWidth = '0';
+                    z.style.border = 'none';
+                    z.style.outline = 'none';
+                    z.style.background = 'transparent';
+                    z.style.padding = '4px 6px';
+                    z.style.boxSizing = 'border-box';
+                    if (!z.style.fontFamily) z.style.fontFamily = fontStack;
+                    if (!z.style.fontSize) z.style.fontSize = '12px';
+                    if (!z.style.color) z.style.color = '#333333';
+                });
+                temp.querySelectorAll('.op-hf-editable').forEach(ed => {
+                    ed.style.width = '100%';
+                    ed.style.border = 'none';
+                    ed.style.outline = 'none';
+                    ed.style.background = 'transparent';
+                    ed.style.padding = '4px 6px';
+                    ed.style.boxSizing = 'border-box';
+                    if (!ed.style.fontFamily) ed.style.fontFamily = fontStack;
+                    if (!ed.style.fontSize) ed.style.fontSize = '12px';
+                    if (!ed.style.color) ed.style.color = '#333333';
+                });
 
-            return `<div class="op-export-hf op-export-${role}" style="position:absolute; left:${geom.left}px; width:${geom.width}px; ${posCss} z-index:2000; pointer-events:none; box-sizing:border-box; border:none; outline:none; background:transparent; font-family:${fontStack}; font-size:12px; color:#333333; line-height:1.35;">${temp.innerHTML}</div>`;
+                const posCss = role === 'header'
+                    ? `top:${geom.headerTop}px; min-height:${geom.headerH}px;`
+                    : `bottom:${geom.footerBottom}px; min-height:${geom.footerH}px;`;
+
+                return `<div class="op-export-hf op-export-${role}" style="position:absolute; left:${offsetX + geom.left}px; width:${geom.width}px; ${posCss} z-index:2000; pointer-events:none; box-sizing:border-box; border:none; outline:none; background:transparent; font-family:${fontStack}; font-size:12px; color:#333333; line-height:1.35;">${temp.innerHTML}</div>`;
+            };
+
+            return buildOne('header', srcPage.header) + buildOne('footer', srcPage.footer);
         };
 
-        return buildOne('header', srcPage.header) + buildOne('footer', srcPage.footer);
+        // Case 1: Booklet imposed sheet with independent left/right half metadata
+        if (page && page._bookletHalves) {
+            const halves = page._bookletHalves;
+            const slotW = parseFloat(halves.singleW) || (pW / 2);
+            const total = halves.totalDocPages || totalDocPages;
+            const leftHalf = halves.left || {};
+            const rightHalf = halves.right || {};
+            const leftSrc = masterPage || leftHalf;
+            const rightSrc = masterPage || rightHalf;
+            const leftSuppress = !!leftHalf.ignoreMasterPage || (leftHalf.docPageNum == null) || (state.showHeaderFooterOnFirstPage === false && leftHalf.docPageNum === 1);
+            const rightSuppress = !!rightHalf.ignoreMasterPage || (rightHalf.docPageNum == null) || (state.showHeaderFooterOnFirstPage === false && rightHalf.docPageNum === 1);
+            return (
+                renderSingleSlotHtml(leftSrc, slotW, 0, leftHalf.docPageNum || 1, total, leftSuppress) +
+                renderSingleSlotHtml(rightSrc, slotW, slotW, rightHalf.docPageNum || 1, total, rightSuppress)
+            );
+        }
+
+        // Case 2: Spread mode page (print/export/sidebar thumbnail)
+        if (state.isSpreadMode && !window._isMultiUpPrinting) {
+            const slotW = pW / 2;
+            const isMasterThumb = !!(state.hasMasterPage && pageIndex === 0);
+            const srcPage = (masterPage && pageIndex !== 0) ? masterPage : (page || {});
+            const ignorePage = !!(page && page.ignoreMasterPage);
+            if (isMasterThumb) {
+                const sm = getSpreadHalfMetrics(0);
+                return (
+                    renderSingleSlotHtml(srcPage, slotW, 0, sm.leftDocPageNum, sm.totalSinglePages, ignorePage) +
+                    renderSingleSlotHtml(srcPage, slotW, slotW, sm.rightDocPageNum, sm.totalSinglePages, ignorePage)
+                );
+            }
+            const sm = (typeof pageIndex === 'number' && pageIndex >= 0)
+                ? getSpreadHalfMetrics(pageIndex)
+                : { leftDocPageNum: docPageNum, rightDocPageNum: docPageNum + 1, totalSinglePages: totalDocPages, hasRightPage: true };
+            const leftSuppress = ignorePage || (state.showHeaderFooterOnFirstPage === false && sm.leftDocPageNum === 1);
+            const rightSuppress = !sm.hasRightPage || ignorePage || (state.showHeaderFooterOnFirstPage === false && sm.rightDocPageNum === 1);
+            return (
+                renderSingleSlotHtml(srcPage, slotW, 0, sm.leftDocPageNum, sm.totalSinglePages, leftSuppress) +
+                renderSingleSlotHtml(srcPage, slotW, slotW, sm.rightDocPageNum, sm.totalSinglePages, rightSuppress)
+            );
+        }
+
+        // Case 3: Single-page mode
+        if (page && page.ignoreMasterPage) return '';
+        const isMasterSingle = !!(state.hasMasterPage && pageIndex === 0);
+        if (!isMasterSingle && state.showHeaderFooterOnFirstPage === false && docPageNum === 1) return '';
+        const useMaster = !!(masterPage && pageIndex !== 0);
+        const srcPage = useMaster ? masterPage : (page || {});
+        return renderSingleSlotHtml(srcPage, pW, 0, docPageNum, totalDocPages, false);
     }
 
     // -------------------------------------------------------------------------
@@ -1839,6 +2027,7 @@
         syncDefaultToolbarLabels,
         isEditingMasterPage,
         getDocumentPageMetrics,
+        getSpreadHalfMetrics,
         formatPageNumberText,
         resolvePageNumberTokensInContainer,
         updateAllPageNumbers,
