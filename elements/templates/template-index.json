@@ -1463,6 +1463,15 @@
     ],
     "Newsletters": [
         {
+            "name": "The Open Gazette - 8-Page Newspaper",
+            "file": "newsletters_open_gazette_newspaper_multipage.opub",
+            "width": 794,
+            "height": 1123,
+            "format": "A4",
+            "pages": 8,
+            "hasMasterPage": true
+        },
+        {
             "name": "Community & Club Newsletter",
             "file": "newsletters_community_club_multipage.opub",
             "width": 794,

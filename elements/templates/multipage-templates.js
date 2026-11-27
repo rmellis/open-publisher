@@ -131,7 +131,22 @@
         }
     ];
 
-    const ALL_MULTIPAGE_REGISTRY = BATCH_1_REGISTRY.concat(BATCH_2_REGISTRY, BATCH_3_REGISTRY);
+    const FLAGSHIP_REGISTRY = [
+        {
+            name: 'The Open Gazette - 8-Page Newspaper',
+            file: 'newsletters_open_gazette_newspaper_multipage.opub',
+            category: 'Newsletters',
+            pages: 8,
+            hasMasterPage: true,
+            fontSchemeId: 'newsletter-editorial',
+            width: 794,
+            height: 1123,
+            format: 'A4',
+            orientation: 'portrait'
+        }
+    ];
+
+    const ALL_MULTIPAGE_REGISTRY = BATCH_1_REGISTRY.concat(BATCH_2_REGISTRY, BATCH_3_REGISTRY, FLAGSHIP_REGISTRY);
 
     function getPreviewPage(opubData) {
         if (!opubData || !Array.isArray(opubData.pages) || opubData.pages.length === 0) {
@@ -273,6 +288,7 @@
         BATCH_1_REGISTRY,
         BATCH_2_REGISTRY,
         BATCH_3_REGISTRY,
+        FLAGSHIP_REGISTRY,
         ALL_MULTIPAGE_REGISTRY,
         getPreviewPage,
         getDocumentPageCount,
