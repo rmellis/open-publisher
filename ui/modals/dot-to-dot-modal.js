@@ -1,4 +1,4 @@
-// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.24.15)
+// Open Publisher Connect-the-Dots (Dot-to-Dot) Path Tool (v5.24.16)
 // Converts any canvas vector path, shape outline, built-in silhouette, custom SVG path,
 // or click-plotted path into a numbered sequence of dot nodes with configurable intervals
 // (1s, 2s, 5s, 10s, A-Z, a-z), curved or straight guide hints, and automatic Page 2 Answer Keys.
@@ -2007,6 +2007,17 @@
                     background: var(--ui-theme-color, #007670); color: #ffffff; cursor: pointer;
                 }
                 .dtd-help-ok:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .dtd-help-header,
+                body.bright-theme .dtd-help-header .custom-dialog-close,
+                body.bright-theme .dtd-help-topic-btn.active,
+                body.bright-theme .dtd-help-topic-btn.active i,
+                body.bright-theme .dtd-help-ok {
+                    color: #111111 !important;
+                }
+                body.bright-theme .dtd-help-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 560px) {
                     .dtd-help-split { grid-template-columns: 1fr; }
                     .dtd-help-toc { max-height: 130px; border-right: none; border-bottom: 1px solid var(--ui-border, #cbd5e1); }
@@ -2289,7 +2300,8 @@
                     display: flex; align-items: center; justify-content: center; gap: 5px;
                 }
                 body.dark-mode .dtd-seg-btn { background: #1e293b; color: #cbd5e1; border-color: #475569; }
-                .dtd-seg-btn.active {
+                .dtd-seg-btn.active,
+                body.dark-mode .dtd-seg-btn.active {
                     background: var(--ui-theme-color, #007670); border-color: var(--ui-theme-color, #007670);
                     color: #ffffff; font-weight: 700;
                 }
@@ -2398,6 +2410,21 @@
                     font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
                 }
                 .dtd-btn-primary:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .dtd-modal-header,
+                body.bright-theme .dtd-modal-header .custom-dialog-close,
+                body.bright-theme .dtd-seg-btn.active,
+                body.bright-theme .dtd-ptab.active,
+                body.bright-theme .dtd-btn-primary,
+                body.bright-theme .dtd-modern-select .arrow-box,
+                body.bright-theme .dtd-select-option.active {
+                    color: #111111 !important;
+                }
+                body.bright-theme .dtd-help-icon-btn:hover,
+                body.dark-mode.bright-theme .dtd-help-icon-btn:hover,
+                body.bright-theme .dtd-modal-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 820px) {
                     .dtd-modal-body { grid-template-columns: 1fr; }
                     .dtd-controls-pane { max-height: 290px; border-right: none; border-bottom: 1px solid var(--ui-border, #e2e8f0); }

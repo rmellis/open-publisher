@@ -1222,6 +1222,17 @@
                     display: flex; align-items: center; justify-content: space-between;
                 }
                 body.dark-mode .cw-help-footer { background: #1e293b; border-color: #334155; }
+                body.bright-theme .cw-help-header,
+                body.bright-theme .cw-help-header .custom-dialog-close,
+                body.bright-theme .cw-help-topic-btn.active,
+                body.bright-theme .cw-help-topic-btn.active i,
+                body.bright-theme #cw-help-ok-btn {
+                    color: #111111 !important;
+                }
+                body.bright-theme .cw-help-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
             </style>
             <div class="cw-help-box" id="cw-help-box">
                 <div class="cw-help-header" id="cw-help-header" title="Drag to move">
@@ -1501,6 +1512,19 @@
                     font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
                 }
                 .cw-btn-primary:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .cw-modal-header,
+                body.bright-theme .cw-modal-header .custom-dialog-close,
+                body.bright-theme .cw-ptab.active,
+                body.bright-theme .cw-btn-primary,
+                body.bright-theme .cw-modern-select .arrow-box {
+                    color: #111111 !important;
+                }
+                body.bright-theme .cw-help-icon-btn:hover,
+                body.dark-mode.bright-theme .cw-help-icon-btn:hover,
+                body.bright-theme .cw-modal-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 860px) {
                     .cw-modal-body { grid-template-columns: 1fr; }
                 }

@@ -1034,6 +1034,17 @@
                     background: var(--ui-theme-color, #007670); color: #ffffff; cursor: pointer;
                 }
                 .cg-help-ok:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .cg-help-header,
+                body.bright-theme .cg-help-header .custom-dialog-close,
+                body.bright-theme .cg-help-topic-btn.active,
+                body.bright-theme .cg-help-topic-btn.active i,
+                body.bright-theme .cg-help-ok {
+                    color: #111111 !important;
+                }
+                body.bright-theme .cg-help-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 560px) {
                     .cg-help-split { grid-template-columns: 1fr; }
                     .cg-help-toc { max-height: 130px; border-right: none; border-bottom: 1px solid var(--ui-border, #cbd5e1); }
@@ -1345,6 +1356,20 @@
                     font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
                 }
                 .cg-btn-primary:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .cg-modal-header,
+                body.bright-theme .cg-modal-header .custom-dialog-close,
+                body.bright-theme .cg-ptab.active,
+                body.bright-theme .cg-btn-primary,
+                body.bright-theme .cg-modern-select .arrow-box,
+                body.bright-theme .cg-select-option.active {
+                    color: #111111 !important;
+                }
+                body.bright-theme .cg-help-icon-btn:hover,
+                body.dark-mode.bright-theme .cg-help-icon-btn:hover,
+                body.bright-theme .cg-modal-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 820px) {
                     .cg-modal-body { grid-template-columns: 1fr; }
                     .cg-controls-pane { max-height: 290px; border-right: none; border-bottom: 1px solid var(--ui-border, #e2e8f0); }

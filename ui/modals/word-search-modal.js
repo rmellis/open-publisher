@@ -937,6 +937,17 @@
                     display: flex; align-items: center; justify-content: space-between;
                 }
                 body.dark-mode .ws-help-footer { background: #1e293b; border-color: #334155; }
+                body.bright-theme .ws-help-header,
+                body.bright-theme .ws-help-header .custom-dialog-close,
+                body.bright-theme .ws-help-topic-btn.active,
+                body.bright-theme .ws-help-topic-btn.active i,
+                body.bright-theme #ws-help-ok-btn {
+                    color: #111111 !important;
+                }
+                body.bright-theme .ws-help-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 620px) {
                     .ws-help-split { grid-template-columns: 1fr; }
                     .ws-help-toc { max-height: 140px; border-right: none; border-bottom: 1px solid var(--ui-border, #cbd5e1); }
@@ -1288,6 +1299,19 @@
                     font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
                 }
                 .ws-btn-primary:hover { background: var(--ui-theme-dark, #004a46); }
+                body.bright-theme .ws-modal-header,
+                body.bright-theme .ws-modal-header .custom-dialog-close,
+                body.bright-theme .ws-ptab.active,
+                body.bright-theme .ws-btn-primary,
+                body.bright-theme .ws-modern-select .arrow-box {
+                    color: #111111 !important;
+                }
+                body.bright-theme .ws-help-icon-btn:hover,
+                body.dark-mode.bright-theme .ws-help-icon-btn:hover,
+                body.bright-theme .ws-modal-header .custom-dialog-close:hover {
+                    background: rgba(0, 0, 0, 0.14) !important;
+                    color: #000000 !important;
+                }
                 @media (max-width: 820px) {
                     .ws-modal-body { grid-template-columns: 1fr; }
                 }
