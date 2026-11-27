@@ -1,5 +1,5 @@
 /* ============================================================================
-   OpenPublisher AI Layout & Command Assistant (v5.24.16)
+   OpenPublisher AI Layout & Command Assistant (v5.24.17)
    - 7-Node Cloudflare Worker Load-Balanced Client with Instant 503 Rollover
    - Dedicated FLUX.1 AI Image Worker (openpub-img-1) & Vector (SVG) Engine
    - Persistent Device UUID (opub_device_id) & 20-Second Local Cooldown
@@ -1668,7 +1668,6 @@
             if (bArt) bArt.remove();
             if (typeof global.setPageBorder === 'function') global.setPageBorder('none', false);
             paper.style.background = '#ffffff';
-            paper.style.backgroundImage = '';
             paper.removeAttribute('data-theme-saved');
             ['id', 'name', 'type', 'c1', 'c2', 'url', 'sat', 'bri', 'con', 'hue', 'tex', 'size'].forEach(a => {
                 paper.removeAttribute(`data-theme-${a}`);
@@ -1809,10 +1808,7 @@
 
         if (typeof cfg.backgroundImage === 'string' && cfg.backgroundImage.trim() && paper) {
             const safeUrl = cfg.backgroundImage.trim().replace(/"/g, '%22');
-            paper.style.backgroundImage = `url("${safeUrl}")`;
-            paper.style.backgroundSize = 'cover';
-            paper.style.backgroundPosition = 'center';
-            paper.style.backgroundRepeat = 'no-repeat';
+            paper.style.background = `url("${safeUrl}") center center / cover no-repeat`;
             if (st.pages && st.pages[st.currentPageIndex]) {
                 st.pages[st.currentPageIndex].background = paper.style.background;
             }
@@ -3169,7 +3165,7 @@
     global.generateAIImage = generateAIImage;
     global.generateAIVectorSVG = generateAIVectorSVG;
     global.AIAssistant = {
-        VERSION: '5.24.16',
+        VERSION: '5.24.17',
         WORKER_NODES: AI_WORKER_NODES.slice(),
         IMAGE_WORKER_NODES: AI_IMAGE_WORKER_NODES.slice(),
         COOLDOWN_MS,

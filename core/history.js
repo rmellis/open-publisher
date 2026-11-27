@@ -111,6 +111,23 @@ function serializeCurrentPage() {
             footer: paper.querySelector('.page-footer') ? paper.querySelector('.page-footer').innerHTML : (existingPage.footer || '')
         };
 
+    const serializedBackground = (() => {
+        if (paper.style.background) return paper.style.background;
+        const bgImg = paper.style.backgroundImage;
+        const bgCol = paper.style.backgroundColor;
+        if (bgImg && bgImg !== 'none') {
+            const parts = [];
+            if (bgCol) parts.push(bgCol);
+            parts.push(bgImg);
+            if (paper.style.backgroundPosition) parts.push(paper.style.backgroundPosition);
+            if (paper.style.backgroundSize) parts.push('/ ' + paper.style.backgroundSize);
+            if (paper.style.backgroundRepeat) parts.push(paper.style.backgroundRepeat);
+            return parts.join(' ').trim();
+        }
+        if (bgCol) return bgCol;
+        return existingPage.background || 'white';
+    })();
+
     const p = {
         id: existingPage.id || Date.now(),
         orientation: isLand ? 'landscape' : 'portrait',
@@ -122,7 +139,7 @@ function serializeCurrentPage() {
         height: curH,
         dpi: existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96),
         format: existingPage.format || (typeof state !== 'undefined' && state.format) || (window.UnitConversionService ? window.UnitConversionService.detectFormat(parseFloat(curW), parseFloat(curH), existingPage.dpi || (typeof state !== 'undefined' && state.dpi ? state.dpi : 96)) : 'A4'),
-        background: paper.style.background || 'white',
+        background: serializedBackground,
         header: serializedHf.header,
         footer: serializedHf.footer,
         borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',

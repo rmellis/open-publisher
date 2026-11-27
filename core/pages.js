@@ -45,10 +45,7 @@ function renderPage(pageData) {
             window.resetThemeStudioUI();
         }
     } else {
-        paper.style.background = pageData.background;
-        if (!pageData.background || !pageData.background.includes('url(')) {
-            paper.style.backgroundImage = '';
-        }
+        paper.style.background = pageData.background || '#ffffff';
         if (pageData.themeSettings && pageData.themeSettings.saved) {
             const ts = pageData.themeSettings;
             paper.setAttribute('data-theme-saved', 'true');
