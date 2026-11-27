@@ -44,10 +44,17 @@ const ContextMenuSystem = {
         e.preventDefault();
         this.hide();
 
-        const el = e.target.closest('.pub-element');
+        const el = e.target.closest('.pub-element') || (
+            e.target.closest('#selection-overlay-container')
+                ? ((typeof state !== 'undefined' && Array.isArray(state.multiSelected) && state.multiSelected.length > 0)
+                    ? state.multiSelected[0]
+                    : ((typeof state !== 'undefined' && state.selectedEl) ? state.selectedEl : null))
+                : null
+        );
         
-        // If right-clicking an element, select it first
-        if(el && state.selectedEl !== el) selectElement(el);
+        // If right-clicking an element outside the current multi-selection, select it first
+        const isInMultiSelection = !!(el && typeof state !== 'undefined' && Array.isArray(state.multiSelected) && state.multiSelected.includes(el));
+        if(el && !isInMultiSelection && state.selectedEl !== el) selectElement(el);
         if(!el && (isPaperOrInside || isMarginGuides)) deselect();
 
         // Build dynamic menu based on target
@@ -521,6 +528,9 @@ const ContextMenuSystem = {
                 html += this.buildItem('Bring Forward', 'fa-arrow-up', 'bringForward()');
                 html += this.buildItem('Send Backward', 'fa-arrow-down', 'sendBackward()');
                 html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
+                if (window.AlignDistribute && typeof window.AlignDistribute.getContextMenuHtml === 'function') {
+                    html += window.AlignDistribute.getContextMenuHtml(this);
+                }
                 html += this.buildDivider();
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
                 html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
@@ -638,6 +648,27 @@ const ContextMenuSystem = {
 
         this.menuEl.style.left = x + 'px';
         this.menuEl.style.top = y + 'px';
+
+        // Keep flyout submenus inside viewport when hovered
+        this.menuEl.querySelectorAll('.pub-context-item.has-flyout').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                const sub = item.querySelector('.pub-flyout-menu');
+                if (!sub) return;
+                sub.style.left = '100%';
+                sub.style.right = 'auto';
+                sub.style.top = '-5px';
+                const sr = sub.getBoundingClientRect();
+                if (sr.width === 0) return;
+                if (sr.right > window.innerWidth - 6) {
+                    sub.style.left = 'auto';
+                    sub.style.right = '100%';
+                }
+                if (sr.bottom > window.innerHeight - 6) {
+                    const shift = Math.ceil(sr.bottom - (window.innerHeight - 6));
+                    sub.style.top = (-5 - shift) + 'px';
+                }
+            });
+        });
     },
 
     buildItem: function(label, icon, action, disabledClass = '') {

@@ -1,4 +1,4 @@
-// Open Publisher Bingo & Raffle Ticket Generator Studio (v5.24.18)
+// Open Publisher Bingo & Raffle Ticket Generator Studio (v5.24.19)
 // Generates randomized, non-identical Bingo cards (with optional Caller's Master Sheet)
 // and sequentially numbered Raffle tickets (with matching tear-off stubs) across multiple pages,
 // complete with custom styling presets, color palettes, cut guides, double-click re-editing,
