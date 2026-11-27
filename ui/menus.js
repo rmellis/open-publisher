@@ -524,10 +524,13 @@ const ContextMenuSystem = {
 
                 // 5. UNIVERSAL OBJECT FUNCTIONS
                 html += this.buildDivider();
-                html += this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()');
-                html += this.buildItem('Bring Forward', 'fa-arrow-up', 'bringForward()');
-                html += this.buildItem('Send Backward', 'fa-arrow-down', 'sendBackward()');
-                html += this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()');
+                const orderSubHtml = [
+                    this.buildItem('Bring to Front', 'fa-layer-group', 'bringFront()'),
+                    this.buildItem('Bring Forward', 'fa-arrow-up', 'bringForward()'),
+                    this.buildItem('Send Backward', 'fa-arrow-down', 'sendBackward()'),
+                    this.buildItem('Send to Back', 'fa-layer-group', 'sendBack()')
+                ].join('');
+                html += this.buildFlyoutItem('Order', 'fa-layer-group', orderSubHtml);
                 if (window.AlignDistribute && typeof window.AlignDistribute.getContextMenuHtml === 'function') {
                     html += window.AlignDistribute.getContextMenuHtml(this);
                 }
@@ -535,7 +538,9 @@ const ContextMenuSystem = {
                 html += this.buildItem('Cut', 'fa-cut', 'if(window.ContextMenuActions && ContextMenuActions.cut) ContextMenuActions.cut(); else if(window.cutEl) window.cutEl(); else cutEl();');
                 html += this.buildItem('Copy', 'fa-copy', 'if(window.ContextMenuActions && ContextMenuActions.copy) ContextMenuActions.copy(); else copyEl();');
                 html += this.buildItem('Duplicate', 'fa-clone', 'if(window.duplicateSelected) window.duplicateSelected(); else if(typeof duplicateSelected === "function") duplicateSelected();');
-                html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
+                if (!isImage && !isText && !isWordArt) {
+                    html += this.buildItem('Size and Position...', 'fa-arrows-alt', 'if(window.showSizePositionModal) window.showSizePositionModal();');
+                }
                 const isElLocked = (state.selectedEl && state.selectedEl.getAttribute('data-locked') === 'true');
                 html += this.buildItem(isElLocked ? 'Unlock Object' : 'Lock in Place', isElLocked ? 'fa-lock-open' : 'fa-lock', 'if(window.toggleElementLock) window.toggleElementLock();');
                 html += this.buildItem('Paste', 'fa-paste', 'if(window.ContextMenuActions) ContextMenuActions.pasteNormal()');
@@ -641,10 +646,10 @@ const ContextMenuSystem = {
 
         // Keep menu on screen (Clamp to viewport)
         const rect = this.menuEl.getBoundingClientRect();
-        let x = e.clientX;
-        let y = e.clientY;
-        if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - 5;
-        if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 5;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const x = Math.max(8, Math.min(e.clientX, vw - rect.width - 8));
+        const y = Math.max(8, Math.min(e.clientY, vh - rect.height - 8));
 
         this.menuEl.style.left = x + 'px';
         this.menuEl.style.top = y + 'px';
@@ -656,17 +661,21 @@ const ContextMenuSystem = {
                 if (!sub) return;
                 sub.style.left = '100%';
                 sub.style.right = 'auto';
-                sub.style.top = '-5px';
+                sub.style.top = '-6px';
                 const sr = sub.getBoundingClientRect();
                 if (sr.width === 0) return;
-                if (sr.right > window.innerWidth - 6) {
+                if (sr.right > vw - 8) {
                     sub.style.left = 'auto';
                     sub.style.right = '100%';
                 }
-                if (sr.bottom > window.innerHeight - 6) {
-                    const shift = Math.ceil(sr.bottom - (window.innerHeight - 6));
-                    sub.style.top = (-5 - shift) + 'px';
+                let topOffset = -6;
+                if (sr.bottom > vh - 8) {
+                    topOffset -= Math.ceil(sr.bottom - (vh - 8));
                 }
+                if (sr.top + (topOffset + 6) < 8) {
+                    topOffset += Math.ceil(8 - (sr.top + (topOffset + 6)));
+                }
+                sub.style.top = topOffset + 'px';
             });
         });
     },

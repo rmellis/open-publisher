@@ -25,18 +25,45 @@ function showMinimapContextMenu(e, index) {
     }
     
     menu.style.display = 'flex';
-    
-    // Position menu
-    let x = e.clientX;
-    let y = e.clientY;
-    
-    // Ensure it doesn't go off-screen
+
+    // Clamp main minimap menu inside viewport using measured bounds
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const rect = menu.getBoundingClientRect();
-    if (x + 180 > window.innerWidth) x = window.innerWidth - 180;
-    if (y + 190 > window.innerHeight) y = window.innerHeight - 190;
-    
+    const x = Math.max(8, Math.min(e.clientX, vw - rect.width - 8));
+    const y = Math.max(8, Math.min(e.clientY, vh - rect.height - 8));
+
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
+
+    // Ensure Master Pages > flyout submenu clamps cleanly inside viewport on hover
+    menu.querySelectorAll('.cm-has-submenu').forEach(item => {
+        if (item.dataset.flyoutClampBound === 'true') return;
+        item.dataset.flyoutClampBound = 'true';
+        item.addEventListener('mouseenter', () => {
+            const sub = item.querySelector('.cm-submenu');
+            if (!sub) return;
+            sub.style.left = '100%';
+            sub.style.right = 'auto';
+            sub.style.top = '-6px';
+            const sr = sub.getBoundingClientRect();
+            if (sr.width === 0) return;
+            const curVw = window.innerWidth;
+            const curVh = window.innerHeight;
+            if (sr.right > curVw - 8) {
+                sub.style.left = 'auto';
+                sub.style.right = '100%';
+            }
+            let topOffset = -6;
+            if (sr.bottom > curVh - 8) {
+                topOffset -= Math.ceil(sr.bottom - (curVh - 8));
+            }
+            if (sr.top + (topOffset + 6) < 8) {
+                topOffset += Math.ceil(8 - (sr.top + (topOffset + 6)));
+            }
+            sub.style.top = topOffset + 'px';
+        });
+    });
 }
 
 
