@@ -135,6 +135,9 @@
 
         if (pagesToPrint) {
             for (let pageIdx = 0; pageIdx < pagesToPrint.length; pageIdx++) {
+                if (typeof state !== 'undefined' && state && state.hasMasterPage && pagesToPrint === state.pages && pagesToPrint.length > 1 && pageIdx === 0) {
+                    continue;
+                }
                 const page = pagesToPrint[pageIdx];
                 let pageWrapper = document.createElement('div');
                 pageWrapper.className = 'op-print-page';
@@ -145,7 +148,13 @@
                 pageWrapper.appendChild(scaler);
                 printSpooler.appendChild(pageWrapper);
 
-                // ✨ DOCUMENT WATERMARK RENDERING (v5.19.10 / v5.23.0 per-page support) ✨
+                // Inherit Master Page elements cleanly when not ignored
+                let baseElements = page.elements || [];
+                if (typeof state !== 'undefined' && state && state.hasMasterPage && pageIdx > 0 && pagesToPrint === state.pages && state.pages[0] && state.pages[0].elements && !page.ignoreMasterPage) {
+                    baseElements = state.pages[0].elements.concat(baseElements);
+                }
+
+                // Document Watermark Rendering
                 if (window.WatermarkEngine) {
                     const wmConfig = (typeof window.WatermarkEngine.getWatermarkForPage === 'function')
                         ? window.WatermarkEngine.getWatermarkForPage(pageIdx, pagesToPrint.length, page)
@@ -162,7 +171,7 @@
                     }
                 }
 
-                let elementsToRender = page.elements || [];
+                let elementsToRender = baseElements;
                 
                 // Final safety check: if this page has ignoreBackground=true, forcefully strip any residual theme wrappers
                 if (page.ignoreBackground) {
@@ -313,69 +322,35 @@
                     scaler.appendChild(elDiv);
                 });
 
-                // ✨ HIGH-RES BORDER ART & PAGE BORDER PRINT RENDERING ✨
-                const hasBorderArtInScaler = scaler.querySelector('#native-border-art-border, .border-art-wrapper');
-                if (!hasBorderArtInScaler && page.borderStyle && page.borderStyle.startsWith('borderart:')) {
-                    const parts = page.borderStyle.split(':');
-                    const artId = parts[1] || 'santas';
-                    const preset = window.BorderArtEngine ? window.BorderArtEngine.getPresetById(artId) : null;
-                    if (preset && window.BorderArtEngine) {
-                        const pW = parseFloat(page.width) || 794;
-                        const pH = parseFloat(page.height) || 1123;
-                        const size = parseInt(parts[2]) || 32;
-                        const inset = parts[3] !== undefined ? parseInt(parts[3]) : 15;
-                        const bDiv = document.createElement('div');
-                        bDiv.id = 'native-border-art-border';
-                        bDiv.className = 'pub-element';
-                        bDiv.setAttribute('data-type', 'shape');
-                        bDiv.setAttribute('data-is-border', 'true');
-                        bDiv.style.cssText = `position: absolute; left: 0px; top: 0px; width: ${pW}px; height: ${pH}px; z-index: 1; pointer-events: none; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
-                        bDiv.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${window.BorderArtEngine.generateTilesHTML(preset, pW, pH, size, inset)}</div>`;
-                        scaler.appendChild(bDiv);
-                    }
+                // High-res Border Art, Booklet Halves, Spreads & CSS Page Border Print Rendering
+                if (typeof window.createPrintPageBorderNodes === 'function') {
+                    const borderNodes = window.createPrintPageBorderNodes(
+                        page,
+                        pageIdx,
+                        pagesToPrint,
+                        parseFloat(page.width) || 794,
+                        parseFloat(page.height) || 1123
+                    );
+                    borderNodes.forEach(bn => {
+                        if (bn.id === 'native-border-art-border' && scaler.querySelector('#native-border-art-border, .border-art-wrapper')) return;
+                        if (bn.classList && bn.classList.contains('page-border-container') && scaler.querySelector('.page-border-container, #native-blueprint-border')) return;
+                        scaler.appendChild(bn);
+                    });
                 }
 
-                const hasStandardBorderInScaler = scaler.querySelector('.page-border-container, #native-blueprint-border');
-                if (!hasStandardBorderInScaler && page.borderStyle && page.borderStyle !== 'none' && !page.borderStyle.startsWith('borderart:')) {
-                    const bDiv = document.createElement('div');
-                    bDiv.className = 'page-border-container';
-                    bDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;';
-                    const type = page.borderStyle;
-                    if (type.startsWith('fancy-')) {
-                        if (type === 'fancy-deco') {
-                            bDiv.style.border = '15px solid #333';
-                            bDiv.style.outline = '2px dashed #333';
-                            bDiv.style.outlineOffset = '-20px';
-                        } else if (type === 'fancy-cert') {
-                            bDiv.style.border = '20px solid #d4af37';
-                            bDiv.style.borderImage = 'linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1';
-                            const inner = document.createElement('div');
-                            inner.style.position = 'absolute'; inner.style.inset = '5px'; inner.style.border = '2px solid #b8860b';
-                            bDiv.appendChild(inner);
-                        } else if (type === 'fancy-double') {
-                            bDiv.style.border = 'double 10px #000';
-                            bDiv.style.outline = 'double 4px #000';
-                            bDiv.style.outlineOffset = '-15px';
-                        } else if (type === 'fancy-antique') {
-                            bDiv.style.border = '10px double #5d4037';
-                            const c = document.createElement('div');
-                            c.style.cssText = 'position:absolute; inset:5px; border: 2px solid #5d4037; border-radius: 10px;';
-                            bDiv.appendChild(c);
-                        } else if (type === 'fancy-modern') {
-                            bDiv.style.border = '20px solid #2c3e50';
-                            bDiv.style.borderBottom = '40px solid #2c3e50';
-                        } else if (type === 'fancy-floral') {
-                            bDiv.style.border = '5px solid green';
-                            const tl = document.createElement('div'); tl.innerText = '🌿'; tl.style.cssText = 'position:absolute; top:-15px; left:-15px; font-size:40px;';
-                            const tr = document.createElement('div'); tr.innerText = '🌿'; tr.style.cssText = 'position:absolute; top:-15px; right:-15px; font-size:40px; transform:scaleX(-1);';
-                            const bl = document.createElement('div'); bl.innerText = '🌿'; bl.style.cssText = 'position:absolute; bottom:-15px; left:-15px; font-size:40px; transform:scaleY(-1);';
-                            const br = document.createElement('div'); br.innerText = '🌿'; br.style.cssText = 'position:absolute; bottom:-15px; right:-15px; font-size:40px; transform:scale(-1);';
-                            bDiv.appendChild(tl); bDiv.appendChild(tr); bDiv.appendChild(bl); bDiv.appendChild(br);
-                        }
-                    } else {
-                        bDiv.style.border = '2px ' + type + ' #333';
-                    }
-                    scaler.appendChild(bDiv);
+                if (window.MasterHeaderFooterEngine) {
+                    const isDocPagesList = (pagesToPrint === state.pages);
+                    const metrics = isDocPagesList
+                        ? window.MasterHeaderFooterEngine.getDocumentPageMetrics(pageIdx)
+                        : { isMaster: false, docPageNum: pageIdx + 1, totalDocPages: pagesToPrint.length };
+                    const hfHtml = window.MasterHeaderFooterEngine.buildExportHeaderFooterHtml(
+                        page,
+                        isDocPagesList ? pageIdx : -1,
+                        metrics.docPageNum,
+                        metrics.totalDocPages
+                    );
+                    if (hfHtml) scaler.insertAdjacentHTML('beforeend', hfHtml);
+                    window.MasterHeaderFooterEngine.resolvePageNumberTokensInContainer(scaler, metrics.docPageNum, metrics.totalDocPages);
                 }
 
                 // ✨ HIGH-RES WORDART PRINT BAKING (Native Browser Print Spooler) ✨
@@ -2656,8 +2631,10 @@
                 }
 
                 let pageWrapper = document.createElement('div');
+                pageWrapper.className = 'op-print-page';
                 pageWrapper.style.width = pW + 'px';
                 pageWrapper.style.height = pH + 'px';
+                pageWrapper.style.margin = '0';
                 pageWrapper.style.position = 'relative';
                 pageWrapper.style.overflow = 'hidden';
                 pageWrapper.style.background = page.background || '#ffffff';
@@ -3182,26 +3159,16 @@
                     pageWrapper.appendChild(elDiv);
                 }
 
-                if (borderHtml && !pageWrapper.querySelector('#native-border-art-border, [data-is-border="true"]')) {
+                if (i === state.currentPageIndex && borderHtml && !pageWrapper.querySelector('#native-border-art-border, [data-is-border="true"]')) {
                     pageWrapper.insertAdjacentHTML('beforeend', borderHtml);
-                } else if (!pageWrapper.querySelector('#native-border-art-border, .border-art-wrapper') && page.borderStyle && page.borderStyle.startsWith('borderart:')) {
-                    const parts = page.borderStyle.split(':');
-                    const artId = parts[1] || 'santas';
-                    const preset = window.BorderArtEngine ? window.BorderArtEngine.getPresetById(artId) : null;
-                    if (preset && window.BorderArtEngine) {
-                        const pW = parseFloat(page.width) || 794;
-                        const pH = parseFloat(page.height) || 1123;
-                        const size = parseInt(parts[2]) || 32;
-                        const inset = parts[3] !== undefined ? parseInt(parts[3]) : 15;
-                        const bDiv = document.createElement('div');
-                        bDiv.id = 'native-border-art-border';
-                        bDiv.className = 'pub-element';
-                        bDiv.setAttribute('data-type', 'shape');
-                        bDiv.setAttribute('data-is-border', 'true');
-                        bDiv.style.cssText = `position: absolute; left: 0px; top: 0px; width: ${pW}px; height: ${pH}px; z-index: 1; pointer-events: none;`;
-                        bDiv.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${window.BorderArtEngine.generateTilesHTML(preset, pW, pH, size, inset)}</div>`;
-                        pageWrapper.appendChild(bDiv);
-                    }
+                }
+                if (typeof window.createPrintPageBorderNodes === 'function') {
+                    const borderNodes = window.createPrintPageBorderNodes(page, i, pagesToPrint, pW, pH);
+                    borderNodes.forEach(bn => {
+                        if (bn.id === 'native-border-art-border' && pageWrapper.querySelector('#native-border-art-border, .border-art-wrapper')) return;
+                        if (bn.classList && bn.classList.contains('page-border-container') && pageWrapper.querySelector('.page-border-container, #native-blueprint-border')) return;
+                        pageWrapper.appendChild(bn);
+                    });
                 }
                 
                 if (window.MasterHeaderFooterEngine) {

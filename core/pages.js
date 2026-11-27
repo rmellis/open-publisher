@@ -111,12 +111,27 @@ function renderPage(pageData) {
         paper.classList.remove('is-spread');
     }
     const borderEl = paper.querySelector('.page-border-container');
-    borderEl.setAttribute('data-style', pageData.borderStyle);
-    setPageBorder(pageData.borderStyle, false); 
+    const resolvedBorder = (typeof window.resolveEffectivePageBorderStyle === 'function')
+        ? window.resolveEffectivePageBorderStyle(pageData, state.currentPageIndex, state.pages)
+        : { style: pageData.borderStyle || 'none', isMasterInherited: false };
+    if (borderEl) {
+        borderEl.setAttribute('data-style', resolvedBorder.style);
+    }
+    setPageBorder(resolvedBorder.style, false);
+    if (borderEl) {
+        if (resolvedBorder.isMasterInherited) {
+            borderEl.setAttribute('data-master-inherited', 'true');
+        } else {
+            borderEl.removeAttribute('data-master-inherited');
+        }
+    }
 
     const structural = paper.querySelectorAll('.margin-guides, .page-border-container, .page-header, .page-footer');
     paper.innerHTML = '';
     structural.forEach(el => paper.appendChild(el));
+    if (pageData.borderWrapperHtml) {
+        paper.insertAdjacentHTML('beforeend', pageData.borderWrapperHtml);
+    }
 
     if (window.MasterHeaderFooterEngine && typeof window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper === 'function') {
         window.MasterHeaderFooterEngine.renderHeaderFooterOnPaper(paper, pageData, state.currentPageIndex);

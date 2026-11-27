@@ -128,6 +128,16 @@ function serializeCurrentPage() {
         return existingPage.background || 'white';
     })();
 
+    const borderNode = paper.querySelector('.page-border-container') || paper.querySelector('#page-border');
+    const isInheritedMasterBorder = !!(borderNode && borderNode.getAttribute('data-master-inherited') === 'true');
+    const domBorderStyle = (borderNode && borderNode.getAttribute('data-style')) || paper.getAttribute('data-border-style') || '';
+    const resolvedBorderStyle = isInheritedMasterBorder
+        ? (existingPage.borderStyle || 'none')
+        : (domBorderStyle || existingPage.borderStyle || 'none');
+    const extraBorderWrappers = Array.from(paper.querySelectorAll('.page-border-wrapper:not(.pub-element)'))
+        .map(w => w.outerHTML)
+        .join('');
+
     const p = {
         id: existingPage.id || Date.now(),
         orientation: isLand ? 'landscape' : 'portrait',
@@ -142,7 +152,7 @@ function serializeCurrentPage() {
         background: serializedBackground,
         header: serializedHf.header,
         footer: serializedHf.footer,
-        borderStyle: paper.querySelector('.page-border-container').getAttribute('data-style') || 'none',
+        borderStyle: resolvedBorderStyle,
         themeSettings: (paper.getAttribute('data-theme-saved') === 'true') ? {
             saved: true,
             id: paper.getAttribute('data-theme-id') || '',
@@ -162,6 +172,7 @@ function serializeCurrentPage() {
     };
 
     if (existingPage.note) p.note = existingPage.note;
+    if (extraBorderWrappers) p.borderWrapperHtml = extraBorderWrappers;
     if (existingPage._singleOrientation) p._singleOrientation = existingPage._singleOrientation;
     if (existingPage._spreadLeftPageMeta) p._spreadLeftPageMeta = JSON.parse(JSON.stringify(existingPage._spreadLeftPageMeta));
     if (existingPage._spreadRightPageMeta !== undefined) {

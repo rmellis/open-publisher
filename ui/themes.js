@@ -241,15 +241,182 @@ function applySingleElementScheme(el, schemeName) {
 }
 
 // --- BORDERS ---
+function resolveEffectivePageBorderStyle(pageData, pageIndex, pagesList) {
+    const pages = Array.isArray(pagesList) ? pagesList : ((typeof state !== 'undefined' && state && Array.isArray(state.pages)) ? state.pages : []);
+    const ownStyle = (pageData && pageData.borderStyle && pageData.borderStyle !== 'none') ? String(pageData.borderStyle) : '';
+    if (ownStyle) {
+        return { style: ownStyle, isMasterInherited: false };
+    }
+    const hasMaster = (typeof state !== 'undefined' && state && !!state.hasMasterPage);
+    if (hasMaster && pageIndex !== 0 && pages.length > 0 && !(pageData && pageData.ignoreMasterPage)) {
+        const masterStyle = (pages[0] && pages[0].borderStyle && pages[0].borderStyle !== 'none') ? String(pages[0].borderStyle) : '';
+        if (masterStyle) {
+            return { style: masterStyle, isMasterInherited: true };
+        }
+    }
+    return { style: 'none', isMasterInherited: false };
+}
+window.resolveEffectivePageBorderStyle = resolveEffectivePageBorderStyle;
+
+function applyPageBorderStylesToElement(div, type, bounds) {
+    if (!div) return;
+    if (!type) type = 'none';
+    div.setAttribute('data-style', type);
+    const posCss = bounds
+        ? `position: absolute; left: ${bounds.left}px; top: ${bounds.top}px; width: ${bounds.width}px; height: ${bounds.height}px;`
+        : 'position: absolute; inset: 0; width: 100%; height: 100%;';
+    div.style.cssText = `${posCss} pointer-events: none; z-index: 2500; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact;`;
+    div.innerHTML = '';
+
+    if (type === 'none') return;
+
+    if (type.startsWith('fancy-')) {
+        if (type === 'fancy-deco') {
+            div.style.border = '15px solid #333';
+            const inner = document.createElement('div');
+            inner.className = 'op-page-border-inner';
+            inner.style.cssText = 'position:absolute; inset:3px; border:2px dashed #333; box-sizing:border-box; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;';
+            div.appendChild(inner);
+        } else if (type === 'fancy-cert') {
+            div.style.border = '20px solid #d4af37';
+            div.style.borderImage = 'linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1';
+            const inner = document.createElement('div');
+            inner.className = 'op-page-border-inner';
+            inner.style.cssText = 'position:absolute; inset:5px; border:2px solid #b8860b; box-sizing:border-box; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;';
+            div.appendChild(inner);
+        } else if (type === 'fancy-double') {
+            div.style.border = 'double 10px #000';
+            const inner = document.createElement('div');
+            inner.className = 'op-page-border-inner';
+            inner.style.cssText = 'position:absolute; inset:3px; border:double 4px #000; box-sizing:border-box; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;';
+            div.appendChild(inner);
+        } else if (type === 'fancy-antique') {
+            div.style.border = '10px double #5d4037';
+            const c = document.createElement('div');
+            c.className = 'op-page-border-inner';
+            c.style.cssText = 'position:absolute; inset:5px; border: 2px solid #5d4037; border-radius: 10px; box-sizing:border-box; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact;';
+            div.appendChild(c);
+        } else if (type === 'fancy-modern') {
+            div.style.border = '20px solid #2c3e50';
+            div.style.borderBottom = '40px solid #2c3e50';
+        } else if (type === 'fancy-floral') {
+            div.style.border = '5px solid green';
+            const tl = document.createElement('div'); tl.innerText = '🌿'; tl.style.cssText = 'position:absolute; top:-15px; left:-15px; font-size:40px; line-height:1;';
+            const tr = document.createElement('div'); tr.innerText = '🌿'; tr.style.cssText = 'position:absolute; top:-15px; right:-15px; font-size:40px; line-height:1; transform:scaleX(-1);';
+            const bl = document.createElement('div'); bl.innerText = '🌿'; bl.style.cssText = 'position:absolute; bottom:-15px; left:-15px; font-size:40px; line-height:1; transform:scaleY(-1);';
+            const br = document.createElement('div'); br.innerText = '🌿'; br.style.cssText = 'position:absolute; bottom:-15px; right:-15px; font-size:40px; line-height:1; transform:scale(-1);';
+            div.appendChild(tl); div.appendChild(tr); div.appendChild(bl); div.appendChild(br);
+        }
+    } else if (!type.startsWith('borderart:')) {
+        div.style.border = '2px ' + type + ' #333';
+    }
+}
+window.applyPageBorderStylesToElement = applyPageBorderStylesToElement;
+
+function createSingleRegionBorderNode(borderStyle, w, h, leftOffset) {
+    if (!borderStyle || borderStyle === 'none') return null;
+    if (borderStyle.startsWith('borderart:')) {
+        if (!window.BorderArtEngine) return null;
+        const parts = borderStyle.split(':');
+        const artId = parts[1] || 'santas';
+        const preset = window.BorderArtEngine.getPresetById(artId);
+        if (!preset) return null;
+        const size = parseInt(parts[2], 10) || 32;
+        const inset = parts[3] !== undefined ? parseInt(parts[3], 10) : 15;
+        const bDiv = document.createElement('div');
+        bDiv.id = 'native-border-art-border';
+        bDiv.className = 'pub-element';
+        bDiv.setAttribute('data-type', 'shape');
+        bDiv.setAttribute('data-is-border', 'true');
+        bDiv.style.cssText = `position: absolute; left: ${leftOffset || 0}px; top: 0px; width: ${w}px; height: ${h}px; z-index: 1; pointer-events: none; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
+        bDiv.innerHTML = `<div class="element-content" style="width:100%; height:100%; position:absolute; inset:0; pointer-events:none;">${window.BorderArtEngine.generateTilesHTML(preset, w, h, size, inset)}</div>`;
+        return bDiv;
+    }
+
+    const bDiv = document.createElement('div');
+    bDiv.className = 'page-border-container';
+    applyPageBorderStylesToElement(bDiv, borderStyle);
+    return bDiv;
+}
+
+function createPrintPageBorderNodes(pageData, pageIndex, pagesList, pageW, pageH) {
+    const nodes = [];
+    const pW = parseFloat(pageW || (pageData && pageData.width)) || 794;
+    const pH = parseFloat(pageH || (pageData && pageData.height)) || 1123;
+
+    if (pageData && pageData._bookletHalves) {
+        const halves = pageData._bookletHalves;
+        const halfW = parseFloat(halves.singleW) || (pW / 2);
+        const defs = [
+            { side: 'left', left: 0, meta: halves.left },
+            { side: 'right', left: halfW, meta: halves.right }
+        ];
+        defs.forEach(def => {
+            const halfContainer = document.createElement('div');
+            halfContainer.className = `booklet-half-page booklet-half-${def.side}`;
+            halfContainer.style.cssText = `position: absolute; left: ${def.left}px; top: 0px; width: ${halfW}px; height: ${pH}px; pointer-events: none; z-index: 2500; box-sizing: border-box; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
+            const halfBorderStyle = (def.meta && def.meta.borderStyle && def.meta.borderStyle !== 'none') ? def.meta.borderStyle : 'none';
+            if (halfBorderStyle !== 'none') {
+                const innerNode = createSingleRegionBorderNode(halfBorderStyle, halfW, pH, 0);
+                if (innerNode) halfContainer.appendChild(innerNode);
+            }
+            if (def.meta && def.meta.borderWrapperHtml) {
+                halfContainer.insertAdjacentHTML('beforeend', def.meta.borderWrapperHtml);
+            }
+            if (halfContainer.children.length > 0) {
+                nodes.push(halfContainer);
+            }
+        });
+        return nodes;
+    }
+
+    if (pageData && (pageData._spreadLeftPageMeta || pageData._spreadRightPageMeta)) {
+        const halfW = pW / 2;
+        const spreadDefs = [
+            { side: 'left', left: 0, meta: pageData._spreadLeftPageMeta || {} },
+            { side: 'right', left: halfW, meta: pageData._spreadRightPageMeta || null }
+        ];
+        spreadDefs.forEach(def => {
+            if (!def.meta) return;
+            const resolved = resolveEffectivePageBorderStyle(def.meta, pageIndex, pagesList);
+            if (resolved.style && resolved.style !== 'none') {
+                const halfContainer = document.createElement('div');
+                halfContainer.className = `booklet-half-page booklet-half-${def.side}`;
+                halfContainer.style.cssText = `position: absolute; left: ${def.left}px; top: 0px; width: ${halfW}px; height: ${pH}px; pointer-events: none; z-index: 2500; box-sizing: border-box; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;`;
+                const innerNode = createSingleRegionBorderNode(resolved.style, halfW, pH, 0);
+                if (innerNode) {
+                    halfContainer.appendChild(innerNode);
+                    nodes.push(halfContainer);
+                }
+            }
+        });
+        if (nodes.length > 0) return nodes;
+    }
+
+    const resolved = resolveEffectivePageBorderStyle(pageData, pageIndex, pagesList);
+    if (resolved.style && resolved.style !== 'none') {
+        const node = createSingleRegionBorderNode(resolved.style, pW, pH, 0);
+        if (node) nodes.push(node);
+    }
+
+    if (pageData && pageData.borderWrapperHtml) {
+        const wrapHost = document.createElement('div');
+        wrapHost.innerHTML = pageData.borderWrapperHtml;
+        Array.from(wrapHost.children).forEach(ch => nodes.push(ch));
+    }
+
+    return nodes;
+}
+window.createPrintPageBorderNodes = createPrintPageBorderNodes;
+
 function setPageBorder(type, doPush = true) {
     if (!type) type = 'none';
     const div = document.getElementById('page-border');
     if (!div) return;
-    div.setAttribute('data-style', type);
-    div.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2500; box-sizing: border-box;';
-    div.innerHTML = '';
+    div.removeAttribute('data-master-inherited');
 
     if (type === 'none') { 
+        applyPageBorderStylesToElement(div, 'none');
         if (window.BorderArtEngine) window.BorderArtEngine.updateActiveUI(null);
         const ba = document.getElementById('native-border-art-border');
         if (ba) ba.remove();
@@ -261,6 +428,8 @@ function setPageBorder(type, doPush = true) {
     if (oldBa && !type.startsWith('borderart:')) oldBa.remove();
 
     if (type.startsWith('borderart:')) {
+        applyPageBorderStylesToElement(div, 'none');
+        div.setAttribute('data-style', type);
         if (window.BorderArtEngine && typeof window.BorderArtEngine.renderPageBorder === 'function') {
             window.BorderArtEngine.renderPageBorder(div, type);
         }
@@ -270,42 +439,10 @@ function setPageBorder(type, doPush = true) {
         return;
     }
 
-    if (type.startsWith('fancy-')) {
-        if (type === 'fancy-deco') {
-            div.style.border = '15px solid #333';
-            div.style.outline = '2px dashed #333';
-            div.style.outlineOffset = '-20px';
-        } else if (type === 'fancy-cert') {
-            div.style.border = '20px solid #d4af37';
-            div.style.borderImage = 'linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1';
-            const inner = document.createElement('div');
-            inner.style.position = 'absolute'; inner.style.inset = '5px'; inner.style.border = '2px solid #b8860b';
-            div.appendChild(inner);
-        } else if (type === 'fancy-double') {
-            div.style.border = 'double 10px #000';
-            div.style.outline = 'double 4px #000';
-            div.style.outlineOffset = '-15px';
-        } else if (type === 'fancy-antique') {
-            div.style.border = '10px double #5d4037';
-            const c = document.createElement('div');
-            c.style.cssText = 'position:absolute; inset:5px; border: 2px solid #5d4037; border-radius: 10px;';
-            div.appendChild(c);
-        } else if (type === 'fancy-modern') {
-            div.style.border = '20px solid #2c3e50';
-            div.style.borderBottom = '40px solid #2c3e50';
-        } else if (type === 'fancy-floral') {
-            div.style.border = '5px solid green';
-            const tl = document.createElement('div'); tl.innerText = '🌿'; tl.style.cssText = 'position:absolute; top:-15px; left:-15px; font-size:40px;';
-            const tr = document.createElement('div'); tr.innerText = '🌿'; tr.style.cssText = 'position:absolute; top:-15px; right:-15px; font-size:40px; transform:scaleX(-1);';
-            const bl = document.createElement('div'); bl.innerText = '🌿'; bl.style.cssText = 'position:absolute; bottom:-15px; left:-15px; font-size:40px; transform:scaleY(-1);';
-            const br = document.createElement('div'); br.innerText = '🌿'; br.style.cssText = 'position:absolute; bottom:-15px; right:-15px; font-size:40px; transform:scale(-1);';
-            div.appendChild(tl); div.appendChild(tr); div.appendChild(bl); div.appendChild(br);
-        }
-    } else {
-        div.style.border = '2px ' + type + ' #333';
-    }
+    applyPageBorderStylesToElement(div, type);
 
-    document.getElementById('border-dropdown').style.display = 'none';
+    const dd = document.getElementById('border-dropdown');
+    if (dd) dd.style.display = 'none';
     if (doPush) pushHistory();
 }
 

@@ -1690,10 +1690,24 @@ body.dark-mode .multipage-dialog-warning {
     border-left: 1px dashed rgba(180, 83, 9, 0.28);
 }
 
-.page-border-container {
+.page-border-container,
+.op-print-page .page-border-container,
+.booklet-half-page .page-border-container {
     position: absolute; inset: 0; pointer-events: none; z-index: 2500;
     border: 0px solid black;
-    box-sizing: border-box; 
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+.page-border-container *,
+.page-border-container::before,
+.page-border-container::after,
+.booklet-half-page,
+.booklet-half-page::before,
+.booklet-half-page::after {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
 }
 
 .pub-element {
@@ -2752,6 +2766,7 @@ body::-webkit-scrollbar-thumb:hover,
         border: none !important;
         box-shadow: none !important;
         overflow: hidden !important; 
+        box-sizing: border-box !important;
         
         /* Zoom removed: CSS zoom breaks Chrome's 3D perspective rasterization (causes massive offsets). 
            Users should use the native Print Dialog 'Scale' option if micro-bleeds are needed. */
@@ -2759,6 +2774,19 @@ body::-webkit-scrollbar-thumb:hover,
         /* Strict Page Breaking */
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+    }
+
+    #paper .page-border-container,
+    .op-print-page .page-border-container,
+    .booklet-half-page .page-border-container,
+    .booklet-half-page,
+    .page-border-container *,
+    .page-border-container::before,
+    .page-border-container::after {
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 
     /* Switch to BEFORE instead of AFTER. This guarantees the last page never forces an empty sheet! */

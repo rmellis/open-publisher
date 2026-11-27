@@ -228,6 +228,11 @@ window.exportAsHTML = async function(opts = {}) {
                 if (renderFooter) pageWrapper.insertAdjacentHTML('beforeend', `<div class="page-footer visible" style="pointer-events:none; z-index:0; position:absolute; bottom:0; left:0; width:100%; font-family:inherit;">${renderFooter}</div>`);
             }
             
+            if (typeof window.createPrintPageBorderNodes === 'function') {
+                const borderNodes = window.createPrintPageBorderNodes(page, i, state.pages, pW, pH);
+                borderNodes.forEach(bn => pageWrapper.appendChild(bn));
+            }
+            
             printSpooler.appendChild(pageWrapper);
 
             // Strip interactive editor badges/handles that should never appear in HTML or email exports

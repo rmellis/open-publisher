@@ -267,6 +267,11 @@ window.printFullDocumentDirect = async function(isImposed = false) {
             window.MasterHeaderFooterEngine.resolvePageNumberTokensInContainer(pageWrapper, metrics.docPageNum, metrics.totalDocPages);
         }
 
+        if (typeof window.createPrintPageBorderNodes === 'function') {
+            const borderNodes = window.createPrintPageBorderNodes(page, pageIndex, pagesToRender, parseFloat(page.width) || 794, parseFloat(page.height) || 1123);
+            borderNodes.forEach(bn => pageWrapper.appendChild(bn));
+        }
+
         // Add the finished page to our hidden stack
         printSpooler.appendChild(pageWrapper);
     });
@@ -301,14 +306,22 @@ function printBooklet() {
                 const singleW = parseInt(spread.width) / 2;
                 const leftMeta = spread._spreadLeftPageMeta || {};
                 const rightMeta = spread._spreadRightPageMeta;
+                const masterBorder = (state.hasMasterPage && state.pages[0] && state.pages[0].borderStyle && state.pages[0].borderStyle !== 'none')
+                    ? state.pages[0].borderStyle
+                    : 'none';
+                const leftIgnoreMaster = !!(leftMeta.ignoreMasterPage !== undefined ? leftMeta.ignoreMasterPage : spread.ignoreMasterPage);
+                const rightIgnoreMaster = !!(rightMeta && rightMeta.ignoreMasterPage !== undefined ? rightMeta.ignoreMasterPage : spread.ignoreMasterPage);
+                const rawLeftBorder = leftMeta.borderStyle || spread.borderStyle || 'none';
+                const rawRightBorder = (rightMeta && rightMeta.borderStyle) || spread.borderStyle || 'none';
                 let leftPage = {
                     width: singleW + 'px',
                     height: spread.height,
                     background: leftMeta.background || spread.background,
                     header: leftMeta.header || spread.header || '',
                     footer: leftMeta.footer || spread.footer || '',
-                    ignoreMasterPage: !!(leftMeta.ignoreMasterPage !== undefined ? leftMeta.ignoreMasterPage : spread.ignoreMasterPage),
-                    borderStyle: leftMeta.borderStyle || spread.borderStyle || 'none',
+                    ignoreMasterPage: leftIgnoreMaster,
+                    borderStyle: (rawLeftBorder === 'none' && !leftIgnoreMaster && masterBorder !== 'none') ? masterBorder : rawLeftBorder,
+                    borderWrapperHtml: leftMeta.borderWrapperHtml || '',
                     elements: []
                 };
                 let rightPage = {
@@ -317,8 +330,9 @@ function printBooklet() {
                     background: (rightMeta && rightMeta.background) || spread.background,
                     header: (rightMeta && rightMeta.header) || spread.header || '',
                     footer: (rightMeta && rightMeta.footer) || spread.footer || '',
-                    ignoreMasterPage: !!(rightMeta && rightMeta.ignoreMasterPage !== undefined ? rightMeta.ignoreMasterPage : spread.ignoreMasterPage),
-                    borderStyle: (rightMeta && rightMeta.borderStyle) || spread.borderStyle || 'none',
+                    ignoreMasterPage: rightIgnoreMaster,
+                    borderStyle: (rawRightBorder === 'none' && !rightIgnoreMaster && masterBorder !== 'none') ? masterBorder : rawRightBorder,
+                    borderWrapperHtml: (rightMeta && rightMeta.borderWrapperHtml) || '',
                     elements: []
                 };
                 
@@ -350,10 +364,19 @@ function printBooklet() {
             });
         } else {
             singlePages = JSON.parse(JSON.stringify(state.pages));
-            if (state.hasMasterPage && state.pages[0] && state.pages[0].elements) {
+            if (state.hasMasterPage && state.pages[0]) {
+                const masterBorder = (state.pages[0].borderStyle && state.pages[0].borderStyle !== 'none') ? state.pages[0].borderStyle : 'none';
                 for (let i = 1; i < singlePages.length; i++) {
                     if (!singlePages[i].ignoreMasterPage) {
-                        singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                        if (state.pages[0].elements) {
+                            singlePages[i].elements = state.pages[0].elements.concat(singlePages[i].elements || []);
+                        }
+                        if ((!singlePages[i].borderStyle || singlePages[i].borderStyle === 'none') && masterBorder !== 'none') {
+                            singlePages[i].borderStyle = masterBorder;
+                        }
+                        if (!singlePages[i].borderWrapperHtml && state.pages[0].borderWrapperHtml) {
+                            singlePages[i].borderWrapperHtml = state.pages[0].borderWrapperHtml;
+                        }
                     }
                     if (singlePages[i].ignoreBackground) {
                         singlePages[i].elements = singlePages[i].elements.filter(el => !(el.innerHTML && (el.innerHTML.includes('op-theme-container') || el.innerHTML.includes('op-theme-bg'))));
@@ -414,13 +437,17 @@ function printBooklet() {
                         docPageNum: leftPage.docPageNum,
                         ignoreMasterPage: !!(leftPage.ignoreMasterPage || leftPage.isBlankPad),
                         header: leftPage.header || '',
-                        footer: leftPage.footer || ''
+                        footer: leftPage.footer || '',
+                        borderStyle: (!leftPage.isBlankPad && leftPage.borderStyle) ? leftPage.borderStyle : 'none',
+                        borderWrapperHtml: (!leftPage.isBlankPad && leftPage.borderWrapperHtml) ? leftPage.borderWrapperHtml : ''
                     },
                     right: {
                         docPageNum: rightPage.docPageNum,
                         ignoreMasterPage: !!(rightPage.ignoreMasterPage || rightPage.isBlankPad),
                         header: rightPage.header || '',
-                        footer: rightPage.footer || ''
+                        footer: rightPage.footer || '',
+                        borderStyle: (!rightPage.isBlankPad && rightPage.borderStyle) ? rightPage.borderStyle : 'none',
+                        borderWrapperHtml: (!rightPage.isBlankPad && rightPage.borderWrapperHtml) ? rightPage.borderWrapperHtml : ''
                     }
                 }
             };
